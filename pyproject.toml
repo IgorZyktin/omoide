@@ -7,6 +7,8 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+SQLAlchemy = "^1.4.29"
+psycopg2 = "^2.9.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
