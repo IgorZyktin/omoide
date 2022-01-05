@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon"
+          href="{{ url_for('static', path='favicon.ico') }}">
+    <link type="text/css"
+          href="{{ url_for('static', path='base.css') }}"
+          rel="stylesheet">
+    <link type="text/css"
+          href="{{ url_for('static', path='base_search.css') }}"
+          rel="stylesheet">
+    <script type="text/javascript"
+            src="{{ url_for('static', path='code.js') }}"></script>
+    {% block head %}{% endblock %}
+    <title>Omoide</title>
+</head>
+
+<body>
+<div id="header" style="display: {{ 'none' if query.folded else 'block' }}">
+    <form id="main_form" method="post" onsubmit="goSearch(this);">
+        <div class="query-container">
+
+            <a href="{{ url_for('search') }}"
+               title="Use it to clear search query"
+               class="button">Home</a>
+
+            <label for="query">
+                <input id="query_element"
+                       name="query"
+                       type="search"
+                       value="{{ query.raw_query }}"
+                       class="query_input"
+                       placeholder="{{ placeholder }}" autofocus/>
+            </label>
+
+            <input id="searchButton"
+                   title="Press to perform search"
+                   type="submit"
+                   class="button"
+                   name="search"
+                   value="Search" autofocus/>
+
+        </div>
+    </form>
+
+    {% block upper_body %}{% endblock %}
+
+    <hr>
+
+</div>
+
+{% block body %}{% endblock %}
+
+</body>
+</html>
