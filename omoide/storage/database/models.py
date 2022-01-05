@@ -88,6 +88,7 @@ class Visibility(Base):
     # fields ------------------------------------------------------------------
 
     stats = sa.Column(sa.JSON, nullable=False)
+    # TODO - probably should add tags here
 
 
 class Group(Base):
@@ -143,7 +144,7 @@ class Item(Base):
                            nullable=False,
                            index=True)
 
-    number = sa.Column(sa.BigInteger, autoincrement=True, nullable=False)
+    number = sa.Column(sa.BigInteger, nullable=False)
 
     # fields ------------------------------------------------------------------
 
@@ -224,6 +225,7 @@ class ComputedPermissions(Base):
     )
 
 
+# TODO - probably should get rid of this class
 class Stats(Base):
     """Statistic for whole branch of items."""
     __tablename__ = 'stats'
