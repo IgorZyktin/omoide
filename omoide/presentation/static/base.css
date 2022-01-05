@@ -1,0 +1,86 @@
+:root {
+    --gap-tiny: 0.4em;
+    --gap-small: 0.5em;
+    --gap-normal: 0.5em;
+
+    --radius: 5px;
+    --main-text-color: #1a1b1d;
+    --bright-text-color: #ffffff;
+    --active-color: #8cb96f;
+    --active-color-bright: #79cb3e;
+    --background-color: #939393;
+}
+
+html, body {
+    color: var(--main-text-color);
+    background-color: var(--background-color);
+    font-family: Tahoma, Verdana, Segoe, sans-serif;
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+hr {
+    border: 0;
+    height: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+input {
+    border-radius: var(--radius);
+    color: var(--main-text-color);
+    padding: var(--gap-tiny);
+    width: 100%;
+    height: 100%;
+}
+
+textarea:focus, input:focus {
+    outline: none;
+}
+
+.button {
+    border-radius: var(--radius);
+    padding: var(--gap-tiny);
+    background-color: #545454;
+    color: #ffffff;
+    text-align: center;
+    display: inline-block;
+    text-decoration: none;
+    border: 1px solid black;
+}
+
+.button:hover {
+    color: var(--bright-text-color);
+    background-color: #383838;
+    text-decoration: none;
+}
+
+.button:active {
+    color: var(--bright-text-color);
+    background-color: black;
+}
+
+a {
+    color: var(--bright-text-color);
+    display: inline-block;
+}
+
+a:link {
+    color: var(--bright-text-color);
+    text-decoration: none;
+}
+
+a:visited {
+    color: var(--bright-text-color);
+}
+
+a:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+a:active {
+    color: var(--bright-text-color);
+}
