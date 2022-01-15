@@ -176,7 +176,20 @@ class Item(Base):
 
 
 class ComputedTags(Base):
-    """Combined tags of whole hierarchy of items."""
+    """Combined tags of whole hierarchy of items.
+
+    Hierarchy gets unwind and descendants inherit ancestors tags and uuids.
+
+    Hierarchy:
+        item1 with tags {'a', 'b'}
+            └───item2 with tags {'b', 'c'}
+                    └───item3 with tags {'c', 'd'}
+
+    Computed tags example:
+        item1: {'item1_uuid', 'a', 'b'}
+        item2: {'item1_uuid', 'item2_uuid', 'a', 'b', 'c'}
+        item3: {'item1_uuid', 'item2_uuid', 'item3_uuid', 'a', 'b', 'c', 'd'}
+    """
     __tablename__ = 'computed_tags'
 
     # primary and foreign keys ------------------------------------------------
@@ -200,7 +213,18 @@ class ComputedTags(Base):
 
 
 class ComputedPermissions(Base):
-    """Combined permissions of whole hierarchy of items."""
+    """Combined permissions of whole hierarchy of items.
+
+    No inheritance involved, permissions are separate for each record.
+
+    Records:
+        item1 with permissions {'family', 'friends'}
+        item2 with permissions {'colleagues'}
+
+    Computed permissions example:
+        item1 with permissions {'user_uuid1', 'user_uuid2', 'user_uuid3'}
+        item2 with permissions {'user_uuid3', 'user_uuid4'}
+    """
     __tablename__ = 'computed_permissions'
 
     # primary and foreign keys ------------------------------------------------
