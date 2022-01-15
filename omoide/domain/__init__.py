@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
-from omoide.domain.query import Query
-from omoide.domain.search_results import SimpleItem, SearchResult
+from omoide.domain.auth import *
+from omoide.domain.search import *

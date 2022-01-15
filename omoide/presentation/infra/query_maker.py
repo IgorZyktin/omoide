@@ -5,12 +5,34 @@ import re
 from itertools import zip_longest
 from typing import Iterable, Any, Iterator
 
+from pydantic import BaseModel
 from starlette.datastructures import QueryParams
 
-from omoide import domain
+from omoide.domain import search
 
 
-def from_request(params: QueryParams) -> domain.Query:
+class ExtQuery(BaseModel):
+    """Extended query, also includes some app-specific stuff."""
+    raw_query: str
+    query: search.Query
+    folded: bool
+
+    def as_str(self) -> str:
+        """Convert to urlsafe string."""
+        string = (
+            f'?q={self.raw_query}'
+            f'&page={self.query.page}'
+            f'&folded={self.folded}'
+        )
+
+        string = string.replace(' ', '%20')
+        string = string.replace(',', '%2C')
+        string = string.replace('+', '%2B')
+
+        return string
+
+
+def from_request(params: QueryParams) -> ExtQuery:
     """Create new query from request params."""
     raw_query = params.get('q', '')
     tags_include, tags_exclude = parse_tags(raw_query)
@@ -21,23 +43,31 @@ def from_request(params: QueryParams) -> domain.Query:
     except (ValueError, TypeError):
         page = 1
 
-    return domain.Query(
+    return ExtQuery(
         raw_query=raw_query,
-        tags_include=tags_include,
-        tags_exclude=tags_exclude,
-        page=page,
+        query=search.Query(
+            tags_include=tags_include,
+            tags_exclude=tags_exclude,
+            tags_include_implicit=[],
+            tags_exclude_implicit=[],
+            page=page,
+        ),
         folded=folded,
     )
 
 
-def from_form(query: domain.Query, additional_query: str) -> domain.Query:
+def from_form(query: ExtQuery, additional_query: str) -> ExtQuery:
     """Populate existing query with form contents."""
     tags_include, tags_exclude = parse_tags(additional_query)
-    return domain.Query(
+    return ExtQuery(
         raw_query=additional_query,
-        tags_include=tags_include,
-        tags_exclude=tags_exclude,
-        page=query.page,
+        query=search.Query(
+            tags_include=tags_include,
+            tags_exclude=tags_exclude,
+            tags_include_implicit=[],
+            tags_exclude_implicit=[],
+            page=query.query.page,
+        ),
         folded=query.folded,
     )
 
@@ -78,14 +108,3 @@ def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
             tags_exclude.append(tag)
 
     return tags_include, tags_exclude
-
-
-def as_str(query: domain.Query) -> str:
-    """Convert to urlsafe string."""
-    string = f'?q={query.raw_query}&page={query.page}&folded={query.folded}'
-
-    string = string.replace(' ', '%20')
-    string = string.replace(',', '%2C')
-    string = string.replace('+', '%2B')
-
-    return string
