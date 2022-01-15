@@ -18,6 +18,11 @@ class SimpleItem(BaseModel):
     name: str
     ext: str | None
 
+    @property
+    def location(self) -> str:
+        """Return file system path segment that will allow to find file."""
+        return f'{self.uuid[:2]}/{self.uuid}.{self.ext}'
+
 
 class Result(BaseModel):
     """Result of a search request."""
@@ -32,8 +37,6 @@ class Query(BaseModel):
     """User search query."""
     tags_include: list[str]
     tags_exclude: list[str]
-    tags_include_implicit: list[str]
-    tags_exclude_implicit: list[str]
     page: int
     items_per_page: int = 10
 
@@ -42,6 +45,4 @@ class Query(BaseModel):
         return any((
             self.tags_include,
             self.tags_exclude,
-            self.tags_include_implicit,
-            self.tags_exclude_implicit,
         ))

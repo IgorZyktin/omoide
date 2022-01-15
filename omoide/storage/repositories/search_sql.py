@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-"""SQL queries.
+"""SQL queries for search.
+"""
+COUNT_ITEMS_FOR_ANON_USER = """
+SELECT count(*) AS total
+FROM items
+WHERE owner_uuid IN (SELECT user_uuid FROM public_users);
 """
 
 SEARCH_RANDOM_ITEMS_FOR_ANON_USER = """
-WITH query AS (
-    SELECT owner_uuid,
-           uuid,
-           number,
-           is_collection,
-           name,
-           thumbnail_ext as ext
-    FROM items
-    WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-)
-SELECT *
-FROM (TABLE query ORDER BY random() LIMIT :limit OFFSET :offset) sub
-         RIGHT JOIN (SELECT count(*) FROM query) c(full_count) ON true;
+SELECT owner_uuid,
+       uuid,
+       number,
+       is_collection,
+       name,
+       thumbnail_ext as ext
+FROM items
+WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+ORDER BY random() LIMIT :limit OFFSET :offset
 """
 
 SEARCH_SPECIFIC_ITEMS_FOR_ANON_USER = """

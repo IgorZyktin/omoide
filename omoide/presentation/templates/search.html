@@ -5,21 +5,21 @@
     <div class="envelope-container">
         {% for item in result.items %}
             <div class="envelope">
-                {% if item.name %}
+                {%- if item.name -%}
                     <p>{{ item.name }}</p>
-                {% endif %}
+                {%- endif -%}
 
-                {% if item.is_collection %}
+                {%- if item.is_collection %}
                     <a href="{{ url_for('browse', uuid=item.uuid) }}">
                 {% else %}
                     <a href="{{ url_for('preview', uuid=item.uuid) }}">
-                {% endif %}
+                {% endif -%}
 
-                {% if item.ext is none %}
+                {%- if item.ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>
-                {% else %}
-                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.uuid[:2] }}/{{ item.uuid }}.{{ item.ext }}" alt="{{ item.name }}"/>
-                {% endif %}
+                {%- else -%}
+                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.location }}" alt="{{ item.name }}"/>
+                {%- endif -%}
                 </a>
             </div>
         {% endfor %}
