@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Search use cases.
+"""Use case for search.
 """
 from omoide.domain import search, auth
 from omoide.domain.interfaces import database

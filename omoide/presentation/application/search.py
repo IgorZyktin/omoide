@@ -48,4 +48,4 @@ async def search(
         'placeholder': 'Enter something',
         'result': result,
     }
-    return templates.TemplateResponse('search.html', context)
+    return dependencies.templates.TemplateResponse('search.html', context)
