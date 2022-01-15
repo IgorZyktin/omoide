@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from omoide.presentation import dependencies
 from omoide.presentation.application import browse
+from omoide.presentation.application import preview
 from omoide.presentation.application import search
 
 app = fastapi.FastAPI(
@@ -29,8 +30,9 @@ async def shutdown():
     await dependencies.db.disconnect()
 
 
-app.include_router(search.router)
 app.include_router(browse.router)
+app.include_router(preview.router)
+app.include_router(search.router)
 
 app.mount(
     '/static',

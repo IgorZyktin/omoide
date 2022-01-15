@@ -42,3 +42,42 @@
     width: 100%;
     height: 100%;
 }
+
+.preview {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.preview-image {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.preview-tags {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tag-box {
+    color: var(--main-text-color) !important;
+    border: 2px solid black;
+    margin: 0.1em;
+    padding: var(--gap-tiny);
+    border-radius: var(--radius);
+    background-color: #46813C2D;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.tag-box:hover {
+    text-decoration: none;
+    background-color: #46813CA3;
+}
+
+.tag-box > a {
+    color: var(--main-text-color) !important;
+    text-decoration: none;
+}

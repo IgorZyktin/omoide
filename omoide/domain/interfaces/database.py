@@ -4,6 +4,7 @@
 import abc
 
 from omoide.domain import auth
+from omoide.domain import preview
 from omoide.domain import search
 
 
@@ -49,3 +50,15 @@ class AbsSearchRepository(abc.ABC):
             query: search.Query,
     ) -> search.Result:
         """Find specific items for authorised user."""
+
+
+class AbsPreviewRepository(abc.ABC):
+    """Repository that performs all preview queries."""
+
+    @abc.abstractmethod
+    async def get_item_or_empty(
+            self,
+            user: auth.User,
+            item_uuid: str,
+    ) -> tuple[preview.Item, preview.AccessStatus]:
+        """Load item with all required fields or return failure."""

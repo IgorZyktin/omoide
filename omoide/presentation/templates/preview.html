@@ -1,0 +1,29 @@
+{% extends "base_search.html" %}
+
+{% block body %}
+
+    <div class="preview">
+        <div class="preview-tags">
+            {% if item.tags %}
+                {% for tag in item.tags %}
+                    <div class="tag-box">
+                        <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="preview-image">
+            <a href="/content/{{ item.owner_uuid }}/content/{{ item.content_location }}">
+                {%- if item.preview_ext is none -%}
+                    <img src="{{ url_for('static', path='empty.png') }}"
+                         alt="{{ item.name }}"/>
+                {%- else -%}
+                    <img src="/content/{{ item.owner_uuid }}/preview/{{ item.preview_location }}"
+                         alt="{{ item.name }}"/>
+                {%- endif -%}
+            </a>
+        </div>
+
+    </div>
+{% endblock %}
