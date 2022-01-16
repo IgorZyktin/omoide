@@ -3,7 +3,7 @@
 """
 import abc
 
-from omoide.domain import auth
+from omoide.domain import auth, browse
 from omoide.domain import preview
 from omoide.domain import search
 
@@ -62,3 +62,16 @@ class AbsPreviewRepository(abc.ABC):
             item_uuid: str,
     ) -> tuple[preview.Item, preview.AccessStatus]:
         """Load item with all required fields or return failure."""
+
+
+class AbsBrowseRepository(abc.ABC):
+    """Repository that performs all browse queries."""
+
+    @abc.abstractmethod
+    async def get_nested_items(
+            self,
+            user: auth.User,
+            item_uuid: str,
+            query: browse.Query,
+    ) -> tuple[browse.Result, browse.AccessStatus]:
+        """Load all children with all required fields."""

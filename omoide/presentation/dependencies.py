@@ -18,6 +18,9 @@ search_use_case = use_cases.SearchUseCase(search_repository)
 preview_repository = repositories.PreviewRepository(db)
 preview_use_case = use_cases.PreviewUseCase(preview_repository)
 
+browse_repository = repositories.BrowseRepository(db)
+browse_use_case = use_cases.BrowseUseCase(browse_repository)
+
 templates = Jinja2Templates(directory='presentation/templates')
 
 
@@ -42,3 +45,8 @@ def get_search_use_case():
 def get_preview_use_case():
     """Get use case instance."""
     return preview_use_case
+
+
+def get_browse_use_case():
+    """Get use case instance."""
+    return browse_use_case
