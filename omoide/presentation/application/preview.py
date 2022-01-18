@@ -10,7 +10,7 @@ from fastapi.responses import RedirectResponse
 from omoide import use_cases
 from omoide.domain import auth
 from omoide.presentation import dependencies
-from omoide.presentation.infra import query_maker
+from omoide.presentation import infra
 
 router = fastapi.APIRouter()
 
@@ -26,17 +26,17 @@ async def preview(
         ),
         response_class=HTMLResponse | RedirectResponse):
     """Browse contents of a single item as one object."""
-    query = query_maker.from_request(request.query_params)
+    query = infra.query_maker.from_request(request.query_params)
 
     if request.method == 'POST':
         form = await request.form()
-        query = query_maker.from_form(query, form.get('query', ''))
+        query = infra.query_maker.from_form(query, form.get('query', ''))
         return RedirectResponse(
             request.url_for('search') + query.as_str(),
             status_code=http.HTTPStatus.SEE_OTHER,
         )
 
-    item, access = await use_case.execute(user, uuid)
+    item, neighbours, access = await use_case.execute(user, uuid)
 
     if access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
@@ -49,5 +49,10 @@ async def preview(
         'query': query,
         'placeholder': 'Enter something',
         'item': item,
+        'album': infra.Album(
+            sequence=neighbours,
+            position=item.uuid,
+            items_on_page=10,
+        )
     }
     return dependencies.templates.TemplateResponse('preview.html', context)

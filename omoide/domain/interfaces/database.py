@@ -60,7 +60,7 @@ class AbsPreviewRepository(abc.ABC):
             self,
             user: auth.User,
             item_uuid: str,
-    ) -> tuple[preview.Item, preview.AccessStatus]:
+    ) -> tuple[preview.Item, list[str], preview.AccessStatus]:
         """Load item with all required fields or return failure."""
 
 

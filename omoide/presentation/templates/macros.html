@@ -44,3 +44,49 @@
         </div>
     {% endif %}
 {% endmacro %}
+
+{% macro render_album(request, album) %}
+    {% if album %}
+        <div class="pages">
+            {% if not album.is_fitting %}
+                {% if album.has_previous %}
+                    <a class="active-page page-separate"
+                       href="{{ request.url_for('preview', uuid=album.previous_item) }}">Previous</a>
+                {% else %}
+                    <a class="page-separate">Previous</a>
+                {% endif %}
+                <span>&nbsp;</span>
+            {% endif %}
+
+            {% for page in album %}
+                {% if page.number == 1 %}
+                    {% set corner_style = ' page-left' %}
+                {% elif page.number == album.total_items %}
+                    {% set corner_style = ' page-right' %}
+                {% else %}
+                    {% set corner_style = '' %}
+                {% endif %}
+
+                {% if page.is_dummy %}
+                    <a class="inactive-page {{ corner_style }}">...</a>
+                {% elif page.is_current %}
+                    <a href="{{ request.url_for('preview', uuid=page.value) }}"
+                       class="active-page{{ corner_style }}">{{ page.number }}</a>
+                {% else %}
+                    <a href="{{ request.url_for('preview', uuid=page.value) }}"
+                       class="{{ corner_style }}">{{ page.number }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if not album.is_fitting %}
+                <span>&nbsp;</span>
+                {% if album.has_next %}
+                    <a class="active-page page-separate"
+                       href="{{ request.url_for('preview', uuid=album.next_item) }}">Next</a>
+                {% else %}
+                    <a class="page-separate">Next</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+{% endmacro %}

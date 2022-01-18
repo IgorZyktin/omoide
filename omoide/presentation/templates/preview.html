@@ -1,17 +1,11 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_album %}
 
 {% block body %}
 
     <div class="preview">
-        <div class="preview-tags">
-            {% if item.tags %}
-                {% for tag in item.tags %}
-                    <div class="tag-box">
-                        <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+
+        {{ render_album(request, album) }}
 
         <div class="preview-image">
             <a href="/content/{{ item.owner_uuid }}/content/{{ item.content_location }}">
@@ -24,6 +18,20 @@
                 {%- endif -%}
             </a>
         </div>
+
+        <hr>
+
+        <div class="preview-tags">
+            {% if item.tags %}
+                {% for tag in item.tags %}
+                    <div class="tag-box">
+                        <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <br>
 
     </div>
 {% endblock %}

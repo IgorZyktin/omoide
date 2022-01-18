@@ -16,6 +16,6 @@ class PreviewUseCase:
             self,
             user: auth.User,
             item_uuid: str,
-    ) -> tuple[preview.Item, preview.AccessStatus]:
+    ) -> tuple[preview.Item, list[str], preview.AccessStatus]:
         """Return preview model suitable for rendering."""
         return await self._repo.get_item_or_empty(user, item_uuid)
