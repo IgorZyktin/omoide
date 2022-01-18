@@ -18,7 +18,7 @@
 </head>
 
 <body>
-<div id="header" style="display: {{ 'none' if query.folded else 'block' }}">
+<div id="header">
     <form id="main_form" method="post" onsubmit="goSearch(this);">
         <div class="query-container">
 
@@ -46,8 +46,6 @@
     </form>
 
     {% block upper_body %}{% endblock %}
-
-    <hr>
 
 </div>
 
