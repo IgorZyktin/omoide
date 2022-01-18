@@ -84,3 +84,45 @@ a:hover {
 a:active {
     color: var(--bright-text-color);
 }
+
+.pages {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.pages a {
+    color: var(--main-text-color) !important;
+    background-color: rgba(70, 129, 60, 0.18);
+    padding: 5px 15px;
+    margin-top: var(--gap-tiny);
+    margin-bottom: var(--gap-tiny);
+    text-decoration: none;
+    min-width: 1em;
+    text-align: center;
+    border: 1px solid #707070;
+}
+
+.page-left {
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.page-right {
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.page-separate {
+    border-radius: var(--radius);
+}
+
+.active-page {
+    background-color: var(--active-color) !important;
+}
+
+.inactive-page {
+    cursor: default !important;
+}

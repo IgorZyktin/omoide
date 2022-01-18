@@ -31,6 +31,18 @@ class ExtQuery(BaseModel):
 
         return string
 
+    def at_page(self, page: int) -> 'ExtQuery':
+        """Return new query for given page."""
+        return type(self)(
+            raw_query=self.raw_query,
+            query=search.Query(
+                tags_include=self.query.tags_include,
+                tags_exclude=self.query.tags_exclude,
+                page=page,
+            ),
+            folded=self.folded,
+        )
+
 
 def from_request(params: QueryParams) -> ExtQuery:
     """Create new query from request params."""
@@ -48,8 +60,6 @@ def from_request(params: QueryParams) -> ExtQuery:
         query=search.Query(
             tags_include=tags_include,
             tags_exclude=tags_exclude,
-            tags_include_implicit=[],
-            tags_exclude_implicit=[],
             page=page,
         ),
         folded=folded,
@@ -64,8 +74,6 @@ def from_form(query: ExtQuery, additional_query: str) -> ExtQuery:
         query=search.Query(
             tags_include=tags_include,
             tags_exclude=tags_exclude,
-            tags_include_implicit=[],
-            tags_exclude_implicit=[],
             page=query.query.page,
         ),
         folded=query.folded,

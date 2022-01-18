@@ -1,6 +1,9 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_paginator %}
 
 {% block body %}
+
+    {{ render_paginator(request, paginator, query) }}
 
     <div class="envelope-container">
         {% for item in result.items %}
@@ -24,5 +27,7 @@
             </div>
         {% endfor %}
     </div>
+
+    {{ render_paginator(request, paginator, query) }}
 
 {% endblock %}

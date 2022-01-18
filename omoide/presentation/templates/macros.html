@@ -1,0 +1,46 @@
+{% macro render_paginator(request, paginator, query) %}
+    {% if paginator %}
+        <div class="pages">
+            {% if not paginator.is_fitting %}
+                {% if paginator.has_previous %}
+                    <a class="active-page page-separate"
+                       href="{{ request.url_for('search') + query.at_page(paginator.previous_page).as_str() }}">Previous</a>
+                {% else %}
+                    <a class="page-separate">Previous</a>
+                {% endif %}
+                <span>&nbsp;</span>
+            {% endif %}
+
+            {% for page in paginator %}
+
+                {% if page.number == 1 %}
+                    {% set corner_style = 'page-left' %}
+                {% elif page.number == paginator.num_pages %}
+                    {% set corner_style = 'page-right' %}
+                {% else %}
+                    {% set corner_style = '' %}
+                {% endif %}
+
+                {% if page.is_dummy %}
+                    <a class="inactive-page {{ corner_style }}">...</a>
+                {% elif page.is_current %}
+                    <a href="{{ request.url_for('search') + query.at_page(page.number).as_str() }}"
+                       class="active-page {{ corner_style }}">{{ page.number }}</a>
+                {% else %}
+                    <a href="{{ request.url_for('search') + query.at_page(page.number).as_str() }}"
+                       class="{{ corner_style }}">{{ page.number }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if not paginator.is_fitting %}
+                <span>&nbsp;</span>
+                {% if paginator.has_next %}
+                    <a class="active-page page-separate"
+                       href="{{ request.url_for('search') + query.at_page(paginator.next_page).as_str() }}">Next</a>
+                {% else %}
+                    <a class="page-separate">Next</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+{% endmacro %}
