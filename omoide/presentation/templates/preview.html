@@ -1,7 +1,9 @@
 {% extends "base_search.html" %}
-{% from "macros.html" import render_album %}
+{% from "macros.html" import render_album, render_location %}
 
 {% block body %}
+
+    {{ render_location(request, result.location) }}
 
     <div class="preview">
 

@@ -126,3 +126,13 @@ a:active {
 .inactive-page {
     cursor: default !important;
 }
+
+.location {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.location h3 {
+    margin: 0;
+}

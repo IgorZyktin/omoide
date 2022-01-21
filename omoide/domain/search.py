@@ -3,25 +3,12 @@
 """
 from pydantic import BaseModel
 
+from omoide.domain.common import SimpleItem
+
 __all__ = [
-    'SimpleItem',
     'Result',
     'Query',
 ]
-
-
-class SimpleItem(BaseModel):
-    """Primitive version of an item."""
-    owner_uuid: str | None
-    uuid: str
-    is_collection: bool
-    name: str
-    ext: str | None
-
-    @property
-    def location(self) -> str:
-        """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.ext}'
 
 
 class Result(BaseModel):

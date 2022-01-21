@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for preview.
 """
-from omoide.domain import auth, preview
+from omoide.domain import auth, preview, common
 from omoide.domain.interfaces import database
 
 
@@ -16,6 +16,23 @@ class PreviewUseCase:
             self,
             user: auth.User,
             item_uuid: str,
-    ) -> tuple[preview.Item, list[str], preview.AccessStatus]:
+    ) -> preview.Result:
         """Return preview model suitable for rendering."""
-        return await self._repo.get_item_or_empty(user, item_uuid)
+        async with self._repo.transaction():
+            access = await self._repo.check_access(user, item_uuid)
+
+            if access.is_not_given:
+                item = preview.Item.empty()
+                neighbours = []
+                location = common.Location.empty()
+            else:
+                item = await self._repo.get_preview_item(item_uuid)
+                neighbours = await self._repo.get_neighbours(item_uuid)
+                location = await self._repo.get_location(item_uuid)
+
+        return preview.Result(
+            access=access,
+            item=item,
+            neighbours=neighbours,
+            location=location,
+        )

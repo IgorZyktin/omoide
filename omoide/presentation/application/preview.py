@@ -36,22 +36,23 @@ async def preview(
             status_code=http.HTTPStatus.SEE_OTHER,
         )
 
-    item, neighbours, access = await use_case.execute(user, uuid)
+    result = await use_case.execute(user, uuid)
 
-    if access.does_not_exist:
+    if result.access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
 
-    if access.is_not_given:
+    if result.access.is_not_given:
         raise fastapi.HTTPException(status_code=401)
 
     context = {
         'request': request,
         'query': query,
         'placeholder': 'Enter something',
-        'item': item,
+        'item': result.item,
+        'result': result,
         'album': infra.Album(
-            sequence=neighbours,
-            position=item.uuid,
+            sequence=result.neighbours,
+            position=result.item.uuid,
             items_on_page=10,
         )
     }

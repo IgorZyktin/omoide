@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
-from omoide.domain import preview, auth, browse
+from omoide.domain import auth, browse, common
 from omoide.domain.interfaces import database
+from omoide.storage.repositories import base
 from omoide.storage.repositories import browse_sql
 
 
-class BrowseRepository(database.AbsBrowseRepository):
+class BrowseRepository(
+    base.BaseRepository,
+    database.AbsBrowseRepository
+):
     """Repository that performs all browse queries."""
     _q_access = browse_sql.CHECK_ACCESS
     _q_items = browse_sql.GET_NESTED_ITEMS
-
-    def __init__(self, db) -> None:
-        """Initialize instance."""
-        self.db = db
 
     async def get_nested_items(
             self,
@@ -41,7 +41,7 @@ class BrowseRepository(database.AbsBrowseRepository):
             self,
             user: auth.User,
             item_uuid: str,
-    ) -> preview.AccessStatus:
+    ) -> common.AccessStatus:
         """Check access to the item."""
         response = await self.db.fetch_one(
             query=self._q_access,
@@ -49,13 +49,13 @@ class BrowseRepository(database.AbsBrowseRepository):
         )
 
         if response is None:
-            return preview.AccessStatus(
+            return common.AccessStatus(
                 exists=False,
                 is_public=False,
                 is_given=False,
             )
 
-        return preview.AccessStatus(
+        return common.AccessStatus(
             exists=True,
             is_public=bool(response['is_public']),
             is_given=bool(response['is_given']),

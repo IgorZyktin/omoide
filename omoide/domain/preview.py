@@ -3,9 +3,11 @@
 """
 from pydantic import BaseModel
 
+from omoide.domain.common import Location, AccessStatus
+
 __all__ = [
     'Item',
-    'AccessStatus',
+    'Result',
 ]
 
 
@@ -50,19 +52,38 @@ class Item(BaseModel):
             groups=[],
         )
 
+    # -------------------------------------------------------------------------
+    # TODO - hacky solutions, must get rid of UUID type
+    @classmethod
+    def from_row(cls, raw_item):
+        """Convert from db format to required model."""
 
-class AccessStatus(BaseModel):
-    """Status of an access and existence check."""
-    exists: bool
-    is_public: bool
-    is_given: bool
+        def as_str(key: str) -> str | None:
+            """Extract optional."""
+            value = raw_item[key]
+            if value is None:
+                return None
+            return str(value)
 
-    @property
-    def does_not_exist(self) -> bool:
-        """Return True if item does not exist."""
-        return not self.exists
+        return cls(
+            uuid=as_str('uuid'),
+            parent_uuid=as_str('parent_uuid'),
+            owner_uuid=as_str('owner_uuid'),
+            number=raw_item['number'],
+            name=raw_item['name'],
+            is_collection=raw_item['is_collection'],
+            thumbnail_ext=raw_item['thumbnail_ext'],
+            preview_ext=raw_item['preview_ext'],
+            content_ext=raw_item['content_ext'],
+            tags=raw_item['tags'],
+            groups=raw_item['permissions'],
+        )
+    # -------------------------------------------------------------------------
 
-    @property
-    def is_not_given(self) -> bool:
-        """Return True if user cannot access this item."""
-        return not self.is_public and not self.is_given
+
+class Result(BaseModel):
+    """Complete output of Preview request."""
+    access: AccessStatus
+    location: Location
+    item: Item
+    neighbours: list[str]

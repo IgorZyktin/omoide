@@ -3,12 +3,30 @@
 """
 import abc
 
-from omoide.domain import auth, browse
-from omoide.domain import preview
-from omoide.domain import search
+from omoide.domain import auth, browse, common, preview, search
 
 
-class AbsSearchRepository(abc.ABC):
+class AbsRepository(abc.ABC):
+    """Base repository class."""
+
+    @abc.abstractmethod
+    def transaction(self):
+        """Start transaction."""
+
+    @abc.abstractmethod
+    async def check_access(
+            self,
+            user: auth.User,
+            item_uuid: str,
+    ) -> common.AccessStatus:
+        """Check if user has access to the item."""
+
+    @abc.abstractmethod
+    async def get_location(self, item_uuid: str) -> common.Location:
+        """Return Location of the item."""
+
+
+class AbsSearchRepository(AbsRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
@@ -52,19 +70,19 @@ class AbsSearchRepository(abc.ABC):
         """Find specific items for authorised user."""
 
 
-class AbsPreviewRepository(abc.ABC):
+class AbsPreviewRepository(AbsRepository):
     """Repository that performs all preview queries."""
 
     @abc.abstractmethod
-    async def get_item_or_empty(
-            self,
-            user: auth.User,
-            item_uuid: str,
-    ) -> tuple[preview.Item, list[str], preview.AccessStatus]:
-        """Load item with all required fields or return failure."""
+    async def get_preview_item(self, item_uuid: str) -> preview.Item:
+        """Return instance of the item."""
+
+    @abc.abstractmethod
+    async def get_neighbours(self, item_uuid: str) -> list[str]:
+        """Return uuids of all the neighbours."""
 
 
-class AbsBrowseRepository(abc.ABC):
+class AbsBrowseRepository(AbsRepository):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod
@@ -73,5 +91,5 @@ class AbsBrowseRepository(abc.ABC):
             user: auth.User,
             item_uuid: str,
             query: browse.Query,
-    ) -> tuple[browse.Result, browse.AccessStatus]:
+    ) -> tuple[browse.Result, browse.AccessStatus]:  # FIXME
         """Load all children with all required fields."""

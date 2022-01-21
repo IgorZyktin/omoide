@@ -3,12 +3,16 @@
 """
 import typing
 
-from omoide.domain import auth, search
+from omoide.domain import auth, search, common
 from omoide.domain.interfaces import database
+from omoide.storage.repositories import base
 from omoide.storage.repositories import search_sql
 
 
-class SearchRepository(database.AbsSearchRepository):
+class SearchRepository(
+    base.BaseRepository,
+    database.AbsSearchRepository
+):
     """Repository that performs all search queries."""
     _q_count_for_anon = search_sql.COUNT_ITEMS_FOR_ANON_USER
     _q_random_for_anon = search_sql.SEARCH_RANDOM_ITEMS_FOR_ANON_USER
@@ -17,10 +21,6 @@ class SearchRepository(database.AbsSearchRepository):
     _q_count_for_user = None  # TODO(i.zyktin): need to add this
     _q_random_for_user = None  # TODO(i.zyktin): need to add this
     _q_specific_for_user = None  # TODO(i.zyktin): need to add this
-
-    def __init__(self, db) -> None:
-        """Initialize instance."""
-        self.db = db
 
     async def count_for_anon_user(self, user: auth.User) -> int:
         """Count available items for unauthorised user."""
@@ -40,7 +40,7 @@ class SearchRepository(database.AbsSearchRepository):
             values=self._values_without_tags(query)
         )
 
-        items = [self._cast_item(row) for row in response]
+        items = [common.SimpleItem.from_row(row) for row in response]
         total_pages = int(total_items / (query.items_per_page or 1))
 
         return search.Result(
@@ -64,7 +64,7 @@ class SearchRepository(database.AbsSearchRepository):
             values=self._values_with_tags(query)
         )
 
-        items = [self._cast_item(row) for row in response]
+        items = [common.SimpleItem.from_row(row) for row in response]
         total_pages = int(total_items / (query.items_per_page or 1))
 
         return search.Result(
@@ -113,23 +113,3 @@ class SearchRepository(database.AbsSearchRepository):
         values['tags_include'] = query.tags_include
         values['tags_exclude'] = query.tags_exclude
         return values
-
-    @staticmethod
-    def _cast_item(raw_item) -> search.SimpleItem:
-        """Convert from db format to required model."""
-
-        def as_str(key: str) -> str | None:
-            """Extract optional."""
-            value = raw_item[key]
-            if value is None:
-                return None
-            return str(value)
-
-        return search.SimpleItem(
-            owner_uuid=as_str('owner_uuid'),
-            uuid=as_str('uuid'),
-            is_collection=raw_item['is_collection'],
-            name=raw_item['name'],
-            ext=raw_item['ext'],
-
-        )
