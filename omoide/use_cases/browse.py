@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for browse.
 """
-from omoide.domain import auth, browse
+from omoide.domain import auth, browse, common
 from omoide.domain.interfaces import database
 
 
@@ -17,6 +17,29 @@ class BrowseUseCase:
             user: auth.User,
             item_uuid: str,
             query: browse.Query,
-    ) -> tuple[browse.Result, browse.AccessStatus]:
+    ) -> browse.Result:
         """Return browse model suitable for rendering."""
-        return await self._repo.get_nested_items(user, item_uuid, query)
+        async with self._repo.transaction():
+            access = await self._repo.check_access(user, item_uuid)
+
+            if access.is_not_given:
+                location = common.Location.empty()
+                page = 1
+                total_items = 0
+                total_pages = 0
+                items = []
+            else:
+                location = await self._repo.get_location(item_uuid)
+                items = await self._repo.get_nested_items(item_uuid, query)
+                page = 1
+                total_items = 1
+                total_pages = 1
+
+        return browse.Result(
+            access=access,
+            location=location,
+            page=page,
+            total_items=total_items,
+            total_pages=total_pages,
+            items=items,
+        )

@@ -9,7 +9,7 @@ from fastapi.responses import RedirectResponse
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies
+from omoide.presentation import dependencies, infra
 from omoide.presentation.infra import query_maker
 
 router = fastapi.APIRouter()
@@ -36,18 +36,26 @@ async def browse(
             status_code=http.HTTPStatus.SEE_OTHER,
         )
 
-    result, access = await use_case.execute(user, uuid, query.query)
+    result = await use_case.execute(user, uuid, query.query)
 
-    if access.does_not_exist:
+    if result.access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
 
-    if access.is_not_given:
+    if result.access.is_not_given:
         raise fastapi.HTTPException(status_code=401)
+
+    paginator = infra.Paginator(
+        page=result.page,
+        items_per_page=query.query.items_per_page,
+        total_items=result.total_items,
+        pages_in_block=10,
+    )
 
     context = {
         'request': request,
         'query': query,
         'placeholder': 'Enter something',
+        'paginator': paginator,
         'result': result,
     }
     return dependencies.templates.TemplateResponse('browse.html', context)

@@ -3,49 +3,22 @@
 """
 from pydantic import BaseModel
 
+from omoide.domain.common import AccessStatus, Location, SimpleItem
+
 __all__ = [
     'AccessStatus',
     'Result',
 ]
 
 
-class SimpleItem(BaseModel):
-    """Primitive version of an item."""
-    owner_uuid: str | None
-    uuid: str
-    is_collection: bool
-    name: str
-    ext: str | None
-
-    @property
-    def location(self) -> str:
-        """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.ext}'
-
-
 class Result(BaseModel):
     """Result of a search request."""
+    access: AccessStatus
+    location: Location
     page: int
     total_items: int
     total_pages: int
     items: list[SimpleItem]
-
-
-class AccessStatus(BaseModel):
-    """Status of an access and existence check."""
-    exists: bool
-    is_public: bool
-    is_given: bool
-
-    @property
-    def does_not_exist(self) -> bool:
-        """Return True if item does not exist."""
-        return not self.exists
-
-    @property
-    def is_not_given(self) -> bool:
-        """Return True if user cannot access this item."""
-        return not self.is_public and not self.is_given
 
 
 class Query(BaseModel):

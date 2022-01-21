@@ -1,6 +1,9 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_paginator, render_location %}
 
 {% block body %}
+
+    {{ render_location(request, result.location) }}
 
     <div class="envelope-container">
         {% for item in result.items %}
@@ -18,7 +21,7 @@
                 {%- if item.ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>
                 {%- else -%}
-                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.location }}" alt="{{ item.name }}"/>
+                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.path }}" alt="{{ item.name }}"/>
                 {%- endif -%}
                 </a>
             </div>

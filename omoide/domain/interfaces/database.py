@@ -88,8 +88,7 @@ class AbsBrowseRepository(AbsRepository):
     @abc.abstractmethod
     async def get_nested_items(
             self,
-            user: auth.User,
             item_uuid: str,
             query: browse.Query,
-    ) -> tuple[browse.Result, browse.AccessStatus]:  # FIXME
+    ) -> list[common.SimpleItem]:
         """Load all children with all required fields."""
