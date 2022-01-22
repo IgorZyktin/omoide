@@ -40,7 +40,8 @@ async def search(
             status_code=http.HTTPStatus.SEE_OTHER,
         )
 
-    result = await use_case.execute(user, query.query)
+    with infra.Timer() as timer:
+        result = await use_case.execute(user, query.query)
 
     if result.is_random:
         paginator = infra.Paginator.empty()
@@ -58,5 +59,6 @@ async def search(
         'placeholder': 'Enter something',
         'paginator': paginator,
         'result': result,
+        'duration': timer.seconds,
     }
     return dependencies.templates.TemplateResponse('search.html', context)
