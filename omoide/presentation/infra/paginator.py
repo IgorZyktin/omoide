@@ -70,7 +70,7 @@ class Paginator:
         return self.total_pages <= self.pages_in_block
 
     @classmethod
-    def new_empty(cls) -> 'Paginator':
+    def empty(cls) -> 'Paginator':
         """Create empty paginator."""
         return cls(
             page=1,

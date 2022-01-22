@@ -28,7 +28,7 @@ def test_album_str():
 
 
 def test_album_empty():
-    assert not infra.Album.new_empty()
+    assert not infra.Album.empty()
 
 
 def test_album_neighbours():

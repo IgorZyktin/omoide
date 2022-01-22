@@ -18,7 +18,7 @@ def _str(paginator: infra.Paginator) -> str:
 
 
 def test_paginator_empty():
-    assert not infra.Paginator.new_empty()
+    assert not infra.Paginator.empty()
 
 
 def test_paginator_str():

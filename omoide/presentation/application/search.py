@@ -39,11 +39,11 @@ async def search(
             request.url_for('search') + query.as_str(),
             status_code=http.HTTPStatus.SEE_OTHER,
         )
-    # TODO - must separate total found from total available
+
     result = await use_case.execute(user, query.query)
 
     if result.is_random:
-        paginator = infra.Paginator.new_empty()
+        paginator = infra.Paginator.empty()
     else:
         paginator = infra.Paginator(
             page=result.page,

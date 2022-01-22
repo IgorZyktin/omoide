@@ -73,7 +73,7 @@ class Album(Generic[T]):
         return self.total_items <= self.items_on_page
 
     @classmethod
-    def new_empty(cls) -> 'Album':
+    def empty(cls) -> 'Album':
         """Create empty paginator."""
         return cls(
             sequence=[],

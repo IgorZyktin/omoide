@@ -30,7 +30,11 @@ class AbsSearchRepository(AbsRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def count_for_anon_user(self, user: auth.User) -> int:
+    async def count_items_for_anon_user(
+            self,
+            user: auth.User,
+            query: search.Query,
+    ) -> int:
         """Count available items for unauthorised user."""
 
     @abc.abstractmethod
@@ -38,7 +42,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: search.Query,
-    ) -> search.Result:
+    ) -> list[common.SimpleItem]:
         """Find random items for unauthorised user."""
 
     @abc.abstractmethod
@@ -46,11 +50,15 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: search.Query,
-    ) -> search.Result:
+    ) -> list[common.SimpleItem]:
         """Find specific items for unauthorised user."""
 
     @abc.abstractmethod
-    async def count_for_known_user(self, user: auth.User) -> int:
+    async def count_items_for_known_user(
+            self,
+            user: auth.User,
+            query: search.Query,
+    ) -> int:
         """Count available items for authorised user."""
 
     @abc.abstractmethod
@@ -58,7 +66,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: search.Query,
-    ) -> search.Result:
+    ) -> list[common.SimpleItem]:
         """Find random items for authorised user."""
 
     @abc.abstractmethod
@@ -66,7 +74,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: search.Query,
-    ) -> search.Result:
+    ) -> list[common.SimpleItem]:
         """Find specific items for authorised user."""
 
 
