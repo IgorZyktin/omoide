@@ -53,6 +53,7 @@ async def browse(
 
     context = {
         'request': request,
+        'uuid': uuid,
         'query': query,
         'placeholder': 'Enter something',
         'paginator': paginator,

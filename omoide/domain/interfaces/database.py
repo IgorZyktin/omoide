@@ -101,6 +101,13 @@ class AbsBrowseRepository(AbsRepository):
     ) -> list[common.SimpleItem]:
         """Load all children with all required fields."""
 
+    @abc.abstractmethod
+    async def count_nested_items(
+            self,
+            item_uuid: str,
+    ) -> int:
+        """Count all children with all required fields."""
+
 
 class AbsByUserRepository(AbsRepository):
     """Repository that performs search by owner uuid."""
