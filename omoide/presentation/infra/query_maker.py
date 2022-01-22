@@ -15,14 +15,12 @@ class ExtQuery(BaseModel):
     """Extended query, also includes some app-specific stuff."""
     raw_query: str
     query: search.Query
-    folded: bool
 
     def as_str(self) -> str:
         """Convert to urlsafe string."""
         string = (
             f'?q={self.raw_query}'
             f'&page={self.query.page}'
-            f'&folded={self.folded}'
         )
 
         string = string.replace(' ', '%20')
@@ -39,8 +37,7 @@ class ExtQuery(BaseModel):
                 tags_include=self.query.tags_include,
                 tags_exclude=self.query.tags_exclude,
                 page=page,
-            ),
-            folded=self.folded,
+            )
         )
 
 
@@ -48,7 +45,6 @@ def from_request(params: QueryParams) -> ExtQuery:
     """Create new query from request params."""
     raw_query = params.get('q', '')
     tags_include, tags_exclude = parse_tags(raw_query)
-    folded = str(params.get('folded', '')).lower() == 'true'
 
     try:
         page = int(params.get('page', 1))
@@ -61,8 +57,7 @@ def from_request(params: QueryParams) -> ExtQuery:
             tags_include=tags_include,
             tags_exclude=tags_exclude,
             page=page,
-        ),
-        folded=folded,
+        )
     )
 
 
@@ -75,8 +70,7 @@ def from_form(query: ExtQuery, additional_query: str) -> ExtQuery:
             tags_include=tags_include,
             tags_exclude=tags_exclude,
             page=query.query.page,
-        ),
-        folded=query.folded,
+        )
     )
 
 
