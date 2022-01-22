@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from omoide.presentation import dependencies
 from omoide.presentation.application import browse
+from omoide.presentation.application import by_user
 from omoide.presentation.application import preview
 from omoide.presentation.application import search
 
@@ -31,6 +32,7 @@ async def shutdown():
 
 
 app.include_router(browse.router)
+app.include_router(by_user.router)
 app.include_router(preview.router)
 app.include_router(search.router)
 

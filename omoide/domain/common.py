@@ -43,7 +43,7 @@ class SimpleItem(BaseModel):
     uuid: str
     is_collection: bool
     name: str
-    ext: str | None
+    ext: str | None  # TODO - replace with original field name
 
     @property
     def path(self) -> str:

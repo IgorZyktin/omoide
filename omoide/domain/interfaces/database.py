@@ -92,3 +92,48 @@ class AbsBrowseRepository(AbsRepository):
             query: browse.Query,
     ) -> list[common.SimpleItem]:
         """Load all children with all required fields."""
+
+
+class AbsByUserRepository(AbsRepository):
+    """Repository that performs search by owner uuid."""
+
+    @abc.abstractmethod
+    async def user_is_public(
+            self,
+            owner_uuid: str,
+    ) -> bool:
+        """Return True if owner is a public user."""
+
+    @abc.abstractmethod
+    async def count_items_of_public_user(
+            self,
+            owner_uuid: str,
+    ) -> int:
+        """Count all items of a public user."""
+
+    @abc.abstractmethod
+    async def get_items_of_public_user(
+            self,
+            owner_uuid: str,
+            limit: int,
+            offset: int,
+    ) -> list[common.SimpleItem]:
+        """Load all items of a public user."""
+
+    @abc.abstractmethod
+    async def count_items_of_private_user(
+            self,
+            user: auth.User,
+            owner_uuid: str,
+    ) -> int:
+        """Count all items of a private user."""
+
+    @abc.abstractmethod
+    async def get_items_of_private_user(
+            self,
+            user: auth.User,
+            owner_uuid: str,
+            limit: int,
+            offset: int,
+    ) -> list[common.SimpleItem]:
+        """Load all items of a private user."""

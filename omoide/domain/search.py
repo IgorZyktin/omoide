@@ -33,3 +33,8 @@ class Query(BaseModel):
             self.tags_include,
             self.tags_exclude,
         ))
+
+    @property
+    def offset(self) -> int:
+        """Return offset from start of the result block."""
+        return self.items_per_page * (self.page - 1)
