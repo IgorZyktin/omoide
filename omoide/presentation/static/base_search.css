@@ -55,6 +55,10 @@
     justify-content: center;
 }
 
+.preview-image img {
+    height: 80vh;
+}
+
 .preview-tags {
     display: flex;
     justify-content: center;
