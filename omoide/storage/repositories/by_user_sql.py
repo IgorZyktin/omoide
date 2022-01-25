@@ -10,7 +10,8 @@ WHERE user_uuid = :user_uuid;
 COUNT_ITEMS_OF_PUBLIC_USER = """
 SELECT count(*) AS total_items
 FROM items
-WHERE owner_uuid = :owner_uuid;
+WHERE owner_uuid = :owner_uuid
+  AND parent_uuid IS NULL;
 """
 
 GET_ITEMS_OF_PUBLIC_USER = """
@@ -22,6 +23,7 @@ SELECT owner_uuid,
        thumbnail_ext
 FROM items
 WHERE owner_uuid = :owner_uuid
+  AND parent_uuid IS NULL
 ORDER BY number LIMIT :limit OFFSET :offset
 """
 
