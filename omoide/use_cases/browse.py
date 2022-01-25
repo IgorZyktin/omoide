@@ -28,8 +28,8 @@ class BrowseUseCase:
                 items = []
             else:
                 location = await self._repo.get_location(item_uuid)
-                items = await self._repo.get_nested_items(item_uuid, query)
-                total_items = await self._repo.count_nested_items(item_uuid)
+                items = await self._repo.get_items(item_uuid, query)
+                total_items = await self._repo.count_items(item_uuid)
 
         total_pages = int(total_items / (query.items_per_page or 1))
 

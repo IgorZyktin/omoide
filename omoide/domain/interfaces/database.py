@@ -94,7 +94,7 @@ class AbsBrowseRepository(AbsRepository):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod
-    async def get_nested_items(
+    async def get_items(
             self,
             item_uuid: str,
             query: browse.Query,
@@ -102,7 +102,7 @@ class AbsBrowseRepository(AbsRepository):
         """Load all children with all required fields."""
 
     @abc.abstractmethod
-    async def count_nested_items(
+    async def count_items(
             self,
             item_uuid: str,
     ) -> int:
