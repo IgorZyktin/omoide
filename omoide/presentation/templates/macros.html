@@ -15,7 +15,7 @@
 
                 {% if page.number == 1 %}
                     {% set corner_style = 'page-left' %}
-                {% elif page.number == paginator.num_pages %}
+                {% elif page.number == paginator.total_pages %}
                     {% set corner_style = 'page-right' %}
                 {% else %}
                     {% set corner_style = '' %}
@@ -62,7 +62,7 @@
 
                 {% if page.number == 1 %}
                     {% set corner_style = 'page-left' %}
-                {% elif page.number == paginator.num_pages %}
+                {% elif page.number == paginator.total_pages %}
                     {% set corner_style = 'page-right' %}
                 {% else %}
                     {% set corner_style = '' %}
@@ -109,7 +109,7 @@
 
                 {% if page.number == 1 %}
                     {% set corner_style = 'page-left' %}
-                {% elif page.number == paginator.num_pages %}
+                {% elif page.number == paginator.total_pages %}
                     {% set corner_style = 'page-right' %}
                 {% else %}
                     {% set corner_style = '' %}
