@@ -13,7 +13,10 @@
 
             {% for page in paginator %}
 
-                {% if page.number == 1 %}
+
+                {% if paginator.total_pages == 1 %}
+                    {% set corner_style = 'page-separate' %}
+                {% elif page.number == 1 %}
                     {% set corner_style = 'page-left' %}
                 {% elif page.number == paginator.total_pages %}
                     {% set corner_style = 'page-right' %}
@@ -60,7 +63,9 @@
 
             {% for page in paginator %}
 
-                {% if page.number == 1 %}
+                {% if paginator.total_pages == 1 %}
+                    {% set corner_style = 'page-separate' %}
+                {% elif page.number == 1 %}
                     {% set corner_style = 'page-left' %}
                 {% elif page.number == paginator.total_pages %}
                     {% set corner_style = 'page-right' %}
@@ -107,7 +112,9 @@
 
             {% for page in paginator %}
 
-                {% if page.number == 1 %}
+                {% if paginator.total_pages == 1 %}
+                    {% set corner_style = 'page-separate' %}
+                {% elif page.number == 1 %}
                     {% set corner_style = 'page-left' %}
                 {% elif page.number == paginator.total_pages %}
                     {% set corner_style = 'page-right' %}
@@ -153,7 +160,9 @@
             {% endif %}
 
             {% for page in album %}
-                {% if page.number == 1 %}
+                {% if album.total_items == 1 %}
+                    {% set corner_style = 'page-separate' %}
+                {% elif page.number == 1 %}
                     {% set corner_style = ' page-left' %}
                 {% elif page.number == album.total_items %}
                     {% set corner_style = ' page-right' %}
