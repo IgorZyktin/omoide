@@ -56,7 +56,35 @@
 }
 
 .preview-image img {
-    height: 80vh;
+    max-height: 80vh;
+    max-width: 80vw;
+}
+
+.preview-image a {
+    margin: 0;
+}
+
+.preview-swipe {
+    width: 100%;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #777777;
+}
+
+.preview-swipe:hover {
+    background-color: #545454;
+}
+
+.preview-swipe-inactive {
+    background-color: unset;
+}
+
+.preview-swipe-inactive:hover {
+    background-color: unset;
+    text-decoration: none;
+    cursor: default;
 }
 
 .preview-tags {

@@ -10,8 +10,16 @@
         {{ render_album(request, album) }}
 
         <div class="preview-image">
+
+            {% if album.has_previous %}
+                <a class="preview-swipe" href="{{ url_for('preview', uuid=album.previous_item) }}">Previous</a>
+            {% else %}
+                <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
+            {% endif %}
+
             <a href="/content/{{ item.owner_uuid }}/content/{{ item.content_location }}">
                 {%- if item.preview_ext is none -%}
+                    <p>{{ item.name }}</p>
                     <img src="{{ url_for('static', path='empty.png') }}"
                          alt="{{ item.name }}"/>
                 {%- else -%}
@@ -19,6 +27,13 @@
                          alt="{{ item.name }}"/>
                 {%- endif -%}
             </a>
+
+            {% if album.has_next %}
+                <a class="preview-swipe" href="{{ url_for('preview', uuid=album.next_item) }}">Next</a>
+            {% else %}
+                <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
+            {% endif %}
+
         </div>
 
         <hr>
