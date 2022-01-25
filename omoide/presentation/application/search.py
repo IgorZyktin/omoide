@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """Search related routes.
 """
-import http
-
 import fastapi
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from omoide import use_cases
@@ -27,18 +24,10 @@ async def search(
         use_case: use_cases.SearchUseCase = fastapi.Depends(
             dependencies.get_search_use_case
         ),
-        response_class=HTMLResponse | RedirectResponse
+        response_class=HTMLResponse,
 ):
     """Main page of the application."""
     query = infra.query_maker.from_request(request.query_params)
-
-    if request.method == 'POST':
-        form = await request.form()
-        query = infra.query_maker.from_form(query, form.get('query', ''))
-        return RedirectResponse(
-            request.url_for('search') + query.as_str(),
-            status_code=http.HTTPStatus.SEE_OTHER,
-        )
 
     with infra.Timer() as timer:
         result = await use_case.execute(user, query.query)

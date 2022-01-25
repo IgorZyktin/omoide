@@ -1,10 +1,11 @@
-function goSearch(form) {
-    // escape special symbols in query and update parameters
-    let element = document.getElementById("query_element");
-    element.value = element.value.replaceAll("\,", "%2C")
-    element.value = element.value.replaceAll("\+", "%2B")
-    element.value = element.value.replaceAll(/\s+/g, "%20")
+function goSearch() {
+    // escape special symbols in query and relocate
+    let element = document.getElementById("query_element")
 
-    let searchParams = new URLSearchParams(window.location.search);
-    form.action = "/search?" + searchParams.toString();
+    if (!element)
+        return
+
+    let searchParams = new URLSearchParams(window.location.search)
+    searchParams.set('q', element.value)
+    window.location.href = "/search?" + searchParams.toString();
 }
