@@ -19,7 +19,7 @@ WITH RECURSIVE nested_items AS (
            uuid,
            is_collection,
            name,
-           thumbnail_ext as ext
+           thumbnail_ext
     FROM items
     WHERE uuid = :item_uuid
     UNION ALL
@@ -28,7 +28,7 @@ WITH RECURSIVE nested_items AS (
            i.uuid,
            i.is_collection,
            i.name,
-           i.thumbnail_ext as ext
+           i.thumbnail_ext
     FROM items i
              INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
 )
@@ -36,7 +36,7 @@ SELECT owner_uuid,
        uuid,
        is_collection,
        name,
-       ext
+       thumbnail_ext
 FROM nested_items;
 """
 

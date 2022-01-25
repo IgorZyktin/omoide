@@ -16,7 +16,7 @@ SELECT owner_uuid,
        number,
        is_collection,
        name,
-       thumbnail_ext as ext
+       thumbnail_ext
 FROM items
 WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
 ORDER BY random() LIMIT :limit OFFSET :offset
@@ -28,7 +28,7 @@ SELECT owner_uuid,
        number,
        is_collection,
        name,
-       thumbnail_ext as ext,
+       thumbnail_ext,
        ct.tags
 FROM items it
          RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid

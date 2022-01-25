@@ -43,12 +43,12 @@ class SimpleItem(BaseModel):
     uuid: str
     is_collection: bool
     name: str
-    ext: str | None  # TODO - replace with original field name
+    thumbnail_ext: str | None
 
     @property
     def path(self) -> str:
         """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.ext}'
+        return f'{self.uuid[:2]}/{self.uuid}.{self.thumbnail_ext}'
 
     # -------------------------------------------------------------------------
     # TODO - hacky solutions, must get rid of UUID type
@@ -68,7 +68,7 @@ class SimpleItem(BaseModel):
             uuid=as_str('uuid'),
             is_collection=raw_item['is_collection'],
             name=raw_item['name'],
-            ext=raw_item['ext'],
+            thumbnail_ext=raw_item['thumbnail_ext'],
         )
     # -------------------------------------------------------------------------
 

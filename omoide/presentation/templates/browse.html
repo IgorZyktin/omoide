@@ -19,7 +19,7 @@
                     <a href="{{ url_for('preview', uuid=item.uuid) }}">
                 {% endif -%}
 
-                {%- if item.ext is none -%}
+                {%- if item.thumbnail_ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>
                 {%- else -%}
                     <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.path }}" alt="{{ item.name }}"/>

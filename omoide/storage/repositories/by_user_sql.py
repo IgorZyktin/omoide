@@ -19,7 +19,7 @@ SELECT owner_uuid,
        number,
        is_collection,
        name,
-       thumbnail_ext as ext
+       thumbnail_ext
 FROM items
 WHERE owner_uuid = :owner_uuid
 ORDER BY number LIMIT :limit OFFSET :offset
