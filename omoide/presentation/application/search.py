@@ -17,7 +17,6 @@ templates = Jinja2Templates(directory='presentation/templates')
 
 @router.get('/')
 @router.get('/search')
-@router.post('/search')
 async def search(
         request: fastapi.Request,
         user: auth.User = fastapi.Depends(dependencies.get_current_user),

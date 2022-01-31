@@ -13,7 +13,6 @@ router = fastapi.APIRouter()
 
 
 @router.get('/preview/{uuid}')
-@router.post('/preview/{uuid}')
 async def preview(
         request: fastapi.Request,
         uuid: str,

@@ -13,7 +13,6 @@ router = fastapi.APIRouter()
 
 
 @router.get('/browse/{uuid}')
-@router.post('/browse/{uuid}')
 async def browse(
         request: fastapi.Request,
         uuid: str,

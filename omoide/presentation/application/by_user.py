@@ -16,7 +16,6 @@ templates = Jinja2Templates(directory='presentation/templates')
 
 
 @router.get('/by_user/{uuid}')
-@router.post('/by_user/{uuid}')
 async def by_user(
         request: fastapi.Request,
         uuid: str,
