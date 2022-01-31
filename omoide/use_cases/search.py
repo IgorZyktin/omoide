@@ -31,24 +31,15 @@ class SearchUseCase:
             query: common.Query,
     ) -> search.Result:
         """Perform search request for anon user."""
-        total_items = await self._repo.count_items_for_anon_user(
-            user=user,
-            query=query,
-        )
-
         if query:
             is_random = False
-            items = await self._repo.search_specific_items_for_anon_user(
-                user=user,
-                query=query,
-            )
+            total_items = await self._repo.total_specific_anon(user, query)
+            items = await self._repo.search_specific_anon(user, query)
 
         else:
             is_random = True
-            items = await self._repo.search_random_items_for_anon_user(
-                user=user,
-                query=query,
-            )
+            total_items = await self._repo.total_random_anon(user)
+            items = await self._repo.search_random_anon(user, query)
 
         return search.Result(
             is_random=is_random,
@@ -64,21 +55,21 @@ class SearchUseCase:
             query: common.Query,
     ) -> search.Result:
         """Perform search request for known user."""
-        total_items = await self._repo.count_items_for_known_user(
+        total_items = await self._repo.total_specific_known(
             user=user,
             query=query,
         )
 
         if query:
             is_random = False
-            items = await self._repo.search_specific_items_for_known_user(
+            items = await self._repo.search_specific_known(
                 user=user,
                 query=query,
             )
 
         else:
             is_random = True
-            items = await self._repo.search_random_items_for_known_user(
+            items = await self._repo.search_random_known(
                 user=user,
                 query=query,
             )

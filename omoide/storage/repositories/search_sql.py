@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """SQL queries for search.
 """
-COUNT_ITEMS_FOR_ANON_USER = """
+TOTAL_RANDOM_ANON = """
 SELECT count(*) AS total_items
 FROM items
 WHERE owner_uuid IN (SELECT user_uuid FROM public_users);
 """
 
-COUNT_SPECIFIC_ITEMS_ANON = """
+TOTAL_SPECIFIC_ANON = """
 SELECT count(*) AS total_items
 FROM items it
          RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
@@ -16,7 +16,7 @@ WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
   AND NOT ct.tags && :tags_exclude;
 """
 
-SEARCH_RANDOM_ITEMS_FOR_ANON_USER = """
+SEARCH_RANDOM_ANON = """
 SELECT owner_uuid,
        uuid,
        number,
@@ -28,7 +28,7 @@ WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
 ORDER BY random() LIMIT :limit OFFSET :offset
 """
 
-SEARCH_SPECIFIC_ITEMS_FOR_ANON_USER = """
+SEARCH_SPECIFIC_ANON = """
 SELECT owner_uuid,
        uuid,
        number,

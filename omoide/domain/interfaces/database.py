@@ -30,15 +30,22 @@ class AbsSearchRepository(AbsRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def count_items_for_anon_user(
+    async def total_random_anon(
+            self,
+            user: auth.User,
+    ) -> int:
+        """Count all available items for unauthorised user."""
+
+    @abc.abstractmethod
+    async def total_specific_anon(
             self,
             user: auth.User,
             query: common.Query,
     ) -> int:
-        """Count available items for unauthorised user."""
+        """Count specific available items for unauthorised user."""
 
     @abc.abstractmethod
-    async def search_random_items_for_anon_user(
+    async def search_random_anon(
             self,
             user: auth.User,
             query: common.Query,
@@ -46,7 +53,7 @@ class AbsSearchRepository(AbsRepository):
         """Find random items for unauthorised user."""
 
     @abc.abstractmethod
-    async def search_specific_items_for_anon_user(
+    async def search_specific_anon(
             self,
             user: auth.User,
             query: common.Query,
@@ -54,7 +61,14 @@ class AbsSearchRepository(AbsRepository):
         """Find specific items for unauthorised user."""
 
     @abc.abstractmethod
-    async def count_items_for_known_user(
+    async def total_random_known(
+            self,
+            user: auth.User,
+    ) -> int:
+        """Count all available items for authorised user."""
+
+    @abc.abstractmethod
+    async def total_specific_known(
             self,
             user: auth.User,
             query: common.Query,
@@ -62,7 +76,7 @@ class AbsSearchRepository(AbsRepository):
         """Count available items for authorised user."""
 
     @abc.abstractmethod
-    async def search_random_items_for_known_user(
+    async def search_random_known(
             self,
             user: auth.User,
             query: common.Query,
@@ -70,7 +84,7 @@ class AbsSearchRepository(AbsRepository):
         """Find random items for authorised user."""
 
     @abc.abstractmethod
-    async def search_specific_items_for_known_user(
+    async def search_specific_known(
             self,
             user: auth.User,
             query: common.Query,

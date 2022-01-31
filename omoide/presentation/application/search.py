@@ -33,7 +33,6 @@ async def search(
 
     with infra.Timer() as timer:
         result = await use_case.execute(user, query.query)
-        print(result)
 
     if result.is_random:
         paginator = infra.Paginator.empty()
