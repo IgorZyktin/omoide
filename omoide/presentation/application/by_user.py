@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies, constants
+from omoide.presentation import dependencies, constants, utils
 from omoide.presentation import infra
 
 router = fastapi.APIRouter()
@@ -31,7 +31,8 @@ async def by_user(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
-    result = await use_case.execute(user, query.query, uuid)
+    with infra.Timer() as timer:
+        result = await use_case.execute(user, query.query, uuid)
 
     paginator = infra.Paginator(
         page=result.page,
@@ -40,11 +41,13 @@ async def by_user(
         pages_in_block=constants.PAGES_IN_BLOCK,
     )
 
+    placeholder = utils.make_search_report(result.total_items, timer.seconds)
+
     context = {
         'request': request,
         'query': query,
         'uuid': uuid,
-        'placeholder': 'Enter something',
+        'placeholder': placeholder,
         'paginator': paginator,
         'result': result,
     }

@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies, constants
+from omoide.presentation import dependencies, constants, utils
 from omoide.presentation import infra
 
 router = fastapi.APIRouter()
@@ -33,6 +33,7 @@ async def search(
 
     with infra.Timer() as timer:
         result = await use_case.execute(user, query.query)
+        print(result)
 
     if result.is_random:
         paginator = infra.Paginator.empty()
@@ -44,12 +45,17 @@ async def search(
             pages_in_block=constants.PAGES_IN_BLOCK,
         )
 
+    report = utils.make_search_report(
+        total=result.total_items,
+        duration=timer.seconds,
+    )
+
     context = {
         'request': request,
         'query': query,
-        'placeholder': 'Enter something',
+        'placeholder': 'Enter one or more tags here',
         'paginator': paginator,
         'result': result,
-        'duration': timer.seconds,
+        'report': report,
     }
     return dependencies.templates.TemplateResponse('search.html', context)

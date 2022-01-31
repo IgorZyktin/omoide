@@ -28,10 +28,6 @@ class SearchRepository(
         """Count available items for unauthorised user."""
         response = await self.db.fetch_one(
             query=self._query_count_items_for_anon,
-            values={
-                'tags_include': query.tags_include,
-                'tags_exclude': query.tags_exclude,
-            },
         )
         return response['total_items']
 

@@ -136,3 +136,8 @@ a:active {
 .location h3 {
     margin: 0;
 }
+
+h5 {
+    margin: 0;
+    text-align: center;
+}

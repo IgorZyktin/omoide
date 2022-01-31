@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies, constants
+from omoide.presentation import dependencies, constants, utils
 from omoide.presentation import infra
 
 router = fastapi.APIRouter()
@@ -28,7 +28,8 @@ async def preview(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
-    result = await use_case.execute(user, uuid)
+    with infra.Timer() as timer:
+        result = await use_case.execute(user, uuid)
 
     if result.access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
@@ -36,10 +37,15 @@ async def preview(
     if result.access.is_not_given:
         raise fastapi.HTTPException(status_code=401)
 
+    placeholder = utils.make_search_report(
+        total=len(result.neighbours),
+        duration=timer.seconds,
+    )
+
     context = {
         'request': request,
         'query': query,
-        'placeholder': 'Enter something',
+        'placeholder': placeholder,
         'item': result.item,
         'result': result,
         'album': infra.Album(

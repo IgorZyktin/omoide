@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies, infra, constants
+from omoide.presentation import dependencies, infra, constants, utils
 
 router = fastapi.APIRouter()
 
@@ -27,7 +27,8 @@ async def browse(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
-    result = await use_case.execute(user, uuid, query.query)
+    with infra.Timer() as timer:
+        result = await use_case.execute(user, uuid, query.query)
 
     if result.access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
@@ -42,11 +43,13 @@ async def browse(
         pages_in_block=constants.PAGES_IN_BLOCK,
     )
 
+    placeholder = utils.make_search_report(result.total_items, timer.seconds)
+
     context = {
         'request': request,
         'uuid': uuid,
         'query': query,
-        'placeholder': 'Enter something',
+        'placeholder': placeholder,
         'paginator': paginator,
         'result': result,
     }

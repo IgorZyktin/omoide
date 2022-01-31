@@ -42,6 +42,7 @@ class SearchUseCase:
                 user=user,
                 query=query,
             )
+
         else:
             is_random = True
             items = await self._repo.search_random_items_for_anon_user(
@@ -49,12 +50,10 @@ class SearchUseCase:
                 query=query,
             )
 
-        total_pages = int(total_items / (query.items_per_page or 1))
-
         return search.Result(
             is_random=is_random,
             page=query.page,
-            total_pages=total_pages,
+            total_pages=query.calc_total_pages(total_items),
             total_items=total_items,
             items=items,
         )
@@ -76,6 +75,7 @@ class SearchUseCase:
                 user=user,
                 query=query,
             )
+
         else:
             is_random = True
             items = await self._repo.search_random_items_for_known_user(

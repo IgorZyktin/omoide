@@ -3,6 +3,12 @@
 """
 COUNT_ITEMS_FOR_ANON_USER = """
 SELECT count(*) AS total_items
+FROM items
+WHERE owner_uuid IN (SELECT user_uuid FROM public_users);
+"""
+
+COUNT_SPECIFIC_ITEMS_ANON = """
+SELECT count(*) AS total_items
 FROM items it
          RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
 WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
