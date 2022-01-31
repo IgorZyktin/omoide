@@ -12,7 +12,9 @@
         <div class="preview-image">
 
             {% if album.has_previous %}
-                <a class="preview-swipe" href="{{ url_for('preview', uuid=album.previous_item) }}">Previous</a>
+                <a class="preview-swipe" href="{{ url_for('preview', uuid=album.previous_item) }}">
+                    <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                </a>
             {% else %}
                 <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
             {% endif %}
@@ -29,7 +31,9 @@
             </a>
 
             {% if album.has_next %}
-                <a class="preview-swipe" href="{{ url_for('preview', uuid=album.next_item) }}">Next</a>
+                <a class="preview-swipe" href="{{ url_for('preview', uuid=album.next_item) }}">
+                    <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                </a>
             {% else %}
                 <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
             {% endif %}

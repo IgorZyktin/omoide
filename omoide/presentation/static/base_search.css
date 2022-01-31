@@ -80,6 +80,10 @@
     cursor: default;
 }
 
+.preview-swipe img {
+    height: 2em;
+}
+
 .preview-tags {
     display: flex;
     justify-content: center;
