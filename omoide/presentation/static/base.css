@@ -11,6 +11,48 @@
     --background-color: #939393;
 }
 
+@media (min-width: 300px) {
+    html, body {
+        font-size: 32pt;
+    }
+
+    input {
+        font-size: 32pt;
+    }
+
+    .query-container {
+        margin: 5px;
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        grid-column-gap: 0.1em;
+    }
+
+    .wide-text {
+        display: none;
+    }
+}
+
+@media (min-width: 1080px) {
+    html, body {
+        font-size: 12pt;
+    }
+
+    input {
+        font-size: 12pt;
+    }
+
+    .query-container {
+        margin: 10px;
+        display: grid;
+        grid-template-columns: 1fr 3fr 1fr;
+        grid-column-gap: 1em;
+    }
+
+    .wide-text {
+        display: block;
+    }
+}
+
 html, body {
     color: var(--main-text-color);
     background-color: var(--background-color);
