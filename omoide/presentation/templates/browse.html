@@ -9,15 +9,16 @@
     <div class="envelope-container">
         {% for item in result.items %}
             <div class="envelope">
-                {%- if item.name -%}
-                    <p>{{ item.name }}</p>
-                {%- endif -%}
 
                 {%- if item.is_collection %}
                     <a href="{{ url_for('browse', uuid=item.uuid) }}">
                 {% else %}
                     <a href="{{ url_for('preview', uuid=item.uuid) }}">
                 {% endif -%}
+
+                {%- if item.name -%}
+                    <p>{{ item.name }}</p>
+                {%- endif -%}
 
                 {%- if item.thumbnail_ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>

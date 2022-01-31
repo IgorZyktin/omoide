@@ -197,7 +197,10 @@
 {% macro render_location(request, location) %}
     <div class="location">
         <h3>
-            <a href="{{ request.url_for('by_user', uuid=location.owner.uuid) }}">{{ location.owner.name }}</a>
+            {% if location.owner is not none %}
+                <a href="{{ request.url_for('by_user', uuid=location.owner.uuid) }}">{{ location.owner.name }}</a>
+            {% endif %}
+
             {% for item in location.items %}
                 {% if item.name %}
                     <span>&nbsp;/&nbsp;</span>
