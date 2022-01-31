@@ -25,7 +25,7 @@ class Query(BaseModel):
     tags_include: list[str]
     tags_exclude: list[str]
     page: int
-    items_per_page: int = 10
+    items_per_page: int
 
     def __bool__(self) -> bool:
         """Return True if query has tags to search."""

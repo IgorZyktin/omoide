@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies, infra
+from omoide.presentation import dependencies, infra, constants
 from omoide.presentation.infra import query_maker
 
 router = fastapi.APIRouter()
@@ -23,7 +23,10 @@ async def browse(
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as collection."""
-    query = query_maker.from_request(request.query_params)
+    query = infra.query_maker.from_request(
+        params=request.query_params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
 
     result = await use_case.execute(user, uuid, query.query)
 
@@ -37,7 +40,7 @@ async def browse(
         page=result.page,
         items_per_page=query.query.items_per_page,
         total_items=result.total_items,
-        pages_in_block=10,
+        pages_in_block=constants.PAGES_IN_BLOCK,
     )
 
     context = {

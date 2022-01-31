@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies
+from omoide.presentation import dependencies, constants
 from omoide.presentation import infra
 
 router = fastapi.APIRouter()
@@ -26,7 +26,10 @@ async def by_user(
         response_class=HTMLResponse,
 ):
     """Specific search by owner uuid."""
-    query = infra.query_maker.from_request(request.query_params)
+    query = infra.query_maker.from_request(
+        params=request.query_params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
 
     result = await use_case.execute(user, query.query, uuid)
 
@@ -34,7 +37,7 @@ async def by_user(
         page=result.page,
         items_per_page=query.query.items_per_page,
         total_items=result.total_items,
-        pages_in_block=10,
+        pages_in_block=constants.PAGES_IN_BLOCK,
     )
 
     context = {

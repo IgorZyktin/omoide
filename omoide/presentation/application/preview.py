@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 
 from omoide import use_cases
 from omoide.domain import auth
-from omoide.presentation import dependencies
+from omoide.presentation import dependencies, constants
 from omoide.presentation import infra
 
 router = fastapi.APIRouter()
@@ -23,7 +23,10 @@ async def preview(
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
-    query = infra.query_maker.from_request(request.query_params)
+    query = infra.query_maker.from_request(
+        params=request.query_params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
 
     result = await use_case.execute(user, uuid)
 
@@ -42,7 +45,7 @@ async def preview(
         'album': infra.Album(
             sequence=result.neighbours,
             position=result.item.uuid,
-            items_on_page=10,
+            items_on_page=constants.PAGES_IN_BLOCK,
         )
     }
     return dependencies.templates.TemplateResponse('preview.html', context)

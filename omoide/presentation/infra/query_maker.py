@@ -37,11 +37,12 @@ class ExtQuery(BaseModel):
                 tags_include=self.query.tags_include,
                 tags_exclude=self.query.tags_exclude,
                 page=page,
+                items_per_page=self.query.items_per_page,
             )
         )
 
 
-def from_request(params: QueryParams) -> ExtQuery:
+def from_request(params: QueryParams, items_per_page: int) -> ExtQuery:
     """Create new query from request params."""
     raw_query = params.get('q', '')
     tags_include, tags_exclude = parse_tags(raw_query)
@@ -57,19 +58,7 @@ def from_request(params: QueryParams) -> ExtQuery:
             tags_include=tags_include,
             tags_exclude=tags_exclude,
             page=page,
-        )
-    )
-
-
-def from_form(query: ExtQuery, additional_query: str) -> ExtQuery:
-    """Populate existing query with form contents."""
-    tags_include, tags_exclude = parse_tags(additional_query)
-    return ExtQuery(
-        raw_query=additional_query,
-        query=search.Query(
-            tags_include=tags_include,
-            tags_exclude=tags_exclude,
-            page=query.query.page,
+            items_per_page=items_per_page,
         )
     )
 
