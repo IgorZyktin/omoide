@@ -42,11 +42,12 @@ textarea:focus, input:focus {
 
 .button {
     border-radius: var(--radius);
-    padding: var(--gap-tiny);
+    padding: 2px;
     background-color: #545454;
     color: #ffffff;
-    text-align: center;
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-decoration: none;
     border: 1px solid black;
 }
@@ -60,6 +61,10 @@ textarea:focus, input:focus {
 .button:active {
     color: var(--bright-text-color);
     background-color: black;
+}
+
+.button img {
+    height: 100%;
 }
 
 a {
@@ -93,6 +98,10 @@ a:active {
     margin-right: auto;
     justify-content: center;
     flex-wrap: wrap;
+}
+
+.pages img {
+    height: 100%;
 }
 
 .pages a {

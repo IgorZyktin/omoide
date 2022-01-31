@@ -23,7 +23,10 @@
 
         <a href="{{ url_for('search') }}"
            title="Use it to clear search query"
-           class="button">Home</a>
+           class="button">
+            <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"/>
+            Home
+        </a>
 
         <label for="query">
             <input id="query_element"
@@ -34,14 +37,13 @@
                    placeholder="{{ placeholder }}" autofocus/>
         </label>
 
-        <input id="searchButton"
-               title="Press to perform search"
-               type="submit"
-               class="button"
-               name="search"
-               value="Search"
-               onclick="goSearch()"
-               autofocus/>
+        <a href=""
+           title="Press to perform search"
+           onclick="goSearch()"
+           class="button">
+            <img src="{{ request.url_for('static', path='ic_search_24px.svg') }}"/>
+            Search
+        </a>
 
     </div>
 

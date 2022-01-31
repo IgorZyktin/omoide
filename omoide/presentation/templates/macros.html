@@ -4,9 +4,13 @@
             {% if not paginator.is_fitting %}
                 {% if paginator.has_previous %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('search') + query.at_page(paginator.previous_page).as_str() }}">Previous</a>
+                       href="{{ request.url_for('search') + query.at_page(paginator.previous_page).as_str() }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Previous</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% endif %}
                 <span>&nbsp;</span>
             {% endif %}
@@ -39,9 +43,13 @@
                 <span>&nbsp;</span>
                 {% if paginator.has_next %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('search') + query.at_page(paginator.next_page).as_str() }}">Next</a>
+                       href="{{ request.url_for('search') + query.at_page(paginator.next_page).as_str() }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Next</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% endif %}
             {% endif %}
         </div>
@@ -54,9 +62,13 @@
             {% if not paginator.is_fitting %}
                 {% if paginator.has_previous %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('by_user', uuid=uuid) + query.at_page(paginator.previous_page).as_str() }}">Previous</a>
+                       href="{{ request.url_for('by_user', uuid=uuid) + query.at_page(paginator.previous_page).as_str() }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Previous</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% endif %}
                 <span>&nbsp;</span>
             {% endif %}
@@ -88,9 +100,13 @@
                 <span>&nbsp;</span>
                 {% if paginator.has_next %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('by_user', uuid=uuid) + query.at_page(paginator.next_page).as_str() }}">Next</a>
+                       href="{{ request.url_for('by_user', uuid=uuid) + query.at_page(paginator.next_page).as_str() }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Next</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% endif %}
             {% endif %}
         </div>
@@ -103,9 +119,13 @@
             {% if not paginator.is_fitting %}
                 {% if paginator.has_previous %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('browse', uuid=uuid) + query.at_page(paginator.previous_page).as_str() }}">Previous</a>
+                       href="{{ request.url_for('browse', uuid=uuid) + query.at_page(paginator.previous_page).as_str() }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Previous</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% endif %}
                 <span>&nbsp;</span>
             {% endif %}
@@ -137,9 +157,13 @@
                 <span>&nbsp;</span>
                 {% if paginator.has_next %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('browse', uuid=uuid) + query.at_page(paginator.next_page).as_str() }}">Next</a>
+                       href="{{ request.url_for('browse', uuid=uuid) + query.at_page(paginator.next_page).as_str() }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Next</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% endif %}
             {% endif %}
         </div>
@@ -152,9 +176,13 @@
             {% if not album.is_fitting %}
                 {% if album.has_previous %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('preview', uuid=album.previous_item) }}">Previous</a>
+                       href="{{ request.url_for('preview', uuid=album.previous_item) }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Previous</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"/>
+                    </a>
                 {% endif %}
                 <span>&nbsp;</span>
             {% endif %}
@@ -185,9 +213,13 @@
                 <span>&nbsp;</span>
                 {% if album.has_next %}
                     <a class="active-page page-separate"
-                       href="{{ request.url_for('preview', uuid=album.next_item) }}">Next</a>
+                       href="{{ request.url_for('preview', uuid=album.next_item) }}">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% else %}
-                    <a class="page-separate">Next</a>
+                    <a class="inactive-page page-separate">
+                        <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"/>
+                    </a>
                 {% endif %}
             {% endif %}
         </div>
