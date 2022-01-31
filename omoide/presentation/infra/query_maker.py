@@ -8,13 +8,13 @@ from typing import Iterable, Any, Iterator
 from pydantic import BaseModel
 from starlette.datastructures import QueryParams
 
-from omoide.domain import search
+from omoide.domain import common
 
 
 class ExtQuery(BaseModel):
     """Extended query, also includes some app-specific stuff."""
     raw_query: str
-    query: search.Query
+    query: common.Query
 
     def as_str(self) -> str:
         """Convert to urlsafe string."""
@@ -33,7 +33,7 @@ class ExtQuery(BaseModel):
         """Return new query for given page."""
         return type(self)(
             raw_query=self.raw_query,
-            query=search.Query(
+            query=common.Query(
                 tags_include=self.query.tags_include,
                 tags_exclude=self.query.tags_exclude,
                 page=page,
@@ -54,7 +54,7 @@ def from_request(params: QueryParams, items_per_page: int) -> ExtQuery:
 
     return ExtQuery(
         raw_query=raw_query,
-        query=search.Query(
+        query=common.Query(
             tags_include=tags_include,
             tags_exclude=tags_exclude,
             page=page,

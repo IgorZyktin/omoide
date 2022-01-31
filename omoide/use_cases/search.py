@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for search.
 """
-from omoide.domain import search, auth
+from omoide.domain import search, auth, common
 from omoide.domain.interfaces import database
 
 
@@ -15,7 +15,7 @@ class SearchUseCase:
     async def execute(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> search.Result:
         """Perform search request."""
         async with self._repo.transaction():
@@ -28,7 +28,7 @@ class SearchUseCase:
     async def _search_for_anon(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> search.Result:
         """Perform search request for anon user."""
         total_items = await self._repo.count_items_for_anon_user(
@@ -62,7 +62,7 @@ class SearchUseCase:
     async def _search_for_known(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> search.Result:
         """Perform search request for known user."""
         total_items = await self._repo.count_items_for_known_user(
@@ -83,12 +83,10 @@ class SearchUseCase:
                 query=query,
             )
 
-        total_pages = int(total_items / (query.items_per_page or 1))
-
         return search.Result(
             is_random=is_random,
             page=query.page,
-            total_pages=total_pages,
+            total_pages=query.calc_total_pages(total_items),
             total_items=total_items,
             items=items,
         )

@@ -16,7 +16,7 @@ class BrowseUseCase:
             self,
             user: auth.User,
             item_uuid: str,
-            query: browse.Query,
+            query: common.Query,
     ) -> browse.Result:
         """Return browse model suitable for rendering."""
         async with self._repo.transaction():
@@ -31,13 +31,11 @@ class BrowseUseCase:
                 items = await self._repo.get_items(item_uuid, query)
                 total_items = await self._repo.count_items(item_uuid)
 
-        total_pages = int(total_items / (query.items_per_page or 1))
-
         return browse.Result(
             access=access,
             location=location,
             page=query.page,
             total_items=total_items,
-            total_pages=total_pages,
+            total_pages=query.calc_total_pages(total_items),
             items=items,
         )

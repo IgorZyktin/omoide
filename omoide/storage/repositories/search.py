@@ -23,7 +23,7 @@ class SearchRepository(
     async def count_items_for_anon_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> int:
         """Count available items for unauthorised user."""
         response = await self.db.fetch_one(
@@ -38,7 +38,7 @@ class SearchRepository(
     async def search_random_items_for_anon_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Find random items for unauthorised user."""
         response = await self.db.fetch_all(
@@ -53,7 +53,7 @@ class SearchRepository(
     async def search_specific_items_for_anon_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Find specific items for unauthorised user."""
         response = await self.db.fetch_all(
@@ -70,7 +70,7 @@ class SearchRepository(
     async def count_items_for_known_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> int:
         """Count available items for authorised user."""
         # TODO(i.zyktin): need to implement this
@@ -79,7 +79,7 @@ class SearchRepository(
     async def search_random_items_for_known_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> search.Result:
         """Find random items for authorised user."""
         # TODO(i.zyktin): need to implement this
@@ -88,7 +88,7 @@ class SearchRepository(
     async def search_specific_items_for_known_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> search.Result:
         """Find specific items for authorised user."""
         # TODO(i.zyktin): need to implement this

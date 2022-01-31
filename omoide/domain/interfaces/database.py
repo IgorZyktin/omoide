@@ -3,7 +3,7 @@
 """
 import abc
 
-from omoide.domain import auth, browse, common, preview, search
+from omoide.domain import auth, common, preview
 
 
 class AbsRepository(abc.ABC):
@@ -33,7 +33,7 @@ class AbsSearchRepository(AbsRepository):
     async def count_items_for_anon_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> int:
         """Count available items for unauthorised user."""
 
@@ -41,7 +41,7 @@ class AbsSearchRepository(AbsRepository):
     async def search_random_items_for_anon_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Find random items for unauthorised user."""
 
@@ -49,7 +49,7 @@ class AbsSearchRepository(AbsRepository):
     async def search_specific_items_for_anon_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Find specific items for unauthorised user."""
 
@@ -57,7 +57,7 @@ class AbsSearchRepository(AbsRepository):
     async def count_items_for_known_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> int:
         """Count available items for authorised user."""
 
@@ -65,7 +65,7 @@ class AbsSearchRepository(AbsRepository):
     async def search_random_items_for_known_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Find random items for authorised user."""
 
@@ -73,7 +73,7 @@ class AbsSearchRepository(AbsRepository):
     async def search_specific_items_for_known_user(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Find specific items for authorised user."""
 
@@ -97,7 +97,7 @@ class AbsBrowseRepository(AbsRepository):
     async def get_items(
             self,
             item_uuid: str,
-            query: browse.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Load all children with all required fields."""
 

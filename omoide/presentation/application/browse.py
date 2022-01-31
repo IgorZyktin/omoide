@@ -7,7 +7,6 @@ from fastapi.responses import HTMLResponse
 from omoide import use_cases
 from omoide.domain import auth
 from omoide.presentation import dependencies, infra, constants
-from omoide.presentation.infra import query_maker
 
 router = fastapi.APIRouter()
 

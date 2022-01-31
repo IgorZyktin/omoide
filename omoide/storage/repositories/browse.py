@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
-from omoide.domain import browse, common
+from omoide.domain import common
 from omoide.domain.interfaces import database
 from omoide.storage.repositories import base
 from omoide.storage.repositories import browse_sql
@@ -18,7 +18,7 @@ class BrowseRepository(
     async def get_items(
             self,
             item_uuid: str,
-            query: browse.Query,
+            query: common.Query,
     ) -> list[common.SimpleItem]:
         """Load all children and sub children of the record."""
         response = await self.db.fetch_all(

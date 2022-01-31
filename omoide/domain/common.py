@@ -115,3 +115,27 @@ class AccessStatus(BaseModel):
             is_public=False,
             is_given=False,
         )
+
+
+class Query(BaseModel):
+    """User search query."""
+    tags_include: list[str]
+    tags_exclude: list[str]
+    page: int
+    items_per_page: int
+
+    def __bool__(self) -> bool:
+        """Return True if query has tags to search."""
+        return any((
+            self.tags_include,
+            self.tags_exclude,
+        ))
+
+    @property
+    def offset(self) -> int:
+        """Return offset from start of the result block."""
+        return self.items_per_page * (self.page - 1)
+
+    def calc_total_pages(self, total_items: int) -> int:
+        """Calculate how many pages we need considering this query."""
+        return int(total_items / (self.items_per_page or 1))

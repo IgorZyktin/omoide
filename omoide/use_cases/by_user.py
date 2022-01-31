@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for search by owner uuid.
 """
-from omoide.domain import auth, by_user, search
+from omoide.domain import auth, by_user, common
 from omoide.domain.interfaces import database
 
 
@@ -15,7 +15,7 @@ class ByUserUseCase:
     async def execute(
             self,
             user: auth.User,
-            query: search.Query,
+            query: common.Query,
             owner_uuid: str,
     ) -> by_user.Result:
         """Return preview model suitable for rendering."""
@@ -46,11 +46,9 @@ class ByUserUseCase:
                     offset=query.offset,
                 )
 
-        total_pages = int(total_items / (query.items_per_page or 1))
-
         return by_user.Result(
             page=query.page,
             total_items=total_items,
-            total_pages=total_pages,
+            total_pages=query.calc_total_pages(total_items),
             items=items,
         )

@@ -19,11 +19,3 @@ class Result(BaseModel):
     total_items: int
     total_pages: int
     items: list[SimpleItem]
-
-
-class Query(BaseModel):
-    """User search query."""
-    tags_include: list[str]
-    tags_exclude: list[str]
-    page: int
-    items_per_page: int = 10
