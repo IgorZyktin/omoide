@@ -21,7 +21,7 @@
         <a href="{{ url_for('search') }}"
            title="Use it to clear search query"
            class="button">
-            <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"/>
+            <img class="invert" src="{{ request.url_for('static', path='ic_home_24px.svg') }}"/>
             <span class="wide-text">Home</span>
         </a>
 
@@ -38,7 +38,7 @@
            title="Press to perform search"
            onclick="goSearch()"
            class="button">
-            <img src="{{ request.url_for('static', path='ic_search_24px.svg') }}"/>
+            <img class="invert" src="{{ request.url_for('static', path='ic_search_24px.svg') }}"/>
             <span class="wide-text">Search</span>
         </a>
 

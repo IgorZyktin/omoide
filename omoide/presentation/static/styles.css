@@ -317,3 +317,7 @@ h5 {
 
 .location-separator {
 }
+
+.invert {
+    filter: invert(90%);
+}
