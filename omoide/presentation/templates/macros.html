@@ -219,7 +219,7 @@
 
             {% for item in location.items %}
                 {% if item.name %}
-                    <span>&nbsp;/&nbsp;</span>
+                    <span class="location-separator">&nbsp;/&nbsp;</span>
                     {% if item.is_collection %}
                         <a href="{{ request.url_for('browse', uuid=item.uuid) }}">{{ item.name }}</a>
                     {% else %}
