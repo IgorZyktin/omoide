@@ -19,7 +19,7 @@ class BrowseRepository(
             self,
             item_uuid: str,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all children and sub children of the record."""
         response = await self.db.fetch_all(
             query=self._query_get_items,
@@ -29,7 +29,7 @@ class BrowseRepository(
                 'offset': (query.page - 1) * query.items_per_page,
             }
         )
-        return [common.SimpleItem.from_row(x) for x in response]
+        return [common.Item.from_map(x) for x in response]
 
     async def count_items(
             self,

@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
+from typing import Optional, Mapping
+
 from pydantic import BaseModel
+
+
+def _as_str(mapping: Mapping, key: str) -> str | None:
+    """Extract optional."""
+    value = mapping[key]
+    if value is None:
+        return None
+    return str(value)
 
 
 class SimpleUser(BaseModel):
@@ -37,46 +47,60 @@ class SimpleUser(BaseModel):
     # -------------------------------------------------------------------------
 
 
-class SimpleItem(BaseModel):
-    """Primitive version of an item."""
-    owner_uuid: str | None
+class Item(BaseModel):
+    """Model of a standard item."""
     uuid: str
-    is_collection: bool
+    parent_uuid: Optional[str]
+    owner_uuid: str
+    number: int
     name: str
-    thumbnail_ext: str | None
+    is_collection: bool
+    content_ext: Optional[str]
+    preview_ext: Optional[str]
+    thumbnail_ext: Optional[str]
 
     @property
-    def path(self) -> str:
+    def thumbnail_path(self) -> str:
         """Return file system path segment that will allow to find file."""
         return f'{self.uuid[:2]}/{self.uuid}.{self.thumbnail_ext}'
 
-    # -------------------------------------------------------------------------
-    # TODO - hacky solutions, must get rid of UUID type
+    @property
+    def preview_path(self) -> str:
+        """Return file system path segment that will allow to find file."""
+        return f'{self.uuid[:2]}/{self.uuid}.{self.preview_ext}'
+
+    @property
+    def content_path(self) -> str:
+        """Return file system path segment that will allow to find file."""
+        return f'{self.uuid[:2]}/{self.uuid}.{self.content_ext}'
+
     @classmethod
-    def from_row(cls, raw_item):
-        """Convert from db format to required model."""
-
-        def as_str(key: str) -> str | None:
-            """Extract optional."""
-            value = raw_item[key]
-            if value is None:
-                return None
-            return str(value)
-
+    def from_map(cls, mapping: Mapping) -> 'Item':
+        """Convert from arbitrary format to model."""
         return cls(
-            owner_uuid=as_str('owner_uuid'),
-            uuid=as_str('uuid'),
-            is_collection=raw_item['is_collection'],
-            name=raw_item['name'],
-            thumbnail_ext=raw_item['thumbnail_ext'],
+            uuid=_as_str(mapping, 'uuid'),
+            parent_uuid=_as_str(mapping, 'parent_uuid'),
+            owner_uuid=_as_str(mapping, 'owner_uuid'),
+            number=mapping['number'],
+            name=mapping['name'],
+            is_collection=mapping['is_collection'],
+            content_ext=mapping['content_ext'],
+            preview_ext=mapping['preview_ext'],
+            thumbnail_ext=mapping['thumbnail_ext'],
         )
-    # -------------------------------------------------------------------------
+
+
+class SimplePositionedItem(BaseModel):
+    """Primitive version of an item with position information."""
+    position: int
+    total_items: int
+    item: Item
 
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
     owner: SimpleUser | None
-    items: list[SimpleItem]
+    items: list[Item]
 
     def __bool__(self) -> bool:
         """Return True if location is not empty."""

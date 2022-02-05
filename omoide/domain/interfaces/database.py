@@ -2,6 +2,7 @@
 """Repository interfaces.
 """
 import abc
+from typing import Optional
 
 from omoide.domain import auth, common, preview
 
@@ -24,6 +25,27 @@ class AbsRepository(abc.ABC):
     @abc.abstractmethod
     async def get_location(self, item_uuid: str) -> common.Location:
         """Return Location of the item."""
+
+    @abc.abstractmethod
+    async def get_user(
+            self,
+            user_uuid: str,
+    ) -> Optional[common.SimpleUser]:
+        """Return user or None."""
+
+    @abc.abstractmethod
+    async def get_item(
+            self,
+            item_uuid: str,
+    ) -> Optional[common.Item]:
+        """Return item or None."""
+
+    @abc.abstractmethod
+    async def get_item_with_position(
+            self,
+            item_uuid: str,
+    ) -> Optional[common.SimplePositionedItem]:
+        """Return item with its position in siblings."""
 
 
 class AbsSearchRepository(AbsRepository):
@@ -49,7 +71,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Find random items for unauthorised user."""
 
     @abc.abstractmethod
@@ -57,7 +79,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
 
     @abc.abstractmethod
@@ -80,7 +102,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Find random items for authorised user."""
 
     @abc.abstractmethod
@@ -88,7 +110,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Find specific items for authorised user."""
 
 
@@ -112,7 +134,7 @@ class AbsBrowseRepository(AbsRepository):
             self,
             item_uuid: str,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all children with all required fields."""
 
     @abc.abstractmethod
@@ -146,7 +168,7 @@ class AbsByUserRepository(AbsRepository):
             owner_uuid: str,
             limit: int,
             offset: int,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all items of a public user."""
 
     @abc.abstractmethod
@@ -164,5 +186,5 @@ class AbsByUserRepository(AbsRepository):
             owner_uuid: str,
             limit: int,
             offset: int,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all items of a private user."""

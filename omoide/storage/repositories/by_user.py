@@ -49,7 +49,7 @@ class ByUserRepository(
             owner_uuid: str,
             limit: int,
             offset: int,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all items of a public user."""
         response = await self.db.fetch_all(
             query=self._query_get_items_of_public_user,
@@ -59,7 +59,7 @@ class ByUserRepository(
                 'offset': offset,
             }
         )
-        return [common.SimpleItem.from_row(row) for row in response]
+        return [common.Item.from_map(row) for row in response]
 
     async def count_items_of_private_user(
             self,
@@ -83,7 +83,7 @@ class ByUserRepository(
             owner_uuid: str,
             limit: int,
             offset: int,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all items of a private user."""
         # FIXME
         raise
@@ -96,4 +96,4 @@ class ByUserRepository(
                 'offset': offset,
             }
         )
-        return [common.SimpleItem.from_row(row) for row in response]
+        return [common.Item.from_map(row) for row in response]

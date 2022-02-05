@@ -3,7 +3,7 @@
 """
 from pydantic import BaseModel
 
-from omoide.domain.common import SimpleItem
+from omoide.domain.common import Item
 
 __all__ = [
     'Result',
@@ -16,4 +16,4 @@ class Result(BaseModel):
     page: int
     total_items: int
     total_pages: int
-    items: list[SimpleItem]
+    items: list[Item]

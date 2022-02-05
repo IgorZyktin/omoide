@@ -39,10 +39,3 @@ SELECT owner_uuid,
        thumbnail_ext
 FROM nested_items;
 """
-
-GET_OWNER = """
-SELECT uuid,
-       name
-FROM users
-WHERE uuid = :user_uuid;
-"""
