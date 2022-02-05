@@ -4,7 +4,6 @@
 from omoide.domain import auth, search, common
 from omoide.domain.interfaces import database
 from omoide.storage.repositories import base
-from omoide.storage.repositories import search_sql
 
 
 class SearchRepository(
@@ -12,70 +11,97 @@ class SearchRepository(
     database.AbsSearchRepository
 ):
     """Repository that performs all search queries."""
-    _query_total_random_anon = search_sql.TOTAL_RANDOM_ANON
-    _query_total_specific_anon = search_sql.TOTAL_SPECIFIC_ANON
-    _query_search_random_anon = search_sql.SEARCH_RANDOM_ANON
-    _query_search_specific_anon = search_sql.SEARCH_SPECIFIC_ANON
 
-    _q_count_for_user = None  # TODO(i.zyktin): need to add this
-    _q_random_for_user = None  # TODO(i.zyktin): need to add this
-    _q_specific_for_user = None  # TODO(i.zyktin): need to add this
-
-    async def total_random_anon(
-            self,
-            user: auth.User,
-    ) -> int:
+    async def total_random_anon(self) -> int:
         """Count all available items for unauthorised user."""
-        response = await self.db.fetch_one(
-            query=self._query_total_random_anon,
-        )
-        return response['total_items']
+        query = """
+        SELECT count(*) AS total_items
+        FROM items
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users);
+        """
 
-    async def total_specific_anon(
-            self,
-            user: auth.User,
-            query: common.Query,
-    ) -> int:
+        response = await self.db.fetch_one(query)
+        return int(response['total_items'])
+
+    async def total_specific_anon(self, query: common.Query) -> int:
         """Count available items for unauthorised user."""
-        response = await self.db.fetch_one(
-            query=self._query_total_specific_anon,
-            values={
-                'tags_include': query.tags_include,
-                'tags_exclude': query.tags_exclude,
-            },
-        )
-        return response['total_items']
+        _query = """
+        SELECT count(*) AS total_items
+        FROM items it
+                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+          AND ct.tags @> :tags_include
+          AND NOT ct.tags && :tags_exclude;
+        """
+
+        values = {
+            'tags_include': query.tags_include,
+            'tags_exclude': query.tags_exclude,
+        }
+
+        response = await self.db.fetch_one(_query, values)
+        return int(response['total_items'])
 
     async def search_random_anon(
             self,
-            user: auth.User,
             query: common.Query,
     ) -> list[common.Item]:
         """Find random items for unauthorised user."""
-        response = await self.db.fetch_all(
-            query=self._query_search_random_anon,
-            values={
-                'limit': query.items_per_page,
-                'offset': query.offset,
-            }
-        )
+        _query = """
+        SELECT uuid, 
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+        ORDER BY random() LIMIT :limit OFFSET :offset;
+        """
+
+        values = {
+            'limit': query.items_per_page,
+            'offset': query.offset,
+        }
+
+        response = await self.db.fetch_all(_query, values)
         return [common.Item.from_map(row) for row in response]
 
     async def search_specific_anon(
             self,
-            user: auth.User,
             query: common.Query,
     ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
-        response = await self.db.fetch_all(
-            query=self._query_search_specific_anon,
-            values={
-                'limit': query.items_per_page,
-                'offset': query.offset,
-                'tags_include': query.tags_include,
-                'tags_exclude': query.tags_exclude,
-            }
-        )
+        _query = """
+        SELECT uuid, 
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext,
+               ct.tags
+        FROM items it
+                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+          AND ct.tags @> :tags_include
+          AND NOT ct.tags && :tags_exclude
+        ORDER BY number LIMIT :limit OFFSET :offset;
+        """
+
+        values = {
+            'limit': query.items_per_page,
+            'offset': query.offset,
+            'tags_include': query.tags_include,
+            'tags_exclude': query.tags_exclude,
+        }
+
+        response = await self.db.fetch_all(_query, values)
         return [common.Item.from_map(row) for row in response]
 
     async def total_random_known(
