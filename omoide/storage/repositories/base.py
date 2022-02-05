@@ -12,7 +12,6 @@ class BaseRepository(database.AbsRepository):
     """Base functionality for all concrete repositories."""
     _query_check_access = base_sql.CHECK_ACCESS
     _query_get_ancestors = base_sql.GET_ANCESTORS
-    _query_get_owner = base_sql.GET_OWNER
 
     def __init__(self, db) -> None:
         """Initialize instance."""
@@ -93,7 +92,7 @@ class BaseRepository(database.AbsRepository):
     async def _get_ancestors(
             self,
             current_item: common.Item,
-    ) -> list[common.SimplePositionedItem]:
+    ) -> list[common.PositionedItem]:
         """Return list of positioned ancestors."""
         ancestors = []
 
@@ -126,11 +125,14 @@ class BaseRepository(database.AbsRepository):
     ) -> Optional[common.Item]:
         """Return item or None."""
         query = """
-        SELECT parent_uuid,
+        SELECT uuid, 
+               parent_uuid,
                owner_uuid,
-               uuid,
-               is_collection,
+               number,
                name,
+               is_collection,
+               content_ext,
+               preview_ext,
                thumbnail_ext
         FROM items
         WHERE uuid = :item_uuid;
@@ -145,31 +147,36 @@ class BaseRepository(database.AbsRepository):
 
     async def get_item_with_position(
             self,
-            item_uuid: str,
-    ) -> Optional[common.SimplePositionedItem]:
+            current_item: common.Item,
+    ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
         query = """
-WITH children AS (
-    SELECT uuid
-    FROM items
-    WHERE parent_uuid = '6302fbc8-de32-4db5-83eb-0fc283cecd9e'
-    ORDER BY number
-)
-SELECT parent_uuid,
-       owner_uuid,
-       uuid,
-       is_collection,
-       name,
-       thumbnail_ext,
-       (select array_position(array(select uuid from children),
-                              '52d42a9a-2bee-4751-9868-af29fd91f5a6')) as position,
-       (select count(*) from children)                                 as total
-FROM items
-WHERE uuid = '6302fbc8-de32-4db5-83eb-0fc283cecd9e'
-
+        WITH children AS (
+            SELECT uuid
+            FROM items
+            WHERE parent_uuid = :parent_uuid
+            ORDER BY number
+        )
+        SELECT uuid, 
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext,
+               (select array_position(array(select uuid from children),
+                                      :item_uuid)) as position,
+               (select count(*) from children) as total
+        FROM items
+        WHERE uuid = :item_uuid
         """
 
-        values = {'item_uuid': item_uuid}
+        values = {
+            'item_uuid': current_item.uuid,
+            'parent_uuid': current_item.parent_uuid,
+        }
 
         response = await self.db.fetch_one(query, values)
 

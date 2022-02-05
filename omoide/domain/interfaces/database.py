@@ -44,7 +44,7 @@ class AbsRepository(abc.ABC):
     async def get_item_with_position(
             self,
             item_uuid: str,
-    ) -> Optional[common.SimplePositionedItem]:
+    ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
 
 

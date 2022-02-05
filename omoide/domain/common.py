@@ -90,7 +90,7 @@ class Item(BaseModel):
         )
 
 
-class SimplePositionedItem(BaseModel):
+class PositionedItem(BaseModel):
     """Primitive version of an item with position information."""
     position: int
     total_items: int
