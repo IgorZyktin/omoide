@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Preview related interfaces and objects.
 """
+from typing import Optional
+
 from pydantic import BaseModel
 
 from omoide.domain.common import Location, AccessStatus
@@ -85,5 +87,5 @@ class Result(BaseModel):
     """Complete output of Preview request."""
     access: AccessStatus
     location: Location
-    item: Item
+    item: Optional[Item]
     neighbours: list[str]

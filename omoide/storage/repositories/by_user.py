@@ -4,7 +4,6 @@
 from omoide.domain import auth, common
 from omoide.domain.interfaces import database
 from omoide.storage.repositories import base
-from omoide.storage.repositories import by_user_sql
 
 
 class ByUserRepository(
@@ -12,19 +11,20 @@ class ByUserRepository(
     database.AbsByUserRepository
 ):
     """Repository that performs search based on owner uuid."""
-    _query_count_of_public_user = by_user_sql.COUNT_ITEMS_OF_PUBLIC_USER
 
     async def count_items_of_public_user(
             self,
             owner_uuid: str,
     ) -> int:
         """Count all items of a public user."""
-        response = await self.db.fetch_one(
-            query=self._query_count_of_public_user,
-            values={
-                'owner_uuid': owner_uuid,
-            }
-        )
+        query = """
+        SELECT count(*) AS total_items
+        FROM items
+        WHERE owner_uuid = :owner_uuid
+          AND parent_uuid IS NULL;
+        """
+
+        response = await self.db.fetch_one(query, {'owner_uuid': owner_uuid})
         return int(response['total_items'])
 
     async def get_items_of_public_user(

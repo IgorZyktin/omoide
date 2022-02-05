@@ -22,7 +22,7 @@ class PreviewUseCase:
             access = await self._repo.check_access(user, item_uuid)
 
             if access.is_not_given:
-                item = preview.Item.empty()
+                item = None
                 neighbours = []
                 location = common.Location.empty()
             else:

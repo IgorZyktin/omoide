@@ -73,24 +73,16 @@ class AbsSearchRepository(AbsRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def total_random_anon(
-            self,
-            user: auth.User,
-    ) -> int:
+    async def total_random_anon(self) -> int:
         """Count all available items for unauthorised user."""
 
     @abc.abstractmethod
-    async def total_specific_anon(
-            self,
-            user: auth.User,
-            query: common.Query,
-    ) -> int:
+    async def total_specific_anon(self, query: common.Query) -> int:
         """Count specific available items for unauthorised user."""
 
     @abc.abstractmethod
     async def search_random_anon(
             self,
-            user: auth.User,
             query: common.Query,
     ) -> list[common.Item]:
         """Find random items for unauthorised user."""
@@ -98,7 +90,6 @@ class AbsSearchRepository(AbsRepository):
     @abc.abstractmethod
     async def search_specific_anon(
             self,
-            user: auth.User,
             query: common.Query,
     ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
@@ -139,7 +130,7 @@ class AbsPreviewRepository(AbsRepository):
     """Repository that performs all preview queries."""
 
     @abc.abstractmethod
-    async def get_preview_item(self, item_uuid: str) -> preview.Item:
+    async def get_preview_item(self, item_uuid: str) -> Optional[preview.Item]:
         """Return instance of the item."""
 
     @abc.abstractmethod

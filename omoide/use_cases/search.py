@@ -20,26 +20,25 @@ class SearchUseCase:
         """Perform search request."""
         async with self._repo.transaction():
             if user.is_anon():
-                result = await self._search_for_anon(user, query)
+                result = await self._search_for_anon(query)
             else:
                 result = await self._search_for_known(user, query)
         return result
 
     async def _search_for_anon(
             self,
-            user: auth.User,
             query: common.Query,
     ) -> search.Result:
         """Perform search request for anon user."""
         if query:
             is_random = False
-            total_items = await self._repo.total_specific_anon(user, query)
-            items = await self._repo.search_specific_anon(user, query)
+            total_items = await self._repo.total_specific_anon(query)
+            items = await self._repo.search_specific_anon(query)
 
         else:
             is_random = True
-            total_items = await self._repo.total_random_anon(user)
-            items = await self._repo.search_random_anon(user, query)
+            total_items = await self._repo.total_random_anon()
+            items = await self._repo.search_random_anon(query)
 
         return search.Result(
             is_random=is_random,
