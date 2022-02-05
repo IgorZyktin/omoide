@@ -130,7 +130,7 @@ class AbsPreviewRepository(AbsRepository):
     """Repository that performs all preview queries."""
 
     @abc.abstractmethod
-    async def get_preview_item(self, item_uuid: str) -> preview.Item:
+    async def get_preview_item(self, item_uuid: str) -> Optional[preview.Item]:
         """Return instance of the item."""
 
     @abc.abstractmethod
