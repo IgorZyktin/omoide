@@ -28,7 +28,8 @@ class PreviewUseCase:
             else:
                 item = await self._repo.get_preview_item(item_uuid)
                 neighbours = await self._repo.get_neighbours(item_uuid)
-                location = await self._repo.get_location(item_uuid)
+                # FIXME
+                location = await self._repo.get_location(item_uuid, 10)
 
         return preview.Result(
             access=access,

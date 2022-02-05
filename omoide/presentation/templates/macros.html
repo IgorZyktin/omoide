@@ -217,13 +217,13 @@
                 <a href="{{ request.url_for('by_user', uuid=location.owner.uuid) }}">{{ location.owner.name }}</a>
             {% endif %}
 
-            {% for item in location.items %}
-                {% if item.name %}
+            {% for pos in location %}
+                {% if pos.item.name %}
                     <span class="location-separator">&nbsp;/&nbsp;</span>
-                    {% if item.is_collection %}
-                        <a href="{{ request.url_for('browse', uuid=item.uuid) }}">{{ item.name }}</a>
+                    {% if pos.item.is_collection %}
+                        <a href="{{ request.url_for('browse', uuid=pos.item.uuid) }}">{{ pos.item.name }}</a>
                     {% else %}
-                        <a href="{{ request.url_for('preview', uuid=item.uuid) }}">{{ item.name }}</a>
+                        <a href="{{ request.url_for('preview', uuid=pos.item.uuid) }}">{{ pos.item.name }}</a>
                     {% endif %}
                 {% endif %}
             {% endfor %}

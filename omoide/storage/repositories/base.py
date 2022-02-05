@@ -44,7 +44,11 @@ class BaseRepository(database.AbsRepository):
             is_given=bool(response['is_given']),
         )
 
-    async def get_location(self, item_uuid: str) -> common.Location:
+    async def get_location(
+            self,
+            item_uuid: str,
+            items_per_page: int,
+    ) -> common.Location:
         """Return Location of the item."""
         current_item = await self.get_item(item_uuid)
 
@@ -56,47 +60,28 @@ class BaseRepository(database.AbsRepository):
         if owner is None:
             return common.Location.empty()
 
-        ancestors = await self.get_item_with_position(current_item)
+        ancestors = await self._get_ancestors(current_item, items_per_page)
 
-        # ancestors_response = await self.db.fetch_all(
-        #     query=self._query_get_ancestors,
-        #     values={
-        #         'item_uuid': item_uuid,
-        #     }
-        # )
-        #
-        # if ancestors_response is None or not ancestors_response:
-        #     return common.Location.empty()
-        #
-        # items = [common.SimpleItem.from_row(x) for x in ancestors_response]
-        #
-        # pos = await self.get_item_with_position(item_uuid)
-        #
-        # parent_response = await self.db.fetch_one(
-        #     query=self._query_get_owner,
-        #     values={
-        #         'user_uuid': items[-1].owner_uuid,
-        #     }
-        # )
-        #
-        # if parent_response is None:
-        #     return common.Location.empty()
-        #
-        # items.reverse()
-        #
-        # return common.Location(
-        #     owner=common.SimpleUser.from_row(parent_response),
-        #     items=items,
-        # )
+        return common.Location(
+            owner=owner,
+            items=ancestors,
+        )
 
     async def _get_ancestors(
             self,
             current_item: common.Item,
+            items_per_page: int,
     ) -> list[common.PositionedItem]:
         """Return list of positioned ancestors."""
         ancestors = []
 
-        # parent = await self.get_item_with_position(current_item.)
+        parent = await self.get_item(current_item.parent_uuid)
+        while parent:
+            ancestor = await self.get_item_with_position(parent,
+                                                         items_per_page)
+            parent = await self.get_item(parent.parent_uuid)
+            ancestors.append(ancestor)
+
         ancestors.reverse()
         return ancestors
 
@@ -113,11 +98,7 @@ class BaseRepository(database.AbsRepository):
         """
 
         response = await self.db.fetch_one(query, {'user_uuid': user_uuid})
-
-        if response is None:
-            return None
-
-        return common.SimpleUser.from_row(response)
+        return common.SimpleUser.from_row(response) if response else None
 
     async def get_item(
             self,
@@ -139,15 +120,12 @@ class BaseRepository(database.AbsRepository):
         """
 
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
-
-        if response is None:
-            return None
-
-        return common.Item.from_map(response)
+        return common.Item.from_map(response) if response else None
 
     async def get_item_with_position(
             self,
             current_item: common.Item,
+            items_per_page: int,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
         query = """
@@ -168,7 +146,7 @@ class BaseRepository(database.AbsRepository):
                thumbnail_ext,
                (select array_position(array(select uuid from children),
                                       :item_uuid)) as position,
-               (select count(*) from children) as total
+               (select count(*) from children) as total_items
         FROM items
         WHERE uuid = :item_uuid
         """
@@ -183,4 +161,11 @@ class BaseRepository(database.AbsRepository):
         if response is None:
             return None
 
-        print(dict(response))
+        mapping = dict(response)
+
+        return common.PositionedItem(
+            position=mapping.pop('position') or 0,
+            total_items=mapping.pop('total_items') or 0,
+            items_per_page=items_per_page,
+            item=common.Item.from_map(mapping),
+        )

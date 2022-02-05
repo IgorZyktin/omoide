@@ -27,8 +27,9 @@ class BrowseUseCase:
                 items = []
                 total_items = 0
             else:
-                location = await self._repo.get_location(item_uuid)
-                items = await self._repo.get_items(item_uuid, query)
+                location = await self._repo.get_location(item_uuid,
+                                                         query.items_per_page)
+                items = await self._repo.get_children(item_uuid, query)
                 total_items = await self._repo.count_items(item_uuid)
 
         return browse.Result(

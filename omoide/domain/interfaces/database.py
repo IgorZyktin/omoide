@@ -23,7 +23,11 @@ class AbsRepository(abc.ABC):
         """Check if user has access to the item."""
 
     @abc.abstractmethod
-    async def get_location(self, item_uuid: str) -> common.Location:
+    async def get_location(
+            self,
+            item_uuid: str,
+            items_per_page: int,
+    ) -> common.Location:
         """Return Location of the item."""
 
     @abc.abstractmethod
@@ -44,6 +48,7 @@ class AbsRepository(abc.ABC):
     async def get_item_with_position(
             self,
             item_uuid: str,
+            items_per_page: int,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
 
@@ -130,7 +135,7 @@ class AbsBrowseRepository(AbsRepository):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod
-    async def get_items(
+    async def get_children(
             self,
             item_uuid: str,
             query: common.Query,

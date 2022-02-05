@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
-from typing import Optional, Mapping
+from typing import Optional, Mapping, Iterator
 
 from pydantic import BaseModel
 
@@ -94,17 +94,22 @@ class PositionedItem(BaseModel):
     """Primitive version of an item with position information."""
     position: int
     total_items: int
+    items_per_page: int
     item: Item
 
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
     owner: SimpleUser | None
-    items: list[Item]
+    items: list[PositionedItem]
 
     def __bool__(self) -> bool:
         """Return True if location is not empty."""
         return self.owner is not None and self.items
+
+    def __iter__(self) -> Iterator[PositionedItem]:
+        """Iterate over items."""
+        return iter(self.items)
 
     @classmethod
     def empty(cls) -> 'Location':
