@@ -34,7 +34,7 @@ def get_current_user():
         login='anon',
         password='',
         name='anon',
-        visiblity=None,
+        visibility=None,
         language=None,
         last_seen=None,
     )
