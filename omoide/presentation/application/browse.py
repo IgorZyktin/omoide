@@ -22,13 +22,15 @@ async def browse(
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as collection."""
-    query = infra.query_maker.from_request(
+    details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    query = infra.query_maker.from_request(request.query_params)
+
     with infra.Timer() as timer:
-        result = await use_case.execute(user, uuid, query.query)
+        result = await use_case.execute(user, uuid, details)
 
     if result.access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
@@ -38,7 +40,7 @@ async def browse(
 
     paginator = infra.Paginator(
         page=result.page,
-        items_per_page=query.query.items_per_page,
+        items_per_page=details.items_per_page,
         total_items=result.total_items,
         pages_in_block=constants.PAGES_IN_BLOCK,
     )
@@ -48,7 +50,7 @@ async def browse(
     context = {
         'request': request,
         'uuid': uuid,
-        'query': query,
+        'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': placeholder,
         'paginator': paginator,
         'result': result,

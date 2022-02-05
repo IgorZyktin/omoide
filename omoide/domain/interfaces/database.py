@@ -26,7 +26,7 @@ class AbsRepository(abc.ABC):
     async def get_location(
             self,
             item_uuid: str,
-            items_per_page: int,
+            details: common.Details,
     ) -> common.Location:
         """Return Location of the item."""
 
@@ -84,6 +84,7 @@ class AbsSearchRepository(AbsRepository):
     async def search_random_anon(
             self,
             query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Find random items for unauthorised user."""
 
@@ -91,6 +92,7 @@ class AbsSearchRepository(AbsRepository):
     async def search_specific_anon(
             self,
             query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
 
@@ -145,7 +147,7 @@ class AbsBrowseRepository(AbsRepository):
     async def get_children(
             self,
             item_uuid: str,
-            query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Load all children with all required fields."""
 

@@ -15,7 +15,7 @@ class BrowseRepository(
     async def get_children(
             self,
             item_uuid: str,
-            query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Load all children and sub children of the record."""
         _query = """
@@ -37,8 +37,8 @@ class BrowseRepository(
 
         values = {
             'item_uuid': item_uuid,
-            'limit': query.items_per_page,
-            'offset': (query.page - 1) * query.items_per_page,
+            'limit': details.items_per_page,
+            'offset': details.offset,
         }
 
         response = await self.db.fetch_all(_query, values)

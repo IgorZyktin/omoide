@@ -26,17 +26,19 @@ async def by_user(
         response_class=HTMLResponse,
 ):
     """Specific search by owner uuid."""
-    query = infra.query_maker.from_request(
+    details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    query = infra.query_maker.from_request(request.query_params)
+
     with infra.Timer() as timer:
-        result = await use_case.execute(user, query.query, uuid)
+        result = await use_case.execute(user, uuid, details)
 
     paginator = infra.Paginator(
         page=result.page,
-        items_per_page=query.query.items_per_page,
+        items_per_page=details.items_per_page,
         total_items=result.total_items,
         pages_in_block=constants.PAGES_IN_BLOCK,
     )
@@ -45,7 +47,7 @@ async def by_user(
 
     context = {
         'request': request,
-        'query': query,
+        'query': infra.query_maker.QueryWrapper(query, details),
         'uuid': uuid,
         'placeholder': placeholder,
         'paginator': paginator,

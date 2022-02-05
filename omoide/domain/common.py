@@ -173,17 +173,26 @@ class AccessStatus(BaseModel):
 
 class Query(BaseModel):
     """User search query."""
+    raw_query: str
     tags_include: list[str]
     tags_exclude: list[str]
-    page: int
-    items_per_page: int
 
     def __bool__(self) -> bool:
         """Return True if query has tags to search."""
-        return any((
-            self.tags_include,
-            self.tags_exclude,
-        ))
+        return any((self.tags_include, self.tags_exclude))
+
+
+class Details(BaseModel):
+    """Additional request parameters."""
+    page: int
+    items_per_page: int
+
+    def at_page(self, page: int) -> 'Details':
+        """Return details with different page."""
+        return type(self)(
+            page=page,
+            items_per_page=self.items_per_page,
+        )
 
     @property
     def offset(self) -> int:

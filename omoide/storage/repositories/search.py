@@ -45,6 +45,7 @@ class SearchRepository(
     async def search_random_anon(
             self,
             query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Find random items for unauthorised user."""
         _query = """
@@ -63,8 +64,8 @@ class SearchRepository(
         """
 
         values = {
-            'limit': query.items_per_page,
-            'offset': query.offset,
+            'limit': details.items_per_page,
+            'offset': details.offset,
         }
 
         response = await self.db.fetch_all(_query, values)
@@ -73,6 +74,7 @@ class SearchRepository(
     async def search_specific_anon(
             self,
             query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
         _query = """
@@ -95,8 +97,8 @@ class SearchRepository(
         """
 
         values = {
-            'limit': query.items_per_page,
-            'offset': query.offset,
+            'limit': details.items_per_page,
+            'offset': details.offset,
             'tags_include': query.tags_include,
             'tags_exclude': query.tags_exclude,
         }

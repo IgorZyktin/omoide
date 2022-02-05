@@ -16,6 +16,7 @@ class PreviewUseCase:
             self,
             user: auth.User,
             item_uuid: str,
+            details: common.Details,
     ) -> preview.Result:
         """Return preview model suitable for rendering."""
         async with self._repo.transaction():
@@ -29,7 +30,7 @@ class PreviewUseCase:
                 item = await self._repo.get_preview_item(item_uuid)
                 neighbours = await self._repo.get_neighbours(item_uuid)
                 # FIXME
-                location = await self._repo.get_location(item_uuid, 10)
+                location = await self._repo.get_location(item_uuid, details)
 
         return preview.Result(
             access=access,

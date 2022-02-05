@@ -47,7 +47,7 @@ class BaseRepository(database.AbsRepository):
     async def get_location(
             self,
             item_uuid: str,
-            items_per_page: int,
+            details: common.Details,
     ) -> common.Location:
         """Return Location of the item."""
         current_item = await self.get_item(item_uuid)
@@ -60,14 +60,14 @@ class BaseRepository(database.AbsRepository):
         if owner is None:
             return common.Location.empty()
 
-        ancestors = await self._get_ancestors(current_item, items_per_page)
+        ancestors = await self._get_ancestors(current_item, details)
 
         if ancestors:
             positioned_owner = await self.get_positioned_by_user(
-                owner, ancestors[-1].item, items_per_page)
+                owner, ancestors[-1].item, details)
         else:
             positioned_owner = await self.get_positioned_by_user(
-                owner, current_item, items_per_page)
+                owner, current_item, details)
 
         return common.Location(
             owner=positioned_owner,
@@ -78,12 +78,12 @@ class BaseRepository(database.AbsRepository):
     async def _get_ancestors(
             self,
             item: common.Item,
-            items_per_page: int,
+            details: common.Details,
     ) -> list[common.PositionedItem]:
         """Return list of positioned ancestors of given item."""
         ancestors = []
 
-        ancestor = await self.get_ancestor_item(item, items_per_page)
+        ancestor = await self.get_ancestor_item(item, details)
 
         while ancestor:
             ancestors.append(ancestor)
@@ -92,7 +92,7 @@ class BaseRepository(database.AbsRepository):
             if parent is None:
                 break
 
-            ancestor = await self.get_ancestor_item(parent, items_per_page)
+            ancestor = await self.get_ancestor_item(parent, details)
 
         ancestors.reverse()
         return ancestors
@@ -114,7 +114,7 @@ class BaseRepository(database.AbsRepository):
             self,
             user: common.SimpleUser,
             item: common.Item,
-            items_per_page: int,
+            details: common.Details,
     ) -> Optional[common.PositionedByUserItem]:
         """Return user with position information."""
         if await self.user_is_public(user.uuid):
@@ -148,7 +148,7 @@ class BaseRepository(database.AbsRepository):
             user=user,
             position=position,
             total_items=total_items,
-            items_per_page=items_per_page,
+            items_per_page=details.items_per_page,
             item=item,
         )
 
@@ -192,7 +192,7 @@ class BaseRepository(database.AbsRepository):
     async def get_ancestor_item(
             self,
             current_item: common.Item,
-            items_per_page: int,
+            details: common.Details,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
         query = """
@@ -234,6 +234,6 @@ class BaseRepository(database.AbsRepository):
         return common.PositionedItem(
             position=mapping.pop('position') or 0,
             total_items=mapping.pop('total_items') or 0,
-            items_per_page=items_per_page,
+            items_per_page=details.items_per_page,
             item=common.Item.from_map(mapping),
         )
