@@ -5,22 +5,24 @@ import re
 from itertools import zip_longest
 from typing import Iterable, Any, Iterator
 
-from pydantic import BaseModel
 from starlette.datastructures import QueryParams
 
 from omoide.domain import common
 
 
-class ExtQuery(BaseModel):
-    """Extended query, also includes some app-specific stuff."""
-    raw_query: str
-    query: common.Query
+class QueryWrapper:
+    """Extended query."""
+
+    def __init__(self, query: common.Query, details: common.Details) -> None:
+        """Initialize instance."""
+        self.query = query
+        self.details = details
 
     def as_str(self) -> str:
         """Convert to urlsafe string."""
         string = (
-            f'?q={self.raw_query}'
-            f'&page={self.query.page}'
+            f'?q={self.query.raw_query}'
+            f'&page={self.details.page}'
         )
 
         string = string.replace(' ', '%20')
@@ -29,37 +31,23 @@ class ExtQuery(BaseModel):
 
         return string
 
-    def at_page(self, page: int) -> 'ExtQuery':
+    def at_page(self, page: int) -> 'QueryWrapper':
         """Return new query for given page."""
         return type(self)(
-            raw_query=self.raw_query,
-            query=common.Query(
-                tags_include=self.query.tags_include,
-                tags_exclude=self.query.tags_exclude,
-                page=page,
-                items_per_page=self.query.items_per_page,
-            )
+            query=self.query,
+            details=self.details.at_page(page),
         )
 
 
-def from_request(params: QueryParams, items_per_page: int) -> ExtQuery:
+def from_request(params: QueryParams) -> common.Query:
     """Create new query from request params."""
     raw_query = params.get('q', '')
     tags_include, tags_exclude = parse_tags(raw_query)
 
-    try:
-        page = int(params.get('page', 1))
-    except (ValueError, TypeError):
-        page = 1
-
-    return ExtQuery(
+    return common.Query(
         raw_query=raw_query,
-        query=common.Query(
-            tags_include=tags_include,
-            tags_exclude=tags_exclude,
-            page=max(1, page),
-            items_per_page=items_per_page,
-        )
+        tags_include=tags_include,
+        tags_exclude=tags_exclude,
     )
 
 

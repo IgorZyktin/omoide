@@ -23,13 +23,15 @@ async def preview(
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
-    query = infra.query_maker.from_request(
+    details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    query = infra.query_maker.from_request(request.query_params)
+
     with infra.Timer() as timer:
-        result = await use_case.execute(user, uuid)
+        result = await use_case.execute(user, uuid, details)
 
     if result.access.does_not_exist:
         raise fastapi.HTTPException(status_code=404)
