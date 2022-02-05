@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
+import math
 from typing import Optional, Mapping, Iterator
 
 from pydantic import BaseModel
@@ -97,11 +98,17 @@ class PositionedItem(BaseModel):
     items_per_page: int
     item: Item
 
+    @property
+    def page(self) -> int:
+        """Return page number for this item in parent's collection."""
+        return math.ceil(self.position // self.items_per_page)
+
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: SimpleUser | None
+    owner: Optional[SimpleUser]
     items: list[PositionedItem]
+    current_item: Optional[Item]
 
     def __bool__(self) -> bool:
         """Return True if location is not empty."""
@@ -117,6 +124,7 @@ class Location(BaseModel):
         return cls(
             owner=None,
             items=[],
+            current_item=None,
         )
 
 

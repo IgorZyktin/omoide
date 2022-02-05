@@ -65,6 +65,7 @@ class BaseRepository(database.AbsRepository):
         return common.Location(
             owner=owner,
             items=ancestors,
+            current_item=current_item,
         )
 
     async def _get_ancestors(
