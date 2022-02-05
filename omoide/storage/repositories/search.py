@@ -50,7 +50,7 @@ class SearchRepository(
             self,
             user: auth.User,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Find random items for unauthorised user."""
         response = await self.db.fetch_all(
             query=self._query_search_random_anon,
@@ -59,13 +59,13 @@ class SearchRepository(
                 'offset': query.offset,
             }
         )
-        return [common.SimpleItem.from_row(row) for row in response]
+        return [common.Item.from_map(row) for row in response]
 
     async def search_specific_anon(
             self,
             user: auth.User,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
         response = await self.db.fetch_all(
             query=self._query_search_specific_anon,
@@ -76,7 +76,7 @@ class SearchRepository(
                 'tags_exclude': query.tags_exclude,
             }
         )
-        return [common.SimpleItem.from_row(row) for row in response]
+        return [common.Item.from_map(row) for row in response]
 
     async def total_random_known(
             self,

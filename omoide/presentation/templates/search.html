@@ -26,7 +26,7 @@
                 {%- if item.thumbnail_ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>
                 {%- else -%}
-                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.path }}" alt="{{ item.name }}"/>
+                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.thumbnail_path }}" alt="{{ item.name }}"/>
                 {%- endif -%}
                 </a>
             </div>

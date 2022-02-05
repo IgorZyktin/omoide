@@ -57,7 +57,7 @@ def from_request(params: QueryParams, items_per_page: int) -> ExtQuery:
         query=common.Query(
             tags_include=tags_include,
             tags_exclude=tags_exclude,
-            page=page,
+            page=max(1, page),
             items_per_page=items_per_page,
         )
     )

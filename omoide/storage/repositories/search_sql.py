@@ -17,11 +17,14 @@ WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
 """
 
 SEARCH_RANDOM_ANON = """
-SELECT owner_uuid,
-       uuid,
+SELECT uuid, 
+       parent_uuid,
+       owner_uuid,
        number,
-       is_collection,
        name,
+       is_collection,
+       content_ext,
+       preview_ext,
        thumbnail_ext
 FROM items
 WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
@@ -29,11 +32,14 @@ ORDER BY random() LIMIT :limit OFFSET :offset
 """
 
 SEARCH_SPECIFIC_ANON = """
-SELECT owner_uuid,
-       uuid,
+SELECT uuid, 
+       parent_uuid,
+       owner_uuid,
        number,
-       is_collection,
        name,
+       is_collection,
+       content_ext,
+       preview_ext,
        thumbnail_ext,
        ct.tags
 FROM items it

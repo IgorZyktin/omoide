@@ -4,7 +4,6 @@
 from omoide.domain import common
 from omoide.domain.interfaces import database
 from omoide.storage.repositories import base
-from omoide.storage.repositories import browse_sql
 
 
 class BrowseRepository(
@@ -12,34 +11,49 @@ class BrowseRepository(
     database.AbsBrowseRepository
 ):
     """Repository that performs all browse queries."""
-    _query_get_items = browse_sql.GET_ITEMS
-    _query_count_items = browse_sql.COUNT_ITEMS
 
-    async def get_items(
+    async def get_children(
             self,
             item_uuid: str,
             query: common.Query,
-    ) -> list[common.SimpleItem]:
+    ) -> list[common.Item]:
         """Load all children and sub children of the record."""
-        response = await self.db.fetch_all(
-            query=self._query_get_items,
-            values={
-                'item_uuid': item_uuid,
-                'limit': query.items_per_page,
-                'offset': (query.page - 1) * query.items_per_page,
-            }
-        )
-        return [common.SimpleItem.from_row(x) for x in response]
+        _query = """
+        SELECT uuid, 
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items
+        WHERE parent_uuid = :item_uuid
+        AND uuid <> :item_uuid   
+        ORDER BY number
+        LIMIT :limit OFFSET :offset;
+        """
+
+        values = {
+            'item_uuid': item_uuid,
+            'limit': query.items_per_page,
+            'offset': (query.page - 1) * query.items_per_page,
+        }
+
+        response = await self.db.fetch_all(_query, values)
+        return [common.Item.from_map(x) for x in response]
 
     async def count_items(
             self,
             item_uuid: str,
     ) -> int:
         """Count all children with all required fields."""
-        response = await self.db.fetch_one(
-            query=self._query_count_items,
-            values={
-                'item_uuid': item_uuid,
-            }
-        )
+        query = """
+        SELECT count(*) AS total_items
+        FROM items
+        WHERE parent_uuid = :item_uuid;
+        """
+
+        response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
         return int(response['total_items'])
