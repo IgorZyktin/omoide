@@ -31,11 +31,27 @@ class AbsRepository(abc.ABC):
         """Return Location of the item."""
 
     @abc.abstractmethod
+    async def user_is_public(
+            self,
+            owner_uuid: str,
+    ) -> bool:
+        """Return True if owner is a public user."""
+
+    @abc.abstractmethod
     async def get_user(
             self,
             user_uuid: str,
     ) -> Optional[common.SimpleUser]:
         """Return user or None."""
+
+    @abc.abstractmethod
+    async def get_positioned_by_user(
+            self,
+            user: common.SimpleUser,
+            item: common.Item,
+            items_per_page: int,
+    ) -> Optional[common.PositionedByUserItem]:
+        """Return user with position information."""
 
     @abc.abstractmethod
     async def get_item(
@@ -45,7 +61,7 @@ class AbsRepository(abc.ABC):
         """Return item or None."""
 
     @abc.abstractmethod
-    async def get_item_with_position(
+    async def get_ancestor_item(
             self,
             item_uuid: str,
             items_per_page: int,
@@ -152,13 +168,6 @@ class AbsBrowseRepository(AbsRepository):
 
 class AbsByUserRepository(AbsRepository):
     """Repository that performs search by owner uuid."""
-
-    @abc.abstractmethod
-    async def user_is_public(
-            self,
-            owner_uuid: str,
-    ) -> bool:
-        """Return True if owner is a public user."""
 
     @abc.abstractmethod
     async def count_items_of_public_user(

@@ -215,8 +215,8 @@
     <div class="location">
         <h3>
             {% if location.owner is not none %}
-                <a href="{{ request.url_for('by_user', uuid=location.owner.uuid) }}">
-                    {{ location.owner.name }}
+                <a href="{{ request.url_for('by_user', uuid=location.owner.user.uuid) }}?page={{ location.owner.page }}">
+                    {{ location.owner.user.name }}
                 </a>
             {% endif %}
 

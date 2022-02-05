@@ -62,29 +62,95 @@ class BaseRepository(database.AbsRepository):
 
         ancestors = await self._get_ancestors(current_item, items_per_page)
 
+        if ancestors:
+            positioned_owner = await self.get_positioned_by_user(
+                owner, ancestors[-1].item, items_per_page)
+        else:
+            positioned_owner = await self.get_positioned_by_user(
+                owner, current_item, items_per_page)
+
         return common.Location(
-            owner=owner,
+            owner=positioned_owner,
             items=ancestors,
             current_item=current_item,
         )
 
     async def _get_ancestors(
             self,
-            current_item: common.Item,
+            item: common.Item,
             items_per_page: int,
     ) -> list[common.PositionedItem]:
-        """Return list of positioned ancestors."""
+        """Return list of positioned ancestors of given item."""
         ancestors = []
 
-        parent = await self.get_item(current_item.parent_uuid)
-        while parent:
-            ancestor = await self.get_item_with_position(parent,
-                                                         items_per_page)
-            parent = await self.get_item(parent.parent_uuid)
+        ancestor = await self.get_ancestor_item(item, items_per_page)
+
+        while ancestor:
             ancestors.append(ancestor)
+            parent = await self.get_item(ancestor.item.parent_uuid)
+
+            if parent is None:
+                break
+
+            ancestor = await self.get_ancestor_item(parent, items_per_page)
 
         ancestors.reverse()
         return ancestors
+
+    async def user_is_public(
+            self,
+            owner_uuid: str,
+    ) -> bool:
+        """Return True if owner is a public user."""
+        query = """
+        SELECT 1 
+        FROM public_users
+        WHERE user_uuid = :user_uuid;
+        """
+        response = await self.db.fetch_one(query, {'user_uuid': owner_uuid})
+        return response is not None
+
+    async def get_positioned_by_user(
+            self,
+            user: common.SimpleUser,
+            item: common.Item,
+            items_per_page: int,
+    ) -> Optional[common.PositionedByUserItem]:
+        """Return user with position information."""
+        if await self.user_is_public(user.uuid):
+            query = """
+            WITH children AS (
+                SELECT uuid
+                FROM items
+                WHERE owner_uuid = :owner_uuid
+                  AND parent_uuid IS NULL
+                ORDER BY number
+            )
+        SELECT (select array_position(array(select uuid from children),
+                                      :item_uuid)) as position,
+               (select count(*) from children) as total_items
+        """
+        else:
+            raise
+
+        values = {'owner_uuid': user.uuid, 'item_uuid': item.uuid}
+
+        response = await self.db.fetch_one(query, values)
+
+        if response is None:
+            position = 1
+            total_items = 1
+        else:
+            position = int(response['position'] or 1)
+            total_items = int(response['total_items'] or 1)
+
+        return common.PositionedByUserItem(
+            user=user,
+            position=position,
+            total_items=total_items,
+            items_per_page=items_per_page,
+            item=item,
+        )
 
     async def get_user(
             self,
@@ -123,7 +189,7 @@ class BaseRepository(database.AbsRepository):
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
         return common.Item.from_map(response) if response else None
 
-    async def get_item_with_position(
+    async def get_ancestor_item(
             self,
             current_item: common.Item,
             items_per_page: int,
@@ -145,11 +211,12 @@ class BaseRepository(database.AbsRepository):
                content_ext,
                preview_ext,
                thumbnail_ext,
+               array (select * from children),
                (select array_position(array(select uuid from children),
                                       :item_uuid)) as position,
                (select count(*) from children) as total_items
         FROM items
-        WHERE uuid = :item_uuid
+        WHERE uuid = :parent_uuid
         """
 
         values = {

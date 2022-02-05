@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
-import math
 from typing import Optional, Mapping, Iterator
 
 from pydantic import BaseModel
@@ -19,6 +18,10 @@ class SimpleUser(BaseModel):
     """Primitive version of User model."""
     uuid: str
     name: str
+
+    def is_anon(self) -> bool:
+        """Return True if user is anonymous."""
+        return self.uuid is None
 
     @classmethod
     def empty(cls) -> 'SimpleUser':
@@ -101,12 +104,26 @@ class PositionedItem(BaseModel):
     @property
     def page(self) -> int:
         """Return page number for this item in parent's collection."""
-        return math.ceil(self.position // self.items_per_page)
+        return self.position // self.items_per_page + 1
+
+
+class PositionedByUserItem(BaseModel):
+    """Same as PositionedItem but according to user catalogue."""
+    user: SimpleUser
+    position: int
+    total_items: int
+    items_per_page: int
+    item: Item
+
+    @property
+    def page(self) -> int:
+        """Return page number for this item in parent's collection."""
+        return self.position // self.items_per_page + 1
 
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: Optional[SimpleUser]
+    owner: Optional[PositionedByUserItem]
     items: list[PositionedItem]
     current_item: Optional[Item]
 
