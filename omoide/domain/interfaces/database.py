@@ -61,10 +61,11 @@ class AbsRepository(abc.ABC):
         """Return item or None."""
 
     @abc.abstractmethod
-    async def get_ancestor_item(
+    async def get_item_with_position(
             self,
             item_uuid: str,
-            items_per_page: int,
+            child_uuid: str,
+            details: common.Details,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
 

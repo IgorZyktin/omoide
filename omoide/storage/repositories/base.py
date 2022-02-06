@@ -64,7 +64,7 @@ class BaseRepository(database.AbsRepository):
 
         if ancestors:
             positioned_owner = await self.get_positioned_by_user(
-                owner, ancestors[-1].item, details)
+                owner, ancestors[0].item, details)
         else:
             positioned_owner = await self.get_positioned_by_user(
                 owner, current_item, details)
@@ -83,16 +83,22 @@ class BaseRepository(database.AbsRepository):
         """Return list of positioned ancestors of given item."""
         ancestors = []
 
-        ancestor = await self.get_ancestor_item(item, details)
+        item_uuid = item.parent_uuid
+        child_uuid = item.uuid
 
-        while ancestor:
-            ancestors.append(ancestor)
-            parent = await self.get_item(ancestor.item.parent_uuid)
+        while True:
+            ancestor = await self.get_item_with_position(
+                item_uuid=item_uuid,
+                child_uuid=child_uuid,
+                details=details,
+            )
 
-            if parent is None:
+            if ancestor is None:
                 break
 
-            ancestor = await self.get_ancestor_item(parent, details)
+            ancestors.append(ancestor)
+            item_uuid = ancestor.item.parent_uuid
+            child_uuid = ancestor.item.uuid
 
         ancestors.reverse()
         return ancestors
@@ -189,9 +195,10 @@ class BaseRepository(database.AbsRepository):
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
         return common.Item.from_map(response) if response else None
 
-    async def get_ancestor_item(
+    async def get_item_with_position(
             self,
-            current_item: common.Item,
+            item_uuid: str,
+            child_uuid: str,
             details: common.Details,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
@@ -199,7 +206,7 @@ class BaseRepository(database.AbsRepository):
         WITH children AS (
             SELECT uuid
             FROM items
-            WHERE parent_uuid = :parent_uuid
+            WHERE parent_uuid = :item_uuid
             ORDER BY number
         )
         SELECT uuid, 
@@ -210,20 +217,15 @@ class BaseRepository(database.AbsRepository):
                is_collection,
                content_ext,
                preview_ext,
-               thumbnail_ext,
-               array (select * from children),
+               thumbnail_ext, 
                (select array_position(array(select uuid from children),
-                                      :item_uuid)) as position,
+                                      :child_uuid)) as position,
                (select count(*) from children) as total_items
         FROM items
-        WHERE uuid = :parent_uuid
+        WHERE uuid = :item_uuid;
         """
 
-        values = {
-            'item_uuid': current_item.uuid,
-            'parent_uuid': current_item.parent_uuid,
-        }
-
+        values = {'item_uuid': item_uuid, 'child_uuid': child_uuid}
         response = await self.db.fetch_one(query, values)
 
         if response is None:
@@ -232,8 +234,8 @@ class BaseRepository(database.AbsRepository):
         mapping = dict(response)
 
         return common.PositionedItem(
-            position=mapping.pop('position') or 0,
-            total_items=mapping.pop('total_items') or 0,
+            position=mapping.pop('position') or 1,
+            total_items=mapping.pop('total_items') or 1,
             items_per_page=details.items_per_page,
             item=common.Item.from_map(mapping),
         )
