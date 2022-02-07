@@ -118,7 +118,7 @@ class BaseRepository(database.AbsRepository):
 
     async def get_positioned_by_user(
             self,
-            user: common.SimpleUser,
+            user: auth.User,
             item: common.Item,
             details: common.Details,
     ) -> Optional[common.PositionedByUserItem]:
@@ -161,17 +161,16 @@ class BaseRepository(database.AbsRepository):
     async def get_user(
             self,
             user_uuid: str,
-    ) -> Optional[common.SimpleUser]:
+    ) -> Optional[auth.User]:
         """Return user or None."""
         query = """
-        SELECT uuid,
-               name
+        SELECT *
         FROM users
         WHERE uuid = :user_uuid;
         """
 
         response = await self.db.fetch_one(query, {'user_uuid': user_uuid})
-        return common.SimpleUser.from_row(response) if response else None
+        return auth.User.from_map(response) if response else None
 
     async def get_item(
             self,

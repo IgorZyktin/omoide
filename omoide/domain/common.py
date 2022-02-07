@@ -5,50 +5,7 @@ from typing import Optional, Mapping, Iterator
 
 from pydantic import BaseModel
 
-
-def as_str(mapping: Mapping, key: str) -> Optional[str]:
-    """Extract optional."""
-    value = mapping[key]
-    if value is None:
-        return None
-    return str(value)
-
-
-class SimpleUser(BaseModel):
-    """Primitive version of User model."""
-    uuid: str
-    name: str
-
-    def is_anon(self) -> bool:
-        """Return True if user is anonymous."""
-        return self.uuid is None
-
-    @classmethod
-    def empty(cls) -> 'SimpleUser':
-        """User has no access to this info, return empty one."""
-        return cls(
-            uuid='',
-            name='',
-        )
-
-    # -------------------------------------------------------------------------
-    # TODO - hacky solutions, must get rid of UUID type
-    @classmethod
-    def from_row(cls, raw_item):
-        """Convert from db format to required model."""
-
-        def as_str(key: str) -> str | None:
-            """Extract optional."""
-            value = raw_item[key]
-            if value is None:
-                return None
-            return str(value)
-
-        return cls(
-            uuid=as_str('uuid'),
-            name=raw_item['name'],
-        )
-    # -------------------------------------------------------------------------
+from omoide.domain import utils, auth
 
 
 class Item(BaseModel):
@@ -82,9 +39,9 @@ class Item(BaseModel):
     def from_map(cls, mapping: Mapping) -> 'Item':
         """Convert from arbitrary format to model."""
         return cls(
-            uuid=as_str(mapping, 'uuid'),
-            parent_uuid=as_str(mapping, 'parent_uuid'),
-            owner_uuid=as_str(mapping, 'owner_uuid'),
+            uuid=utils.as_str(mapping, 'uuid'),
+            parent_uuid=utils.as_str(mapping, 'parent_uuid'),
+            owner_uuid=utils.as_str(mapping, 'owner_uuid'),
             number=mapping['number'],
             name=mapping['name'],
             is_collection=mapping['is_collection'],
@@ -109,7 +66,7 @@ class PositionedItem(BaseModel):
 
 class PositionedByUserItem(BaseModel):
     """Same as PositionedItem but according to user catalogue."""
-    user: SimpleUser
+    user: auth.User
     position: int
     total_items: int
     items_per_page: int

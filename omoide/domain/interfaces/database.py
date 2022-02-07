@@ -41,13 +41,13 @@ class AbsRepository(abc.ABC):
     async def get_user(
             self,
             user_uuid: str,
-    ) -> Optional[common.SimpleUser]:
+    ) -> Optional[auth.User]:
         """Return user or None."""
 
     @abc.abstractmethod
     async def get_positioned_by_user(
             self,
-            user: common.SimpleUser,
+            user: auth.User,
             item: common.Item,
             items_per_page: int,
     ) -> Optional[common.PositionedByUserItem]:

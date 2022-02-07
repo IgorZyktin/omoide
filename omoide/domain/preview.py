@@ -5,7 +5,7 @@ from typing import Optional, Mapping
 
 from pydantic import BaseModel
 
-from omoide.domain import common
+from omoide.domain import common, utils
 
 __all__ = [
     'ExtendedItem',
@@ -22,9 +22,9 @@ class ExtendedItem(common.Item):
     def from_map(cls, mapping: Mapping) -> 'ExtendedItem':
         """Convert from arbitrary format to model."""
         return cls(
-            uuid=common.as_str(mapping, 'uuid'),
-            parent_uuid=common.as_str(mapping, 'parent_uuid'),
-            owner_uuid=common.as_str(mapping, 'owner_uuid'),
+            uuid=utils.as_str(mapping, 'uuid'),
+            parent_uuid=utils.as_str(mapping, 'parent_uuid'),
+            owner_uuid=utils.as_str(mapping, 'owner_uuid'),
             number=mapping['number'],
             name=mapping['name'],
             is_collection=mapping['is_collection'],
