@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Paginator that works with arbitrary items as pages.
 """
-from typing import TypeVar, Sequence, Iterator, Generic
+from typing import TypeVar, Sequence, Iterator, Generic, Optional
 
 from pydantic import BaseModel
 
@@ -11,7 +11,7 @@ T = TypeVar('T')
 class PageVal(Generic[T], BaseModel):
     """Single page representation."""
     number: int
-    value: T | None
+    value: Optional[T]
     is_dummy: bool
     is_current: bool
 
@@ -22,7 +22,7 @@ class Album(Generic[T]):
     def __init__(
             self,
             sequence: Sequence[T],
-            position: T | None,
+            position: Optional[None],
             items_on_page: int,
     ) -> None:
         """Initialize instance."""
@@ -92,28 +92,28 @@ class Album(Generic[T]):
         return 0 <= self.index < self.total_items - 1
 
     @property
-    def previous_item(self) -> T | None:
+    def previous_item(self) -> Optional[T]:
         """Return previous value in sequence."""
         if self.has_previous:
             return self.sequence[self.index - 1]
         return None
 
     @property
-    def next_item(self) -> T | None:
+    def next_item(self) -> Optional[T]:
         """Return next value in sequence."""
         if self.has_next:
             return self.sequence[self.index + 1]
         return None
 
     @property
-    def first_item(self) -> T | None:
+    def first_item(self) -> Optional[T]:
         """Return first item."""
         if self.sequence:
             return self.sequence[0]
         return None
 
     @property
-    def last_item(self) -> T | None:
+    def last_item(self) -> Optional[T]:
         """Return last item."""
         if self.sequence:
             return self.sequence[-1]

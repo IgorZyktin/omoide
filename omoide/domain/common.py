@@ -6,7 +6,7 @@ from typing import Optional, Mapping, Iterator
 from pydantic import BaseModel
 
 
-def as_str(mapping: Mapping, key: str) -> str | None:
+def as_str(mapping: Mapping, key: str) -> Optional[str]:
     """Extract optional."""
     value = mapping[key]
     if value is None:
