@@ -65,15 +65,8 @@ class ByUserRepository(
             owner_uuid: str,
     ) -> int:
         """Count all items of a private user."""
-        # FIXME
-        raise
-        response = await self.db.fetch_one(
-            query=self._query_count_of_private_user,
-            values={
-                'user_uuid': owner_uuid,
-            }
-        )
-        return int(response['total_items'])
+        # TODO(i.zyktin): need to implement this
+        raise NotImplementedError
 
     async def get_items_of_private_user(
             self,
@@ -83,15 +76,5 @@ class ByUserRepository(
             offset: int,
     ) -> list[common.Item]:
         """Load all items of a private user."""
-        # FIXME
-        raise
-        response = await self.db.fetch_one(
-            query=self._query_get_items_of_public_user,
-            values={
-                'user_uuid': user.uuid,
-                'owner_uuid': owner_uuid,
-                'limit': limit,
-                'offset': offset,
-            }
-        )
-        return [common.Item.from_map(row) for row in response]
+        # TODO(i.zyktin): need to implement this
+        raise NotImplementedError
