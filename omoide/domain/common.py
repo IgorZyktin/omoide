@@ -6,7 +6,7 @@ from typing import Optional, Mapping, Iterator
 from pydantic import BaseModel
 
 
-def _as_str(mapping: Mapping, key: str) -> str | None:
+def as_str(mapping: Mapping, key: str) -> str | None:
     """Extract optional."""
     value = mapping[key]
     if value is None:
@@ -82,9 +82,9 @@ class Item(BaseModel):
     def from_map(cls, mapping: Mapping) -> 'Item':
         """Convert from arbitrary format to model."""
         return cls(
-            uuid=_as_str(mapping, 'uuid'),
-            parent_uuid=_as_str(mapping, 'parent_uuid'),
-            owner_uuid=_as_str(mapping, 'owner_uuid'),
+            uuid=as_str(mapping, 'uuid'),
+            parent_uuid=as_str(mapping, 'parent_uuid'),
+            owner_uuid=as_str(mapping, 'owner_uuid'),
             number=mapping['number'],
             name=mapping['name'],
             is_collection=mapping['is_collection'],

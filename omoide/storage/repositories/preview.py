@@ -14,10 +14,10 @@ class PreviewRepository(
 ):
     """Repository that performs all preview queries."""
 
-    async def get_preview_item(
+    async def get_extended_item(
             self,
             item_uuid: str,
-    ) -> Optional[preview.Item]:
+    ) -> Optional[preview.ExtendedItem]:
         """Return instance of item."""
         query = """
         SELECT * 
@@ -26,10 +26,7 @@ class PreviewRepository(
         """
 
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
-
-        if response is None:
-            return None
-        return preview.Item.from_row(response)
+        return preview.ExtendedItem.from_map(response) if response else None
 
     async def get_neighbours(self, item_uuid: str) -> list[str]:
         """Return uuids of all the neighbours."""

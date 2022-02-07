@@ -3,19 +3,18 @@
 """
 from pydantic import BaseModel
 
-from omoide.domain.common import AccessStatus, Location, Item
+from omoide.domain import common
 
 __all__ = [
-    'AccessStatus',
     'Result',
 ]
 
 
 class Result(BaseModel):
     """Result of a search request."""
-    access: AccessStatus
-    location: Location
+    access: common.AccessStatus
+    location: common.Location
     page: int
     total_items: int
     total_pages: int
-    items: list[Item]
+    items: list[common.Item]

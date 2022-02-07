@@ -28,7 +28,7 @@ class PreviewUseCase:
                 location = common.Location.empty()
             else:
                 location = await self._repo.get_location(item_uuid, details)
-                item = await self._repo.get_preview_item(item_uuid)
+                item = await self._repo.get_extended_item(item_uuid)
                 neighbours = await self._repo.get_neighbours(item_uuid)
 
         return preview.Result(

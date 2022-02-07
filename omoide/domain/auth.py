@@ -2,6 +2,7 @@
 """User related interfaces and objects.
 """
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, UUID4
 
@@ -12,13 +13,13 @@ __all__ = [
 
 class User(BaseModel):
     """User model."""
-    uuid: UUID4 | None
+    uuid: Optional[UUID4]
     login: str
     password: str
     name: str
-    visibility: str | None
-    language: str | None
-    last_seen: datetime | None
+    visibility: Optional[str]
+    language: Optional[str]
+    last_seen: Optional[datetime]
 
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
