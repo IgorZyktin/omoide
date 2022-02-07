@@ -28,14 +28,14 @@ class Item(BaseModel):
     groups: list[str]
 
     @property
-    def preview_location(self) -> str:
-        """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.preview_ext}'
-
-    @property
-    def content_location(self) -> str:
+    def content_path(self) -> str:
         """Return file system path segment that will allow to find file."""
         return f'{self.uuid[:2]}/{self.uuid}.{self.content_ext}'
+
+    @property
+    def preview_path(self) -> str:
+        """Return file system path segment that will allow to find file."""
+        return f'{self.uuid[:2]}/{self.uuid}.{self.preview_ext}'
 
     @classmethod
     def empty(cls) -> 'Item':

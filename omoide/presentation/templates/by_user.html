@@ -7,7 +7,13 @@
 
     <div class="envelope-container">
         {% for item in result.items %}
-            <div class="envelope">
+            {% if item.is_collection %}
+                {% set additional_style = ' env-collection' %}
+            {% else %}
+                {% set additional_style = '' %}
+            {% endif %}
+
+            <div class="envelope{{ additional_style }}">
 
                 {%- if item.is_collection %}
                     <a href="{{ url_for('browse', uuid=item.uuid) }}">
@@ -22,7 +28,7 @@
                 {%- if item.thumbnail_ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>
                 {%- else -%}
-                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.path }}" alt="{{ item.name }}"/>
+                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.thumbnail_path }}" alt="{{ item.name }}"/>
                 {%- endif -%}
                 </a>
             </div>

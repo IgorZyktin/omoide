@@ -228,6 +228,7 @@ h5 {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    text-align: center;
 }
 
 .envelope a {
@@ -320,4 +321,19 @@ h5 {
 
 .invert {
     filter: invert(90%);
+}
+
+.env-collection {
+
+}
+
+.env-collection img {
+    opacity: .5;
+    z-index: 2;
+}
+
+.env-collection p {
+    font-weight: bold;
+    z-index: 1;
+    text-shadow: 0 0 20px #000000;
 }

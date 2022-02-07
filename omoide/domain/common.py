@@ -64,9 +64,9 @@ class Item(BaseModel):
     thumbnail_ext: Optional[str]
 
     @property
-    def thumbnail_path(self) -> str:
+    def content_path(self) -> str:
         """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.thumbnail_ext}'
+        return f'{self.uuid[:2]}/{self.uuid}.{self.content_ext}'
 
     @property
     def preview_path(self) -> str:
@@ -74,9 +74,9 @@ class Item(BaseModel):
         return f'{self.uuid[:2]}/{self.uuid}.{self.preview_ext}'
 
     @property
-    def content_path(self) -> str:
+    def thumbnail_path(self) -> str:
         """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.content_ext}'
+        return f'{self.uuid[:2]}/{self.uuid}.{self.thumbnail_ext}'
 
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'Item':

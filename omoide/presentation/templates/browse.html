@@ -8,7 +8,13 @@
 
     <div class="envelope-container">
         {% for item in result.items %}
-            <div class="envelope">
+            {% if item.is_collection %}
+                {% set additional_style = ' env-collection' %}
+            {% else %}
+                {% set additional_style = '' %}
+            {% endif %}
+
+            <div class="envelope{{ additional_style }}">
 
                 {%- if item.is_collection %}
                     <a href="{{ url_for('browse', uuid=item.uuid) }}">
