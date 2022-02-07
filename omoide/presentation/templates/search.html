@@ -1,5 +1,5 @@
 {% extends "base_search.html" %}
-{% from "macros.html" import render_paginator %}
+{% from "macros.html" import render_paginator, render_thumbnail_for_item %}
 
 {% block body %}
 
@@ -11,31 +11,7 @@
 
     <div class="envelope-container">
         {% for item in result.items %}
-            {% if item.is_collection %}
-                {% set additional_style = ' env-collection' %}
-            {% else %}
-                {% set additional_style = '' %}
-            {% endif %}
-
-            <div class="envelope {{ additional_style }}">
-
-                {%- if item.is_collection %}
-                    <a href="{{ url_for('browse', uuid=item.uuid) }}">
-                {% else %}
-                    <a href="{{ url_for('preview', uuid=item.uuid) }}">
-                {% endif -%}
-
-                {%- if item.name -%}
-                    <p>{{ item.name }}</p>
-                {%- endif -%}
-
-                {%- if item.thumbnail_ext is none -%}
-                    <img src="{{ url_for('static', path='empty.png') }}" alt="{{ item.name }}"/>
-                {%- else -%}
-                    <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.thumbnail_path }}" alt="{{ item.name }}"/>
-                {%- endif -%}
-                </a>
-            </div>
+            {{ render_thumbnail_for_item(request, item) }}
         {% endfor %}
     </div>
 
