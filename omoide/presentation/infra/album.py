@@ -22,7 +22,7 @@ class Album(Generic[T]):
     def __init__(
             self,
             sequence: Sequence[T],
-            position: Optional[None],
+            position: Optional[T],
             items_on_page: int,
     ) -> None:
         """Initialize instance."""
