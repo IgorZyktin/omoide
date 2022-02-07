@@ -17,10 +17,6 @@ def _str(paginator: infra.Paginator) -> str:
     return ' '.join(numbers)
 
 
-def test_paginator_empty():
-    assert not infra.Paginator.empty()
-
-
 def test_paginator_str():
     paginator = infra.Paginator(
         page=3,
