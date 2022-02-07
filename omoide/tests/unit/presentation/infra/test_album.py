@@ -27,10 +27,6 @@ def test_album_str():
     assert str(album) == "Album(sequence='abc', position='b', items_on_page=5)"
 
 
-def test_album_empty():
-    assert not infra.Album.empty()
-
-
 def test_album_neighbours():
     album = infra.Album(
         sequence='abc',

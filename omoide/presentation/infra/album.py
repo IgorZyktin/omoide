@@ -72,15 +72,6 @@ class Album(Generic[T]):
         """Return True if all pages can be displayed at once."""
         return self.total_items <= self.items_on_page
 
-    @classmethod
-    def empty(cls) -> 'Album':
-        """Create empty paginator."""
-        return cls(
-            sequence=[],
-            position=None,
-            items_on_page=1,
-        )
-
     @property
     def has_previous(self) -> bool:
         """Return True if we can go back."""
