@@ -25,7 +25,7 @@ class PreviewUseCase:
             if access.is_not_given:
                 item = None
                 neighbours = []
-                location = common.Location.empty()
+                location = None
             else:
                 location = await self._repo.get_location(item_uuid, details)
                 item = await self._repo.get_extended_item(item_uuid)

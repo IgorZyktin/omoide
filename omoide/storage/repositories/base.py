@@ -48,17 +48,17 @@ class BaseRepository(database.AbsRepository):
             self,
             item_uuid: str,
             details: common.Details,
-    ) -> common.Location:
+    ) -> Optional[common.Location]:
         """Return Location of the item."""
         current_item = await self.get_item(item_uuid)
 
         if current_item is None:
-            return common.Location.empty()
+            return None
 
         owner = await self.get_user(current_item.owner_uuid)
 
         if owner is None:
-            return common.Location.empty()
+            return None
 
         ancestors = await self._get_ancestors(current_item, details)
 

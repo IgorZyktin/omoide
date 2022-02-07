@@ -39,6 +39,6 @@ class ExtendedItem(common.Item):
 class Result(BaseModel):
     """Complete output of Preview request."""
     access: common.AccessStatus
-    location: common.Location
+    location: Optional[common.Location]
     item: Optional[ExtendedItem]
     neighbours: list[str]

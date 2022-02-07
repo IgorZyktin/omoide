@@ -25,7 +25,7 @@ class BrowseUseCase:
             if access.is_not_given:
                 items = []
                 total_items = 0
-                location = common.Location.empty()
+                location = None
             else:
                 location = await self._repo.get_location(item_uuid, details)
                 items = await self._repo.get_children(item_uuid, details)
