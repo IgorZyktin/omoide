@@ -46,7 +46,7 @@ async def preview(
 
     context = {
         'request': request,
-        'query': query,
+        'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': placeholder,
         'item': result.item,
         'result': result,

@@ -31,12 +31,12 @@
             <input id="query_element"
                    name="query"
                    type="search"
-                   value="{{ query.raw_query }}"
+                   value="{{ query.query.raw_query }}"
                    class="query_input"
                    placeholder="{{ placeholder }}" autofocus/>
         </label>
 
-        <a href=""
+        <a href="javascript:void(0)"
            title="Press to perform search"
            onclick="goSearch()"
            class="button">
