@@ -49,7 +49,7 @@ class AbsRepository(abc.ABC):
             self,
             user: auth.User,
             item: common.Item,
-            items_per_page: int,
+            details: common.Details,
     ) -> Optional[common.PositionedByUserItem]:
         """Return user with position information."""
 
