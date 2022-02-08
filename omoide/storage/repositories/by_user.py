@@ -2,13 +2,13 @@
 """By owner uuid search repository.
 """
 from omoide.domain import auth, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 from omoide.storage.repositories import base
 
 
 class ByUserRepository(
     base.BaseRepository,
-    database.AbsByUserRepository
+    repositories.AbsByUserRepository,
 ):
     """Repository that performs search based on owner uuid."""
 

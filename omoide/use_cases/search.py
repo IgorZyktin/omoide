@@ -2,13 +2,13 @@
 """Use case for search.
 """
 from omoide.domain import search, auth, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 
 
 class SearchUseCase:
     """Use case for search."""
 
-    def __init__(self, repo: database.AbsSearchRepository) -> None:
+    def __init__(self, repo: repositories.AbsSearchRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 

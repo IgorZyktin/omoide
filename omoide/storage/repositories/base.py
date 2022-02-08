@@ -4,11 +4,11 @@
 from typing import Optional, Any
 
 from omoide.domain import auth, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 from omoide.storage.repositories import base_sql
 
 
-class BaseRepository(database.AbsRepository):
+class BaseRepository(repositories.AbsRepository):
     """Base functionality for all concrete repositories."""
     _query_check_access = base_sql.CHECK_ACCESS
     _query_get_ancestors = base_sql.GET_ANCESTORS

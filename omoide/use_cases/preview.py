@@ -2,13 +2,13 @@
 """Use case for preview.
 """
 from omoide.domain import auth, preview, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 
 
 class PreviewUseCase:
     """Use case for preview."""
 
-    def __init__(self, repo: database.AbsPreviewRepository) -> None:
+    def __init__(self, repo: repositories.AbsPreviewRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 

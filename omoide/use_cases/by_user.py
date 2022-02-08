@@ -2,13 +2,13 @@
 """Use case for search by owner uuid.
 """
 from omoide.domain import auth, by_user, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 
 
 class ByUserUseCase:
     """Use case for search by owner uuid."""
 
-    def __init__(self, repo: database.AbsByUserRepository) -> None:
+    def __init__(self, repo: repositories.AbsByUserRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 

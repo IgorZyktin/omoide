@@ -4,13 +4,13 @@
 from typing import Optional
 
 from omoide.domain import preview
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 from omoide.storage.repositories import base
 
 
 class PreviewRepository(
     base.BaseRepository,
-    database.AbsPreviewRepository
+    repositories.AbsPreviewRepository,
 ):
     """Repository that performs all preview queries."""
 

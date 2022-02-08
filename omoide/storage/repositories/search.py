@@ -2,13 +2,13 @@
 """Search repository.
 """
 from omoide.domain import auth, search, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 from omoide.storage.repositories import base
 
 
 class SearchRepository(
     base.BaseRepository,
-    database.AbsSearchRepository
+    repositories.AbsSearchRepository,
 ):
     """Repository that performs all search queries."""
 

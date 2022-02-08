@@ -2,13 +2,13 @@
 """Browse repository.
 """
 from omoide.domain import common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 from omoide.storage.repositories import base
 
 
 class BrowseRepository(
     base.BaseRepository,
-    database.AbsBrowseRepository
+    repositories.AbsBrowseRepository,
 ):
     """Repository that performs all browse queries."""
 

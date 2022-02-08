@@ -2,13 +2,13 @@
 """Use case for browse.
 """
 from omoide.domain import auth, browse, common
-from omoide.domain.interfaces import database
+from omoide.domain.interfaces import repositories
 
 
 class BrowseUseCase:
     """Use case for browse."""
 
-    def __init__(self, repo: database.AbsBrowseRepository) -> None:
+    def __init__(self, repo: repositories.AbsBrowseRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 
