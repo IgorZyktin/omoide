@@ -32,4 +32,4 @@ jobs:
             -   name: Test with mypy
                 run: |
                     pip install mypy
-                    mypy --config-file pyproject.toml ./omoide
+                    mypy --install-types --config-file pyproject.toml ./omoide
