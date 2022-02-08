@@ -127,7 +127,7 @@ class SearchRepository(
             self,
             user: auth.User,
             query: common.Query,
-    ) -> search.Result:
+    ) -> list[common.Item]:
         """Find random items for authorised user."""
         # TODO(i.zyktin): need to implement this
         raise NotImplementedError
@@ -136,7 +136,7 @@ class SearchRepository(
             self,
             user: auth.User,
             query: common.Query,
-    ) -> search.Result:
+    ) -> list[common.Item]:
         """Find specific items for authorised user."""
         # TODO(i.zyktin): need to implement this
         raise NotImplementedError
