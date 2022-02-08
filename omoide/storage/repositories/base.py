@@ -45,7 +45,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
     ) -> bool:
         """Return True if owner is a public user."""
         query = """
-        SELECT 1 
+        SELECT 1
         FROM public_users
         WHERE user_uuid = :user_uuid;
         """
@@ -114,7 +114,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
     ) -> Optional[common.Item]:
         """Return item or None."""
         query = """
-        SELECT uuid, 
+        SELECT uuid,
                parent_uuid,
                owner_uuid,
                number,
@@ -144,7 +144,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             WHERE parent_uuid = :item_uuid
             ORDER BY number
         )
-        SELECT uuid, 
+        SELECT uuid,
                parent_uuid,
                owner_uuid,
                number,
@@ -152,7 +152,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                is_collection,
                content_ext,
                preview_ext,
-               thumbnail_ext, 
+               thumbnail_ext,
                (select array_position(array(select uuid from children),
                                       :child_uuid)) as position,
                (select count(*) from children) as total_items

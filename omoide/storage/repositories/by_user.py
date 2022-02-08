@@ -35,7 +35,7 @@ class ByUserRepository(
     ) -> list[common.Item]:
         """Load all items of a public user."""
         query = """
-        SELECT uuid, 
+        SELECT uuid,
                parent_uuid,
                owner_uuid,
                number,

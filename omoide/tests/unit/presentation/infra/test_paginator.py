@@ -9,7 +9,7 @@ def _str(paginator: infra.Paginator) -> str:
     numbers = []
     for page in paginator:
         if page.is_dummy:
-            numbers.append(f'...')
+            numbers.append('...')
         elif page.is_current:
             numbers.append(f'[{page.number:02d}]')
         else:

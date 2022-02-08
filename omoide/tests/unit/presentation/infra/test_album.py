@@ -9,7 +9,7 @@ def _str(album: infra.Album) -> str:
     values = []
     for page in album:
         if page.is_dummy:
-            values.append(f'...')
+            values.append('...')
         elif page.is_current:
             values.append(f'[{page.value}]')
         else:

@@ -49,7 +49,7 @@ class SearchRepository(
     ) -> list[common.Item]:
         """Find random items for unauthorised user."""
         _query = """
-        SELECT uuid, 
+        SELECT uuid,
                parent_uuid,
                owner_uuid,
                number,
@@ -78,7 +78,7 @@ class SearchRepository(
     ) -> list[common.Item]:
         """Find specific items for unauthorised user."""
         _query = """
-        SELECT uuid, 
+        SELECT uuid,
                parent_uuid,
                owner_uuid,
                number,

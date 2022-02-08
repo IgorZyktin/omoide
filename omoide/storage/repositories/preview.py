@@ -20,7 +20,7 @@ class PreviewRepository(
     ) -> Optional[preview.ExtendedItem]:
         """Return instance of item."""
         query = """
-        SELECT * 
+        SELECT *
         FROM items
         WHERE uuid = :item_uuid;
         """
@@ -34,8 +34,8 @@ class PreviewRepository(
         SELECT uuid
         FROM items
         WHERE parent_uuid = (
-            SELECT parent_uuid 
-            FROM items 
+            SELECT parent_uuid
+            FROM items
             WHERE uuid = :item_uuid
         );
         """

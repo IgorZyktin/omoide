@@ -19,7 +19,7 @@ class BrowseRepository(
     ) -> list[common.Item]:
         """Load all children and sub children of the record."""
         _query = """
-        SELECT uuid, 
+        SELECT uuid,
                parent_uuid,
                owner_uuid,
                number,
@@ -30,7 +30,7 @@ class BrowseRepository(
                thumbnail_ext
         FROM items
         WHERE parent_uuid = :item_uuid
-        AND uuid <> :item_uuid   
+        AND uuid <> :item_uuid
         ORDER BY number
         LIMIT :limit OFFSET :offset;
         """
