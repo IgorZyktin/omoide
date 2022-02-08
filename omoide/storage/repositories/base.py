@@ -5,13 +5,10 @@ from typing import Optional, Any
 
 from omoide.domain import auth, common
 from omoide.domain.interfaces import repositories
-from omoide.storage.repositories import base_sql
 
 
 class BaseRepository(repositories.AbsRepository):
     """Base functionality for all concrete repositories."""
-    _query_check_access = base_sql.CHECK_ACCESS
-    _query_get_ancestors = base_sql.GET_ANCESTORS
 
     def __init__(self, db) -> None:
         """Initialize instance."""
@@ -27,13 +24,19 @@ class BaseRepository(repositories.AbsRepository):
             item_uuid: str,
     ) -> common.AccessStatus:
         """Check access to the item."""
-        response = await self.db.fetch_one(
-            query=self._query_check_access,
-            values={
-                'user_uuid': user.uuid,
-                'item_uuid': item_uuid,
-            }
-        )
+        query = """
+        SELECT owner_uuid,
+               exists(SELECT 1
+                      FROM public_users pu
+                      WHERE pu.user_uuid = i.owner_uuid)  AS is_public,
+               (SELECT :user_uuid = ANY (cp.permissions)) AS is_given
+        FROM items i
+                 LEFT JOIN computed_permissions cp ON cp.item_uuid = i.uuid
+        WHERE uuid = :item_uuid;
+        """
+
+        values = {'user_uuid': user.uuid, 'item_uuid': item_uuid}
+        response = await self.db.fetch_one(query, values)
 
         if response is None:
             return common.AccessStatus.not_found()
