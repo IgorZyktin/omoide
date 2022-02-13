@@ -36,6 +36,7 @@ function renderMoreItems(container, items) {
     // actually insert new items into response
     for (const item of items) {
         let envelope = document.createElement('div')
+        envelope.classList.add("envelope")
 
         if (item["is_collection"]) {
             envelope.classList.add("env-collection")
