@@ -5,8 +5,8 @@ import fastapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from omoide import domain
 from omoide import use_cases
-from omoide.domain import auth
 from omoide.presentation import dependencies, constants, utils
 from omoide.presentation import infra
 
@@ -19,7 +19,7 @@ templates = Jinja2Templates(directory='presentation/templates')
 @router.get('/search')
 async def search(
         request: fastapi.Request,
-        user: auth.User = fastapi.Depends(dependencies.get_current_user),
+        user: domain.User = fastapi.Depends(dependencies.get_current_user),
         use_case: use_cases.SearchUseCase = fastapi.Depends(
             dependencies.get_search_use_case
         ),
@@ -29,6 +29,7 @@ async def search(
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
+        items_per_page_async=constants.ITEMS_PER_PAGE_ASYNC,
     )
 
     query = infra.query_maker.from_request(request.query_params)
@@ -37,8 +38,10 @@ async def search(
         result, is_random = await use_case.execute(user, query, details)
 
     if is_random:
+        template = 'search_random.html'
         paginator = None
     else:
+        template = 'search.html'
         paginator = infra.Paginator(
             page=result.page,
             items_per_page=details.items_per_page,
@@ -54,9 +57,51 @@ async def search(
     context = {
         'request': request,
         'query': infra.query_maker.QueryWrapper(query, details),
+        'details': details,
         'placeholder': 'Enter one or more tags here',
         'paginator': paginator,
         'result': result,
         'report': report,
     }
-    return dependencies.templates.TemplateResponse('search.html', context)
+
+    return dependencies.templates.TemplateResponse(template, context)
+
+
+@router.get('/api/random/{items_per_page}')
+async def api_random(
+        request: fastapi.Request,
+        items_per_page: int,
+        user: domain.User = fastapi.Depends(dependencies.get_current_user),
+        use_case: use_cases.SearchUseCase = fastapi.Depends(
+            dependencies.get_search_use_case
+        ),
+):
+    """Return portion of random items."""
+    details = domain.Details(page=1, items_per_page=items_per_page)
+    query = domain.Query(raw_query='', tags_include=[], tags_exclude=[])
+    result, _ = await use_case.execute(user, query, details)
+
+    simple_items = []
+    for item in result.items:
+        if item.is_collection:
+            href = request.url_for('browse', uuid=item.uuid)
+        else:
+            href = request.url_for('preview', uuid=item.uuid)
+
+        if item.thumbnail_ext is None:
+            thumbnail = request.url_for('static', path='empty.png')
+        else:
+            thumbnail = (
+                f'/content/{item.owner_uuid}/thumbnail/{item.thumbnail_path}'
+            )
+
+        simple_item = {
+            'uuid': item.uuid,
+            'is_collection': item.is_collection,
+            'href': href,
+            'thumbnail': thumbnail,
+        }
+
+        simple_items.append(simple_item)
+
+    return simple_items

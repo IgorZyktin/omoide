@@ -9,6 +9,7 @@ from omoide.domain import common
 def details_from_params(
         params: QueryParams,
         items_per_page: int,
+        items_per_page_async: int = -1,
 ) -> common.Details:
     """Create details from request params."""
     try:
@@ -19,4 +20,5 @@ def details_from_params(
     return common.Details(
         page=max(1, page),
         items_per_page=items_per_page,
+        items_per_page_async=items_per_page_async,
     )
