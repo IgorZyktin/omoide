@@ -30,7 +30,7 @@ templates = Jinja2Templates(directory='presentation/templates')
 def get_current_user():
     """Load current user or use anon user."""
     return auth.User(
-        uuid=None,
+        uuid='',
         login='anon',
         password='',
         name='anon',

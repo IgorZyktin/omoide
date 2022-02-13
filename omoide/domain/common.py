@@ -98,9 +98,9 @@ class Location(BaseModel):
 
     def __bool__(self) -> bool:
         """Return True if location is not empty."""
-        return self.owner is not None and self.items
+        return (self.owner is not None) and bool(self.items)
 
-    def __iter__(self) -> Iterator[PositionedItem]:
+    def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
         """Iterate over items."""
         return iter(self.items)
 

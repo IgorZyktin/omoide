@@ -15,7 +15,7 @@ __all__ = [
 
 class User(BaseModel):
     """User model."""
-    uuid: Optional[str]
+    uuid: str
     login: str
     password: str
     name: str
@@ -25,7 +25,7 @@ class User(BaseModel):
 
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
-        return self.uuid is None
+        return self.uuid == ''
 
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'User':

@@ -62,6 +62,9 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
         child_uuid = item.uuid
 
         while True:
+            if item_uuid is None:
+                break
+
             ancestor = await self.get_item_with_position(
                 item_uuid=item_uuid,
                 child_uuid=child_uuid,
