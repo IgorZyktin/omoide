@@ -32,11 +32,11 @@ async def browse(
     with infra.Timer() as timer:
         access, result = await use_case.execute(user, uuid, details)
 
-    if access.is_not_given:
-        raise fastapi.HTTPException(status_code=401)
-
     if access.does_not_exist or result is None:
         raise fastapi.HTTPException(status_code=404)
+
+    if access.is_not_given:
+        raise fastapi.HTTPException(status_code=401)
 
     paginator = infra.Paginator(
         page=result.page,
