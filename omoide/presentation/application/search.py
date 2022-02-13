@@ -34,9 +34,9 @@ async def search(
     query = infra.query_maker.from_request(request.query_params)
 
     with infra.Timer() as timer:
-        result = await use_case.execute(user, query, details)
+        result, is_random = await use_case.execute(user, query, details)
 
-    if result.is_random:
+    if is_random:
         paginator = None
     else:
         paginator = infra.Paginator(

@@ -7,6 +7,17 @@ from pydantic import BaseModel
 
 from omoide.domain import utils, auth
 
+__all__ = [
+    'Item',
+    'PositionedItem',
+    'PositionedByUserItem',
+    'Location',
+    'AccessStatus',
+    'Query',
+    'Details',
+    'Result',
+]
+
 
 class Item(BaseModel):
     """Model of a standard item."""
@@ -159,3 +170,16 @@ class Details(BaseModel):
     def calc_total_pages(self, total_items: int) -> int:
         """Calculate how many pages we need considering this query."""
         return int(total_items / (self.items_per_page or 1))
+
+
+class Result(BaseModel):
+    """Result of a search request."""
+    total_items: int
+    total_pages: int
+    items: list[Item]
+    details: Details
+
+    @property
+    def page(self) -> int:
+        """Return current page number."""
+        return self.details.page

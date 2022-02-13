@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 """Preview related interfaces and objects.
 """
-from typing import Optional, Mapping
+from typing import Mapping
 
-from pydantic import BaseModel
-
-from omoide.domain import common, utils
+from omoide import domain
+from omoide.domain import utils
 
 __all__ = [
     'ExtendedItem',
-    'Result',
 ]
 
 
-class ExtendedItem(common.Item):
+class ExtendedItem(domain.Item):
     """Complete version of an item."""
     tags: list[str]
     permissions: list[str]
@@ -34,11 +32,3 @@ class ExtendedItem(common.Item):
             tags=mapping['tags'],
             permissions=mapping['permissions'],
         )
-
-
-class Result(BaseModel):
-    """Complete output of Preview request."""
-    access: common.AccessStatus
-    location: Optional[common.Location]
-    item: Optional[ExtendedItem]
-    neighbours: list[str]

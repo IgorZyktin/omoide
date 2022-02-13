@@ -1,36 +1,35 @@
 # -*- coding: utf-8 -*-
 """Use case for search.
 """
-from omoide.domain import search, auth, common
-from omoide.domain.interfaces import repositories
+from omoide import domain
+from omoide.domain import interfaces
 
 
 class SearchUseCase:
     """Use case for search."""
 
-    def __init__(self, repo: repositories.AbsSearchRepository) -> None:
+    def __init__(self, repo: interfaces.AbsSearchRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 
     async def execute(
             self,
-            user: auth.User,
-            query: common.Query,
-            details: common.Details,
-    ) -> search.Result:
+            user: domain.User,
+            query: domain.Query,
+            details: domain.Details,
+    ) -> tuple[domain.Result, bool]:
         """Perform search request."""
         async with self._repo.transaction():
             if user.is_anon():
-                result = await self._search_for_anon(query, details)
+                return await self._search_for_anon(query, details)
             else:
-                result = await self._search_for_known(user, query, details)
-        return result
+                return await self._search_for_known(user, query, details)
 
     async def _search_for_anon(
             self,
-            query: common.Query,
-            details: common.Details,
-    ) -> search.Result:
+            query: domain.Query,
+            details: domain.Details,
+    ) -> tuple[domain.Result, bool]:
         """Perform search request for anon user."""
         if query:
             is_random = False
@@ -42,20 +41,21 @@ class SearchUseCase:
             total_items = await self._repo.total_random_anon()
             items = await self._repo.search_random_anon(query, details)
 
-        return search.Result(
-            is_random=is_random,
-            page=details.page,
-            total_pages=details.calc_total_pages(total_items),
+        result = domain.Result(
             total_items=total_items,
+            total_pages=details.calc_total_pages(total_items),
             items=items,
+            details=details,
         )
+
+        return result, is_random
 
     async def _search_for_known(
             self,
-            user: auth.User,
-            query: common.Query,
-            details: common.Details,
-    ) -> search.Result:
+            user: domain.User,
+            query: domain.Query,
+            details: domain.Details,
+    ) -> tuple[domain.Result, bool]:
         """Perform search request for known user."""
         total_items = await self._repo.total_specific_known(
             user=user,
@@ -76,10 +76,11 @@ class SearchUseCase:
                 query=query,
             )
 
-        return search.Result(
-            is_random=is_random,
-            page=details.page,
-            total_pages=details.calc_total_pages(total_items),
+        result = domain.Result(
             total_items=total_items,
+            total_pages=details.calc_total_pages(total_items),
             items=items,
+            details=details,
         )
+
+        return result, is_random
