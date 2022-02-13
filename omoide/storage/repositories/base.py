@@ -29,6 +29,11 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
         values = {'user_uuid': user.uuid, 'item_uuid': item_uuid}
         response = await self.db.fetch_one(query, values)
+        # TODO
+        #  asyncpg.exceptions.DataError: invalid input for query argument $1:
+        #  'a7ed9da0-470d-48f0-ge1f-20e74eeab717'
+        #  (invalid UUID 'a7ed9da0-470d-48f0-ge1f-20e74eeab717':
+        #  unexpected character 'g')
 
         if response is None:
             return domain.AccessStatus.not_found()

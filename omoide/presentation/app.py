@@ -11,6 +11,7 @@ from omoide.presentation.application import browse
 from omoide.presentation.application import by_user
 from omoide.presentation.application import preview
 from omoide.presentation.application import search
+from omoide.presentation.application import special
 
 app = fastapi.FastAPI(
     openapi_url=None,
@@ -35,6 +36,7 @@ app.include_router(browse.router)
 app.include_router(by_user.router)
 app.include_router(preview.router)
 app.include_router(search.router)
+app.include_router(special.router)
 
 app.mount(
     '/static',

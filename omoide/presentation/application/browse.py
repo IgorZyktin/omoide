@@ -33,10 +33,12 @@ async def browse(
         access, result = await use_case.execute(user, uuid, details)
 
     if access.does_not_exist or result is None:
-        raise fastapi.HTTPException(status_code=404)
+        url = request.url_for('not_found') + f'?q={uuid}'
+        return fastapi.responses.RedirectResponse(url)
 
     if access.is_not_given:
-        raise fastapi.HTTPException(status_code=401)
+        url = request.url_for('not_allowed') + f'?q={uuid}'
+        return fastapi.responses.RedirectResponse(url)
 
     paginator = infra.Paginator(
         page=result.page,
