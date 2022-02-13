@@ -3,21 +3,21 @@
 """
 from typing import Optional
 
-from omoide.domain import preview
-from omoide.domain.interfaces import repositories
+from omoide import domain
+from omoide.domain import interfaces
 from omoide.storage.repositories import base
 
 
 class PreviewRepository(
     base.BaseRepository,
-    repositories.AbsPreviewRepository,
+    interfaces.AbsPreviewRepository,
 ):
     """Repository that performs all preview queries."""
 
     async def get_extended_item(
             self,
             item_uuid: str,
-    ) -> Optional[preview.ExtendedItem]:
+    ) -> Optional[domain.ExtendedItem]:
         """Return instance of item."""
         query = """
         SELECT *
@@ -26,7 +26,7 @@ class PreviewRepository(
         """
 
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
-        return preview.ExtendedItem.from_map(response) if response else None
+        return domain.ExtendedItem.from_map(response) if response else None
 
     async def get_neighbours(self, item_uuid: str) -> list[str]:
         """Return uuids of all the neighbours."""

@@ -5,7 +5,7 @@ import fastapi
 from fastapi.responses import HTMLResponse
 
 from omoide import use_cases
-from omoide.domain import auth
+from omoide import domain
 from omoide.presentation import dependencies, infra, constants, utils
 
 router = fastapi.APIRouter()
@@ -15,7 +15,7 @@ router = fastapi.APIRouter()
 async def browse(
         request: fastapi.Request,
         uuid: str,
-        user: auth.User = fastapi.Depends(dependencies.get_current_user),
+        user: domain.User = fastapi.Depends(dependencies.get_current_user),
         use_case: use_cases.BrowseUseCase = fastapi.Depends(
             dependencies.get_browse_use_case
         ),
@@ -30,13 +30,13 @@ async def browse(
     query = infra.query_maker.from_request(request.query_params)
 
     with infra.Timer() as timer:
-        result = await use_case.execute(user, uuid, details)
+        access, result = await use_case.execute(user, uuid, details)
 
-    if result.access.does_not_exist:
-        raise fastapi.HTTPException(status_code=404)
-
-    if result.access.is_not_given:
+    if access.is_not_given:
         raise fastapi.HTTPException(status_code=401)
+
+    if access.does_not_exist or result is None:
+        raise fastapi.HTTPException(status_code=404)
 
     paginator = infra.Paginator(
         page=result.page,

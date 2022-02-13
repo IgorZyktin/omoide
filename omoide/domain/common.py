@@ -15,7 +15,8 @@ __all__ = [
     'AccessStatus',
     'Query',
     'Details',
-    'Result',
+    'Results',
+    'SingleResult',
 ]
 
 
@@ -172,14 +173,23 @@ class Details(BaseModel):
         return int(total_items / (self.items_per_page or 1))
 
 
-class Result(BaseModel):
+class Results(BaseModel):
     """Result of a search request."""
     total_items: int
     total_pages: int
     items: list[Item]
     details: Details
+    location: Optional[Location]
 
     @property
     def page(self) -> int:
         """Return current page number."""
         return self.details.page
+
+
+class SingleResult(BaseModel):
+    """Result of a request for a single item."""
+    item: Item
+    details: Details
+    location: Location
+    neighbours: list[str]

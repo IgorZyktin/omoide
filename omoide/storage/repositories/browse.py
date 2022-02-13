@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
-from omoide.domain import common
-from omoide.domain.interfaces import repositories
+from omoide import domain
+from omoide.domain import interfaces
 from omoide.storage.repositories import base
 
 
 class BrowseRepository(
     base.BaseRepository,
-    repositories.AbsBrowseRepository,
+    interfaces.AbsBrowseRepository,
 ):
     """Repository that performs all browse queries."""
 
     async def get_children(
             self,
             item_uuid: str,
-            details: common.Details,
-    ) -> list[common.Item]:
+            details: domain.Details,
+    ) -> list[domain.Item]:
         """Load all children and sub children of the record."""
         _query = """
         SELECT uuid,
@@ -42,7 +42,7 @@ class BrowseRepository(
         }
 
         response = await self.db.fetch_all(_query, values)
-        return [common.Item.from_map(x) for x in response]
+        return [domain.Item.from_map(x) for x in response]
 
     async def count_items(
             self,

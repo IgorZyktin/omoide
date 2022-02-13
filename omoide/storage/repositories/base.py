@@ -3,7 +3,7 @@
 """
 from typing import Optional
 
-from omoide.domain import auth, common
+from omoide import domain
 from omoide.storage.repositories import base_logic
 
 
@@ -12,9 +12,9 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
     async def check_access(
             self,
-            user: auth.User,
+            user: domain.User,
             item_uuid: str,
-    ) -> common.AccessStatus:
+    ) -> domain.AccessStatus:
         """Check access to the item."""
         query = """
         SELECT owner_uuid,
@@ -31,9 +31,9 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         response = await self.db.fetch_one(query, values)
 
         if response is None:
-            return common.AccessStatus.not_found()
+            return domain.AccessStatus.not_found()
 
-        return common.AccessStatus(
+        return domain.AccessStatus(
             exists=True,
             is_public=bool(response['is_public']),
             is_given=bool(response['is_given']),
@@ -54,10 +54,10 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
     async def get_positioned_by_user(
             self,
-            user: auth.User,
-            item: common.Item,
-            details: common.Details,
-    ) -> Optional[common.PositionedByUserItem]:
+            user: domain.User,
+            item: domain.Item,
+            details: domain.Details,
+    ) -> Optional[domain.PositionedByUserItem]:
         """Return user with position information."""
         if await self.user_is_public(user.uuid):
             query = """
@@ -86,7 +86,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             position = int(response['position'] or 1)
             total_items = int(response['total_items'] or 1)
 
-        return common.PositionedByUserItem(
+        return domain.PositionedByUserItem(
             user=user,
             position=position,
             total_items=total_items,
@@ -97,7 +97,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
     async def get_user(
             self,
             user_uuid: str,
-    ) -> Optional[auth.User]:
+    ) -> Optional[domain.User]:
         """Return user or None."""
         query = """
         SELECT *
@@ -106,12 +106,12 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         """
 
         response = await self.db.fetch_one(query, {'user_uuid': user_uuid})
-        return auth.User.from_map(response) if response else None
+        return domain.User.from_map(response) if response else None
 
     async def get_item(
             self,
             item_uuid: str,
-    ) -> Optional[common.Item]:
+    ) -> Optional[domain.Item]:
         """Return item or None."""
         query = """
         SELECT uuid,
@@ -128,14 +128,14 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         """
 
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
-        return common.Item.from_map(response) if response else None
+        return domain.Item.from_map(response) if response else None
 
     async def get_item_with_position(
             self,
             item_uuid: str,
             child_uuid: str,
-            details: common.Details,
-    ) -> Optional[common.PositionedItem]:
+            details: domain.Details,
+    ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
         query = """
         WITH children AS (
@@ -168,9 +168,9 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
         mapping = dict(response)
 
-        return common.PositionedItem(
+        return domain.PositionedItem(
             position=mapping.pop('position') or 1,
             total_items=mapping.pop('total_items') or 1,
             items_per_page=details.items_per_page,
-            item=common.Item.from_map(mapping),
+            item=domain.Item.from_map(mapping),
         )

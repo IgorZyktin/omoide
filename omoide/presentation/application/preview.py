@@ -31,13 +31,13 @@ async def preview(
     query = infra.query_maker.from_request(request.query_params)
 
     with infra.Timer() as timer:
-        result = await use_case.execute(user, uuid, details)
+        access, result = await use_case.execute(user, uuid, details)
 
-    if result.access.does_not_exist:
-        raise fastapi.HTTPException(status_code=404)
-
-    if result.access.is_not_given:
+    if access.is_not_given:
         raise fastapi.HTTPException(status_code=401)
+
+    if access.does_not_exist or result is None:
+        raise fastapi.HTTPException(status_code=404)
 
     placeholder = utils.make_search_report(
         total=len(result.neighbours),
@@ -53,7 +53,7 @@ async def preview(
         'album': infra.Album(
             sequence=result.neighbours,
             position=result.item.uuid,
-            items_on_page=constants.PAGES_IN_BLOCK,
+            items_on_page=constants.PAGES_IN_BLOCK,  # TODO: move to details
         )
     }
     return dependencies.templates.TemplateResponse('preview.html', context)

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """Search repository.
 """
-from omoide.domain import auth, search, common
-from omoide.domain.interfaces import repositories
+from omoide import domain
+from omoide.domain import interfaces
 from omoide.storage.repositories import base
 
 
 class SearchRepository(
     base.BaseRepository,
-    repositories.AbsSearchRepository,
+    interfaces.AbsSearchRepository,
 ):
     """Repository that performs all search queries."""
 
@@ -23,7 +23,7 @@ class SearchRepository(
         response = await self.db.fetch_one(query)
         return int(response['total_items'])
 
-    async def total_specific_anon(self, query: common.Query) -> int:
+    async def total_specific_anon(self, query: domain.Query) -> int:
         """Count available items for unauthorised user."""
         _query = """
         SELECT count(*) AS total_items
@@ -44,9 +44,9 @@ class SearchRepository(
 
     async def search_random_anon(
             self,
-            query: common.Query,
-            details: common.Details,
-    ) -> list[common.Item]:
+            query: domain.Query,
+            details: domain.Details,
+    ) -> list[domain.Item]:
         """Find random items for unauthorised user."""
         _query = """
         SELECT uuid,
@@ -69,13 +69,13 @@ class SearchRepository(
         }
 
         response = await self.db.fetch_all(_query, values)
-        return [common.Item.from_map(row) for row in response]
+        return [domain.Item.from_map(row) for row in response]
 
     async def search_specific_anon(
             self,
-            query: common.Query,
-            details: common.Details,
-    ) -> list[common.Item]:
+            query: domain.Query,
+            details: domain.Details,
+    ) -> list[domain.Item]:
         """Find specific items for unauthorised user."""
         _query = """
         SELECT uuid,
@@ -104,11 +104,11 @@ class SearchRepository(
         }
 
         response = await self.db.fetch_all(_query, values)
-        return [common.Item.from_map(row) for row in response]
+        return [domain.Item.from_map(row) for row in response]
 
     async def total_random_known(
             self,
-            user: auth.User,
+            user: domain.User,
     ) -> int:
         """Count all available items for authorised user."""
         # TODO(i.zyktin): need to implement this
@@ -116,8 +116,8 @@ class SearchRepository(
 
     async def total_specific_known(
             self,
-            user: auth.User,
-            query: common.Query,
+            user: domain.User,
+            query: domain.Query,
     ) -> int:
         """Count available items for authorised user."""
         # TODO(i.zyktin): need to implement this
@@ -125,18 +125,18 @@ class SearchRepository(
 
     async def search_random_known(
             self,
-            user: auth.User,
-            query: common.Query,
-    ) -> list[common.Item]:
+            user: domain.User,
+            query: domain.Query,
+    ) -> list[domain.Item]:
         """Find random items for authorised user."""
         # TODO(i.zyktin): need to implement this
         raise NotImplementedError
 
     async def search_specific_known(
             self,
-            user: auth.User,
-            query: common.Query,
-    ) -> list[common.Item]:
+            user: domain.User,
+            query: domain.Query,
+    ) -> list[domain.Item]:
         """Find specific items for authorised user."""
         # TODO(i.zyktin): need to implement this
         raise NotImplementedError

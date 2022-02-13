@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """By owner uuid search repository.
 """
-from omoide.domain import auth, common
-from omoide.domain.interfaces import repositories
+from omoide import domain
+from omoide.domain import interfaces
 from omoide.storage.repositories import base
 
 
 class ByUserRepository(
     base.BaseRepository,
-    repositories.AbsByUserRepository,
+    interfaces.AbsByUserRepository,
 ):
     """Repository that performs search based on owner uuid."""
 
@@ -32,7 +32,7 @@ class ByUserRepository(
             owner_uuid: str,
             limit: int,
             offset: int,
-    ) -> list[common.Item]:
+    ) -> list[domain.Item]:
         """Load all items of a public user."""
         query = """
         SELECT uuid,
@@ -57,11 +57,11 @@ class ByUserRepository(
         }
 
         response = await self.db.fetch_all(query, values)
-        return [common.Item.from_map(row) for row in response]
+        return [domain.Item.from_map(row) for row in response]
 
     async def count_items_of_private_user(
             self,
-            user: auth.User,
+            user: domain.User,
             owner_uuid: str,
     ) -> int:
         """Count all items of a private user."""
@@ -70,11 +70,11 @@ class ByUserRepository(
 
     async def get_items_of_private_user(
             self,
-            user: auth.User,
+            user: domain.User,
             owner_uuid: str,
             limit: int,
             offset: int,
-    ) -> list[common.Item]:
+    ) -> list[domain.Item]:
         """Load all items of a private user."""
         # TODO(i.zyktin): need to implement this
         raise NotImplementedError

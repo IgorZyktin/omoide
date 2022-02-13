@@ -3,15 +3,14 @@
 """
 from typing import Mapping
 
-from omoide import domain
-from omoide.domain import utils
+from omoide.domain import utils, common
 
 __all__ = [
     'ExtendedItem',
 ]
 
 
-class ExtendedItem(domain.Item):
+class ExtendedItem(common.Item):
     """Complete version of an item."""
     tags: list[str]
     permissions: list[str]

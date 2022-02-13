@@ -17,7 +17,7 @@ class SearchUseCase:
             user: domain.User,
             query: domain.Query,
             details: domain.Details,
-    ) -> tuple[domain.Result, bool]:
+    ) -> tuple[domain.Results, bool]:
         """Perform search request."""
         async with self._repo.transaction():
             if user.is_anon():
@@ -29,7 +29,7 @@ class SearchUseCase:
             self,
             query: domain.Query,
             details: domain.Details,
-    ) -> tuple[domain.Result, bool]:
+    ) -> tuple[domain.Results, bool]:
         """Perform search request for anon user."""
         if query:
             is_random = False
@@ -41,7 +41,7 @@ class SearchUseCase:
             total_items = await self._repo.total_random_anon()
             items = await self._repo.search_random_anon(query, details)
 
-        result = domain.Result(
+        result = domain.Results(
             total_items=total_items,
             total_pages=details.calc_total_pages(total_items),
             items=items,
@@ -55,7 +55,7 @@ class SearchUseCase:
             user: domain.User,
             query: domain.Query,
             details: domain.Details,
-    ) -> tuple[domain.Result, bool]:
+    ) -> tuple[domain.Results, bool]:
         """Perform search request for known user."""
         total_items = await self._repo.total_specific_known(
             user=user,
@@ -76,11 +76,12 @@ class SearchUseCase:
                 query=query,
             )
 
-        result = domain.Result(
+        result = domain.Results(
             total_items=total_items,
             total_pages=details.calc_total_pages(total_items),
             items=items,
             details=details,
+            location=None,
         )
 
         return result, is_random
