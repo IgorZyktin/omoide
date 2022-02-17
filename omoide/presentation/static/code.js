@@ -36,10 +36,10 @@ function renderMoreItems(container, items) {
     // actually insert new items into response
     for (const item of items) {
         let envelope = document.createElement('div')
-        envelope.classList.add("envelope")
+        envelope.classList.add('envelope')
 
-        if (item["is_collection"]) {
-            envelope.classList.add("env-collection")
+        if (item['is_collection']) {
+            envelope.classList.add('env-collection')
         }
 
         let link = document.createElement('a')
@@ -52,7 +52,7 @@ function renderMoreItems(container, items) {
         }
 
         let img = document.createElement('img')
-        img.src = item["thumbnail"]
+        img.src = item['thumbnail']
         link.appendChild(img)
 
         envelope.appendChild(link)

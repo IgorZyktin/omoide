@@ -97,6 +97,7 @@ async def api_random(
 
         simple_item = {
             'uuid': item.uuid,
+            'name': item.name,
             'is_collection': item.is_collection,
             'href': href,
             'thumbnail': thumbnail,
