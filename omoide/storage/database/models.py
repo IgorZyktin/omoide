@@ -35,15 +35,9 @@ class User(Base):
     login = sa.Column(sa.String(length=MEDIUM), nullable=False, unique=True)
     password = sa.Column(sa.String(length=HUGE), nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
-    visibility = sa.Column(sa.String(length=MEDIUM), nullable=True)
-    language = sa.Column(sa.String(length=SMALL), nullable=True)
-    last_seen = sa.Column(sa.DateTime(timezone=True), nullable=True)
 
     # relations ---------------------------------------------------------------
 
-    groups = relationship('Group',
-                          back_populates='owner',
-                          order_by='Group.name')
     items = relationship('Item', back_populates='owner')
 
 
@@ -62,63 +56,6 @@ class PublicUsers(Base):
                           nullable=False,
                           index=True,
                           unique=True)
-
-
-class Visibility(Base):
-    """Chosen set of items to display."""
-    __tablename__ = 'visibility'
-
-    # primary and foreign keys ------------------------------------------------
-
-    owner_uuid = sa.Column(pg.UUID,
-                           sa.ForeignKey('users.uuid'),
-                           nullable=False,
-                           index=True,
-                           primary_key=True)
-
-    name = sa.Column(sa.String(length=MEDIUM),
-                     primary_key=True,
-                     nullable=False,
-                     index=True)
-
-    # array fields ------------------------------------------------------------
-
-    anchors = sa.Column(pg.ARRAY(sa.Text), nullable=False)
-
-    # fields ------------------------------------------------------------------
-
-    stats = sa.Column(sa.JSON, nullable=False)
-    # TODO - probably should add tags here
-
-
-class Group(Base):
-    """Personal collection of users."""
-    __tablename__ = 'groups'
-
-    # primary and foreign keys ------------------------------------------------
-
-    owner_uuid = sa.Column(pg.UUID,
-                           sa.ForeignKey('users.uuid'),
-                           nullable=False,
-                           index=True,
-                           primary_key=True)
-
-    name = sa.Column(sa.String(length=MEDIUM),
-                     primary_key=True,
-                     nullable=False,
-                     index=True)
-
-    # array fields ------------------------------------------------------------
-
-    users = sa.Column(pg.ARRAY(sa.Text), nullable=False)
-
-    # relations ---------------------------------------------------------------
-
-    owner = relationship('User', back_populates='groups')
-
-    # other -------------------------------------------------------------------
-
-    sa.UniqueConstraint('owner_uuid', 'name', name='uix_group_name_and_owner')
 
 
 class Item(Base):
@@ -162,10 +99,6 @@ class Item(Base):
     # relations ---------------------------------------------------------------
 
     owner = relationship('User', back_populates='items')
-    stats = relationship('Stats', back_populates='item')
-    meta = relationship('Meta', back_populates='item')
-    exif = relationship('Exif', back_populates='item')
-    media = relationship('Media', back_populates='item')
 
     # other -------------------------------------------------------------------
 
@@ -249,49 +182,6 @@ class ComputedPermissions(Base):
     )
 
 
-# TODO - probably should get rid of this class
-class Stats(Base):
-    """Statistic for whole branch of items."""
-    __tablename__ = 'stats'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          nullable=False,
-                          index=True,
-                          primary_key=True)
-
-    # fields ------------------------------------------------------------------
-
-    data = sa.Column(sa.JSON, nullable=False)
-
-    # relations ---------------------------------------------------------------
-
-    item = relationship('Item', back_populates='stats')
-
-
-class Exif(Base):
-    """Exif information for images."""
-    __tablename__ = 'exif'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          nullable=False,
-                          index=True,
-                          primary_key=True)
-
-    # fields ------------------------------------------------------------------
-
-    data = sa.Column(sa.JSON, nullable=False)
-
-    # relations ---------------------------------------------------------------
-
-    item = relationship('Item', back_populates='exif')
-
-
 class Meta(Base):
     """Meta information for items."""
     __tablename__ = 'meta'
@@ -311,28 +201,3 @@ class Meta(Base):
     # relations ---------------------------------------------------------------
 
     item = relationship('Item', back_populates='meta')
-
-
-class Media(Base):
-    """Temporary storage for unsaved media data."""
-    __tablename__ = 'media'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          nullable=False,
-                          index=True,
-                          primary_key=True)
-
-    # fields ------------------------------------------------------------------
-
-    content = sa.Column(pg.BYTEA, nullable=True)
-    preview = sa.Column(pg.BYTEA, nullable=True)
-    thumbnail = sa.Column(pg.BYTEA, nullable=True)
-    added_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
-    saved_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
-
-    # relations ---------------------------------------------------------------
-
-    item = relationship('Item', back_populates='media')

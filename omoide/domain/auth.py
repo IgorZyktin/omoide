@@ -35,7 +35,4 @@ class User(BaseModel):
             login=mapping['login'],
             password=mapping['password'],
             name=mapping['name'],
-            visibility=mapping['visibility'],
-            language=mapping['language'],
-            last_seen=mapping['last_seen'],
         )
