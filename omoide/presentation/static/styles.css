@@ -36,6 +36,10 @@
     .button {
         border-radius: var(--large-radius);
     }
+
+    .envelope img {
+        min-height: 512px;
+    }
 }
 
 @media (min-width: 1080px) {
@@ -61,6 +65,10 @@
 
     .button {
         border-radius: var(--radius);
+    }
+
+    .envelope img {
+        min-height: auto;
     }
 }
 
