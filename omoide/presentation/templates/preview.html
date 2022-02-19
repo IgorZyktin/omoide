@@ -23,7 +23,6 @@
 
             <a href="/content/{{ item.owner_uuid }}/content/{{ item.content_path }}">
                 {%- if item.preview_ext is none -%}
-                    <p>{{ item.name }}</p>
                     <img src="{{ url_for('static', path='empty.png') }}"
                          alt="{{ item.name }}"/>
                 {%- else -%}
