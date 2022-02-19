@@ -23,6 +23,11 @@ async def preview(
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
+    if infra.parse.cast_uuid(uuid) is None:
+        # TODO - maybe use UUID type inside use cases?
+        url = request.url_for('not_appropriate')
+        return fastapi.responses.RedirectResponse(url)
+
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,

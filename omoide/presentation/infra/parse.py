@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Request attributes extraction.
 """
+from typing import Optional
+from uuid import UUID
+
 from starlette.datastructures import QueryParams
 
 from omoide.domain import common
@@ -22,3 +25,21 @@ def details_from_params(
         items_per_page=items_per_page,
         items_per_page_async=items_per_page_async,
     )
+
+
+def cast_uuid(uuid: str) -> Optional[UUID]:
+    """Try casting given string as uuid."""
+    try:
+        result = UUID(uuid)
+    except (ValueError, AttributeError):
+        result = None
+    return result
+
+
+def cast_int(number: str) -> Optional[int]:
+    """Try casting given string as int."""
+    try:
+        result = int(number)
+    except ValueError:
+        result = None
+    return result
