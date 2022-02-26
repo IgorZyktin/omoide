@@ -8,6 +8,7 @@ from omoide import use_cases
 from omoide.domain import auth
 from omoide.presentation import dependencies, constants, utils
 from omoide.presentation import infra
+from omoide.presentation.config import config
 
 router = fastapi.APIRouter()
 
@@ -53,6 +54,7 @@ async def preview(
 
     context = {
         'request': request,
+        'config': config,
         'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': placeholder,
         'item': result.item,

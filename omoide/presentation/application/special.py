@@ -5,6 +5,7 @@ import fastapi
 from fastapi.responses import HTMLResponse
 
 from omoide.presentation import dependencies, infra, constants
+from omoide.presentation.config import config
 
 router = fastapi.APIRouter()
 
@@ -24,6 +25,7 @@ async def not_found(
 
     context = {
         'request': request,
+        'config': config,
         'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': 'Enter one or more tags here',
     }
@@ -49,6 +51,7 @@ async def not_allowed(
 
     context = {
         'request': request,
+        'config': config,
         'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': 'Enter one or more tags here',
     }
@@ -74,6 +77,7 @@ async def not_appropriate(
 
     context = {
         'request': request,
+        'config': config,
         'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': 'Enter one or more tags here',
     }

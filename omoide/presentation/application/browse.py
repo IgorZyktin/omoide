@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 from omoide import domain
 from omoide import use_cases
 from omoide.presentation import dependencies, infra, constants, utils
+from omoide.presentation.config import config
 
 router = fastapi.APIRouter()
 
@@ -56,6 +57,7 @@ async def browse(
 
     context = {
         'request': request,
+        'config': config,
         'uuid': uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': placeholder,

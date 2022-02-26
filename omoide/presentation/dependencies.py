@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """External components.
 """
-import os
-
 from databases import Database
 from starlette.templating import Jinja2Templates
 
 from omoide import use_cases
 from omoide.domain import auth
+from omoide.presentation.config import config
 from omoide.storage import repositories
 
-db = Database(os.environ['OMOIDE_DB_URL'])
+db = Database(config.omoide_db_url)
 
 search_repository = repositories.SearchRepository(db)
 search_use_case = use_cases.SearchUseCase(search_repository)

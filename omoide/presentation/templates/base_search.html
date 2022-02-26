@@ -60,5 +60,10 @@
         }
     });
 </script>
+
+{%- if config.omoide_injection %}
+    {{ config.omoide_injection|safe }}
+{% endif -%}
+
 </body>
 </html>
