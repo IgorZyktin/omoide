@@ -1,0 +1,13 @@
+[Unit]
+Description=Omoide application web server
+After=network.target
+
+[Service]
+User=omoide
+WorkingDirectory=/home/omoide/omoide
+ExecStart=/home/omoide/omoide/run_app.sh
+CPUAccounting=true
+MemoryAccounting=true
+
+[Install]
+WantedBy=multi-user.target
