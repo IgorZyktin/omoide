@@ -23,7 +23,7 @@ browse_use_case = use_cases.BrowseUseCase(browse_repository)
 by_user_repository = repositories.ByUserRepository(db)
 by_user_use_case = use_cases.ByUserUseCase(by_user_repository)
 
-templates = Jinja2Templates(directory='presentation/templates')
+templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 
 def get_current_user():

@@ -12,6 +12,7 @@ from omoide.presentation.application import by_user
 from omoide.presentation.application import preview
 from omoide.presentation.application import search
 from omoide.presentation.application import special
+from omoide.presentation.config import config
 
 app = fastapi.FastAPI(
     openapi_url=None,
@@ -40,13 +41,14 @@ app.include_router(special.router)
 
 app.mount(
     '/static',
-    StaticFiles(directory='presentation/static'),
+    StaticFiles(directory='omoide/presentation/static'),
     name='static',
 )
 
 # TODO(i.zyktin): remove after nginx container setup
-app.mount(
-    '/content',
-    StaticFiles(directory='o:\\new\\omoide-media\\'),
-    name='content',
-)
+if config.omoide_env == 'dev':
+    app.mount(
+        '/content',
+        StaticFiles(directory='o:\\content\\'),
+        name='content',
+    )

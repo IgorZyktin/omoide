@@ -13,7 +13,7 @@ from omoide.presentation.config import config
 
 router = fastapi.APIRouter()
 
-templates = Jinja2Templates(directory='presentation/templates')
+templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 
 @router.get('/')
