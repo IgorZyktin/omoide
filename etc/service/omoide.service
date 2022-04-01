@@ -6,6 +6,7 @@ After=network.target
 User=omoide
 WorkingDirectory=/home/omoide/omoide
 ExecStart=/home/omoide/omoide/run_app.sh
+EnvironmentFile=/home/omoide/omoide/etc/env
 CPUAccounting=true
 MemoryAccounting=true
 
