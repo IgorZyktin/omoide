@@ -112,7 +112,7 @@ class SearchRepository(
     ) -> int:
         """Count all available items for authorised user."""
         # TODO(i.zyktin): need to implement this
-        raise NotImplementedError
+        return await self.total_random_anon()
 
     async def total_specific_known(
             self,
@@ -121,22 +121,24 @@ class SearchRepository(
     ) -> int:
         """Count available items for authorised user."""
         # TODO(i.zyktin): need to implement this
-        raise NotImplementedError
+        return await self.total_random_anon()
 
     async def search_random_known(
             self,
             user: domain.User,
             query: domain.Query,
+            details: domain.Details,
     ) -> list[domain.Item]:
         """Find random items for authorised user."""
         # TODO(i.zyktin): need to implement this
-        raise NotImplementedError
+        return await self.search_random_anon(query, details)
 
     async def search_specific_known(
             self,
             user: domain.User,
             query: domain.Query,
+            details: domain.Details,
     ) -> list[domain.Item]:
         """Find specific items for authorised user."""
         # TODO(i.zyktin): need to implement this
-        raise NotImplementedError
+        return await self.search_specific_known(user, query, details)

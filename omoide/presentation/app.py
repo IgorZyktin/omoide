@@ -7,6 +7,7 @@ import fastapi
 from fastapi.staticfiles import StaticFiles
 
 from omoide.presentation import dependencies
+from omoide.presentation.application import auth
 from omoide.presentation.application import browse
 from omoide.presentation.application import by_user
 from omoide.presentation.application import preview
@@ -33,6 +34,7 @@ async def shutdown():
     await dependencies.db.disconnect()
 
 
+app.include_router(auth.router)
 app.include_router(browse.router)
 app.include_router(by_user.router)
 app.include_router(preview.router)

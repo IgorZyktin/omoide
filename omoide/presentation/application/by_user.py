@@ -54,6 +54,7 @@ async def by_user(
     context = {
         'request': request,
         'config': config,
+        'user': user,
         'query': infra.query_maker.QueryWrapper(query, details),
         'uuid': uuid,
         'placeholder': placeholder,

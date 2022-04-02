@@ -58,6 +58,7 @@ async def browse(
     context = {
         'request': request,
         'config': config,
+        'user': user,
         'uuid': uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
         'placeholder': placeholder,
