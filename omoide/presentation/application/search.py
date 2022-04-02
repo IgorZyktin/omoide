@@ -58,6 +58,7 @@ async def search(
     context = {
         'request': request,
         'config': config,
+        'user': user,
         'query': infra.query_maker.QueryWrapper(query, details),
         'details': details,
         'placeholder': 'Enter one or more tags here',
