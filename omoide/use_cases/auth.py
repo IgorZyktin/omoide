@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Use case for auth.
 """
-import secrets
 
+import bcrypt
 from fastapi.security import HTTPBasicCredentials
 
 from omoide.domain import interfaces, auth
@@ -25,10 +25,9 @@ class AuthUseCase:
         if user is None:
             return auth.User.new_anon()
 
-        # TODO - need to use more serious password encoding
-        password_is_correct = secrets.compare_digest(
-            credentials.password,
-            user.password,
+        password_is_correct = bcrypt.checkpw(
+            credentials.password.encode(),
+            user.password.encode(),
         )
 
         if password_is_correct:
