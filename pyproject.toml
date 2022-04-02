@@ -15,6 +15,7 @@ Jinja2 = "^3.0.3"
 python-multipart = "^0.0.5"
 databases = "^0.5.3"
 asyncpg = "^0.25.0"
+bcrypt = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
