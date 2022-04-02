@@ -36,3 +36,16 @@ class User(BaseModel):
             password=mapping['password'],
             name=mapping['name'],
         )
+
+    @classmethod
+    def new_anon(cls) -> 'User':
+        """Return new anon user."""
+        return cls(
+            uuid='',
+            login='',
+            password='',
+            name='anon',
+            visibility=None,
+            language=None,
+            last_seen=None,
+        )
