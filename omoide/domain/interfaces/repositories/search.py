@@ -54,6 +54,7 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Find random items for authorised user."""
 
@@ -62,5 +63,6 @@ class AbsSearchRepository(AbsRepository):
             self,
             user: auth.User,
             query: common.Query,
+            details: common.Details,
     ) -> list[common.Item]:
         """Find specific items for authorised user."""

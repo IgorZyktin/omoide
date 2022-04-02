@@ -67,6 +67,7 @@ class SearchUseCase:
             items = await self._repo.search_specific_known(
                 user=user,
                 query=query,
+                details=details,
             )
 
         else:
@@ -74,6 +75,7 @@ class SearchUseCase:
             items = await self._repo.search_random_known(
                 user=user,
                 query=query,
+                details=details,
             )
 
         result = domain.Results(
