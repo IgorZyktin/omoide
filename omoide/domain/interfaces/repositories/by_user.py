@@ -3,6 +3,7 @@
 """
 import abc
 
+from omoide import domain
 from omoide.domain import common, auth
 from omoide.domain.interfaces.repositories.base import AbsRepository
 
@@ -21,8 +22,7 @@ class AbsByUserRepository(AbsRepository):
     async def get_items_of_public_user(
             self,
             owner_uuid: str,
-            limit: int,
-            offset: int,
+            details: domain.Details,
     ) -> list[common.Item]:
         """Load all items of a public user."""
 
@@ -39,7 +39,6 @@ class AbsByUserRepository(AbsRepository):
             self,
             user: auth.User,
             owner_uuid: str,
-            limit: int,
-            offset: int,
+            details: domain.Details,
     ) -> list[common.Item]:
         """Load all items of a private user."""

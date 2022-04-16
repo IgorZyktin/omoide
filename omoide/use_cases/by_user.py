@@ -27,8 +27,7 @@ class ByUserUseCase:
 
                 items = await self._repo.get_items_of_public_user(
                     owner_uuid=owner_uuid,
-                    limit=details.items_per_page,
-                    offset=details.offset,
+                    details=details,
                 )
 
             else:
@@ -40,8 +39,7 @@ class ByUserUseCase:
                 items = await self._repo.get_items_of_private_user(
                     user=user,
                     owner_uuid=owner_uuid,
-                    limit=details.items_per_page,
-                    offset=details.offset,
+                    details=details,
                 )
 
         return domain.Results(

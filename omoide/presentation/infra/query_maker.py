@@ -35,7 +35,7 @@ class QueryWrapper:
         """Return new query for given page."""
         return type(self)(
             query=self.query,
-            details=self.details.at_page(page),
+            details=self.details.at_page(page, self.details.anchor),
         )
 
 
