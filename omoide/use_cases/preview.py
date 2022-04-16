@@ -28,9 +28,19 @@ class PreviewUseCase:
                 result = None
 
             else:
-                item = await self._repo.get_extended_item(item_uuid)
                 location = await self._repo.get_location(item_uuid, details)
-                neighbours = await self._repo.get_neighbours(item_uuid)
+                item = await self._repo.get_extended_item(item_uuid)
+
+                if user.is_anon():
+                    neighbours = await self._repo.get_neighbours(
+                        item_uuid=item_uuid,
+                    )
+                else:
+                    neighbours = await self._repo.get_specific_neighbours(
+                        user=user,
+                        item_uuid=item_uuid,
+                    )
+
                 result = domain.SingleResult(
                     item=item,
                     details=details,

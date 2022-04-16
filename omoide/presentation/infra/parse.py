@@ -20,8 +20,14 @@ def details_from_params(
     except (ValueError, TypeError):
         page = 1
 
+    try:
+        anchor = int(params.get('anchor', 1))
+    except (ValueError, TypeError):
+        anchor = -1
+
     return common.Details(
         page=max(1, page),
+        anchor=anchor,
         items_per_page=items_per_page,
         items_per_page_async=items_per_page_async,
     )

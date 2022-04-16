@@ -2,7 +2,6 @@
 """Use case for auth.
 """
 
-import bcrypt
 from fastapi.security import HTTPBasicCredentials
 
 from omoide.domain import interfaces, auth
@@ -18,6 +17,7 @@ class AuthUseCase:
     async def execute(
             self,
             credentials: HTTPBasicCredentials,
+            authenticator: interfaces.AbsAuthenticator,
     ) -> auth.User:
         """Return user model."""
         user = await self._repo.get_user_by_login(credentials.username)
@@ -25,12 +25,8 @@ class AuthUseCase:
         if user is None:
             return auth.User.new_anon()
 
-        password_is_correct = bcrypt.checkpw(
-            credentials.password.encode(),
-            user.password.encode(),
-        )
-
-        if password_is_correct:
+        if authenticator.password_is_correct(credentials.password.encode(),
+                                             user.password.encode()):
             return user
 
         return auth.User.new_anon()

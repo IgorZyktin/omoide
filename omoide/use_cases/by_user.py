@@ -20,17 +20,14 @@ class ByUserUseCase:
     ) -> domain.Results:
         """Return preview model suitable for rendering."""
         async with self._repo.transaction():
-            is_public = await self._repo.user_is_public(owner_uuid)
-
-            if is_public:
+            if user.is_anon():
                 total_items = await self._repo.count_items_of_public_user(
                     owner_uuid=owner_uuid,
                 )
 
                 items = await self._repo.get_items_of_public_user(
                     owner_uuid=owner_uuid,
-                    limit=details.items_per_page,
-                    offset=details.offset,
+                    details=details,
                 )
 
             else:
@@ -42,8 +39,7 @@ class ByUserUseCase:
                 items = await self._repo.get_items_of_private_user(
                     user=user,
                     owner_uuid=owner_uuid,
-                    limit=details.items_per_page,
-                    offset=details.offset,
+                    details=details,
                 )
 
         return domain.Results(

@@ -154,21 +154,18 @@ class Query(BaseModel):
 class Details(BaseModel):
     """Additional request parameters."""
     page: int
+    anchor: int
     items_per_page: int
     items_per_page_async: int = -1
 
-    def at_page(self, page: int) -> 'Details':
+    def at_page(self, page: int, anchor: int) -> 'Details':
         """Return details with different page."""
         return type(self)(
             page=page,
+            anchor=anchor,
             items_per_page=self.items_per_page,
             items_per_page_async=self.items_per_page_async,
         )
-
-    @property
-    def offset(self) -> int:
-        """Return offset from start of the result block."""
-        return self.items_per_page * (self.page - 1)
 
     def calc_total_pages(self, total_items: int) -> int:
         """Calculate how many pages we need considering this query."""
