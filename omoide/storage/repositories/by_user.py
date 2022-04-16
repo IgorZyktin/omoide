@@ -65,8 +65,22 @@ class ByUserRepository(
             owner_uuid: str,
     ) -> int:
         """Count all items of a private user."""
-        # TODO(i.zyktin): need to implement this
-        raise NotImplementedError
+        query = """
+        SELECT count(*) AS total_items
+        FROM items it
+            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+        WHERE owner_uuid = :owner_uuid
+          AND :user_uuid = ANY(cp.permissions)
+          AND parent_uuid IS NULL;
+        """
+
+        values = {
+            'user_uuid': user.uuid,
+            'owner_uuid': owner_uuid,
+        }
+
+        response = await self.db.fetch_one(query, values)
+        return int(response['total_items'])
 
     async def get_items_of_private_user(
             self,
@@ -76,5 +90,30 @@ class ByUserRepository(
             offset: int,
     ) -> list[domain.Item]:
         """Load all items of a private user."""
-        # TODO(i.zyktin): need to implement this
-        raise NotImplementedError
+        query = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items it
+            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+        WHERE owner_uuid = :owner_uuid
+          AND :user_uuid = ANY(cp.permissions)
+          AND parent_uuid IS NULL
+        ORDER BY number LIMIT :limit OFFSET :offset
+        """
+
+        values = {
+            'user_uuid': user.uuid,
+            'owner_uuid': owner_uuid,
+            'limit': limit,
+            'offset': offset,
+        }
+
+        response = await self.db.fetch_all(query, values)
+        return [domain.Item.from_map(row) for row in response]
