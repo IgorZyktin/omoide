@@ -11,10 +11,13 @@ from starlette.templating import Jinja2Templates
 
 from omoide import use_cases
 from omoide.domain import auth
+from omoide.domain import interfaces
+from omoide.presentation import infra
 from omoide.presentation.config import config
 from omoide.storage import repositories
 
 db = Database(config.omoide_db_url)
+current_authenticator = infra.BcryptAuthenticator(complexity=4)  # minimal
 
 search_repository = repositories.SearchRepository(db)
 search_use_case = use_cases.SearchUseCase(search_repository)
@@ -65,14 +68,22 @@ def get_auth_use_case():
     return auth_use_case
 
 
+def get_authenticator():
+    """Get authenticator instance."""
+    return current_authenticator
+
+
 async def get_current_user(
         credentials: HTTPBasicCredentials = fastapi.Depends(get_credentials),
         use_case: use_cases.AuthUseCase = fastapi.Depends(get_auth_use_case),
+        authenticator: interfaces.AbsAuthenticator = fastapi.Depends(
+            get_authenticator,
+        ),
 ) -> auth.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
         return auth.User.new_anon()
-    return await use_case.execute(credentials)
+    return await use_case.execute(credentials, authenticator)
 
 
 def get_search_use_case():

@@ -7,6 +7,7 @@ from fastapi.security import HTTPBasicCredentials, HTTPBasic
 from starlette import status
 
 from omoide import domain, use_cases
+from omoide.domain import interfaces
 from omoide.presentation import dependencies, infra, constants
 from omoide.presentation.config import config
 
@@ -19,6 +20,9 @@ async def login(
         request: fastapi.Request,
         user: domain.User = fastapi.Depends(dependencies.get_current_user),
         credentials: HTTPBasicCredentials = fastapi.Depends(security),
+        authenticator: interfaces.AbsAuthenticator = fastapi.Depends(
+            dependencies.get_authenticator,
+        ),
         use_case: use_cases.AuthUseCase = fastapi.Depends(
             dependencies.get_auth_use_case,
         ),
@@ -31,7 +35,7 @@ async def login(
         # already logged in
         return fastapi.responses.RedirectResponse(url)
 
-    new_user = await use_case.execute(credentials)
+    new_user = await use_case.execute(credentials, authenticator)
 
     if new_user.is_anon():
         raise fastapi.HTTPException(
