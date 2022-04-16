@@ -37,8 +37,36 @@ class PreviewRepository(
             SELECT parent_uuid
             FROM items
             WHERE uuid = :item_uuid
-        );
+        )
+        ORDER BY number;
         """
 
         response = await self.db.fetch_all(query, {'item_uuid': item_uuid})
+        return [str(row['uuid']) for row in response]
+
+    async def get_specific_neighbours(
+            self,
+            user: domain.User,
+            item_uuid: str,
+    ) -> list[str]:
+        """Return uuids of all the neighbours (which we have access to)."""
+        query = """
+        SELECT uuid
+        FROM items it
+            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+        WHERE parent_uuid = (
+            SELECT parent_uuid
+            FROM items
+            WHERE uuid = :item_uuid
+        )
+        AND :user_uuid = ANY(cp.permissions)
+        ORDER BY number;
+        """
+
+        values = {
+            'user_uuid': user.uuid,
+            'item_uuid': item_uuid,
+        }
+
+        response = await self.db.fetch_all(query, values)
         return [str(row['uuid']) for row in response]
