@@ -28,9 +28,22 @@ class BrowseUseCase:
                 result = None
 
             else:
-                items = await self._repo.get_children(item_uuid, details)
                 location = await self._repo.get_location(item_uuid, details)
-                total_items = await self._repo.count_items(item_uuid)
+
+                if user.is_anon():
+                    items = await self._repo.get_children(item_uuid, details)
+                    total_items = await self._repo.count_items(item_uuid)
+                else:
+                    items = await self._repo.get_specific_children(
+                        user=user,
+                        item_uuid=item_uuid,
+                        details=details,
+                    )
+                    total_items = await self._repo.count_specific_items(
+                        user=user,
+                        item_uuid=item_uuid,
+                    )
+
                 result = domain.Results(
                     total_items=total_items,
                     total_pages=details.calc_total_pages(total_items),
