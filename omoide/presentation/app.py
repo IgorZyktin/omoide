@@ -10,6 +10,7 @@ from omoide.presentation import dependencies as dep
 from omoide.presentation.application import auth
 from omoide.presentation.application import browse
 from omoide.presentation.application import by_user
+from omoide.presentation.application import create_item
 from omoide.presentation.application import preview
 from omoide.presentation.application import profile
 from omoide.presentation.application import search
@@ -42,6 +43,7 @@ app.include_router(preview.router)
 app.include_router(search.router)
 app.include_router(special.router)
 app.include_router(profile.router)
+app.include_router(create_item.router)
 
 app.mount(
     '/static',
