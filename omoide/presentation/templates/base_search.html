@@ -24,7 +24,7 @@
             <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"
                  class="invert"
                  alt="Home icon"/>
-            <span class="wide-text">Home</span>
+            <span class="wide-text">&nbsp;Home</span>
         </a>
 
         <label for="query">
@@ -43,7 +43,7 @@
             <img src="{{ request.url_for('static', path='ic_search_24px.svg') }}"
                  class="invert"
                  alt="Looking glass icon"/>
-            <span class="wide-text">Search</span>
+            <span class="wide-text">&nbsp;Search</span>
         </a>
 
         {% if user.is_anon() %}
@@ -53,7 +53,7 @@
                 <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
                      class="invert"
                      alt="Log in icon"/>
-                <span class="wide-text">Login</span>
+                <span class="wide-text">&nbsp;Login</span>
             </a>
         {% else %}
             <a href="{{ url_for('profile') }}"
