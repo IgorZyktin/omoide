@@ -1,20 +1,64 @@
 {% extends "base_search.html" %}
 
-{% block body %}
-    <h5>Current user: {{ user.name }}</h5>
+{% block head %}
+    <script type="text/javascript"
+            src="{{ url_for('static', path='crud.js') }}"></script>
+    <link type="text/css"
+          href="{{ url_for('static', path='crud.css') }}"
+          rel="stylesheet">
+{% endblock %}
 
-    <br>
+{% block body %}
 
     <div class="narrow-block">
+        <label for="parent_uuid">Parent UUID:
+            <input id="parent_uuid"
+                   type="text"
+                   value=""
+                   class="query_input"
+                   style="height: auto"/> {# FIXME #}
+        </label>
 
-        <a href="{{ url_for('logout') }}"
-           title="Log out"
-           class="button">
-            <img src="{{ request.url_for('static', path='ic_exit_to_app_24px.svg') }}"
-                 class="invert"
-                 alt="Log out icon"/>
-            <span class="wide-text">&nbsp;Log out</span>
-        </a>
+        <label for="item_name">Item name (only for collections):
+            <input id="item_name"
+                   type="text"
+                   value=""
+                   class="query_input"
+                   style="height: auto"/> {# FIXME #}
+        </label>
+
+        <span>Treat as collection or single item?:</span>
+        <div>
+            <input type="radio"
+                   id="item_type_collection"
+                   name="drone"
+                   value="collection"
+                   checked>
+            <label for="item_type_collection">Collection</label>
+        </div>
+
+        <div>
+            <input type="radio"
+                   id="item_type_single"
+                   name="drone"
+                   value="single">
+            <label for="item_type_single">Single item</label>
+        </div>
+
+        <label for="item_tags">Tags (one tag per line):<br>
+            <textarea id="item_tags" rows="10"></textarea>
+        </label>
+
+        <label for="item_permissions">Permissions (one user per line):<br>
+            <textarea id="item_permissions" rows="10"></textarea>
+        </label>
+
+        <div id="alerts"></div>
+
+        <a href="javascript:void(0)"
+           onclick="createItem('{{ request.url_for('api_create_item') }}')"
+           title="Create item"
+           class="button">Create item</a>
 
     </div>
 
