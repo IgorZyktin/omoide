@@ -80,7 +80,8 @@ async def api_random(
         ),
 ):
     """Return portion of random items."""
-    details = domain.Details(page=1, items_per_page=items_per_page)
+    # TODO - random can return repeating items
+    details = domain.Details(page=1, anchor=-1, items_per_page=items_per_page)
     query = domain.Query(raw_query='', tags_include=[], tags_exclude=[])
     result, _ = await use_case.execute(user, query, details)
 
