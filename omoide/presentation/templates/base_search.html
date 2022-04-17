@@ -56,13 +56,13 @@
                 <span class="wide-text">Login</span>
             </a>
         {% else %}
-            <a href="{{ url_for('logout') }}"
-               title="Log out"
+            <a href="{{ url_for('profile') }}"
+               title="Enter user profile"
                class="button">
-                <span class="wide-text">{{ user.name }}</span>
-                <img src="{{ request.url_for('static', path='ic_exit_to_app_24px.svg') }}"
+                <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
                      class="invert"
-                     alt="Log out icon"/>
+                     alt="Profile icon"/>
+                <span class="wide-text">&nbsp;{{ user.name }}</span>
             </a>
         {% endif %}
 

@@ -249,6 +249,11 @@ h3, h4, h5 {
     height: 100%;
 }
 
+.narrow-block {
+    max-width: 500px;
+    margin: auto;
+}
+
 .preview {
     display: flex;
     flex-direction: column;

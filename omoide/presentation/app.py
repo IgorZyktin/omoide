@@ -6,11 +6,12 @@ This component is facing towards the user and displays search results.
 import fastapi
 from fastapi.staticfiles import StaticFiles
 
-from omoide.presentation import dependencies
+from omoide.presentation import dependencies as dep
 from omoide.presentation.application import auth
 from omoide.presentation.application import browse
 from omoide.presentation.application import by_user
 from omoide.presentation.application import preview
+from omoide.presentation.application import profile
 from omoide.presentation.application import search
 from omoide.presentation.application import special
 from omoide.presentation.config import config
@@ -25,13 +26,13 @@ app = fastapi.FastAPI(
 @app.on_event('startup')
 async def startup():
     """Connect to the database."""
-    await dependencies.db.connect()
+    await dep.db.connect()
 
 
 @app.on_event('shutdown')
 async def shutdown():
     """Disconnect from the database."""
-    await dependencies.db.disconnect()
+    await dep.db.disconnect()
 
 
 app.include_router(auth.router)
@@ -40,6 +41,7 @@ app.include_router(by_user.router)
 app.include_router(preview.router)
 app.include_router(search.router)
 app.include_router(special.router)
+app.include_router(profile.router)
 
 app.mount(
     '/static',
