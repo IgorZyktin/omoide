@@ -65,12 +65,15 @@ class ByUserRepository(
             owner_uuid: str,
     ) -> int:
         """Count all items of a private user."""
+        # TODO - this code forces user to give permissions
+        #  to himself just to browse content
         query = """
         SELECT count(*) AS total_items
         FROM items it
             RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE owner_uuid = :owner_uuid
-          AND :user_uuid = ANY(cp.permissions)
+          AND (:user_uuid = ANY(cp.permissions) 
+               OR it.owner_uuid::text = :user_uuid)
           AND parent_uuid IS NULL;
         """
 
@@ -102,7 +105,8 @@ class ByUserRepository(
         FROM items it
             RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE owner_uuid = :owner_uuid
-          AND :user_uuid = ANY(cp.permissions)
+          AND (:user_uuid = ANY(cp.permissions) 
+               OR it.owner_uuid::text = :user_uuid)
           AND parent_uuid IS NULL
           AND number > :anchor
         ORDER BY number LIMIT :limit;

@@ -59,7 +59,8 @@ class PreviewRepository(
             FROM items
             WHERE uuid = :item_uuid
         )
-        AND :user_uuid = ANY(cp.permissions)
+        AND (:user_uuid = ANY(cp.permissions) 
+             OR it.owner_uuid::text = :user_uuid)
         ORDER BY number;
         """
 

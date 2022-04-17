@@ -75,7 +75,19 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                (select count(*) from children) as total_items
         """
         else:
-            raise
+            # FIXME
+            query = """
+                WITH children AS (
+                    SELECT uuid
+                    FROM items
+                    WHERE owner_uuid = :owner_uuid
+                      AND parent_uuid IS NULL
+                    ORDER BY number
+                )
+            SELECT (select array_position(array(select uuid from children),
+                                          :item_uuid)) as position,
+                   (select count(*) from children) as total_items
+            """
 
         values = {'owner_uuid': user.uuid, 'item_uuid': item.uuid}
 
