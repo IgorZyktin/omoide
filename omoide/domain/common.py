@@ -118,7 +118,8 @@ class AccessStatus(BaseModel):
     """Status of an access and existence check."""
     exists: bool
     is_public: bool
-    is_given: bool
+    is_permitted: bool
+    is_owner: bool
 
     @property
     def does_not_exist(self) -> bool:
@@ -126,9 +127,18 @@ class AccessStatus(BaseModel):
         return not self.exists
 
     @property
+    def is_given(self) -> bool:
+        """Return True if user can access this item."""
+        return any([
+            self.is_public,
+            self.is_owner,
+            self.is_permitted,
+        ])
+
+    @property
     def is_not_given(self) -> bool:
         """Return True if user cannot access this item."""
-        return not self.is_public and not self.is_given
+        return not self.is_given
 
     @classmethod
     def not_found(cls) -> 'AccessStatus':
@@ -136,7 +146,8 @@ class AccessStatus(BaseModel):
         return cls(
             exists=False,
             is_public=False,
-            is_given=False,
+            is_permitted=False,
+            is_owner=False,
         )
 
 

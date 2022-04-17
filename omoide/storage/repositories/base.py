@@ -21,7 +21,8 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                exists(SELECT 1
                       FROM public_users pu
                       WHERE pu.user_uuid = i.owner_uuid)  AS is_public,
-               (SELECT :user_uuid = ANY (cp.permissions)) AS is_given
+               (SELECT :user_uuid = ANY (cp.permissions)) AS is_permitted,
+               owner_uuid::text = :user_uuid AS is_owner 
         FROM items i
                  LEFT JOIN computed_permissions cp ON cp.item_uuid = i.uuid
         WHERE uuid = :item_uuid;
@@ -36,7 +37,8 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         return domain.AccessStatus(
             exists=True,
             is_public=bool(response['is_public']),
-            is_given=bool(response['is_given']),
+            is_permitted=bool(response['is_permitted']),
+            is_owner=bool(response['is_owner']),
         )
 
     async def user_is_public(
