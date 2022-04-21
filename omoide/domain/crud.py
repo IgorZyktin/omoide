@@ -2,6 +2,7 @@
 """CRUD related interfaces and objects.
 """
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -12,7 +13,7 @@ __all__ = [
 
 class CreateItemPayload(BaseModel):
     """Payload for item creation."""
-    uuid: Optional[str]
+    uuid: Optional[UUID]
     parent_uuid: str
     item_name: str
     is_collection: bool
