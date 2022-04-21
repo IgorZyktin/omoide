@@ -2,6 +2,7 @@
 """Base functionality for all concrete repositories.
 """
 from typing import Optional
+from uuid import UUID, uuid4
 
 from omoide import domain
 from omoide.storage.repositories import base_logic
@@ -9,6 +10,18 @@ from omoide.storage.repositories import base_logic
 
 class BaseRepository(base_logic.BaseRepositoryLogic):
     """Base functionality for all concrete repositories."""
+
+    async def generate_uuid(self) -> UUID:
+        """Generate new UUID4."""
+        query = """
+        SELECT exists(SELECT 1 FROM items WHERE uuid = :uuid);
+        """
+        while True:
+            new_uuid = uuid4()
+            exists = await self.db.fetch_one(query, {'uuid': new_uuid})
+
+            if not exists:
+                return new_uuid
 
     async def check_access(
             self,
