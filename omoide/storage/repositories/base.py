@@ -14,7 +14,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
     async def generate_uuid(self) -> UUID:
         """Generate new UUID4."""
         query = """
-        SELECT exists(SELECT 1 FROM items WHERE uuid = :uuid);
+        SELECT 1 FROM items WHERE uuid = :uuid;
         """
         while True:
             new_uuid = uuid4()
