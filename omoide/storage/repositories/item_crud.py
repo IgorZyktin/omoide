@@ -100,7 +100,7 @@ class ItemCRUDRepository(
         """
 
         values = {
-            'uuid': uuid.uuid4(),
+            'uuid': payload.uuid,
             'parent_uuid': payload.parent_uuid,
             'owner_uuid': user.uuid,
             'name': payload.item_name,

@@ -21,12 +21,15 @@ class CreateItemUseCase:
     ) -> tuple[domain.AccessStatus, Optional[str]]:
         """Return preview model suitable for rendering."""
         async with self._repo.transaction():
+            payload.uuid = await self._repo.generate_uuid()
+
             if not payload.parent_uuid:
                 # TODO - need to implement root level items
                 access = domain.AccessStatus(
                     exists=True,
                     is_public=False,
-                    is_given=True,
+                    is_permitted=True,
+                    is_owner=True,
                 )
                 item_uuid = await self._repo.create_root_item(user, payload)
             else:
