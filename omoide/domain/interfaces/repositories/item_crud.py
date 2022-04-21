@@ -25,3 +25,10 @@ class AbsItemCRUDRepository(AbsRepository, abc.ABC):
             payload: domain.CreateItemPayload,
     ) -> domain.Item:
         """Create item with parent."""
+
+    @abc.abstractmethod
+    async def save_raw_media(
+            self,
+            payload: domain.RawMedia,
+    ) -> bool:
+        """Save given content to the DB."""
