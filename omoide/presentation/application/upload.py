@@ -129,7 +129,6 @@ async def upload(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Given item does not exist',
         )
-    print('created uuids', uuids)
 
     url = request.url_for('upload_complete', uuid=item_uuid)
     return fastapi.responses.RedirectResponse(

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for media upload.
 """
+import datetime
 from uuid import UUID
 
 from omoide import domain
@@ -45,6 +46,7 @@ class UploadUseCase:
 
                             await self._upload_media_content(
                                 uuid=child_item,
+                                filename=file.filename,
                                 content=content,
                                 features=features,
                             )
@@ -55,6 +57,7 @@ class UploadUseCase:
                     if content:
                         await self._upload_media_content(
                             uuid=item_uuid,
+                            filename=files[0].filename,
                             content=content,
                             features=features,
                         )
@@ -87,10 +90,19 @@ class UploadUseCase:
     async def _upload_media_content(
             self,
             uuid: UUID,
+            filename: str,
             content: bytes,
             features: list[str],
     ) -> bool:
         """Upload media to existing item."""
-        print(content)
-        # TODO
+        raw_media = domain.RawMedia(
+            uuid=uuid,
+            created_at=datetime.datetime.now(tz=datetime.timezone.utc),
+            processed_at=None,
+            status='init',
+            filename=filename,
+            content=content,
+            features=features,
+        )
+        await self._repo.save_raw_media(raw_media)
         return True
