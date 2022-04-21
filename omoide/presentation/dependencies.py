@@ -36,6 +36,7 @@ auth_use_case = use_cases.AuthUseCase(base_repository)
 
 item_crud_repository = repositories.ItemCRUDRepository(db)
 create_item_use_case = use_cases.CreateItemUseCase(item_crud_repository)
+upload_use_case = use_cases.UploadUseCase(item_crud_repository)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
@@ -112,3 +113,8 @@ def get_by_user_use_case():
 def get_create_item_use_case():
     """Get use case instance."""
     return create_item_use_case
+
+
+def get_upload_use_case() -> use_cases.UploadUseCase:
+    """Get use case instance."""
+    return upload_use_case
