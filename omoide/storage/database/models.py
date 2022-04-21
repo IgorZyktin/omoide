@@ -201,3 +201,33 @@ class Meta(Base):
     # relations ---------------------------------------------------------------
 
     item = relationship('Item', back_populates='meta')
+
+
+class RawMedia(Base):
+    """Initial content from user, not processed at all."""
+    __tablename__ = 'raw_media'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id = sa.Column(sa.BigInteger,
+                   primary_key=True,
+                   autoincrement=True,
+                   nullable=False)
+    item_uuid = sa.Column(pg.UUID,
+                          sa.ForeignKey('items.uuid'),
+                          nullable=False,
+                          index=True)
+
+    # fields ------------------------------------------------------------------
+
+    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
+    status = sa.Column(sa.Enum('init', 'work', 'done', 'fail', name='status'),
+                       index=True)
+    filename = sa.Column(sa.String(length=MEDIUM), nullable=False)
+    content = sa.Column(pg.BYTEA, nullable=False)
+    features = sa.Column(pg.ARRAY(sa.Text), nullable=False)
+
+    # relations ---------------------------------------------------------------
+
+    item = relationship('Item', back_populates='raw_media')
