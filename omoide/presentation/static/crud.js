@@ -18,19 +18,33 @@ function makeAlert(text) {
     target.appendChild(alert)
 }
 
-async function createItem(endpoint) {
-    // send command for item creation
+function gatherItemParameters() {
+    // gather information from typical creation fields
     let tags = splitLines(document.getElementById('item_tags').value)
     let permissions = splitLines(document.getElementById('item_permissions').value)
-
-    let data = {
+    return {
         parent_uuid: document.getElementById('parent_uuid').value,
-        item_name: document.getElementById('item_name').value,
         is_collection: document.getElementById('item_type_collection').checked,
         tags: tags,
         permissions: permissions
     }
+}
 
+async function createItem(endpoint) {
+    // send command for item creation
+    let data = gatherItemParameters()
+    data['item_name'] = document.getElementById('item_name').value
+    await request(endpoint, data)
+}
+
+async function uploadItems(endpoint) {
+    // send command for item creation
+    let data = gatherItemParameters()
+    await request(endpoint, data)
+}
+
+async function request(endpoint, payload) {
+    // made HTTP POST request
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -38,13 +52,15 @@ async function createItem(endpoint) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         });
 
+        const result = await response.json()
         if (response.status === 201) {
-            window.location.href = response.headers.get('location')
+            let url = result.get('url')
+            if (url !== undefined)
+                window.location.href = url
         } else {
-            const result = await response.json()
             makeAlert(result['detail'])
         }
     } catch (err) {
