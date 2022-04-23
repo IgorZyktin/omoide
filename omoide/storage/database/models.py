@@ -3,7 +3,8 @@
 
 PostgreSQL specific because application needs arrays.
 """
-import uuid
+from typing import Optional
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
@@ -23,12 +24,11 @@ class User(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    uuid = sa.Column(pg.UUID,
-                     primary_key=True,
-                     nullable=False,
-                     index=True,
-                     default=uuid.uuid4,
-                     unique=True)
+    uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                           primary_key=True,
+                           nullable=False,
+                           index=True,
+                           unique=True)
 
     # fields ------------------------------------------------------------------
 
@@ -38,7 +38,9 @@ class User(Base):
 
     # relations ---------------------------------------------------------------
 
-    items = relationship('Item', back_populates='owner')
+    items: list['Item'] = relationship('Item',
+                                       back_populates='owner',
+                                       uselist=True)
 
 
 class PublicUsers(Base):
@@ -51,11 +53,11 @@ class PublicUsers(Base):
                        nullable=False,
                        primary_key=True)
 
-    user_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('users.uuid'),
-                          nullable=False,
-                          index=True,
-                          unique=True)
+    user_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('users.uuid'),
+                                nullable=False,
+                                index=True,
+                                unique=True)
 
 
 class Item(Base):
@@ -64,22 +66,21 @@ class Item(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    uuid = sa.Column(pg.UUID,
-                     primary_key=True,
-                     nullable=False,
-                     index=True,
-                     default=uuid.uuid4,
-                     unique=True)
-
-    parent_uuid = sa.Column(pg.UUID,
-                            sa.ForeignKey('items.uuid'),
-                            nullable=True,
-                            index=True)
-
-    owner_uuid = sa.Column(pg.UUID,
-                           sa.ForeignKey('users.uuid'),
+    uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                           primary_key=True,
                            nullable=False,
-                           index=True)
+                           index=True,
+                           unique=True)
+
+    parent_uuid: Optional[UUID] = sa.Column(pg.UUID(as_uuid=True),
+                                            sa.ForeignKey('items.uuid'),
+                                            nullable=True,
+                                            index=True)
+
+    owner_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                 sa.ForeignKey('users.uuid'),
+                                 nullable=False,
+                                 index=True)
 
     number = sa.Column(sa.BigInteger, nullable=False)
 
@@ -98,7 +99,7 @@ class Item(Base):
 
     # relations ---------------------------------------------------------------
 
-    owner = relationship('User', back_populates='items')
+    owner: User = relationship('User', back_populates='items', uselist=False)
 
     # other -------------------------------------------------------------------
 
@@ -127,12 +128,12 @@ class ComputedTags(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          primary_key=True,
-                          nullable=False,
-                          index=True,
-                          unique=True)
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('items.uuid'),
+                                primary_key=True,
+                                nullable=False,
+                                index=True,
+                                unique=True)
 
     # array fields ------------------------------------------------------------
 
@@ -162,12 +163,12 @@ class ComputedPermissions(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          primary_key=True,
-                          nullable=False,
-                          index=True,
-                          unique=True)
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('items.uuid'),
+                                primary_key=True,
+                                nullable=False,
+                                index=True,
+                                unique=True)
 
     # array fields ------------------------------------------------------------
 
@@ -188,11 +189,11 @@ class Meta(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          nullable=False,
-                          index=True,
-                          primary_key=True)
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('items.uuid'),
+                                nullable=False,
+                                index=True,
+                                primary_key=True)
 
     # fields ------------------------------------------------------------------
 
@@ -200,7 +201,7 @@ class Meta(Base):
 
     # relations ---------------------------------------------------------------
 
-    item = relationship('Item', back_populates='meta')
+    item: Item = relationship('Item', back_populates='meta', uselist=False)
 
 
 class RawMedia(Base):
@@ -213,10 +214,11 @@ class RawMedia(Base):
                    primary_key=True,
                    autoincrement=True,
                    nullable=False)
-    item_uuid = sa.Column(pg.UUID,
-                          sa.ForeignKey('items.uuid'),
-                          nullable=False,
-                          index=True)
+
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('items.uuid'),
+                                nullable=False,
+                                index=True)
 
     # fields ------------------------------------------------------------------
 
@@ -230,4 +232,6 @@ class RawMedia(Base):
 
     # relations ---------------------------------------------------------------
 
-    item = relationship('Item', back_populates='raw_media')
+    item: Item = relationship('Item',
+                              back_populates='raw_media',
+                              uselist=False)
