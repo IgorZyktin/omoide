@@ -100,7 +100,7 @@ class ItemCRUDRepository(
         """
 
         values = {
-            'uuid': uuid.uuid4(),
+            'uuid': payload.uuid,
             'parent_uuid': payload.parent_uuid,
             'owner_uuid': user.uuid,
             'name': payload.item_name,
@@ -112,3 +112,42 @@ class ItemCRUDRepository(
         response = await self.db.execute(query, values)
 
         return response
+
+    async def save_raw_media(
+            self,
+            payload: domain.RawMedia,
+    ) -> bool:
+        """Save given content to the DB."""
+        query = """
+        INSERT INTO raw_media (
+            item_uuid, 
+            created_at, 
+            processed_at, 
+            status, 
+            filename, 
+            content, 
+            features
+        ) 
+        VALUES ( 
+            :item_uuid,
+            :created_at,
+            :processed_at,
+            :status,
+            :filename,
+            :content,
+            :features
+        );
+        """
+
+        values = {
+            'item_uuid': payload.uuid,
+            'created_at': payload.created_at,
+            'processed_at': payload.processed_at,
+            'status': payload.status,
+            'filename': payload.filename,
+            'content': payload.content,
+            'features': payload.features,
+        }
+
+        await self.db.execute(query, values)
+        return True

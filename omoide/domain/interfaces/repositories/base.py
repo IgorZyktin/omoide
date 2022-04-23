@@ -3,7 +3,7 @@
 """
 import abc
 from typing import Optional
-
+from uuid import UUID
 from omoide.domain import auth, common
 
 
@@ -13,6 +13,10 @@ class AbsRepository(abc.ABC):
     @abc.abstractmethod
     def transaction(self):
         """Start transaction."""
+
+    @abc.abstractmethod
+    async def generate_uuid(self) -> UUID:
+        """Generate new UUID4."""
 
     @abc.abstractmethod
     async def check_access(

@@ -15,6 +15,7 @@ from omoide.presentation.application import preview
 from omoide.presentation.application import profile
 from omoide.presentation.application import search
 from omoide.presentation.application import special
+from omoide.presentation.application import upload
 from omoide.presentation.config import config
 
 app = fastapi.FastAPI(
@@ -44,6 +45,7 @@ app.include_router(search.router)
 app.include_router(special.router)
 app.include_router(profile.router)
 app.include_router(create_item.router)
+app.include_router(upload.router)
 
 app.mount(
     '/static',

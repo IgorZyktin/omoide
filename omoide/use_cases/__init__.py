@@ -5,3 +5,4 @@ from omoide.use_cases.by_user import ByUserUseCase
 from omoide.use_cases.create_item import CreateItemUseCase
 from omoide.use_cases.preview import PreviewUseCase
 from omoide.use_cases.search import SearchUseCase
+from omoide.use_cases.upload import UploadUseCase

@@ -1,0 +1,65 @@
+{% extends "base_search.html" %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ url_for('static', path='crud.js') }}"></script>
+    <link type="text/css"
+          href="{{ url_for('static', path='crud.css') }}"
+          rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    <div class="narrow-block">
+        <form enctype="multipart/form-data" method="post">
+            <label for="item_uuid">Item UUID:
+                <input id="item_uuid"
+                       name="item_uuid"
+                       type="text"
+                       value=""
+                       required
+                       class="height-auto"/>
+            </label>
+
+            <div>
+                <input name="files"
+                       type="file"
+                       multiple class="height-auto">
+            </div>
+
+            <span>How to load content?</span>
+            <div>
+                <input type="radio"
+                       id="load_type_collection"
+                       name="load_type_collection"
+                       value="collection"
+                       checked>
+                <label for="load_type_collection">Load all files as new child
+                    items for parent</label>
+            </div>
+
+            <div>
+                <input type="radio"
+                       id="load_type_single"
+                       name="load_type_single"
+                       value="single">
+                <label for="load_type_single">Load media only for
+                    parent</label>
+            </div>
+
+            <label for="item_tags">Tags (one tag per line):<br>
+                <textarea name="tags" rows="10"></textarea>
+            </label>
+
+            <label for="item_permissions">Permissions (one user per line):<br>
+                <textarea name="permissions" rows="10"></textarea>
+            </label>
+
+            <div id="alerts"></div>
+            <input type="submit" value="Submit" class="height-auto">
+        </form>
+
+    </div>
+
+
+{% endblock %}

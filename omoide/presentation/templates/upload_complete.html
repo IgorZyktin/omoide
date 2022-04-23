@@ -1,0 +1,11 @@
+{% extends "base_search.html" %}
+
+{% block body %}
+    <div class="narrow-block">
+        <h1>Items uploaded</h1>
+        <p>Give system some time to process them (usually ~10 minutes).</p>
+        <a href="{{ request.url_for('browse', uuid=uuid) }}"
+           class="button">Try browsing now
+        </a>
+    </div>
+{% endblock %}
