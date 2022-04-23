@@ -3,6 +3,8 @@
 """
 import abc
 
+from uuid import UUID
+
 from omoide import domain
 from omoide.domain.interfaces.repositories.base import AbsRepository
 
@@ -15,7 +17,7 @@ class AbsItemCRUDRepository(AbsRepository, abc.ABC):
             self,
             user: domain.User,
             payload: domain.CreateItemPayload,
-    ) -> domain.Item:
+    ) -> UUID:
         """Create item without parent."""
 
     @abc.abstractmethod
@@ -23,7 +25,7 @@ class AbsItemCRUDRepository(AbsRepository, abc.ABC):
             self,
             user: domain.User,
             payload: domain.CreateItemPayload,
-    ) -> domain.Item:
+    ) -> UUID:
         """Create item with parent."""
 
     @abc.abstractmethod

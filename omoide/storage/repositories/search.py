@@ -134,7 +134,7 @@ class SearchRepository(
             query: domain.Query,
     ) -> int:
         """Count available items for authorised user."""
-        query = """
+        _query = """
         SELECT count(*) AS total_items
         FROM items it
                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
@@ -149,7 +149,7 @@ class SearchRepository(
             'user_uuid': user.uuid,
         }
 
-        response = await self.db.fetch_one(query, values)
+        response = await self.db.fetch_one(_query, values)
         return int(response['total_items'])
 
     async def search_random_known(

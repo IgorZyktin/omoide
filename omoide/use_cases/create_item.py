@@ -2,6 +2,7 @@
 """Use case for item creation.
 """
 from typing import Optional
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -18,7 +19,7 @@ class CreateItemUseCase:
             self,
             user: domain.User,
             payload: domain.CreateItemPayload,
-    ) -> tuple[domain.AccessStatus, Optional[str]]:
+    ) -> tuple[domain.AccessStatus, Optional[UUID]]:
         """Return preview model suitable for rendering."""
         async with self._repo.transaction():
             payload.uuid = await self._repo.generate_uuid()

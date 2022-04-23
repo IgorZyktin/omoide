@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on items and their data.
 """
-import uuid
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -18,7 +18,7 @@ class ItemCRUDRepository(
             self,
             user: domain.User,
             payload: domain.CreateItemPayload,
-    ) -> str:
+    ) -> UUID:
         """Create item without parent."""
         query = """
         INSERT INTO items (
@@ -51,7 +51,7 @@ class ItemCRUDRepository(
         """
 
         values = {
-            'uuid': uuid.uuid4(),
+            'uuid': payload.uuid,
             'owner_uuid': user.uuid,
             'name': payload.item_name,
             'is_collection': payload.is_collection,
@@ -67,7 +67,7 @@ class ItemCRUDRepository(
             self,
             user: domain.User,
             payload: domain.CreateItemPayload,
-    ) -> domain.Item:
+    ) -> UUID:
         """Create item with parent."""
         query = """
         INSERT INTO items (
