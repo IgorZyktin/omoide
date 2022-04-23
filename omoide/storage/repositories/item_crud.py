@@ -22,31 +22,31 @@ class ItemCRUDRepository(
         """Create item without parent."""
         query = """
         INSERT INTO items (
-            uuid, 
-            parent_uuid, 
-            owner_uuid, 
-            number, 
-            name, 
-            is_collection, 
-            content_ext, 
-            preview_ext, 
-            thumbnail_ext, 
-            tags, 
+            uuid,
+            parent_uuid,
+            owner_uuid,
+            number,
+            name,
+            is_collection,
+            content_ext,
+            preview_ext,
+            thumbnail_ext,
+            tags,
             permissions
-        ) 
+        )
         SELECT
             :uuid,
             NULL,
             :owner_uuid,
-            max(number) + 1 as new_number,  
-            :name, 
+            max(number) + 1 as new_number,
+            :name,
             :is_collection,
             '',
             '',
             '',
             :tags,
             :permissions
-        FROM items 
+        FROM items
         RETURNING uuid;
         """
 
@@ -71,31 +71,31 @@ class ItemCRUDRepository(
         """Create item with parent."""
         query = """
         INSERT INTO items (
-            uuid, 
-            parent_uuid, 
-            owner_uuid, 
-            number, 
-            name, 
-            is_collection, 
-            content_ext, 
-            preview_ext, 
-            thumbnail_ext, 
-            tags, 
+            uuid,
+            parent_uuid,
+            owner_uuid,
+            number,
+            name,
+            is_collection,
+            content_ext,
+            preview_ext,
+            thumbnail_ext,
+            tags,
             permissions
-        ) 
+        )
         SELECT
             :uuid,
             :parent_uuid,
             :owner_uuid,
-            max(number) + 1 as new_number,  
-            :name, 
+            max(number) + 1 as new_number,
+            :name,
             :is_collection,
             '',
             '',
             '',
             :tags,
             :permissions
-        FROM items 
+        FROM items
         RETURNING uuid;
         """
 
@@ -120,15 +120,15 @@ class ItemCRUDRepository(
         """Save given content to the DB."""
         query = """
         INSERT INTO raw_media (
-            item_uuid, 
-            created_at, 
-            processed_at, 
-            status, 
-            filename, 
-            content, 
+            item_uuid,
+            created_at,
+            processed_at,
+            status,
+            filename,
+            content,
             features
-        ) 
-        VALUES ( 
+        )
+        VALUES (
             :item_uuid,
             :created_at,
             :processed_at,

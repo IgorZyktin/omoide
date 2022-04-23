@@ -35,7 +35,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                       FROM public_users pu
                       WHERE pu.user_uuid = i.owner_uuid)  AS is_public,
                (SELECT :user_uuid = ANY (cp.permissions)) AS is_permitted,
-               owner_uuid::text = :user_uuid AS is_owner 
+               owner_uuid::text = :user_uuid AS is_owner
         FROM items i
                  LEFT JOIN computed_permissions cp ON cp.item_uuid = i.uuid
         WHERE uuid = :item_uuid;

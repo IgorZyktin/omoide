@@ -80,7 +80,7 @@ class BrowseRepository(
             RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE parent_uuid = :item_uuid
             AND uuid <> :item_uuid
-            AND (:user_uuid = ANY(cp.permissions) 
+            AND (:user_uuid = ANY(cp.permissions)
                  OR it.owner_uuid::text = :user_uuid)
             AND number > :anchor
         ORDER BY number
@@ -108,7 +108,7 @@ class BrowseRepository(
         FROM items it
             RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE parent_uuid = :item_uuid
-            AND (:user_uuid = ANY(cp.permissions) 
+            AND (:user_uuid = ANY(cp.permissions)
                  OR it.owner_uuid::text = :user_uuid);
         """
 

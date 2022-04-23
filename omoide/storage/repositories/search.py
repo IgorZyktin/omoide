@@ -117,7 +117,7 @@ class SearchRepository(
         SELECT count(*) AS total_items
         FROM items it
                 RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions) 
+        WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid);
         """
 
@@ -139,7 +139,7 @@ class SearchRepository(
         FROM items it
                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
                 RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions) 
+        WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
           AND ct.tags @> :tags_include
           AND NOT ct.tags && :tags_exclude;
@@ -171,7 +171,7 @@ class SearchRepository(
                thumbnail_ext
         FROM items it
             RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions) 
+        WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
             AND number > :anchor
         ORDER BY random() LIMIT :limit;
@@ -207,7 +207,7 @@ class SearchRepository(
         FROM items it
                  RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
                  RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions) 
+        WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
           AND ct.tags @> :tags_include
           AND NOT ct.tags && :tags_exclude

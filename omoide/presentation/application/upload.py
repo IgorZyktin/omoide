@@ -16,7 +16,7 @@ router = fastapi.APIRouter()
 
 
 @router.get('/upload')
-async def upload(
+async def upload_get(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
 ):
@@ -73,7 +73,7 @@ async def upload_complete(
 
 
 @router.post('/upload')
-async def upload(
+async def upload_post(
         request: Request,
         item_uuid: str = Form(...),
         tags: str = Form(default=''),
