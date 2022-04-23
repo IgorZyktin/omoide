@@ -32,4 +32,4 @@ jobs:
             -   name: Test with mypy
                 run: |
                     pip install mypy
-                    mypy --install-types ./omoide
+                    mypy ./omoide
