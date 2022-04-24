@@ -100,6 +100,10 @@ class Item(Base):
     # relations ---------------------------------------------------------------
 
     owner: User = relationship('User', back_populates='items', uselist=False)
+    meta: 'Meta' = relationship('Meta', back_populates='item', uselist=False)
+    raw_media: 'RawMedia' = relationship('RawMedia',
+                                         back_populates='item',
+                                         uselist=False)
 
     # other -------------------------------------------------------------------
 
