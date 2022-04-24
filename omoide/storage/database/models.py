@@ -100,7 +100,13 @@ class Item(Base):
     # relations ---------------------------------------------------------------
 
     owner: User = relationship('User', back_populates='items', uselist=False)
-
+    meta: 'Meta' = relationship('Meta', back_populates='item', uselist=False)
+    raw_media: 'RawMedia' = relationship('RawMedia',
+                                         back_populates='item',
+                                         uselist=False)
+    media: 'Media' = relationship('Media',
+                                  back_populates='item',
+                                  uselist=True)
     # other -------------------------------------------------------------------
 
     __table_args__ = (
@@ -234,4 +240,34 @@ class RawMedia(Base):
 
     item: Item = relationship('Item',
                               back_populates='raw_media',
+                              uselist=False)
+
+
+class Media(Base):
+    """Converted content from user."""
+    __tablename__ = 'media'
+
+    # primary and foreign keys ------------------------------------------------
+
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('items.uuid'),
+                                primary_key=True,
+                                nullable=False,
+                                index=True)
+    type = sa.Column(sa.Enum('content', 'preview', 'thumbnail', name='type'),
+                     primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
+    status = sa.Column(sa.Enum('init', 'work', 'done', 'fail', name='status'),
+                       index=True)
+    ext = sa.Column(sa.String(length=SMALL), nullable=False)
+    content = sa.Column(pg.BYTEA, nullable=False)
+
+    # relations ---------------------------------------------------------------
+
+    item: Item = relationship('Item',
+                              back_populates='media',
                               uselist=False)
