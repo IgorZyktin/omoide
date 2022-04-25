@@ -41,10 +41,15 @@ def _convert(engine: Engine, limit: int) -> None:
     for uuid in uuids:
         if database.claim(engine, uuid):
             with Session(engine) as session:
-                convert_single_entry(session, uuid)
-                session.commit()
-                print(f'Converted {uuid}')
-                converted += 1
+                try:
+                    convert_single_entry(session, uuid)
+                except Exception as exc:
+                    print(f'Failed to convert {uuid}: {exc}')
+                else:
+                    print(f'Converted {uuid}')
+                    converted += 1
+                finally:
+                    session.commit()
 
     if converted:
         print(f'Conversion complete, total converted files: {converted}')
