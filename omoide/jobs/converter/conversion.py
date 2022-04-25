@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Converter implementation.
 """
-import datetime
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from omoide import utils
 from omoide.jobs.converter import database
 from omoide.jobs.converter import features
 from omoide.jobs.converter import renderer
@@ -48,7 +48,7 @@ def convert_single_entry(session: Session, uuid: UUID) -> None:
     session.add_all([content, preview, thumbnail])
 
     raw_media.status = 'done'
-    raw_media.processed_at = datetime.datetime.now(tz=datetime.timezone.utc)
+    raw_media.processed_at = utils.now()
     raw_media.content = b''
     image.close()
 
