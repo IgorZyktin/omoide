@@ -273,7 +273,7 @@
             <a href="{{ request.url_for('preview', uuid=item.uuid) }}">
         {% endif -%}
 
-        {%- if item.name -%}
+        {%- if item.is_collection and item.name -%}
             <p>{{ item.name }}</p>
         {%- endif -%}
 
