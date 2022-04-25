@@ -68,6 +68,16 @@ def _download(
                 media.status = 'done'
                 media.content = b''
                 downloaded += 1
+
+                if media.type == 'content':
+                    media.item.content_ext = media.ext
+                elif media.type == 'preview':
+                    media.item.preview_ext = media.ext
+                elif media.type == 'thumbnail':
+                    media.item.thumbnail_ext = media.ext
+                else:
+                    print(f'Unknown media type: {media.type!r}')
+
             finally:
                 media.processed_at = utils.now()
                 session.commit()
