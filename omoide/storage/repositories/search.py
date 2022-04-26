@@ -60,13 +60,12 @@ class SearchRepository(
                thumbnail_ext
         FROM items
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-            AND number > :anchor
-        ORDER BY random() LIMIT :limit;
+        ORDER BY random() LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'limit': details.items_per_page,
-            'anchor': details.anchor,
+            'offset': details.offset,
         }
 
         response = await self.db.fetch_all(_query, values)
@@ -94,13 +93,12 @@ class SearchRepository(
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
           AND ct.tags @> :tags_include
           AND NOT ct.tags && :tags_exclude
-          AND number > :anchor
-        ORDER BY number LIMIT :limit;
+        ORDER BY number LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'limit': details.items_per_page,
-            'anchor': details.anchor,
+            'offset': details.offset,
             'tags_include': query.tags_include,
             'tags_exclude': query.tags_exclude,
         }
@@ -173,14 +171,13 @@ class SearchRepository(
             RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
-            AND number > :anchor
-        ORDER BY random() LIMIT :limit;
+        ORDER BY random() LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'user_uuid': user.uuid,
             'limit': details.items_per_page,
-            'anchor': details.anchor,
+            'offset': details.offset,
         }
 
         response = await self.db.fetch_all(_query, values)
@@ -211,14 +208,13 @@ class SearchRepository(
                OR it.owner_uuid::text = :user_uuid)
           AND ct.tags @> :tags_include
           AND NOT ct.tags && :tags_exclude
-          AND number > :anchor
-        ORDER BY number LIMIT :limit;
+        ORDER BY number LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'user_uuid': user.uuid,
             'limit': details.items_per_page,
-            'anchor': details.anchor,
+            'offset': details.offset,
             'tags_include': query.tags_include,
             'tags_exclude': query.tags_exclude,
         }
