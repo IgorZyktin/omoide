@@ -13,14 +13,14 @@ from omoide.storage.database.models import Item, Media, RawMedia
 
 def get_image(raw_media: RawMedia) -> Image:
     """Extract binary data from raw media."""
-    return Image.open(io.BytesIO(raw_media.content))
+    return Image.open(io.BytesIO(raw_media.content or b''))
 
 
 def gather_media_parameters(item: Item, image: Image, size: int) -> None:
     """Extract basic parameters from the item."""
     width, height = image.size
 
-    data = item.meta.data or {}
+    data = dict(item.meta.data) or {}  # type: ignore
     data.update({
         'width': width,
         'height': height,

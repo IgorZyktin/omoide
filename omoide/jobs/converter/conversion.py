@@ -32,6 +32,10 @@ def convert_single_entry(session: Session, uuid: UUID) -> None:
               f'has unsupported ext: {raw_media.filename!r}')
         return
 
+    if not raw_media.content:
+        print(f'Nothing to convert for {uuid}')
+        return
+
     item = raw_media.item
 
     if item.meta is None:
