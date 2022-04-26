@@ -33,6 +33,7 @@ class UploadUseCase:
             if access.is_given:
                 if is_collection:
                     for file in files:
+                        filename = file.filename.lower()
                         content = await file.read()
 
                         if content:
@@ -41,12 +42,12 @@ class UploadUseCase:
                                 parent_uuid=item_uuid,
                                 tags=tags,
                                 permissions=permissions,
-                                filename=file.filename,
+                                filename=filename,
                             )
 
                             await self._upload_media_content(
                                 uuid=child_item,
-                                filename=file.filename,
+                                filename=filename,
                                 content=content,
                                 features=features,
                             )
@@ -57,7 +58,7 @@ class UploadUseCase:
                     if content:
                         await self._upload_media_content(
                             uuid=item_uuid,
-                            filename=files[0].filename,
+                            filename=files[0].filename.lower(),
                             content=content,
                             features=features,
                         )
