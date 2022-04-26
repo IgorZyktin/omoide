@@ -74,7 +74,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             details: domain.Details,
     ) -> Optional[domain.PositionedByUserItem]:
         """Return user with position information."""
-        if await self.user_is_public(user.uuid):
+        if user.is_anon():
             query = """
             WITH children AS (
                 SELECT uuid
@@ -88,13 +88,16 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                (select count(*) from children) as total_items
         """
         else:
-            # FIXME
             query = """
                 WITH children AS (
                     SELECT uuid
-                    FROM items
+                    FROM items it
+                        RIGHT JOIN computed_permissions cp 
+                            ON cp.item_uuid = it.uuid
                     WHERE owner_uuid = :owner_uuid
                       AND parent_uuid IS NULL
+                      AND (:user_uuid = ANY(cp.permissions)
+                        OR it.owner_uuid::text = :user_uuid)
                     ORDER BY number
                 )
             SELECT (select array_position(array(select uuid from children),
@@ -102,7 +105,11 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                    (select count(*) from children) as total_items
             """
 
-        values = {'owner_uuid': user.uuid, 'item_uuid': item.uuid}
+        values = {
+            'user_uuid': user.uuid,
+            'owner_uuid': user.uuid,
+            'item_uuid': item.uuid,
+        }
 
         response = await self.db.fetch_one(query, values)
 
@@ -173,35 +180,69 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
     async def get_item_with_position(
             self,
+            user: domain.User,
             item_uuid: str,
             child_uuid: str,
             details: domain.Details,
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
-        query = """
-        WITH children AS (
-            SELECT uuid
+        if user.is_anon():
+            query = """
+            WITH children AS (
+                SELECT uuid
+                FROM items
+                WHERE parent_uuid = :item_uuid
+                ORDER BY number
+            )
+            SELECT uuid,
+                   parent_uuid,
+                   owner_uuid,
+                   number,
+                   name,
+                   is_collection,
+                   content_ext,
+                   preview_ext,
+                   thumbnail_ext,
+                   (select array_position(array(select uuid from children),
+                                          :child_uuid)) as position,
+                   (select count(*) from children) as total_items
             FROM items
-            WHERE parent_uuid = :item_uuid
-            ORDER BY number
-        )
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext,
-               (select array_position(array(select uuid from children),
-                                      :child_uuid)) as position,
-               (select count(*) from children) as total_items
-        FROM items
-        WHERE uuid = :item_uuid;
-        """
+            WHERE uuid = :item_uuid;
+            """
+            values = {'item_uuid': item_uuid, 'child_uuid': child_uuid}
+        else:
+            query = """
+            WITH children AS (
+                SELECT uuid
+                FROM items it
+                RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+                WHERE parent_uuid = :item_uuid
+                AND (:user_uuid = ANY(cp.permissions)
+                 OR it.owner_uuid::text = :user_uuid)
+                ORDER BY number
+            )
+            SELECT uuid,
+                   parent_uuid,
+                   owner_uuid,
+                   number,
+                   name,
+                   is_collection,
+                   content_ext,
+                   preview_ext,
+                   thumbnail_ext,
+                   (select array_position(array(select uuid from children),
+                                          :child_uuid)) as position,
+                   (select count(*) from children) as total_items
+            FROM items
+            WHERE uuid = :item_uuid;
+            """
 
-        values = {'item_uuid': item_uuid, 'child_uuid': child_uuid}
+            values = {
+                'user_uuid': user.uuid,
+                'item_uuid': item_uuid,
+                'child_uuid': child_uuid,
+            }
+
         response = await self.db.fetch_one(query, values)
 
         if response is None:
