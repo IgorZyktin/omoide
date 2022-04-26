@@ -178,6 +178,11 @@ class Details(BaseModel):
             items_per_page_async=self.items_per_page_async,
         )
 
+    @property
+    def offset(self) -> int:
+        """Return offset from start of the result block."""
+        return self.items_per_page * (self.page - 1)
+
     def calc_total_pages(self, total_items: int) -> int:
         """Calculate how many pages we need considering this query."""
         return int(total_items / (self.items_per_page or 1))

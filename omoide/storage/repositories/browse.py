@@ -30,16 +30,15 @@ class BrowseRepository(
                thumbnail_ext
         FROM items
         WHERE parent_uuid = :item_uuid
-            AND uuid <> :item_uuid
-            AND number > :anchor
+        AND uuid <> :item_uuid
         ORDER BY number
-        LIMIT :limit;
+        LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'item_uuid': item_uuid,
             'limit': details.items_per_page,
-            'anchor': details.anchor,
+            'offset': details.offset,
         }
 
         response = await self.db.fetch_all(_query, values)
@@ -82,16 +81,15 @@ class BrowseRepository(
             AND uuid <> :item_uuid
             AND (:user_uuid = ANY(cp.permissions)
                  OR it.owner_uuid::text = :user_uuid)
-            AND number > :anchor
         ORDER BY number
-        LIMIT :limit;
+        LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'user_uuid': user.uuid,
             'item_uuid': item_uuid,
             'limit': details.items_per_page,
-            'anchor': details.anchor,
+            'offset': details.offset,
         }
 
         response = await self.db.fetch_all(_query, values)

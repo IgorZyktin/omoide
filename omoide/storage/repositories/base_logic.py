@@ -21,6 +21,7 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
 
     async def get_location(
             self,
+            user: domain.User,
             item_uuid: str,
             details: domain.Details,
     ) -> Optional[domain.Location]:
@@ -35,7 +36,7 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
         if owner is None:
             return None
 
-        ancestors = await self._get_ancestors(current_item, details)
+        ancestors = await self._get_ancestors(user, current_item, details)
 
         if ancestors:
             positioned_owner = await self.get_positioned_by_user(
@@ -52,6 +53,7 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
 
     async def _get_ancestors(
             self,
+            user: domain.User,
             item: domain.Item,
             details: domain.Details,
     ) -> list[domain.PositionedItem]:
@@ -66,6 +68,7 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
                 break
 
             ancestor = await self.get_item_with_position(
+                user=user,
                 item_uuid=item_uuid,
                 child_uuid=child_uuid,
                 details=details,

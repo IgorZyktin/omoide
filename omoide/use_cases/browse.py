@@ -28,7 +28,9 @@ class BrowseUseCase:
                 result = None
 
             else:
-                location = await self._repo.get_location(item_uuid, details)
+                location = await self._repo.get_location(user,
+                                                         item_uuid,
+                                                         details)
 
                 if user.is_anon():
                     items = await self._repo.get_children(item_uuid, details)

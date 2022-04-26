@@ -28,7 +28,9 @@ class PreviewUseCase:
                 result = None
 
             else:
-                location = await self._repo.get_location(item_uuid, details)
+                location = await self._repo.get_location(user,
+                                                         item_uuid,
+                                                         details)
                 item = await self._repo.get_extended_item(item_uuid)
 
                 if user.is_anon():

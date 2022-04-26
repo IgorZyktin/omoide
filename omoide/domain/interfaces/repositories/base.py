@@ -4,6 +4,8 @@
 import abc
 from typing import Optional
 from uuid import UUID
+
+from omoide import domain
 from omoide.domain import auth, common
 
 
@@ -29,6 +31,7 @@ class AbsRepository(abc.ABC):
     @abc.abstractmethod
     async def get_location(
             self,
+            user: domain.User,
             item_uuid: str,
             details: common.Details,
     ) -> Optional[common.Location]:
@@ -74,6 +77,7 @@ class AbsRepository(abc.ABC):
     @abc.abstractmethod
     async def get_item_with_position(
             self,
+            user: auth.User,
             item_uuid: str,
             child_uuid: str,
             details: common.Details,
