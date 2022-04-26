@@ -92,7 +92,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                 WITH children AS (
                     SELECT uuid
                     FROM items it
-                        RIGHT JOIN computed_permissions cp 
+                        RIGHT JOIN computed_permissions cp
                             ON cp.item_uuid = it.uuid
                     WHERE owner_uuid = :owner_uuid
                       AND parent_uuid IS NULL
