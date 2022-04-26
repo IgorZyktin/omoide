@@ -6,13 +6,16 @@ import random
 from pathlib import Path
 
 from omoide import utils
-from omoide.storage.database.models import Media
 from omoide.jobs.downloader import filesystem
+from omoide.storage.database.models import Media
 
 
 def download_single_entry(media: Media, paths: list[Path]) -> None:
     """Perform full download for single entry."""
     for path in paths:
+        if not media.type or not media.ext or not media.content:
+            continue
+
         bucket = utils.get_bucket(media.item_uuid)
         filename = filesystem.create_folders_for_filename(
             path,
