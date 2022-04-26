@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Converter implementation.
 """
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -39,7 +40,8 @@ def convert_single_entry(session: Session, uuid: UUID) -> None:
         session.commit()
 
     image = renderer.get_image(raw_media)
-    renderer.gather_media_parameters(item, image, len(raw_media.content))
+    size = len(raw_media.content or '')
+    renderer.gather_media_parameters(item, image, size)
 
     features.apply_features(item, image)
     content = renderer.save_content(item, image, ext)
@@ -53,7 +55,7 @@ def convert_single_entry(session: Session, uuid: UUID) -> None:
     image.close()
 
 
-def extract_ext(filename: str) -> str:
+def extract_ext(filename: Optional[str]) -> str:
     """Extract filename from extension.
 
     >>> extract_ext('test.txt')
@@ -65,7 +67,11 @@ def extract_ext(filename: str) -> str:
     >>> extract_ext('test.txt.bak')
     'bak'
     """
+    if not filename:
+        return ''
+
     parts = filename.rsplit('.', maxsplit=1)
     if len(parts) == 1:
         return ''
+
     return parts[-1].lower()

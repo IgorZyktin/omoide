@@ -8,8 +8,7 @@ import math
 from PIL import Image
 from sqlalchemy.orm.attributes import flag_modified
 
-from omoide.domain import RawMedia
-from omoide.storage.database.models import Item, Media
+from omoide.storage.database.models import Item, Media, RawMedia
 
 
 def get_image(raw_media: RawMedia) -> Image:
@@ -21,7 +20,8 @@ def gather_media_parameters(item: Item, image: Image, size: int) -> None:
     """Extract basic parameters from the item."""
     width, height = image.size
 
-    item.meta.data.update({
+    data = item.meta.data or {}
+    data.update({
         'width': width,
         'height': height,
         'res': round(width * height / 1_000_000, 2),
@@ -29,6 +29,7 @@ def gather_media_parameters(item: Item, image: Image, size: int) -> None:
         'type': 'image',
         'registered_on': str(datetime.datetime.now(tz=datetime.timezone.utc)),
     })
+    item.meta.data = data
     flag_modified(item.meta, 'data')
 
 
