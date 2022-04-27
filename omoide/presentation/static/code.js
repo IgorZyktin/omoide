@@ -38,21 +38,21 @@ function renderMoreItems(container, items) {
         let envelope = document.createElement('div')
         envelope.classList.add('envelope')
 
-        if (item['is_collection']) {
+        if (item.is_collection) {
             envelope.classList.add('env-collection')
         }
 
         let link = document.createElement('a')
         link.href = item['href']
 
-        if (item.name) {
+        if (item.is_collection && item.name) {
             let name = document.createElement('p')
             name.innerText = item.name
             link.appendChild(name)
         }
 
         let img = document.createElement('img')
-        img.src = item['thumbnail']
+        img.src = item.thumbnail
         link.appendChild(img)
 
         envelope.appendChild(link)
