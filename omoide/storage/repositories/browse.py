@@ -104,7 +104,7 @@ class BrowseRepository(
         query = """
         SELECT count(*) AS total_items
         FROM items it
-            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE parent_uuid = :item_uuid
             AND (:user_uuid = ANY(cp.permissions)
                  OR it.owner_uuid::text = :user_uuid);
