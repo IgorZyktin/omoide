@@ -56,8 +56,8 @@ async function request(endpoint, payload) {
         });
 
         const result = await response.json()
-        if (response.status === 201) {
-            let url = result.get('url')
+        if (response.status === 200) {
+            let url = result['url']
             if (url !== undefined)
                 window.location.href = url
         } else {

@@ -116,6 +116,5 @@ async def api_create_item(
             detail='Parent with this UUID does not exist',
         )
 
-    response.headers['Location'] = request.url_for('preview', uuid=item_uuid)
-    response.status_code = status.HTTP_201_CREATED
-    return 'ok'
+    url = request.url_for('preview', uuid=item_uuid)
+    return {'url': url}
