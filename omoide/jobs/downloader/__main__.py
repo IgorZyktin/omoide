@@ -18,7 +18,7 @@ from omoide.jobs.downloader import filesystem
 
 
 @click.command()
-@click.option('--limit', default=100,
+@click.option('--limit', default=-1,
               help='Maximum amount of items to process')
 @click.option('--strict/--no-strict', default=False,
               help='Raise exception in case of any problems')

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from omoide.storage.database.models import RawMedia
 
 
-def get_uuids_to_process(engine: Engine, limit: int = 100) -> list[UUID]:
+def get_uuids_to_process(engine: Engine, limit: int) -> list[UUID]:
     """Return UUIDs of all unprocessed items from raw media table."""
     query = sqlalchemy.select(
         RawMedia.item_uuid
@@ -19,9 +19,10 @@ def get_uuids_to_process(engine: Engine, limit: int = 100) -> list[UUID]:
         RawMedia.status == 'init'
     ).order_by(
         RawMedia.id
-    ).limit(
-        limit
     )
+
+    if limit > 0:
+        query = query.limit(limit)
 
     with engine.begin() as conn:
         response = conn.execute(query)

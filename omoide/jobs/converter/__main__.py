@@ -16,7 +16,7 @@ from omoide.jobs.converter.conversion import convert_single_entry
 
 
 @click.command()
-@click.option('--limit', default=100,
+@click.option('--limit', default=-1,
               help='Maximum amount of items to process')
 def main(limit: int):
     """Converter entry point."""
