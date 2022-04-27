@@ -41,9 +41,9 @@ class ItemCRUDRepository(
             max(number) + 1 as new_number,
             :name,
             :is_collection,
-            '',
-            '',
-            '',
+            NULL,
+            NULL,
+            NULL,
             :tags,
             :permissions
         FROM items
@@ -90,9 +90,9 @@ class ItemCRUDRepository(
             max(number) + 1 as new_number,
             :name,
             :is_collection,
-            '',
-            '',
-            '',
+            NULL,
+            NULL,
+            NULL,
             :tags,
             :permissions
         FROM items
