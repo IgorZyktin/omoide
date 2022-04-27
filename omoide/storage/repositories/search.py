@@ -168,7 +168,7 @@ class SearchRepository(
                preview_ext,
                thumbnail_ext
         FROM items it
-            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
         ORDER BY random() LIMIT :limit OFFSET :offset;
@@ -203,7 +203,7 @@ class SearchRepository(
                ct.tags
         FROM items it
                  RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
-                 RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+                 LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
           AND ct.tags @> :tags_include

@@ -53,7 +53,7 @@ class PreviewRepository(
         query = """
         SELECT uuid
         FROM items it
-            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE parent_uuid = (
             SELECT parent_uuid
             FROM items

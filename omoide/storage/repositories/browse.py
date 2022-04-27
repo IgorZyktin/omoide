@@ -76,7 +76,7 @@ class BrowseRepository(
                preview_ext,
                thumbnail_ext
         FROM items it
-            RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE parent_uuid = :item_uuid
             AND uuid <> :item_uuid
             AND (:user_uuid = ANY(cp.permissions)
