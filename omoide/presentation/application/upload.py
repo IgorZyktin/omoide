@@ -80,7 +80,7 @@ async def upload_complete(
 @router.post('/upload')
 async def upload_post(
         request: Request,
-        item_uuid: str = Form(...),
+        parent_uuid: str = Form(...),
         tags: str = Form(default=''),
         collection: str = Form(default=''),
         user: domain.User = Depends(dep.get_current_user),
@@ -120,7 +120,7 @@ async def upload_post(
 
     access, uuids = await use_case.execute(
         user=user,
-        item_uuid=UUID(item_uuid),
+        item_uuid=UUID(parent_uuid),
         is_collection=is_collection,
         files=files,
         tags=list(filter(None, tags.split('\n'))),  # FIXME
@@ -134,7 +134,7 @@ async def upload_post(
             detail='Given item does not exist',
         )
 
-    url = request.url_for('upload_complete', uuid=item_uuid)
+    url = request.url_for('upload_complete', uuid=parent_uuid)
     return fastapi.responses.RedirectResponse(
         url,
         status_code=status.HTTP_302_FOUND,

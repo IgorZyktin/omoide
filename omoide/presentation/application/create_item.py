@@ -121,5 +121,9 @@ async def api_create_item(
             detail='Parent with this UUID does not exist',
         )
 
-    url = request.url_for('preview', uuid=item_uuid)
+    if payload.go_upload:
+        url = request.url_for('upload_get') + f'?parent_uuid={item_uuid}'
+    else:
+        url = request.url_for('preview', uuid=item_uuid)
+
     return {'url': url}

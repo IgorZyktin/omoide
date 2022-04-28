@@ -21,6 +21,7 @@ class CreateItemPayload(BaseModel):
     is_collection: bool
     tags: list[str]
     permissions: list[str]
+    go_upload: bool = False
 
 
 class RawMedia(BaseModel):

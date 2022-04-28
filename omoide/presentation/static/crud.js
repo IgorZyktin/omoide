@@ -24,7 +24,8 @@ function gatherItemParameters() {
     let permissions = splitLines(document.getElementById('item_permissions').value)
     return {
         parent_uuid: document.getElementById('parent_uuid').value,
-        is_collection: document.getElementById('item_type_collection').checked,
+        is_collection: document.getElementById('is_collection').checked,
+        go_upload: document.getElementById('go_upload').checked,
         tags: tags,
         permissions: permissions
     }
