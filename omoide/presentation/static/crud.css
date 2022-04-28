@@ -23,3 +23,8 @@
 .height-auto {
     height: auto;
 }
+
+input[type="checkbox"] {
+    width: auto;
+    height: auto;
+}

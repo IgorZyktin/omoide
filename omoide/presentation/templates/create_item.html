@@ -9,8 +9,15 @@
 {% endblock %}
 
 {% block body %}
-
     <div class="narrow-block">
+        <h3>Creation of a new item</h3>
+        <label for="item_name">Item name:
+            <input id="item_name"
+                   type="text"
+                   value=""
+                   class="height-auto"/>
+        </label>
+
         <label for="parent_uuid">Parent UUID:
             <input id="parent_uuid"
                    type="text"
@@ -18,37 +25,29 @@
                    class="height-auto"/>
         </label>
 
-        <label for="item_name">Item name (only for collections):
-            <input id="item_name"
+        <label for="parent_name">Parent name:
+            <input id="parent_name"
                    type="text"
                    value=""
                    class="height-auto"/>
         </label>
 
-        <span>Treat as collection or single item?:</span>
         <div>
-            <input type="radio"
-                   id="item_type_collection"
-                   name="drone"
-                   value="collection"
+            <input id="is_collection"
+                   type="checkbox"
                    checked>
-            <label for="item_type_collection">Collection</label>
+            <label for="is_collection">Collection</label>
         </div>
 
         <div>
-            <input type="radio"
-                   id="item_type_single"
-                   name="drone"
-                   value="single">
-            <label for="item_type_single">Single item</label>
+            <input id="go_upload"
+                   type="checkbox"
+                   checked>
+            <label for="go_upload">Add media after creation</label>
         </div>
 
         <label for="item_tags">Tags (one tag per line):<br>
             <textarea id="item_tags" rows="10"></textarea>
-        </label>
-
-        <label for="item_permissions">Permissions (one user per line):<br>
-            <textarea id="item_permissions" rows="10"></textarea>
         </label>
 
         <div id="alerts"></div>
@@ -56,7 +55,7 @@
         <a href="javascript:void(0)"
            onclick="createItem('{{ request.url_for('api_create_item') }}')"
            title="Create item"
-           class="button">Create item</a>
+           class="button">Create</a>
 
     </div>
 
