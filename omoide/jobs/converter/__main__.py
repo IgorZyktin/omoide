@@ -41,8 +41,14 @@ def _convert(engine: Engine, limit: int) -> None:
     for uuid in uuids:
         if database.claim(engine, uuid):
             with Session(engine) as session:
+                raw_media = database.get_raw_media_instance(session, uuid)
+
+                if raw_media is None:
+                    print(f'Could not load raw media for {uuid}')
+                    return
+
                 try:
-                    convert_single_entry(session, uuid)
+                    convert_single_entry(session, raw_media)
                 except Exception as exc:
                     print(f'Failed to convert {uuid}: {exc}')
                 else:

@@ -2,38 +2,30 @@
 """Converter implementation.
 """
 from typing import Optional
-from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from omoide import utils
-from omoide.jobs.converter import database
 from omoide.jobs.converter import features
 from omoide.jobs.converter import renderer
-from omoide.storage.database.models import Meta
+from omoide.storage.database.models import Meta, RawMedia
 
 VALID_EXT = frozenset([
     'jpg',
 ])
 
 
-def convert_single_entry(session: Session, uuid: UUID) -> None:
+def convert_single_entry(session: Session, raw_media: RawMedia) -> None:
     """Perform full conversion for single entry."""
-    raw_media = database.get_raw_media_instance(session, uuid)
-
-    if raw_media is None:
-        print(f'Could not load raw media for {uuid}')
-        return
-
     ext = extract_ext(raw_media.filename)
 
     if not ext or ext not in VALID_EXT:
-        print(f'Cant handle {uuid}, filename '
+        print(f'Cant handle {raw_media.item_uuid}, filename '
               f'has unsupported ext: {raw_media.filename!r}')
         return
 
     if not raw_media.content:
-        print(f'Nothing to convert for {uuid}')
+        print(f'Nothing to convert for {raw_media.item_uuid}')
         return
 
     item = raw_media.item
