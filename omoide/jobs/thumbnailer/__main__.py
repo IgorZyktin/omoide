@@ -70,12 +70,12 @@ def copy_single_thumbnail(
 
         target.thumbnail_ext = source.thumbnail_ext
 
-        source_bucket = utils.get_bucket(source.item_uuid)
-        target_bucket = utils.get_bucket(target.item_uuid)
+        source_bucket = utils.get_bucket(source.uuid)
+        target_bucket = utils.get_bucket(target.uuid)
 
         source_filename = filesystem.create_folders_for_filename(
             path,
-            str(source.uuid),
+            str(source.owner_uuid),
             'thumbnail',
             source_bucket,
             f'{source.uuid}.{source.thumbnail_ext}'
@@ -83,7 +83,7 @@ def copy_single_thumbnail(
 
         target_filename = filesystem.create_folders_for_filename(
             path,
-            str(target.uuid),
+            str(target.owner_uuid),
             'thumbnail',
             target_bucket,
             f'{target.uuid}.{target.thumbnail_ext}'
