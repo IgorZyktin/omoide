@@ -31,7 +31,7 @@ def main(limit: int, strict: bool):
 
     folders = os.environ.get('OMOIDE_SAVE_TO_FOLDERS')
 
-    if url is None:
+    if folders is None:
         raise ValueError('No folders to save given')
 
     paths = filesystem.extract_paths(folders)
