@@ -21,15 +21,27 @@
         <label for="parent_uuid">Parent UUID:
             <input id="parent_uuid"
                    type="text"
-                   value=""
-                   class="height-auto"/>
+                   value="{{ parent_uuid }}"
+                   class="height-auto"
+                   onchange="tryLoadingThumbnail('{{ user.uuid }}', '{{ request.url_for('static', path='empty.png') }}')"/>
         </label>
 
-        <label for="parent_name">Parent name:
-            <input id="parent_name"
-                   type="text"
-                   value=""
-                   class="height-auto"/>
+        {# TODO - uncomment this when name based search will be available #}
+        {#        <label for="parent_name">Parent name:#}
+        {#            <input id="parent_name"#}
+        {#                   type="text"#}
+        {#                   value=""#}
+        {#                   class="height-auto"/>#}
+        {#        </label>#}
+
+        <div class="parent_thumbnail">
+            <img id="item_thumbnail"
+                 src="{{ request.url_for('static', path='empty.png') }}"
+                 alt="Parent thumbnail"/>
+        </div>
+
+        <label for="item_tags">Tags (one tag per line):<br>
+            <textarea id="item_tags" rows="10"></textarea>
         </label>
 
         <div>
@@ -46,10 +58,6 @@
             <label for="go_upload">Add media after creation</label>
         </div>
 
-        <label for="item_tags">Tags (one tag per line):<br>
-            <textarea id="item_tags" rows="10"></textarea>
-        </label>
-
         <div id="alerts"></div>
 
         <a href="javascript:void(0)"
@@ -58,6 +66,5 @@
            class="button">Create</a>
 
     </div>
-
 
 {% endblock %}

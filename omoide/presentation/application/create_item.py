@@ -5,7 +5,7 @@ import fastapi
 from fastapi import Depends, Request, Response
 from starlette import status
 
-from omoide import domain, use_cases
+from omoide import domain, use_cases, utils
 from omoide.domain.crud import CreateItemPayload
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
@@ -17,6 +17,7 @@ router = fastapi.APIRouter()
 @router.get('/create_item')
 async def create_item(
         request: Request,
+        parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
 ):
     """Create item page."""
@@ -34,11 +35,15 @@ async def create_item(
 
     query = infra.query_maker.from_request(request.query_params)
 
+    if not utils.is_valid_uuid(parent_uuid):
+        parent_uuid = ''
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'url': request.url_for('search'),
+        'parent_uuid': parent_uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 

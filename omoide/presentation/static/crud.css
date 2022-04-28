@@ -28,3 +28,14 @@ input[type="checkbox"] {
     width: auto;
     height: auto;
 }
+
+.parent_thumbnail {
+    width: 100%;
+    text-align: center;
+}
+
+.parent_thumbnail img {
+    max-width: 256px;
+    max-height: 256px;
+    border-radius: 10px;
+}

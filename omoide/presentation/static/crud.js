@@ -67,3 +67,34 @@ async function request(endpoint, payload) {
         throw err
     }
 }
+
+function isUUID(uuid) {
+    let s = "" + uuid;
+    s = s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/g);
+    return s !== null;
+}
+
+function srcFromUUID(user_uuid, uuid){
+    // generate item thumbnail url from uuid
+    let prefix = uuid.slice(0, 2)
+    return `/content/${user_uuid}/thumbnail/${prefix}/${uuid}.jpg`
+}
+
+function tryLoadingThumbnail(user_uuid, defaultSrc) {
+    // try to load thumbnail for item
+    let uuid = document.getElementById('parent_uuid')
+
+    if (uuid === undefined)
+        return
+
+    let image = document.getElementById('item_thumbnail')
+
+    if (image === undefined)
+        return
+
+    if (isUUID(uuid.value)) {
+        image.src = srcFromUUID(user_uuid, uuid.value)
+    } else {
+        image.src = defaultSrc
+    }
+}
