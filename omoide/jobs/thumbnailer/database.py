@@ -10,7 +10,8 @@ from omoide.storage.database.models import Item
 
 def get_items_without_thumbnail(session: Session) -> list[Item]:
     """Return some media records to save."""
-    return session.query(Item).where(Item.thumbnail_ext == None).all()
+    return session.query(Item).where(
+        Item.thumbnail_ext == None).all()  # noqa: E711
 
 
 def get_first_child(session: Session, item: Item) -> Optional[Item]:
