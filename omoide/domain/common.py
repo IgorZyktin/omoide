@@ -190,6 +190,7 @@ class Details(BaseModel):
 
 class Results(BaseModel):
     """Result of a search request."""
+    item: Optional[Item]
     total_items: int
     total_pages: int
     items: list[Item]

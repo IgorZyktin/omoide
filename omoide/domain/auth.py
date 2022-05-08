@@ -27,6 +27,10 @@ class User(BaseModel):
         """Return True if user is anonymous."""
         return self.uuid == ''
 
+    def is_not_anon(self) -> bool:
+        """Return True if user is registered one."""
+        return not self.is_anon()
+
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'User':
         """Convert from arbitrary format to model."""

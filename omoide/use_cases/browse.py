@@ -32,6 +32,8 @@ class BrowseUseCase:
                                                          item_uuid,
                                                          details)
 
+                item = await self._repo.get_item(item_uuid)
+
                 if user.is_anon():
                     items = await self._repo.get_children(item_uuid, details)
                     total_items = await self._repo.count_items(item_uuid)
@@ -47,6 +49,7 @@ class BrowseUseCase:
                     )
 
                 result = domain.Results(
+                    item=item,
                     total_items=total_items,
                     total_pages=details.calc_total_pages(total_items),
                     items=items,

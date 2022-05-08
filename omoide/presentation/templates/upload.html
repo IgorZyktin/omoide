@@ -69,4 +69,11 @@
 
     </div>
 
+    <script>
+        function updateThumbnail() {
+            tryLoadingThumbnail('{{ user.uuid }}', '{{ request.url_for('static', path='empty.png') }}')
+        }
+        window.onload = updateThumbnail;
+    </script>
+
 {% endblock %}

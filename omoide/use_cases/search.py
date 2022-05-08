@@ -79,6 +79,7 @@ class SearchUseCase:
             )
 
         result = domain.Results(
+            item=None,
             total_items=total_items,
             total_pages=details.calc_total_pages(total_items),
             items=items,

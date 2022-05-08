@@ -3,6 +3,13 @@
 
 {% block body %}
 
+    {% if user.is_not_anon() and user.uuid == result.item.owner_uuid %}
+        <a href="{{ request.url_for('upload_get') }}?parent_uuid={{ result.item.uuid }}"
+           title="Upload new items"
+           class="button">Upload to this
+        </a>
+    {% endif %}
+
     {{ render_location(request, result.location) }}
     {{ render_paginator_by_item(request, paginator, query, uuid) }}
 
