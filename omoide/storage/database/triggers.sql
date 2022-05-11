@@ -6,19 +6,21 @@ BEGIN
     WITH RECURSIVE nested_items AS (
         SELECT parent_uuid,
                uuid,
+               name,
                tags
         FROM items
         WHERE uuid = given_uuid
         UNION ALL
         SELECT i.parent_uuid,
                i.uuid,
+               i.name,
                i.tags
         FROM items i
                  INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
     )
     SELECT INTO computed_tags array_agg(DISTINCT tags) as tags
     FROM (SELECT uuid,
-                 unnest(array_append(tags, uuid::text)) as tags
+                 unnest(array_cat (tags, ARRAY [lower(name), uuid::text])) as tags
           FROM nested_items) uniq;
 END
 $$ LANGUAGE 'plpgsql';
