@@ -53,15 +53,12 @@ async def browse(
         pages_in_block=constants.PAGES_IN_BLOCK,
     )
 
-    placeholder = utils.make_search_report(result.total_items, timer.seconds)
-
     context = {
         'request': request,
         'config': config,
         'user': user,
         'uuid': uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
-        'placeholder': placeholder,
         'paginator': paginator,
         'result': result,
     }

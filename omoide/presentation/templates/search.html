@@ -3,10 +3,6 @@
 
 {% block body %}
 
-    {% if report %}
-        <h5>{{ report }}</h5>
-    {% endif %}
-
     {{ render_paginator(request, paginator, query) }}
 
     <div class="envelope-container">

@@ -50,21 +50,14 @@ async def search(
             pages_in_block=constants.PAGES_IN_BLOCK,
         )
 
-    report = utils.make_search_report(
-        total=result.total_items,
-        duration=timer.seconds,
-    )
-
     context = {
         'request': request,
         'config': config,
         'user': user,
         'query': infra.query_maker.QueryWrapper(query, details),
         'details': details,
-        'placeholder': 'Enter one or more tags here',
         'paginator': paginator,
         'result': result,
-        'report': report,
     }
 
     return dependencies.templates.TemplateResponse(template, context)

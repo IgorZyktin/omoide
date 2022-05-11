@@ -28,7 +28,6 @@ async def not_found(
         'config': config,
         'user': auth.User.new_anon(),
         'query': infra.query_maker.QueryWrapper(query, details),
-        'placeholder': 'Enter one or more tags here',
     }
     return dependencies.templates.TemplateResponse(
         name='not_found.html',
@@ -55,7 +54,6 @@ async def not_allowed(
         'config': config,
         'user': auth.User.new_anon(),
         'query': infra.query_maker.QueryWrapper(query, details),
-        'placeholder': 'Enter one or more tags here',
     }
     return dependencies.templates.TemplateResponse(
         name='not_allowed.html',
@@ -82,7 +80,6 @@ async def not_appropriate(
         'config': config,
         'user': auth.User.new_anon(),
         'query': infra.query_maker.QueryWrapper(query, details),
-        'placeholder': 'Enter one or more tags here',
     }
     return dependencies.templates.TemplateResponse(
         name='not_appropriate.html',

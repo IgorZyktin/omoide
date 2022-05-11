@@ -35,9 +35,3 @@ def sep_digits(number: int | float | str, precision: int = 2) -> str:
         result = str(number)
 
     return result
-
-
-def make_search_report(total: int, duration: float) -> str:
-    """Format human-readable search report."""
-    total_str = sep_digits(total)
-    return f'Found {total_str} items in {duration:0.3f} sec.'

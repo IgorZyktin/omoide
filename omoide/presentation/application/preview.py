@@ -47,17 +47,11 @@ async def preview(
         url = request.url_for('not_allowed') + f'?q={uuid}'
         return fastapi.responses.RedirectResponse(url)
 
-    placeholder = utils.make_search_report(
-        total=len(result.neighbours),
-        duration=timer.seconds,
-    )
-
     context = {
         'request': request,
         'config': config,
         'user': user,
         'query': infra.query_maker.QueryWrapper(query, details),
-        'placeholder': placeholder,
         'item': result.item,
         'result': result,
         'album': infra.Album(
