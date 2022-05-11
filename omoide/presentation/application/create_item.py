@@ -122,7 +122,7 @@ async def api_create_item(
         )
 
     if payload.go_upload:
-        url = request.url_for('upload_get') + f'?parent_uuid={item_uuid}'
+        url = request.url_for('upload') + f'?parent_uuid={item_uuid}'
     else:
         url = request.url_for('preview', uuid=item_uuid)
 
