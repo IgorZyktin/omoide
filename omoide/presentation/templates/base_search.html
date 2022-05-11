@@ -68,7 +68,13 @@
 
     {% if not user.is_anon() %}
         <div class="menu-container">
-            <a href="{{ url_for('create_item') }}"
+            {% if current_item %}
+                {% set parent_hint = '?parent_uuid=' + current_item.uuid|string %}
+            {% else %}
+                {% set parent_hint = '' %}
+            {% endif %}
+
+            <a href="{{ url_for('create_item') + parent_hint }}"
                title="Create new item"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_create_24px.svg') }}"
@@ -77,7 +83,7 @@
                 <span class="wide-text">&nbsp;Create item</span>
             </a>
 
-            <a href="{{ url_for('upload') }}"
+            <a href="{{ url_for('upload') + parent_hint }}"
                title="Upload media"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_file_upload_24px.svg') }}"

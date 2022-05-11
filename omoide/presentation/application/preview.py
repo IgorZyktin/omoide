@@ -57,6 +57,7 @@ async def preview(
             sequence=result.neighbours,
             position=result.item.uuid,
             items_on_page=constants.PAGES_IN_BLOCK,  # TODO: move to details
-        )
+        ),
+        'current_item': result.item,
     }
     return dependencies.templates.TemplateResponse('preview.html', context)

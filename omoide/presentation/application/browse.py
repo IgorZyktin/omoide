@@ -60,5 +60,6 @@ async def browse(
         'query': infra.query_maker.QueryWrapper(query, details),
         'paginator': paginator,
         'result': result,
+        'current_item': result.item,
     }
     return dependencies.templates.TemplateResponse('browse.html', context)
