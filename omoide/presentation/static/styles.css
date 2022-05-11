@@ -26,6 +26,13 @@
         border-radius: var(--large-radius);
     }
 
+    .menu-container {
+        margin: 5px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-column-gap: 0.1em;
+    }
+
     .query-container {
         margin: 5px;
         display: grid;
@@ -58,6 +65,13 @@
 
     textarea {
         border-radius: var(--radius);
+    }
+
+    .menu-container {
+        margin: 5px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-column-gap: 1em;
     }
 
     .query-container {

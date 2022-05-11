@@ -17,7 +17,6 @@
 <body>
 <div id="header">
     <div class="query-container">
-
         <a href="{{ url_for('search') }}"
            title="Clear search query and show random items"
            class="button">
@@ -65,8 +64,47 @@
                 <span class="wide-text">&nbsp;{{ user.name }}</span>
             </a>
         {% endif %}
-
     </div>
+
+    {% if not user.is_anon() %}
+        <div class="menu-container">
+            <a href="{{ url_for('create_item') }}"
+               title="Create new item"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_create_24px.svg') }}"
+                     class="invert"
+                     alt="Create new item"/>
+                <span class="wide-text">&nbsp;Create item</span>
+            </a>
+
+            <a href="{{ url_for('upload') }}"
+               title="Upload media"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_file_upload_24px.svg') }}"
+                     class="invert"
+                     alt="Upload media"/>
+                <span class="wide-text">&nbsp;Upload media</span>
+            </a>
+
+            <a href="{{ url_for('profile') }}" {# TODO #}
+               title="Enter user profile"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_create_24px.svg') }}"
+                     class="invert"
+                     alt="Profile icon"/>
+                <span class="wide-text">&nbsp;To random</span>
+            </a>
+
+            <a href="{{ url_for('profile') }}" {# TODO #}
+               title="Enter user profile"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
+                     class="invert"
+                     alt="Profile icon"/>
+                <span class="wide-text">&nbsp;To nested</span>
+            </a>
+        </div>
+    {% endif %}
 
     {% block upper_body %}{% endblock %}
 

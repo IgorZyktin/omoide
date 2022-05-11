@@ -16,7 +16,7 @@ router = fastapi.APIRouter()
 
 
 @router.get('/upload')
-async def upload_get(
+async def upload(
         request: Request,
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
