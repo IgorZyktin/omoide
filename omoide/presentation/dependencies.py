@@ -28,9 +28,6 @@ preview_use_case = use_cases.PreviewUseCase(preview_repository)
 browse_repository = repositories.BrowseRepository(db)
 browse_use_case = use_cases.BrowseUseCase(browse_repository)
 
-by_user_repository = repositories.ByUserRepository(db)
-by_user_use_case = use_cases.ByUserUseCase(by_user_repository)
-
 base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
 
@@ -103,11 +100,6 @@ def get_preview_use_case():
 def get_browse_use_case():
     """Get use case instance."""
     return browse_use_case
-
-
-def get_by_user_use_case():
-    """Get use case instance."""
-    return by_user_use_case
 
 
 def get_create_item_use_case():

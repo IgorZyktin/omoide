@@ -19,6 +19,7 @@ class User(BaseModel):
     login: str
     password: str
     name: str
+    root_item: Optional[str]
     visibility: Optional[str]
     language: Optional[str]
     last_seen: Optional[datetime]
@@ -39,6 +40,7 @@ class User(BaseModel):
             login=mapping['login'],
             password=mapping['password'],
             name=mapping['name'],
+            root_item=utils.as_str(mapping, 'root_item'),
         )
 
     @classmethod
@@ -49,6 +51,7 @@ class User(BaseModel):
             login='',
             password='',
             name='anon',
+            root_item=None,
             visibility=None,
             language=None,
             last_seen=None,

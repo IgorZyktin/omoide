@@ -38,15 +38,8 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
 
         ancestors = await self._get_ancestors(user, current_item, details)
 
-        if ancestors:
-            positioned_owner = await self.get_positioned_by_user(
-                owner, ancestors[0].item, details)
-        else:
-            positioned_owner = await self.get_positioned_by_user(
-                owner, current_item, details)
-
         return domain.Location(
-            owner=positioned_owner,
+            owner=owner,
             items=ancestors,
             current_item=current_item,
         )

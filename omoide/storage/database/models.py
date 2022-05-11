@@ -35,7 +35,10 @@ class User(Base):
     login = sa.Column(sa.String(length=MEDIUM), nullable=False, unique=True)
     password = sa.Column(sa.String(length=HUGE), nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
-
+    root_item: Optional[UUID] = sa.Column(pg.UUID(as_uuid=True),
+                                          sa.ForeignKey('items.uuid'),
+                                          nullable=True,
+                                          index=True)
     # relations ---------------------------------------------------------------
 
     items: list['Item'] = relationship('Item',

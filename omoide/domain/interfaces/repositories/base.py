@@ -59,15 +59,6 @@ class AbsRepository(abc.ABC):
         """Return user or None."""
 
     @abc.abstractmethod
-    async def get_positioned_by_user(
-            self,
-            user: auth.User,
-            item: common.Item,
-            details: common.Details,
-    ) -> Optional[common.PositionedByUserItem]:
-        """Return user with position information."""
-
-    @abc.abstractmethod
     async def get_item(
             self,
             item_uuid: str,

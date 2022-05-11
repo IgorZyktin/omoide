@@ -5,7 +5,8 @@ from typing import Optional, Mapping, Iterator
 
 from pydantic import BaseModel
 
-from omoide.domain import utils, auth
+from omoide import domain
+from omoide.domain import utils
 
 __all__ = [
     'Item',
@@ -78,7 +79,7 @@ class PositionedItem(BaseModel):
 
 class PositionedByUserItem(BaseModel):
     """Same as PositionedItem but according to user catalogue."""
-    user: auth.User
+    user: domain.User
     position: int
     total_items: int
     items_per_page: int
@@ -92,7 +93,7 @@ class PositionedByUserItem(BaseModel):
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: Optional[PositionedByUserItem]
+    owner: domain.User
     items: list[PositionedItem]
     current_item: Optional[Item]
 
@@ -103,15 +104,6 @@ class Location(BaseModel):
     def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
         """Iterate over items."""
         return iter(self.items)
-
-    @classmethod
-    def empty(cls) -> 'Location':
-        """User has no access to this location, return empty one."""
-        return cls(
-            owner=None,
-            items=[],
-            current_item=None,
-        )
 
 
 class AccessStatus(BaseModel):
