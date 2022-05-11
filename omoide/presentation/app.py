@@ -9,7 +9,6 @@ from fastapi.staticfiles import StaticFiles
 from omoide.presentation import dependencies as dep
 from omoide.presentation.application import auth
 from omoide.presentation.application import browse
-from omoide.presentation.application import by_user
 from omoide.presentation.application import create_item
 from omoide.presentation.application import preview
 from omoide.presentation.application import profile
@@ -39,7 +38,6 @@ async def shutdown():
 
 app.include_router(auth.router)
 app.include_router(browse.router)
-app.include_router(by_user.router)
 app.include_router(preview.router)
 app.include_router(search.router)
 app.include_router(special.router)
