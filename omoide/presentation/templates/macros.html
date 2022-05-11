@@ -230,14 +230,11 @@
     {% if location is not none %}
         <div class="location">
             <h3>
-                {% if location.owner is not none %}
-                    <a href="{{ request.url_for('by_user', uuid=location.owner.user.uuid) }}?page={{ location.owner.page }}">
-                        {{ location.owner.user.name }}
-                    </a>
-                {% endif %}
-
                 {% for pos in location %}
-                    <span class="location-separator">&nbsp;/&nbsp;</span>
+                    {% if not loop.first %}
+                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                    {% endif %}
+
                     {% if pos.item.is_collection %}
                         <a href="{{ request.url_for('browse', uuid=pos.item.uuid) }}?page={{ pos.page }}">
                             {{ pos.item.name or '???' }}
@@ -250,7 +247,9 @@
                 {% endfor %}
 
                 {% if location.current_item and location.current_item.is_collection %}
-                    <span class="location-separator">&nbsp;/&nbsp;</span>
+                    {% if location.items | length != 0 %}
+                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                    {% endif %}
                     {{ location.current_item.name }}
                 {% endif %}
             </h3>

@@ -67,67 +67,6 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         response = await self.db.fetch_one(query, {'user_uuid': owner_uuid})
         return response is not None
 
-    async def get_positioned_by_user(
-            self,
-            user: domain.User,
-            item: domain.Item,
-            details: domain.Details,
-    ) -> Optional[domain.PositionedByUserItem]:
-        """Return user with position information."""
-        if user.is_anon():
-            query = """
-            WITH children AS (
-                SELECT uuid
-                FROM items
-                WHERE owner_uuid = :owner_uuid
-                  AND parent_uuid IS NULL
-                ORDER BY number
-            )
-        SELECT (select array_position(array(select uuid from children),
-                                      :item_uuid)) as position,
-               (select count(*) from children) as total_items
-        """
-        else:
-            query = """
-                WITH children AS (
-                    SELECT uuid
-                    FROM items it
-                        RIGHT JOIN computed_permissions cp
-                            ON cp.item_uuid = it.uuid
-                    WHERE owner_uuid = :owner_uuid
-                      AND parent_uuid IS NULL
-                      AND (:user_uuid = ANY(cp.permissions)
-                        OR it.owner_uuid::text = :user_uuid)
-                    ORDER BY number
-                )
-            SELECT (select array_position(array(select uuid from children),
-                                          :item_uuid)) as position,
-                   (select count(*) from children) as total_items
-            """
-
-        values = {
-            'user_uuid': user.uuid,
-            'owner_uuid': user.uuid,
-            'item_uuid': item.uuid,
-        }
-
-        response = await self.db.fetch_one(query, values)
-
-        if response is None:
-            position = 1
-            total_items = 1
-        else:
-            position = int(response['position'] or 1)
-            total_items = int(response['total_items'] or 1)
-
-        return domain.PositionedByUserItem(
-            user=user,
-            position=position,
-            total_items=total_items,
-            items_per_page=details.items_per_page,
-            item=item,
-        )
-
     async def get_user(
             self,
             user_uuid: str,
