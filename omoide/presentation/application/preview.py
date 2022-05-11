@@ -36,8 +36,7 @@ async def preview(
 
     query = infra.query_maker.from_request(request.query_params)
 
-    with infra.Timer() as timer:
-        access, result = await use_case.execute(user, uuid, details)
+    access, result = await use_case.execute(user, uuid, details)
 
     if access.does_not_exist or result is None:
         url = request.url_for('not_found') + f'?q={uuid}'

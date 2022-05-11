@@ -35,8 +35,7 @@ async def search(
 
     query = infra.query_maker.from_request(request.query_params)
 
-    with infra.Timer() as timer:
-        result, is_random = await use_case.execute(user, query, details)
+    result, is_random = await use_case.execute(user, query, details)
 
     if is_random:
         template = 'search_random.html'
