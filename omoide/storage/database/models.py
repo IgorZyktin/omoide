@@ -36,12 +36,14 @@ class User(Base):
     password = sa.Column(sa.String(length=HUGE), nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
     root_item: Optional[UUID] = sa.Column(pg.UUID(as_uuid=True),
-                                          sa.ForeignKey('items.uuid'),
+                                          sa.ForeignKey('items.uuid',
+                                                        ondelete='SET NULL'),
                                           nullable=True,
                                           index=True)
     # relations ---------------------------------------------------------------
 
     items: list['Item'] = relationship('Item',
+                                       passive_deletes=True,
                                        back_populates='owner',
                                        uselist=True)
 
@@ -57,7 +59,8 @@ class PublicUsers(Base):
                        primary_key=True)
 
     user_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('users.uuid'),
+                                sa.ForeignKey('users.uuid',
+                                              ondelete='CASCADE'),
                                 nullable=False,
                                 index=True,
                                 unique=True)
@@ -76,12 +79,14 @@ class Item(Base):
                            unique=True)
 
     parent_uuid: Optional[UUID] = sa.Column(pg.UUID(as_uuid=True),
-                                            sa.ForeignKey('items.uuid'),
+                                            sa.ForeignKey('items.uuid',
+                                                          ondelete='CASCADE'),
                                             nullable=True,
                                             index=True)
 
     owner_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                 sa.ForeignKey('users.uuid'),
+                                 sa.ForeignKey('users.uuid',
+                                               ondelete='CASCADE'),
                                  nullable=False,
                                  index=True)
 
@@ -102,12 +107,20 @@ class Item(Base):
 
     # relations ---------------------------------------------------------------
 
-    owner: User = relationship('User', back_populates='items', uselist=False)
-    meta: 'Meta' = relationship('Meta', back_populates='item', uselist=False)
+    owner: User = relationship('User',
+                               passive_deletes=True,
+                               back_populates='items',
+                               uselist=False)
+    meta: 'Meta' = relationship('Meta',
+                                passive_deletes=True,
+                                back_populates='item',
+                                uselist=False)
     raw_media: 'RawMedia' = relationship('RawMedia',
+                                         passive_deletes=True,
                                          back_populates='item',
                                          uselist=False)
     media: 'Media' = relationship('Media',
+                                  passive_deletes=True,
                                   back_populates='item',
                                   uselist=True)
     # other -------------------------------------------------------------------
@@ -138,7 +151,8 @@ class ComputedTags(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('items.uuid'),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
                                 primary_key=True,
                                 nullable=False,
                                 index=True,
@@ -173,7 +187,8 @@ class ComputedPermissions(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('items.uuid'),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
                                 primary_key=True,
                                 nullable=False,
                                 index=True,
@@ -199,7 +214,8 @@ class Meta(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('items.uuid'),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
                                 nullable=False,
                                 index=True,
                                 primary_key=True)
@@ -210,7 +226,10 @@ class Meta(Base):
 
     # relations ---------------------------------------------------------------
 
-    item: Item = relationship('Item', back_populates='meta', uselist=False)
+    item: Item = relationship('Item',
+                              passive_deletes=True,
+                              back_populates='meta',
+                              uselist=False)
 
 
 class RawMedia(Base):
@@ -225,7 +244,8 @@ class RawMedia(Base):
                    nullable=False)
 
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('items.uuid'),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
                                 nullable=False,
                                 index=True)
 
@@ -242,6 +262,7 @@ class RawMedia(Base):
     # relations ---------------------------------------------------------------
 
     item: Item = relationship('Item',
+                              passive_deletes=True,
                               back_populates='raw_media',
                               uselist=False)
 
@@ -253,7 +274,8 @@ class Media(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('items.uuid'),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
                                 primary_key=True,
                                 nullable=False,
                                 index=True)
@@ -272,5 +294,6 @@ class Media(Base):
     # relations ---------------------------------------------------------------
 
     item: Item = relationship('Item',
+                              passive_deletes=True,
                               back_populates='media',
                               uselist=False)
