@@ -59,6 +59,7 @@ async def api_home(
             'is_collection': item.is_collection,
             'href': href,
             'thumbnail': thumbnail,
+            'number': item.number,
         }
 
         simple_items.append(simple_item)

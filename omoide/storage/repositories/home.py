@@ -30,12 +30,11 @@ class HomeRepository(
         FROM items
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
             AND parent_uuid is NULL
-        ORDER BY random() LIMIT :limit OFFSET :offset;
+        ORDER BY random() LIMIT :limit;
         """
 
         values = {
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -59,12 +58,13 @@ class HomeRepository(
         FROM items
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
             AND parent_uuid is NULL
-        ORDER BY number LIMIT :limit OFFSET :offset;
+            AND number > :last_seen
+        ORDER BY number LIMIT :limit;
         """
 
         values = {
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
+            'last_seen': aim.last_seen,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -87,12 +87,11 @@ class HomeRepository(
                thumbnail_ext
         FROM items
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-        ORDER BY random() LIMIT :limit OFFSET :offset;
+        ORDER BY random() LIMIT :limit;
         """
 
         values = {
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -115,12 +114,13 @@ class HomeRepository(
                thumbnail_ext
         FROM items
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+            AND number > :last_seen
         ORDER BY number LIMIT :limit OFFSET :offset;
         """
 
         values = {
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
+            'last_seen': aim.last_seen,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -147,13 +147,12 @@ class HomeRepository(
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
                AND parent_uuid IS NULL
-        ORDER BY random() LIMIT :limit OFFSET :offset;
+        ORDER BY random() LIMIT :limit;
         """
 
         values = {
             'user_uuid': user.uuid,
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -180,13 +179,14 @@ class HomeRepository(
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
                AND parent_uuid IS NULL
+               AND number > :last_seen
         ORDER BY number LIMIT :limit OFFSET :offset;
         """
 
         values = {
             'user_uuid': user.uuid,
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
+            'last_seen': aim.last_seen,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -212,13 +212,12 @@ class HomeRepository(
             LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
-        ORDER BY random() LIMIT :limit OFFSET :offset;
+        ORDER BY random() LIMIT :limit;
         """
 
         values = {
             'user_uuid': user.uuid,
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
         }
 
         response = await self.db.fetch_all(stmt, values)
@@ -244,13 +243,14 @@ class HomeRepository(
             LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
-        ORDER BY number LIMIT :limit OFFSET :offset;
+               AND number > :last_seen
+        ORDER BY number LIMIT :limit;
         """
 
         values = {
             'user_uuid': user.uuid,
-            'limit': 10,  # FIXME
-            'offset': 0,  # FIXME
+            'limit': aim.items_per_page,
+            'last_seen': aim.last_seen,
         }
 
         response = await self.db.fetch_all(stmt, values)

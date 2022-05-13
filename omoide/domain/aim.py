@@ -16,6 +16,7 @@ class Aim(BaseModel):
     ordered: bool
     nested: bool
     last_seen: int
+    items_per_page: int
 
     @property
     def random(self) -> bool:
@@ -48,8 +49,15 @@ def aim_from_params(params: dict) -> Aim:
     except (ValueError, TypeError):
         last_seen = -1
 
+    raw_items_per_page = params.get('items_per_page')
+    try:
+        items_per_page = int(raw_items_per_page)
+    except (ValueError, TypeError):
+        items_per_page = 10
+
     return Aim(
         ordered=ordered,
         nested=nested,
         last_seen=last_seen,
+        items_per_page=items_per_page,
     )
