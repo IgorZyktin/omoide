@@ -36,7 +36,8 @@ async def api_home(
         ),
 ):
     """Return portion of items for home directory."""
-    items = await use_case.execute(user)
+    aim = domain.aim_from_params(dict(request.query_params))
+    items = await use_case.execute(user, aim)
     simple_items = []
 
     for item in items:

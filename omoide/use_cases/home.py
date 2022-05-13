@@ -15,6 +15,7 @@ class HomeUseCase:
     async def execute(
             self,
             user: domain.User,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Perform request for home directory."""
         condition = {
@@ -26,26 +27,38 @@ class HomeUseCase:
         async with self._repo.transaction():
             match condition:
                 case {'anon': True, 'ordered': True, 'flat': True}:
-                    items = await self._repo.select_home_ordered_flat_anon()
+                    items = await self._repo \
+                        .select_home_ordered_flat_anon(aim)
+
                 case {'anon': True, 'ordered': True, 'flat': False}:
-                    items = await self._repo.select_home_ordered_nested_anon()
+                    items = await self._repo \
+                        .select_home_ordered_nested_anon(aim)
+
                 case {'anon': True, 'ordered': False, 'flat': True}:
-                    items = await self._repo.select_home_random_flat_anon()
+                    items = await self._repo \
+                        .select_home_random_flat_anon(aim)
+
                 case {'anon': True, 'ordered': False, 'flat': False}:
-                    items = await self._repo.select_home_random_nested_anon()
+                    items = await self._repo \
+                        .select_home_random_nested_anon(aim)
+
                 case {'anon': False, 'ordered': True, 'flat': True}:
-                    items = await self._repo.select_home_ordered_flat_known(
-                        user)
+                    items = await self._repo \
+                        .select_home_ordered_flat_known(user, aim)
+
                 case {'anon': False, 'ordered': True, 'flat': False}:
-                    items = await self._repo.select_home_ordered_nested_known(
-                        user)
+                    items = await self._repo \
+                        .select_home_ordered_nested_known(user, aim)
+
                 case {'anon': False, 'ordered': False, 'flat': True}:
-                    items = await self._repo.select_home_random_flat_known(
-                        user)
+                    items = await self._repo \
+                        .select_home_random_flat_known(user, aim)
+
                 case {'anon': False, 'ordered': False, 'flat': False}:
-                    items = await self._repo.select_home_random_nested_known(
-                        user)
+                    items = await self._repo \
+                        .select_home_random_nested_known(user, aim)
+
                 case _:
-                    items = await self._repo.select_home_random_flat_anon()
+                    items = await self._repo.select_home_random_flat_anon(aim)
 
         return items

@@ -14,6 +14,7 @@ class HomeRepository(
 
     async def select_home_random_nested_anon(
             self,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find random nested items for unauthorised user."""
         stmt = """
@@ -42,6 +43,7 @@ class HomeRepository(
 
     async def select_home_ordered_nested_anon(
             self,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find ordered nested items for unauthorised user."""
         stmt = """
@@ -70,6 +72,7 @@ class HomeRepository(
 
     async def select_home_random_flat_anon(
             self,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find random flat items for unauthorised user."""
         stmt = """
@@ -97,6 +100,7 @@ class HomeRepository(
 
     async def select_home_ordered_flat_anon(
             self,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find ordered flat items for unauthorised user."""
         stmt = """
@@ -125,6 +129,7 @@ class HomeRepository(
     async def select_home_random_nested_known(
             self,
             user: domain.User,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find random nested items for authorised user."""
         stmt = """
@@ -157,6 +162,7 @@ class HomeRepository(
     async def select_home_ordered_nested_known(
             self,
             user: domain.User,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find ordered nested items for authorised user."""
         stmt = """
@@ -189,6 +195,7 @@ class HomeRepository(
     async def select_home_random_flat_known(
             self,
             user: domain.User,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find random flat items for authorised user."""
         stmt = """
@@ -220,6 +227,7 @@ class HomeRepository(
     async def select_home_ordered_flat_known(
             self,
             user: domain.User,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find ordered flat items for authorised user."""
         stmt = """
