@@ -10,6 +10,7 @@ from omoide.presentation import dependencies as dep
 from omoide.presentation.application import auth
 from omoide.presentation.application import browse
 from omoide.presentation.application import create_item
+from omoide.presentation.application import basic
 from omoide.presentation.application import preview
 from omoide.presentation.application import profile
 from omoide.presentation.application import search
@@ -37,6 +38,7 @@ async def shutdown():
 
 
 app.include_router(auth.router)
+app.include_router(basic.router)
 app.include_router(browse.router)
 app.include_router(preview.router)
 app.include_router(search.router)
