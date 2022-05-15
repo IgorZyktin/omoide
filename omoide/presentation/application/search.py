@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import use_cases
-from omoide.presentation import dependencies, constants, utils
+from omoide.presentation import dependencies, constants
 from omoide.presentation import infra
 from omoide.presentation.config import config
 
@@ -16,7 +16,6 @@ router = fastapi.APIRouter()
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 
-@router.get('/')
 @router.get('/search')
 async def search(
         request: fastapi.Request,
