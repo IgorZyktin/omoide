@@ -12,32 +12,11 @@ class AbsHomeRepository(AbsRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def select_home_random_nested_anon(
+    async def find_home_items_for_anon(
             self,
             aim: aim_module.Aim,
     ) -> list[common.Item]:
-        """Find random nested items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def select_home_ordered_nested_anon(
-            self,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find ordered nested items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def select_home_random_flat_anon(
-            self,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find random flat items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def select_home_ordered_flat_anon(
-            self,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find ordered flat items for unauthorised user."""
+        """Find home items for unauthorised user."""
 
     @abc.abstractmethod
     async def select_home_random_nested_known(

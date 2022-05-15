@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """Repository that show items at the home endpoint.
 """
+import sqlalchemy
+from sqlalchemy import func
+
 from omoide import domain
 from omoide.domain import interfaces
+from omoide.storage.database import models
 from omoide.storage.repositories import base
 
 
@@ -12,119 +16,45 @@ class HomeRepository(
 ):
     """Repository that show items at the home endpoint."""
 
-    async def select_home_random_nested_anon(
+    async def find_home_items_for_anon(
             self,
             aim: domain.Aim,
     ) -> list[domain.Item]:
-        """Find random nested items for unauthorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-            AND parent_uuid is NULL
-        ORDER BY random() LIMIT :limit;
-        """
+        """Find home items for unauthorised user."""
+        subquery = sqlalchemy.select(models.PublicUsers.user_uuid)
+        conditions = [
+            models.Item.owner_uuid.in_(subquery)
+        ]
 
-        values = {
-            'limit': aim.items_per_page,
-        }
+        if aim.nested:
+            conditions.append(models.Item.parent_uuid == None)
 
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
+        stmt = sqlalchemy.select(
+            models.Item.uuid,
+            models.Item.parent_uuid,
+            models.Item.owner_uuid,
+            models.Item.number,
+            models.Item.name,
+            models.Item.is_collection,
+            models.Item.content_ext,
+            models.Item.preview_ext,
+            models.Item.thumbnail_ext,
+        ).where(*conditions)
 
-    async def select_home_ordered_nested_anon(
-            self,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find ordered nested items for unauthorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-            AND parent_uuid is NULL
-            AND number > :last_seen
-        ORDER BY number LIMIT :limit;
-        """
+        if aim.ordered:
+            stmt = stmt.order_by(models.Item.number)
+        else:
+            stmt = stmt.order_by(func.random())
 
-        values = {
-            'limit': aim.items_per_page,
-            'last_seen': aim.last_seen,
-        }
+        stmt = stmt.limit(aim.items_per_page)
 
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
-
-    async def select_home_random_flat_anon(
-            self,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find random flat items for unauthorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-        ORDER BY random() LIMIT :limit;
-        """
-
-        values = {
-            'limit': aim.items_per_page,
-        }
-
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
-
-    async def select_home_ordered_flat_anon(
-            self,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find ordered flat items for unauthorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-            AND number > :last_seen
-        ORDER BY number LIMIT :limit OFFSET :offset;
-        """
-
-        values = {
-            'limit': aim.items_per_page,
-            'last_seen': aim.last_seen,
-        }
-
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
+        response = await self.db.fetch_all(stmt)
+        # TODO - damn asyncpg tries to bee too smart
+        items = [
+            domain.Item.from_map(dict(zip(row.keys(), row.values())))
+            for row in response
+        ]
+        return items
 
     async def select_home_random_nested_known(
             self,
