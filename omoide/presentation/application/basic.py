@@ -23,6 +23,7 @@ async def home(
         'request': request,
         'config': config,
         'user': user,
+        'api_url': request.url_for('api_home'),
     }
     return dep.templates.TemplateResponse('basic.html', context)
 
