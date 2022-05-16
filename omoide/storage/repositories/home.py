@@ -29,6 +29,9 @@ class HomeRepository(
         if aim.nested:
             conditions.append(models.Item.parent_uuid == None)
 
+        if aim.ordered:
+            conditions.append(models.Item.number > aim.last_seen)
+
         stmt = sqlalchemy.select(
             models.Item.uuid,
             models.Item.parent_uuid,
