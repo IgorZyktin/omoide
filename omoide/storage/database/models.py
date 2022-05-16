@@ -44,6 +44,9 @@ class User(Base):
 
     items: list['Item'] = relationship('Item',
                                        passive_deletes=True,
+                                       primaryjoin=(
+                                           'Item.owner_uuid==User.uuid'
+                                       ),
                                        back_populates='owner',
                                        uselist=True)
 
@@ -110,6 +113,7 @@ class Item(Base):
     owner: User = relationship('User',
                                passive_deletes=True,
                                back_populates='items',
+                               primaryjoin='Item.owner_uuid==User.uuid',
                                uselist=False)
     meta: 'Meta' = relationship('Meta',
                                 passive_deletes=True,
