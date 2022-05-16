@@ -60,7 +60,7 @@ function renderMoreItems(container, items) {
     }
 }
 
-function atTheBottom(){
+function atTheBottom() {
     // return true if user scrolled at the end of the page
     let scrollY = window.scrollY
     let innerHeight = window.innerHeight
@@ -121,4 +121,34 @@ function dynamicallyRenderMoreItems(container, items, callback) {
         container.appendChild(envelope);
 
     }
+}
+
+function goToNewSearch(newSearchParams) {
+    // redirect using new search params
+    window.location.href = window.location.origin
+        + window.location.pathname + '?' + newSearchParams.toString();
+}
+
+function toggleRandom() {
+    // toggle random/ordered search mode
+    let searchParams = new URLSearchParams(window.location.search)
+
+    if (searchParams.get('ordered') === 'on')
+        searchParams.set('ordered', 'off')
+    else
+        searchParams.set('ordered', 'on')
+
+    goToNewSearch(searchParams)
+}
+
+function toggleNested() {
+    // toggle nested/flat search mode
+    let searchParams = new URLSearchParams(window.location.search)
+
+    if (searchParams.get('nested') === 'on')
+        searchParams.set('nested', 'off')
+    else
+        searchParams.set('nested', 'on')
+
+    goToNewSearch(searchParams)
 }
