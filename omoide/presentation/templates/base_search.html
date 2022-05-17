@@ -36,13 +36,23 @@
         </label>
 
         <a href="javascript:void(0)"
+           title="Press to perform search"
+           onclick="goSearch()"
+           class="button">
+            <img src="{{ request.url_for('static', path='ic_search_24px.svg') }}"
+                 class="invert"
+                 alt="Looking glass icon"/>
+            <span class="wide-text">&nbsp;Search</span>
+        </a>
+
+        <a href="javascript:void(0)"
            title="Toggle random"
-           onclick="toggleRandom()"
+           onclick="toggleOrdered()"
            class="button">
             <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
                  class="invert"
-                 alt="Toggle random"/>
-            <span class="wide-text">&nbsp;Random</span>
+                 alt="Toggle ordered"/>
+            <span class="wide-text">&nbsp;Ordered</span>
         </a>
 
         <a href="javascript:void(0)"
@@ -56,13 +66,13 @@
         </a>
 
         <a href="javascript:void(0)"
-           title="Press to perform search"
-           onclick="goSearch()"
+           title="Toggle paged"
+           onclick="togglePaged()"
            class="button">
-            <img src="{{ request.url_for('static', path='ic_search_24px.svg') }}"
+            <img src="{{ request.url_for('static', path='ic_import_contacts_24px.svg') }}"
                  class="invert"
-                 alt="Looking glass icon"/>
-            <span class="wide-text">&nbsp;Search</span>
+                 alt="Toggle paged"/>
+            <span class="wide-text">&nbsp;Paged</span>
         </a>
 
         {% if user.is_anon() %}
