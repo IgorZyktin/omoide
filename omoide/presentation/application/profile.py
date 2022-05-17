@@ -31,12 +31,14 @@ async def profile(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'url': request.url_for('search'),
         'query': infra.query_maker.QueryWrapper(query, details),
     }
