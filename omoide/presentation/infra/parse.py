@@ -7,6 +7,7 @@ from uuid import UUID
 from starlette.datastructures import QueryParams
 
 from omoide.domain import common
+from omoide.domain import exceptions
 
 
 def details_from_params(
@@ -33,12 +34,12 @@ def details_from_params(
     )
 
 
-def cast_uuid(uuid: str) -> Optional[UUID]:
+def cast_uuid(uuid: str) -> UUID:
     """Try casting given string as uuid."""
     try:
         result = UUID(uuid)
-    except (ValueError, AttributeError):
-        result = None
+    except (ValueError, AttributeError) as exc:
+        raise exceptions.IncorrectUUID(str(exc)) from exc
     return result
 
 
