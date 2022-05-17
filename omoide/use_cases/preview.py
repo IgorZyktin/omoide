@@ -4,7 +4,7 @@
 from uuid import UUID
 
 from omoide import domain
-from omoide.domain import interfaces, exceptions
+from omoide.domain import interfaces
 
 
 class PreviewUseCase:
@@ -21,23 +21,9 @@ class PreviewUseCase:
             details: domain.Details,
     ) -> domain.SingleResult:
         """Return preview model suitable for rendering."""
+        await self._repo.assert_has_access(user, uuid)
+
         async with self._repo.transaction():
-            access = await self._repo.check_access(user, uuid)
-
-            if access.does_not_exist:
-                raise exceptions.NotFound(f'Item {uuid} does not exist')
-
-            if access.is_not_given:
-                if user.is_anon():
-                    raise exceptions.Unauthorized(
-                        f'Anon user has no access to {uuid}'
-                    )
-                else:
-                    raise exceptions.Forbidden(
-                        f'User {user.uuid} ({user.name}) '
-                        f'has no access to {uuid}'
-                    )
-
             location = await self._repo.get_location(user, uuid, details)
             item = await self._repo.get_extended_item(uuid)
 

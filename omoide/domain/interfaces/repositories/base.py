@@ -5,7 +5,6 @@ import abc
 from typing import Optional
 from uuid import UUID
 
-from omoide import domain
 from omoide.domain import auth, common
 
 
@@ -29,9 +28,17 @@ class AbsRepository(abc.ABC):
         """Check if user has access to the item."""
 
     @abc.abstractmethod
+    async def assert_has_access(
+            self,
+            user: auth.User,
+            uuid: UUID,
+    ) -> None:
+        """Raise if item does not exist or user has no access to it."""
+
+    @abc.abstractmethod
     async def get_location(
             self,
-            user: domain.User,
+            user: auth.User,
             item_uuid: str,
             details: common.Details,
     ) -> Optional[common.Location]:

@@ -5,6 +5,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from omoide import domain
+from omoide.domain import exceptions
 from omoide.storage.repositories import base_logic
 
 
@@ -26,7 +27,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
     async def check_access(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
     ) -> domain.AccessStatus:
         """Check access to the item."""
         query = """
@@ -41,7 +42,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         WHERE uuid = :item_uuid;
         """
 
-        values = {'user_uuid': user.uuid, 'item_uuid': item_uuid}
+        values = {'user_uuid': user.uuid, 'item_uuid': uuid}
         response = await self.db.fetch_one(query, values)
 
         if response is None:
@@ -53,6 +54,28 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             is_permitted=bool(response['is_permitted']),
             is_owner=bool(response['is_owner']),
         )
+
+    async def assert_has_access(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> None:
+        """Raise if item does not exist or user has no access to it."""
+        access = await self.check_access(user, uuid)
+
+        if access.does_not_exist:
+            raise exceptions.NotFound(f'Item {uuid} does not exist')
+
+        if access.is_not_given:
+            if user.is_anon():
+                raise exceptions.Unauthorized(
+                    f'Anon user has no access to {uuid}'
+                )
+            else:
+                raise exceptions.Forbidden(
+                    f'User {user.uuid} ({user.name}) '
+                    f'has no access to {uuid}'
+                )
 
     async def user_is_public(
             self,
