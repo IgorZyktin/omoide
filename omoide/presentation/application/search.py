@@ -32,6 +32,7 @@ async def search(
         items_per_page_async=constants.ITEMS_PER_UPLOAD,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     result, is_random = await use_case.execute(user, query, details)
@@ -52,6 +53,7 @@ async def search(
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
         'details': details,
         'paginator': paginator,
