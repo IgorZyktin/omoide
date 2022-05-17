@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for browse.
 """
-from typing import Optional
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -17,44 +17,37 @@ class BrowseUseCase:
     async def execute(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
             details: domain.Details,
-    ) -> tuple[domain.AccessStatus, Optional[domain.Results]]:
+    ) -> domain.Results:
         """Return browse model suitable for rendering."""
+        await self._repo.assert_has_access(user, uuid)
+
         async with self._repo.transaction():
-            access = await self._repo.check_access(user, item_uuid)
+            location = await self._repo.get_location(user, uuid, details)
+            item = await self._repo.get_item(uuid)
 
-            if access.is_not_given:
-                result = None
-
+            if user.is_anon():
+                items = await self._repo.get_children(uuid, details)
+                total_items = await self._repo.count_items(uuid)
             else:
-                location = await self._repo.get_location(user,
-                                                         item_uuid,
-                                                         details)
-
-                item = await self._repo.get_item(item_uuid)
-
-                if user.is_anon():
-                    items = await self._repo.get_children(item_uuid, details)
-                    total_items = await self._repo.count_items(item_uuid)
-                else:
-                    items = await self._repo.get_specific_children(
-                        user=user,
-                        item_uuid=item_uuid,
-                        details=details,
-                    )
-                    total_items = await self._repo.count_specific_items(
-                        user=user,
-                        item_uuid=item_uuid,
-                    )
-
-                result = domain.Results(
-                    item=item,
-                    total_items=total_items,
-                    total_pages=details.calc_total_pages(total_items),
-                    items=items,
+                items = await self._repo.get_specific_children(
+                    user=user,
+                    item_uuid=uuid,
                     details=details,
-                    location=location,
+                )
+                total_items = await self._repo.count_specific_items(
+                    user=user,
+                    item_uuid=uuid,
                 )
 
-        return access, result
+            result = domain.Results(
+                item=item,
+                total_items=total_items,
+                total_pages=details.calc_total_pages(total_items),
+                items=items,
+                details=details,
+                location=location,
+            )
+
+        return result
