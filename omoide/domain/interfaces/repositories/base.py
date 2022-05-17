@@ -24,7 +24,7 @@ class AbsRepository(abc.ABC):
     async def check_access(
             self,
             user: auth.User,
-            item_uuid: str,
+            uuid: UUID,
     ) -> common.AccessStatus:
         """Check if user has access to the item."""
 
