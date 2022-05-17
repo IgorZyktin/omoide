@@ -29,7 +29,7 @@ async def search(
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
-        items_per_page_async=constants.ITEMS_PER_PAGE_ASYNC,
+        items_per_page_async=constants.ITEMS_PER_UPLOAD,
     )
 
     query = infra.query_maker.from_request(request.query_params)
