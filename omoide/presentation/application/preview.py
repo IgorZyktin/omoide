@@ -2,11 +2,12 @@
 """Preview related routes.
 """
 import fastapi
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from omoide import use_cases
-from omoide.domain import auth
-from omoide.presentation import dependencies, constants, utils
+from omoide.domain import auth, exceptions
+from omoide.presentation import constants
+from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
 from omoide.presentation.config import config
 
@@ -17,18 +18,13 @@ router = fastapi.APIRouter()
 async def preview(
         request: fastapi.Request,
         uuid: str,
-        user: auth.User = fastapi.Depends(dependencies.get_current_user),
+        user: auth.User = fastapi.Depends(dep.get_current_user),
         use_case: use_cases.PreviewUseCase = fastapi.Depends(
-            dependencies.get_preview_use_case
+            dep.get_preview_use_case
         ),
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
-    if infra.parse.cast_uuid(uuid) is None:
-        # TODO - maybe use UUID type inside use cases?
-        url = request.url_for('not_appropriate')
-        return fastapi.responses.RedirectResponse(url)
-
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
@@ -36,15 +32,17 @@ async def preview(
 
     query = infra.query_maker.from_request(request.query_params)
 
-    access, result = await use_case.execute(user, uuid, details)
-
-    if access.does_not_exist or result is None:
-        url = request.url_for('not_found') + f'?q={uuid}'
-        return fastapi.responses.RedirectResponse(url)
-
-    if access.is_not_given:
-        url = request.url_for('not_allowed') + f'?q={uuid}'
-        return fastapi.responses.RedirectResponse(url)
+    try:
+        valid_uuid = infra.parse.cast_uuid(uuid)
+        result = await use_case.execute(user, valid_uuid, details)
+    except exceptions.IncorrectUUID:
+        return RedirectResponse(request.url_for('bad_request'))
+    except exceptions.NotFound:
+        return RedirectResponse(request.url_for('not_found') + f'?q={uuid}')
+    except exceptions.Unauthorized:
+        return RedirectResponse(request.url_for('unauthorized') + f'?q={uuid}')
+    except exceptions.Forbidden:
+        return RedirectResponse(request.url_for('forbidden') + f'?q={uuid}')
 
     context = {
         'request': request,
@@ -60,4 +58,4 @@ async def preview(
         ),
         'current_item': result.item,
     }
-    return dependencies.templates.TemplateResponse('preview.html', context)
+    return dep.templates.TemplateResponse('preview.html', context)

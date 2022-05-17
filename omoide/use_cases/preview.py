@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Use case for preview.
 """
-from typing import Optional
+from uuid import UUID
 
 from omoide import domain
-from omoide.domain import interfaces
+from omoide.domain import interfaces, exceptions
 
 
 class PreviewUseCase:
@@ -17,37 +17,45 @@ class PreviewUseCase:
     async def execute(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
             details: domain.Details,
-    ) -> tuple[domain.AccessStatus, Optional[domain.SingleResult]]:
+    ) -> domain.SingleResult:
         """Return preview model suitable for rendering."""
         async with self._repo.transaction():
-            access = await self._repo.check_access(user, item_uuid)
+            access = await self._repo.check_access(user, uuid)
+
+            if access.does_not_exist:
+                raise exceptions.NotFound(f'Item {uuid} does not exist')
 
             if access.is_not_given:
-                result = None
-
-            else:
-                location = await self._repo.get_location(user,
-                                                         item_uuid,
-                                                         details)
-                item = await self._repo.get_extended_item(item_uuid)
-
                 if user.is_anon():
-                    neighbours = await self._repo.get_neighbours(
-                        item_uuid=item_uuid,
+                    raise exceptions.Unauthorized(
+                        f'Anon user has no access to {uuid}'
                     )
                 else:
-                    neighbours = await self._repo.get_specific_neighbours(
-                        user=user,
-                        item_uuid=item_uuid,
+                    raise exceptions.Forbidden(
+                        f'User {user.uuid} ({user.name}) '
+                        f'has no access to {uuid}'
                     )
 
-                result = domain.SingleResult(
-                    item=item,
-                    details=details,
-                    location=location,
-                    neighbours=neighbours,
+            location = await self._repo.get_location(user, uuid, details)
+            item = await self._repo.get_extended_item(uuid)
+
+            if user.is_anon():
+                neighbours = await self._repo.get_neighbours(
+                    item_uuid=uuid,
+                )
+            else:
+                neighbours = await self._repo.get_specific_neighbours(
+                    user=user,
+                    item_uuid=uuid,
                 )
 
-        return access, result
+            result = domain.SingleResult(
+                item=item,
+                details=details,
+                location=location,
+                neighbours=neighbours,
+            )
+
+        return result
