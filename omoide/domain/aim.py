@@ -15,6 +15,7 @@ class Aim(BaseModel):
     """Object that describes user's desired output."""
     ordered: bool
     nested: bool
+    paged: bool
     last_seen: int
     items_per_page: int
 
@@ -43,6 +44,12 @@ def aim_from_params(params: dict) -> Aim:
     else:
         nested = raw_nested == 'on'
 
+    raw_paged = params.get('paged')
+    if raw_paged is None:
+        paged = False
+    else:
+        paged = raw_paged == 'on'
+
     raw_last_seen = params.get('last_seen')
     try:
         last_seen = int(raw_last_seen)
@@ -58,6 +65,7 @@ def aim_from_params(params: dict) -> Aim:
     return Aim(
         ordered=ordered,
         nested=nested,
+        paged=paged,
         last_seen=last_seen,
         items_per_page=items_per_page,
     )
