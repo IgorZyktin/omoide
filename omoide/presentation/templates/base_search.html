@@ -48,7 +48,7 @@
         <a href="javascript:void(0)"
            title="Toggle random"
            onclick="toggleOrdered()"
-           class="button">
+           class="button{{ ' active-button' if aim.ordered else '' }}">
             <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
                  class="invert"
                  alt="Toggle ordered"/>
@@ -58,7 +58,7 @@
         <a href="javascript:void(0)"
            title="Toggle nested"
            onclick="toggleNested()"
-           class="button">
+           class="button{{ ' active-button' if aim.nested else '' }}">
             <img src="{{ request.url_for('static', path='ic_device_hub_24px.svg') }}"
                  class="invert"
                  alt="Toggle nested"/>
@@ -68,7 +68,7 @@
         <a href="javascript:void(0)"
            title="Toggle paged"
            onclick="togglePaged()"
-           class="button">
+           class="button{{ ' active-button' if aim.paged else '' }}">
             <img src="{{ request.url_for('static', path='ic_import_contacts_24px.svg') }}"
                  class="invert"
                  alt="Toggle paged"/>
