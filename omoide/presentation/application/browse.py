@@ -31,6 +31,7 @@ async def browse(
     )
 
     query = infra.query_maker.from_request(request.query_params)
+    aim = domain.aim_from_params(dict(request.query_params))
 
     try:
         valid_uuid = infra.parse.cast_uuid(uuid)
@@ -56,6 +57,7 @@ async def browse(
         'config': config,
         'user': user,
         'uuid': uuid,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
         'paginator': paginator,
         'result': result,

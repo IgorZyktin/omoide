@@ -129,7 +129,7 @@ function goToNewSearch(newSearchParams) {
         + window.location.pathname + '?' + newSearchParams.toString();
 }
 
-function toggleRandom() {
+function toggleOrdered() {
     // toggle random/ordered search mode
     let searchParams = new URLSearchParams(window.location.search)
 
@@ -149,6 +149,18 @@ function toggleNested() {
         searchParams.set('nested', 'off')
     else
         searchParams.set('nested', 'on')
+
+    goToNewSearch(searchParams)
+}
+
+function togglePaged() {
+    // toggle paged/dynamic load mode
+    let searchParams = new URLSearchParams(window.location.search)
+
+    if (searchParams.get('paged') === 'on')
+        searchParams.set('paged', 'off')
+    else
+        searchParams.set('paged', 'on')
 
     goToNewSearch(searchParams)
 }

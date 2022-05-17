@@ -4,7 +4,7 @@
 import fastapi
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from omoide import use_cases
+from omoide import use_cases, domain
 from omoide.domain import auth, exceptions
 from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
@@ -30,6 +30,7 @@ async def preview(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     try:
@@ -48,6 +49,7 @@ async def preview(
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
         'item': result.item,
         'result': result,

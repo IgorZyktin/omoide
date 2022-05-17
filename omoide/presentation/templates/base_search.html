@@ -36,26 +36,6 @@
         </label>
 
         <a href="javascript:void(0)"
-           title="Toggle random"
-           onclick="toggleRandom()"
-           class="button">
-            <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
-                 class="invert"
-                 alt="Toggle random"/>
-            <span class="wide-text">&nbsp;Random</span>
-        </a>
-
-        <a href="javascript:void(0)"
-           title="Toggle nested"
-           onclick="toggleNested()"
-           class="button">
-            <img src="{{ request.url_for('static', path='ic_device_hub_24px.svg') }}"
-                 class="invert"
-                 alt="Toggle nested"/>
-            <span class="wide-text">&nbsp;Nested</span>
-        </a>
-
-        <a href="javascript:void(0)"
            title="Press to perform search"
            onclick="goSearch()"
            class="button">
@@ -63,6 +43,36 @@
                  class="invert"
                  alt="Looking glass icon"/>
             <span class="wide-text">&nbsp;Search</span>
+        </a>
+
+        <a href="javascript:void(0)"
+           title="Toggle random"
+           onclick="toggleOrdered()"
+           class="button{{ ' active-button' if aim.ordered else '' }}">
+            <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
+                 class="invert"
+                 alt="Toggle ordered"/>
+            <span class="wide-text">&nbsp;Ordered</span>
+        </a>
+
+        <a href="javascript:void(0)"
+           title="Toggle nested"
+           onclick="toggleNested()"
+           class="button{{ ' active-button' if aim.nested else '' }}">
+            <img src="{{ request.url_for('static', path='ic_device_hub_24px.svg') }}"
+                 class="invert"
+                 alt="Toggle nested"/>
+            <span class="wide-text">&nbsp;Nested</span>
+        </a>
+
+        <a href="javascript:void(0)"
+           title="Toggle paged"
+           onclick="togglePaged()"
+           class="button{{ ' active-button' if aim.paged else '' }}">
+            <img src="{{ request.url_for('static', path='ic_import_contacts_24px.svg') }}"
+                 class="invert"
+                 alt="Toggle paged"/>
+            <span class="wide-text">&nbsp;Paged</span>
         </a>
 
         {% if user.is_anon() %}

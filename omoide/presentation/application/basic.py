@@ -23,6 +23,7 @@ async def home(
         'request': request,
         'config': config,
         'user': user,
+        'aim': domain.aim_from_params(dict(request.query_params)),
         'api_url': request.url_for('api_home'),
     }
     return dep.templates.TemplateResponse('basic.html', context)

@@ -33,6 +33,7 @@ async def create_item(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     if not utils.is_valid_uuid(parent_uuid):
@@ -42,6 +43,7 @@ async def create_item(
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'url': request.url_for('search'),
         'parent_uuid': parent_uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
