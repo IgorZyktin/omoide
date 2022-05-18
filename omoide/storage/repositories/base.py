@@ -118,7 +118,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         response = await self.db.fetch_one(query, {'user_login': user_login})
         return domain.User.from_map(response) if response else None
 
-    async def get_item(
+    async def read_item(
             self,
             item_uuid: str,
     ) -> Optional[domain.Item]:

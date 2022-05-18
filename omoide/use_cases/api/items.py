@@ -7,7 +7,8 @@ from omoide import domain
 from omoide.domain import interfaces, exceptions
 
 __all__ = [
-    'GetItemUseCase',
+    'CreateItemUseCase',
+    'ReadItemUseCase',
     'DeleteItemUseCase',
 ]
 
@@ -36,7 +37,27 @@ class BaseItemUseCase:
         return access
 
 
-class GetItemUseCase(BaseItemUseCase):
+class CreateItemUseCase(BaseItemUseCase):
+    """Use case for creating an item."""
+
+    async def execute(
+            self,
+            user: domain.User,
+            payload: domain.CreateItemIn,
+    ) -> UUID:
+        """Business logic."""
+        if user.is_anon():
+            raise exceptions.Forbidden('Anonymous users are not '
+                                       'allowed to create items')
+
+        if payload.parent_uuid:
+            await self._assert_has_access(user, payload.parent_uuid)
+
+        payload.uuid = await self._repo.generate_uuid()
+        return await self._repo.create_item(user, payload)
+
+
+class ReadItemUseCase(BaseItemUseCase):
     """Use case for getting an item."""
 
     async def execute(
@@ -46,7 +67,7 @@ class GetItemUseCase(BaseItemUseCase):
     ) -> domain.Item:
         """Business logic."""
         await self._assert_has_access(user, uuid)
-        return await self._repo.get_item(uuid)
+        return await self._repo.read_item(uuid)
 
 
 class DeleteItemUseCase(BaseItemUseCase):

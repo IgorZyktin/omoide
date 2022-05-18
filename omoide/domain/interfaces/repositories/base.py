@@ -66,7 +66,7 @@ class AbsRepository(abc.ABC):
         """Return user or None."""
 
     @abc.abstractmethod
-    async def get_item(
+    async def read_item(
             self,
             item_uuid: str,
     ) -> Optional[common.Item]:

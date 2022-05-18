@@ -4,22 +4,47 @@
 import http
 from uuid import UUID
 
-import fastapi
-from fastapi import HTTPException
+from fastapi import HTTPException, Response, Depends, APIRouter, Request
 
 from omoide import domain, use_cases
 from omoide.domain import exceptions
 from omoide.presentation import dependencies as dep
 
-router = fastapi.APIRouter(prefix='/api/items')
+router = APIRouter(prefix='/api/items')
+
+
+@router.post('', status_code=http.HTTPStatus.CREATED)
+async def api_create_item(
+        request: Request,
+        response: Response,
+        payload: domain.CreateItemIn,
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.CreateItemUseCase = Depends(
+            dep.create_item_use_case),
+):
+    """Create item."""
+    try:
+        uuid = await use_case.execute(user, payload)
+    except exceptions.Forbidden as exc:
+        raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
+                            detail=str(exc))
+
+    response.headers['Location'] = request.url_for('api_get_item', uuid=uuid)
+
+    if payload.is_collection:
+        url = request.url_for('browse', uuid=uuid)
+    else:
+        url = request.url_for('preview', uuid=uuid)
+
+    return {'url': url}
 
 
 @router.get('/{uuid}')
-async def get_item(
+async def api_get_item(
         uuid: UUID,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
-        use_case: use_cases.GetItemUseCase = fastapi.Depends(
-            dep.get_item_use_case),
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.ReadItemUseCase = Depends(
+            dep.read_item_use_case),
 ):
     """Get item."""
     try:
@@ -34,10 +59,10 @@ async def get_item(
 
 
 @router.delete('/{uuid}', status_code=http.HTTPStatus.NO_CONTENT)
-async def delete_item(
+async def api_delete_item(
         uuid: UUID,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
-        use_case: use_cases.DeleteItemUseCase = fastapi.Depends(
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.DeleteItemUseCase = Depends(
             dep.delete_item_use_case),
 ):
     """Delete item."""

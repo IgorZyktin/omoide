@@ -2,7 +2,6 @@
 from omoide.use_cases.api.items import *
 from omoide.use_cases.auth import AuthUseCase
 from omoide.use_cases.browse import BrowseUseCase
-from omoide.use_cases.create_item import CreateItemUseCase
 from omoide.use_cases.home import HomeUseCase
 from omoide.use_cases.preview import PreviewUseCase
 from omoide.use_cases.search import SearchUseCase

@@ -25,7 +25,7 @@ class BrowseUseCase:
 
         async with self._repo.transaction():
             location = await self._repo.get_location(user, uuid, details)
-            item = await self._repo.get_item(uuid)
+            item = await self._repo.read_item(uuid)
 
             if user.is_anon():
                 items = await self._repo.get_children(uuid, details)

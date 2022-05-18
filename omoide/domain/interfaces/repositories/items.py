@@ -13,7 +13,19 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     """Repository that perform CRUD operations on items and their data."""
 
     @abc.abstractmethod
-    async def get_item(
+    async def generate_uuid(self) -> UUID:
+        """Generate new UUID4 for an item."""
+
+    @abc.abstractmethod
+    async def create_item(
+            self,
+            user: domain.User,
+            payload: domain.CreateItemIn,
+    ) -> UUID:
+        """Return UUID for created item."""
+
+    @abc.abstractmethod
+    async def read_item(
             self,
             uuid: UUID,
     ) -> Optional[domain.Item]:
