@@ -7,5 +7,6 @@ from omoide.domain.interfaces.repositories.home import AbsHomeRepository
 from omoide.domain.interfaces.repositories.item_crud import (
     AbsItemCRUDRepository,
 )
+from omoide.domain.interfaces.repositories.items import AbsItemsRepository
 from omoide.domain.interfaces.repositories.preview import AbsPreviewRepository
 from omoide.domain.interfaces.repositories.search import AbsSearchRepository

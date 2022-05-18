@@ -6,11 +6,12 @@ This component is facing towards the user and displays search results.
 import fastapi
 from fastapi.staticfiles import StaticFiles
 
+from omoide.presentation import api
 from omoide.presentation import dependencies as dep
 from omoide.presentation.application import auth
+from omoide.presentation.application import basic
 from omoide.presentation.application import browse
 from omoide.presentation.application import create_item
-from omoide.presentation.application import basic
 from omoide.presentation.application import preview
 from omoide.presentation.application import profile
 from omoide.presentation.application import search
@@ -46,6 +47,9 @@ app.include_router(special.router)
 app.include_router(profile.router)
 app.include_router(create_item.router)
 app.include_router(upload.router)
+
+# API routes
+app.include_router(api.items.router)
 
 app.mount(
     '/static',
