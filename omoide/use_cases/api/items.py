@@ -8,6 +8,7 @@ from omoide.domain import interfaces, exceptions
 
 __all__ = [
     'GetItemUseCase',
+    'DeleteItemUseCase',
 ]
 
 
@@ -18,24 +19,25 @@ class BaseItemUseCase:
         """Initialize instance."""
         self._repo = repo
 
-
-class GetItemUseCase(BaseItemUseCase):
-    """Use case for getting an item."""
-
     async def _assert_has_access(
             self,
             user: domain.User,
             uuid: UUID,
-    ) -> None:
+    ) -> domain.AccessStatus:
         """Raise if user has no access to this item."""
         access = await self._repo.check_access(user, uuid)
 
         if access.does_not_exist:
-            raise exceptions.NotFound(f'Item {uuid!r} does not exist')
+            raise exceptions.NotFound(f'Item {uuid} does not exist')
 
         if access.is_not_given:
-            raise exceptions.Forbidden(f'User {user.uuid!r} ({user.name!r}) '
-                                       f'has no access to item {uuid!r}')
+            raise exceptions.Forbidden(f'User {user.uuid} ({user.name}) '
+                                       f'has no access to item {uuid}')
+        return access
+
+
+class GetItemUseCase(BaseItemUseCase):
+    """Use case for getting an item."""
 
     async def execute(
             self,
@@ -45,3 +47,21 @@ class GetItemUseCase(BaseItemUseCase):
         """Business logic."""
         await self._assert_has_access(user, uuid)
         return await self._repo.get_item(uuid)
+
+
+class DeleteItemUseCase(BaseItemUseCase):
+    """Use case for deleting an item."""
+
+    async def execute(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> None:
+        """Business logic."""
+        access = await self._assert_has_access(user, uuid)
+
+        if access.is_not_owner:
+            raise exceptions.Forbidden(f'You must own item {uuid} '
+                                       'to be able to delete it')
+
+        return await self._repo.delete_item(uuid)

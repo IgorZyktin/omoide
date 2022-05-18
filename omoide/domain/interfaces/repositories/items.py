@@ -18,3 +18,10 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
+
+    @abc.abstractmethod
+    async def delete_item(
+            self,
+            uuid: UUID,
+    ) -> None:
+        """Delete item with given UUID."""

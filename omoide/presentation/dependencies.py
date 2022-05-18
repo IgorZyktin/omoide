@@ -122,6 +122,11 @@ def get_upload_use_case() -> use_cases.UploadUseCase:
     return upload_use_case
 
 
-def get_get_item_use_case() -> use_cases.GetItemUseCase:
+def get_item_use_case() -> use_cases.GetItemUseCase:
     """Get use case instance."""
     return use_cases.GetItemUseCase(items_repository)
+
+
+def delete_item_use_case() -> use_cases.DeleteItemUseCase:
+    """Get use case instance."""
+    return use_cases.DeleteItemUseCase(items_repository)

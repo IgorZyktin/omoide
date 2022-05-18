@@ -36,3 +36,11 @@ class ItemsRepository(
 
         response = await self.db.fetch_one(stmt, {'uuid': uuid})
         return domain.Item.from_map(response) if response else None
+
+    async def delete_item(
+            self,
+            uuid: UUID,
+    ) -> None:
+        """Delete item with given UUID."""
+        stmt = """DELETE FROM items WHERE uuid = :uuid;"""
+        await self.db.execute(stmt, {'uuid': uuid})

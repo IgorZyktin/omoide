@@ -132,6 +132,11 @@ class AccessStatus(BaseModel):
         """Return True if user cannot access this item."""
         return not self.is_given
 
+    @property
+    def is_not_owner(self) -> bool:
+        """Return True if user is not owner of the item."""
+        return not self.is_owner
+
     @classmethod
     def not_found(cls) -> 'AccessStatus':
         """Item does not exist."""
