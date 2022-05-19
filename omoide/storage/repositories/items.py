@@ -103,7 +103,7 @@ class ItemsRepository(
     ) -> UUID:
         """Update existing item."""
         stmt = """
-        UPDATE items SET 
+        UPDATE items SET
             parent_uuid = :parent_uuid,
             name = :name,
             is_collection = :is_collection,
