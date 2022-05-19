@@ -23,9 +23,9 @@ function gatherItemParameters() {
     let tags = splitLines(document.getElementById('item_tags').value)
     let permissions = splitLines(document.getElementById('item_permissions').value)
     return {
-        parent_uuid: document.getElementById('parent_uuid').value,
+        parent_uuid: document.getElementById('parent_uuid').value || null,
         is_collection: document.getElementById('is_collection').checked,
-        go_upload: document.getElementById('go_upload').checked,
+        name: document.getElementById('item_name').value,
         tags: tags,
         permissions: permissions
     }
@@ -35,16 +35,24 @@ async function createItem(endpoint) {
     // send command for item creation
     let data = gatherItemParameters()
     data['item_name'] = document.getElementById('item_name').value
-    await request(endpoint, data)
+
+    function onCreate(headers, result) {
+        let url = result['url']
+        if (url !== undefined)
+            window.location.href = url
+    }
+
+    await request(endpoint, data, onCreate)
 }
 
 async function uploadItems(endpoint) {
     // send command for item creation
     let data = gatherItemParameters()
-    await request(endpoint, data)
+    await request(endpoint, data, () => {
+    })
 }
 
-async function request(endpoint, payload) {
+async function request(endpoint, payload, callback) {
     // made HTTP POST request
     try {
         const response = await fetch(endpoint, {
@@ -57,12 +65,13 @@ async function request(endpoint, payload) {
         });
 
         const result = await response.json()
-        if (response.status === 200) {
-            let url = result['url']
-            if (url !== undefined)
-                window.location.href = url
+        if (response.status === 200 || response.status === 201) {
+            callback(response.headers, result)
         } else {
-            makeAlert(result['detail'])
+            for (const problem of result['detail']) {
+                console.log(problem)
+                makeAlert(problem.msg)
+            }
         }
     } catch (err) {
         throw err
@@ -75,7 +84,7 @@ function isUUID(uuid) {
     return s !== null;
 }
 
-function srcFromUUID(user_uuid, uuid){
+function srcFromUUID(user_uuid, uuid) {
     // generate item thumbnail url from uuid
     let prefix = uuid.slice(0, 2)
     return `/content/${user_uuid}/thumbnail/${prefix}/${uuid}.jpg`

@@ -26,7 +26,7 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
             details: domain.Details,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
-        current_item = await self.get_item(item_uuid)
+        current_item = await self.read_item(item_uuid)
 
         if current_item is None:
             return None
