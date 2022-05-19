@@ -19,33 +19,9 @@ class AbsHomeRepository(AbsRepository):
         """Find home items for unauthorised user."""
 
     @abc.abstractmethod
-    async def select_home_random_nested_known(
+    async def find_home_items_for_known(
             self,
             user: auth.User,
             aim: aim_module.Aim,
     ) -> list[common.Item]:
-        """Find random nested items for authorised user."""
-
-    @abc.abstractmethod
-    async def select_home_ordered_nested_known(
-            self,
-            user: auth.User,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find ordered nested items for authorised user."""
-
-    @abc.abstractmethod
-    async def select_home_random_flat_known(
-            self,
-            user: auth.User,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find random flat items for authorised user."""
-
-    @abc.abstractmethod
-    async def select_home_ordered_flat_known(
-            self,
-            user: auth.User,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find ordered flat items for authorised user."""
+        """Find home items for known user."""

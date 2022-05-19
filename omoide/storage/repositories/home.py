@@ -23,11 +23,11 @@ class HomeRepository(
         """Find home items for unauthorised user."""
         subquery = sqlalchemy.select(models.PublicUsers.user_uuid)
         conditions = [
-            models.Item.owner_uuid.in_(subquery)
+            models.Item.owner_uuid.in_(subquery)  # noqa
         ]
 
         if aim.nested:
-            conditions.append(models.Item.parent_uuid == None)
+            conditions.append(models.Item.parent_uuid == None)  # noqa
 
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
@@ -59,132 +59,53 @@ class HomeRepository(
         ]
         return items
 
-    async def select_home_random_nested_known(
+    async def find_home_items_for_known(
             self,
             user: domain.User,
             aim: domain.Aim,
     ) -> list[domain.Item]:
-        """Find random nested items for authorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items it
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid)
-               AND parent_uuid IS NULL
-        ORDER BY random() LIMIT :limit;
-        """
+        """Find home items for known user."""
+        conditions = [
+            sqlalchemy.or_(
+                models.Item.owner_uuid == user.uuid,
+                models.ComputedPermissions.permissions.any(user.uuid),
+            )
+        ]
 
-        values = {
-            'user_uuid': user.uuid,
-            'limit': aim.items_per_page,
-        }
+        if aim.nested:
+            conditions.append(models.Item.parent_uuid == None)  # noqa
 
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
+        if aim.ordered:
+            conditions.append(models.Item.number > aim.last_seen)
 
-    async def select_home_ordered_nested_known(
-            self,
-            user: domain.User,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find ordered nested items for authorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items it
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid)
-               AND parent_uuid IS NULL
-               AND number > :last_seen
-        ORDER BY number LIMIT :limit OFFSET :offset;
-        """
+        stmt = sqlalchemy.select(
+            models.Item.uuid,
+            models.Item.parent_uuid,
+            models.Item.owner_uuid,
+            models.Item.number,
+            models.Item.name,
+            models.Item.is_collection,
+            models.Item.content_ext,
+            models.Item.preview_ext,
+            models.Item.thumbnail_ext,
+        ).select_from(
+            models.ComputedPermissions.__table__.join(
+                models.Item,
+                models.Item.uuid == models.ComputedPermissions.item_uuid
+            )
+        ).where(*conditions)
 
-        values = {
-            'user_uuid': user.uuid,
-            'limit': aim.items_per_page,
-            'last_seen': aim.last_seen,
-        }
+        if aim.ordered:
+            stmt = stmt.order_by(models.Item.number)
+        else:
+            stmt = stmt.order_by(func.random())
 
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
+        stmt = stmt.limit(aim.items_per_page)
 
-    async def select_home_random_flat_known(
-            self,
-            user: domain.User,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find random flat items for authorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items it
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid)
-        ORDER BY random() LIMIT :limit;
-        """
-
-        values = {
-            'user_uuid': user.uuid,
-            'limit': aim.items_per_page,
-        }
-
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
-
-    async def select_home_ordered_flat_known(
-            self,
-            user: domain.User,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find ordered flat items for authorised user."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items it
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid)
-               AND number > :last_seen
-        ORDER BY number LIMIT :limit;
-        """
-
-        values = {
-            'user_uuid': user.uuid,
-            'limit': aim.items_per_page,
-            'last_seen': aim.last_seen,
-        }
-
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item.from_map(row) for row in response]
+        response = await self.db.fetch_all(stmt)
+        # TODO - damn asyncpg tries to bee too smart
+        items = [
+            domain.Item.from_map(dict(zip(row.keys(), row.values())))
+            for row in response
+        ]
+        return items
