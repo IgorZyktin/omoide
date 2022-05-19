@@ -73,7 +73,12 @@ class ReadItemUseCase(BaseItemUseCase):
     ) -> domain.Item:
         """Business logic."""
         await self._assert_has_access(user, uuid)
-        return await self._repo.read_item(uuid)
+        item = await self._repo.read_item(uuid)
+
+        if item is None:
+            raise exceptions.NotFound(f'Item {uuid} does not exist')
+
+        return item
 
 
 class UpdateItemUseCase(BaseItemUseCase):
