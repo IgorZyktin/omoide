@@ -35,6 +35,11 @@ class BaseItemUseCase:
         if access.is_not_given:
             raise exceptions.Forbidden(f'User {user.uuid} ({user.name}) '
                                        f'has no access to item {uuid}')
+
+        if access.is_not_owner:
+            raise exceptions.Forbidden(f'You must own item {uuid} '
+                                       'to be able to modify it')
+
         return access
 
 
@@ -92,10 +97,5 @@ class DeleteItemUseCase(BaseItemUseCase):
             uuid: UUID,
     ) -> None:
         """Business logic."""
-        access = await self._assert_has_access(user, uuid)
-
-        if access.is_not_owner:
-            raise exceptions.Forbidden(f'You must own item {uuid} '
-                                       'to be able to delete it')
-
+        await self._assert_has_access(user, uuid)
         return await self._repo.delete_item(uuid)
