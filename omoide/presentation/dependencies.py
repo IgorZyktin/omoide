@@ -32,7 +32,6 @@ base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
 
 item_crud_repository = repositories.ItemCRUDRepository(db)
-_create_item_use_case = use_cases.CreateItemUseCase(item_crud_repository)
 upload_use_case = use_cases.UploadUseCase(item_crud_repository)
 
 home_repository = repositories.HomeRepository(db)
@@ -111,11 +110,6 @@ def get_browse_use_case():
 def home_use_case():
     """Get use case instance."""
     return use_cases.HomeUseCase(home_repository)
-
-
-def get_create_item_use_case():
-    """Get use case instance."""
-    return _create_item_use_case
 
 
 def get_upload_use_case() -> use_cases.UploadUseCase:
