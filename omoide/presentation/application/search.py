@@ -9,6 +9,7 @@ from omoide import domain
 from omoide import use_cases
 from omoide.presentation import dependencies, constants
 from omoide.presentation import infra
+from omoide.presentation import utils
 from omoide.presentation.config import config
 
 router = fastapi.APIRouter()
@@ -77,29 +78,4 @@ async def api_random(
     details = domain.Details(page=1, anchor=-1, items_per_page=items_per_page)
     query = domain.Query(raw_query='', tags_include=[], tags_exclude=[])
     result, _ = await use_case.execute(user, query, details)
-
-    simple_items = []
-    for item in result.items:
-        if item.is_collection:
-            href = request.url_for('browse', uuid=item.uuid)
-        else:
-            href = request.url_for('preview', uuid=item.uuid)
-
-        if item.thumbnail_ext is None:
-            thumbnail = request.url_for('static', path='empty.png')
-        else:
-            thumbnail = (
-                f'/content/{item.owner_uuid}/thumbnail/{item.thumbnail_path}'
-            )
-
-        simple_item = {
-            'uuid': item.uuid,
-            'name': item.name,
-            'is_collection': item.is_collection,
-            'href': href,
-            'thumbnail': thumbnail,
-        }
-
-        simple_items.append(simple_item)
-
-    return simple_items
+    return utils.to_simple_items(request, result.items)
