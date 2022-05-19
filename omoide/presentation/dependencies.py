@@ -31,8 +31,7 @@ browse_use_case = use_cases.BrowseUseCase(browse_repository)
 base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
 
-item_crud_repository = repositories.ItemCRUDRepository(db)
-upload_use_case = use_cases.UploadUseCase(item_crud_repository)
+upload_repository = repositories.UploadRepository(db)
 
 home_repository = repositories.HomeRepository(db)
 items_repository = repositories.ItemsRepository(db)
@@ -112,9 +111,9 @@ def home_use_case():
     return use_cases.HomeUseCase(home_repository)
 
 
-def get_upload_use_case() -> use_cases.UploadUseCase:
+def upload_use_case() -> use_cases.UploadUseCase:
     """Get use case instance."""
-    return upload_use_case
+    return use_cases.UploadUseCase(upload_repository)
 
 
 # api item related use cases --------------------------------------------------

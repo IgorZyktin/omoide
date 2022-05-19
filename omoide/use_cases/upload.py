@@ -5,65 +5,68 @@ import datetime
 from uuid import UUID
 
 from omoide import domain
-from omoide.domain import interfaces
+from omoide.domain import interfaces, exceptions
 
 
 class UploadUseCase:
     """Use case for media upload."""
 
-    def __init__(self, repo: interfaces.AbsItemCRUDRepository) -> None:
+    def __init__(self, repo: interfaces.AbsUploadRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 
     async def execute(
             self,
             user: domain.User,
-            item_uuid: UUID,
+            uuid: UUID,
             is_collection: bool,
             files: list,
             tags: list[str],
             permissions: list[str],
             features: list[str],
-    ) -> tuple[domain.AccessStatus, list[UUID]]:
+    ) -> list[UUID]:
         """Return preview model suitable for rendering."""
+        if user.is_anon():
+            raise exceptions.Unauthorized('Anon users are not '
+                                          'allowed to make uploads')
+
         created_uuids: list[UUID] = []
         async with self._repo.transaction():
-            access = await self._repo.check_access(user, str(item_uuid))
+            await self._repo.assert_has_access(user, uuid)
 
-            if access.is_given:
-                if is_collection:
-                    for file in files:
-                        filename = file.filename.lower()
-                        content = await file.read()
-
-                        if content:
-                            child_item = await self._generate_item(
-                                user=user,
-                                parent_uuid=item_uuid,
-                                tags=tags,
-                                permissions=permissions,
-                                filename=filename,
-                            )
-
-                            await self._upload_media_content(
-                                uuid=child_item,
-                                filename=filename,
-                                content=content,
-                                features=features,
-                            )
-                            created_uuids.append(child_item)
-                else:
-                    content = await files[0].read()
+            if is_collection:
+                for file in files:
+                    filename = file.filename.lower()
+                    content = await file.read()
 
                     if content:
+                        child_item = await self._generate_item(
+                            user=user,
+                            parent_uuid=uuid,
+                            tags=tags,
+                            permissions=permissions,
+                            filename=filename,
+                        )
+
                         await self._upload_media_content(
-                            uuid=item_uuid,
-                            filename=files[0].filename.lower(),
+                            uuid=child_item,
+                            filename=filename,
                             content=content,
                             features=features,
                         )
+                        created_uuids.append(child_item)
+            else:
+                content = await files[0].read()
 
-        return access, created_uuids
+                if content:
+                    await self._upload_media_content(
+                        uuid=uuid,
+                        filename=files[0].filename.lower(),
+                        content=content,
+                        features=features,
+                    )
+
+        return created_uuids
 
     async def _generate_item(
             self,
@@ -76,16 +79,16 @@ class UploadUseCase:
         """Create child item for given target and return uuid."""
         uuid = await self._repo.generate_uuid()
 
-        payload = domain.CreateItemPayload(
+        payload = domain.CreateItemIn(
             uuid=uuid,
-            parent_uuid=str(parent_uuid),
-            item_name=filename,
+            parent_uuid=parent_uuid,
+            name=filename,
             is_collection=False,
             tags=tags,
             permissions=permissions,
         )
 
-        await self._repo.create_dependant_item(user, payload)
+        await self._repo.create_item(user, payload)
         return uuid
 
     async def _upload_media_content(

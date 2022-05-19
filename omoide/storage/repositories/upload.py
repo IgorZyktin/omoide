@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Repository that perform CRUD operations on items and their data.
+"""Repository that handles media upload.
 """
 from omoide import domain
 from omoide.domain import interfaces
-from omoide.storage.repositories import base
+from omoide.storage.repositories import base, items
 
 
-class ItemCRUDRepository(
+class UploadRepository(
     base.BaseRepository,
-    interfaces.AbsItemCRUDRepository,
+    items.ItemsRepository,
+    interfaces.AbsUploadRepository,
 ):
-    """Repository that perform CRUD operations on items and their data."""
+    """Repository that handles media upload."""
 
     async def save_raw_media(
             self,

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Routes related to media upload.
 """
+import http
 from uuid import UUID
 
 import fastapi
-from fastapi import Depends, Request, UploadFile, Form, File
+from fastapi import Depends, Request, UploadFile, Form, File, HTTPException
 from starlette import status
 
 from omoide import domain, use_cases, utils
+from omoide.domain import exceptions
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
 from omoide.presentation.config import config
@@ -25,7 +27,7 @@ async def upload(
     if user.is_anon():  # TODO - move it to a separate decorator
         raise fastapi.HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect login or password',
+            detail='You need to be authorized to make uploads',
             headers={'WWW-Authenticate': 'Basic realm="omoide"'},
         )
 
@@ -87,18 +89,9 @@ async def upload_post(
         collection: str = Form(default=''),
         user: domain.User = Depends(dep.get_current_user),
         files: list[UploadFile] = File(...),
-        use_case: use_cases.UploadUseCase = Depends(
-            dep.get_upload_use_case,
-        ),
+        use_case: use_cases.UploadUseCase = Depends(dep.upload_use_case),
 ):
     """Upload media page."""
-    if user.is_anon():  # TODO - move it to a separate decorator
-        raise fastapi.HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect login or password',
-            headers={'WWW-Authenticate': 'Basic realm="omoide"'},
-        )
-
     is_collection = bool(collection)
 
     something_wrong_with_files = not files  # FIXME
@@ -120,21 +113,25 @@ async def upload_post(
 
         return dep.templates.TemplateResponse('upload.html', context)
 
-    access, uuids = await use_case.execute(
-        user=user,
-        item_uuid=UUID(parent_uuid),
-        is_collection=is_collection,
-        files=files,
-        tags=list(filter(None, tags.split('\n'))),  # FIXME
-        permissions=[],  # FIXME
-        features=[],  # FIXME
-    )
-
-    if access.does_not_exist or access.is_not_given:
-        raise fastapi.HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Given item does not exist',
+    try:
+        await use_case.execute(
+            user=user,
+            uuid=UUID(parent_uuid),
+            is_collection=is_collection,
+            files=files,
+            tags=list(filter(None, tags.split('\n'))),  # FIXME
+            permissions=[],  # FIXME
+            features=[],  # FIXME
         )
+    except exceptions.Unauthorized:
+        raise fastapi.HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='You need to be authorized to make uploads',
+            headers={'WWW-Authenticate': 'Basic realm="omoide"'},
+        )
+    except exceptions.Forbidden as exc:
+        raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
+                            detail=str(exc))
 
     url = request.url_for('upload_complete', uuid=parent_uuid)
     return fastapi.responses.RedirectResponse(
