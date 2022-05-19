@@ -29,7 +29,7 @@ async def api_create_item(
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
 
-    response.headers['Location'] = request.url_for('api_get_item', uuid=uuid)
+    response.headers['Location'] = request.url_for('api_read_item', uuid=uuid)
 
     if payload.is_collection:
         url = request.url_for('browse', uuid=uuid)
@@ -40,7 +40,7 @@ async def api_create_item(
 
 
 @router.get('/{uuid}')
-async def api_get_item(
+async def api_read_item(
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.ReadItemUseCase = Depends(
@@ -56,6 +56,21 @@ async def api_get_item(
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
     return item.dict()
+
+
+@router.get('/{uuid}')
+async def api_update_item(
+        uuid: UUID,
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.UploadUseCase = Depends(
+            dep.read_item_use_case),
+):
+    """Update item."""
+    # TODO(i.zyktin): implement item update
+    assert uuid
+    assert user
+    assert use_case
+    return 'not implemented'
 
 
 @router.delete('/{uuid}', status_code=http.HTTPStatus.NO_CONTENT)

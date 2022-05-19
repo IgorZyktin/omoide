@@ -31,6 +31,12 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> Optional[domain.Item]:
         """Return item or None."""
 
+    async def update_item(
+            self,
+            payload: domain.UpdateItemIn,
+    ) -> UUID:
+        """Update existing item."""
+
     @abc.abstractmethod
     async def delete_item(
             self,

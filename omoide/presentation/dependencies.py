@@ -135,6 +135,11 @@ def read_item_use_case() -> use_cases.ReadItemUseCase:
     return use_cases.ReadItemUseCase(items_repository)
 
 
+def update_item_use_case() -> use_cases.UpdateItemUseCase:
+    """Get use case instance."""
+    return use_cases.UpdateItemUseCase(items_repository)
+
+
 def delete_item_use_case() -> use_cases.DeleteItemUseCase:
     """Get use case instance."""
     return use_cases.DeleteItemUseCase(items_repository)

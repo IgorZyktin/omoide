@@ -9,6 +9,7 @@ from pydantic import BaseModel, validator, root_validator
 
 __all__ = [
     'CreateItemIn',
+    'UpdateItemIn',
     'RawMedia',
 ]
 
@@ -63,6 +64,14 @@ class CreateItemIn(BaseModel):
             raise ValueError('You have to specify name for collection')
 
         return values
+
+
+class UpdateItemIn(CreateItemIn):
+    """Input info for item update."""
+    uuid: UUID
+    content_ext: Optional[str]
+    preview_ext: Optional[str]
+    thumbnail_ext: Optional[str]
 
 
 class RawMedia(BaseModel):

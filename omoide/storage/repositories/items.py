@@ -97,6 +97,38 @@ class ItemsRepository(
         response = await self.db.fetch_one(stmt, {'uuid': uuid})
         return domain.Item.from_map(response) if response else None
 
+    async def update_item(
+            self,
+            payload: domain.UpdateItemIn,
+    ) -> UUID:
+        """Update existing item."""
+        stmt = """
+        UPDATE items SET 
+            parent_uuid = :parent_uuid,
+            name = :name,
+            is_collection = :is_collection,
+            content_ext = :content_ext,
+            preview_ext = :preview_ext,
+            thumbnail_ext = :thumbnail_ext,
+            tags = :tags,
+            permissions = :permissions
+        WHERE uuid = :uuid;
+        """
+
+        values = {
+            'uuid': payload.uuid,
+            'parent_uuid': payload.parent_uuid,
+            'name': payload.name,
+            'is_collection': payload.is_collection,
+            'content_ext': payload.content_ext,
+            'preview_ext': payload.preview_ext,
+            'thumbnail_ext': payload.thumbnail_ext,
+            'tags': payload.tags,
+            'permissions': payload.permissions,
+        }
+
+        return await self.db.execute(stmt, values)
+
     async def delete_item(
             self,
             uuid: UUID,

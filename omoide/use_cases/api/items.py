@@ -9,6 +9,7 @@ from omoide.domain import interfaces, exceptions
 __all__ = [
     'CreateItemUseCase',
     'ReadItemUseCase',
+    'UpdateItemUseCase',
     'DeleteItemUseCase',
 ]
 
@@ -68,6 +69,18 @@ class ReadItemUseCase(BaseItemUseCase):
         """Business logic."""
         await self._assert_has_access(user, uuid)
         return await self._repo.read_item(uuid)
+
+
+class UpdateItemUseCase(BaseItemUseCase):
+    """Use case for updating an item."""
+
+    async def execute(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> None:
+        """Business logic."""
+        # TODO(i.zyktin): implement item update
 
 
 class DeleteItemUseCase(BaseItemUseCase):
