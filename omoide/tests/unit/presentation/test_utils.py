@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests.
 """
-from omoide.presentation import utils
+from omoide import utils
 
 
 def test_sep_digits():
