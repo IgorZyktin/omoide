@@ -5,9 +5,13 @@ Contains all parameters about pagination, ordering etc.
 """
 from pydantic import BaseModel
 
+from omoide.presentation import constants
+
 __all__ = [
     'Aim',
     'aim_from_params',
+    'extract_int',
+    'extract_bool',
 ]
 
 
@@ -30,42 +34,42 @@ class Aim(BaseModel):
         return not self.nested
 
 
+def extract_bool(
+        params: dict,
+        key: str,
+        default: bool,
+) -> bool:
+    """Safely extract boolean value from user input."""
+    value = params.get(key)
+
+    if value is None:
+        result = default
+    else:
+        result = value == 'on'
+
+    return result
+
+
+def extract_int(
+        params: dict,
+        key: str,
+        default: int,
+) -> int:
+    """Safely extract int value from user input."""
+    try:
+        result = int(params.get(key))
+    except (ValueError, TypeError):
+        result = default
+    return result
+
+
 def aim_from_params(params: dict) -> Aim:
     """Parse original string from request."""
-    raw_ordered = params.get('ordered')
-    if raw_ordered is None:
-        ordered = False
-    else:
-        ordered = raw_ordered == 'on'
-
-    raw_nested = params.get('nested')
-    if raw_nested is None:
-        nested = False
-    else:
-        nested = raw_nested == 'on'
-
-    raw_paged = params.get('paged')
-    if raw_paged is None:
-        paged = False
-    else:
-        paged = raw_paged == 'on'
-
-    raw_last_seen = params.get('last_seen')
-    try:
-        last_seen = int(raw_last_seen)
-    except (ValueError, TypeError):
-        last_seen = -1
-
-    raw_items_per_page = params.get('items_per_page')
-    try:
-        items_per_page = int(raw_items_per_page)
-    except (ValueError, TypeError):
-        items_per_page = 10
-
     return Aim(
-        ordered=ordered,
-        nested=nested,
-        paged=paged,
-        last_seen=last_seen,
-        items_per_page=items_per_page,
+        ordered=extract_bool(params, 'ordered', False),
+        nested=extract_bool(params, 'nested', False),
+        paged=extract_bool(params, 'paged', False),
+        last_seen=extract_int(params, 'last_seen', -1),
+        items_per_page=extract_int(params, 'items_per_page',
+                                   constants.ITEMS_PER_PAGE),
     )
