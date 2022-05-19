@@ -4,6 +4,10 @@
 from omoide import domain
 from omoide.domain import interfaces
 
+__all__ = [
+    'HomeUseCase',
+]
+
 
 class HomeUseCase:
     """Use case for home page."""

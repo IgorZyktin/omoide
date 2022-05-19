@@ -36,8 +36,6 @@ _create_item_use_case = use_cases.CreateItemUseCase(item_crud_repository)
 upload_use_case = use_cases.UploadUseCase(item_crud_repository)
 
 home_repository = repositories.HomeRepository(db)
-home_use_case = use_cases.HomeUseCase(home_repository)
-
 items_repository = repositories.ItemsRepository(db)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
@@ -92,6 +90,9 @@ async def get_current_user(
     return await use_case.execute(credentials, authenticator)
 
 
+# application related use cases -----------------------------------------------
+
+
 def get_search_use_case():
     """Get use case instance."""
     return search_use_case
@@ -107,9 +108,9 @@ def get_browse_use_case():
     return browse_use_case
 
 
-def get_home_use_case():
+def home_use_case():
     """Get use case instance."""
-    return home_use_case
+    return use_cases.HomeUseCase(home_repository)
 
 
 def get_create_item_use_case():
