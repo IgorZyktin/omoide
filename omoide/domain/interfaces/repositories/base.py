@@ -16,10 +16,6 @@ class AbsRepository(abc.ABC):
         """Start transaction."""
 
     @abc.abstractmethod
-    async def generate_uuid(self) -> UUID:
-        """Generate new UUID4."""
-
-    @abc.abstractmethod
     async def check_access(
             self,
             user: auth.User,
