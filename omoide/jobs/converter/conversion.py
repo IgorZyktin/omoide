@@ -18,6 +18,7 @@ VALID_EXT = frozenset([
 def convert_single_entry(session: Session, raw_media: RawMedia) -> None:
     """Perform full conversion for single entry."""
     ext = extract_ext(raw_media.filename)
+    ext = cast_ext(ext)
 
     if not ext or ext not in VALID_EXT:
         print(f'Cant handle {raw_media.item_uuid}, filename '
@@ -49,6 +50,16 @@ def convert_single_entry(session: Session, raw_media: RawMedia) -> None:
     raw_media.processed_at = utils.now()
     raw_media.content = b''
     image.close()
+
+
+def cast_ext(ext: str) -> str:
+    """Convert ext to a unified form."""
+    ext = ext.lower()
+
+    if ext == 'jpeg':
+        ext = 'jpg'
+
+    return ext
 
 
 def extract_ext(filename: Optional[str]) -> str:
