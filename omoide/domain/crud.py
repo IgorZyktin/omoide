@@ -26,18 +26,18 @@ class CreateItemIn(BaseModel):
     @validator('name')
     def name_must_have_adequate_length(cls, v):
         """Check."""
-        if len(v) > 64:
+        if len(v) > 255:
             raise ValueError('Name is too long')
         return v
 
     @validator('tags')
     def tags_must_be_adequate(cls, v):
         """Check."""
-        if len(v) > 100:
+        if len(v) > 255:
             raise ValueError('Too many tags')
 
         for tag in v:
-            if len(tag) > 64:
+            if len(tag) > 255:
                 raise ValueError(f'Tag is too long {tag!r}')
 
         return v
@@ -49,7 +49,7 @@ class CreateItemIn(BaseModel):
             raise ValueError('Too many permissions')
 
         for permission in v:
-            if len(permission) > 64:
+            if len(permission) > 255:
                 raise ValueError(f'Permission is too long {permission!r}')
 
         return v
