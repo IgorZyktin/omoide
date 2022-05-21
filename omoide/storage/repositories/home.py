@@ -89,9 +89,10 @@ class HomeRepository(
             models.Item.preview_ext,
             models.Item.thumbnail_ext,
         ).select_from(
-            models.ComputedPermissions.__table__.join(
-                models.Item,
-                models.Item.uuid == models.ComputedPermissions.item_uuid
+            models.Item.__table__.join(
+                models.ComputedPermissions,
+                models.Item.uuid == models.ComputedPermissions.item_uuid,
+                isouter=True,
             )
         ).where(*conditions)
 
