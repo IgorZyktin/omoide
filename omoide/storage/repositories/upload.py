@@ -7,8 +7,8 @@ from omoide.storage.repositories import base, items
 
 
 class UploadRepository(
-    base.BaseRepository,
     items.ItemsRepository,
+    base.BaseRepository,
     interfaces.AbsUploadRepository,
 ):
     """Repository that handles media upload."""
