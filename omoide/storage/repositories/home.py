@@ -2,7 +2,7 @@
 """Repository that show items at the home endpoint.
 """
 import sqlalchemy
-from sqlalchemy import func
+from sqlalchemy import func, desc
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -45,7 +45,10 @@ class HomeRepository(
         ).where(*conditions)
 
         if aim.ordered:
-            stmt = stmt.order_by(models.Item.number)
+            stmt = stmt.order_by(
+                desc(models.Item.is_collection),
+                models.Item.number,
+            )
         else:
             stmt = stmt.order_by(func.random())
 
@@ -97,7 +100,10 @@ class HomeRepository(
         ).where(*conditions)
 
         if aim.ordered:
-            stmt = stmt.order_by(models.Item.number)
+            stmt = stmt.order_by(
+                desc(models.Item.is_collection),
+                models.Item.number,
+            )
         else:
             stmt = stmt.order_by(func.random())
 
