@@ -37,8 +37,16 @@ async function createItem(endpoint) {
     data['item_name'] = document.getElementById('item_name').value
 
     function onCreate(headers, result) {
-        let url = result['url']
-        if (url !== undefined)
+        let goUpload = document.getElementById('go_upload').checked
+        let url = ''
+
+        if (goUpload) {
+            url = result['upload_url']
+        } else {
+            url = result['url']
+        }
+
+        if (url !== undefined && url !== '')
             window.location.href = url
     }
 

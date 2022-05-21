@@ -36,7 +36,12 @@ async def api_create_item(
     else:
         url = request.url_for('preview', uuid=uuid)
 
-    return {'url': url}
+    upload_url = request.url_for('upload') + f'?parent_uuid={uuid}'
+
+    return {
+        'url': url,
+        'upload_url': upload_url,
+    }
 
 
 @router.get('/{uuid}')
