@@ -51,6 +51,7 @@ app.include_router(api.items.router)
 
 # Application routes
 app.include_router(application.create_item.router)
+app.include_router(application.delete_item.router)
 
 app.mount(
     '/static',

@@ -57,7 +57,8 @@ class CreateItemUseCase(BaseItemUseCase):
                                        'allowed to create items')
 
         if payload.parent_uuid:
-            await self._assert_has_access(user, payload.parent_uuid)
+            await self._repo.assert_has_access(user, payload.parent_uuid,
+                                               only_for_owner=True)
 
         payload.uuid = await self._repo.generate_uuid()
         return await self._repo.create_item(user, payload)
@@ -72,7 +73,7 @@ class ReadItemUseCase(BaseItemUseCase):
             uuid: UUID,
     ) -> domain.Item:
         """Business logic."""
-        await self._assert_has_access(user, uuid)
+        await self._repo.assert_has_access(user, uuid, only_for_owner=False)
         item = await self._repo.read_item(uuid)
 
         if item is None:
@@ -102,5 +103,6 @@ class DeleteItemUseCase(BaseItemUseCase):
             uuid: UUID,
     ) -> None:
         """Business logic."""
-        await self._assert_has_access(user, uuid)
+        await self._repo.assert_has_access(user, uuid, only_for_owner=True)
+        # TODO(i.zyktin): add records to the zombies table
         return await self._repo.delete_item(uuid)

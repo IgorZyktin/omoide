@@ -4,9 +4,11 @@
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.repositories import base
+from omoide.storage.repositories import items
 
 
 class BrowseRepository(
+    items.ItemsRepository,
     base.BaseRepository,
     interfaces.AbsBrowseRepository,
 ):

@@ -23,7 +23,6 @@ search_repository = repositories.SearchRepository(db)
 search_use_case = use_cases.SearchUseCase(search_repository)
 
 preview_repository = repositories.PreviewRepository(db)
-preview_use_case = use_cases.PreviewUseCase(preview_repository)
 
 browse_repository = repositories.BrowseRepository(db)
 browse_use_case = use_cases.BrowseUseCase(browse_repository)
@@ -96,9 +95,9 @@ def get_search_use_case():
     return search_use_case
 
 
-def get_preview_use_case():
+def preview_use_case():
     """Get use case instance."""
-    return preview_use_case
+    return use_cases.PreviewUseCase(preview_repository)
 
 
 def get_browse_use_case():

@@ -6,9 +6,13 @@ import abc
 from omoide import domain
 from omoide.domain import common
 from omoide.domain.interfaces.repositories.base import AbsRepository
+from omoide.domain.interfaces.repositories.items import AbsItemsRepository
 
 
-class AbsBrowseRepository(AbsRepository):
+class AbsBrowseRepository(
+    AbsItemsRepository,
+    AbsRepository,
+):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod

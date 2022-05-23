@@ -5,10 +5,11 @@ from typing import Optional
 
 from omoide import domain
 from omoide.domain import interfaces
-from omoide.storage.repositories import base
+from omoide.storage.repositories import base, items
 
 
 class PreviewRepository(
+    items.ItemsRepository,
     base.BaseRepository,
     interfaces.AbsPreviewRepository,
 ):

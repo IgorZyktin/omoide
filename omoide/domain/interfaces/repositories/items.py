@@ -17,6 +17,23 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
         """Generate new UUID4 for an item."""
 
     @abc.abstractmethod
+    async def check_access(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> domain.AccessStatus:
+        """Check if user has access to the item."""
+
+    @abc.abstractmethod
+    async def assert_has_access(
+            self,
+            user: domain.User,
+            uuid: UUID,
+            only_for_owner: bool,
+    ) -> None:
+        """Raise if item does not exist or user has no access to it."""
+
+    @abc.abstractmethod
     async def create_item(
             self,
             user: domain.User,

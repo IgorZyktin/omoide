@@ -21,7 +21,7 @@ class BrowseUseCase:
             details: domain.Details,
     ) -> domain.Results:
         """Return browse model suitable for rendering."""
-        await self._repo.assert_has_access(user, uuid)
+        await self._repo.assert_has_access(user, uuid, only_for_owner=False)
 
         async with self._repo.transaction():
             location = await self._repo.get_location(user, uuid, details)
