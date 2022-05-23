@@ -32,4 +32,4 @@ class AppDeleteItemUseCase:
         total = await self._repo.count_children(uuid)
         item = await self._repo.read_item(uuid)
 
-        return total + 1, item
+        return total, item

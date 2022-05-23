@@ -66,4 +66,4 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             self,
             uuid: UUID,
     ) -> int:
-        """Count dependant items."""
+        """Count dependant items (including the parent itself)."""

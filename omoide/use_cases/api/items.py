@@ -114,4 +114,6 @@ class DeleteItemUseCase(BaseItemUseCase):
         else:
             parent_item = await self._repo.read_item(item.parent_uuid)
 
+        await self._repo.delete_item(uuid)
+
         return parent_item

@@ -22,7 +22,7 @@
         <div id="alerts"></div>
 
         <a href="javascript:void(0)"
-           onclick="deleteItem('{{ request.url_for('api_delete_item') }}')"
+           onclick="deleteItem('{{ request.url_for('api_delete_item', uuid=item.uuid) }}')"
            title="Delete item"
            class="button">Delete item with all sub-items</a>
 

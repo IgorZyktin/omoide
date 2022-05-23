@@ -78,7 +78,7 @@ async def api_update_item(
     return 'not implemented'
 
 
-@router.delete('/{uuid}', status_code=http.HTTPStatus.NO_CONTENT)
+@router.delete('/{uuid}')
 async def api_delete_item(
         request: Request,
         uuid: UUID,

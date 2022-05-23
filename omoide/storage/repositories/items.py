@@ -205,7 +205,7 @@ class ItemsRepository(
             self,
             uuid: UUID,
     ) -> int:
-        """Count dependant items."""
+        """Count dependant items (including the parent itself)."""
         stmt = """
         WITH RECURSIVE nested_items AS (
             SELECT parent_uuid,
@@ -216,12 +216,15 @@ class ItemsRepository(
             SELECT i.parent_uuid,
                    i.uuid
             FROM items i
-                     INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
+                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
         )
         SELECT count(*) AS total
-        FROM nested_items
-        WHERE uuid <> :uuid;
+        FROM nested_items;
         """
 
         response = await self.db.fetch_one(stmt, {'uuid': uuid})
+
+        if response is None:
+            return 0
+
         return response['total']
