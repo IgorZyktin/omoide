@@ -26,12 +26,14 @@ async def not_found(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
     return dep.templates.TemplateResponse(
@@ -53,12 +55,14 @@ async def unauthorized(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
     return dep.templates.TemplateResponse(
@@ -80,12 +84,14 @@ async def forbidden(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
     return dep.templates.TemplateResponse(
@@ -107,12 +113,14 @@ async def bad_request(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
+    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
+        'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
     return dep.templates.TemplateResponse(
