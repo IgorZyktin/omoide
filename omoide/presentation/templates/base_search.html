@@ -121,6 +121,40 @@
                      alt="Upload media"/>
                 <span class="wide-text">&nbsp;Upload media</span>
             </a>
+
+            {% if current_item %}
+                <a href="{{ url_for('upload') + parent_hint }}"
+                   title="Edit item"
+                   class="button">
+                    <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
+                         class="invert"
+                         alt="Edit item"/>
+                    <span class="wide-text">&nbsp;Edit item</span>
+                </a>
+
+                <a href="{{ url_for('upload') + parent_hint }}"
+                   title="Delete item"
+                   class="button">
+                    <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
+                         class="invert"
+                         alt="Delete item"/>
+                    <span class="wide-text">&nbsp;Delete item</span>
+                </a>
+            {% else %}
+                <span class="button-disabled">
+                    <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
+                         class="invert"
+                         alt="Edit item"/>
+                    <span class="wide-text">&nbsp;Edit item</span>
+                </span>
+
+                <span class="button-disabled">
+                    <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
+                         class="invert"
+                         alt="Delete item"/>
+                    <span class="wide-text">&nbsp;Delete item</span>
+                </span>
+            {% endif %}
         </div>
     {% endif %}
 
