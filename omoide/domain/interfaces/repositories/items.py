@@ -60,3 +60,10 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             uuid: UUID,
     ) -> None:
         """Delete item with given UUID."""
+
+    @abc.abstractmethod
+    async def count_children(
+            self,
+            uuid: UUID,
+    ) -> int:
+        """Count dependant items."""

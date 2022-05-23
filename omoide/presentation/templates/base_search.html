@@ -122,7 +122,7 @@
                 <span class="wide-text">&nbsp;Upload media</span>
             </a>
 
-            {% if current_item %}
+            {% if current_item and current_item.owner_uuid == user.uuid %}
                 <a href="{{ url_for('upload') + parent_hint }}"
                    title="Edit item"
                    class="button">
@@ -132,7 +132,7 @@
                     <span class="wide-text">&nbsp;Edit item</span>
                 </a>
 
-                <a href="{{ url_for('upload') + parent_hint }}"
+                <a href="{{ url_for('app_delete_item', uuid=current_item.uuid) }}"
                    title="Delete item"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"

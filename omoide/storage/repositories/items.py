@@ -200,3 +200,28 @@ class ItemsRepository(
         DELETE FROM items WHERE uuid = :uuid;
         """
         await self.db.execute(stmt, {'uuid': uuid})
+
+    async def count_children(
+            self,
+            uuid: UUID,
+    ) -> int:
+        """Count dependant items."""
+        stmt = """
+        WITH RECURSIVE nested_items AS (
+            SELECT parent_uuid,
+                   uuid
+            FROM items
+            WHERE uuid = :uuid
+            UNION ALL
+            SELECT i.parent_uuid,
+                   i.uuid
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
+        )
+        SELECT count(*) AS total
+        FROM nested_items
+        WHERE uuid <> :uuid;
+        """
+
+        response = await self.db.fetch_one(stmt, {'uuid': uuid})
+        return response['total']

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for items.
 """
+from typing import Optional
 from uuid import UUID
 
 from omoide import domain
@@ -101,8 +102,16 @@ class DeleteItemUseCase(BaseItemUseCase):
             self,
             user: domain.User,
             uuid: UUID,
-    ) -> None:
+    ) -> Optional[domain.Item]:
         """Business logic."""
         await self._repo.assert_has_access(user, uuid, only_for_owner=True)
         # TODO(i.zyktin): add records to the zombies table
-        return await self._repo.delete_item(uuid)
+
+        item = await self._repo.read_item(uuid)
+
+        if item.parent_uuid is None:
+            parent_item = None
+        else:
+            parent_item = await self._repo.read_item(item.parent_uuid)
+
+        return parent_item

@@ -1,18 +1,35 @@
 # -*- coding: utf-8 -*-
 """Use case for items.
 """
-from omoide import domain
+from uuid import UUID
+
+from omoide import domain, utils
+from omoide.domain import interfaces, exceptions
+
+__all__ = [
+    'AppDeleteItemUseCase',
+]
 
 
 class AppDeleteItemUseCase:
     """Use case for deleting an item."""
 
+    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
+        """Initialize instance."""
+        self._repo = repo
+
     async def execute(
             self,
             user: domain.User,
             raw_uuid: str,
-    ) -> None:
+    ) -> tuple[int, domain.Item]:
         """Business logic."""
-        await self._assert_has_access(user, uuid)
-        # TODO(i.zyktin): add records to the zombies table
-        return await self._repo.delete_item(uuid)
+        if not utils.is_valid_uuid(raw_uuid):
+            raise exceptions.IncorrectUUID(f'Bad uuid {raw_uuid!r}')
+
+        uuid = UUID(raw_uuid)
+        await self._repo.assert_has_access(user, uuid, only_for_owner=True)
+        total = await self._repo.count_children(uuid)
+        item = await self._repo.read_item(uuid)
+
+        return total + 1, item

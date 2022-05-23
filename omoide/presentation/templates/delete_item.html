@@ -1,4 +1,5 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
 
 {% block head %}
     <script type="text/javascript"
@@ -10,64 +11,20 @@
 
 {% block body %}
     <div class="narrow-block">
-        <h3>Creation of an item</h3>
-        <label for="item_name">Item name:
-            <input id="item_name"
-                   type="text"
-                   value=""
-                   class="height-auto"/>
-        </label>
+        <h3>Deletion of an item</h3>
 
-        <label for="parent_uuid">Parent UUID:
-            <input id="parent_uuid"
-                   type="text"
-                   value="{{ parent_uuid }}"
-                   class="height-auto"
-                   onchange="tryLoadingThumbnail('{{ user.uuid }}', '{{ request.url_for('static', path='empty.png') }}')"/>
-        </label>
+        {{ render_thumbnail_for_item(request, item) }}
 
-        {# TODO - uncomment this when name based search will be available #}
-        {#        <label for="parent_name">Parent name:#}
-        {#            <input id="parent_name"#}
-        {#                   type="text"#}
-        {#                   value=""#}
-        {#                   class="height-auto"/>#}
-        {#        </label>#}
-
-        <div class="parent_thumbnail">
-            <img id="item_thumbnail"
-                 src="{{ request.url_for('static', path='empty.png') }}"
-                 alt="Parent thumbnail"/>
-        </div>
-
-        <label for="item_tags">Tags (one tag per line):<br>
-            <textarea id="item_tags" rows="10"></textarea>
-        </label>
-
-        <label for="item_permissions">Permissions (one user per line):<br>
-            <textarea id="item_permissions" rows="2"></textarea>
-        </label>
-
-        <div>
-            <input id="is_collection"
-                   type="checkbox"
-                   checked>
-            <label for="is_collection">Collection</label>
-        </div>
-
-        <div>
-            <input id="go_upload"
-                   type="checkbox"
-                   checked>
-            <label for="go_upload">Add media after creation</label>
-        </div>
-
+        <p>Target item: {{ item.name }}</p>
+        <p>Owner of the item: {{ user.name }}</p>
+        <p>You are going to delete {{ total }} element(s).</p>
+        <p><strong>This operation cannot be undone!</strong></p>
         <div id="alerts"></div>
 
         <a href="javascript:void(0)"
-           onclick="createItem('{{ request.url_for('api_create_item') }}')"
-           title="Create item"
-           class="button">Create</a>
+           onclick="deleteItem('{{ request.url_for('api_delete_item') }}')"
+           title="Delete item"
+           class="button">Delete item with all sub-items</a>
 
     </div>
 

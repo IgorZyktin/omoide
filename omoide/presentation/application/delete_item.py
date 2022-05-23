@@ -6,7 +6,7 @@ from fastapi import Depends, Request
 from starlette import status
 from starlette.responses import RedirectResponse
 
-from omoide import domain, utils
+from omoide import domain, utils, use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
 from omoide.presentation.config import config
@@ -15,10 +15,12 @@ router = fastapi.APIRouter()
 
 
 @router.get('/items/delete/{uuid}')
-async def delete_item(
+async def app_delete_item(
         request: Request,
         uuid: str,
         user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.AppDeleteItemUseCase = Depends(
+            dep.app_delete_item_use_case),
 ):
     """Delete item page."""
     if user.is_anon():  # TODO - move it to a separate decorator
@@ -39,13 +41,17 @@ async def delete_item(
     aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
+    total, item = await use_case.execute(user, uuid)
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim': aim,
+        'item': item,
         'url': request.url_for('search'),
         'uuid': uuid,
+        'total': utils.sep_digits(total),
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 

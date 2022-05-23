@@ -53,6 +53,22 @@ async function createItem(endpoint) {
     await request(endpoint, data, onCreate)
 }
 
+
+async function deleteItem(endpoint) {
+    // send command for item deletion
+
+    function onDelete(headers, result) {
+        let url = result['url']
+
+        if (!url)
+            return
+
+        window.location.href = url
+    }
+
+    await request(endpoint, {}, onDelete)
+}
+
 async function uploadItems(endpoint) {
     // send command for item creation
     let data = gatherItemParameters()

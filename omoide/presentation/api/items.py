@@ -80,6 +80,7 @@ async def api_update_item(
 
 @router.delete('/{uuid}', status_code=http.HTTPStatus.NO_CONTENT)
 async def api_delete_item(
+        request: Request,
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.DeleteItemUseCase = Depends(
@@ -87,10 +88,21 @@ async def api_delete_item(
 ):
     """Delete item."""
     try:
-        await use_case.execute(user, uuid)
+        parent_item = await use_case.execute(user, uuid)
     except exceptions.NotFound as exc:
         raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
                             detail=str(exc))
     except exceptions.Forbidden as exc:
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
+
+    if parent_item is None:
+        url = None
+    elif parent_item.is_collection:
+        url = request.url_for('browse', uuid=parent_item.uuid)
+    else:
+        url = request.url_for('preview', uuid=parent_item.uuid)
+
+    return {
+        'url': url,
+    }
