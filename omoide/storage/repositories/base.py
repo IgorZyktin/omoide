@@ -24,59 +24,6 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             if not exists:
                 return new_uuid
 
-    async def check_access(
-            self,
-            user: domain.User,
-            uuid: UUID,
-    ) -> domain.AccessStatus:
-        """Check access to the item."""
-        query = """
-        SELECT owner_uuid,
-               exists(SELECT 1
-                      FROM public_users pu
-                      WHERE pu.user_uuid = i.owner_uuid)  AS is_public,
-               (SELECT :user_uuid = ANY (cp.permissions)) AS is_permitted,
-               owner_uuid::text = :user_uuid AS is_owner
-        FROM items i
-                 LEFT JOIN computed_permissions cp ON cp.item_uuid = i.uuid
-        WHERE uuid = :item_uuid;
-        """
-
-        values = {'user_uuid': user.uuid, 'item_uuid': uuid}
-        response = await self.db.fetch_one(query, values)
-
-        if response is None:
-            return domain.AccessStatus.not_found()
-
-        return domain.AccessStatus(
-            exists=True,
-            is_public=bool(response['is_public']),
-            is_permitted=bool(response['is_permitted']),
-            is_owner=bool(response['is_owner']),
-        )
-
-    async def assert_has_access(
-            self,
-            user: domain.User,
-            uuid: UUID,
-    ) -> None:
-        """Raise if item does not exist or user has no access to it."""
-        access = await self.check_access(user, uuid)
-
-        if access.does_not_exist:
-            raise exceptions.NotFound(f'Item {uuid} does not exist')
-
-        if access.is_not_given:
-            if user.is_anon():
-                raise exceptions.Unauthorized(
-                    f'Anon user has no access to {uuid}'
-                )
-            else:
-                raise exceptions.Forbidden(
-                    f'User {user.uuid} ({user.name}) '
-                    f'has no access to {uuid}'
-                )
-
     async def user_is_public(
             self,
             owner_uuid: str,

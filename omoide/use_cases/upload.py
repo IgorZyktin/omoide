@@ -32,7 +32,7 @@ class UploadUseCase:
 
         created_uuids: list[UUID] = []
         async with self._repo.transaction():
-            await self._repo.assert_has_access(user, uuid)
+            await self._repo.assert_has_access(user, uuid, only_for_owner=True)
 
             if is_collection:
                 for file in files:

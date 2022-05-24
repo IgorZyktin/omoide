@@ -23,7 +23,6 @@ search_repository = repositories.SearchRepository(db)
 search_use_case = use_cases.SearchUseCase(search_repository)
 
 preview_repository = repositories.PreviewRepository(db)
-preview_use_case = use_cases.PreviewUseCase(preview_repository)
 
 browse_repository = repositories.BrowseRepository(db)
 browse_use_case = use_cases.BrowseUseCase(browse_repository)
@@ -91,14 +90,19 @@ async def get_current_user(
 # application related use cases -----------------------------------------------
 
 
+def app_delete_item_use_case():
+    """Get use case instance."""
+    return use_cases.AppDeleteItemUseCase(items_repository)
+
+
 def get_search_use_case():
     """Get use case instance."""
     return search_use_case
 
 
-def get_preview_use_case():
+def preview_use_case():
     """Get use case instance."""
-    return preview_use_case
+    return use_cases.PreviewUseCase(preview_repository)
 
 
 def get_browse_use_case():

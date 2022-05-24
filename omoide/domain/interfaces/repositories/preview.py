@@ -7,9 +7,13 @@ from typing import Optional
 from omoide import domain
 from omoide.domain import preview
 from omoide.domain.interfaces.repositories.base import AbsRepository
+from omoide.domain.interfaces.repositories.items import AbsItemsRepository
 
 
-class AbsPreviewRepository(AbsRepository):
+class AbsPreviewRepository(
+    AbsItemsRepository,
+    AbsRepository,
+):
     """Repository that performs all preview queries."""
 
     @abc.abstractmethod

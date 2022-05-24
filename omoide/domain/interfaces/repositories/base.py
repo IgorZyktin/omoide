@@ -3,7 +3,6 @@
 """
 import abc
 from typing import Optional
-from uuid import UUID
 
 from omoide.domain import auth, common
 
@@ -14,22 +13,6 @@ class AbsRepository(abc.ABC):
     @abc.abstractmethod
     def transaction(self):
         """Start transaction."""
-
-    @abc.abstractmethod
-    async def check_access(
-            self,
-            user: auth.User,
-            uuid: UUID,
-    ) -> common.AccessStatus:
-        """Check if user has access to the item."""
-
-    @abc.abstractmethod
-    async def assert_has_access(
-            self,
-            user: auth.User,
-            uuid: UUID,
-    ) -> None:
-        """Raise if item does not exist or user has no access to it."""
 
     @abc.abstractmethod
     async def get_location(
@@ -60,13 +43,6 @@ class AbsRepository(abc.ABC):
             user_login: str,
     ) -> Optional[auth.User]:
         """Return user or None."""
-
-    @abc.abstractmethod
-    async def read_item(
-            self,
-            item_uuid: str,
-    ) -> Optional[common.Item]:
-        """Return item or None."""
 
     @abc.abstractmethod
     async def get_item_with_position(

@@ -53,6 +53,36 @@ async function createItem(endpoint) {
     await request(endpoint, data, onCreate)
 }
 
+
+async function deleteItem(endpoint) {
+    // send command for item deletion
+    try {
+        const response = await fetch(endpoint, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            },
+        });
+
+        const result = await response.json()
+        if (response.status === 200) {
+            let url = result['url']
+
+            if (!url)
+                return
+
+            window.location.href = url
+        } else {
+            for (const problem of result['detail']) {
+                console.log(problem)
+                makeAlert(problem.msg)
+            }
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
 async function uploadItems(endpoint) {
     // send command for item creation
     let data = gatherItemParameters()
