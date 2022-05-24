@@ -15,9 +15,11 @@
 
         {{ render_thumbnail_for_item(request, item) }}
 
-        <p>Target item: {{ item.name }}</p>
-        <p>Owner of the item: {{ user.name }}</p>
+        <p>Target item: <strong>{{ item.name }}</strong>
+            <br>Owner of the item: <strong>{{ user.name }}</strong></p>
+
         <p>You are going to delete {{ total }} element(s).</p>
+
         <p><strong>This operation cannot be undone!</strong></p>
         <div id="alerts"></div>
 

@@ -18,6 +18,7 @@ class ItemsRepository(
 
     async def generate_uuid(self) -> UUID:
         """Generate new UUID4 for an item."""
+        # TODO(i.zyktin): must also check zombies table
         stmt = """
         SELECT 1 FROM items WHERE uuid = :uuid;
         """

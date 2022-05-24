@@ -65,7 +65,7 @@ async function deleteItem(endpoint) {
         });
 
         const result = await response.json()
-        if (response.status === 200 || response.status === 201) {
+        if (response.status === 200) {
             let url = result['url']
 
             if (!url)
