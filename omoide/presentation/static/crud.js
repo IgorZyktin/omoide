@@ -73,9 +73,14 @@ async function deleteItem(endpoint) {
 
             window.location.href = url
         } else {
-            for (const problem of result['detail']) {
-                console.log(problem)
-                makeAlert(problem.msg)
+            if (typeof result['detail'] === 'string') {
+                console.log(result['detail'])
+                makeAlert(result['detail'])
+            } else {
+                for (const problem of result['detail']) {
+                    console.log(problem)
+                    makeAlert(problem.msg)
+                }
             }
         }
     } catch (err) {

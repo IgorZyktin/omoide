@@ -3,10 +3,10 @@
 """
 import fastapi
 from fastapi import Depends, Request
-from starlette import status
 from starlette.responses import RedirectResponse
 
 from omoide import domain, utils, use_cases
+from omoide.domain import exceptions
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
 from omoide.presentation.config import config
@@ -23,16 +23,6 @@ async def app_delete_item(
             dep.app_delete_item_use_case),
 ):
     """Delete item page."""
-    if user.is_anon():  # TODO - move it to a separate decorator
-        raise fastapi.HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect login or password',
-            headers={'WWW-Authenticate': 'Basic realm="omoide"'},
-        )
-
-    if not utils.is_valid_uuid(uuid):
-        return RedirectResponse(request.url_for('bad_request'))
-
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,
@@ -41,7 +31,14 @@ async def app_delete_item(
     aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
-    total, item = await use_case.execute(user, uuid)
+    try:
+        total, item = await use_case.execute(user, uuid)
+    except exceptions.IncorrectUUID:
+        return RedirectResponse(request.url_for('bad_request'))
+    except exceptions.NotFound:
+        return RedirectResponse(request.url_for('not_found') + f'?q={uuid}')
+    except exceptions.Unauthorized:
+        return RedirectResponse(request.url_for('unauthorized') + f'?q={uuid}')
 
     context = {
         'request': request,
