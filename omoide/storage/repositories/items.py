@@ -202,7 +202,7 @@ class ItemsRepository(
         """
         await self.db.execute(stmt, {'uuid': uuid})
 
-    async def count_children(
+    async def count_all_children(
             self,
             uuid: UUID,
     ) -> int:

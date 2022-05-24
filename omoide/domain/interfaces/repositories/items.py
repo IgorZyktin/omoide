@@ -62,7 +62,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
         """Delete item with given UUID."""
 
     @abc.abstractmethod
-    async def count_children(
+    async def count_all_children(
             self,
             uuid: UUID,
     ) -> int:

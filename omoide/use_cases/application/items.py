@@ -29,7 +29,7 @@ class AppDeleteItemUseCase:
 
         uuid = UUID(raw_uuid)
         await self._repo.assert_has_access(user, uuid, only_for_owner=True)
-        total = await self._repo.count_children(uuid)
+        total = await self._repo.count_all_children(uuid)
         item = await self._repo.read_item(uuid)
 
         return total, item
