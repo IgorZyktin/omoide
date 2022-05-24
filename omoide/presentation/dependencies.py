@@ -25,7 +25,6 @@ search_use_case = use_cases.SearchUseCase(search_repository)
 preview_repository = repositories.PreviewRepository(db)
 
 browse_repository = repositories.BrowseRepository(db)
-browse_use_case = use_cases.BrowseUseCase(browse_repository)
 
 base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
@@ -90,7 +89,7 @@ async def get_current_user(
 # application related use cases -----------------------------------------------
 
 
-def app_delete_item_use_case():
+def app_delete_item_use_case() -> use_cases.AppDeleteItemUseCase:
     """Get use case instance."""
     return use_cases.AppDeleteItemUseCase(items_repository)
 
@@ -100,22 +99,22 @@ def get_search_use_case():
     return search_use_case
 
 
-def preview_use_case():
+def app_preview_use_case() -> use_cases.PreviewUseCase:
     """Get use case instance."""
     return use_cases.PreviewUseCase(preview_repository)
 
 
-def get_browse_use_case():
+def app_browse_use_case() -> use_cases.BrowseUseCase:
     """Get use case instance."""
-    return browse_use_case
+    return use_cases.BrowseUseCase(browse_repository)
 
 
-def home_use_case():
+def app_home_use_case() -> use_cases.HomeUseCase:
     """Get use case instance."""
     return use_cases.HomeUseCase(home_repository)
 
 
-def upload_use_case() -> use_cases.UploadUseCase:
+def app_upload_use_case() -> use_cases.UploadUseCase:
     """Get use case instance."""
     return use_cases.UploadUseCase(upload_repository)
 

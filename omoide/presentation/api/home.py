@@ -14,7 +14,7 @@ async def api_home(
         request: fastapi.Request,
         user: domain.User = fastapi.Depends(dep.get_current_user),
         use_case: use_cases.HomeUseCase = fastapi.Depends(
-            dep.home_use_case),
+            dep.app_home_use_case),
 ):
     """Return portion of items for home directory."""
     aim = domain.aim_from_params(dict(request.query_params))

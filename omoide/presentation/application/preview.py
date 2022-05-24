@@ -20,7 +20,7 @@ async def preview(
         uuid: str,
         user: auth.User = fastapi.Depends(dep.get_current_user),
         use_case: use_cases.PreviewUseCase = fastapi.Depends(
-            dep.preview_use_case
+            dep.app_preview_use_case
         ),
         response_class=HTMLResponse,
 ):

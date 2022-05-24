@@ -91,7 +91,7 @@ async def upload_post(
         collection: str = Form(default=''),
         user: domain.User = Depends(dep.get_current_user),
         files: list[UploadFile] = File(...),
-        use_case: use_cases.UploadUseCase = Depends(dep.upload_use_case),
+        use_case: use_cases.UploadUseCase = Depends(dep.app_upload_use_case),
 ):
     """Upload media page."""
     is_collection = bool(collection)

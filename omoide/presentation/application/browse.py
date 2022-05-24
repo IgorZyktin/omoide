@@ -20,8 +20,7 @@ async def browse(
         uuid: str,
         user: domain.User = fastapi.Depends(dep.get_current_user),
         use_case: use_cases.BrowseUseCase = fastapi.Depends(
-            dep.get_browse_use_case
-        ),
+            dep.app_browse_use_case),
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as collection."""
