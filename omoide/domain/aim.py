@@ -20,6 +20,7 @@ class Aim(BaseModel):
     ordered: bool
     nested: bool
     paged: bool
+    page: int
     last_seen: int
     items_per_page: int
 
@@ -32,6 +33,25 @@ class Aim(BaseModel):
     def flat(self) -> bool:
         """Return True if items must be returned only from the first layer."""
         return not self.nested
+
+    def to_url(self, **kwargs) -> str:
+        """Encode into url."""
+        values = {
+            **self.dict(),
+            **kwargs,
+        }
+
+        def _str(value: bool) -> str:
+            return 'on' if value else 'off'
+
+        return '?' + '&'.join([
+            f'ordered={_str(values["ordered"])}',
+            f'nested={_str(values["nested"])}',
+            f'paged={_str(values["paged"])}',
+            f'page={values["page"]}',
+            f'last_seen={values["last_seen"]}',
+            f'items_per_page={values["items_per_page"]}',
+        ])
 
 
 def extract_bool(
@@ -69,6 +89,7 @@ def aim_from_params(params: dict) -> Aim:
         ordered=extract_bool(params, 'ordered', False),
         nested=extract_bool(params, 'nested', False),
         paged=extract_bool(params, 'paged', False),
+        page=extract_int(params, 'page', 1),
         last_seen=extract_int(params, 'last_seen', -1),
         items_per_page=extract_int(params, 'items_per_page',
                                    constants.ITEMS_PER_PAGE),

@@ -13,7 +13,7 @@
     <div class="narrow-block">
         <h3>Deletion of an item</h3>
 
-        {{ render_thumbnail_for_item(request, item) }}
+        {{ render_thumbnail_for_item(request, item, aim) }}
 
         <p>Target item: <strong>{{ item.name }}</strong>
             <br>Owner of the item: <strong>{{ user.name }}</strong></p>

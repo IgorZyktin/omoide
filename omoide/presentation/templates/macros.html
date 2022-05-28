@@ -113,12 +113,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_paginator_by_item(request, paginator, query, uuid) %}
+{% macro render_paginator_by_item(request, paginator, query, uuid, aim) %}
     {% if paginator %}
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('browse', uuid=uuid) + query.at_page(paginator.previous_page).as_str() }}">
+                   href="{{ request.url_for('browse', uuid=uuid) + aim.to_url(page=paginator.previous_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -145,10 +145,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ request.url_for('browse', uuid=uuid) + query.at_page(page.number).as_str() }}"
+                    <a href="{{ request.url_for('browse', uuid=uuid) + aim.to_url(page=page.number) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ request.url_for('browse', uuid=uuid) + query.at_page(page.number).as_str() }}"
+                    <a href="{{ request.url_for('browse', uuid=uuid) + aim.to_url(page=page.number) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -156,7 +156,7 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('browse', uuid=uuid) + query.at_page(paginator.next_page).as_str() }}">
+                   href="{{ request.url_for('browse', uuid=uuid) + aim.to_url(page=paginator.next_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -226,7 +226,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_location(request, location) %}
+{% macro render_location(request, location, aim) %}
     {% if location is not none %}
         <div class="location">
             <h3>
@@ -236,11 +236,11 @@
                     {% endif %}
 
                     {% if pos.item.is_collection %}
-                        <a href="{{ request.url_for('browse', uuid=pos.item.uuid) }}?page={{ pos.page }}">
+                        <a href="{{ request.url_for('browse', uuid=pos.item.uuid) + aim.to_url(page=pos.page) }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% else %}
-                        <a href="{{ request.url_for('preview', uuid=pos.item.uuid) }}">
+                        <a href="{{ request.url_for('preview', uuid=pos.item.uuid) + aim.to_url() }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% endif %}
@@ -257,7 +257,35 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_thumbnail_for_item(request, item) %}
+{% macro render_simple_location(request, location, aim) %}
+    {% if location is not none %}
+        <div class="location">
+            <h3>
+                {% for item in location %}
+                    {% if not loop.first %}
+                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                    {% endif %}
+
+                    {% if loop.last %}
+                        {{ item.name }}
+                    {% else %}
+                        {% if item.is_collection %}
+                            <a href="{{ request.url_for('browse', uuid=item.uuid) + aim.to_url() }}">
+                                {{ item.name or '???' }}
+                            </a>
+                        {% else %}
+                            <a href="{{ request.url_for('preview', uuid=item.uuid) + aim.to_url() }}">
+                                {{ item.name or '???' }}
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </h3>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_thumbnail_for_item(request, item, aim) %}
     {% if item.is_collection %}
         {% set additional_style = ' env-collection' %}
     {% else %}
@@ -267,9 +295,9 @@
     <div class="envelope {{ additional_style }}">
 
         {%- if item.is_collection %}
-            <a href="{{ request.url_for('browse', uuid=item.uuid) }}">
+            <a href="{{ request.url_for('browse', uuid=item.uuid) + aim.to_url(page=1) }}">
         {% else %}
-            <a href="{{ request.url_for('preview', uuid=item.uuid) }}">
+            <a href="{{ request.url_for('preview', uuid=item.uuid) + aim.to_url(page=1) }}">
         {% endif -%}
 
         {%- if item.is_collection and item.name -%}

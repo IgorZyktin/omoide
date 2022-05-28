@@ -3,15 +3,15 @@
 
 {% block body %}
 
-    {{ render_location(request, result.location) }}
-    {{ render_paginator_by_item(request, paginator, query, uuid) }}
+    {{ render_location(request, result.location, aim) }}
+    {{ render_paginator_by_item(request, paginator, query, uuid, aim) }}
 
     <div class="envelope-container">
         {% for item in result.items %}
-            {{ render_thumbnail_for_item(request, item) }}
+            {{ render_thumbnail_for_item(request, item, aim) }}
         {% endfor %}
     </div>
 
-    {{ render_paginator_by_item(request, paginator, query, uuid) }}
+    {{ render_paginator_by_item(request, paginator, query, uuid, aim) }}
 
 {% endblock %}

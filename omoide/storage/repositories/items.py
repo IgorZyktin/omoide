@@ -229,3 +229,39 @@ class ItemsRepository(
             return 0
 
         return response['total']
+
+    async def get_simple_location(
+            self,
+            user: domain.User,
+            owner: domain.User,
+            item: domain.Item,
+    ) -> Optional[domain.SimpleLocation]:
+        """Return Location of the item (without pagination)."""
+        ancestors = await self.get_simple_ancestors(item)
+        return domain.SimpleLocation(items=ancestors + [item])
+
+    async def get_simple_ancestors(
+            self,
+            item: domain.Item,
+    ) -> list[domain.Item]:
+        """Return list of ancestors for given item."""
+        # TODO(i.zyktin): what if user has no access
+        #  to the item in the middle of dependence chain?
+
+        ancestors = []
+        item_uuid = item.parent_uuid
+
+        while True:
+            if item_uuid is None:
+                break
+
+            ancestor = await self.read_item(item_uuid)
+
+            if ancestor is None:
+                break
+
+            ancestors.append(ancestor)
+            item_uuid = ancestor.parent_uuid
+
+        ancestors.reverse()
+        return ancestors

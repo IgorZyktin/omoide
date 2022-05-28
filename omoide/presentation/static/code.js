@@ -91,6 +91,8 @@ async function dynamicallyLoadMoreItems(endpoint, container, callback) {
 
 function dynamicallyRenderMoreItems(container, items, callback) {
     // actually insert new items into response
+    let searchParams = new URLSearchParams(window.location.search)
+
     for (const item of items) {
         let ignore = callback(item);
 
@@ -105,7 +107,8 @@ function dynamicallyRenderMoreItems(container, items, callback) {
         }
 
         let link = document.createElement('a')
-        link.href = item['href']
+        searchParams.set('page', '1')
+        link.href = item['href'] + '?' + searchParams.toString()
 
         if (item.is_collection && item.name) {
             let name = document.createElement('p')

@@ -19,7 +19,7 @@ async def browse(
         request: fastapi.Request,
         uuid: str,
         user: domain.User = fastapi.Depends(dep.get_current_user),
-        use_case: use_cases.BrowseUseCase = fastapi.Depends(
+        use_case: use_cases.AppBrowseUseCase = fastapi.Depends(
             dep.app_browse_use_case),
         response_class=HTMLResponse,
 ):
@@ -34,7 +34,7 @@ async def browse(
 
     try:
         valid_uuid = infra.parse.cast_uuid(uuid)
-        result = await use_case.execute(user, valid_uuid, details)
+        result = await use_case.execute(user, valid_uuid, aim, details)
     except exceptions.IncorrectUUID:
         return RedirectResponse(request.url_for('bad_request'))
     except exceptions.NotFound:
@@ -44,13 +44,6 @@ async def browse(
     except exceptions.Forbidden:
         return RedirectResponse(request.url_for('forbidden') + f'?q={uuid}')
 
-    paginator = infra.Paginator(
-        page=result.page,
-        items_per_page=details.items_per_page,
-        total_items=result.total_items,
-        pages_in_block=constants.PAGES_IN_BLOCK,
-    )
-
     context = {
         'request': request,
         'config': config,
@@ -58,8 +51,21 @@ async def browse(
         'uuid': uuid,
         'aim': aim,
         'query': infra.query_maker.QueryWrapper(query, details),
-        'paginator': paginator,
+        'location': result.location,
+        'api_url': request.url_for('api_browse', uuid=uuid),
         'result': result,
-        'current_item': result.item,
     }
-    return dep.templates.TemplateResponse('browse.html', context)
+
+    if result.paginated:
+        template = 'browse_paginated.html'
+        paginator = infra.Paginator(
+            page=details.page,
+            items_per_page=details.items_per_page,
+            total_items=result.total_items,
+            pages_in_block=constants.PAGES_IN_BLOCK,
+        )
+        context['paginator'] = paginator
+    else:
+        template = 'browse_dynamic.html'
+
+    return dep.templates.TemplateResponse(template, context)

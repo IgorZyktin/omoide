@@ -44,6 +44,7 @@ app.include_router(profile.router)
 app.include_router(upload.router)
 
 # API routes
+app.include_router(api.browse.router)
 app.include_router(api.items.router)
 app.include_router(api.home.router)
 

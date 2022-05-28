@@ -104,9 +104,9 @@ def app_preview_use_case() -> use_cases.PreviewUseCase:
     return use_cases.PreviewUseCase(preview_repository)
 
 
-def app_browse_use_case() -> use_cases.BrowseUseCase:
+def app_browse_use_case() -> use_cases.AppBrowseUseCase:
     """Get use case instance."""
-    return use_cases.BrowseUseCase(browse_repository)
+    return use_cases.AppBrowseUseCase(browse_repository)
 
 
 def app_home_use_case() -> use_cases.HomeUseCase:
@@ -140,3 +140,8 @@ def update_item_use_case() -> use_cases.UpdateItemUseCase:
 def delete_item_use_case() -> use_cases.DeleteItemUseCase:
     """Get use case instance."""
     return use_cases.DeleteItemUseCase(items_repository)
+
+
+def api_browse_use_case() -> use_cases.APIBrowseUseCase:
+    """Get use case instance."""
+    return use_cases.APIBrowseUseCase(browse_repository)
