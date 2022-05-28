@@ -54,6 +54,7 @@ async def browse(
         'location': result.location,
         'api_url': request.url_for('api_browse', uuid=uuid),
         'result': result,
+        'current_item': result.item,
     }
 
     if result.paginated:
