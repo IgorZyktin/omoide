@@ -169,6 +169,11 @@ textarea:focus, input:focus {
 !important;
 }
 
+.active-button:hover {
+    background-color: #98e873;
+!important;
+}
+
 .button:hover {
     color: var(--bright-text-color);
     background-color: #383838;

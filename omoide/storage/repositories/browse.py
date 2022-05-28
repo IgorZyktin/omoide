@@ -138,8 +138,8 @@ class BrowseRepository(
             models.Item.owner_uuid.in_(subquery)  # noqa
         ]
 
-        # if aim.nested:
-        #     conditions.append(models.Item.parent_uuid == None)  # noqa
+        if aim.nested:
+            conditions.append(models.Item.parent_uuid == uuid)  # noqa
 
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
@@ -181,4 +181,54 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children for given UUID (for known user)."""
-        return []
+        conditions = [
+            sqlalchemy.or_(
+                models.Item.owner_uuid == user.uuid,
+                models.ComputedPermissions.permissions.any(user.uuid),
+            )
+        ]
+
+        # TODO(i.zyktin): add recursive call here
+        # if aim.nested:
+        if 1 == 1:
+            conditions.append(models.Item.parent_uuid == uuid)  # noqa
+
+        if aim.ordered:
+            conditions.append(models.Item.number > aim.last_seen)
+
+        stmt = sqlalchemy.select(
+            models.Item.uuid,
+            models.Item.parent_uuid,
+            models.Item.owner_uuid,
+            models.Item.number,
+            models.Item.name,
+            models.Item.is_collection,
+            models.Item.content_ext,
+            models.Item.preview_ext,
+            models.Item.thumbnail_ext,
+        ).select_from(
+            models.Item.__table__.join(
+                models.ComputedPermissions,
+                models.Item.uuid == models.ComputedPermissions.item_uuid,
+                isouter=True,
+            )
+        ).where(*conditions)
+
+        if aim.ordered:
+            stmt = stmt.order_by(
+                desc(models.Item.is_collection),
+                models.Item.number,
+            )
+        else:
+            stmt = stmt.order_by(func.random())
+
+        stmt = stmt.limit(aim.items_per_page)
+
+        response = await self.db.fetch_all(stmt)
+        # TODO - damn asyncpg tries to bee too smart
+        _items = [
+            domain.Item.from_map(dict(zip(row.keys(), row.values())))
+            for row in response
+        ]
+        return _items
+

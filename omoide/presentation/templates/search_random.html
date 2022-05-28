@@ -5,7 +5,7 @@
 
     <div class="envelope-container">
         {% for item in result.items %}
-            {{ render_thumbnail_for_item(request, item) }}
+            {{ render_thumbnail_for_item(request, item, aim) }}
         {% endfor %}
     </div>
 
