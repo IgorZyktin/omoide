@@ -30,8 +30,6 @@ base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
 
 upload_repository = repositories.UploadRepository(db)
-
-home_repository = repositories.HomeRepository(db)
 items_repository = repositories.ItemsRepository(db)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
@@ -111,7 +109,7 @@ def app_browse_use_case() -> use_cases.AppBrowseUseCase:
 
 def app_home_use_case() -> use_cases.HomeUseCase:
     """Get use case instance."""
-    return use_cases.HomeUseCase(home_repository)
+    return use_cases.HomeUseCase(items_repository)
 
 
 def app_upload_use_case() -> use_cases.UploadUseCase:
@@ -144,4 +142,4 @@ def delete_item_use_case() -> use_cases.DeleteItemUseCase:
 
 def api_browse_use_case() -> use_cases.APIBrowseUseCase:
     """Get use case instance."""
-    return use_cases.APIBrowseUseCase(browse_repository)
+    return use_cases.APIBrowseUseCase(items_repository)
