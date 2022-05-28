@@ -28,6 +28,10 @@
             return ignore
         }
 
+        function stopCallback() {
+            mustLoadMore = false
+        }
+
         function loadTrigger() {
             if (new Date().getTime() >= nextUpload && atTheBottom()) {
                 nextUpload = new Date().getTime() + 500; // half of a second
@@ -41,6 +45,7 @@
                     endpoint + '?' + searchParams.toString(),
                     container,
                     callback,
+                    stopCallback,
                 );
 
                 if (!atTheBottom())

@@ -68,7 +68,8 @@ function atTheBottom() {
     return scrollY + innerHeight > offsetHeight - 100
 }
 
-async function dynamicallyLoadMoreItems(endpoint, container, callback) {
+async function dynamicallyLoadMoreItems(endpoint, container,
+                                        callback, stopCallback) {
     // make request for new items if we scrolled low enough
     let scrollY = window.scrollY;
     let innerHeight = window.innerHeight;
@@ -82,14 +83,17 @@ async function dynamicallyLoadMoreItems(endpoint, container, callback) {
         })
             .then(response => response.json())
             .then(function (response) {
-                dynamicallyRenderMoreItems(container, response, callback)
+                dynamicallyRenderMoreItems(container, response,
+                    callback, stopCallback)
             }).catch(function (error) {
                 console.log(error);
+                stopCallback()
             });
     }
 }
 
-function dynamicallyRenderMoreItems(container, items, callback) {
+function dynamicallyRenderMoreItems(container, items,
+                                    callback, stopCallback) {
     // actually insert new items into response
     let searchParams = new URLSearchParams(window.location.search)
 
@@ -124,6 +128,9 @@ function dynamicallyRenderMoreItems(container, items, callback) {
         container.appendChild(envelope);
 
     }
+
+    if (items.length < searchParams.get('items_per_page'))
+        stopCallback()
 }
 
 function goToNewSearch(newSearchParams) {
