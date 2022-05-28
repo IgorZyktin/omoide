@@ -24,6 +24,7 @@ async def home(
         'config': config,
         'user': user,
         'aim': domain.aim_from_params(dict(request.query_params)),
+        'block_paginated': True,
         'api_url': request.url_for('api_home'),
     }
     return dep.templates.TemplateResponse('basic.html', context)
