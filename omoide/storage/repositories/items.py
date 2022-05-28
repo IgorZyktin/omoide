@@ -409,8 +409,8 @@ WITH RECURSIVE nested_items AS
 SELECT *
 FROM nested_items
 LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
-WHERE owner_uuid = CAST(:user_uuid AS uuid) 
-    OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions)
+WHERE (owner_uuid = CAST(:user_uuid AS uuid) 
+    OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions))
             """
             values['user_uuid'] = user.uuid
 
