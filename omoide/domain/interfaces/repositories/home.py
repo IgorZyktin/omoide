@@ -12,16 +12,9 @@ class AbsHomeRepository(AbsRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def find_home_items_for_anon(
-            self,
-            aim: aim_module.Aim,
-    ) -> list[common.Item]:
-        """Find home items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def find_home_items_for_known(
+    async def find_home_items(
             self,
             user: auth.User,
             aim: aim_module.Aim,
     ) -> list[common.Item]:
-        """Find home items for known user."""
+        """Find home items for given user."""

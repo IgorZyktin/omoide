@@ -23,8 +23,6 @@ class HomeUseCase:
     ) -> list[domain.Item]:
         """Perform request for home directory."""
         async with self._repo.transaction():
-            if user.is_anon():
-                items = await self._repo.find_home_items_for_anon(aim)
-            else:
-                items = await self._repo.find_home_items_for_known(user, aim)
+            items = await self._repo.find_home_items(user, aim)
+
         return items
