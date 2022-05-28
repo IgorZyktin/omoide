@@ -33,6 +33,19 @@ class Aim(BaseModel):
         """Return True if items must be returned only from the first layer."""
         return not self.nested
 
+    def to_url(self) -> str:
+        """Encode into url."""
+
+        def _str(value: bool) -> str:
+            return 'on' if value else 'off'
+
+        return '?' + '&'.join([
+            f'ordered={_str(self.ordered)}',
+            f'nested={_str(self.nested)}',
+            f'last_seen={self.last_seen}',
+            f'items_per_page={self.items_per_page}',
+        ])
+
 
 def extract_bool(
         params: dict,

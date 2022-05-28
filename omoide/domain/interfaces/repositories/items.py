@@ -67,3 +67,20 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             uuid: UUID,
     ) -> int:
         """Count dependant items (including the parent itself)."""
+
+    @abc.abstractmethod
+    async def get_simple_location(
+            self,
+            user: domain.User,
+            owner: domain.User,
+            item: domain.Item,
+    ) -> Optional[domain.SimpleLocation]:
+        """Return Location of the item (without pagination)."""
+
+    @abc.abstractmethod
+    async def get_complex_location(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> Optional[domain.ComplexLocation]:
+        """Return Location of the item (with pagination)."""

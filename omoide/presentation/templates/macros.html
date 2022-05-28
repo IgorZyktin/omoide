@@ -257,6 +257,34 @@
     {% endif %}
 {% endmacro %}
 
+{% macro render_simple_location(request, location, aim) %}
+    {% if location is not none %}
+        <div class="location">
+            <h3>
+                {% for item in location %}
+                    {% if not loop.first %}
+                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                    {% endif %}
+
+                    {% if loop.last %}
+                        {{ item.name }}
+                    {% else %}
+                        {% if item.is_collection %}
+                            <a href="{{ request.url_for('browse', uuid=item.uuid) + aim.to_url() }}">
+                                {{ item.name or '???' }}
+                            </a>
+                        {% else %}
+                            <a href="{{ request.url_for('preview', uuid=item.uuid) + aim.to_url() }}">
+                                {{ item.name or '???' }}
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </h3>
+        </div>
+    {% endif %}
+{% endmacro %}
+
 {% macro render_thumbnail_for_item(request, item) %}
     {% if item.is_collection %}
         {% set additional_style = ' env-collection' %}

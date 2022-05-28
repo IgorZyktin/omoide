@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
+from uuid import UUID
+
+import sqlalchemy
+from sqlalchemy import desc, func
+
 from omoide import domain
 from omoide.domain import interfaces
+from omoide.storage.database import models
 from omoide.storage.repositories import base
 from omoide.storage.repositories import items
 
@@ -119,3 +125,60 @@ class BrowseRepository(
 
         response = await self.db.fetch_one(query, values)
         return int(response['total_items'])
+
+    async def dynamic_children_for_anon(
+            self,
+            uuid: UUID,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Load all children for given UUID (for Anon)."""
+        subquery = sqlalchemy.select(models.PublicUsers.user_uuid)
+        conditions = [
+            models.Item.parent_uuid == uuid,
+            models.Item.owner_uuid.in_(subquery)  # noqa
+        ]
+
+        # if aim.nested:
+        #     conditions.append(models.Item.parent_uuid == None)  # noqa
+
+        if aim.ordered:
+            conditions.append(models.Item.number > aim.last_seen)
+
+        stmt = sqlalchemy.select(
+            models.Item.uuid,
+            models.Item.parent_uuid,
+            models.Item.owner_uuid,
+            models.Item.number,
+            models.Item.name,
+            models.Item.is_collection,
+            models.Item.content_ext,
+            models.Item.preview_ext,
+            models.Item.thumbnail_ext,
+        ).where(*conditions)
+
+        if aim.ordered:
+            stmt = stmt.order_by(
+                desc(models.Item.is_collection),
+                models.Item.number,
+            )
+        else:
+            stmt = stmt.order_by(func.random())
+
+        stmt = stmt.limit(aim.items_per_page)
+
+        response = await self.db.fetch_all(stmt)
+        # TODO - damn asyncpg tries to bee too smart
+        _items = [
+            domain.Item.from_map(dict(zip(row.keys(), row.values())))
+            for row in response
+        ]
+        return _items
+
+    async def dynamic_children_for_known(
+            self,
+            user: domain.User,
+            uuid: UUID,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Load all children for given UUID (for known user)."""
+        return []
