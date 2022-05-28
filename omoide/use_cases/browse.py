@@ -119,7 +119,7 @@ class AppBrowseUseCase:
 class APIBrowseUseCase:
     """Use case for browse (api)."""
 
-    def __init__(self, repo: interfaces.AbsBrowseRepository) -> None:
+    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
         """Initialize instance."""
         self._repo = repo
 
@@ -135,9 +135,18 @@ class APIBrowseUseCase:
             return []
 
         async with self._repo.transaction():
-            if user.is_anon():
-                items = await self._repo.dynamic_children_for_anon(uuid, aim)
+            if aim.nested:
+                items = await self._repo.simple_find_items_to_browse(
+                    user=user,
+                    uuid=uuid,
+                    aim=aim,
+                )
+
             else:
-                items = await self._repo.dynamic_children_for_known(user,
-                                                                    uuid, aim)
+                items = await self._repo.complex_find_items_to_browse(
+                    user=user,
+                    uuid=uuid,
+                    aim=aim,
+                )
+
         return items

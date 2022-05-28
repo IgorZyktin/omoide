@@ -2,7 +2,6 @@
 """Repository that performs all browse queries.
 """
 import abc
-from uuid import UUID
 
 from omoide import domain
 from omoide.domain import common
@@ -47,20 +46,3 @@ class AbsBrowseRepository(
             item_uuid: str,
     ) -> int:
         """Count all children with all required fields (and access)."""
-
-    @abc.abstractmethod
-    async def dynamic_children_for_anon(
-            self,
-            uuid: UUID,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Load all children for given UUID (for Anon)."""
-
-    @abc.abstractmethod
-    async def dynamic_children_for_known(
-            self,
-            user: domain.User,
-            uuid: UUID,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Load all children for given UUID (for known user)."""

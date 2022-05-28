@@ -76,3 +76,21 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
+
+    @abc.abstractmethod
+    async def simple_find_items_to_browse(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items to browse depending on parent (simple)."""
+
+    @abc.abstractmethod
+    async def complex_find_items_to_browse(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items to browse depending on parent (including inheritance)."""
