@@ -4,13 +4,14 @@
 {% block body %}
     {{ render_simple_location(request, location, aim) }}
     <div class="envelope-container"></div>
-        <script>
+    <script>
         let container = document.querySelector('.envelope-container');
         let endpoint = '{{ api_url }}';
         let searchParams = new URLSearchParams(window.location.search);
         let lastSeen = -1;
         let nextUpload = new Date().getTime();
         let mustLoadMore = true;
+        let mustStop = false;
         let alreadySeen = new Set();
 
         function callback(item) {
@@ -29,7 +30,18 @@
         }
 
         function stopCallback() {
-            mustLoadMore = false
+            if (!mustStop) {
+                let jump = document.createElement('a')
+                let linkText = document.createTextNode('Jump to top');
+                jump.classList.add('location')  // FIXME
+                jump.appendChild(linkText);
+                jump.title = 'Scroll back to top';
+                jump.onclick = () => {
+                    document.body.scrollTop = document.documentElement.scrollTop = 0;
+                }
+                document.body.appendChild(jump);
+            }
+            mustStop = true
         }
 
         function loadTrigger() {
@@ -40,7 +52,7 @@
         }
 
         function loadAction() {
-            if (mustLoadMore) {
+            if (mustLoadMore && !mustStop) {
                 dynamicallyLoadMoreItems(
                     endpoint + '?' + searchParams.toString(),
                     container,
