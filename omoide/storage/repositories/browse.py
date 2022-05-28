@@ -231,4 +231,3 @@ class BrowseRepository(
             for row in response
         ]
         return _items
-
