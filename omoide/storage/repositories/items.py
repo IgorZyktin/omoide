@@ -321,10 +321,7 @@ class ItemsRepository(
             )
 
         if aim.ordered:
-            stmt = stmt.order_by(
-                sqlalchemy.desc(models.Item.is_collection),
-                models.Item.number,
-            )
+            stmt = stmt.order_by(models.Item.number)
         else:
             stmt = stmt.order_by(sqlalchemy.func.random())
 
@@ -422,7 +419,7 @@ WHERE owner_uuid = CAST(:user_uuid AS uuid)
             values['last_seen'] = aim.last_seen
 
         if aim.ordered:
-            stmt += ' ORDER BY is_collection DESC, number'
+            stmt += ' ORDER BY number'
         else:
             stmt += ' ORDER BY random()'
 
