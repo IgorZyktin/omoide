@@ -37,7 +37,10 @@ async def login(
 
     new_user = await use_case.execute(credentials, authenticator)
 
-    if new_user.is_anon():
+    # TODO - temporarily avoid logging in test user
+    not_dev = user.login == 'test' and config.omoide_env != 'dev'
+
+    if new_user.is_anon() or not_dev:
         raise fastapi.HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect login or password',
