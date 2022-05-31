@@ -4,20 +4,22 @@
 import http
 
 import fastapi
+from fastapi import Request, Depends
 from fastapi.responses import HTMLResponse
 
 from omoide import domain
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/not_found')
 async def not_found(
-        request: fastapi.Request,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Show <not found> page."""
@@ -45,8 +47,9 @@ async def not_found(
 
 @router.get('/unauthorized')
 async def unauthorized(
-        request: fastapi.Request,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Show <unauthorized> page."""
@@ -74,8 +77,9 @@ async def unauthorized(
 
 @router.get('/forbidden')
 async def forbidden(
-        request: fastapi.Request,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Show <forbidden> page."""
@@ -103,8 +107,9 @@ async def forbidden(
 
 @router.get('/bad_request')
 async def bad_request(
-        request: fastapi.Request,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Show <bad request> page."""

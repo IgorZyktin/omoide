@@ -2,6 +2,7 @@
 """Browse related routes.
 """
 import fastapi
+from fastapi import Depends, Request
 from fastapi.responses import RedirectResponse, HTMLResponse
 
 from omoide import domain
@@ -9,18 +10,18 @@ from omoide import use_cases
 from omoide.domain import exceptions
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/browse/{uuid}')
 async def browse(
-        request: fastapi.Request,
+        request: Request,
         uuid: str,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
-        use_case: use_cases.AppBrowseUseCase = fastapi.Depends(
-            dep.app_browse_use_case),
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.AppBrowseUseCase = Depends(dep.app_browse_use_case),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as collection."""

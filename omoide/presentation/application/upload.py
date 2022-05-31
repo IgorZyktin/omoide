@@ -6,13 +6,14 @@ from uuid import UUID
 
 import fastapi
 from fastapi import Depends, Request, UploadFile, Form, File, HTTPException
+from fastapi.responses import HTMLResponse
 from starlette import status
 
 from omoide import domain, use_cases, utils
 from omoide.domain import exceptions
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
@@ -22,6 +23,8 @@ async def upload(
         request: Request,
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
+        response_class=HTMLResponse,
 ):
     """Upload media page."""
     if user.is_anon():  # TODO - move it to a separate decorator
@@ -60,6 +63,8 @@ async def upload_complete(
         request: Request,
         uuid: str,
         user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
+        response_class=HTMLResponse,
 ):
     """Page that advises user to wait after upload."""
     details = infra.parse.details_from_params(
@@ -92,6 +97,8 @@ async def upload_post(
         user: domain.User = Depends(dep.get_current_user),
         files: list[UploadFile] = File(...),
         use_case: use_cases.UploadUseCase = Depends(dep.app_upload_use_case),
+        config: Config = Depends(dep.config),
+        response_class=HTMLResponse,
 ):
     """Upload media page."""
     is_collection = bool(collection)

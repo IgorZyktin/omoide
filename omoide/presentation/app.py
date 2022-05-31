@@ -7,6 +7,7 @@ import fastapi
 from fastapi.staticfiles import StaticFiles
 
 from omoide.presentation import api
+from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
 from omoide.presentation.application import auth
@@ -15,7 +16,6 @@ from omoide.presentation.application import profile
 from omoide.presentation.application import search
 from omoide.presentation.application import special
 from omoide.presentation.application import upload
-from omoide.presentation.config import config
 
 app = fastapi.FastAPI(
     openapi_url=None,
@@ -61,7 +61,7 @@ app.mount(
 )
 
 # TODO(i.zyktin): remove after nginx container setup
-if config.omoide_env == 'dev':
+if app_config.get_config().env == 'dev':
     app.mount(
         '/content',
         StaticFiles(directory='o:\\content\\'),

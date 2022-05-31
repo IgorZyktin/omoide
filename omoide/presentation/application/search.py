@@ -2,15 +2,17 @@
 """Search related routes.
 """
 import fastapi
+from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import use_cases
-from omoide.presentation import dependencies, constants
+from omoide.presentation import constants
+from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
 from omoide.presentation import utils
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
@@ -19,11 +21,10 @@ templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 @router.get('/search')
 async def search(
-        request: fastapi.Request,
-        user: domain.User = fastapi.Depends(dependencies.get_current_user),
-        use_case: use_cases.SearchUseCase = fastapi.Depends(
-            dependencies.get_search_use_case
-        ),
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.SearchUseCase = Depends(dep.get_search_use_case),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Main page of the application."""
@@ -61,17 +62,15 @@ async def search(
         'result': result,
     }
 
-    return dependencies.templates.TemplateResponse(template, context)
+    return dep.templates.TemplateResponse(template, context)
 
 
 @router.get('/api/random/{items_per_page}')
 async def api_random(
-        request: fastapi.Request,
+        request: Request,
         items_per_page: int,
-        user: domain.User = fastapi.Depends(dependencies.get_current_user),
-        use_case: use_cases.SearchUseCase = fastapi.Depends(
-            dependencies.get_search_use_case
-        ),
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.SearchUseCase = Depends(dep.get_search_use_case),
 ):
     """Return portion of random items."""
     # TODO - random can return repeating items
