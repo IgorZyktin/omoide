@@ -8,7 +8,7 @@ from starlette import status
 from omoide import domain, utils
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra, constants
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
@@ -18,6 +18,7 @@ async def create_item(
         request: Request,
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
 ):
     """Create item page."""
     if user.is_anon():  # TODO - move it to a separate decorator

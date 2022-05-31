@@ -2,11 +2,13 @@
 """Hope page related routes.
 """
 import fastapi
+from fastapi import Depends, Request
+from fastapi.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
 from omoide import domain
 from omoide.presentation import dependencies as dep
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
@@ -15,8 +17,10 @@ templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 @router.get('/')
 async def home(
-        request: fastapi.Request,
+        request: Request,
         user: domain.User = fastapi.Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
+        response_class=HTMLResponse,
 ):
     """Home endpoint for user."""
     context = {

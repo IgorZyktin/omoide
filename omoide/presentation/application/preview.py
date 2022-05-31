@@ -2,6 +2,7 @@
 """Preview related routes.
 """
 import fastapi
+from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from omoide import use_cases, domain
@@ -9,19 +10,18 @@ from omoide.domain import auth, exceptions
 from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
-from omoide.presentation.config import config
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/preview/{uuid}')
 async def preview(
-        request: fastapi.Request,
+        request: Request,
         uuid: str,
-        user: auth.User = fastapi.Depends(dep.get_current_user),
-        use_case: use_cases.PreviewUseCase = fastapi.Depends(
-            dep.app_preview_use_case
-        ),
+        user: auth.User = Depends(dep.get_current_user),
+        use_case: use_cases.PreviewUseCase = Depends(dep.app_preview_use_case),
+        config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
     """Browse contents of a single item as one object."""

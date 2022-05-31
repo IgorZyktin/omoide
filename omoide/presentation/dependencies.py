@@ -13,10 +13,11 @@ from omoide import use_cases
 from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.presentation import infra
-from omoide.presentation.config import config
+from omoide.presentation import app_config
 from omoide.storage import repositories
 
-db = Database(config.omoide_db_url)
+config = app_config.init()
+db = Database(config.db_url)
 current_authenticator = infra.BcryptAuthenticator(complexity=4)  # minimal
 
 search_repository = repositories.SearchRepository(db)
@@ -59,6 +60,11 @@ def get_credentials(
             return HTTPBasicCredentials(username=username, password=password)
 
     return anon
+
+
+def config() -> app_config.Config:
+    """Get config instance."""
+    return app_config.get_config()
 
 
 def get_auth_use_case():

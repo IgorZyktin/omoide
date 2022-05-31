@@ -3,13 +3,16 @@
 """
 
 import fastapi
+from fastapi import Request, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 from starlette import status
 
 from omoide import domain, use_cases
 from omoide.domain import interfaces
-from omoide.presentation import dependencies, infra, constants
-from omoide.presentation.config import config
+from omoide.presentation import dependencies as dep
+from omoide.presentation import infra, constants
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 security = HTTPBasic(realm='omoide')
@@ -17,28 +20,26 @@ security = HTTPBasic(realm='omoide')
 
 @router.get('/login')
 async def login(
-        request: fastapi.Request,
-        user: domain.User = fastapi.Depends(dependencies.get_current_user),
-        credentials: HTTPBasicCredentials = fastapi.Depends(security),
-        authenticator: interfaces.AbsAuthenticator = fastapi.Depends(
-            dependencies.get_authenticator,
-        ),
-        use_case: use_cases.AuthUseCase = fastapi.Depends(
-            dependencies.get_auth_use_case,
-        ),
-        response_class=fastapi.responses.RedirectResponse,
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        credentials: HTTPBasicCredentials = Depends(security),
+        authenticator: interfaces.AbsAuthenticator = Depends(
+            dep.get_authenticator),
+        use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
+        config: Config = Depends(dep.config),
+        response_class=RedirectResponse,
 ):
     """Ask user for login and password."""
     url = request.url_for('search')
 
     if not user.is_anon():
         # already logged in
-        return fastapi.responses.RedirectResponse(url)
+        return RedirectResponse(url)
 
     new_user = await use_case.execute(credentials, authenticator)
 
     # TODO - temporarily avoid logging in test user
-    not_dev = user.login == 'test' and config.omoide_env != 'dev'
+    not_dev = user.login == 'test' and config.env != 'dev'
 
     if new_user.is_anon() or not_dev:
         raise fastapi.HTTPException(
@@ -47,13 +48,14 @@ async def login(
             headers={'WWW-Authenticate': 'Basic realm="omoide"'},
         )
 
-    return fastapi.responses.RedirectResponse(url)
+    return RedirectResponse(url)
 
 
 @router.get('/logout')
 async def logout(
-        request: fastapi.Request,
-        response_class=fastapi.responses.HTMLResponse,
+        request: Request,
+        config: Config = Depends(dep.config),
+        response_class=HTMLResponse,
 ):
     """Clear authorization."""
     details = infra.parse.details_from_params(
@@ -73,7 +75,7 @@ async def logout(
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 
-    return dependencies.templates.TemplateResponse(
+    return dep.templates.TemplateResponse(
         name='logout.html',
         context=context,
         status_code=401,
