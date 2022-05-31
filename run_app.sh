@@ -1,3 +1,3 @@
 #!/bin/bash
 source venv/bin/activate
-uvicorn omoide.presentation.app:app --port 8080
+python3 -m omoide.run_app
