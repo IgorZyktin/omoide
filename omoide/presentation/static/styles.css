@@ -164,16 +164,6 @@ textarea:focus, input:focus {
     border: 1px solid black;
 }
 
-.active-button {
-    background-color: #47bd0f;
-!important;
-}
-
-.active-button:hover {
-    background-color: #98e873;
-!important;
-}
-
 .button:hover {
     color: var(--bright-text-color);
     background-color: #383838;
