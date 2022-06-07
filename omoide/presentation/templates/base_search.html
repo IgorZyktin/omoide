@@ -45,15 +45,27 @@
             <span class="wide-text">&nbsp;Search</span>
         </a>
 
-        <a href="javascript:void(0)"
-           title="Toggle random"
-           onclick="toggleOrdered()"
-           class="button{{ ' active-button' if aim.ordered else '' }}">
-            <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
-                 class="invert"
-                 alt="Toggle ordered"/>
-            <span class="wide-text">&nbsp;Ordered</span>
-        </a>
+        {% if aim.ordered %}
+            <a href="javascript:void(0)"
+               title="Show items ordered"
+               onclick="toggleOrdered()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
+                     class="invert"
+                     alt="Show items ordered"/>
+                <span class="wide-text">&nbsp;Ordered</span>
+            </a>
+        {% else %}
+            <a href="javascript:void(0)"
+               title="Show items in random order"
+               onclick="toggleOrdered()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
+                     class="invert"
+                     alt="Show items in random order"/>
+                <span class="wide-text">&nbsp;Random</span>
+            </a>
+        {% endif %}
 
         <a href="javascript:void(0)"
            title="Toggle nested"
