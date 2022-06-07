@@ -67,15 +67,27 @@
             </a>
         {% endif %}
 
-        <a href="javascript:void(0)"
-           title="Toggle nested"
-           onclick="toggleNested()"
-           class="button{{ ' active-button' if aim.nested else '' }}">
-            <img src="{{ request.url_for('static', path='ic_device_hub_24px.svg') }}"
-                 class="invert"
-                 alt="Toggle nested"/>
-            <span class="wide-text">&nbsp;Nested</span>
-        </a>
+        {% if aim.nested %}
+            <a href="javascript:void(0)"
+               title="Show only top level items"
+               onclick="toggleNested()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                     class="invert"
+                     alt="Show only top level items"/>
+                <span class="wide-text">&nbsp;Nested</span>
+            </a>
+        {% else %}
+            <a href="javascript:void(0)"
+               title="Show albums same way as separate pages"
+               onclick="toggleNested()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                     class="invert"
+                     alt="Show albums same way as separate pages"/>
+                <span class="wide-text">&nbsp;Flat</span>
+            </a>
+        {% endif %}
 
         {% if block_paginated %}
             <span class="button-disabled">
