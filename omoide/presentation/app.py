@@ -61,7 +61,13 @@ app.mount(
 )
 
 # TODO(i.zyktin): remove after nginx container setup
-if app_config.get_config().env == 'dev':
+if app_config.get_config().env == 'dev-linux':
+    app.mount(
+        '/content',
+        StaticFiles(directory='/home/igor/omoide/content'),
+        name='content',
+    )
+elif app_config.get_config().env == 'dev':
     app.mount(
         '/content',
         StaticFiles(directory='o:\\content\\'),
