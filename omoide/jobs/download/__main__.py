@@ -1,46 +1,44 @@
 # -*- coding: utf-8 -*-
-"""Downloader job.
+"""Download job.
 
-Transfers converted media onto local storage.
+By default, considers that database stores some
+processed images which were put there by convert job.
+
+We're using database as medium to transfer files from user to the server.
 """
-import os
 from pathlib import Path
 
 import click
-import sqlalchemy
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from omoide import utils
+from omoide.jobs import common
 from omoide.jobs.download import database
 from omoide.jobs.download import download
-from omoide.jobs.download import filesystem
+from omoide.jobs.job_config import JobConfig
 
 
 @click.command()
-@click.option('--limit', default=-1,
-              help='Maximum amount of items to process')
-@click.option('--strict/--no-strict', default=False,
-              help='Raise exception in case of any problems')
-def main(limit: int, strict: bool):
-    """Converter entry point."""
-    url = os.environ.get('OMOIDE_DB_URL')
+@click.option('--silent/--no-silent',
+              default=False,
+              help='Print output during work or just do it silently')
+@click.option('--dry-run/--no-dry-run',
+              default=True,
+              help='Run script, but do not save changes')
+@click.option('--batch-size',
+              default=50,
+              help='Process not more than this amount of objects at once')
+@click.option('--limit',
+              default=-1,
+              help='Maximum amount of items to process (-1 for infinity)')
+def main(**kwargs):
+    """Entry point."""
+    config = JobConfig()
+    common.apply_cli_kwargs_to_config(config, **kwargs)
 
-    if url is None:
-        raise ValueError('No database url supplied')
-
-    folders = os.environ.get('OMOIDE_SAVE_TO_FOLDERS')
-
-    if folders is None:
-        raise ValueError('No folders to save given')
-
-    paths = filesystem.extract_paths(folders)
-    engine = sqlalchemy.create_engine(url, echo=False)
-
-    try:
-        _download(engine, paths, limit, strict)
-    finally:
-        engine.dispose()
+    with common.temporary_engine(config) as engine:
+        _download(config, engine)
 
 
 def _download(

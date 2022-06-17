@@ -3,6 +3,7 @@
 """
 import os
 import sys
+from typing import Any
 
 from pydantic import BaseSettings, validator
 
@@ -21,16 +22,17 @@ class Config(BaseSettings):
         possible to treat hot storage same way as cold and store there
         everything (full copy).
     """
-    db_url: str  # regular database URI
-    hot_folder: str  # path to storage with fast response
-    cold_folder: str  # path to storage with regular response
-    copy_all: bool  # flag that forces script to use hot storage as a cold one
+    db_url: str  # Regular database URI
+    hot_folder: str  # Path to storage with fast response
+    cold_folder: str  # Path to storage with regular response
+    copy_all: bool  # Flag that forces script to use hot storage as a cold one
 
+    @classmethod
     @validator('hot_folder', 'cold_folder')
-    def ensure_folder_exists(cls, v):
-        if not os.path.exists(v):
-            sys.exit(f'Folder {v} does not exist')
-        return v
+    def ensure_folder_exists(cls, value: Any):
+        if not os.path.exists(value):
+            sys.exit(f'Folder {value} does not exist')
+        return value
 
     class Config:
         env_prefix = 'omoide_'
@@ -42,6 +44,7 @@ class JobConfig(Config):
 
     Will be overwritten after start.
     """
-    silent: bool = False  # print output during work or just do it silently
-    batch_size: int = 50  # process no more than this amount of objects at once
-    limit: int = -1  # process no more that this amount of objects
+    silent: bool = False  # Print output during work or just do it silently
+    dry_run: bool = True  # Run script, but do not save changes
+    batch_size: int = 50  # Process not more than this amount of objects at once
+    limit: int = -1  # Maximum amount of items to process (-1 for infinity)
