@@ -6,7 +6,7 @@ import random
 from pathlib import Path
 
 from omoide import utils
-from omoide.jobs.downloader import filesystem
+from omoide.jobs.download import filesystem
 from omoide.storage.database.models import Media
 
 

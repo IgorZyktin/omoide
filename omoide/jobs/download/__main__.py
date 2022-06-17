@@ -12,9 +12,9 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from omoide import utils
-from omoide.jobs.downloader import database
-from omoide.jobs.downloader import download
-from omoide.jobs.downloader import filesystem
+from omoide.jobs.download import database
+from omoide.jobs.download import download
+from omoide.jobs.download import filesystem
 
 
 @click.command()

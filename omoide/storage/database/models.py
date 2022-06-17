@@ -332,9 +332,9 @@ class Media(Base):
     process must perform download job and save data to actual storage device.
     """
     # TODO(i.zyktin): Theoretically, we can serve content directly from
-    #  the database during time before downloader job completes. This way it
+    #  the database during time before download job completes. This way it
     #  will be 50x times slower than from the filesystem but could give better
-    #  user experience. Especially if downloader job will launch rarely
+    #  user experience. Especially if download job will launch rarely
     #  (like every 30 minutes or so).
     __tablename__ = 'media'
 

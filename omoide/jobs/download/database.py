@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Database operations for downloader job.
+"""Database operations for download job.
 """
 import sqlalchemy
 from sqlalchemy.engine import Engine
