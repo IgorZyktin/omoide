@@ -83,3 +83,4 @@ class RawMedia(BaseModel):
     filename: str
     content: bytes
     features: list[str]
+    signature: str
