@@ -118,6 +118,7 @@ def download_items_from_database_to_storages(
 
                     if not config.dry_run:
                         action.finalize_media(session, media, result)
+                        session.commit()
 
                     if result == 'ok':
                         status = 'done'
