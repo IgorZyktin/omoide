@@ -91,6 +91,7 @@ def consider_media_as_done(media: models.Media) -> None:
     media.status = 'done'
     media.content = b''
     media.processed_at = utils.now()
+    media.attempts += 1
 
     if media.type == 'content':
         media.item.content_ext = media.ext
@@ -126,6 +127,7 @@ def consider_media_as_failed(
         session.add(new_attempt)
 
     media.content = b''
+    media.attempts += 1
 
 
 def finalize_media(
