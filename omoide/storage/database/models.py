@@ -50,6 +50,18 @@ class User(Base):
                                        back_populates='owner',
                                        uselist=True)
 
+    # Feature: Add email field so users could change passwords by themselves
+
+    # Feature: Add registered_at field to be able
+    # to see how long user uses the site
+
+    # Feature: Add last_login field to know when user was active last time
+
+    # Feature: Add is_confirmed field to switch between demo and active users.
+    # Activation links can be sent via emails
+
+    # Feature: Add field is_admin to be able to create superusers
+
 
 class PublicUsers(Base):
     """List of users who demonstrate their content publicly."""
@@ -235,9 +247,43 @@ class Meta(Base):
                               back_populates='meta',
                               uselist=False)
 
+    # Feature: drop this table, it's useless
+
+# Feature: make new Metainfo table with specific fields.
+# Possible structure:
+# class Meta(Base):
+#   item_uuid: ...
+#   --- automatic ---
+#   width: ...
+#   height: ...
+#   duration: ...
+#   resolution: ...
+#   size: ...
+#   \type: ...
+#   added_at: ...
+#   updated_at: ...
+#   --- manual ---
+#   author: ...
+#   author_url: ...
+#   saved_from_url: ...
+#   description: ...
+
+
+# Feature: Create Exif table and store there exif tags for images
+# Possible structure:
+# class Meta(Base):
+#   item_uuid: ...
+#   data = ...
+
 
 class RawMedia(Base):
-    """Initial content from user, not processed at all."""
+    """Initial content from user, not processed at all.
+
+    Content is not trustworthy, must be handled carefully.
+    At this moment we only got some bytes from user and know the filename.
+    Maybe there is a zip bomb inside. Also note that content is not loaded yet,
+    but the item is already exist (and can be seen with empty thumbnail).
+    """
     __tablename__ = 'raw_media'
 
     # primary and foreign keys ------------------------------------------------
@@ -270,9 +316,26 @@ class RawMedia(Base):
                               back_populates='raw_media',
                               uselist=False)
 
+    # Feature: Add 'attempts' field in case if we could not handle media in
+    # adequate amount of attempts. Also tie this table to the Signatures table,
+    # in case if nasty user will try to load something like zip-bomb again
+    # and again. Without this measure user theoretically could take down c
+    # luster of workers of any size since workers will die on zip-bomb one
+    # by one repeatedly.
+
 
 class Media(Base):
-    """Converted content from user."""
+    """Converted content from user.
+
+    Fully processed user content. If it's an image then its already converted
+    to a desired size. At this point we're using database as a storage. Worker
+    process must perform download job and save data to actual storage device.
+    """
+    # TODO(i.zyktin): Theoretically, we can serve content directly from
+    #  the database during time before downloader job completes. This way it
+    #  will be 50x times slower than from the filesystem but could give better
+    #  user experience. Especially if downloader job will launch rarely
+    #  (like every 30 minutes or so).
     __tablename__ = 'media'
 
     # primary and foreign keys ------------------------------------------------
@@ -301,3 +364,11 @@ class Media(Base):
                               passive_deletes=True,
                               back_populates='media',
                               uselist=False)
+
+
+# Feature: Add table for signatures. This will allow us to distinguish same
+# bad payloads and search for duplicates. Someday we could put ImageMatch here.
+# Possible structure:
+# class Signature(Base):
+#   item_uuid: ...
+#   md5: ...
