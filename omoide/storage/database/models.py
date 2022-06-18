@@ -308,6 +308,7 @@ class RawMedia(Base):
     filename = sa.Column(sa.String(length=MEDIUM), nullable=False)
     content = sa.Column(pg.BYTEA, nullable=False)
     features = sa.Column(pg.ARRAY(sa.Text), nullable=False)
+    attempts = sa.Column(sa.Integer, nullable=False, server_default='0')
 
     # relations ---------------------------------------------------------------
 
@@ -327,7 +328,7 @@ class RawMedia(Base):
 class Media(Base):
     """Converted content from user.
 
-    Fully processed user content. If it's an image then its already converted
+    Fully processed user content. If it's an image then it's already converted
     to a desired size. At this point we're using database as a storage. Worker
     process must perform download job and save data to actual storage device.
     """
@@ -340,14 +341,17 @@ class Media(Base):
 
     # primary and foreign keys ------------------------------------------------
 
+    id = sa.Column(sa.BigInteger,
+                   primary_key=True,
+                   autoincrement=True,
+                   nullable=False)
+
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
-                                primary_key=True,
                                 nullable=False,
                                 index=True)
-    type = sa.Column(sa.Enum('content', 'preview', 'thumbnail', name='type'),
-                     primary_key=True)
+    type = sa.Column(sa.Enum('content', 'preview', 'thumbnail', name='type'))
 
     # fields ------------------------------------------------------------------
 
@@ -357,6 +361,7 @@ class Media(Base):
                        index=True)
     ext = sa.Column(sa.String(length=SMALL), nullable=False)
     content = sa.Column(pg.BYTEA, nullable=False)
+    attempts = sa.Column(sa.Integer, nullable=False, server_default='0')
 
     # relations ---------------------------------------------------------------
 

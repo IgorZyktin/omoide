@@ -107,6 +107,7 @@ class UploadUseCase:
             filename=filename,
             content=content,
             features=features,
+            signature='',  # TODO: add actual signature calculation
         )
         await self._repo.save_raw_media(raw_media)
         return True
