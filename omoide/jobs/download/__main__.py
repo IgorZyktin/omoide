@@ -85,8 +85,14 @@ def download_items_from_database_to_storages(
     start = utils.now()
 
     output.table_line(*COLUMNS)
-    output.table_row('UUID', 'Type', 'Size', 'Status', 'Location',
-                     row_formatter=row_formatter)
+    output.table_row(
+        'UUID',
+        'Type',
+        'Size',
+        'Status',
+        'Location',
+        row_formatter=row_formatter,
+    )
     output.table_line(*COLUMNS)
 
     for batch in jobs.database.get_candidates(config, engine, action.get_media):
