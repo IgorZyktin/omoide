@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from omoide import utils
 from omoide.jobs.common import filesystem
-from omoide.jobs.thumbnailer import database
+from omoide.jobs.make_thumbnails import action
 from omoide.storage.database.models import Item
 
 

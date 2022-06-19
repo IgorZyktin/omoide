@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Database operations for thumbnailer job.
+"""Database operations for make_thumbnails job.
 """
 from typing import Optional
 
