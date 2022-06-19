@@ -1,103 +1,154 @@
 # -*- coding: utf-8 -*-
 """Thumbnail generation job.
 
-Works only on collections, copies thumbnail of
-the first item as collection thumbnail.
+Works only on collections, copies thumbnail of the first item as collection
+thumbnail. Thumbnail propagation should be performed on the upload stage,
+but if something gone wrong then, this job can fix that.
 """
-import os
-import random
-import shutil
-from pathlib import Path
 
-import sqlalchemy
+import click
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from omoide import utils
-from omoide.jobs.common import filesystem
+from omoide import utils, jobs
 from omoide.jobs.make_thumbnails import action
-from omoide.storage.database.models import Item
 
 
-def main():
-    """Thumbnailer entry point."""
-    url = os.environ.get('OMOIDE_DB_URL')
+@click.command()
+@click.option('--silent/--no-silent',
+              default=False,
+              help='Print output during work or just do it silently')
+@click.option('--dry-run/--no-dry-run',
+              default=True,
+              help='Run script, but do not save changes')
+@click.option('--strict/--no-strict',
+              default=True,
+              help='Stop processing on first error or try to complete all')
+@click.option('--limit',
+              default=-1,
+              help='Maximum amount of items to process (-1 for infinity)')
+def main(**kwargs):
+    """Entry point."""
+    config = jobs.JobConfig()
+    jobs.apply_cli_kwargs_to_config(config, **kwargs)
+    output = jobs.Output(silent=config.silent)
 
-    if url is None:
-        raise ValueError('No database url supplied')
+    output.print(f'Started <MAKE THUMBNAILS> job')
+    output.print_config(config)
 
-    folders = os.environ.get('OMOIDE_SAVE_TO_FOLDERS')
-
-    if folders is None:
-        raise ValueError('No folders to save given')
-
-    paths = filesystem.extract_paths(folders)
-    engine = sqlalchemy.create_engine(url, echo=False)
-
-    try:
-        _copy_thumbnails(engine, paths)
-    finally:
-        engine.dispose()
+    with jobs.temporary_engine(config) as engine:
+        use_thumbnail_of_first_as_collection_cover(config, engine, output)
 
 
-def _copy_thumbnails(engine: Engine, paths: list[Path]) -> None:
-    """Do actual job."""
+MAXLEN_LOCATION = jobs.get_rest_of_the_terminal_width(
+    jobs.MAXLEN_UUID,
+    jobs.MAXLEN_UUID,
+    max_width=jobs.TERMINAL_WIDTH,
+)
+
+COLUMNS = [
+    jobs.MAXLEN_UUID,
+    jobs.MAXLEN_UUID,
+    jobs.MAXLEN_STATUS,
+    MAXLEN_LOCATION,
+]
+
+
+def row_formatter(uuid_parent: str, uuid_child: str,
+                  status: str, location: str) -> list[str]:
+    """Construct one row for the table."""
+    return [
+        ' ' + uuid_parent.center(jobs.MAXLEN_UUID - 2) + ' ',
+        ' ' + uuid_child.center(jobs.MAXLEN_UUID - 2) + ' ',
+        ' ' + status.center(jobs.MAXLEN_STATUS - 2) + ' ',
+        ' ' + location.ljust(MAXLEN_LOCATION - 2) + ' ',
+    ]
+
+
+def use_thumbnail_of_first_as_collection_cover(
+        config: jobs.JobConfig,
+        engine: Engine,
+        output: jobs.Output,
+) -> None:
+    """Do the actual job."""
+    copied = 0
+    failed = 0
+    start = utils.now()
+
+    output.table_line(*COLUMNS)
+    output.table_row(
+        'UUID of the collection',
+        'UUID of the first child',
+        'Status',
+        'Location',
+        row_formatter=row_formatter,
+    )
+    output.table_line(*COLUMNS)
+
     with Session(engine) as session:
-        items = database.get_items_without_thumbnail(session)
+        last_seen = -1
+        item = action.get_item_without_thumbnail(session, last_seen)
 
-        for item in items:
-            first_child = database.get_first_child(session, item)
+        while item is not None:
+            last_seen = item.number
+
+            if 0 < config.limit <= copied:
+                break
+
+            first_child = action.get_first_child_with_thumbnail(session, item)
 
             if first_child is None:
+                item = action.get_item_without_thumbnail(session, last_seen)
                 continue
 
-            done = copy_single_thumbnail(first_child, item, paths)
+            location = jobs.database.get_cached_location_for_an_item(
+                session=session,
+                item_uuid=item.uuid,
+            )
 
-            if done:
-                print(f'Copied {first_child.uuid} -> {item.uuid}')
-                session.commit()
+            try:
+                done = action.copy_thumbnail(config, item, first_child)
+            except Exception as exc:
+                failed += 1
+                if config.strict:
+                    raise
 
+                # TODO: replace it with proper logger call
+                print(f'{type(exc).__name__}: {exc}')
+            else:
+                if done:
+                    copied += 1
+                    session.commit()
+                    output.table_row(
+                        str(item.uuid),
+                        str(first_child.uuid),
+                        'Copied',
+                        utils.no_longer_than(location, MAXLEN_LOCATION - 2),
+                        row_formatter=row_formatter,
+                    )
+                else:
+                    failed += 1
+                    output.table_row(
+                        str(item.uuid),
+                        str(first_child.uuid),
+                        'Failed'.center(jobs.MAXLEN_STATUS, '!'),
+                        utils.no_longer_than(location, MAXLEN_LOCATION - 2),
+                        row_formatter=row_formatter,
+                    )
 
-def copy_single_thumbnail(
-        source: Item,
-        target: Item,
-        paths: list[Path],
-) -> bool:
-    """Perform thumbnail copy for single entry, return True on success."""
-    for path in paths:
-        if not source.thumbnail_ext:
-            return False
+            item = action.get_item_without_thumbnail(session, last_seen)
 
-        target.thumbnail_ext = source.thumbnail_ext
+    output.table_line(*COLUMNS)
 
-        source_bucket = utils.get_bucket(source.uuid)
-        target_bucket = utils.get_bucket(target.uuid)
+    if copied:
+        output.print(f'Copied files: {utils.sep_digits(copied)}')
 
-        source_filename = filesystem.create_folders_for_filename(
-            path,
-            str(source.owner_uuid),
-            'thumbnail',
-            source_bucket,
-            f'{source.uuid}.{source.thumbnail_ext}'
-        )
+    if failed:
+        output.print(f'Failed to copy: {utils.sep_digits(failed)}')
 
-        target_filename = filesystem.create_folders_for_filename(
-            path,
-            str(target.owner_uuid),
-            'thumbnail',
-            target_bucket,
-            f'{target.uuid}.{target.thumbnail_ext}'
-        )
-
-        temp_filename = source_filename + '.tmp' + str(random.randint(1, 1000))
-
-        filesystem.drop_if_exists(target_filename)
-        filesystem.drop_if_exists(temp_filename)
-
-        shutil.copyfile(source_filename, temp_filename)
-        os.rename(temp_filename, target_filename)
-
-    return True
+    stop = utils.now()
+    duration = utils.human_readable_time(int((stop - start).total_seconds()))
+    output.print(f'Time spent: {duration}')
 
 
 if __name__ == '__main__':
