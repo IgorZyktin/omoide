@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on items and their data.
 """
-from typing import Optional
+from typing import Optional, Callable, Awaitable
 from uuid import UUID, uuid4
 
 import sqlalchemy
@@ -162,6 +162,28 @@ class ItemsRepository(
 
         response = await self.db.fetch_one(stmt, {'uuid': uuid})
         return domain.Item.from_map(response) if response else None
+
+    async def read_children(
+            self,
+            uuid: UUID,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""
+        stmt = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items
+        WHERE parent_uuid = :uuid;
+        """
+
+        response = await self.db.fetch_all(stmt, {'uuid': uuid})
+        return [domain.Item.from_map(each) for each in response]
 
     async def update_item(
             self,
@@ -432,3 +454,62 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             for row in response
         ]
         return items
+
+    async def update_tags_in_children(
+            self,
+            item: domain.Item,
+    ) -> None:
+        """Apply parent tags to every item (and their children too)."""
+
+        async def _update_tags(_item: domain.Item) -> None:
+            pass
+
+        await self.apply_downwards(
+            item=item,
+            already_seen_items=set(),
+            # FIXME: use UUID here instead of str
+            skip_items={item.uuid},  # noqa
+            parent_first=True,
+            function=_update_tags,
+        )
+
+    async def apply_downwards(
+            self,
+            item: domain.Item,
+            already_seen_items: set[UUID],
+            skip_items: set[UUID],
+            parent_first: bool,
+            function: Callable[[domain.Item], Awaitable[None]],
+    ) -> None:
+        """Apply given function to every descendant item.
+
+        Use cases:
+            * We're doing something like delete. Therefore, we must
+              delete all children and then their parents.
+
+            * We're doing something like update. Therefore, we must
+              update all parents and then their children.
+        """
+        if item.uuid in already_seen_items:
+            return
+
+        # FIXME: use UUID here instead of str
+        already_seen_items.add(item.uuid)  # noqa
+
+        if parent_first and item.uuid not in skip_items:
+            await function(item)
+
+        # FIXME: use UUID here instead of str
+        children = await self.read_children(item.uuid)  # noqa
+
+        for child in children:
+            await self.apply_downwards(
+                item=child,
+                already_seen_items=already_seen_items,
+                skip_items=skip_items,
+                parent_first=parent_first,
+                function=function,
+            )
+
+        if not parent_first and item.uuid not in skip_items:
+            await function(item)

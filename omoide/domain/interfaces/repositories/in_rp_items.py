@@ -48,6 +48,12 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> Optional[domain.Item]:
         """Return item or None."""
 
+    async def read_children(
+            self,
+            uuid: UUID,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""
+
     async def update_item(
             self,
             payload: domain.UpdateItemIn,
