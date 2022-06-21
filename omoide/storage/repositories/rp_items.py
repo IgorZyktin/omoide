@@ -5,6 +5,7 @@ from typing import Optional, Callable, Awaitable
 from uuid import UUID, uuid4
 
 import sqlalchemy
+from sqlalchemy import func
 
 from omoide import domain
 from omoide.domain import exceptions
@@ -461,8 +462,16 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
 
-        async def _update_tags(_item: domain.Item) -> None:
-            pass
+        async def _update_tags(
+                _self: ItemsRepository,
+                _item: domain.Item,
+        ) -> None:
+            """Call DB function that updated everything."""
+            # Feature: this operation will recalculate same things
+            # many times. Possible place for an optimisation.
+            await _self.db.execute(
+                sqlalchemy.select(func.compute_tags(_item.uuid))
+            )
 
         await self.apply_downwards(
             item=item,
@@ -479,7 +488,8 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             already_seen_items: set[UUID],
             skip_items: set[UUID],
             parent_first: bool,
-            function: Callable[[domain.Item], Awaitable[None]],
+            function: Callable[['ItemsRepository',
+                                domain.Item], Awaitable[None]],
     ) -> None:
         """Apply given function to every descendant item.
 
@@ -497,7 +507,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         already_seen_items.add(item.uuid)  # noqa
 
         if parent_first and item.uuid not in skip_items:
-            await function(item)
+            await function(self, item)
 
         # FIXME: use UUID here instead of str
         children = await self.read_children(item.uuid)  # noqa
@@ -512,4 +522,4 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             )
 
         if not parent_first and item.uuid not in skip_items:
-            await function(item)
+            await function(self, item)
