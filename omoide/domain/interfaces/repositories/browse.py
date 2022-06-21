@@ -6,7 +6,7 @@ import abc
 from omoide import domain
 from omoide.domain import common
 from omoide.domain.interfaces.repositories.base import AbsRepository
-from omoide.domain.interfaces.repositories.items import AbsItemsRepository
+from omoide.domain.interfaces.repositories.in_rp_items import AbsItemsRepository
 
 
 class AbsBrowseRepository(

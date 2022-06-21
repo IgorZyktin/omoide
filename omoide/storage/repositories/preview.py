@@ -3,13 +3,13 @@
 """
 from typing import Optional
 
-from omoide import domain
+from omoide import domain, utils
 from omoide.domain import interfaces
-from omoide.storage.repositories import base, items
+from omoide.storage.repositories import base, rp_items
 
 
 class PreviewRepository(
-    items.ItemsRepository,
+    rp_items.ItemsRepository,
     base.BaseRepository,
     interfaces.AbsPreviewRepository,
 ):
@@ -27,7 +27,27 @@ class PreviewRepository(
         """
 
         response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
-        return domain.ExtendedItem.from_map(response) if response else None
+        if response is not None:
+            # FIXME: refactor this
+            item = domain.ExtendedItem.from_map(response)
+            query_for_tags = """
+            SELECT tags
+            FROM computed_tags
+            WHERE item_uuid = :item_uuid;
+            """
+            all_tags = await self.db.fetch_one(query_for_tags,
+                                               {'item_uuid': item_uuid})
+            tags = [
+                tag
+                for tag in all_tags['tags']
+                if all((
+                    not tag.endswith('jpg'),
+                    not utils.is_valid_uuid(tag),
+                ))
+            ]
+            item.tags = tags
+            return item
+        return None
 
     async def get_neighbours(self, item_uuid: str) -> list[str]:
         """Return uuids of all the neighbours."""

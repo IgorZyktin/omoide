@@ -48,6 +48,12 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> Optional[domain.Item]:
         """Return item or None."""
 
+    async def read_children(
+            self,
+            uuid: UUID,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""
+
     async def update_item(
             self,
             payload: domain.UpdateItemIn,
@@ -94,3 +100,10 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
+
+    @abc.abstractmethod
+    async def update_tags_in_children(
+            self,
+            item: domain.Item,
+    ) -> None:
+        """Apply parent tags to every item (and their children too)."""
