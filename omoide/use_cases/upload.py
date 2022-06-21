@@ -79,6 +79,7 @@ class UploadUseCase:
         """Create child item for given target and return uuid."""
         uuid = await self._repo.generate_uuid()
 
+        # TODO: do not use filename as item name!
         payload = domain.CreateItemIn(
             uuid=uuid,
             parent_uuid=parent_uuid,
