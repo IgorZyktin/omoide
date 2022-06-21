@@ -20,7 +20,8 @@ async def browse(
         request: Request,
         uuid: str,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.AppBrowseUseCase = Depends(dep.app_browse_use_case),
+        use_case: use_cases.AppBrowseUseCase = Depends(
+            dep.app_browse_use_case),
         config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):

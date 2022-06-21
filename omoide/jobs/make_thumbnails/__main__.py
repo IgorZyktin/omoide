@@ -33,7 +33,7 @@ def main(**kwargs):
     jobs.apply_cli_kwargs_to_config(config, **kwargs)
     output = jobs.Output(silent=config.silent)
 
-    output.print(f'Started <MAKE THUMBNAILS> job')
+    output.print('Started <MAKE THUMBNAILS> job')
     output.print_config(config)
 
     with jobs.temporary_engine(config) as engine:
