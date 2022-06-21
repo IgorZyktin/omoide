@@ -17,6 +17,7 @@ BEGIN
                i.tags
         FROM items i
                  INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
+        WHERE i.name <> ''
     )
     SELECT INTO computed_tags array_agg(DISTINCT tags) as tags
     FROM (SELECT uuid,
