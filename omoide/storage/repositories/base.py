@@ -5,7 +5,6 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from omoide import domain
-from omoide.domain import exceptions
 from omoide.storage.repositories import base_logic
 
 

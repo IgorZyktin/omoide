@@ -9,7 +9,7 @@ from omoide.storage.repositories import base, rp_items
 
 
 class PreviewRepository(
-    items.ItemsRepository,
+    rp_items.ItemsRepository,
     base.BaseRepository,
     interfaces.AbsPreviewRepository,
 ):

@@ -8,7 +8,7 @@ from omoide.storage.repositories import rp_items
 
 
 class BrowseRepository(
-    items.ItemsRepository,
+    rp_items.ItemsRepository,
     base.BaseRepository,
     interfaces.AbsBrowseRepository,
 ):
