@@ -3,7 +3,7 @@
 """
 from omoide import domain
 from omoide.domain import interfaces
-from omoide.storage.repositories import base, items
+from omoide.storage.repositories import base, rp_items
 
 
 class UploadRepository(
