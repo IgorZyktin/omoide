@@ -95,7 +95,8 @@ def download_items_from_database_to_storages(
     )
     output.table_line(*COLUMNS)
 
-    for batch in jobs.database.get_candidates(config, engine, action.get_media):
+    for batch in jobs.database.get_candidates(config, engine,
+                                              action.get_media):
         for media_id in batch:
             if config.dry_run or \
                     jobs.database.claim(engine, media_id, models.Media):

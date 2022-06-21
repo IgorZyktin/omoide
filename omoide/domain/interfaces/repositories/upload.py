@@ -4,7 +4,9 @@
 import abc
 
 from omoide import domain
-from omoide.domain.interfaces.repositories.in_rp_items import AbsItemsRepository
+from omoide.domain.interfaces.repositories.in_rp_items import (
+    AbsItemsRepository
+)
 
 
 class AbsUploadRepository(AbsItemsRepository, abc.ABC):
