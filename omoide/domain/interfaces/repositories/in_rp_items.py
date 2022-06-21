@@ -94,3 +94,10 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
+
+    @abc.abstractmethod
+    async def update_tags_in_children(
+            self,
+            item: domain.Item,
+    ) -> None:
+        """Apply parent tags to every item (and their children too)."""
