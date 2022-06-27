@@ -123,7 +123,7 @@ async function request(endpoint, payload, callback) {
 
 function isUUID(uuid) {
     let s = "" + uuid;
-    s = s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/g);
+    s = s.match(/^[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}$/g);
     return s !== null;
 }
 
