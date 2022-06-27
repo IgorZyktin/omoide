@@ -133,7 +133,7 @@ function dynamicallyRenderMoreItems(container, items,
         stopCallback()
 }
 
-function goToNewSearch(newSearchParams) {
+function reloadSearchParams(newSearchParams) {
     // redirect using new search params
     window.location.href = window.location.origin
         + window.location.pathname + '?' + newSearchParams.toString();
@@ -149,7 +149,7 @@ function toggleOrdered() {
     } else
         searchParams.set('ordered', 'on')
 
-    goToNewSearch(searchParams)
+    reloadSearchParams(searchParams)
 }
 
 function toggleNested() {
@@ -161,7 +161,7 @@ function toggleNested() {
     else
         searchParams.set('nested', 'on')
 
-    goToNewSearch(searchParams)
+    reloadSearchParams(searchParams)
 }
 
 function togglePaged() {
@@ -173,5 +173,14 @@ function togglePaged() {
     else
         searchParams.set('paged', 'on')
 
-    goToNewSearch(searchParams)
+    reloadSearchParams(searchParams)
+}
+
+function relocateWithAim(url, parameters) {
+    // change current url with consideration of query parameters
+    let searchParams = new URLSearchParams(window.location.search)
+    for (const [key, value] of Object.entries(parameters || {})) {
+        searchParams.set(key, value)
+    }
+    window.location.href = url + '?' + searchParams.toString();
 }

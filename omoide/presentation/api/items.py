@@ -28,19 +28,15 @@ async def api_create_item(
     except exceptions.Forbidden as exc:
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
+    except exceptions.NotFound as exc:
+        raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
+                            detail=str(exc))
 
     response.headers['Location'] = request.url_for('api_read_item', uuid=uuid)
-
-    if payload.is_collection:
-        url = request.url_for('browse', uuid=uuid)
-    else:
-        url = request.url_for('preview', uuid=uuid)
-
-    upload_url = request.url_for('upload') + f'?parent_uuid={uuid}'
-
     return {
-        'url': url,
-        'upload_url': upload_url,
+        'object': {
+            'uuid': uuid,
+        },
     }
 
 

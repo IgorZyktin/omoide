@@ -1,5 +1,5 @@
 function splitLines(text) {
-    // split string by line separators and return only non empty
+    // split string by line separators and return only non-empty
     return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
 }
 
@@ -20,37 +20,63 @@ function makeAlert(text) {
 
 function gatherItemParameters() {
     // gather information from typical creation fields
-    let tags = splitLines(document.getElementById('item_tags').value)
-    let permissions = splitLines(document.getElementById('item_permissions').value)
+    let tags = splitLines($('#item_tags').val())
+    // TODO - restore after permissions will be introduced
+    let permissions = []
+    // let permissions = splitLines($('#item_permissions').val())
     return {
-        parent_uuid: document.getElementById('parent_uuid').value || null,
-        is_collection: document.getElementById('is_collection').checked,
-        name: document.getElementById('item_name').value,
+        parent_uuid: $('#parent_uuid').val() || null,
+        is_collection: $('#treat-item-as').val() === 'collection',
+        name: $('#item_name').val(),
         tags: tags,
-        permissions: permissions
+        permissions: permissions,
     }
 }
 
-async function createItem(endpoint) {
-    // send command for item creation
-    let data = gatherItemParameters()
-    data['item_name'] = document.getElementById('item_name').value
-
-    function onCreate(headers, result) {
-        let goUpload = document.getElementById('go_upload').checked
-        let url = ''
-
-        if (goUpload) {
-            url = result['upload_url']
-        } else {
-            url = result['url']
+function describeFail(response) {
+    // generate human readable error message
+    if (typeof response['detail'] === 'string') {
+        console.log('Error: ' + JSON.stringify(response['detail']))
+        makeAlert(response['detail'])
+    } else {
+        for (const problem of response['detail']) {
+            console.log('Error: ' + JSON.stringify(problem))
+            makeAlert(problem.msg)
         }
-
-        if (url !== undefined && url !== '')
-            window.location.href = url
     }
+}
 
-    await request(endpoint, data, onCreate)
+
+async function createItem(button, parameters) {
+    // send command for item creation
+    $.ajax({
+        type: 'POST',
+        url: '/api/items',
+        contentType: 'application/json',
+        data: JSON.stringify(parameters),
+        beforeSend: function () {
+            $(button).addClass('button-disabled')
+        },
+        success: function (response) {
+            let action = $('#action-after-creation').val()
+            let uuid = response['object']['uuid']
+            if (action === 'upload') {
+                relocateWithAim(`/upload`, {'parent_uuid': uuid})
+            } else if (action === 'nothing') {
+                // do nothing
+            } else if (parameters['is_collection']) {
+                relocateWithAim(`/browse/${uuid}`)
+            } else {
+                relocateWithAim(`/preview/${uuid}`)
+            }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON)
+        },
+        complete: function () {
+            $(button).removeClass('button-disabled')
+        }
+    })
 }
 
 
@@ -86,13 +112,6 @@ async function deleteItem(endpoint) {
     } catch (err) {
         throw err
     }
-}
-
-async function uploadItems(endpoint) {
-    // send command for item creation
-    let data = gatherItemParameters()
-    await request(endpoint, data, () => {
-    })
 }
 
 async function request(endpoint, payload, callback) {

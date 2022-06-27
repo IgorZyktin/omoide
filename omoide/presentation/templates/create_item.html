@@ -44,31 +44,37 @@
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
-        <label for="item_permissions">Permissions (one user per line):<br>
-            <textarea id="item_permissions" rows="2"></textarea>
-        </label>
+        {# TODO - restore after permissions will be introduced        #}
+        {#        <label for="item_permissions">Permissions (one user per line):<br>#}
+        {#            <textarea id="item_permissions" rows="2"></textarea>#}
+        {#        </label>#}
 
-        <div>
-            <input id="is_collection"
-                   type="checkbox"
-                   checked>
-            <label for="is_collection">Collection</label>
-        </div>
+        <label for="treat-item-as">Threat this item as:</label>
+        <select id="treat-item-as">
+            <option value="collection">Collection of items (like album cover)
+            </option>
+            <option value="single">Singular item</option>
+        </select>
 
-        <div>
-            <input id="go_upload"
-                   type="checkbox"
-                   checked>
-            <label for="go_upload">Add media after creation</label>
-        </div>
+        <label for="action-after-creation">What to do after creation:</label>
+        <select id="action-after-creation">
+            <option value="upload">Upload content</option>
+            <option value="browse">Browse result</option>
+            <option value="nothing">Do nothing (stay here)</option>
+        </select>
 
         <div id="alerts"></div>
 
-        <a href="javascript:void(0)"
-           onclick="createItem('{{ request.url_for('api_create_item') }}')"
+        <a id="create-item-button"
+           href="javascript:void(0)"
            title="Create item"
            class="button">Create</a>
-
     </div>
+
+    <script>
+        $('#create-item-button').click(function () {
+            createItem(this, gatherItemParameters())
+        });
+    </script>
 
 {% endblock %}
