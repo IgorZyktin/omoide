@@ -26,31 +26,47 @@ class CreateItemIn(BaseModel):
     @validator('name')
     def name_must_have_adequate_length(cls, v):
         """Check."""
-        if len(v) > 255:
-            raise ValueError('Name is too long')
+        name_limit = 255
+        if len(v) > name_limit:
+            raise ValueError(
+                f'Name is too long (maximums {name_limit} characters)'
+            )
         return v
 
     @validator('tags')
     def tags_must_be_adequate(cls, v):
         """Check."""
-        if len(v) > 255:
-            raise ValueError('Too many tags')
+        tags_limit = 255
+        if len(v) > tags_limit:
+            raise ValueError(
+                f'Too many tags (maximum {tags_limit} tags)'
+            )
 
+        tag_name_limit = 255
         for tag in v:
-            if len(tag) > 255:
-                raise ValueError(f'Tag is too long {tag!r}')
+            if len(tag) > tag_name_limit:
+                raise ValueError(
+                    f'Tag is too long (maximum {tag_name_limit} characters)'
+                )
 
         return v
 
     @validator('permissions')
     def permissions_be_adequate(cls, v):
         """Check."""
-        if len(v) > 100:
-            raise ValueError('Too many permissions')
+        permissions_limit = 100
+        if len(v) > permissions_limit:
+            raise ValueError(
+                f'Too many permissions (maximum is {permissions_limit})'
+            )
 
+        permissions_name_limit = 255
         for permission in v:
-            if len(permission) > 255:
-                raise ValueError(f'Permission is too long {permission!r}')
+            if len(permission) > permissions_name_limit:
+                raise ValueError(
+                    'Permission name is too long '
+                    f'(maximum {permissions_name_limit} characters)'
+                )
 
         return v
 
@@ -61,7 +77,7 @@ class CreateItemIn(BaseModel):
         is_collection = values.get('is_collection')
 
         if is_collection and not name:
-            raise ValueError('You have to specify name for collection')
+            raise ValueError('Collection has to have a name')
 
         return values
 
