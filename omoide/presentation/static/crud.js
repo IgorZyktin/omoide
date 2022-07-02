@@ -6,12 +6,22 @@ function splitLines(text) {
 }
 
 function makeAlert(text) {
-    // create popup message
+    // create alert popup message
+    makeNotification(text, 'alert')
+}
+
+function makeAnnounce(text) {
+    // create announce popup message
+    makeNotification(text, 'announce')
+}
+
+function makeNotification(text, css_class){
+    // create user defined notification
     let target = document.getElementById('alerts')
     let alert = document.createElement('div')
 
     alert.innerHTML = `
-        <div class="alert">
+        <div class="notification ${css_class}">
             <span class="closebtn"
                   onclick="this.parentElement.style.display='none';">&times;</span>
             ${text}
@@ -74,7 +84,7 @@ async function createItem(button, parameters) {
             if (action === 'upload') {
                 relocateWithAim(`/upload`, {'parent_uuid': uuid})
             } else if (action === 'nothing') {
-                // do nothing
+                makeAnnounce(`Created ${uuid}`)
             } else if (parameters['is_collection']) {
                 relocateWithAim(`/browse/${uuid}`)
             } else {

@@ -1,8 +1,17 @@
-.alert {
+.notification {
     padding: 20px;
-    background-color: #f44336; /* Red */
-    color: white;
     margin-bottom: 15px;
+    border-radius: 10px;
+}
+
+.alert {
+    background-color: #f44336;
+    color: white;
+}
+
+.announce {
+    background-color: #77ec88;
+    color: #000000;
 }
 
 .closebtn {
