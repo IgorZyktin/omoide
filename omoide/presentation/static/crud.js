@@ -15,7 +15,7 @@ function makeAnnounce(text) {
     makeNotification(text, 'announce')
 }
 
-function makeNotification(text, css_class){
+function makeNotification(text, css_class) {
     // create user defined notification
     let target = document.getElementById('alerts')
     let alert = document.createElement('div')
@@ -103,7 +103,7 @@ async function createItem(button, parameters) {
 
 async function deleteItem(button, uuid) {
     // send command for item deletion
-        $.ajax({
+    $.ajax({
         type: 'DELETE',
         url: `/api/items/${uuid}`,
         contentType: 'application/json',
@@ -111,18 +111,10 @@ async function deleteItem(button, uuid) {
             $(button).addClass('button-disabled')
         },
         success: function (response) {
-            console.log(response)
-            // let action = $('#action_after_creation').val()
-            // let uuid = response['uuid']
-            // if (action === 'upload') {
-            //     relocateWithAim(`/upload`, {'parent_uuid': uuid})
-            // } else if (action === 'nothing') {
-            //     makeAnnounce(`Created ${uuid}`)
-            // } else if (parameters['is_collection']) {
-            //     relocateWithAim(`/browse/${uuid}`)
-            // } else {
-            //     relocateWithAim(`/preview/${uuid}`)
-            // }
+            let uuid = response['uuid']
+
+            if (uuid)
+                relocateWithAim(`/browse/${uuid}`)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
@@ -131,36 +123,6 @@ async function deleteItem(button, uuid) {
             $(button).removeClass('button-disabled')
         }
     })
-    // try {
-    //     const response = await fetch(endpoint, {
-    //         method: 'DELETE',
-    //         headers: {
-    //             'Accept': 'application/json'
-    //         },
-    //     });
-    //
-    //     const result = await response.json()
-    //     if (response.status === 200) {
-    //         let url = result['url']
-    //
-    //         if (!url)
-    //             return
-    //
-    //         window.location.href = url
-    //     } else {
-    //         if (typeof result['detail'] === 'string') {
-    //             console.log(result['detail'])
-    //             makeAlert(result['detail'])
-    //         } else {
-    //             for (const problem of result['detail']) {
-    //                 console.log(problem)
-    //                 makeAlert(problem.msg)
-    //             }
-    //         }
-    //     }
-    // } catch (err) {
-    //     throw err
-    // }
 }
 
 async function uploadMediaForItem(button, parameters) {
