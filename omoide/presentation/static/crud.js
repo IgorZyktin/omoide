@@ -60,8 +60,8 @@ async function createItem(button, parameters) {
             $(button).addClass('button-disabled')
         },
         success: function (response) {
-            let action = $('#action-after-creation').val()
-            let uuid = response['object']['uuid']
+            let action = $('#action_after_creation').val()
+            let uuid = response['uuid']
             if (action === 'upload') {
                 relocateWithAim(`/upload`, {'parent_uuid': uuid})
             } else if (action === 'nothing') {
