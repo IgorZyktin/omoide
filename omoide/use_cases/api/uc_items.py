@@ -59,6 +59,8 @@ class CreateItemUseCase(BaseItemUseCase):
 
         if payload.parent_uuid:
             await self._assert_has_access(user, payload.parent_uuid)
+        else:
+            payload.parent_uuid = user.root_item
 
         payload.uuid = await self._repo.generate_uuid()
 
