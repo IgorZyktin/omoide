@@ -8,12 +8,17 @@ from fastapi import HTTPException, Response, Depends, APIRouter, Request
 
 from omoide import domain, use_cases
 from omoide.domain import exceptions
+from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
 
 router = APIRouter(prefix='/api/items')
 
 
-@router.post('', status_code=http.HTTPStatus.CREATED)
+@router.post(
+    '',
+    status_code=http.HTTPStatus.CREATED,
+    response_model=api_models.OnlyUUID,
+)
 async def api_create_item(
         request: Request,
         response: Response,
@@ -33,11 +38,7 @@ async def api_create_item(
                             detail=str(exc))
 
     response.headers['Location'] = request.url_for('api_read_item', uuid=uuid)
-    return {
-        'object': {
-            'uuid': uuid,
-        },
-    }
+    return api_models.OnlyUUID(uuid=uuid)
 
 
 @router.get('/{uuid}')
