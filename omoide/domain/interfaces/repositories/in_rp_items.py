@@ -7,6 +7,7 @@ from uuid import UUID
 
 from omoide import domain
 from omoide.domain.interfaces import repositories
+from omoide.presentation import api_models
 
 
 class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
@@ -37,7 +38,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     async def create_item(
             self,
             user: domain.User,
-            payload: domain.CreateItemIn,
+            payload: api_models.CreateItemIn,
     ) -> UUID:
         """Return UUID for created item."""
 
@@ -56,7 +57,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
 
     async def update_item(
             self,
-            payload: domain.UpdateItemIn,
+            payload: api_models.UpdateItemIn,
     ) -> UUID:
         """Update existing item."""
 

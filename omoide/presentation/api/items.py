@@ -22,7 +22,7 @@ router = APIRouter(prefix='/api/items')
 async def api_create_item(
         request: Request,
         response: Response,
-        payload: domain.CreateItemIn,
+        payload: api_models.CreateItemIn,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.CreateItemUseCase = Depends(
             dep.create_item_use_case),

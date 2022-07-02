@@ -4,6 +4,7 @@
 from typing import Optional
 from uuid import UUID
 
+from omoide.presentation import api_models
 from omoide import domain
 from omoide.domain import interfaces, exceptions
 
@@ -50,19 +51,21 @@ class CreateItemUseCase(BaseItemUseCase):
     async def execute(
             self,
             user: domain.User,
-            payload: domain.CreateItemIn,
+            payload: api_models.CreateItemIn,
     ) -> UUID:
         """Business logic."""
-        if user.is_anon():
-            raise exceptions.Forbidden('Anonymous users are not '
-                                       'allowed to create items')
+        if user.cannot_create_items():
+            raise exceptions.Forbidden('You are not allowed to create items')
 
         if payload.parent_uuid:
-            await self._repo.assert_has_access(user, payload.parent_uuid,
-                                               only_for_owner=True)
+            await self._assert_has_access(user, payload.parent_uuid)
 
         payload.uuid = await self._repo.generate_uuid()
-        return await self._repo.create_item(user, payload)
+
+        async with self._repo.transaction():
+            uuid = await self._repo.create_item(user, payload)
+
+        return uuid
 
 
 class ReadItemUseCase(BaseItemUseCase):
