@@ -10,70 +10,49 @@
 
 {% block body %}
     <div class="narrow-block">
-        <h3>Upload for an item</h3>
-        <form enctype="multipart/form-data" method="post">
-            <label for="parent_uuid">Item UUID:
-                <input id="parent_uuid"
-                       name="parent_uuid"
-                       type="text"
-                       value="{{ parent_uuid }}"
-                       class="height-auto"
-                       required
-                       onchange="tryLoadingThumbnail('{{ user.uuid }}', '{{ request.url_for('static', path='empty.png') }}')"/>
-            </label>
+        <h1>Upload media</h1>
+        <label for="parent_uuid">Parent UUID (optional):
+            <input id="parent_uuid"
+                   type="text"
+                   value="{{ parent_uuid }}"
+                   class="height-auto"/>
+        </label>
 
-            {# TODO - uncomment this when name based search will be available #}
-            {#        <label for="parent_name">Parent name:#}
-            {#            <input id="parent_name"#}
-            {#                   type="text"#}
-            {#                   value=""#}
-            {#                   class="height-auto"/>#}
-            {#        </label>#}
+        <div id="parent_thumbnail" class="parent_thumbnail"></div>
 
-            <div class="parent_thumbnail">
-                <img id="item_thumbnail"
-                     src="{{ request.url_for('static', path='empty.png') }}"
-                     alt="Parent thumbnail"/>
-            </div>
+        <label for="upload_as">Upload media in a way that:</label>
+        <select id="upload_as">
+            <option value="children">Every file is a new child item</option>
+            <option value="target">File is used only for given parent</option>
+        </select>
 
-            <div>
-                <input type="radio"
-                       id="collection"
-                       name="collection"
-                       value="collection"
-                       checked>
-                <label for="collection">New item from each file</label>
-            </div>
+        <label for="item_tags">Children tags (one tag per line):<br>
+            <textarea id="item_tags" rows="10"></textarea>
+        </label>
 
-            <div>
-                <input type="radio"
-                       id="not_collection"
-                       name="collection"
-                       value="">
-                <label for="not_collection">Only for this item</label>
-            </div>
+        <div id="alerts"></div>
 
-            <label for="item_tags">Tags (one tag per line):<br>
-                <textarea name="tags" rows="10"></textarea>
-            </label>
-
-            <div>
-                <input name="files"
-                       type="file"
-                       multiple class="height-auto">
-            </div>
-
-            <div id="alerts"></div>
-            <input type="submit" value="Upload" class="height-auto">
-        </form>
-
+        <a id="upload_media_button"
+           href="javascript:void(0)"
+           title="Upload media"
+           class="button">Upload</a>
     </div>
 
     <script>
-        function updateThumbnail() {
-            tryLoadingThumbnail('{{ user.uuid }}', '{{ request.url_for('static', path='empty.png') }}')
-        }
-        window.onload = updateThumbnail;
+        $('#upload_media_button').click(function () {
+            uploadMediaForItem(this, gatherUploadParameters())
+        });
+
+        let thumbnailElement = $('#parent_thumbnail')
+        let uuidElement = $('#parent_uuid')
+
+        uuidElement.on('input', function () {
+            tryLoadingThumbnail(uuidElement, thumbnailElement)
+        });
+
+        $(document).ready(function () {
+            tryLoadingThumbnail(uuidElement, thumbnailElement)
+        });
     </script>
 
 {% endblock %}
