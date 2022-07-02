@@ -3,6 +3,8 @@
 {% block head %}
     <script type="text/javascript"
             src="{{ url_for('static', path='crud.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', path='upload.js') }}"></script>
     <link type="text/css"
           href="{{ url_for('static', path='crud.css') }}"
           rel="stylesheet">
@@ -30,7 +32,14 @@
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
+        <input type="file"
+               id="upload-input"
+               multiple
+               onchange="addFiles(this)"/>
+
         <div id="alerts"></div>
+
+        <div id="media"></div>
 
         <a id="upload_media_button"
            href="javascript:void(0)"
@@ -40,18 +49,18 @@
 
     <script>
         $('#upload_media_button').click(function () {
-            uploadMediaForItem(this, gatherUploadParameters())
+            uploadMedia(this)
         });
 
         let thumbnailElement = $('#parent_thumbnail')
         let uuidElement = $('#parent_uuid')
 
         uuidElement.on('input', function () {
-            tryLoadingThumbnail(uuidElement, thumbnailElement)
+            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
         });
 
         $(document).ready(function () {
-            tryLoadingThumbnail(uuidElement, thumbnailElement)
+            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
         });
     </script>
 

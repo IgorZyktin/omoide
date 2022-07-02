@@ -45,15 +45,6 @@ function gatherItemParameters() {
     }
 }
 
-function gatherUploadParameters() {
-    // gather information from upload fields
-    return {
-        parent_uuid: $('#parent_uuid').val() || null,
-        as_children: $('#upload_as').val() === 'children',
-        tags: splitLines($('#item_tags').val()),
-    }
-}
-
 function describeFail(response) {
     // generate human readable error message
     if (typeof response['detail'] === 'string') {
@@ -123,11 +114,6 @@ async function deleteItem(button, uuid) {
             $(button).removeClass('button-disabled')
         }
     })
-}
-
-async function uploadMediaForItem(button, parameters) {
-    // upload given media to the site storage
-    console.log(parameters)
 }
 
 async function request(endpoint, payload, callback) {
