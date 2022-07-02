@@ -113,6 +113,12 @@ function doIf(targets, handler, condition) {
 
 function validateProxy(proxy) {
     // ensure that content is adequate
+    if (proxy.filename.length > 255){
+        proxy.status = 'fail'
+        proxy.isValid = false
+        makeAlert(`Filename is too long: ${proxy.filename}`)
+    }
+
     if (!proxy.ext) {
         proxy.status = 'fail'
         proxy.isValid = false
