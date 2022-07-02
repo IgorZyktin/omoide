@@ -1,30 +1,11 @@
 const FILES = {}
 
 
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    let bytes = new Uint8Array(buffer);
-    let len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-}
-
-
-function base64ToArrayBuffer(base64) {
-    let binary_string = window.atob(base64);
-    let len = binary_string.length;
-    let bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
-
-
 function addFiles(source) {
     // react on file upload
+    let button = $('#upload_media_button')
+    button.addClass('upload-in-progress')
+
     let parent_uuid = $('#parent_uuid').val() || null
     let tags = splitLines($('#item_tags').val())
     let container = $('#media')
@@ -37,20 +18,28 @@ function addFiles(source) {
         FILES[file.name] = proxy
 
         let reader = new FileReader();
-        reader.readAsArrayBuffer(file);
+        reader.readAsDataURL(file);
 
         reader.onload = function () {
-            proxy.file = reader.result
+            proxy.ready = true
+            proxy.content = reader.result
+            proxy.contentGenerated = true
             proxy.tags = tags
             proxy.parent_uuid = parent_uuid
             proxy.element.appendTo(container)
             proxy.render()
-        };
+
+            if (readyToUpload())
+                button.removeClass('upload-in-progress')
+        }
 
         reader.onerror = function () {
             makeAlert(reader.error)
         };
     }
+
+    if (readyToUpload())
+        button.removeClass('upload-in-progress')
 }
 
 
@@ -65,16 +54,18 @@ function extractExt(filename) {
 function createFileProxy(index, file, tags) {
     // create new proxy that stores file upload progress
     return {
-        parent_uuid: null,
+        ready: false,
+        parentUuid: null,
         isValid: null,
         uuid: null,
         index: Number.parseInt(index),
         size: file.size,
         type: file.type,
         filename: file.name,
-        ext: extractExt(file.name),
-        updated_at: file.lastModified,
-        file: null,
+        contentExt: extractExt(file.name),
+        previewExt: null,
+        thumbnailExt: null,
+        updatedAt: file.lastModified,
         content: null,
         preview: null,
         thumbnail: null,
@@ -98,7 +89,7 @@ function createFileProxy(index, file, tags) {
         },
         render: function () {
             this.element.empty()
-            $('<p>', {text: this.filename}).appendTo(this.element)
+            $('<p>', {text: this.filename + ' ' + this.getProgress()}).appendTo(this.element)
         },
     }
 }
@@ -113,13 +104,13 @@ function doIf(targets, handler, condition) {
 
 function validateProxy(proxy) {
     // ensure that content is adequate
-    if (proxy.filename.length > 255){
+    if (proxy.filename.length > 255) {
         proxy.status = 'fail'
         proxy.isValid = false
         makeAlert(`Filename is too long: ${proxy.filename}`)
     }
 
-    if (!proxy.ext) {
+    if (!proxy.contentExt) {
         proxy.status = 'fail'
         proxy.isValid = false
         makeAlert(`File must have an extension: ${proxy.filename}`)
@@ -127,7 +118,7 @@ function validateProxy(proxy) {
 
     // TODO - add more extensions
     const valid_extensions = ['jpg']
-    if (!valid_extensions.includes(proxy.ext)) {
+    if (!valid_extensions.includes(proxy.contentExt)) {
         proxy.status = 'fail'
         proxy.isValid = false
         makeAlert(`File extension must be one of: ${valid_extensions}`)
@@ -135,6 +126,7 @@ function validateProxy(proxy) {
 
     proxy.isValid = true
     proxy.steps += 1
+    proxy.render()
 }
 
 function createItemForProxy(proxy) {
@@ -144,7 +136,7 @@ function createItemForProxy(proxy) {
         url: '/api/items',
         contentType: 'application/json',
         data: JSON.stringify({
-            parent_uuid: proxy.parent_uuid,
+            parent_uuid: proxy.parentUuid,
             name: '',
             is_collection: false,
             tags: proxy.tags,
@@ -157,31 +149,91 @@ function createItemForProxy(proxy) {
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
             proxy.status = 'fail'
-        }
+        },
+        complete: function () {
+            proxy.render()
+        },
     })
 }
 
-function generateContentForProxy(proxy) {
-    // generate content for proxy
-    proxy.content = arrayBufferToBase64(proxy.file)
-    proxy.contentGenerated = true
-    proxy.steps += 1
+function calcImageSize(width, height, maximum) {
+    // calculate new image size
+    // FIXME
+    let newWidth, newHeight, delta
+
+    if (width > height) {
+        newWidth = Math.min(width, maximum)
+        delta = width / newWidth
+        newHeight = height * delta
+    } else {
+        newHeight = Math.min(height, maximum)
+        delta = height / newHeight
+        newWidth = width * delta
+    }
+
+    return {
+        width: newWidth,
+        height: newHeight,
+    }
+}
+
+function resizeImage(data, maxSize, callback) {
+    // resize given image
+    const originalImage = new Image();
+    originalImage.src = data
+
+    //get a reference to the canvas
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d');
+
+    //wait for the image to load
+    originalImage.addEventListener('load', function () {
+        let newSize = calcImageSize(
+            originalImage.naturalWidth,
+            originalImage.naturalHeight,
+            maxSize,
+        )
+
+        canvas.width = newSize.width;
+        canvas.height = newSize.height;
+
+        ctx.drawImage(originalImage, 0, 0, newSize.width, newSize.height);
+        callback(canvas.toDataURL('image/jpeg', 0.85))
+    });
 }
 
 function generatePreviewForProxy(proxy) {
     // generate preview for proxy
-    // TODO - generate preview
-    console.log('generatePreviewForProxy', proxy)
-    proxy.previewGenerated = true
-    proxy.steps += 1
+    proxy.ready = false
+
+    resizeImage(
+        proxy.content,
+        1024,
+        function (data) {
+            proxy.ready = true
+            proxy.preview = data
+            proxy.previewGenerated = true
+            proxy.previewExt = 'jpg'
+            proxy.steps += 1
+            proxy.render()
+        })
 }
 
 function generateThumbnailForProxy(proxy) {
     // generate thumbnail for proxy
-    // TODO - generate thumbnail
-    console.log('generateThumbnailForProxy', proxy)
-    proxy.thumbnailGenerated = true
-    proxy.steps += 1
+    proxy.ready = false
+
+    resizeImage(
+        proxy.content,
+        384,
+        function (data) {
+            proxy.ready = true
+            proxy.thumbnail = data
+            proxy.thumbnailGenerated = true
+            proxy.thumbnailExt = 'jpg'
+            proxy.steps += 1
+            proxy.render()
+        })
 }
 
 function uploadMetaForProxy(proxy) {
@@ -193,7 +245,7 @@ function uploadMetaForProxy(proxy) {
 
 function saveContentForProxy(proxy) {
     // save content of the proxy on the server
-    if (!proxy.content)
+    if (!proxy.content || proxy.contentUploaded)
         return
 
     $.ajax({
@@ -203,21 +255,25 @@ function saveContentForProxy(proxy) {
         data: JSON.stringify({
             type: 'content',
             content: proxy.content,
+            ext: proxy.contentExt,
         }),
         success: function (response) {
-            proxy.contentSent = true
+            proxy.contentUploaded = true
             proxy.steps += 1
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
             proxy.status = 'fail'
-        }
+        },
+        complete: function () {
+            proxy.render()
+        },
     })
 }
 
 function savePreviewForProxy(proxy) {
     // save preview of the proxy on the server
-    if (!proxy.preview)
+    if (!proxy.preview || proxy.previewUploaded)
         return
 
     $.ajax({
@@ -227,21 +283,25 @@ function savePreviewForProxy(proxy) {
         data: JSON.stringify({
             type: 'preview',
             content: proxy.preview,
+            ext: proxy.previewExt,
         }),
         success: function (response) {
-            proxy.previewSent = true
+            proxy.previewUploaded = true
             proxy.steps += 1
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
             proxy.status = 'fail'
-        }
+        },
+        complete: function () {
+            proxy.render()
+        },
     })
 }
 
 function saveThumbnailForProxy(proxy) {
     // save thumbnail of the proxy on the server
-    if (!proxy.thumbnail)
+    if (!proxy.thumbnail || proxy.thumbnailUploaded)
         return
 
     $.ajax({
@@ -251,16 +311,29 @@ function saveThumbnailForProxy(proxy) {
         data: JSON.stringify({
             type: 'thumbnail',
             content: proxy.thumbnail,
+            ext: proxy.thumbnailExt,
         }),
         success: function (response) {
-            proxy.thumbnailSent = true
+            proxy.thumbnailUploaded = true
             proxy.steps += 1
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
             proxy.status = 'fail'
-        }
+        },
+        complete: function () {
+            proxy.render()
+        },
     })
+}
+
+function readyToUpload() {
+    // return true if we can actually upload content
+    for (let each of Object.values(FILES))
+        if (!each.ready) {
+            return false
+        }
+    return true
 }
 
 function uploadMedia(button) {
@@ -278,7 +351,6 @@ function uploadMedia(button) {
     doIf(targets, validateProxy, p => !p.uuid && p.isValid === null)
     doIf(targets, createItemForProxy, p => !p.uuid)
     doIf(targets, uploadMetaForProxy, p => !p.metaUploaded && p.uuid)
-    doIf(targets, generateContentForProxy, p => !p.contentGenerated && p.uuid)
     doIf(targets, generatePreviewForProxy, p => !p.previewGenerated && p.uuid)
     doIf(targets, generateThumbnailForProxy, p => !p.thumbnailGenerated && p.uuid)
     doIf(targets, saveContentForProxy, p => !p.contentUploaded && p.uuid)
