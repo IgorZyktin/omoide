@@ -75,11 +75,11 @@
         let uuidElement = $('#parent_uuid')
 
         uuidElement.on('input', function () {
-            tryLoadingThumbnail(uuidElement, thumbnailElement)
+            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
         });
 
         $(document).ready(function () {
-            tryLoadingThumbnail(uuidElement, thumbnailElement)
+            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
         });
     </script>
 
