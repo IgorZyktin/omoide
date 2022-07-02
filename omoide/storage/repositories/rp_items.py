@@ -10,6 +10,7 @@ from sqlalchemy import func
 from omoide import domain
 from omoide.domain import exceptions
 from omoide.domain.interfaces import repositories as repo_interfaces
+from omoide.presentation import api_models
 from omoide.storage import repositories as repo_implementations
 from omoide.storage.database import models
 
@@ -97,7 +98,7 @@ class ItemsRepository(
     async def create_item(
             self,
             user: domain.User,
-            payload: domain.CreateItemIn,
+            payload: api_models.CreateItemIn,
     ) -> UUID:
         """Create item and return UUID."""
         stmt = """
@@ -188,7 +189,7 @@ class ItemsRepository(
 
     async def update_item(
             self,
-            payload: domain.UpdateItemIn,
+            payload: api_models.UpdateItemIn,
     ) -> UUID:
         """Update existing item."""
         stmt = """

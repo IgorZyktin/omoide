@@ -22,8 +22,7 @@
             <input id="parent_uuid"
                    type="text"
                    value="{{ parent_uuid }}"
-                   class="height-auto"
-                   onchange="tryLoadingThumbnail('{{ user.uuid }}', '{{ request.url_for('static', path='empty.png') }}')"/>
+                   class="height-auto"/>
         </label>
 
         {# TODO - uncomment this when name based search will be available #}
@@ -34,41 +33,54 @@
         {#                   class="height-auto"/>#}
         {#        </label>#}
 
-        <div class="parent_thumbnail">
-            <img id="item_thumbnail"
-                 src="{{ request.url_for('static', path='empty.png') }}"
-                 alt="Parent thumbnail"/>
-        </div>
+        <div id="parent_thumbnail" class="parent_thumbnail"></div>
 
         <label for="item_tags">Tags (one tag per line):<br>
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
-        <label for="item_permissions">Permissions (one user per line):<br>
-            <textarea id="item_permissions" rows="2"></textarea>
-        </label>
+        {# TODO - restore after permissions will be introduced        #}
+        {#        <label for="item_permissions">Permissions (one user per line):<br>#}
+        {#            <textarea id="item_permissions" rows="2"></textarea>#}
+        {#        </label>#}
 
-        <div>
-            <input id="is_collection"
-                   type="checkbox"
-                   checked>
-            <label for="is_collection">Collection</label>
-        </div>
+        <label for="treat_item_as">Treat this item as:</label>
+        <select id="treat_item_as">
+            <option value="collection">Collection of items (like album cover)
+            </option>
+            <option value="single">Singular item</option>
+        </select>
 
-        <div>
-            <input id="go_upload"
-                   type="checkbox"
-                   checked>
-            <label for="go_upload">Add media after creation</label>
-        </div>
+        <label for="action_after_creation">What to do after creation:</label>
+        <select id="action_after_creation">
+            <option value="upload">Upload content</option>
+            <option value="browse">Browse result</option>
+            <option value="nothing">Do nothing (stay here)</option>
+        </select>
 
         <div id="alerts"></div>
 
-        <a href="javascript:void(0)"
-           onclick="createItem('{{ request.url_for('api_create_item') }}')"
+        <a id="create_item_button"
+           href="javascript:void(0)"
            title="Create item"
            class="button">Create</a>
-
     </div>
+
+    <script>
+        $('#create_item_button').click(function () {
+            createItem(this, gatherItemParameters())
+        });
+
+        let thumbnailElement = $('#parent_thumbnail')
+        let uuidElement = $('#parent_uuid')
+
+        uuidElement.on('input', function () {
+            tryLoadingThumbnail(uuidElement, thumbnailElement)
+        });
+
+        $(document).ready(function () {
+            tryLoadingThumbnail(uuidElement, thumbnailElement)
+        });
+    </script>
 
 {% endblock %}

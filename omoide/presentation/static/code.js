@@ -133,7 +133,7 @@ function dynamicallyRenderMoreItems(container, items,
         stopCallback()
 }
 
-function goToNewSearch(newSearchParams) {
+function reloadSearchParams(newSearchParams) {
     // redirect using new search params
     window.location.href = window.location.origin
         + window.location.pathname + '?' + newSearchParams.toString();
@@ -149,7 +149,7 @@ function toggleOrdered() {
     } else
         searchParams.set('ordered', 'on')
 
-    goToNewSearch(searchParams)
+    reloadSearchParams(searchParams)
 }
 
 function toggleNested() {
@@ -161,7 +161,7 @@ function toggleNested() {
     else
         searchParams.set('nested', 'on')
 
-    goToNewSearch(searchParams)
+    reloadSearchParams(searchParams)
 }
 
 function togglePaged() {
@@ -173,5 +173,35 @@ function togglePaged() {
     else
         searchParams.set('paged', 'on')
 
-    goToNewSearch(searchParams)
+    reloadSearchParams(searchParams)
+}
+
+function relocateWithAim(url, parameters) {
+    // change current url with consideration of query parameters
+    let searchParams = new URLSearchParams(window.location.search)
+    for (const [key, value] of Object.entries(parameters || {})) {
+        searchParams.set(key, value)
+    }
+    window.location.href = url + '?' + searchParams.toString();
+}
+
+function renderThumbnailDynamic(container, item) {
+    // render single thumbnail during page edit (collection or singular)
+    let envelope = $('<div>', {class: 'envelope'})
+    if (item.is_collection) {
+        envelope.addClass('env-collection')
+    }
+    envelope.appendTo(container)
+
+    let link = $('<a>', {href: getPreviewUrl(item)})
+    link.appendTo(envelope)
+
+    if (item.is_collection && item.name) {
+        $('<p>', {text: item.name}).appendTo(link)
+    }
+
+    $('<img>', {
+        src: getThumbnailContentUrl(item),
+        alt: 'Thumbnail for ' + (item.name ? item.name : item.uuid)
+    }).appendTo(link)
 }

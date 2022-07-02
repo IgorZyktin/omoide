@@ -1,5 +1,7 @@
+const UUID_PREFIX_LENGTH = 2
+
 function splitLines(text) {
-    // split string by line separators and return only non empty
+    // split string by line separators and return only non-empty
     return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
 }
 
@@ -20,37 +22,63 @@ function makeAlert(text) {
 
 function gatherItemParameters() {
     // gather information from typical creation fields
-    let tags = splitLines(document.getElementById('item_tags').value)
-    let permissions = splitLines(document.getElementById('item_permissions').value)
+    let tags = splitLines($('#item_tags').val())
+    // TODO - restore after permissions will be introduced
+    let permissions = []
+    // let permissions = splitLines($('#item_permissions').val())
     return {
-        parent_uuid: document.getElementById('parent_uuid').value || null,
-        is_collection: document.getElementById('is_collection').checked,
-        name: document.getElementById('item_name').value,
+        parent_uuid: $('#parent_uuid').val() || null,
+        is_collection: $('#treat-item-as').val() === 'collection',
+        name: $('#item_name').val(),
         tags: tags,
-        permissions: permissions
+        permissions: permissions,
     }
 }
 
-async function createItem(endpoint) {
-    // send command for item creation
-    let data = gatherItemParameters()
-    data['item_name'] = document.getElementById('item_name').value
-
-    function onCreate(headers, result) {
-        let goUpload = document.getElementById('go_upload').checked
-        let url = ''
-
-        if (goUpload) {
-            url = result['upload_url']
-        } else {
-            url = result['url']
+function describeFail(response) {
+    // generate human readable error message
+    if (typeof response['detail'] === 'string') {
+        console.log('Error: ' + JSON.stringify(response['detail']))
+        makeAlert(response['detail'])
+    } else {
+        for (const problem of response['detail']) {
+            console.log('Error: ' + JSON.stringify(problem))
+            makeAlert(problem.msg)
         }
-
-        if (url !== undefined && url !== '')
-            window.location.href = url
     }
+}
 
-    await request(endpoint, data, onCreate)
+
+async function createItem(button, parameters) {
+    // send command for item creation
+    $.ajax({
+        type: 'POST',
+        url: '/api/items',
+        contentType: 'application/json',
+        data: JSON.stringify(parameters),
+        beforeSend: function () {
+            $(button).addClass('button-disabled')
+        },
+        success: function (response) {
+            let action = $('#action_after_creation').val()
+            let uuid = response['uuid']
+            if (action === 'upload') {
+                relocateWithAim(`/upload`, {'parent_uuid': uuid})
+            } else if (action === 'nothing') {
+                // do nothing
+            } else if (parameters['is_collection']) {
+                relocateWithAim(`/browse/${uuid}`)
+            } else {
+                relocateWithAim(`/preview/${uuid}`)
+            }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON)
+        },
+        complete: function () {
+            $(button).removeClass('button-disabled')
+        }
+    })
 }
 
 
@@ -88,13 +116,6 @@ async function deleteItem(endpoint) {
     }
 }
 
-async function uploadItems(endpoint) {
-    // send command for item creation
-    let data = gatherItemParameters()
-    await request(endpoint, data, () => {
-    })
-}
-
 async function request(endpoint, payload, callback) {
     // made HTTP POST request
     try {
@@ -123,31 +144,59 @@ async function request(endpoint, payload, callback) {
 
 function isUUID(uuid) {
     let s = "" + uuid;
-    s = s.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/g);
+    s = s.match(/^[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}$/g);
     return s !== null;
 }
 
-function srcFromUUID(user_uuid, uuid) {
-    // generate item thumbnail url from uuid
-    let prefix = uuid.slice(0, 2)
-    return `/content/${user_uuid}/thumbnail/${prefix}/${uuid}.jpg`
+
+function getContentUrl(item, desiredContentType) {
+    // generate link to the desired content type of the given item
+    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
+    let ext = ''
+
+    if (desiredContentType === 'thumbnail')
+        ext = item.thumbnail_ext
+    else if (desiredContentType === 'preview')
+        ext = item.preview_ext
+    else if (desiredContentType === 'content')
+        ext = item.content_ext
+    else
+        return null
+
+    return `/content/${item.owner_uuid}/${desiredContentType}/${prefix}/${item.uuid}.${ext}`
 }
 
-function tryLoadingThumbnail(user_uuid, defaultSrc) {
-    // try to load thumbnail for item
-    let uuid = document.getElementById('parent_uuid')
-
-    if (uuid === undefined)
-        return
-
-    let image = document.getElementById('item_thumbnail')
-
-    if (image === undefined)
-        return
-
-    if (isUUID(uuid.value)) {
-        image.src = srcFromUUID(user_uuid, uuid.value)
-    } else {
-        image.src = defaultSrc
+function getPreviewUrl(item) {
+    // generate preview url for the item
+    let searchParams = new URLSearchParams(window.location.search)
+    if (item.is_collection) {
+        return `/browse/${item.uuid}` + '?' + searchParams.toString()
     }
+    return `/preview/${item.uuid}` + '?' + searchParams.toString()
+}
+
+function getThumbnailContentUrl(item) {
+    // generate thumbnail content url for the item
+    return getContentUrl(item, 'thumbnail')
+}
+
+function tryLoadingThumbnail(uuidElement, thumbnailElement) {
+    // try to load thumbnail for the item
+    let uuid = uuidElement.val()
+    thumbnailElement.empty()
+
+    if (!uuid)
+        return
+
+    if (!isUUID(uuid))
+        return
+
+    $.ajax({
+        type: 'GET',
+        url: `/api/items/${uuid}`,
+        contentType: 'application/json',
+        success: function (response) {
+            renderThumbnailDynamic(thumbnailElement, response)
+        },
+    })
 }

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from omoide.use_cases.api.items import *
+from omoide.use_cases.api.uc_items import *
 from omoide.use_cases.application.home import *
 from omoide.use_cases.application.items import *
 from omoide.use_cases.auth import AuthUseCase

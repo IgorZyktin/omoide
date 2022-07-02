@@ -24,6 +24,10 @@ class User(BaseModel):
     language: Optional[str]
     last_seen: Optional[datetime]
 
+    def cannot_create_items(self) -> bool:
+        """Return True if user is not allowed to create items."""
+        return self.is_anon()
+
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
         return self.uuid == ''

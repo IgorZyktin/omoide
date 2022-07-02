@@ -8,16 +8,21 @@ from fastapi import HTTPException, Response, Depends, APIRouter, Request
 
 from omoide import domain, use_cases
 from omoide.domain import exceptions
+from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
 
 router = APIRouter(prefix='/api/items')
 
 
-@router.post('', status_code=http.HTTPStatus.CREATED)
+@router.post(
+    '',
+    status_code=http.HTTPStatus.CREATED,
+    response_model=api_models.OnlyUUID,
+)
 async def api_create_item(
         request: Request,
         response: Response,
-        payload: domain.CreateItemIn,
+        payload: api_models.CreateItemIn,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.CreateItemUseCase = Depends(
             dep.create_item_use_case),
@@ -28,20 +33,12 @@ async def api_create_item(
     except exceptions.Forbidden as exc:
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
+    except exceptions.NotFound as exc:
+        raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
+                            detail=str(exc))
 
     response.headers['Location'] = request.url_for('api_read_item', uuid=uuid)
-
-    if payload.is_collection:
-        url = request.url_for('browse', uuid=uuid)
-    else:
-        url = request.url_for('preview', uuid=uuid)
-
-    upload_url = request.url_for('upload') + f'?parent_uuid={uuid}'
-
-    return {
-        'url': url,
-        'upload_url': upload_url,
-    }
+    return api_models.OnlyUUID(uuid=uuid)
 
 
 @router.get('/{uuid}')
@@ -78,15 +75,23 @@ async def api_update_item(
     return 'not implemented'
 
 
-@router.delete('/{uuid}')
+@router.delete(
+    '/{uuid}',
+    response_model=api_models.OnlyUUID,
+)
 async def api_delete_item(
-        request: Request,
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.DeleteItemUseCase = Depends(
             dep.delete_item_use_case),
 ):
-    """Delete item."""
+    """Delete item.
+
+    If item does not exist return 404.
+
+    If item was successfully deleted, return UUID of the parent
+    (so you could browse which items are still exist in this collection).
+    """
     try:
         parent_item = await use_case.execute(user, uuid)
     except exceptions.NotFound as exc:
@@ -96,13 +101,4 @@ async def api_delete_item(
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
 
-    if parent_item is None:
-        url = None
-    elif parent_item.is_collection:
-        url = request.url_for('browse', uuid=parent_item.uuid)
-    else:
-        url = request.url_for('preview', uuid=parent_item.uuid)
-
-    return {
-        'url': url,
-    }
+    return api_models.OnlyUUID(uuid=parent_item.uuid)

@@ -6,6 +6,7 @@ from uuid import UUID
 
 from omoide import domain
 from omoide.domain import interfaces, exceptions
+from omoide.presentation import api_models
 
 
 class UploadUseCase:
@@ -80,7 +81,7 @@ class UploadUseCase:
         uuid = await self._repo.generate_uuid()
 
         # TODO: do not use filename as item name!
-        payload = domain.CreateItemIn(
+        payload = api_models.CreateItemIn(
             uuid=uuid,
             parent_uuid=parent_uuid,
             name=filename,
