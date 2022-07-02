@@ -184,3 +184,24 @@ function relocateWithAim(url, parameters) {
     }
     window.location.href = url + '?' + searchParams.toString();
 }
+
+function renderThumbnailDynamic(container, item) {
+    // render single thumbnail during page edit (collection or singular)
+    let envelope = $('<div>', {class: 'envelope'})
+    if (item.is_collection) {
+        envelope.addClass('env-collection')
+    }
+    envelope.appendTo(container)
+
+    let link = $('<a>', {href: getPreviewUrl(item)})
+    link.appendTo(envelope)
+
+    if (item.is_collection && item.name) {
+        $('<p>', {text: item.name}).appendTo(link)
+    }
+
+    $('<img>', {
+        src: getThumbnailContentUrl(item),
+        alt: 'Thumbnail for ' + (item.name ? item.name : item.uuid)
+    }).appendTo(link)
+}

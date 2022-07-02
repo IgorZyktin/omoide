@@ -1,3 +1,5 @@
+const UUID_PREFIX_LENGTH = 2
+
 function splitLines(text) {
     // split string by line separators and return only non-empty
     return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
@@ -146,27 +148,55 @@ function isUUID(uuid) {
     return s !== null;
 }
 
-function srcFromUUID(user_uuid, uuid) {
-    // generate item thumbnail url from uuid
-    let prefix = uuid.slice(0, 2)
-    return `/content/${user_uuid}/thumbnail/${prefix}/${uuid}.jpg`
+
+function getContentUrl(item, desiredContentType) {
+    // generate link to the desired content type of the given item
+    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
+    let ext = ''
+
+    if (desiredContentType === 'thumbnail')
+        ext = item.thumbnail_ext
+    else if (desiredContentType === 'preview')
+        ext = item.preview_ext
+    else if (desiredContentType === 'content')
+        ext = item.content_ext
+    else
+        return null
+
+    return `/content/${item.owner_uuid}/${desiredContentType}/${prefix}/${item.uuid}.${ext}`
 }
 
-function tryLoadingThumbnail(user_uuid, defaultSrc) {
-    // try to load thumbnail for item
-    let uuid = document.getElementById('parent_uuid')
-
-    if (uuid === undefined)
-        return
-
-    let image = document.getElementById('item_thumbnail')
-
-    if (image === undefined)
-        return
-
-    if (isUUID(uuid.value)) {
-        image.src = srcFromUUID(user_uuid, uuid.value)
-    } else {
-        image.src = defaultSrc
+function getPreviewUrl(item) {
+    // generate preview url for the item
+    let searchParams = new URLSearchParams(window.location.search)
+    if (item.is_collection) {
+        return `/browse/${item.uuid}` + '?' + searchParams.toString()
     }
+    return `/preview/${item.uuid}` + '?' + searchParams.toString()
+}
+
+function getThumbnailContentUrl(item) {
+    // generate thumbnail content url for the item
+    return getContentUrl(item, 'thumbnail')
+}
+
+function tryLoadingThumbnail(uuidElement, thumbnailElement) {
+    // try to load thumbnail for the item
+    let uuid = uuidElement.val()
+    thumbnailElement.empty()
+
+    if (!uuid)
+        return
+
+    if (!isUUID(uuid))
+        return
+
+    $.ajax({
+        type: 'GET',
+        url: `/api/items/${uuid}`,
+        contentType: 'application/json',
+        success: function (response) {
+            renderThumbnailDynamic(thumbnailElement, response)
+        },
+    })
 }
