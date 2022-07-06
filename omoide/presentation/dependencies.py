@@ -32,6 +32,7 @@ auth_use_case = use_cases.AuthUseCase(base_repository)
 
 upload_repository = repositories.UploadRepository(db)
 items_repository = repositories.ItemsRepository(db)
+media_repository = repositories.MediaRepository(db)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
@@ -149,3 +150,22 @@ def delete_item_use_case() -> use_cases.DeleteItemUseCase:
 def api_browse_use_case() -> use_cases.APIBrowseUseCase:
     """Get use case instance."""
     return use_cases.APIBrowseUseCase(items_repository)
+
+
+# api media related use cases -------------------------------------------------
+
+
+def read_media_use_case() -> use_cases.ReadMediaUseCase:
+    """Get use case instance."""
+    return use_cases.ReadMediaUseCase(items_repository, media_repository)
+
+
+def update_media_use_case() -> use_cases.CreateOrUpdateMediaUseCase:
+    """Get use case instance."""
+    return use_cases.CreateOrUpdateMediaUseCase(items_repository,
+                                                media_repository)
+
+
+def delete_media_use_case() -> use_cases.DeleteMediaUseCase:
+    """Get use case instance."""
+    return use_cases.DeleteMediaUseCase(items_repository, media_repository)

@@ -86,3 +86,11 @@ class UpdateItemIn(CreateItemIn):
     content_ext: Optional[str]
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
+
+
+class CreateMediaIn(BaseModel):
+    """Input info for media creation."""
+    content: str
+    ext: str
+    origin: str
+    type: str

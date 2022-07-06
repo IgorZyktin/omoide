@@ -20,6 +20,7 @@ __all__ = [
     'SingleResult',
     'SimpleLocation',
     'ComplexLocation',
+    'Media',
 ]
 
 
@@ -236,3 +237,7 @@ class SingleResult(BaseModel):
     details: Details
     location: Location
     neighbours: list[str]
+
+
+class Media(BaseModel):
+    """Transient content fot the item."""
