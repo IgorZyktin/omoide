@@ -177,6 +177,8 @@ function getPreviewUrl(item) {
 
 function getThumbnailContentUrl(item) {
     // generate thumbnail content url for the item
+    if (!item.thumbnail_ext)
+        return `/static/empty.png`
     return getContentUrl(item, 'thumbnail')
 }
 
