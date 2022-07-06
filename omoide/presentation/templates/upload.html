@@ -39,15 +39,30 @@
 
         <div id="alerts"></div>
 
-        <div id="media"></div>
 
-        <a id="upload_media_button"
-           href="javascript:void(0)"
-           title="Upload media"
-           class="button">Upload</a>
+    </div>
+
+    <div id="media" class="upload-container"></div>
+
+    <div class="narrow-block">
+        <input id="preprocess_media_button"
+               type="button"
+               title="Preprocess media"
+               class="button"
+               value="Preprocess media">
+
+        <input id="upload_media_button"
+               type="button"
+               title="Upload media"
+               class="button"
+               value="Upload media">
     </div>
 
     <script>
+        $('#preprocess_media_button').click(function () {
+            preprocessMedia(this)
+        });
+
         $('#upload_media_button').click(function () {
             uploadMedia(this)
         });

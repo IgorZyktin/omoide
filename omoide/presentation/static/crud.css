@@ -49,6 +49,29 @@ input[type="checkbox"] {
     border-radius: 10px;
 }
 
+.upload-container {
+    max-width: 1024px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: auto;
+}
+
 .upload-element {
-    background-color: red;
+    background-color: #c1c1c1;
+    border-radius: 5px;
+    border: 1px solid #414141;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    margin: 5px;
+}
+
+.upload-lines {
+    width: 100%;
+    padding: 10px;
+}
+
+progress {
+    width: 100%;
 }
