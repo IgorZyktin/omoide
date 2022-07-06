@@ -156,28 +156,26 @@ function createItemForProxy(proxy) {
     })
 }
 
-function calcImageSize(width, height, maximum) {
+function calcImageSize(originalWidth, originalHeight,
+                       targetWidth, targetHeight) {
     // calculate new image size
-    // FIXME
-    let newWidth, newHeight, delta
+    if (![originalWidth, originalHeight,
+        targetWidth, targetHeight].every(element => element))
+        return {
+            width: originalWidth,
+            height: originalHeight,
+        }
 
-    if (width > height) {
-        newWidth = Math.min(width, maximum)
-        delta = width / newWidth
-        newHeight = height * delta
-    } else {
-        newHeight = Math.min(height, maximum)
-        delta = height / newHeight
-        newWidth = width * delta
-    }
+    let dimension = Math.max(targetHeight, originalHeight)
+    let coefficient = dimension / originalHeight
 
     return {
-        width: newWidth,
-        height: newHeight,
+        width: Math.ceil(coefficient * originalWidth),
+        height: dimension,
     }
 }
 
-function resizeImage(data, maxSize, callback) {
+function resizeImage(data, targetWidth, targetHeight, callback) {
     // resize given image
     const originalImage = new Image();
     originalImage.src = data
@@ -191,14 +189,15 @@ function resizeImage(data, maxSize, callback) {
         let newSize = calcImageSize(
             originalImage.naturalWidth,
             originalImage.naturalHeight,
-            maxSize,
+            targetWidth,
+            targetHeight,
         )
 
         canvas.width = newSize.width;
         canvas.height = newSize.height;
 
         ctx.drawImage(originalImage, 0, 0, newSize.width, newSize.height);
-        callback(canvas.toDataURL('image/jpeg', 0.85))
+        callback(canvas.toDataURL('image/jpeg', 0.8))
     });
 }
 
@@ -208,6 +207,7 @@ function generatePreviewForProxy(proxy) {
 
     resizeImage(
         proxy.content,
+        1024,
         1024,
         function (data) {
             proxy.ready = true
@@ -225,6 +225,7 @@ function generateThumbnailForProxy(proxy) {
 
     resizeImage(
         proxy.content,
+        384,
         384,
         function (data) {
             proxy.ready = true
