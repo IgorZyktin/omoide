@@ -7,7 +7,6 @@ from uuid import UUID
 
 from omoide import domain
 from omoide.domain.interfaces import repositories
-from omoide.presentation import api_models
 
 
 class AbsMediaRepository(repositories.AbsRepository, abc.ABC):
@@ -18,7 +17,7 @@ class AbsMediaRepository(repositories.AbsRepository, abc.ABC):
     async def create_or_update_media(
             self,
             user: domain.User,
-            payload: api_models.CreateMediaIn,
+            media: domain.Media,
     ) -> bool:
         """Return True if media was created."""
 
@@ -26,6 +25,7 @@ class AbsMediaRepository(repositories.AbsRepository, abc.ABC):
     async def read_media(
             self,
             uuid: UUID,
+            media_type: str,
     ) -> Optional[domain.Media]:
         """Return media or None."""
 
@@ -33,5 +33,6 @@ class AbsMediaRepository(repositories.AbsRepository, abc.ABC):
     async def delete_media(
             self,
             uuid: UUID,
+            media_type: str,
     ) -> bool:
         """Delete media with given UUID."""

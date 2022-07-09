@@ -4,7 +4,7 @@
 import http
 from uuid import UUID
 
-from fastapi import HTTPException, Response, Depends, APIRouter, Request
+from fastapi import HTTPException, Depends, APIRouter
 
 from omoide import domain, use_cases
 from omoide.domain import exceptions
@@ -14,46 +14,38 @@ from omoide.presentation import dependencies as dep
 router = APIRouter(prefix='/api/media')
 
 
-@router.put('/{uuid}')
+@router.put('/{uuid}/{media_type}')
 async def api_create_or_update_media(
         uuid: UUID,
-        request: Request,
-        response: Response,
-        payload: api_models.CreateMediaIn,
+        media_type: str,
+        media_in: api_models.CreateMediaIn,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.CreateOrUpdateMediaUseCase = Depends(
             dep.update_media_use_case),
 ):
     """Create or update media entry."""
     try:
-        created = await use_case.execute(user, uuid, payload)
+        await use_case.execute(user, uuid, media_type, media_in)
     except exceptions.Forbidden as exc:
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
     except exceptions.NotFound as exc:
         raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
                             detail=str(exc))
-
-    response.headers['Location'] = request.url_for('api_read_media', uuid=uuid)
-
-    if created:
-        response.status_code = http.HTTPStatus.CREATED
-    else:
-        response.status_code = http.HTTPStatus.OK
-
     return 'ok'
 
 
-@router.get('/{uuid}')
+@router.get('/{uuid}/{media_type}')
 async def api_read_media(
         uuid: UUID,
+        media_type: str,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.ReadMediaUseCase = Depends(
             dep.read_media_use_case),
 ):
     """Get media."""
     try:
-        media = await use_case.execute(user, uuid)
+        media = await use_case.execute(user, uuid, media_type)
     except exceptions.NotFound as exc:
         raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
                             detail=str(exc))
@@ -63,9 +55,10 @@ async def api_read_media(
     return media.dict()
 
 
-@router.delete('/{uuid}')
+@router.delete('/{uuid}/{media_type}')
 async def api_delete_media(
         uuid: UUID,
+        media_type: str,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.DeleteMediaUseCase = Depends(
             dep.delete_media_use_case),
@@ -76,7 +69,7 @@ async def api_delete_media(
     If media was successfully deleted, 200.
     """
     try:
-        await use_case.execute(user, uuid)
+        await use_case.execute(user, uuid, media_type)
     except exceptions.NotFound as exc:
         raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
                             detail=str(exc))

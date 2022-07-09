@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Use case for media.
 """
+import base64
 from uuid import UUID
 
-from omoide import domain
+from omoide import domain, utils
 from omoide.domain import interfaces, exceptions
 from omoide.presentation import api_models
 
@@ -51,17 +52,34 @@ class BaseMediaUseCase:
 class CreateOrUpdateMediaUseCase(BaseMediaUseCase):
     """Use case for updating an item."""
 
+    @staticmethod
+    def extract_binary_content(raw_content: str) -> bytes:
+        """Convert from base64 into bytes."""
+        sep = raw_content.index(',')
+        body = raw_content[sep + 1:]
+        return base64.decodebytes(body.encode('utf-8'))
+
     async def execute(
             self,
             user: domain.User,
             uuid: UUID,
-            payload: api_models.CreateMediaIn,
+            media_type: str,
+            media: api_models.CreateMediaIn,
     ) -> bool:
         """Business logic."""
-        # TODO(i.zyktin): implement item update
-        print(f'CreateOrUpdateMediaUseCase: {payload.ext}, '
-              f'{payload.type}, {len(payload.content)}')
-        return False
+        await self._assert_has_access(user, uuid)
+
+        valid_media = domain.Media(
+            item_uuid=uuid,
+            created_at=utils.now(),
+            processed_at=None,
+            status='init',
+            content=self.extract_binary_content(media.content),
+            ext=media.ext,
+            media_type=media_type,
+        )
+
+        return await self.media_repo.create_or_update_media(user, valid_media)
 
 
 class ReadMediaUseCase(BaseMediaUseCase):
@@ -71,9 +89,10 @@ class ReadMediaUseCase(BaseMediaUseCase):
             self,
             user: domain.User,
             uuid: UUID,
+            media_type: str,
     ) -> domain.Media:
         await self._assert_has_access(user, uuid)
-        media = await self.media_repo.read_media(uuid)
+        media = await self.media_repo.read_media(uuid, media_type)
 
         if media is None:
             raise exceptions.NotFound(f'Media {uuid} does not exist')
@@ -88,10 +107,11 @@ class DeleteMediaUseCase(BaseMediaUseCase):
             self,
             user: domain.User,
             uuid: UUID,
+            media_type: str,
     ) -> bool:
         """Business logic."""
         await self._assert_has_access(user, uuid)
-        deleted = await self.media_repo.delete_media(uuid)
+        deleted = await self.media_repo.delete_media(uuid, media_type)
 
         if not deleted:
             raise exceptions.NotFound(f'Media {uuid} does not exist')

@@ -92,4 +92,3 @@ class CreateMediaIn(BaseModel):
     """Input info for media creation."""
     content: str
     ext: str
-    type: str

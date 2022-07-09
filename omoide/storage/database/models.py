@@ -249,6 +249,7 @@ class Meta(Base):
 
     # Feature: drop this table, it's useless
 
+
 # Feature: make new Metainfo table with specific fields.
 # Possible structure:
 # class Meta(Base):
@@ -341,17 +342,17 @@ class Media(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    id = sa.Column(sa.BigInteger,
-                   primary_key=True,
-                   autoincrement=True,
-                   nullable=False)
-
     item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
+                                primary_key=True,
                                 nullable=False,
                                 index=True)
-    type = sa.Column(sa.Enum('content', 'preview', 'thumbnail', name='type'))
+    media_type = sa.Column(sa.Enum('content',
+                                   'preview',
+                                   'thumbnail',
+                                   name='media_type'),
+                           primary_key=True)
 
     # fields ------------------------------------------------------------------
 
@@ -359,9 +360,8 @@ class Media(Base):
     processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
     status = sa.Column(sa.Enum('init', 'work', 'done', 'fail', name='status'),
                        index=True)
-    ext = sa.Column(sa.String(length=SMALL), nullable=False)
     content = sa.Column(pg.BYTEA, nullable=False)
-    attempts = sa.Column(sa.Integer, nullable=False, server_default='0')
+    ext = sa.Column(sa.String(length=SMALL), nullable=False)
 
     # relations ---------------------------------------------------------------
 
@@ -370,6 +370,11 @@ class Media(Base):
                               back_populates='media',
                               uselist=False)
 
+    # other -------------------------------------------------------------------
+
+    __table_args__ = (
+        sa.UniqueConstraint('item_uuid', 'media_type', name='uix_media'),
+    )
 
 # Feature: Add table for signatures. This will allow us to distinguish same
 # bad payloads and search for duplicates. Someday we could put ImageMatch here.

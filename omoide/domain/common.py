@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
+from datetime import datetime
 from typing import Optional, Mapping, Iterator
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -241,3 +243,23 @@ class SingleResult(BaseModel):
 
 class Media(BaseModel):
     """Transient content fot the item."""
+    item_uuid: UUID
+    created_at: datetime
+    processed_at: Optional[datetime]
+    status: str
+    content: bytes
+    ext: str
+    media_type: str
+
+    @classmethod
+    def from_map(cls, mapping: Mapping) -> 'Media':
+        """Convert from arbitrary format to model."""
+        return cls(
+            item_uuid=utils.as_str(mapping, 'item_uuid'),
+            created_at=mapping['created_at'],
+            processed_at=mapping['processed_at'],
+            status=mapping['status'],
+            content=mapping['content'],
+            ext=mapping['ext'],
+            media_type=mapping['media_type'],
+        )

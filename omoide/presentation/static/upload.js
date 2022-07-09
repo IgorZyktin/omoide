@@ -298,10 +298,9 @@ async function saveContentForProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'PUT',
-            url: `/api/media/${proxy.uuid}`,
+            url: `/api/media/${proxy.uuid}/content`,
             contentType: 'application/json',
             data: JSON.stringify({
-                type: 'content',
                 content: proxy.content,
                 ext: proxy.contentExt,
             }),
@@ -329,10 +328,9 @@ async function savePreviewForProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'PUT',
-            url: `/api/media/${proxy.uuid}`,
+            url: `/api/media/${proxy.uuid}/preview`,
             contentType: 'application/json',
             data: JSON.stringify({
-                type: 'preview',
                 content: proxy.preview,
                 ext: proxy.previewExt,
             }),
@@ -360,10 +358,9 @@ async function saveThumbnailForProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'PUT',
-            url: `/api/media/${proxy.uuid}`,
+            url: `/api/media/${proxy.uuid}/thumbnail`,
             contentType: 'application/json',
             data: JSON.stringify({
-                type: 'thumbnail',
                 content: proxy.thumbnail,
                 ext: proxy.thumbnailExt,
             }),
