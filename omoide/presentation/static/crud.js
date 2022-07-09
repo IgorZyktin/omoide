@@ -47,7 +47,10 @@ function gatherItemParameters() {
 
 function describeFail(response) {
     // generate human readable error message
-    if (typeof response['detail'] === 'string') {
+    if (response === undefined) {
+        // TODO - make message more adequate
+        makeAlert('Something bad happened')
+    } else if (typeof response['detail'] === 'string') {
         console.log('Error: ' + JSON.stringify(response['detail']))
         makeAlert(response['detail'])
     } else {
