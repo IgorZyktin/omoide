@@ -458,4 +458,11 @@ async function uploadMedia(button) {
     await doIf(targets, savePreviewForProxy, p => !p.previewUploaded && p.uuid && p.isValid)
     await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid && p.isValid)
     $(button).removeClass('button-disabled')
+
+    let parent_uuid = $('#parent_uuid').val() || null
+    if (allDone()
+        && $('#after_upload').val() === 'parent'
+        && parent_uuid !== null) {
+        relocateWithAim(`/browse/${parent_uuid}`)
+    }
 }
