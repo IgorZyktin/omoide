@@ -34,6 +34,14 @@ async function blobToBase64(blob) {
     });
 }
 
+function clearProxies() {
+    // delete all possible proxies
+    Object.keys(FILES).forEach(key => {
+        delete FILES[key];
+    })
+    $('#media').empty()
+}
+
 function addFiles(source) {
     // react on file upload
     let button = $('#upload_media_button')
@@ -42,6 +50,11 @@ function addFiles(source) {
     let parent_uuid = $('#parent_uuid').val() || null
     let tags = splitLines($('#item_tags').val())
     let container = $('#media')
+    let upload_as = $('#upload_as').val()
+
+    if (upload_as === 'target') {
+        clearProxies(container)
+    }
 
     for (let file of Object.values(source.files)) {
         if (file.name in FILES)
@@ -50,9 +63,15 @@ function addFiles(source) {
         let proxy = createFileProxy(file, tags)
         FILES[file.name] = proxy
 
-        proxy.parent_uuid = parent_uuid
         proxy.element.appendTo(container)
         proxy.render()
+
+        if (upload_as === 'target') {
+            proxy.uuid = parent_uuid
+            break
+        } else {
+            proxy.parent_uuid = parent_uuid
+        }
     }
 
     button.removeClass('upload-in-progress')
@@ -384,14 +403,34 @@ function getTargets() {
     // get upload targets in correct order
     let targets
 
-    if ($('#upload_as').val() === 'children')
+    if ($('#upload_as').val() === 'children') {
         targets = Object.values(FILES)
-    else
-        targets = Object.values(FILES)[0]
-
-    targets.sort((a, b) => a.filename > b.filename ? 1 : -1)
+        targets.sort((a, b) => a.filename > b.filename ? 1 : -1)
+    } else {
+        if (Object.keys(FILES).length) {
+            targets = [Object.values(FILES)[0]]
+        } else {
+            targets = []
+        }
+    }
 
     return targets
+}
+
+function allDone() {
+    // return true if all items are ready
+    for (let proxy of Object.values(FILES)) {
+        let done = proxy.isValid
+            && proxy.uuid
+            && proxy.contentUploaded
+            && proxy.previewUploaded
+            && proxy.thumbnailUploaded
+
+        if (!done) {
+            return false
+        }
+    }
+    return true
 }
 
 async function preprocessMedia(button) {
@@ -399,7 +438,7 @@ async function preprocessMedia(button) {
     let targets = getTargets()
 
     $(button).addClass('button-disabled')
-    await doIf(targets, validateProxy, p => !p.uuid && p.isValid === null)
+    await doIf(targets, validateProxy, p => p.isValid === null)
     await doIf(targets, generateContentForProxy, p => !p.contentGenerated && p.isValid)
     await doIf(targets, generatePreviewForProxy, p => !p.previewGenerated && p.isValid)
     await doIf(targets, generateThumbnailForProxy, p => !p.thumbnailGenerated && p.isValid)
@@ -412,11 +451,11 @@ async function uploadMedia(button) {
     let targets = getTargets()
 
     $(button).addClass('button-disabled')
-    await doIf(targets, createItemForProxy, p => !p.uuid)
-    await doIf(targets, uploadMetaForProxy, p => !p.metaUploaded && p.uuid)
-    await doIf(targets, uploadTagsProxy, p => p.uuid)
-    await doIf(targets, saveContentForProxy, p => !p.contentUploaded && p.uuid)
-    await doIf(targets, savePreviewForProxy, p => !p.previewUploaded && p.uuid)
-    await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid)
+    await doIf(targets, createItemForProxy, p => !p.uuid && p.isValid)
+    await doIf(targets, uploadMetaForProxy, p => !p.metaUploaded && p.uuid && p.isValid)
+    await doIf(targets, uploadTagsProxy, p => p.uuid && p.isValid)
+    await doIf(targets, saveContentForProxy, p => !p.contentUploaded && p.uuid && p.isValid)
+    await doIf(targets, savePreviewForProxy, p => !p.previewUploaded && p.uuid && p.isValid)
+    await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid && p.isValid)
     $(button).removeClass('button-disabled')
 }

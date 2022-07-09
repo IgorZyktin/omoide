@@ -70,6 +70,10 @@
             uploadMedia(this)
         });
 
+        $('#upload_as').on('change', function () {
+            clearProxies()
+        });
+
         let thumbnailElement = $('#parent_thumbnail')
         let uuidElement = $('#parent_uuid')
 
