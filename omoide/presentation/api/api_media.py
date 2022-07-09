@@ -14,10 +14,7 @@ from omoide.presentation import dependencies as dep
 router = APIRouter(prefix='/api/media')
 
 
-@router.put(
-    '/{uuid}',
-    response_model=api_models.OnlyUUID,
-)
+@router.put('/{uuid}')
 async def api_create_or_update_media(
         uuid: UUID,
         request: Request,
@@ -44,7 +41,7 @@ async def api_create_or_update_media(
     else:
         response.status_code = http.HTTPStatus.OK
 
-    return response
+    return 'ok'
 
 
 @router.get('/{uuid}')

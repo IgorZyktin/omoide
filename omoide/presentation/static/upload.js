@@ -3,7 +3,36 @@ const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
 const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
+const TOTAL_STEPS = 10
+const VALID_EXTENSIONS = ['jpg', 'jpeg']
 
+let reducer = new window.ImageBlobReduce({
+    pica: window.ImageBlobReduce.pica({features: ['js', 'wasm', 'ww']})
+});
+
+reducer._calculate_size = function (env) {
+    let dimension = Math.min(env.opts.max, env.image.height)
+    let coefficient = dimension / env.image.height
+    env.transform_width = Math.ceil(coefficient * env.image.width)
+    env.transform_height = dimension
+    return env;
+};
+
+reducer._create_blob = function (env) {
+    return this.pica.toBlob(env.out_canvas, 'image/jpeg', 0.75)
+        .then(function (blob) {
+            env.out_blob = blob;
+            return env;
+        });
+};
+
+async function blobToBase64(blob) {
+    return new Promise((resolve, _) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+    });
+}
 
 function addFiles(source) {
     // react on file upload
@@ -21,29 +50,12 @@ function addFiles(source) {
         let proxy = createFileProxy(file, tags)
         FILES[file.name] = proxy
 
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-
-        reader.onload = function () {
-            proxy.ready = true
-            proxy.content = reader.result
-            proxy.contentGenerated = true
-            proxy.tags = tags
-            proxy.parent_uuid = parent_uuid
-            proxy.element.appendTo(container)
-            proxy.render()
-
-            if (readyToUpload())
-                button.removeClass('upload-in-progress')
-        }
-
-        reader.onerror = function () {
-            makeAlert(reader.error)
-        };
+        proxy.parent_uuid = parent_uuid
+        proxy.element.appendTo(container)
+        proxy.render()
     }
 
-    if (readyToUpload())
-        button.removeClass('upload-in-progress')
+    button.removeClass('upload-in-progress')
 }
 
 
@@ -59,34 +71,51 @@ function createFileProxy(file, tags) {
     // create new proxy that stores file upload progress
     return {
         ready: false,
+        uuid: null,
         parentUuid: null,
         isValid: null,
-        uuid: null,
+
+        // content
+        content: null,
+        contentExt: extractExt(file.name),
+        contentGenerated: false,
+        contentUploaded: false,
+
+        // preview
+        preview: null,
+        previewExt: null,
+        previewGenerated: false,
+        previewUploaded: false,
+
+        // thumbnail
+        thumbnail: null,
+        thumbnailExt: null,
+        thumbnailGenerated: false,
+        thumbnailUploaded: false,
+
+        // icon
+        icon: null,
+        iconGenerated: false,
+
+        // file
+        file: file,
         size: file.size,
         type: file.type,
         filename: file.name,
-        contentExt: extractExt(file.name),
-        previewExt: null,
-        thumbnailExt: null,
-        updatedAt: file.lastModified,
-        content: null,
-        preview: null,
-        thumbnail: null,
-        icon: null,
+
+        // meta
         metaUploaded: false,
-        contentGenerated: false,
-        previewGenerated: false,
-        thumbnailGenerated: false,
-        iconGenerated: false,
-        contentUploaded: false,
-        previewUploaded: false,
-        thumbnailUploaded: false,
+
+        // exif
+        exifUploaded: false,
+
+        updatedAt: file.lastModified,
         element: $('<div>', {class: 'upload-element'}),
         features: [],
         status: 'init',
         description: '',
         steps: 0,
-        totalSteps: 9,  // tags are not counted as a step
+        totalSteps: TOTAL_STEPS,  // tags are not counted as a step
         tags: tags,
         permissions: [], // TODO - add permissions
         getProgress: function () {
@@ -146,12 +175,14 @@ async function validateProxy(proxy) {
         makeAlert(`File must have an extension: ${proxy.filename}`)
     }
 
-    // TODO - add more extensions
-    const valid_extensions = ['jpg']
-    if (!valid_extensions.includes(proxy.contentExt)) {
+    if (!VALID_EXTENSIONS.includes(proxy.contentExt)) {
         proxy.status = 'fail'
         proxy.isValid = false
-        makeAlert(`File extension must be one of: ${valid_extensions}`)
+        makeAlert(`File extension must be one of: ${VALID_EXTENSIONS}`)
+    }
+
+    if (proxy.contentExt === 'jpeg') {
+        proxy.contentExt = 'jpg'
     }
 
     proxy.isValid = true
@@ -190,106 +221,61 @@ async function createItemForProxy(proxy) {
     })
 }
 
-function calcImageSize(originalWidth, originalHeight,
-                       targetWidth, targetHeight) {
-    // calculate new image size
-    if (![originalWidth, originalHeight,
-        targetWidth, targetHeight].every(element => element)) {
-        console.log(`Bad dimensions for image conversion: 
-        (w=${originalWidth}, h=${originalHeight})
-         => (w=${targetWidth}, h=${targetHeight})`)
-
-        return {
-            width: originalWidth,
-            height: originalHeight,
-        }
-    }
-
-    let dimension = Math.min(targetHeight, originalHeight)
-    let coefficient = dimension / originalHeight
-    return {
-        width: Math.ceil(coefficient * originalWidth),
-        height: dimension,
-    }
+async function resizeFromFile(file, maxSize) {
+    // generate smaller version of the image using original file
+    return reducer
+        .toBlob(
+            file,
+            {
+                max: maxSize,
+                unsharpAmount: 80,
+                unsharpRadius: 0.6,
+                unsharpThreshold: 2
+            }
+        )
+        .then(blob => blobToBase64(blob))
 }
 
-async function resizeImage(data, targetWidth, targetHeight, callback) {
-    // resize given image
-    const originalImage = new Image();
-    originalImage.src = data
-
-    //get a reference to the canvas
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d');
-
-    return new Promise(function (resolve, reject) {
-        //wait for the image to load
-        originalImage.addEventListener('load', function () {
-            let newSize = calcImageSize(
-                originalImage.naturalWidth,
-                originalImage.naturalHeight,
-                targetWidth,
-                targetHeight,
-            )
-
-            canvas.width = newSize.width;
-            canvas.height = newSize.height;
-
-            ctx.drawImage(originalImage, 0, 0, newSize.width, newSize.height);
-            callback(canvas.toDataURL('image/jpeg', 0.85))
-            resolve('ok')
-        });
-    })
+async function generateContentForProxy(proxy) {
+    // generate preview for proxy
+    proxy.ready = false
+    proxy.content = await blobToBase64(proxy.file)
+    proxy.contentGenerated = true
+    proxy.steps += 1
+    proxy.ready = true
+    proxy.render()
 }
 
 async function generatePreviewForProxy(proxy) {
     // generate preview for proxy
     proxy.ready = false
-    await resizeImage(
-        proxy.content,
-        PREVIEW_SIZE,
-        PREVIEW_SIZE,
-        function (data) {
-            proxy.ready = true
-            proxy.preview = data
-            proxy.previewGenerated = true
-            proxy.previewExt = 'jpg'
-            proxy.steps += 1
-            proxy.render()
-        })
+    proxy.preview = await resizeFromFile(proxy.file, PREVIEW_SIZE)
+    proxy.previewGenerated = true
+    proxy.previewExt = 'jpg'
+    proxy.steps += 1
+    proxy.ready = true
+    proxy.render()
 }
 
 async function generateThumbnailForProxy(proxy) {
     // generate thumbnail for proxy
     proxy.ready = false
-    await resizeImage(
-        proxy.content,
-        THUMBNAIL_SIZE,
-        THUMBNAIL_SIZE,
-        function (data) {
-            proxy.ready = true
-            proxy.thumbnail = data
-            proxy.thumbnailGenerated = true
-            proxy.thumbnailExt = 'jpg'
-            proxy.steps += 1
-            proxy.render()
-        })
+    proxy.thumbnail = await resizeFromFile(proxy.file, THUMBNAIL_SIZE)
+    proxy.thumbnailGenerated = true
+    proxy.thumbnailExt = 'jpg'
+    proxy.steps += 1
+    proxy.ready = true
+    proxy.render()
 }
 
 async function generateIconForProxy(proxy) {
     // generate tiny thumbnail for proxy
     proxy.ready = false
-    await resizeImage(
-        proxy.content,
-        ICON_SIZE,
-        ICON_SIZE,
-        function (data) {
-            proxy.ready = true
-            proxy.icon = data
-            proxy.iconGenerated = true
-            proxy.steps += 1
-            proxy.render()
-        })
+    proxy.icon = await resizeFromFile(proxy.file, ICON_SIZE)
+    proxy.iconGenerated = true
+    proxy.steps += 1
+    proxy.ready = true
+    proxy.render()
 }
 
 async function uploadMetaForProxy(proxy) {
@@ -309,27 +295,29 @@ async function saveContentForProxy(proxy) {
     if (!proxy.content || proxy.contentUploaded)
         return
 
-    $.ajax({
-        type: 'PUT',
-        url: `/api/media/${proxy.uuid}`,
-        contentType: 'application/json',
-        data: JSON.stringify({
-            type: 'content',
-            origin: 'direct',
-            content: proxy.content,
-            ext: proxy.contentExt,
-        }),
-        success: function (response) {
-            proxy.contentUploaded = true
-            proxy.steps += 1
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
-            proxy.status = 'fail'
-        },
-        complete: function () {
-            proxy.render()
-        },
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            type: 'PUT',
+            url: `/api/media/${proxy.uuid}`,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                type: 'content',
+                content: proxy.content,
+                ext: proxy.contentExt,
+            }),
+            success: function (response) {
+                proxy.contentUploaded = true
+                proxy.steps += 1
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+            complete: function () {
+                resolve('ok')
+                proxy.render()
+            },
+        })
     })
 }
 
@@ -345,7 +333,6 @@ async function savePreviewForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 type: 'preview',
-                origin: 'direct',
                 content: proxy.preview,
                 ext: proxy.previewExt,
             }),
@@ -355,12 +342,11 @@ async function savePreviewForProxy(proxy) {
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
-                proxy.status = 'fail'
                 reject('fail')
             },
             complete: function () {
-                proxy.render()
                 resolve('ok')
+                proxy.render()
             },
         })
     })
@@ -378,7 +364,6 @@ async function saveThumbnailForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 type: 'thumbnail',
-                origin: 'direct',
                 content: proxy.thumbnail,
                 ext: proxy.thumbnailExt,
             }),
@@ -388,24 +373,14 @@ async function saveThumbnailForProxy(proxy) {
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
-                proxy.status = 'fail'
                 reject('fail')
             },
             complete: function () {
-                proxy.render()
                 resolve('ok')
+                proxy.render()
             },
         })
     })
-}
-
-function readyToUpload() {
-    // return true if we can actually upload content
-    for (let each of Object.values(FILES))
-        if (!each.ready) {
-            return false
-        }
-    return true
 }
 
 function getTargets() {
@@ -428,6 +403,7 @@ async function preprocessMedia(button) {
 
     $(button).addClass('button-disabled')
     await doIf(targets, validateProxy, p => !p.uuid && p.isValid === null)
+    await doIf(targets, generateContentForProxy, p => !p.contentGenerated && p.isValid)
     await doIf(targets, generatePreviewForProxy, p => !p.previewGenerated && p.isValid)
     await doIf(targets, generateThumbnailForProxy, p => !p.thumbnailGenerated && p.isValid)
     await doIf(targets, generateIconForProxy, p => !p.iconGenerated && p.isValid)
