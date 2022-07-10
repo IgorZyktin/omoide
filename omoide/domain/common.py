@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
+import typing
 from datetime import datetime
 from typing import Optional, Mapping, Iterator
 from uuid import UUID
@@ -23,6 +24,7 @@ __all__ = [
     'SimpleLocation',
     'ComplexLocation',
     'Media',
+    'EXIF',
 ]
 
 
@@ -262,4 +264,18 @@ class Media(BaseModel):
             content=mapping['content'],
             ext=mapping['ext'],
             media_type=mapping['media_type'],
+        )
+
+
+class EXIF(BaseModel):
+    """Exif media information."""
+    item_uuid: UUID
+    exif: dict[str, typing.Any]
+
+    @classmethod
+    def from_map(cls, mapping: Mapping) -> 'EXIF':
+        """Convert from arbitrary format to model."""
+        return cls(
+            item_uuid=utils.as_str(mapping, 'item_uuid'),
+            exif=mapping['exif'],
         )

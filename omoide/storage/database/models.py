@@ -139,6 +139,10 @@ class Item(Base):
                                   passive_deletes=True,
                                   back_populates='item',
                                   uselist=True)
+    exif: 'EXIF' = relationship('EXIF',
+                                passive_deletes=True,
+                                back_populates='item',
+                                uselist=True)
     # other -------------------------------------------------------------------
 
     __table_args__ = (
@@ -376,9 +380,35 @@ class Media(Base):
         sa.UniqueConstraint('item_uuid', 'media_type', name='uix_media'),
     )
 
+
 # Feature: Add table for signatures. This will allow us to distinguish same
 # bad payloads and search for duplicates. Someday we could put ImageMatch here.
 # Possible structure:
 # class Signature(Base):
 #   item_uuid: ...
 #   md5: ...
+
+
+class EXIF(Base):
+    """EXIF information for items."""
+    __tablename__ = 'exif'
+
+    # primary and foreign keys ------------------------------------------------
+
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
+                                nullable=False,
+                                index=True,
+                                primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    exif = sa.Column(pg.JSONB, nullable=False)
+
+    # relations ---------------------------------------------------------------
+
+    item: Item = relationship('Item',
+                              passive_deletes=True,
+                              back_populates='exif',
+                              uselist=False)

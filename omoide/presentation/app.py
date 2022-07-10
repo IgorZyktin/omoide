@@ -48,6 +48,7 @@ app.include_router(api.browse.router)
 app.include_router(api.items.router)
 app.include_router(api.home.router)
 app.include_router(api.api_media.router)
+app.include_router(api.api_exif.router)
 
 # Application routes
 app.include_router(application.browse.router)

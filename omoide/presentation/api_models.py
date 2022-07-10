@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Input and output models for the API.
 """
+import typing
 from typing import Optional
 from uuid import UUID
 
@@ -92,3 +93,8 @@ class CreateMediaIn(BaseModel):
     """Input info for media creation."""
     content: str
     ext: str
+
+
+class EXIFIn(BaseModel):
+    """Input info for EXIF creation."""
+    exif: dict[str, typing.Any]

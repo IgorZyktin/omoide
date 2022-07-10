@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from omoide.use_cases.api.uc_exif import *
 from omoide.use_cases.api.uc_items import *
 from omoide.use_cases.api.uc_media import *
 from omoide.use_cases.application.home import *
