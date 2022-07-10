@@ -3,8 +3,10 @@ const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
 const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
-const TOTAL_STEPS = 10
+const TOTAL_STEPS = 12
 const VALID_EXTENSIONS = ['jpg', 'jpeg']
+
+let parentThumbnailUploaded = false
 
 let reducer = new window.ImageBlobReduce({
     pica: window.ImageBlobReduce.pica({features: ['js', 'wasm', 'ww']})
@@ -134,8 +136,9 @@ function createFileProxy(file, tags) {
         status: 'init',
         description: '',
         steps: 0,
-        totalSteps: TOTAL_STEPS,  // tags are not counted as a step
-        tags: tags,
+        totalSteps: TOTAL_STEPS,
+        tagsInitial: tags,
+        tagsUploaded: false,
         permissions: [], // TODO - add permissions
         getProgress: function () {
             return (this.steps / this.totalSteps) * 100
@@ -307,6 +310,15 @@ async function uploadMetaForProxy(proxy) {
 async function uploadTagsProxy(proxy) {
     // upload tags
     // TODO - add tags upload
+    proxy.tagsUploaded = true
+    proxy.steps += 1
+}
+
+async function uploadEXIFProxy(proxy) {
+    // upload exif data
+    // TODO - add exif upload
+    proxy.exifUploaded = true
+    proxy.steps += 1
 }
 
 async function saveContentForProxy(proxy) {
@@ -433,6 +445,65 @@ function allDone() {
     return true
 }
 
+async function getParent(parentUUID) {
+    // load parent by uuid
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            type: 'GET',
+            url: `/api/items/${parentUUID}`,
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
+}
+
+async function ensureParentHasThumbnail(parentUUID, targets) {
+    // use thumbnail of the first child as a parent thumbnail
+    if (!parentUUID || !targets.length || parentThumbnailUploaded)
+        return
+
+    let parent
+
+    await getParent(parentUUID).then(function (result) {
+        parent = result
+    })
+
+    let firstChild = targets[0]
+
+    if (!parent || !firstChild)
+        return
+
+    if (parent.thumbnail_ext === null) {
+        console.log(`Set parent ${parentUUID} to use thumbnail from ${firstChild.uuid}`)
+
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: 'PUT',
+                url: `/api/media/${parentUUID}/thumbnail`,
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    content: firstChild.thumbnail,
+                    ext: firstChild.thumbnailExt,
+                }),
+                success: function (response) {
+                    parentThumbnailUploaded = true
+                    resolve('ok')
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    describeFail(XMLHttpRequest.responseJSON)
+                    reject('fail')
+                },
+            })
+        })
+    }
+}
+
 async function preprocessMedia(button) {
     // prepare given media for upload
     let targets = getTargets()
@@ -453,13 +524,16 @@ async function uploadMedia(button) {
     $(button).addClass('button-disabled')
     await doIf(targets, createItemForProxy, p => !p.uuid && p.isValid)
     await doIf(targets, uploadMetaForProxy, p => !p.metaUploaded && p.uuid && p.isValid)
-    await doIf(targets, uploadTagsProxy, p => p.uuid && p.isValid)
+    await doIf(targets, uploadTagsProxy, p => !p.tagsUploaded && p.uuid && p.isValid)
+    await doIf(targets, uploadEXIFProxy, p => !p.exifUploaded && p.uuid && p.isValid)
     await doIf(targets, saveContentForProxy, p => !p.contentUploaded && p.uuid && p.isValid)
     await doIf(targets, savePreviewForProxy, p => !p.previewUploaded && p.uuid && p.isValid)
     await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid && p.isValid)
     $(button).removeClass('button-disabled')
 
     let parent_uuid = $('#parent_uuid').val() || null
+    await ensureParentHasThumbnail(parent_uuid, targets)
+
     if (allDone()
         && $('#after_upload').val() === 'parent'
         && parent_uuid !== null) {
