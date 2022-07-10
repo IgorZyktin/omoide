@@ -336,9 +336,28 @@ async function generateEXIForProxy(proxy) {
 
 async function uploadMetaForProxy(proxy) {
     // upload metainfo
-    // TODO - add metainfo upload
-    proxy.metaUploaded = true
-    proxy.steps += 1
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            type: 'PUT',
+            url: `/api/meta/${proxy.uuid}`,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                original_file_name: proxy.file.name,
+                original_file_modified_at: proxy.file.lastModified,
+                file_type: proxy.file.type,
+                file_size: proxy.file.size,
+            }),
+            success: function (response) {
+                proxy.metaUploaded = true
+                proxy.steps += 1
+                resolve('ok')
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
 }
 
 async function uploadTagsProxy(proxy) {
