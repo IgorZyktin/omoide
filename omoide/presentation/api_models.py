@@ -98,3 +98,11 @@ class CreateMediaIn(BaseModel):
 class EXIFIn(BaseModel):
     """Input info for EXIF creation."""
     exif: dict[str, typing.Any]
+
+
+class MetaIn(BaseModel):
+    """Input info for meta creation."""
+    original_file_name: str
+    original_file_modified_at: int
+    file_type: str
+    file_size: int

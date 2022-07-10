@@ -34,6 +34,7 @@ upload_repository = repositories.UploadRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
 exif_repository = repositories.EXIFRepository(db)
+meta_repository = repositories.MetaRepository(db)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
@@ -189,3 +190,16 @@ def update_exif_use_case() -> use_cases.CreateOrUpdateEXIFUseCase:
 def delete_exif_use_case() -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
     return use_cases.DeleteEXIFUseCase(items_repository, exif_repository)
+
+# api meta related use cases -------------------------------------------------
+
+
+def read_meta_use_case() -> use_cases.ReadMetaUseCase:
+    """Get use case instance."""
+    return use_cases.ReadMetaUseCase(items_repository, meta_repository)
+
+
+def update_meta_use_case() -> use_cases.CreateOrUpdateMetaUseCase:
+    """Get use case instance."""
+    return use_cases.CreateOrUpdateMetaUseCase(items_repository,
+                                               meta_repository)

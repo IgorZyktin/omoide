@@ -25,6 +25,7 @@ __all__ = [
     'ComplexLocation',
     'Media',
     'EXIF',
+    'Meta',
 ]
 
 
@@ -278,4 +279,18 @@ class EXIF(BaseModel):
         return cls(
             item_uuid=utils.as_str(mapping, 'item_uuid'),
             exif=mapping['exif'],
+        )
+
+
+class Meta(BaseModel):
+    """Metainfo for item."""
+    item_uuid: UUID
+    meta: dict
+
+    @classmethod
+    def from_map(cls, mapping: Mapping) -> 'Meta':
+        """Convert from arbitrary format to model."""
+        return cls(
+            item_uuid=utils.as_str(mapping, 'item_uuid'),
+            meta=mapping['data'],
         )
