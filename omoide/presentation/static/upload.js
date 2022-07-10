@@ -314,6 +314,11 @@ async function extractEXIFTags(file) {
     })
 }
 
+function clearNullTerminator(string) {
+    // remove u0 symbols
+    return string.replace(/\\u([0-9]|[a-fA-F])([0-9]|[a-fA-F])([0-9]|[a-fA-F])([0-9]|[a-fA-F])/g, "")
+}
+
 async function generateEXIForProxy(proxy) {
     // extract exif tags
     proxy.ready = false
@@ -348,13 +353,15 @@ async function uploadEXIFProxy(proxy) {
     if (proxy.exif === null || Object.keys(proxy.exif).length === 0)
         return
 
+    let exif = JSON.parse(clearNullTerminator(JSON.stringify(proxy.exif)))
+
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'PUT',
             url: `/api/exif/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
-                exif: JSON.stringify(proxy.exif),
+                exif: exif,
             }),
             success: function (response) {
                 proxy.exifUploaded = true
