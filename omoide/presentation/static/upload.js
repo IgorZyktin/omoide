@@ -182,7 +182,7 @@ async function doIf(targets, handler, condition) {
     // conditionally iterate on every element
     for (let target of targets) {
         if (target.status !== 'fail' && condition(target)) {
-            console.log(`Doing ${handler.name}`)
+            console.log(`Doing ${handler.name} for ${target.uuid}`)
             await handler(target)
         }
     }
