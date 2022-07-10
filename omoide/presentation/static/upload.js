@@ -3,7 +3,7 @@ const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
 const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
-const TOTAL_STEPS = 13
+const TOTAL_STEPS = 11
 const VALID_EXTENSIONS = ['jpg', 'jpeg']
 
 let parentThumbnailUploaded = false
@@ -330,7 +330,6 @@ async function generateEXIForProxy(proxy) {
 
     proxy.exif = exif
     proxy.exifGenerated = true
-    proxy.steps += 1
     proxy.ready = true
 }
 
@@ -384,7 +383,6 @@ async function uploadEXIFProxy(proxy) {
             }),
             success: function (response) {
                 proxy.exifUploaded = true
-                proxy.steps += 1
                 resolve('ok')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
