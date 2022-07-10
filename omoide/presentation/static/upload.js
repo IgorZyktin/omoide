@@ -3,7 +3,7 @@ const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
 const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
-const TOTAL_STEPS = 12
+const TOTAL_STEPS = 13
 const VALID_EXTENSIONS = ['jpg', 'jpeg']
 
 let parentThumbnailUploaded = false
@@ -128,6 +128,8 @@ function createFileProxy(file, tags) {
         metaUploaded: false,
 
         // exif
+        exif: null,
+        exifGenerated: false,
         exifUploaded: false,
 
         updatedAt: file.lastModified,
@@ -170,6 +172,9 @@ function createFileProxy(file, tags) {
             }).appendTo(lines)
             lines.appendTo(this.element)
         },
+        getTags: function () {
+            return this.tagsInitial
+        }
     }
 }
 
@@ -223,7 +228,7 @@ async function createItemForProxy(proxy) {
                 parent_uuid: proxy.parentUuid,
                 name: '',
                 is_collection: false,
-                tags: proxy.tags,
+                tags: proxy.getTags(),
                 permissions: proxy.permissions,
             }),
             success: function (response) {
@@ -300,6 +305,30 @@ async function generateIconForProxy(proxy) {
     proxy.render()
 }
 
+async function extractEXIFTags(file) {
+    // extract tags from file
+    return new Promise(function (resolve, _) {
+        EXIF.getData(file, function () {
+            resolve(EXIF.getAllTags(this))
+        })
+    })
+}
+
+async function generateEXIForProxy(proxy) {
+    // extract exif tags
+    proxy.ready = false
+
+    let exif
+    await extractEXIFTags(proxy.file).then(function (result) {
+        exif = result
+    })
+
+    proxy.exif = exif
+    proxy.exifGenerated = true
+    proxy.steps += 1
+    proxy.ready = true
+}
+
 async function uploadMetaForProxy(proxy) {
     // upload metainfo
     // TODO - add metainfo upload
@@ -316,9 +345,28 @@ async function uploadTagsProxy(proxy) {
 
 async function uploadEXIFProxy(proxy) {
     // upload exif data
-    // TODO - add exif upload
-    proxy.exifUploaded = true
-    proxy.steps += 1
+    if (proxy.exif === null || Object.keys(proxy.exif).length === 0)
+        return
+
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            type: 'PUT',
+            url: `/api/exif/${proxy.uuid}`,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                exif: JSON.stringify(proxy.exif),
+            }),
+            success: function (response) {
+                proxy.exifUploaded = true
+                proxy.steps += 1
+                resolve('ok')
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
 }
 
 async function saveContentForProxy(proxy) {
@@ -514,6 +562,7 @@ async function preprocessMedia(button) {
     await doIf(targets, generatePreviewForProxy, p => !p.previewGenerated && p.isValid)
     await doIf(targets, generateThumbnailForProxy, p => !p.thumbnailGenerated && p.isValid)
     await doIf(targets, generateIconForProxy, p => !p.iconGenerated && p.isValid)
+    await doIf(targets, generateEXIForProxy, p => !p.exifGenerated && p.isValid)
     $(button).removeClass('button-disabled')
 }
 
