@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for Meta.
 """
+from datetime import datetime, timezone
 from uuid import UUID
 
 from omoide import domain, utils
@@ -60,6 +61,11 @@ class CreateOrUpdateMetaUseCase(BaseMetaUseCase):
         await self._assert_has_access(user, uuid)
         # TODO - extend with more detailed info
 
+        modified_at = datetime.fromtimestamp(
+            meta_in.original_file_modified_at / 1000,
+            tz=timezone.utc,
+        )
+
         meta = domain.Meta(
             item_uuid=uuid,
             meta={
@@ -67,7 +73,7 @@ class CreateOrUpdateMetaUseCase(BaseMetaUseCase):
                 'type': meta_in.file_type,
                 'size': meta_in.file_size,
                 'original_file_name': meta_in.original_file_name,
-                'original_file_modified_at': meta_in.original_file_modified_at,
+                'original_file_modified_at': str(modified_at),
             },
         )
 
