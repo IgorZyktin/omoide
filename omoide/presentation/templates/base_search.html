@@ -225,8 +225,8 @@
     });
 </script>
 
-{%- if config.omoide_injection %}
-    {{ config.omoide_injection|safe }}
+{%- if config.app.injection %}
+    {{ config.app.injection|safe }}
 {% endif -%}
 
 </body>
