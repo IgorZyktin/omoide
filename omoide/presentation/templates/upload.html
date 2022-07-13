@@ -4,9 +4,9 @@
     <script type="text/javascript"
             src="{{ url_for('static', path='crud.js') }}"></script>
     <script type="text/javascript"
-        src="{{ url_for('static', path='thirdparty/image-blob-reduce.min.js') }}"></script>
+            src="{{ url_for('static', path='thirdparty/image-blob-reduce.min.js') }}"></script>
     <script type="text/javascript"
-        src="{{ url_for('static', path='thirdparty/exif-js.min.js') }}"></script>
+            src="{{ url_for('static', path='thirdparty/exif-js.min.js') }}"></script>
     <script type="text/javascript"
             src="{{ url_for('static', path='upload.js') }}"></script>
     <link type="text/css"
@@ -41,6 +41,11 @@
         <label for="item_tags">Children tags (one tag per line):<br>
             <textarea id="item_tags" rows="10"></textarea>
         </label>
+
+        <div>
+            <input type="checkbox" id="feature-exif">
+            <label for="feature-exif">Extract EXIF info from photos</label>
+        </div>
 
         <input type="file"
                id="upload-input"

@@ -593,12 +593,13 @@ async function preprocessMedia(button) {
 async function uploadMedia(button) {
     // upload given media to the backend
     let targets = getTargets()
+    let handleEXIF = $('#feature-exif').is(':checked')
 
     $(button).addClass('button-disabled')
     await doIf(targets, createItemForProxy, p => !p.uuid && p.isValid)
     await doIf(targets, uploadMetaForProxy, p => !p.metaUploaded && p.uuid && p.isValid)
     await doIf(targets, uploadTagsProxy, p => !p.tagsUploaded && p.uuid && p.isValid)
-    await doIf(targets, uploadEXIFProxy, p => !p.exifUploaded && p.uuid && p.isValid)
+    await doIf(targets, uploadEXIFProxy, p => !p.exifUploaded && p.uuid && p.isValid && handleEXIF)
     await doIf(targets, saveContentForProxy, p => !p.contentUploaded && p.uuid && p.isValid)
     await doIf(targets, savePreviewForProxy, p => !p.previewUploaded && p.uuid && p.isValid)
     await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid && p.isValid)
