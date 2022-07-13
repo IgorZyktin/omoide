@@ -2,6 +2,7 @@
 """Repository that perform CRUD operations on metas.
 """
 import json
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -35,6 +36,10 @@ class MetaRepository(
         ) ON CONFLICT (item_uuid) DO UPDATE SET
             data = excluded.data;
         """
+
+        for key, value in meta.meta.items():
+            if isinstance(value, datetime):
+                meta.meta[key] = str(value)
 
         values = {
             'item_uuid': meta.item_uuid,

@@ -205,3 +205,20 @@ function renderThumbnailDynamic(container, item) {
         alt: 'Thumbnail for ' + (item.name ? item.name : item.uuid)
     }).appendTo(link)
 }
+
+function convertDatetimeToIsoString(datetime) {
+  let tzo = -datetime.getTimezoneOffset(),
+      dif = tzo >= 0 ? '+' : '-',
+      pad = function(num) {
+          return (num < 10 ? '0' : '') + num;
+      };
+
+  return datetime.getFullYear() +
+      '-' + pad(datetime.getMonth() + 1) +
+      '-' + pad(datetime.getDate()) +
+      ' ' + pad(datetime.getHours()) +
+      ':' + pad(datetime.getMinutes()) +
+      ':' + pad(datetime.getSeconds()) +
+      dif + pad(Math.floor(Math.abs(tzo) / 60)) +
+      ':' + pad(Math.abs(tzo) % 60);
+}

@@ -133,7 +133,6 @@ function createFileProxy(file, tags) {
         exifGenerated: false,
         exifUploaded: false,
 
-        updatedAt: file.lastModified,
         element: $('<div>', {class: 'upload-element'}),
         features: [],
         status: 'init',
@@ -344,6 +343,8 @@ async function generateEXIForProxy(proxy) {
 
 async function uploadMetaForProxy(proxy) {
     // upload metainfo
+    let date = new Date(proxy.file.lastModified)
+    let lastModified = convertDatetimeToIsoString(date)
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'PUT',
@@ -351,7 +352,7 @@ async function uploadMetaForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 original_file_name: proxy.file.name,
-                original_file_modified_at: proxy.file.lastModified,
+                original_file_modified_at: lastModified,
                 file_type: proxy.file.type,
                 file_size: proxy.file.size,
             }),

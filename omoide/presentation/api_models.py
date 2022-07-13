@@ -2,6 +2,7 @@
 """Input and output models for the API.
 """
 import typing
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -103,6 +104,6 @@ class EXIFIn(BaseModel):
 class MetaIn(BaseModel):
     """Input info for meta creation."""
     original_file_name: str
-    original_file_modified_at: int
+    original_file_modified_at: Optional[datetime]
     file_type: str
     file_size: int
