@@ -36,7 +36,7 @@ class BaseMediaUseCase:
         access = await self.items_repo.check_access(user, uuid)
 
         if access.does_not_exist:
-            raise exceptions.NotFound(f'Media {uuid} does not exist')
+            raise exceptions.NotFound(f'Item {uuid} does not exist')
 
         if access.is_not_given:
             raise exceptions.Forbidden(f'User {user.uuid} ({user.name}) '
