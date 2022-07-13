@@ -64,7 +64,7 @@ async def api_read_item(
 async def api_update_item(
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.UploadUseCase = Depends(
+        use_case: use_cases.ReadItemUseCase = Depends(
             dep.read_item_use_case),
 ):
     """Update item."""

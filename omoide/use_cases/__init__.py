@@ -9,4 +9,3 @@ from omoide.use_cases.auth import AuthUseCase
 from omoide.use_cases.browse import *
 from omoide.use_cases.preview import PreviewUseCase
 from omoide.use_cases.search import SearchUseCase
-from omoide.use_cases.upload import UploadUseCase

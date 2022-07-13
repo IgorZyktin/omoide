@@ -121,11 +121,6 @@ def app_home_use_case() -> use_cases.HomeUseCase:
     return use_cases.HomeUseCase(items_repository)
 
 
-def app_upload_use_case() -> use_cases.UploadUseCase:
-    """Get use case instance."""
-    return use_cases.UploadUseCase(upload_repository)
-
-
 # api item related use cases --------------------------------------------------
 
 
