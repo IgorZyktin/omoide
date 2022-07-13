@@ -69,7 +69,7 @@ function atTheBottom() {
 }
 
 async function dynamicallyLoadMoreItems(endpoint, container,
-                                        callback, stopCallback) {
+                                        callback, stopCallback, lastSeen) {
     // make request for new items if we scrolled low enough
     let scrollY = window.scrollY;
     let innerHeight = window.innerHeight;
@@ -84,7 +84,7 @@ async function dynamicallyLoadMoreItems(endpoint, container,
             .then(response => response.json())
             .then(function (response) {
                 dynamicallyRenderMoreItems(container, response,
-                    callback, stopCallback)
+                    callback, stopCallback, lastSeen)
             }).catch(function (error) {
                 console.log(error);
                 stopCallback()
@@ -93,12 +93,14 @@ async function dynamicallyLoadMoreItems(endpoint, container,
 }
 
 function dynamicallyRenderMoreItems(container, items,
-                                    callback, stopCallback) {
+                                    callback, stopCallback, lastSeen) {
     // actually insert new items into response
     let searchParams = new URLSearchParams(window.location.search)
+    let last_item
 
     for (const item of items) {
         let ignore = callback(item);
+        last_item = item
 
         if (ignore)
             continue
@@ -130,6 +132,9 @@ function dynamicallyRenderMoreItems(container, items,
     }
 
     if (items.length < searchParams.get('items_per_page'))
+        stopCallback()
+
+    if (last_item !== undefined && last_item.number === lastSeen)
         stopCallback()
 }
 
@@ -204,4 +209,21 @@ function renderThumbnailDynamic(container, item) {
         src: getThumbnailContentUrl(item),
         alt: 'Thumbnail for ' + (item.name ? item.name : item.uuid)
     }).appendTo(link)
+}
+
+function convertDatetimeToIsoString(datetime) {
+  let tzo = -datetime.getTimezoneOffset(),
+      dif = tzo >= 0 ? '+' : '-',
+      pad = function(num) {
+          return (num < 10 ? '0' : '') + num;
+      };
+
+  return datetime.getFullYear() +
+      '-' + pad(datetime.getMonth() + 1) +
+      '-' + pad(datetime.getDate()) +
+      ' ' + pad(datetime.getHours()) +
+      ':' + pad(datetime.getMinutes()) +
+      ':' + pad(datetime.getSeconds()) +
+      dif + pad(Math.floor(Math.abs(tzo) / 60)) +
+      ':' + pad(Math.abs(tzo) % 60);
 }

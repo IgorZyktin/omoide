@@ -11,9 +11,9 @@
 
 {% block body %}
     <div class="narrow-block">
-        <h3>Deletion of an item</h3>
+        <h1>Deletion of an item</h1>
 
-        {{ render_thumbnail_for_item(request, item, aim) }}
+        <div id="thumbnail" class="thumbnail"></div>
 
         <p>Target item: <strong>{{ item.name }}</strong>
             <br>Owner of the item: <strong>{{ user.name }}</strong></p>
@@ -23,11 +23,21 @@
         <p><strong>This operation cannot be undone!</strong></p>
         <div id="alerts"></div>
 
-        <a href="javascript:void(0)"
-           onclick="deleteItem('{{ request.url_for('api_delete_item', uuid=item.uuid) }}')"
+        <a id="delete_item_button"
+           href="javascript:void(0)"
            title="Delete item"
-           class="button">Delete item with all sub-items</a>
+           class="button">Delete item with all children</a>
 
     </div>
+
+    <script>
+        $('#delete_item_button').click(function () {
+            deleteItem(this, '{{ item.uuid }}')
+        });
+
+        $(document).ready(function () {
+            tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
+        });
+    </script>
 
 {% endblock %}

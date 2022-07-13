@@ -405,3 +405,8 @@ h3, h4, h5 {
     z-index: 1;
     text-shadow: 0 0 20px #000000;
 }
+
+.upload-in-progress {
+    /* FIXME */
+    background-color: red;
+}

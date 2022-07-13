@@ -59,6 +59,8 @@ class CreateItemUseCase(BaseItemUseCase):
 
         if payload.parent_uuid:
             await self._assert_has_access(user, payload.parent_uuid)
+        else:
+            payload.parent_uuid = user.root_item
 
         payload.uuid = await self._repo.generate_uuid()
 
@@ -105,18 +107,17 @@ class DeleteItemUseCase(BaseItemUseCase):
             self,
             user: domain.User,
             uuid: UUID,
-    ) -> Optional[domain.Item]:
+    ) -> UUID:
         """Business logic."""
-        await self._repo.assert_has_access(user, uuid, only_for_owner=True)
-        # TODO(i.zyktin): add records to the zombies table
+        await self._assert_has_access(user, uuid)
 
         item = await self._repo.read_item(uuid)
+        parent_uuid = item.parent_uuid
 
-        if item.parent_uuid is None:
-            parent_item = None
-        else:
-            parent_item = await self._repo.read_item(item.parent_uuid)
+        if parent_uuid is None:
+            raise exceptions.Forbidden(f'You are not allowed '
+                                       f'to delete root items')
 
         await self._repo.delete_item(uuid)
 
-        return parent_item
+        return parent_uuid

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Input and output models for the API.
 """
+import typing
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -86,3 +88,22 @@ class UpdateItemIn(CreateItemIn):
     content_ext: Optional[str]
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
+
+
+class CreateMediaIn(BaseModel):
+    """Input info for media creation."""
+    content: str
+    ext: str
+
+
+class EXIFIn(BaseModel):
+    """Input info for EXIF creation."""
+    exif: dict[str, typing.Any]
+
+
+class MetaIn(BaseModel):
+    """Input info for meta creation."""
+    original_file_name: str
+    original_file_modified_at: Optional[datetime]
+    file_type: str
+    file_size: int

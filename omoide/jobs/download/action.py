@@ -4,10 +4,11 @@
 import os
 import random
 from pathlib import Path
+from typing import Optional
+from uuid import UUID
 
 import sqlalchemy
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
 
 from omoide import jobs
 from omoide import utils
@@ -16,19 +17,23 @@ from omoide.storage.database import models
 
 def get_media(
         engine: Engine,
-        max_attempts: int,
         limit: int,
-        last_seen: int = -1,
-) -> list[int]:
-    """Return ids of media records to save."""
-    stmt = sqlalchemy.select(
-        models.Media.id
-    ).where(
-        models.Media.status == 'init',
-        models.Media.id > last_seen,
-        models.Media.attempts < max_attempts,
-    ).order_by(
-        models.Media.id
+        last_seen: Optional[tuple[UUID, str]] = None,
+) -> list[tuple[UUID, str]]:
+    """Return UUIDs of media records to save."""
+    stmt = sqlalchemy.select(models.Media.item_uuid, models.Media.media_type)
+
+    if last_seen is not None:
+        last_uuid, last_type = last_seen
+        stmt = stmt.where(
+            models.Media.status == 'init',
+            (models.Media.item_uuid,
+             models.Media.media_type) > (last_uuid, last_type),
+        )
+
+    stmt = stmt.order_by(
+        models.Media.item_uuid,
+        models.Media.media_type,
     )
 
     if limit > 0:
@@ -37,7 +42,7 @@ def get_media(
     with engine.begin() as conn:
         response = conn.execute(stmt)
 
-    return [x for x, in response]
+    return [x for x in response]
 
 
 def process_single_media(
@@ -46,7 +51,7 @@ def process_single_media(
 ) -> str:
     """Perform all operations on single entry and return result."""
     if any((
-            not media.type,
+            not media.media_type,
             not media.ext,
             not media.content,
     )):
@@ -68,7 +73,7 @@ def download_file_for_media(media: models.Media, path: Path) -> None:
     filename = jobs.create_folders_for_filename(
         path,
         str(media.item.owner_uuid),
-        media.type,
+        media.media_type,
         bucket,
         f'{media.item_uuid}.{media.ext}'
     )
@@ -91,13 +96,12 @@ def consider_media_as_done(media: models.Media) -> None:
     media.status = 'done'
     media.content = b''
     media.processed_at = utils.now()
-    media.attempts += 1
 
-    if media.type == 'content':
+    if media.media_type == 'content':
         media.item.content_ext = media.ext
-    elif media.type == 'preview':
+    elif media.media_type == 'preview':
         media.item.preview_ext = media.ext
-    elif media.type == 'thumbnail':
+    elif media.media_type == 'thumbnail':
         media.item.thumbnail_ext = media.ext
     else:
         # TODO: replace it with proper logger call
@@ -105,33 +109,14 @@ def consider_media_as_done(media: models.Media) -> None:
 
 
 def consider_media_as_failed(
-        session: Session,
         media: models.Media,
-        retry: bool = True,
 ) -> None:
     """Perform all operations when download is failed."""
     media.status = 'fail'
     media.processed_at = utils.now()
 
-    if retry:
-        new_attempt = models.Media(
-            item_uuid=media.item_uuid,
-            created_at=media.created_at,
-            processed_at=None,
-            status='init',
-            type=media.type,
-            ext=media.ext,
-            content=media.content,
-            attempts=media.attempts + 1,
-        )
-        session.add(new_attempt)
-
-    media.content = b''
-    media.attempts += 1
-
 
 def finalize_media(
-        session: Session,
         media: models.Media,
         result: str,
 ) -> None:
@@ -139,6 +124,6 @@ def finalize_media(
     if result == 'ok':
         consider_media_as_done(media)
     elif result == 'exc':
-        consider_media_as_failed(session, media, retry=True)
+        consider_media_as_failed(media)
     else:
-        consider_media_as_failed(session, media, retry=False)
+        consider_media_as_failed(media)

@@ -2,7 +2,7 @@
 """Database operations for all jobs.
 """
 import sys
-from typing import Callable, Iterator, Type
+from typing import Callable, Iterator, Any, Optional
 from uuid import UUID
 
 import sqlalchemy
@@ -16,16 +16,18 @@ from omoide.storage.database import models
 def get_candidates(
         config: JobConfig,
         engine: Engine,
-        getter: Callable[[Engine, int, int, int], list[int]],
-) -> Iterator[list[int]]:
+        getter: Callable[[Engine,
+                          int,
+                          Optional[tuple[UUID, str]]], list[tuple[UUID, str]]],
+) -> Iterator[list[Any]]:
     """Load packs of primary keys to process."""
     limit = sys.maxsize if config.limit == -1 else config.limit
-    last_seen = -1
+    last_seen = None
     processed = 0
 
     while processed < limit:
         batch_size = min(config.batch_size, limit - processed)
-        candidates = getter(engine, config.max_attempts, batch_size, last_seen)
+        candidates = getter(engine, batch_size, last_seen)
 
         if not candidates:
             break
@@ -60,7 +62,7 @@ def get_location_for_an_item(session: Session, item_uuid: UUID) -> str:
         done_steps += 1
         item = session.query(models.Item).get(current_uuid)
         current_uuid = item.parent_uuid
-        segments.append(item.name)
+        segments.append(item.name or str(item.uuid))
 
         if done_steps > max_steps:
             # TODO: replace it with proper logger call
@@ -75,15 +77,16 @@ def get_location_for_an_item(session: Session, item_uuid: UUID) -> str:
 
 def claim(
         engine: Engine,
-        target_id: int,
-        model: Type[models.RawMedia] | Type[models.Media],
+        uuid: UUID,
+        media_type: str,
 ) -> bool:
     """Return True if we could get lock to this target."""
     command = sqlalchemy.update(
-        model
+        models.Media
     ).where(
-        model.id == target_id,
-        model.status == 'init',
+        models.Media.item_uuid == uuid,
+        models.Media.media_type == media_type,
+        models.Media.status == 'init',
     ).values(
         status='work'
     )

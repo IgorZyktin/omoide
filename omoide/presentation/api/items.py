@@ -64,7 +64,7 @@ async def api_read_item(
 async def api_update_item(
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.UploadUseCase = Depends(
+        use_case: use_cases.ReadItemUseCase = Depends(
             dep.read_item_use_case),
 ):
     """Update item."""
@@ -93,7 +93,7 @@ async def api_delete_item(
     (so you could browse which items are still exist in this collection).
     """
     try:
-        parent_item = await use_case.execute(user, uuid)
+        uuid = await use_case.execute(user, uuid)
     except exceptions.NotFound as exc:
         raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
                             detail=str(exc))
@@ -101,4 +101,4 @@ async def api_delete_item(
         raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
                             detail=str(exc))
 
-    return api_models.OnlyUUID(uuid=parent_item.uuid)
+    return api_models.OnlyUUID(uuid=uuid)

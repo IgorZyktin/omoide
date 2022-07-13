@@ -12,8 +12,8 @@ from starlette.templating import Jinja2Templates
 from omoide import use_cases
 from omoide.domain import auth
 from omoide.domain import interfaces
-from omoide.presentation import infra
 from omoide.presentation import app_config
+from omoide.presentation import infra
 from omoide.storage import repositories
 
 config = app_config.init()
@@ -32,6 +32,9 @@ auth_use_case = use_cases.AuthUseCase(base_repository)
 
 upload_repository = repositories.UploadRepository(db)
 items_repository = repositories.ItemsRepository(db)
+media_repository = repositories.MediaRepository(db)
+exif_repository = repositories.EXIFRepository(db)
+meta_repository = repositories.MetaRepository(db)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
@@ -118,11 +121,6 @@ def app_home_use_case() -> use_cases.HomeUseCase:
     return use_cases.HomeUseCase(items_repository)
 
 
-def app_upload_use_case() -> use_cases.UploadUseCase:
-    """Get use case instance."""
-    return use_cases.UploadUseCase(upload_repository)
-
-
 # api item related use cases --------------------------------------------------
 
 
@@ -149,3 +147,54 @@ def delete_item_use_case() -> use_cases.DeleteItemUseCase:
 def api_browse_use_case() -> use_cases.APIBrowseUseCase:
     """Get use case instance."""
     return use_cases.APIBrowseUseCase(items_repository)
+
+
+# api media related use cases -------------------------------------------------
+
+
+def read_media_use_case() -> use_cases.ReadMediaUseCase:
+    """Get use case instance."""
+    return use_cases.ReadMediaUseCase(items_repository, media_repository)
+
+
+def update_media_use_case() -> use_cases.CreateOrUpdateMediaUseCase:
+    """Get use case instance."""
+    return use_cases.CreateOrUpdateMediaUseCase(items_repository,
+                                                media_repository)
+
+
+def delete_media_use_case() -> use_cases.DeleteMediaUseCase:
+    """Get use case instance."""
+    return use_cases.DeleteMediaUseCase(items_repository, media_repository)
+
+
+# api exif related use cases -------------------------------------------------
+
+
+def read_exif_use_case() -> use_cases.ReadEXIFUseCase:
+    """Get use case instance."""
+    return use_cases.ReadEXIFUseCase(items_repository, exif_repository)
+
+
+def update_exif_use_case() -> use_cases.CreateOrUpdateEXIFUseCase:
+    """Get use case instance."""
+    return use_cases.CreateOrUpdateEXIFUseCase(items_repository,
+                                               exif_repository)
+
+
+def delete_exif_use_case() -> use_cases.DeleteEXIFUseCase:
+    """Get use case instance."""
+    return use_cases.DeleteEXIFUseCase(items_repository, exif_repository)
+
+# api meta related use cases -------------------------------------------------
+
+
+def read_meta_use_case() -> use_cases.ReadMetaUseCase:
+    """Get use case instance."""
+    return use_cases.ReadMetaUseCase(items_repository, meta_repository)
+
+
+def update_meta_use_case() -> use_cases.CreateOrUpdateMetaUseCase:
+    """Get use case instance."""
+    return use_cases.CreateOrUpdateMetaUseCase(items_repository,
+                                               meta_repository)

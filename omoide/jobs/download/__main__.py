@@ -97,17 +97,16 @@ def download_items_from_database_to_storages(
 
     for batch in jobs.database.get_candidates(config, engine,
                                               action.get_media):
-        for media_id in batch:
-            if config.dry_run or \
-                    jobs.database.claim(engine, media_id, models.Media):
+        for uuid, media_type in batch:
+            if config.dry_run or jobs.database.claim(engine, uuid, media_type):
 
                 with Session(engine) as session:
-                    media = session.query(models.Media).get(media_id)
+                    media = session.query(models.Media).get((uuid, media_type))
                     size = -1
 
                     if media is None:
                         # TODO: replace it with proper logger call
-                        print(f'Media {media_id} disappeared before download!')
+                        print(f'Media {uuid} disappeared before download!')
                         continue
 
                     try:
@@ -123,8 +122,14 @@ def download_items_from_database_to_storages(
                         # TODO: replace it with proper logger call
                         print(f'{type(exc).__name__}: {exc}')
 
+                        if not config.dry_run:
+                            action.finalize_media(media, result)
+                            session.commit()
+
+                        continue
+
                     if not config.dry_run:
-                        action.finalize_media(session, media, result)
+                        action.finalize_media(media, result)
                         session.commit()
 
                     if result == 'ok':
@@ -141,7 +146,7 @@ def download_items_from_database_to_storages(
 
                     output.table_row(
                         str(media.item_uuid),
-                        str(media.type),
+                        str(media.media_type),
                         utils.byte_count_to_text(size),
                         status,
                         utils.no_longer_than(location, MAXLEN_LOCATION - 2),

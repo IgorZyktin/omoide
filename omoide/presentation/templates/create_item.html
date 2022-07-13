@@ -10,7 +10,7 @@
 
 {% block body %}
     <div class="narrow-block">
-        <h3>Creation of an item</h3>
+        <h1>Creation of an item</h1>
         <label for="item_name">Item name:
             <input id="item_name"
                    type="text"
@@ -18,7 +18,7 @@
                    class="height-auto"/>
         </label>
 
-        <label for="parent_uuid">Parent UUID:
+        <label for="parent_uuid">Parent UUID (optional):
             <input id="parent_uuid"
                    type="text"
                    value="{{ parent_uuid }}"
@@ -75,11 +75,11 @@
         let uuidElement = $('#parent_uuid')
 
         uuidElement.on('input', function () {
-            tryLoadingThumbnail(uuidElement, thumbnailElement)
+            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
         });
 
         $(document).ready(function () {
-            tryLoadingThumbnail(uuidElement, thumbnailElement)
+            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
         });
     </script>
 
