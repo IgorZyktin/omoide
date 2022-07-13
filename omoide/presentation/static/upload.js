@@ -59,15 +59,16 @@ function addFiles(source) {
         clearProxies(container)
     }
 
+    let local_files = []
+
     for (let file of Object.values(source.files)) {
         if (file.name in FILES)
             continue
 
         let proxy = createFileProxy(file, tags)
         FILES[file.name] = proxy
+        local_files.push(proxy)
 
-        proxy.element.appendTo(container)
-        proxy.render()
 
         if (upload_as === 'target') {
             proxy.uuid = parent_uuid
@@ -75,6 +76,12 @@ function addFiles(source) {
         } else {
             proxy.parent_uuid = parent_uuid
         }
+    }
+
+    local_files.sort((a, b) => a.filename > b.filename ? 1 : -1)
+    for (let proxy of local_files){
+        proxy.element.appendTo(container)
+        proxy.render()
     }
 
     button.removeClass('upload-in-progress')
