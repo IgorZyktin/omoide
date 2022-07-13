@@ -12,14 +12,14 @@ class App(BaseModel):
     port: int = 8080
     debug: bool = False
     reload: bool = False
-    injection: str = ''
+    injection: str
 
 
 class Config(BaseSettings):
     """Application settings."""
     db_url: str
+    app: App
     env: str = 'dev'
-    app: App = App()
 
     class Config:
         env_prefix = 'omoide_'
