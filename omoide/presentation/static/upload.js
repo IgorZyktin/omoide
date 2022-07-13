@@ -5,6 +5,7 @@ const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
 const TOTAL_STEPS = 11
 const VALID_EXTENSIONS = ['jpg', 'jpeg']
+const MAX_FILENAME_LENGTH = 255
 
 let parentThumbnailUploaded = false
 
@@ -180,17 +181,25 @@ function createFileProxy(file, tags) {
 
 async function doIf(targets, handler, condition) {
     // conditionally iterate on every element
+    let progress = 0
     for (let target of targets) {
         if (target.status !== 'fail' && condition(target)) {
-            console.log(`Doing ${handler.name} for ${target.uuid}`)
+            let label = target.uuid || target.file.name
+            console.log(`Doing ${handler.name} for ${label}`)
             await handler(target)
+            progress += target.getProgress()
         }
     }
+
+    if (!targets.length)
+        return
+
+    $('#global-progress').attr('value', progress / targets.length)
 }
 
 async function validateProxy(proxy) {
     // ensure that content is adequate
-    if (proxy.filename.length > 255) {
+    if (proxy.filename.length > MAX_FILENAME_LENGTH) {
         proxy.status = 'fail'
         proxy.isValid = false
         makeAlert(`Filename is too long: ${proxy.filename}`)
@@ -606,6 +615,7 @@ async function uploadMedia(button) {
     $(button).removeClass('button-disabled')
 
     let parent_uuid = $('#parent_uuid').val() || null
+    // TODO - what if parent of the parent has no thumbnail?
     await ensureParentHasThumbnail(parent_uuid, targets)
 
     if (allDone()
