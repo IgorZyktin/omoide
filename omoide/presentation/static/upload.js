@@ -233,7 +233,7 @@ async function createItemForProxy(proxy) {
             url: '/api/items',
             contentType: 'application/json',
             data: JSON.stringify({
-                parent_uuid: proxy.parentUuid,
+                parent_uuid: proxy.parent_uuid,
                 name: '',
                 is_collection: false,
                 tags: proxy.getTags(),
