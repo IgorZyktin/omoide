@@ -30,7 +30,6 @@ browse_repository = repositories.BrowseRepository(db)
 base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
 
-upload_repository = repositories.UploadRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
 exif_repository = repositories.EXIFRepository(db)
