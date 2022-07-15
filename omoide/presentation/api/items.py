@@ -60,19 +60,24 @@ async def api_read_item(
     return item.dict()
 
 
-@router.get('/{uuid}')
-async def api_update_item(
+@router.patch('/{uuid}')
+async def api_partial_update_item(
         uuid: UUID,
+        operations: list[api_models.PatchOperation],
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.ReadItemUseCase = Depends(
-            dep.read_item_use_case),
+        use_case: use_cases.UpdateItemUseCase = Depends(
+            dep.update_item_use_case),
 ):
     """Update item."""
-    # TODO(i.zyktin): implement item update
-    assert uuid
-    assert user
-    assert use_case
-    return 'not implemented'
+    try:
+        await use_case.execute(user, uuid, operations)
+    except exceptions.NotFound as exc:
+        raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND,
+                            detail=str(exc))
+    except exceptions.Forbidden as exc:
+        raise HTTPException(status_code=http.HTTPStatus.FORBIDDEN,
+                            detail=str(exc))
+    return api_models.OnlyUUID(uuid=uuid)
 
 
 @router.delete(

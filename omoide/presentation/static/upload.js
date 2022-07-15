@@ -7,7 +7,7 @@ const TOTAL_STEPS = 11
 const VALID_EXTENSIONS = ['jpg', 'jpeg']
 const MAX_FILENAME_LENGTH = 255
 
-let parentThumbnailUploaded = false
+let parentProcessed = false
 
 let reducer = new window.ImageBlobReduce({
     pica: window.ImageBlobReduce.pica({features: ['js', 'wasm', 'ww']})
@@ -43,6 +43,7 @@ function clearProxies() {
         delete FILES[key];
     })
     $('#media').empty()
+    $('#global-progress').attr('value', 0)
 }
 
 function addFiles(source) {
@@ -79,7 +80,7 @@ function addFiles(source) {
     }
 
     local_files.sort((a, b) => a.filename > b.filename ? 1 : -1)
-    for (let proxy of local_files){
+    for (let proxy of local_files) {
         proxy.element.appendTo(container)
         proxy.render()
     }
@@ -534,12 +535,12 @@ function allDone() {
     return true
 }
 
-async function getParent(parentUUID) {
+async function getItem(itemUUID) {
     // load parent by uuid
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'GET',
-            url: `/api/items/${parentUUID}`,
+            url: `/api/items/${itemUUID}`,
             contentType: 'application/json',
             success: function (response) {
                 resolve(response)
@@ -552,37 +553,66 @@ async function getParent(parentUUID) {
     })
 }
 
-async function ensureParentHasThumbnail(parentUUID, targets) {
-    // use thumbnail of the first child as a parent thumbnail
-    if (!parentUUID || !targets.length || parentThumbnailUploaded)
-        return
-
-    let parent
-
-    await getParent(parentUUID).then(function (result) {
-        parent = result
-    })
-
-    let firstChild = targets[0]
-
+async function ensureParentHasThumbnail(parent, firstChild) {
+    // use thumbnail of the first child as a parent thumbnail (recursively)
     if (!parent || !firstChild)
         return
 
+    if (typeof parent == 'string')
+        parent = await getItem(parent)
+
     if (parent.thumbnail_ext === null) {
-        console.log(`Set parent ${parentUUID} to use thumbnail from ${firstChild.uuid}`)
+        console.log(`Set parent ${parent.uuid} to use thumbnail from ${firstChild.uuid}`)
 
         return new Promise(function (resolve, reject) {
             $.ajax({
                 type: 'PUT',
-                url: `/api/media/${parentUUID}/thumbnail`,
+                url: `/api/media/${parent.uuid}/thumbnail`,
                 contentType: 'application/json',
                 data: JSON.stringify({
                     content: firstChild.thumbnail,
                     ext: firstChild.thumbnailExt,
                 }),
                 success: function (response) {
-                    parentThumbnailUploaded = true
-                    resolve('ok')
+                    ensureParentHasThumbnail(parent.parent_uuid, firstChild)
+                    resolve(response)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    describeFail(XMLHttpRequest.responseJSON)
+                    reject('fail')
+                },
+            })
+        })
+    }
+}
+
+
+async function ensureParentIsCollection(parent) {
+    // mark parent as collection
+    if (!parent)
+        return
+
+    if (typeof parent == 'string')
+        parent = await getItem(parent)
+
+    if (!parent.is_collection) {
+        console.log(`Set parent ${parent.uuid} as collection`)
+
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: 'PATCH',
+                url: `/api/items/${parent.uuid}`,
+                contentType: 'application/json',
+                data: JSON.stringify([
+                    {
+                        'op': 'replace',
+                        'path': '/is_collection',
+                        'value': true,
+                    }
+                ]),
+                success: function (response) {
+                    ensureParentIsCollection(parent.parent_uuid)
+                    resolve(response)
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     describeFail(XMLHttpRequest.responseJSON)
@@ -622,13 +652,24 @@ async function uploadMedia(button) {
     await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid && p.isValid)
     $(button).removeClass('button-disabled')
 
-    let parent_uuid = $('#parent_uuid').val() || null
-    // TODO - what if parent of the parent has no thumbnail?
-    await ensureParentHasThumbnail(parent_uuid, targets)
+    let parentUUID = $('#parent_uuid').val() || null
+
+    if (!parentProcessed && parentUUID) {
+        let parent = await getItem(parentUUID)
+
+        if (parent !== undefined) {
+            await ensureParentHasThumbnail(parent, targets[0])
+
+            if ($('#upload_as').val() === 'children') {
+                await ensureParentIsCollection(parent)
+            }
+            parentProcessed = true
+        }
+    }
 
     if (allDone()
         && $('#after_upload').val() === 'parent'
-        && parent_uuid !== null) {
-        relocateWithAim(`/browse/${parent_uuid}`)
+        && parentUUID !== null) {
+        relocateWithAim(`/browse/${parentUUID}`)
     }
 }

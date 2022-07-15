@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """Input and output models for the API.
 """
-import typing
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from uuid import UUID
 
 from pydantic import BaseModel, validator, root_validator
@@ -12,6 +11,13 @@ from pydantic import BaseModel, validator, root_validator
 class OnlyUUID(BaseModel):
     """Simple model, that describes only UUID of the object."""
     uuid: UUID
+
+
+class PatchOperation(BaseModel):
+    """Single operation in PATCH request."""
+    op: str
+    path: str
+    value: Any
 
 
 class CreateItemIn(BaseModel):
@@ -98,7 +104,7 @@ class CreateMediaIn(BaseModel):
 
 class EXIFIn(BaseModel):
     """Input info for EXIF creation."""
-    exif: dict[str, typing.Any]
+    exif: dict[str, Any]
 
 
 class MetaIn(BaseModel):

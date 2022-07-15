@@ -148,21 +148,8 @@ class ItemsRepository(
             uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE uuid = :uuid;
-        """
-
-        response = await self.db.fetch_one(stmt, {'uuid': uuid})
+        stmt = sqlalchemy.select(models.Item).where(models.Item.uuid == uuid)
+        response = await self.db.fetch_one(stmt)
         return domain.Item.from_map(response) if response else None
 
     async def read_children(
@@ -189,7 +176,7 @@ class ItemsRepository(
 
     async def update_item(
             self,
-            payload: api_models.UpdateItemIn,
+            item: domain.Item,
     ) -> UUID:
         """Update existing item."""
         stmt = """
@@ -206,15 +193,15 @@ class ItemsRepository(
         """
 
         values = {
-            'uuid': payload.uuid,
-            'parent_uuid': payload.parent_uuid,
-            'name': payload.name,
-            'is_collection': payload.is_collection,
-            'content_ext': payload.content_ext,
-            'preview_ext': payload.preview_ext,
-            'thumbnail_ext': payload.thumbnail_ext,
-            'tags': payload.tags,
-            'permissions': payload.permissions,
+            'uuid': item.uuid,
+            'parent_uuid': item.parent_uuid,
+            'name': item.name,
+            'is_collection': item.is_collection,
+            'content_ext': item.content_ext,
+            'preview_ext': item.preview_ext,
+            'thumbnail_ext': item.thumbnail_ext,
+            'tags': item.tags,
+            'permissions': item.permissions,
         }
 
         return await self.db.execute(stmt, values)
@@ -315,17 +302,7 @@ class ItemsRepository(
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
 
-        stmt = sqlalchemy.select(
-            models.Item.uuid,
-            models.Item.parent_uuid,
-            models.Item.owner_uuid,
-            models.Item.number,
-            models.Item.name,
-            models.Item.is_collection,
-            models.Item.content_ext,
-            models.Item.preview_ext,
-            models.Item.thumbnail_ext,
-        )
+        stmt = sqlalchemy.select(models.Item)
 
         if conditions:
             stmt = stmt.where(*conditions)

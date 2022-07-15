@@ -4,7 +4,10 @@
 from typing import Optional
 from uuid import UUID, uuid4
 
+import sqlalchemy
+
 from omoide import domain
+from omoide.storage.database import models
 from omoide.storage.repositories import base_logic
 
 
@@ -66,24 +69,11 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
     async def read_item(
             self,
-            item_uuid: str,
+            uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
-        query = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE uuid = :item_uuid;
-        """
-
-        response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
+        stmt = sqlalchemy.select(models.Item).where(models.Item.uuid == uuid)
+        response = await self.db.fetch_one(stmt)
         return domain.Item.from_map(response) if response else None
 
     async def get_item_with_position(

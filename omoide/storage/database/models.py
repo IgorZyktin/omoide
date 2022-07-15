@@ -131,10 +131,6 @@ class Item(Base):
                                 passive_deletes=True,
                                 back_populates='item',
                                 uselist=False)
-    raw_media: 'RawMedia' = relationship('RawMedia',
-                                         passive_deletes=True,
-                                         back_populates='item',
-                                         uselist=False)
     media: 'Media' = relationship('Media',
                                   passive_deletes=True,
                                   back_populates='item',
@@ -272,62 +268,6 @@ class Meta(Base):
 #   author_url: ...
 #   saved_from_url: ...
 #   description: ...
-
-
-# Feature: Create Exif table and store there exif tags for images
-# Possible structure:
-# class Meta(Base):
-#   item_uuid: ...
-#   data = ...
-
-
-class RawMedia(Base):
-    """Initial content from user, not processed at all.
-
-    Content is not trustworthy, must be handled carefully.
-    At this moment we only got some bytes from user and know the filename.
-    Maybe there is a zip bomb inside. Also note that content is not loaded yet,
-    but the item is already exist (and can be seen with empty thumbnail).
-    """
-    __tablename__ = 'raw_media'
-
-    # primary and foreign keys ------------------------------------------------
-
-    id = sa.Column(sa.BigInteger,
-                   primary_key=True,
-                   autoincrement=True,
-                   nullable=False)
-
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
-                                sa.ForeignKey('items.uuid',
-                                              ondelete='CASCADE'),
-                                nullable=False,
-                                index=True)
-
-    # fields ------------------------------------------------------------------
-
-    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
-    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
-    status = sa.Column(sa.Enum('init', 'work', 'done', 'fail', name='status'),
-                       index=True)
-    filename = sa.Column(sa.String(length=MEDIUM), nullable=False)
-    content = sa.Column(pg.BYTEA, nullable=False)
-    features = sa.Column(pg.ARRAY(sa.Text), nullable=False)
-    attempts = sa.Column(sa.Integer, nullable=False, server_default='0')
-
-    # relations ---------------------------------------------------------------
-
-    item: Item = relationship('Item',
-                              passive_deletes=True,
-                              back_populates='raw_media',
-                              uselist=False)
-
-    # Feature: Add 'attempts' field in case if we could not handle media in
-    # adequate amount of attempts. Also tie this table to the Signatures table,
-    # in case if nasty user will try to load something like zip-bomb again
-    # and again. Without this measure user theoretically could take down c
-    # luster of workers of any size since workers will die on zip-bomb one
-    # by one repeatedly.
 
 
 class Media(Base):

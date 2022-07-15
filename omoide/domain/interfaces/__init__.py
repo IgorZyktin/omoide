@@ -17,6 +17,3 @@ from omoide.domain.interfaces.repositories.in_rp_meta import (
 )
 from omoide.domain.interfaces.repositories.preview import AbsPreviewRepository
 from omoide.domain.interfaces.repositories.search import AbsSearchRepository
-from omoide.domain.interfaces.repositories.upload import (
-    AbsUploadRepository,
-)

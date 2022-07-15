@@ -2,5 +2,4 @@
 from omoide.domain.aim import *
 from omoide.domain.auth import *
 from omoide.domain.common import *
-from omoide.domain.crud import *
 from omoide.domain.preview import *
