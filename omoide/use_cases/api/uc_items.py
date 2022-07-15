@@ -95,9 +95,28 @@ class UpdateItemUseCase(BaseItemUseCase):
             self,
             user: domain.User,
             uuid: UUID,
+            operations: list[api_models.PatchOperation],
     ) -> None:
         """Business logic."""
-        # TODO(i.zyktin): implement item update
+        await self._assert_has_access(user, uuid)
+        item = await self._repo.read_item(uuid)
+
+        if item is None:
+            raise exceptions.NotFound(f'Item {uuid} does not exist')
+
+        async with self._repo.transaction():
+            for operation in operations:
+                if operation.path == '/is_collection':
+                    await self.alter_is_collection(item, operation)
+
+    async def alter_is_collection(
+            self,
+            item: domain.Item,
+            operation: api_models.PatchOperation,
+    ) -> None:
+        """Alter collection field."""
+        item.is_collection = bool(operation.value)
+        await self._repo.update_item(item)
 
 
 class DeleteItemUseCase(BaseItemUseCase):

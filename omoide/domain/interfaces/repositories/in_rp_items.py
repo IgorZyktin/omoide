@@ -57,7 +57,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
 
     async def update_item(
             self,
-            payload: api_models.UpdateItemIn,
+            item: domain.Item,
     ) -> UUID:
         """Update existing item."""
 

@@ -31,7 +31,7 @@ __all__ = [
 
 class Item(BaseModel):
     """Model of a standard item."""
-    uuid: str
+    uuid: UUID
     parent_uuid: Optional[str]
     owner_uuid: str
     number: int
@@ -40,35 +40,41 @@ class Item(BaseModel):
     content_ext: Optional[str]
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
+    tags: list[str]
+    permissions: list[str]
 
     @property
     def content_path(self) -> str:
         """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.content_ext}'
+        return f'{str(self.uuid)[:2]}/{self.uuid}.{self.content_ext}'
 
     @property
     def preview_path(self) -> str:
         """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.preview_ext}'
+        return f'{str(self.uuid)[:2]}/{self.uuid}.{self.preview_ext}'
 
     @property
     def thumbnail_path(self) -> str:
         """Return file system path segment that will allow to find file."""
-        return f'{self.uuid[:2]}/{self.uuid}.{self.thumbnail_ext}'
+        return f'{str(self.uuid)[:2]}/{self.uuid}.{self.thumbnail_ext}'
 
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'Item':
         """Convert from arbitrary format to model."""
+        # TODO - damn asyncpg tries to bee too smart
+        _mapping = dict(zip(mapping.keys(), mapping.values()))
         return cls(
-            uuid=utils.as_str(mapping, 'uuid'),
-            parent_uuid=utils.as_str(mapping, 'parent_uuid'),
-            owner_uuid=utils.as_str(mapping, 'owner_uuid'),
-            number=mapping['number'],
-            name=mapping['name'],
-            is_collection=mapping['is_collection'],
-            content_ext=mapping['content_ext'],
-            preview_ext=mapping['preview_ext'],
-            thumbnail_ext=mapping['thumbnail_ext'],
+            uuid=utils.as_str(_mapping, 'uuid'),
+            parent_uuid=utils.as_str(_mapping, 'parent_uuid'),
+            owner_uuid=utils.as_str(_mapping, 'owner_uuid'),
+            number=_mapping['number'],
+            name=_mapping['name'],
+            is_collection=_mapping['is_collection'],
+            content_ext=_mapping['content_ext'],
+            preview_ext=_mapping['preview_ext'],
+            thumbnail_ext=_mapping['thumbnail_ext'],
+            tags=_mapping.get('tags', []) or [],
+            permissions=_mapping.get('permissions', []) or [],
         )
 
 
