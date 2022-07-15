@@ -237,6 +237,7 @@ async function createItemForProxy(proxy) {
     // send raw data to server and get uuid back
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 10000, // 10 seconds
             type: 'POST',
             url: '/api/items',
             contentType: 'application/json',
@@ -355,6 +356,7 @@ async function uploadMetaForProxy(proxy) {
     let lastModified = convertDatetimeToIsoString(date)
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 10000, // 10 seconds
             type: 'PUT',
             url: `/api/meta/${proxy.uuid}`,
             contentType: 'application/json',
@@ -393,6 +395,7 @@ async function uploadEXIFProxy(proxy) {
 
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 10000, // 10 seconds
             type: 'PUT',
             url: `/api/exif/${proxy.uuid}`,
             contentType: 'application/json',
@@ -418,6 +421,7 @@ async function saveContentForProxy(proxy) {
 
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 100000, // 100 seconds
             type: 'PUT',
             url: `/api/media/${proxy.uuid}/content`,
             contentType: 'application/json',
@@ -448,6 +452,7 @@ async function savePreviewForProxy(proxy) {
 
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 100000, // 100 seconds
             type: 'PUT',
             url: `/api/media/${proxy.uuid}/preview`,
             contentType: 'application/json',
@@ -478,6 +483,7 @@ async function saveThumbnailForProxy(proxy) {
 
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 100000, // 100 seconds
             type: 'PUT',
             url: `/api/media/${proxy.uuid}/thumbnail`,
             contentType: 'application/json',
@@ -539,6 +545,7 @@ async function getItem(itemUUID) {
     // load parent by uuid
     return new Promise(function (resolve, reject) {
         $.ajax({
+            timeout: 5000, // 5 seconds
             type: 'GET',
             url: `/api/items/${itemUUID}`,
             contentType: 'application/json',
@@ -566,6 +573,7 @@ async function ensureParentHasThumbnail(parent, firstChild) {
 
         return new Promise(function (resolve, reject) {
             $.ajax({
+                timeout: 5000, // 5 seconds
                 type: 'PUT',
                 url: `/api/media/${parent.uuid}/thumbnail`,
                 contentType: 'application/json',
@@ -600,6 +608,7 @@ async function ensureParentIsCollection(parent) {
 
         return new Promise(function (resolve, reject) {
             $.ajax({
+                timeout: 5000, // 5 seconds
                 type: 'PATCH',
                 url: `/api/items/${parent.uuid}`,
                 contentType: 'application/json',
