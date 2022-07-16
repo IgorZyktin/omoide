@@ -352,3 +352,34 @@ class EXIF(Base):
                               passive_deletes=True,
                               back_populates='exif',
                               uselist=False)
+
+
+class OrphanFiles(Base):
+    """Model that tracks files of already deleted items.
+
+    Has not foreign keys because user/item could already be deleted.
+    """
+    __tablename__ = 'orphan_files'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: int = sa.Column(sa.BigInteger,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    media_type = sa.Column(sa.Enum('content',
+                                   'preview',
+                                   'thumbnail',
+                                   name='media_type'))
+
+    owner_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                 nullable=False)
+
+    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+                                nullable=False)
+
+    ext = sa.Column(sa.String(length=SMALL), nullable=False)
