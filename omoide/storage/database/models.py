@@ -383,3 +383,8 @@ class OrphanFiles(Base):
                                 nullable=False)
 
     ext = sa.Column(sa.String(length=SMALL), nullable=False)
+
+    moment = sa.Column(sa.DateTime(timezone=True),
+                       nullable=False,
+                       index=True,
+                       server_default=sa.text("timezone('utc', now())"))
