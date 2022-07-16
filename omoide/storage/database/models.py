@@ -87,19 +87,19 @@ class Item(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    uuid: UUID = sa.Column(pg.UUID(),
                            primary_key=True,
                            nullable=False,
                            index=True,
                            unique=True)
 
-    parent_uuid: Optional[UUID] = sa.Column(pg.UUID(as_uuid=True),
+    parent_uuid: Optional[UUID] = sa.Column(pg.UUID(),
                                             sa.ForeignKey('items.uuid',
                                                           ondelete='CASCADE'),
                                             nullable=True,
                                             index=True)
 
-    owner_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    owner_uuid: UUID = sa.Column(pg.UUID(),
                                  sa.ForeignKey('users.uuid',
                                                ondelete='CASCADE'),
                                  nullable=False,

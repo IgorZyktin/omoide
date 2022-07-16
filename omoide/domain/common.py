@@ -32,16 +32,16 @@ __all__ = [
 class Item(BaseModel):
     """Model of a standard item."""
     uuid: UUID
-    parent_uuid: Optional[str]
-    owner_uuid: str
+    parent_uuid: Optional[UUID]
+    owner_uuid: UUID
     number: int
     name: str
     is_collection: bool
     content_ext: Optional[str]
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
-    tags: list[str]
-    permissions: list[str]
+    tags: list[str] = []
+    permissions: list[str] = []
 
     @property
     def content_path(self) -> str:
@@ -61,21 +61,7 @@ class Item(BaseModel):
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'Item':
         """Convert from arbitrary format to model."""
-        # TODO - damn asyncpg tries to bee too smart
-        _mapping = dict(zip(mapping.keys(), mapping.values()))
-        return cls(
-            uuid=utils.as_str(_mapping, 'uuid'),
-            parent_uuid=utils.as_str(_mapping, 'parent_uuid'),
-            owner_uuid=utils.as_str(_mapping, 'owner_uuid'),
-            number=_mapping['number'],
-            name=_mapping['name'],
-            is_collection=_mapping['is_collection'],
-            content_ext=_mapping['content_ext'],
-            preview_ext=_mapping['preview_ext'],
-            thumbnail_ext=_mapping['thumbnail_ext'],
-            tags=_mapping.get('tags', []) or [],
-            permissions=_mapping.get('permissions', []) or [],
-        )
+        return cls(**mapping)
 
 
 class PositionedItem(BaseModel):

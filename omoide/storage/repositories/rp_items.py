@@ -150,7 +150,7 @@ class ItemsRepository(
         """Return item or None."""
         stmt = sqlalchemy.select(models.Item).where(models.Item.uuid == uuid)
         response = await self.db.fetch_one(stmt)
-        return domain.Item.from_map(response) if response else None
+        return domain.Item.from_map(dict(response)) if response else None
 
     async def read_children(
             self,
