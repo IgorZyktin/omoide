@@ -3,6 +3,8 @@
 
 This component is facing towards the user and displays search results.
 """
+import os
+
 import fastapi
 from fastapi.staticfiles import StaticFiles
 
@@ -63,16 +65,9 @@ app.mount(
     name='static',
 )
 
-# TODO(i.zyktin): remove after nginx container setup
-if app_config.get_config().env == 'dev-linux':
+if app_config.get_config().env != 'prod':
     app.mount(
         '/content',
-        StaticFiles(directory='/home/igor/omoide/content'),
-        name='content',
-    )
-elif app_config.get_config().env == 'dev':
-    app.mount(
-        '/content',
-        StaticFiles(directory='o:\\content\\'),
+        StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
         name='content',
     )
