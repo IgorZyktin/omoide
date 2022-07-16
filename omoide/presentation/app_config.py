@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
 """Application settings.
 """
+import os
 from typing import Optional
 
-from pydantic import BaseSettings, BaseModel
-
-
-class App(BaseModel):
-    """Settings for the app itself."""
-    host: str = '0.0.0.0'
-    port: int = 8080
-    debug: bool = False
-    reload: bool = False
-    injection: str
+from pydantic import BaseSettings, SecretStr
 
 
 class Config(BaseSettings):
     """Application settings."""
-    db_url: str
-    app: App
+    db_url: SecretStr
+    injection: str = ''
     env: str = 'dev'
+    host: str = '0.0.0.0'
 
     class Config:
         env_prefix = 'omoide_'
-        env_nested_delimiter = '__'
 
 
 _active_config: Optional[Config] = None
+
+
+def clear_env_on_prod(given_config: Config) -> None:
+    """Clear env before start."""
+    if given_config.env == 'prod':
+        os.environ.clear()
+        os.environb.clear()
 
 
 def init(given_config: Optional[Config] = None) -> Config:
@@ -35,6 +34,7 @@ def init(given_config: Optional[Config] = None) -> Config:
 
     if given_config is None:
         _active_config = Config()
+        clear_env_on_prod(_active_config)
     else:
         _active_config = given_config
     return _active_config
