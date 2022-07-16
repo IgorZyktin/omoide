@@ -3,8 +3,9 @@
 """
 import os
 from typing import Optional
+from uuid import UUID
 
-from pydantic import BaseSettings, SecretStr
+from pydantic import BaseSettings, SecretStr, validator
 
 
 class Config(BaseSettings):
@@ -13,6 +14,19 @@ class Config(BaseSettings):
     injection: str = ''
     env: str = 'dev'
     host: str = '0.0.0.0'
+    test_users: str | frozenset[UUID] = frozenset()
+
+    @classmethod
+    @validator('test_users', pre=True)
+    def parse_test_users(cls, value: str | frozenset[UUID]):
+        """Convert string of users into set of UUIDs."""
+        if isinstance(value, str):
+            value = frozenset(
+                UUID(clean)
+                for raw in value.split()
+                if (clean := raw.strip())
+            )
+        return value
 
     class Config:
         env_prefix = 'omoide_'

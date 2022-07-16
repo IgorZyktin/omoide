@@ -38,10 +38,7 @@ async def login(
 
     new_user = await use_case.execute(credentials, authenticator)
 
-    # TODO - temporarily avoid logging in test user
-    not_dev = user.login == 'test' and config.env != 'dev'
-
-    if new_user.is_anon() or not_dev:
+    if new_user.is_anon() or user.uuid in config.test_users:
         raise fastapi.HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect login or password',
