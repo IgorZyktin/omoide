@@ -18,10 +18,10 @@ def main():
     config = init_app()
     uvicorn.run(
         'omoide.presentation.app:app',
-        host=config.app.host,
-        port=config.app.port,
-        debug=config.app.debug,
-        reload=config.app.reload,
+        host=config.host,
+        port=8080,
+        debug=True,
+        reload=True,
     )
 
 
