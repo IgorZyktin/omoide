@@ -85,11 +85,17 @@ async def get_current_user(
         authenticator: interfaces.AbsAuthenticator = fastapi.Depends(
             get_authenticator,
         ),
+        active_config: app_config.Config = fastapi.Depends(config),
 ) -> auth.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
         return auth.User.new_anon()
-    return await use_case.execute(credentials, authenticator)
+    return await use_case.execute(
+        credentials,
+        authenticator,
+        env=active_config.env,
+        test_users=active_config.test_users,
+    )
 
 
 # application related use cases -----------------------------------------------

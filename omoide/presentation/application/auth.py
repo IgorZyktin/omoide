@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Auth related routes.
 """
-
 import fastapi
 from fastapi import Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -36,9 +35,14 @@ async def login(
         # already logged in
         return RedirectResponse(url)
 
-    new_user = await use_case.execute(credentials, authenticator)
+    new_user = await use_case.execute(
+        credentials,
+        authenticator,
+        env=config.env,
+        test_users=config.test_users,
+    )
 
-    if new_user.is_anon() or user.uuid in config.test_users:
+    if new_user.is_anon():
         raise fastapi.HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect login or password',
