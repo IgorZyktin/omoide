@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Application settings.
 """
-import os
 from typing import Optional
 from uuid import UUID
 
@@ -35,20 +34,12 @@ class Config(BaseSettings):
 _active_config: Optional[Config] = None
 
 
-def clear_env_on_prod(given_config: Config) -> None:
-    """Clear env before start."""
-    if given_config.env == 'prod':
-        os.environ.clear()
-        os.environb.clear()
-
-
 def init(given_config: Optional[Config] = None) -> Config:
     """Generate new config instance."""
     global _active_config
 
     if given_config is None:
         _active_config = Config()
-        clear_env_on_prod(_active_config)
     else:
         _active_config = given_config
     return _active_config
