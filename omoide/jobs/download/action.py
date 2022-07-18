@@ -21,12 +21,16 @@ def get_media(
         last_seen: Optional[tuple[UUID, str]] = None,
 ) -> list[tuple[UUID, str]]:
     """Return UUIDs of media records to save."""
-    stmt = sqlalchemy.select(models.Media.item_uuid, models.Media.media_type)
+    stmt = sqlalchemy.select(
+        models.Media.item_uuid,
+        models.Media.media_type,
+    ).where(
+        models.Media.status == 'init',
+    )
 
     if last_seen is not None:
         last_uuid, last_type = last_seen
         stmt = stmt.where(
-            models.Media.status == 'init',
             (models.Media.item_uuid,
              models.Media.media_type) > (last_uuid, last_type),
         )
