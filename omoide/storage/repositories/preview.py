@@ -2,6 +2,7 @@
 """Preview repository.
 """
 from typing import Optional
+from uuid import UUID
 
 from omoide import domain, utils
 from omoide.domain import interfaces
@@ -49,7 +50,7 @@ class PreviewRepository(
             return item
         return None
 
-    async def get_neighbours(self, item_uuid: str) -> list[str]:
+    async def get_neighbours(self, item_uuid: str) -> list[UUID]:
         """Return uuids of all the neighbours."""
         query = """
         SELECT uuid
@@ -63,13 +64,13 @@ class PreviewRepository(
         """
 
         response = await self.db.fetch_all(query, {'item_uuid': item_uuid})
-        return [str(row['uuid']) for row in response]
+        return [row['uuid'] for row in response]
 
     async def get_specific_neighbours(
             self,
             user: domain.User,
             item_uuid: str,
-    ) -> list[str]:
+    ) -> list[UUID]:
         """Return uuids of all the neighbours (which we have access to)."""
         query = """
         SELECT uuid
@@ -91,4 +92,4 @@ class PreviewRepository(
         }
 
         response = await self.db.fetch_all(query, values)
-        return [str(row['uuid']) for row in response]
+        return [row['uuid'] for row in response]

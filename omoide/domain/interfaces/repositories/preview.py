@@ -3,6 +3,7 @@
 """
 import abc
 from typing import Optional
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import preview
@@ -26,7 +27,7 @@ class AbsPreviewRepository(
         """Return instance of the item."""
 
     @abc.abstractmethod
-    async def get_neighbours(self, item_uuid: str) -> list[str]:
+    async def get_neighbours(self, item_uuid: str) -> list[UUID]:
         """Return uuids of all the neighbours."""
 
     @abc.abstractmethod
@@ -34,5 +35,5 @@ class AbsPreviewRepository(
             self,
             user: domain.User,
             item_uuid: str,
-    ) -> list[str]:
+    ) -> list[UUID]:
         """Return uuids of all the neighbours (which we have access to)."""

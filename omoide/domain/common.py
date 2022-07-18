@@ -247,7 +247,7 @@ class SingleResult(BaseModel):
     item: Item
     details: Details
     location: Location
-    neighbours: list[str]
+    neighbours: list[UUID]
 
 
 class Media(BaseModel):
