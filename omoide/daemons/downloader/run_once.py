@@ -27,8 +27,8 @@ def main(**kwargs):
             output=output,
         )
 
-    downloaded = sum(x for x in actions if x.is_done())
-    failed = sum(x for x in actions if x.is_failed())
+    downloaded = sum(1 for x in actions if x.is_done())
+    failed = sum(1 for x in actions if x.is_failed())
 
     if downloaded or failed:
         output.print_line()
