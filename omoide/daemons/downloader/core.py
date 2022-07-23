@@ -16,5 +16,6 @@ def download_items_from_database_to_storages(
         output: out.Output,
 ) -> list[action_class.Action]:
     """Do the actual download job."""
-    # TODO - add logic here
+    batch = database.get_media_to_download()
+
     return []
