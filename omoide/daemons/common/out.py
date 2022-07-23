@@ -10,6 +10,7 @@ class Column(BaseModel):
     """Column DTO."""
     name: str
     width: int
+    alias: str
 
 
 class Output:
@@ -25,10 +26,19 @@ class Output:
             self.print = print
 
         self.columns: list[Column] = []
+        self._columns_map: dict[str, Column] = {}
 
     def add_columns(self, *args: Column) -> None:
         """Store columns setup."""
         self.columns.extend(args)
+        self._extend_alias(*args)
+
+    def _extend_alias(self, *args: Column) -> None:
+        """Store additional aliases."""
+        self._columns_map.update({
+            column.alias: column
+            for column in args
+        })
 
     def print_dummy(self, *args, **kwargs) -> None:
         """Do nothing."""
@@ -67,5 +77,19 @@ class Output:
             column.name.center(column.width)
             for column in self.columns
         ]
+
+        self.print('|' + '|'.join(segments) + '|')
+
+    def print_row(self, **kwargs: str) -> None:
+        """Print table row."""
+        if self.silent:
+            return
+
+        segments = []
+
+        for key, value in kwargs.items():
+            column = self._columns_map[key]
+            text = value.center(column.width)
+            segments.append(text)
 
         self.print('|' + '|'.join(segments) + '|')

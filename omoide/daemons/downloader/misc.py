@@ -45,12 +45,12 @@ def get_output_instance_for_downloader(
     output = out.Output(silent=config.silent)
 
     output.add_columns(
-        out.Column(name='Processed at', width=27),
-        out.Column(name='UUID', width=38),
-        out.Column(name='Type', width=11),
-        out.Column(name='Size', width=14),
-        out.Column(name='Status', width=8),
-        out.Column(name='Location', width=95),
+        out.Column(name='Processed at', width=27, alias='processed_at'),
+        out.Column(name='UUID', width=38, alias='uuid'),
+        out.Column(name='Type', width=11, alias='type'),
+        out.Column(name='Size', width=14, alias='size'),
+        out.Column(name='Status', width=8, alias='status'),
+        out.Column(name='Location', width=95, alias='location'),
     )
 
     return output

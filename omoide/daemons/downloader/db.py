@@ -16,6 +16,7 @@ from omoide.storage.database import models
 
 class Database:
     """Wrapper on SQL commands for downloader."""
+    _location_cache: dict[UUID, str] = {}
 
     def __init__(self, config: cfg.DownloaderConfig) -> None:
         """Initialize instance."""
@@ -163,3 +164,36 @@ class Database:
             self.consider_media_as_done(media)
         else:
             self.consider_media_as_failed(media)
+
+    def get_cached_location_for_an_item(self, item_uuid: UUID) -> str:
+        """Fast location load."""
+        location = self._location_cache.get(item_uuid)
+
+        if location is None:
+            location = self.get_location_for_an_item(item_uuid)
+            self._location_cache[item_uuid] = location
+
+        return location
+
+    def get_location_for_an_item(self, item_uuid: UUID) -> str:
+        """Get human-readable location of an item."""
+        current_uuid = item_uuid
+        segments = []
+        done_steps = 0
+        max_steps = 100
+
+        while current_uuid:
+            done_steps += 1
+            item = self.session.query(models.Item).get(current_uuid)
+            current_uuid = item.parent_uuid
+            segments.append(item.name or str(item.uuid))
+
+            if done_steps > max_steps:
+                # TODO: replace it with proper logger call
+                print('Got into loop during parent search')
+                break
+
+        if not segments:
+            return '???'
+
+        return '/'.join(reversed(segments))
