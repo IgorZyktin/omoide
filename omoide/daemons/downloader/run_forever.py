@@ -17,6 +17,9 @@ def main(**kwargs):
 
     output.print('Started <DOWNLOADER> as a daemon')
     output.print_config(config)
+    output.print_line()
+    output.print_header()
+    output.print_line()
 
     next_invocation = time.monotonic()
 

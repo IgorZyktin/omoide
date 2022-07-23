@@ -16,7 +16,9 @@ def main(**kwargs):
 
     output.print('Started <DOWNLOADER> as a command')
     output.print_config(config)
+    output.print_line()
     output.print_header()
+    output.print_line()
 
     with database.life_cycle():
         actions = core.download_items_from_database_to_storages(
@@ -25,19 +27,20 @@ def main(**kwargs):
             output=output,
         )
 
-    output.print_line()
-
-    message = 'Downloaded {} media items.'.format(
-        sum(x for x in actions if x.is_done())
-    )
+    downloaded = sum(x for x in actions if x.is_done())
     failed = sum(x for x in actions if x.is_failed())
+
+    if downloaded or failed:
+        output.print_line()
+
+    if downloaded:
+        output.print(f'Downloaded {downloaded} media items.')
+
     if failed:
-        message += f'\nFailed to download {failed} media items.'
+        output.print(f'Failed to download {failed} media items.')
 
     duration = (utils.now() - config.started_at).total_seconds()
-    message += f'\nTook {duration:0.1f} sec.'
-
-    output.print(message)
+    output.print(f'Took {duration:0.1f} sec.')
 
 
 if __name__ == '__main__':

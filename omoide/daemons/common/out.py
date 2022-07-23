@@ -3,7 +3,13 @@
 """
 from datetime import datetime
 
-from pydantic import BaseSettings
+from pydantic import BaseSettings, BaseModel
+
+
+class Column(BaseModel):
+    """Column DTO."""
+    name: str
+    width: int
 
 
 class Output:
@@ -17,6 +23,12 @@ class Output:
             self.print = self.print_dummy
         else:
             self.print = print
+
+        self.columns: list[Column] = []
+
+    def add_columns(self, *args: Column) -> None:
+        """Store columns setup."""
+        self.columns.extend(args)
 
     def print_dummy(self, *args, **kwargs) -> None:
         """Do nothing."""
@@ -39,11 +51,21 @@ class Output:
         if self.silent:
             return
 
-        # TODO
+        segments = [
+            '-' * column.width
+            for column in self.columns
+        ]
+
+        self.print('+' + '+'.join(segments) + '+')
 
     def print_header(self) -> None:
         """Print header for the table."""
         if self.silent:
             return
 
-        # TODO
+        segments = [
+            column.name.center(column.width)
+            for column in self.columns
+        ]
+
+        self.print('|' + '|'.join(segments) + '|')
