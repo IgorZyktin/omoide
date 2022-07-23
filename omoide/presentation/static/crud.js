@@ -166,7 +166,7 @@ function getContentUrl(item, desiredContentType) {
     else
         return null
 
-    return `/content/${item.owner_uuid}/${desiredContentType}/${prefix}/${item.uuid}.${ext}`
+    return `/content/${desiredContentType}/${item.owner_uuid}/${prefix}/${item.uuid}.${ext}`
 }
 
 function getPreviewUrl(item) {

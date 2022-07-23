@@ -308,7 +308,7 @@
             <img src="{{ request.url_for('static', path='empty.png') }}"
                  alt="{{ item.name }}"/>
         {%- else -%}
-            <img src="/content/{{ item.owner_uuid }}/thumbnail/{{ item.thumbnail_path }}"
+            <img src="/content/thumbnail/{{ item.owner_uuid }}/{{ item.thumbnail_path }}"
                  alt="{{ item.name }}"/>
         {%- endif -%}
         </a>

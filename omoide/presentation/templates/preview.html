@@ -21,12 +21,12 @@
                 <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
             {% endif %}
 
-            <a href="/content/{{ item.owner_uuid }}/content/{{ item.content_path }}">
+            <a href="/content/content/{{ item.owner_uuid }}/{{ item.content_path }}">
                 {%- if item.preview_ext is none -%}
                     <img src="{{ url_for('static', path='empty.png') }}"
                          alt="{{ item.name }}"/>
                 {%- else -%}
-                    <img src="/content/{{ item.owner_uuid }}/preview/{{ item.preview_path }}"
+                    <img src="/content/preview/{{ item.owner_uuid }}/{{ item.preview_path }}"
                          alt="{{ item.name }}"/>
                 {%- endif -%}
             </a>

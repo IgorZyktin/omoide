@@ -33,7 +33,7 @@ def to_simple_item(
         thumbnail = empty_href
     else:
         thumbnail = (
-            f'/content/{item.owner_uuid}/thumbnail/{item.thumbnail_path}'
+            f'/content/thumbnail/{item.owner_uuid}/{item.thumbnail_path}'
         )
 
     return {
