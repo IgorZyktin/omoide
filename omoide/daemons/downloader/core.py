@@ -4,6 +4,10 @@
 Downloads processed images from database to the local storages(s).
 We're using database as a medium.
 """
+import os
+import random
+from pathlib import Path
+
 from omoide import utils
 from omoide.daemons.common import action_class
 from omoide.daemons.common import out
@@ -27,8 +31,10 @@ def download_items_from_database_to_storages(
 
             try:
                 size = len(media.content)
-                process_single_media(config, media)
-                action.done()
+                if process_single_media(config, media):
+                    action.done()
+                else:
+                    action.fail()
             except Exception as exc:
                 action.fail()
 
@@ -63,6 +69,64 @@ def download_items_from_database_to_storages(
 def process_single_media(
         config: cfg.DownloaderConfig,
         media: models.Media,
-) -> None:
-    """Save one object."""
-    # TODO
+) -> bool:
+    """Save one object. Return True on success."""
+    if any((
+            not media.media_type,
+            not media.ext,
+            not media.content,
+    )):
+        return False
+
+    if config.dry_run:
+        return True
+
+    if (config.copy_all or media.type == 'thumbnail') and config.use_hot:
+        download_file_for_media(media, path=Path(config.hot_folder))
+
+    download_file_for_media(media, path=Path(config.cold_folder))
+
+    return True
+
+
+def download_file_for_media(media: models.Media, path: Path) -> None:
+    """Perform actual filesystem operations for media."""
+    bucket = utils.get_bucket(media.item_uuid)
+    filename = create_folders_for_filename(
+        path,
+        media.media_type,
+        str(media.item.owner_uuid),
+        bucket,
+        f'{media.item_uuid}.{media.ext.lower()}'
+    )
+
+    temp_filename = filename + '.tmp' + str(random.randint(1, 1000))
+
+    drop_if_exists(filename)
+    drop_if_exists(temp_filename)
+
+    with open(temp_filename, 'wb') as file:
+        file.write(media.content)
+        file.flush()
+        os.fsync(file.fileno())
+
+    os.rename(temp_filename, filename)
+
+
+def drop_if_exists(filename: str) -> None:
+    """Try deleting file before saving."""
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass
+
+
+def create_folders_for_filename(path: Path, *segments: str) -> str:
+    """Combine filename, create folders if they do not exist."""
+    for i, segment in enumerate(segments, start=1):
+        path /= segment
+
+        if not path.exists() and i != len(segments):
+            os.mkdir(path)
+
+    return str(path.absolute())

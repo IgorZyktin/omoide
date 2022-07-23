@@ -50,7 +50,8 @@ def get_output_instance_for_downloader(
         out.Column(name='Type', width=11, alias='type'),
         out.Column(name='Size', width=14, alias='size'),
         out.Column(name='Status', width=8, alias='status'),
-        out.Column(name='Location', width=95, alias='location'),
+        out.Column(name='Location', width=95,
+                   alias='location', justify='left'),
     )
 
     return output

@@ -11,6 +11,17 @@ class Column(BaseModel):
     name: str
     width: int
     alias: str
+    justify: str = 'center'
+
+    def use_value(self, value: str) -> str:
+        """Return textual representation."""
+        if self.justify == 'center':
+            result = value.center(self.width)
+        elif self.justify == 'left':
+            result = value.ljust(self.width)
+        else:
+            result = value.rjust(self.width)
+        return result
 
 
 class Output:
@@ -44,7 +55,16 @@ class Output:
         """Do nothing."""
 
     def print_config(self, config: BaseSettings) -> None:
-        """Human-readable display of the given config."""
+        """Human-readable display of the given config.
+
+        Example:
+        Config:
+            01. db_url=SecretStr('**********')
+            02. hot_folder='/home/user/hot'
+            03. cold_folder='/home/user/cold'
+            04. copy_all=True
+            05. use_hot=True
+        """
         if self.silent:
             return
 
@@ -57,7 +77,11 @@ class Output:
                 self.print(f'\t{i:02d}. {key}={value!r}')
 
     def print_line(self) -> None:
-        """Print separation line for a table."""
+        """Print separation line for a table.
+
+        Example:
+        +----------+-----------------+-----------+--------------+--------+
+        """
         if self.silent:
             return
 
@@ -69,7 +93,11 @@ class Output:
         self.print('+' + '+'.join(segments) + '+')
 
     def print_header(self) -> None:
-        """Print header for the table."""
+        """Print header for the table.
+
+        Example:
+        |        Processed at       |           UUID          |
+        """
         if self.silent:
             return
 
@@ -81,7 +109,11 @@ class Output:
         self.print('|' + '|'.join(segments) + '|')
 
     def print_row(self, **kwargs: str) -> None:
-        """Print table row."""
+        """Print table row.
+
+        Example:
+        | 2022-07-23 10:48:59+00:00 | 942aca5c-668d-4bd9-a706-a7f809b3720d |
+        """
         if self.silent:
             return
 
@@ -89,7 +121,6 @@ class Output:
 
         for key, value in kwargs.items():
             column = self._columns_map[key]
-            text = value.center(column.width)
-            segments.append(text)
+            segments.append(column.use_value(value))
 
         self.print('|' + '|'.join(segments) + '|')

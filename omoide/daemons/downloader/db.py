@@ -68,7 +68,7 @@ class Database:
         with Session(self.engine) as session:
             self.session = session
             yield
-            self.session = None
+        self.session = None
 
     def get_media_to_download(self) -> Iterator[models.Media]:
         """Load all media rows with batching."""
