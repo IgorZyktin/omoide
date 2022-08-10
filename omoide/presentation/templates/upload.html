@@ -86,8 +86,8 @@
                class="button"
                value="Upload media">
 
-        <label for="global-progress">Completion:</label>
-        <progress id="global-progress" value="0" max="100">25</progress>
+        <div id="global-status"></div>
+
     </div>
 
     <br/>
@@ -96,24 +96,26 @@
     <br/>
 
     <script>
+        const UPLOAD_STATE = createUploadState('global-status')
+
         $('#media_button').click(function () {
+            if ($(this).hasClass('button-disabled')) {
+                return
+            }
+
             if ($('#complexity_of_upload').val() === 'simple') {
-                oneShot(this)
+                oneShot(this, UPLOAD_STATE)
             } else {
-                // TODO - add upload state
-                if (true) {
-                    preprocessMedia(this)
-                } else {
-                    uploadMedia(this)
+                if (UPLOAD_STATE.status === 'init') {
+                    preprocessMedia(this, UPLOAD_STATE)
+                } else if (UPLOAD_STATE.status === 'processed') {
+                    uploadMedia(this, UPLOAD_STATE)
                 }
             }
         });
 
-        $('#upload_media_button').click(function () {
-            uploadMedia(this)
-        });
-
         $('#complexity_of_upload').on('change', function () {
+            UPLOAD_STATE.setStatus('init')
             if ($(this).val() === 'simple') {
                 $('#media_button').val('Upload media')
             } else {
@@ -134,8 +136,10 @@
         $('#feature-exif').on('change', function () {
             if ($(this).is(':checked')) {
                 $('#all-features-exif').show()
+                EXPECTED_STEPS.add('uploadEXIFProxy')
             } else {
                 $('#all-features-exif').hide()
+                EXPECTED_STEPS.delete('uploadEXIFProxy')
             }
         });
 
