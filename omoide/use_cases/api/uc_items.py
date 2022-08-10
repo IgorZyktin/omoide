@@ -134,8 +134,8 @@ class DeleteItemUseCase(BaseItemUseCase):
         parent_uuid = item.parent_uuid
 
         if parent_uuid is None:
-            raise exceptions.Forbidden(f'You are not allowed '
-                                       f'to delete root items')
+            raise exceptions.Forbidden('You are not allowed '
+                                       'to delete root items')
 
         await self._repo.delete_item(uuid)
 
