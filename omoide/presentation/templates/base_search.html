@@ -176,7 +176,8 @@
                 <span class="wide-text">&nbsp;Upload media</span>
             </a>
 
-            {% if current_item and current_item.owner_uuid == user.uuid %}
+            {# TODO: actually use uuids, not just strings #}
+            {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
                 <a href="{{ url_for('upload') + parent_hint }}"
                    title="Edit item"
                    class="button">
