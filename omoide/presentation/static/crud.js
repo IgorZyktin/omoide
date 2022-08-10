@@ -32,14 +32,21 @@ function makeNotification(text, css_class) {
 
 function gatherItemParameters() {
     // gather information from typical creation fields
-    let tags = splitLines($('#item_tags').val())
-    let permissions = splitLines($('#item_permissions').val())
+    let uuid_or_name = $('#parent_uuid_or_name').val()
+    let parent_uuid
+
+    if (isUUID(uuid_or_name)){
+        parent_uuid = uuid_or_name
+    } else {
+        parent_uuid = null
+    }
+
     return {
-        parent_uuid: $('#parent_uuid').val() || null,
+        parent_uuid: parent_uuid,
         is_collection: $('#treat-item-as').val() === 'collection',
         name: $('#item_name').val(),
-        tags: tags,
-        permissions: permissions,
+        tags: splitLines($('#item_tags').val()),
+        permissions: splitLines($('#item_permissions').val()),
     }
 }
 
@@ -62,6 +69,7 @@ function describeFail(response) {
 
 async function createItem(button, parameters) {
     // send command for item creation
+    console.log(parameters)
     $.ajax({
         type: 'POST',
         url: '/api/items',
