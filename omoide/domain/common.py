@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional, Mapping, Iterator
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from omoide import domain
 from omoide.domain import utils
@@ -41,7 +41,15 @@ class Item(BaseModel):
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
     tags: list[str] = []
-    permissions: list[str] = []
+    permissions: Optional[list[str]] = None
+
+    @validator('permissions', pre=True, always=True)
+    def set_default_permissions(
+            cls,
+            permissions: Optional[list[str]],
+    ) -> list[str]:
+        """Set permissions if item does not have it."""
+        return permissions or []
 
     @property
     def content_path(self) -> str:

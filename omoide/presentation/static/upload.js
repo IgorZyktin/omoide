@@ -3,9 +3,22 @@ const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
 const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
-const TOTAL_STEPS = 11
 const VALID_EXTENSIONS = ['jpg', 'jpeg']
 const MAX_FILENAME_LENGTH = 255
+const EXPECTED_STEPS = new Set([
+    'validateProxy',
+    'generateContentForProxy',
+    'generatePreviewForProxy',
+    'generateThumbnailForProxy',
+    'generateIconForProxy',
+    'generateEXIForProxy',
+    'createItemForProxy',
+    'uploadMetaForProxy',
+    'uploadTagsProxy',
+    'saveContentForProxy',
+    'savePreviewForProxy',
+    'saveThumbnailForProxy',
+])
 
 let parentProcessed = false
 
@@ -99,6 +112,30 @@ function extractExt(filename) {
 
 function createFileProxy(file, tags) {
     // create new proxy that stores file upload progress
+    let element = $('<div>', {class: 'upload-element'})
+
+    let iconElement = $('<img>', {
+        src: EMPTY_FILE,
+        width: ICON_SIZE,
+        height: 'auto',
+    })
+
+    let progressElement = $('<progress>', {
+        id: 'global-progress',
+        value: 0,
+        max: 100,
+    })
+
+    let textElement = $('<p>', {
+        text: file.name,
+    })
+
+    let linesElement = $('<div>', {class: 'upload-lines'})
+
+    textElement.appendTo(linesElement)
+    progressElement.appendTo(linesElement)
+    iconElement.appendTo(element)
+    linesElement.appendTo(element)
     return {
         ready: false,
         uuid: null,
@@ -141,44 +178,35 @@ function createFileProxy(file, tags) {
         exifGenerated: false,
         exifUploaded: false,
 
-        element: $('<div>', {class: 'upload-element'}),
-        features: [],
+        // html
+        'element': element,
+        'progressElement': progressElement,
+        'labelElement': linesElement,
+        'iconElement': iconElement,
+        'textElement': textElement,
+
+        features: new Set([]),
         status: 'init',
         description: '',
-        steps: 0,
-        totalSteps: TOTAL_STEPS,
+        actualSteps: new Set([]),
         tagsInitial: tags,
         tagsUploaded: false,
         permissions: [], // TODO - add permissions
         getProgress: function () {
-            return (this.steps / this.totalSteps) * 100
+            let _intersection = new Set([]);
+            for (let elem of EXPECTED_STEPS) {
+                if (this.actualSteps.has(elem))
+                    _intersection.add(elem)
+            }
+            return (_intersection.size / EXPECTED_STEPS.size) * 100
+        },
+        setIcon: function (newIcon){
+            this.icon = newIcon
+            this.iconElement.attr('src', newIcon)
+            this.iconGenerated = true
         },
         render: function () {
-            this.element.empty()
-            if (this.icon) {
-                $('<img>', {
-                    src: this.icon,
-                    width: ICON_SIZE,
-                    height: 'auto',
-                }).appendTo(this.element)
-            } else {
-                $('<img>', {
-                    src: EMPTY_FILE,
-                    width: ICON_SIZE,
-                    height: 'auto',
-                }).appendTo(this.element)
-            }
-            let lines = $('<div>', {class: 'upload-lines'})
-
-            $('<p>', {
-                text: this.filename,
-            }).appendTo(lines)
-
-            $('<progress>', {
-                value: this.getProgress(),
-                max: 100,
-            }).appendTo(lines)
-            lines.appendTo(this.element)
+            this.progressElement.val(this.getProgress())
         },
         getTags: function () {
             return this.tagsInitial
@@ -186,13 +214,53 @@ function createFileProxy(file, tags) {
     }
 }
 
-async function doIf(targets, handler, condition) {
+function getHandlerDescription(handler, label) {
+    // get human-readable description of current function
+    let text
+
+    if (handler.name === 'validateProxy')
+        text = `Checking ${label}`
+    else if (handler.name === 'generateContentForProxy')
+        text = `Processing content ${label}`
+    else if (handler.name === 'generatePreviewForProxy')
+        text = `Processing preview ${label}`
+    else if (handler.name === 'generateThumbnailForProxy')
+        text = `Processing thumbnail ${label}`
+    else if (handler.name === 'generateIconForProxy')
+        text = `Processing icon ${label}`
+    else if (handler.name === 'generateEXIForProxy')
+        text = `Processing EXIF ${label}`
+    else if (handler.name === 'createItemForProxy')
+        text = `Creating item ${label}`
+    else if (handler.name === 'uploadMetaForProxy')
+        text = `Uploading metainfo ${label}`
+    else if (handler.name === 'uploadTagsProxy')
+        text = `Uploading tags ${label}`
+    else if (handler.name === 'uploadPermissionsForProxy')
+        text = `Uploading permissions ${label}`
+    else if (handler.name === 'uploadEXIFProxy')
+        text = `Uploading exif ${label}`
+    else if (handler.name === 'saveContentForProxy')
+        text = `Uploading content ${label}`
+    else if (handler.name === 'savePreviewForProxy')
+        text = `Uploading preview ${label}`
+    else if (handler.name === 'saveThumbnailForProxy')
+        text = `Uploading thumbnail ${label}`
+    else
+        text = `Doing ${handler.name} for ${label}`
+
+    return text
+}
+
+async function doIf(targets, handler, uploadState, condition) {
     // conditionally iterate on every element
     let progress = 0
     for (let target of targets) {
         if (target.status !== 'fail' && condition(target)) {
             let label = target.uuid || target.file.name
-            console.log(`Doing ${handler.name} for ${label}`)
+            let action = getHandlerDescription(handler, label)
+            uploadState.setAction(action)
+            console.log(action)
             await handler(target)
             progress += target.getProgress()
         }
@@ -201,7 +269,7 @@ async function doIf(targets, handler, condition) {
     if (!targets.length)
         return
 
-    $('#global-progress').attr('value', progress / targets.length)
+    uploadState.setProgress(progress / targets.length)
 }
 
 async function validateProxy(proxy) {
@@ -229,7 +297,7 @@ async function validateProxy(proxy) {
     }
 
     proxy.isValid = true
-    proxy.steps += 1
+    proxy.actualSteps.add('validateProxy')
     proxy.render()
 }
 
@@ -250,7 +318,7 @@ async function createItemForProxy(proxy) {
             }),
             success: function (response) {
                 proxy.uuid = response['uuid']
-                proxy.steps += 1
+                proxy.actualSteps.add('createItemForProxy')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
@@ -285,7 +353,7 @@ async function generateContentForProxy(proxy) {
     proxy.ready = false
     proxy.content = await blobToBase64(proxy.file)
     proxy.contentGenerated = true
-    proxy.steps += 1
+    proxy.actualSteps.add('generateContentForProxy')
     proxy.ready = true
     proxy.render()
 }
@@ -296,7 +364,7 @@ async function generatePreviewForProxy(proxy) {
     proxy.preview = await resizeFromFile(proxy.file, PREVIEW_SIZE)
     proxy.previewGenerated = true
     proxy.previewExt = 'jpg'
-    proxy.steps += 1
+    proxy.actualSteps.add('generatePreviewForProxy')
     proxy.ready = true
     proxy.render()
 }
@@ -307,7 +375,7 @@ async function generateThumbnailForProxy(proxy) {
     proxy.thumbnail = await resizeFromFile(proxy.file, THUMBNAIL_SIZE)
     proxy.thumbnailGenerated = true
     proxy.thumbnailExt = 'jpg'
-    proxy.steps += 1
+    proxy.actualSteps.add('generateThumbnailForProxy')
     proxy.ready = true
     proxy.render()
 }
@@ -315,9 +383,8 @@ async function generateThumbnailForProxy(proxy) {
 async function generateIconForProxy(proxy) {
     // generate tiny thumbnail for proxy
     proxy.ready = false
-    proxy.icon = await resizeFromFile(proxy.file, ICON_SIZE)
-    proxy.iconGenerated = true
-    proxy.steps += 1
+    proxy.setIcon(await resizeFromFile(proxy.file, ICON_SIZE))
+    proxy.actualSteps.add('generateIconForProxy')
     proxy.ready = true
     proxy.render()
 }
@@ -347,7 +414,13 @@ async function generateEXIForProxy(proxy) {
 
     proxy.exif = exif
     proxy.exifGenerated = true
+    proxy.actualSteps.add('generateEXIForProxy')
     proxy.ready = true
+}
+
+async function uploadPermissionsForProxy(proxy) {
+    // upload permissions
+    // TODO
 }
 
 async function uploadMetaForProxy(proxy) {
@@ -368,7 +441,7 @@ async function uploadMetaForProxy(proxy) {
             }),
             success: function (response) {
                 proxy.metaUploaded = true
-                proxy.steps += 1
+                proxy.actualSteps.add('uploadMetaForProxy')
                 resolve('ok')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -383,7 +456,7 @@ async function uploadTagsProxy(proxy) {
     // upload tags
     // TODO - add tags upload
     proxy.tagsUploaded = true
-    proxy.steps += 1
+    proxy.actualSteps.add('uploadTagsProxy')
 }
 
 async function uploadEXIFProxy(proxy) {
@@ -431,7 +504,7 @@ async function saveContentForProxy(proxy) {
             }),
             success: function (response) {
                 proxy.contentUploaded = true
-                proxy.steps += 1
+                proxy.actualSteps.add('saveContentForProxy')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
@@ -462,7 +535,7 @@ async function savePreviewForProxy(proxy) {
             }),
             success: function (response) {
                 proxy.previewUploaded = true
-                proxy.steps += 1
+                proxy.actualSteps.add('savePreviewForProxy')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
@@ -493,7 +566,7 @@ async function saveThumbnailForProxy(proxy) {
             }),
             success: function (response) {
                 proxy.thumbnailUploaded = true
-                proxy.steps += 1
+                proxy.actualSteps.add('saveThumbnailForProxy')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
@@ -632,33 +705,55 @@ async function ensureParentIsCollection(parent) {
     }
 }
 
-async function preprocessMedia(button) {
+async function oneShot(button, uploadState) {
+    // preprocess + upload
+    await preprocessMedia(button, uploadState)
+    await uploadMedia(button, uploadState)
+}
+
+async function preprocessMedia(button, uploadState) {
     // prepare given media for upload
     let targets = getTargets()
 
     $(button).addClass('button-disabled')
-    await doIf(targets, validateProxy, p => p.isValid === null)
-    await doIf(targets, generateContentForProxy, p => !p.contentGenerated && p.isValid)
-    await doIf(targets, generatePreviewForProxy, p => !p.previewGenerated && p.isValid)
-    await doIf(targets, generateThumbnailForProxy, p => !p.thumbnailGenerated && p.isValid)
-    await doIf(targets, generateIconForProxy, p => !p.iconGenerated && p.isValid)
-    await doIf(targets, generateEXIForProxy, p => !p.exifGenerated && p.isValid)
+    await doIf(targets, validateProxy, uploadState,
+        p => p.isValid === null)
+    await doIf(targets, generateContentForProxy, uploadState,
+        p => !p.contentGenerated && p.isValid)
+    await doIf(targets, generatePreviewForProxy, uploadState,
+        p => !p.previewGenerated && p.isValid)
+    await doIf(targets, generateThumbnailForProxy, uploadState,
+        p => !p.thumbnailGenerated && p.isValid)
+    await doIf(targets, generateIconForProxy, uploadState,
+        p => !p.iconGenerated && p.isValid)
+    await doIf(targets, generateEXIForProxy, uploadState,
+        p => !p.exifGenerated && p.isValid)
     $(button).removeClass('button-disabled')
+
+    uploadState.setAction('Done processing')
+    uploadState.setStatus('processed')
 }
 
-async function uploadMedia(button) {
+async function uploadMedia(button, uploadState) {
     // upload given media to the backend
     let targets = getTargets()
     let handleEXIF = $('#feature-exif').is(':checked')
 
     $(button).addClass('button-disabled')
-    await doIf(targets, createItemForProxy, p => !p.uuid && p.isValid)
-    await doIf(targets, uploadMetaForProxy, p => !p.metaUploaded && p.uuid && p.isValid)
-    await doIf(targets, uploadTagsProxy, p => !p.tagsUploaded && p.uuid && p.isValid)
-    await doIf(targets, uploadEXIFProxy, p => !p.exifUploaded && p.uuid && p.isValid && handleEXIF)
-    await doIf(targets, saveContentForProxy, p => !p.contentUploaded && p.uuid && p.isValid)
-    await doIf(targets, savePreviewForProxy, p => !p.previewUploaded && p.uuid && p.isValid)
-    await doIf(targets, saveThumbnailForProxy, p => !p.thumbnailUploaded && p.uuid && p.isValid)
+    await doIf(targets, createItemForProxy, uploadState,
+        p => !p.uuid && p.isValid)
+    await doIf(targets, uploadMetaForProxy, uploadState,
+        p => !p.metaUploaded && p.uuid && p.isValid)
+    await doIf(targets, uploadTagsProxy, uploadState,
+        p => !p.tagsUploaded && p.uuid && p.isValid)
+    await doIf(targets, uploadEXIFProxy, uploadState,
+        p => !p.exifUploaded && p.uuid && p.isValid && handleEXIF)
+    await doIf(targets, saveContentForProxy, uploadState,
+        p => !p.contentUploaded && p.uuid && p.isValid)
+    await doIf(targets, savePreviewForProxy, uploadState,
+        p => !p.previewUploaded && p.uuid && p.isValid)
+    await doIf(targets, saveThumbnailForProxy, uploadState,
+        p => !p.thumbnailUploaded && p.uuid && p.isValid)
     $(button).removeClass('button-disabled')
 
     let parentUUID = $('#parent_uuid').val() || null
@@ -676,9 +771,62 @@ async function uploadMedia(button) {
         }
     }
 
-    if (allDone()
-        && $('#after_upload').val() === 'parent'
-        && parentUUID !== null) {
-        relocateWithAim(`/browse/${parentUUID}`)
+    if (allDone()) {
+        uploadState.setStatus('uploaded')
+        uploadState.setAction('Done uploading')
+
+        if ($('#after_upload').val() === 'parent'
+            && parentUUID !== null) {
+            relocateWithAim(`/browse/${parentUUID}`)
+        }
+    }
+}
+
+function createUploadState(divId) {
+    // progress of upload, goes init -> processed -> uploaded
+    let element = $('#' + divId)
+
+    let progressElement = $('<progress>', {
+        id: 'global-progress',
+        value: 0,
+        max: 100,
+    })
+
+    let labelElement = $('<label>', {
+        id: 'test',
+        text: 'Completion: 0.00%'
+    })
+    labelElement.attr('for', 'global-progress')
+
+    let actionElement = $('<span>', {
+        text: 'Ready for work'
+    })
+
+    labelElement.appendTo(element)
+    progressElement.appendTo(element)
+    actionElement.appendTo(element)
+    return {
+        status: 'init',
+        element: element,
+        progress: 0,
+        action: 'Ready for work',
+        progressElement: progressElement,
+        labelElement: labelElement,
+        actionElement: actionElement,
+        setAction: function (newAction) {
+            this.action = newAction
+            this.actionElement.text(newAction)
+        },
+        setProgress: function (newProgress) {
+            this.progress = newProgress
+            this.labelElement.text(`Completion: ${newProgress.toFixed(2)}%`)
+        },
+        setStatus: function (newStatus) {
+            this.status = newStatus
+
+            if (this.status === 'processed') {
+                $('#media_button').val('Upload media')
+            }
+        },
     }
 }

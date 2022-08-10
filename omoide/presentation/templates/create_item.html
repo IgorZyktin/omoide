@@ -18,31 +18,14 @@
                    class="height-auto"/>
         </label>
 
-        <label for="parent_uuid">Parent UUID (optional):
-            <input id="parent_uuid"
+        <label for="parent_uuid_or_name">Parent item (optional):
+            <input id="parent_uuid_or_name"
                    type="text"
                    value="{{ parent_uuid }}"
                    class="height-auto"/>
         </label>
 
-        {# TODO - uncomment this when name based search will be available #}
-        {#        <label for="parent_name">Parent name:#}
-        {#            <input id="parent_name"#}
-        {#                   type="text"#}
-        {#                   value=""#}
-        {#                   class="height-auto"/>#}
-        {#        </label>#}
-
         <div id="parent_thumbnail" class="parent_thumbnail"></div>
-
-        <label for="item_tags">Tags (one tag per line):<br>
-            <textarea id="item_tags" rows="10"></textarea>
-        </label>
-
-        {# TODO - restore after permissions will be introduced        #}
-        {#        <label for="item_permissions">Permissions (one user per line):<br>#}
-        {#            <textarea id="item_permissions" rows="2"></textarea>#}
-        {#        </label>#}
 
         <label for="treat_item_as">Treat this item as:</label>
         <select id="treat_item_as">
@@ -58,6 +41,14 @@
             <option value="nothing">Do nothing (stay here)</option>
         </select>
 
+        <label for="item_tags">Tags (one tag per line):<br>
+            <textarea id="item_tags" rows="7"></textarea>
+        </label>
+
+        <label for="item_permissions">Permissions (one user per line):<br>
+            <textarea id="item_permissions" rows="3"></textarea>
+        </label>
+
         <div id="alerts"></div>
 
         <a id="create_item_button"
@@ -72,7 +63,7 @@
         });
 
         let thumbnailElement = $('#parent_thumbnail')
-        let uuidElement = $('#parent_uuid')
+        let uuidElement = $('#parent_uuid_or_name')
 
         uuidElement.on('input', function () {
             tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
