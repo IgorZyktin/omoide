@@ -182,6 +182,7 @@ function createFileProxy(file, tags) {
         'element': element,
         'progressElement': progressElement,
         'labelElement': linesElement,
+        'iconElement': iconElement,
         'textElement': textElement,
 
         features: new Set([]),
@@ -198,6 +199,11 @@ function createFileProxy(file, tags) {
                     _intersection.add(elem)
             }
             return (_intersection.size / EXPECTED_STEPS.size) * 100
+        },
+        setIcon: function (newIcon){
+            this.icon = newIcon
+            this.iconElement.attr('src', newIcon)
+            this.iconGenerated = true
         },
         render: function () {
             this.progressElement.val(this.getProgress())
@@ -377,8 +383,7 @@ async function generateThumbnailForProxy(proxy) {
 async function generateIconForProxy(proxy) {
     // generate tiny thumbnail for proxy
     proxy.ready = false
-    proxy.icon = await resizeFromFile(proxy.file, ICON_SIZE)
-    proxy.iconGenerated = true
+    proxy.setIcon(await resizeFromFile(proxy.file, ICON_SIZE))
     proxy.actualSteps.add('generateIconForProxy')
     proxy.ready = true
     proxy.render()
