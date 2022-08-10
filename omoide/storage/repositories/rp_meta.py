@@ -54,6 +54,6 @@ class MetaRepository(
             uuid: UUID,
     ) -> Optional[domain.Meta]:
         """Return meta or None."""
-        stmt = sa.select(models.Meta).where(models.Media.item_uuid == uuid)
+        stmt = sa.select(models.Meta).where(models.Meta.item_uuid == uuid)
         response = await self.db.fetch_one(stmt)
         return domain.Meta.from_map(response) if response else None
