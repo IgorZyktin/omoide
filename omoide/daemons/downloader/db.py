@@ -107,7 +107,6 @@ class Database:
         ).where(
             models.Media.status == 'init',
         ).order_by(
-            models.Media.created_at,
             models.Media.item_uuid,
             models.Media.media_type,
         )
