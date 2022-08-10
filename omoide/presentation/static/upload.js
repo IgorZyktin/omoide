@@ -631,6 +631,11 @@ async function ensureParentIsCollection(parent) {
         })
     }
 }
+async function oneShot(button) {
+    // preprocess + upload
+    await preprocessMedia(button)
+    await uploadMedia(button)
+}
 
 async function preprocessMedia(button) {
     // prepare given media for upload

@@ -26,6 +26,12 @@
 
         <div id="parent_thumbnail" class="parent_thumbnail"></div>
 
+        <label for="complexity_of_upload">Complexity of upload:</label>
+        <select id="complexity_of_upload">
+            <option value="simple">Just upload all</option>
+            <option value="complex">Let me check before upload</option>
+        </select>
+
         <label for="upload_as">Upload media in a way that:</label>
         <select id="upload_as">
             <option value="children">Every file is a new item</option>
@@ -44,7 +50,26 @@
 
         <div>
             <input type="checkbox" id="feature-exif">
-            <label for="feature-exif">Extract EXIF info (if uploading photos)</label>
+            <label for="feature-exif">Extract EXIF info (if uploading
+                photos)</label>
+        </div>
+
+        <div id="all-features-exif" style="display: none;">
+            <div>
+                <input type="checkbox" id="feature-exif-year">
+                <label for="feature-exif-year">Extract year from EXIF, like
+                    "2022"</label>
+            </div>
+            <div>
+                <input type="checkbox" id="feature-exif-month-en">
+                <label for="feature-exif-month-en">Extract month from EXIF in
+                    english, like "10th of january"</label>
+            </div>
+            <div>
+                <input type="checkbox" id="feature-exif-month-ru">
+                <label for="feature-exif-month-ru">Extract month from EXIF in
+                    russian, like "10 января"</label>
+            </div>
         </div>
 
         <input type="file"
@@ -54,38 +79,46 @@
                onchange="addFiles(this)"/>
 
         <div id="alerts"></div>
-    </div>
 
-    <div class="narrow-block">
-        <input id="preprocess_media_button"
+        <input id="media_button"
                type="button"
-               title="Preprocess media"
-               class="button"
-               value="Preprocess media">
-
-        <input id="upload_media_button"
-               type="button"
-               title="Upload media"
+               title="Start operation"
                class="button"
                value="Upload media">
-    </div>
 
-    <div class="narrow-block">
-        <progress id="global-progress" value="0" max="100"></progress>
+        <label for="global-progress">Completion:</label>
+        <progress id="global-progress" value="0" max="100">25</progress>
     </div>
 
     <br/>
-    <div id="media" class="upload-container"></div>
+    <div id="media" class="upload-container narrow-block"></div>
     <br/>
     <br/>
 
     <script>
-        $('#preprocess_media_button').click(function () {
-            preprocessMedia(this)
+        $('#media_button').click(function () {
+            if ($('#complexity_of_upload').val() === 'simple') {
+                oneShot(this)
+            } else {
+                // TODO - add upload state
+                if (true) {
+                    preprocessMedia(this)
+                } else {
+                    uploadMedia(this)
+                }
+            }
         });
 
         $('#upload_media_button').click(function () {
             uploadMedia(this)
+        });
+
+        $('#complexity_of_upload').on('change', function () {
+            if ($(this).val() === 'simple') {
+                $('#media_button').val('Upload media')
+            } else {
+                $('#media_button').val('Preprocess media')
+            }
         });
 
         $('#upload_as').on('change', function () {
@@ -95,6 +128,14 @@
                 $("label[for='item_tags']").hide()
             } else {
                 $("label[for='item_tags']").show()
+            }
+        });
+
+        $('#feature-exif').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#all-features-exif').show()
+            } else {
+                $('#all-features-exif').hide()
             }
         });
 
