@@ -286,7 +286,7 @@ class Media(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
                                 primary_key=True,

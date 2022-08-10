@@ -249,15 +249,7 @@ class Media(BaseModel):
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'Media':
         """Convert from arbitrary format to model."""
-        return cls(
-            item_uuid=utils.as_str(mapping, 'item_uuid'),
-            created_at=mapping['created_at'],
-            processed_at=mapping['processed_at'],
-            status=mapping['status'],
-            content=mapping['content'],
-            ext=mapping['ext'],
-            media_type=mapping['media_type'],
-        )
+        return cls(**mapping)
 
 
 class EXIF(BaseModel):
