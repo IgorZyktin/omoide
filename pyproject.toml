@@ -19,7 +19,7 @@ SQLAlchemy = {extras = ["mypy"], version = "^1.4.35"}
 click = "^8.1.2"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
+pytest = "^7.1.2"
 coverage = "^6.2"
 
 [build-system]
