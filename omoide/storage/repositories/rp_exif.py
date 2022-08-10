@@ -49,7 +49,7 @@ class EXIFRepository(
             uuid: UUID,
     ) -> Optional[domain.EXIF]:
         """Return media or None."""
-        stmt = sa.select(models.EXIF).where(models.Media.item_uuid == uuid)
+        stmt = sa.select(models.EXIF).where(models.EXIF.item_uuid == uuid)
         response = await self.db.fetch_one(stmt)
         return domain.Media.from_map(response) if response else None
 
@@ -58,6 +58,6 @@ class EXIFRepository(
             uuid: UUID,
     ) -> bool:
         """Delete media for the item with given UUID."""
-        stmt = sa.delete(models.EXIF).where(models.Media.item_uuid == uuid)
+        stmt = sa.delete(models.EXIF).where(models.EXIF.item_uuid == uuid)
         response = await self.db.fetch_one(stmt)
         return response.rowcount == 1

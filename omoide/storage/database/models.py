@@ -24,7 +24,7 @@ class User(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    uuid: UUID = sa.Column(pg.UUID(),
                            primary_key=True,
                            nullable=False,
                            index=True,
@@ -35,7 +35,7 @@ class User(Base):
     login = sa.Column(sa.String(length=MEDIUM), nullable=False, unique=True)
     password = sa.Column(sa.String(length=HUGE), nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
-    root_item: Optional[UUID] = sa.Column(pg.UUID(as_uuid=True),
+    root_item: Optional[UUID] = sa.Column(pg.UUID(),
                                           sa.ForeignKey('items.uuid',
                                                         ondelete='SET NULL'),
                                           nullable=True,
@@ -73,7 +73,7 @@ class PublicUsers(Base):
                        nullable=False,
                        primary_key=True)
 
-    user_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    user_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('users.uuid',
                                               ondelete='CASCADE'),
                                 nullable=False,
@@ -166,7 +166,7 @@ class ComputedTags(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
                                 primary_key=True,
@@ -202,7 +202,7 @@ class ComputedPermissions(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
                                 primary_key=True,
@@ -229,7 +229,7 @@ class Meta(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
                                 nullable=False,
@@ -286,7 +286,7 @@ class Media(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
                                 primary_key=True,
@@ -335,7 +335,7 @@ class EXIF(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
                                 nullable=False,
@@ -376,10 +376,10 @@ class OrphanFiles(Base):
                                    'thumbnail',
                                    name='media_type'))
 
-    owner_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    owner_uuid: UUID = sa.Column(pg.UUID(),
                                  nullable=False)
 
-    item_uuid: UUID = sa.Column(pg.UUID(as_uuid=True),
+    item_uuid: UUID = sa.Column(pg.UUID(),
                                 nullable=False)
 
     ext = sa.Column(sa.String(length=SMALL), nullable=False)
