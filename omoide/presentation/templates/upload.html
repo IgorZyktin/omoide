@@ -17,7 +17,7 @@
 {% block body %}
     <div class="narrow-block">
         <h1>Upload media</h1>
-        <label for="parent_uuid">Parent UUID (optional):
+        <label for="parent_uuid">Parent item (optional):
             <input id="parent_uuid"
                    type="text"
                    value="{{ parent_uuid }}"
@@ -28,23 +28,23 @@
 
         <label for="upload_as">Upload media in a way that:</label>
         <select id="upload_as">
-            <option value="children">Every file is a new child item</option>
-            <option value="target">File is used only for given parent</option>
+            <option value="children">Every file is a new item</option>
+            <option value="target">Only change parent item</option>
         </select>
 
         <label for="after_upload">After upload:</label>
         <select id="after_upload">
-            <option value="parent">Go browse parent</option>
+            <option value="parent">Go browse result</option>
             <option value="nothing">Do nothing (stay here)</option>
         </select>
 
-        <label for="item_tags">Children tags (one tag per line):<br>
+        <label for="item_tags">Tags for new items (one tag per line):<br>
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
         <div>
             <input type="checkbox" id="feature-exif">
-            <label for="feature-exif">Extract EXIF info from photos</label>
+            <label for="feature-exif">Extract EXIF info (if uploading photos)</label>
         </div>
 
         <input type="file"
@@ -54,11 +54,7 @@
                onchange="addFiles(this)"/>
 
         <div id="alerts"></div>
-
-
     </div>
-
-    <div id="media" class="upload-container"></div>
 
     <div class="narrow-block">
         <input id="preprocess_media_button"
@@ -79,6 +75,8 @@
     </div>
 
     <br/>
+    <div id="media" class="upload-container"></div>
+    <br/>
     <br/>
 
     <script>
@@ -92,6 +90,12 @@
 
         $('#upload_as').on('change', function () {
             clearProxies()
+
+            if ($(this).val() === 'target') {
+                $("label[for='item_tags']").hide()
+            } else {
+                $("label[for='item_tags']").show()
+            }
         });
 
         let thumbnailElement = $('#parent_thumbnail')
