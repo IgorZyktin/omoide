@@ -33,9 +33,7 @@ function makeNotification(text, css_class) {
 function gatherItemParameters() {
     // gather information from typical creation fields
     let tags = splitLines($('#item_tags').val())
-    // TODO - restore after permissions will be introduced
-    let permissions = []
-    // let permissions = splitLines($('#item_permissions').val())
+    let permissions = splitLines($('#item_permissions').val())
     return {
         parent_uuid: $('#parent_uuid').val() || null,
         is_collection: $('#treat-item-as').val() === 'collection',
@@ -185,19 +183,20 @@ function getThumbnailContentUrl(item) {
     return getContentUrl(item, 'thumbnail')
 }
 
-function tryLoadingThumbnail(uuid, thumbnailElement) {
+function tryLoadingThumbnail(uuid_or_name, thumbnailElement) {
     // try to load thumbnail for the item
     thumbnailElement.empty()
 
-    if (!uuid)
+    if (!uuid_or_name)
         return
 
-    if (!isUUID(uuid))
+    if (!isUUID(uuid_or_name))
+        // TODO - also perform search on names
         return
 
     $.ajax({
         type: 'GET',
-        url: `/api/items/${uuid}`,
+        url: `/api/items/${uuid_or_name}`,
         contentType: 'application/json',
         success: function (response) {
             renderThumbnailDynamic(thumbnailElement, response)
