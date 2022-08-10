@@ -55,12 +55,13 @@ def download_items_from_database_to_storages(
             )
 
             output.print_row(
-                processed_at=str(action.ended_at.replace(microsecond=0)),
+                processed_at=str(action.ended_at.replace(microsecond=0,
+                                                         tzinfo=None)),
                 uuid=str(media.item_uuid),
                 type=str(media.media_type),
                 size=utils.byte_count_to_text(size),
                 status=action.status,
-                location=utils.no_longer_than(location, 93),
+                location=utils.no_longer_than(' ' + location, 93),
             )
 
     return actions

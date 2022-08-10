@@ -45,7 +45,7 @@ def get_output_instance_for_downloader(
     output = out.Output(silent=config.silent)
 
     output.add_columns(
-        out.Column(name='Processed at', width=27, alias='processed_at'),
+        out.Column(name='Processed at (UTC)', width=21, alias='processed_at'),
         out.Column(name='UUID', width=38, alias='uuid'),
         out.Column(name='Type', width=11, alias='type'),
         out.Column(name='Size', width=14, alias='size'),
