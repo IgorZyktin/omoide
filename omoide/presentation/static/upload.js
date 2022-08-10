@@ -819,6 +819,7 @@ function createUploadState(divId) {
         },
         setProgress: function (newProgress) {
             this.progress = newProgress
+            this.progressElement.val(newProgress)
             this.labelElement.text(`Completion: ${newProgress.toFixed(2)}%`)
         },
         setStatus: function (newStatus) {
