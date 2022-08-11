@@ -12,9 +12,9 @@ const EXPECTED_STEPS = new Set([
     'generateThumbnailForProxy',
     'generateIconForProxy',
     'generateEXIForProxy',
+    'generateFeaturesForProxy',
     'createItemForProxy',
     'uploadMetaForProxy',
-    'uploadTagsProxy',
     'saveContentForProxy',
     'savePreviewForProxy',
     'saveThumbnailForProxy',
@@ -65,7 +65,6 @@ function addFiles(source) {
     button.addClass('upload-in-progress')
 
     let parent_uuid = $('#parent_uuid').val() || null
-    let tags = splitLines($('#item_tags').val())
     let container = $('#media')
     let upload_as = $('#upload_as').val()
 
@@ -79,7 +78,7 @@ function addFiles(source) {
         if (file.name in FILES)
             continue
 
-        let proxy = createFileProxy(file, tags)
+        let proxy = createFileProxy(file)
         FILES[file.name] = proxy
         local_files.push(proxy)
 
@@ -110,7 +109,7 @@ function extractExt(filename) {
     return ext.toLowerCase()
 }
 
-function createFileProxy(file, tags) {
+function createFileProxy(file) {
     // create new proxy that stores file upload progress
     let element = $('<div>', {class: 'upload-element'})
 
@@ -132,11 +131,18 @@ function createFileProxy(file, tags) {
 
     let linesElement = $('<div>', {class: 'upload-lines'})
 
+    let tagsElementLabel = $('<label>',
+        {text: 'Additional tags for this item (one tag per line):'})
+    let tagsElement = $('<textarea>', {rows: 3})
+    tagsElement.appendTo(tagsElementLabel)
+
     textElement.appendTo(linesElement)
     progressElement.appendTo(linesElement)
+    tagsElementLabel.appendTo(linesElement)
+
     iconElement.appendTo(element)
     linesElement.appendTo(element)
-    return {
+    let proxy = {
         ready: false,
         uuid: null,
         parentUuid: null,
@@ -153,6 +159,7 @@ function createFileProxy(file, tags) {
         previewExt: null,
         previewGenerated: false,
         previewUploaded: false,
+        previewVisible: false,
 
         // thumbnail
         thumbnail: null,
@@ -184,13 +191,15 @@ function createFileProxy(file, tags) {
         'labelElement': linesElement,
         'iconElement': iconElement,
         'textElement': textElement,
+        'tagsElement': tagsElement,
+        'tagsElementLabel': tagsElementLabel,
 
         features: new Set([]),
         status: 'init',
         description: '',
         actualSteps: new Set([]),
-        tagsInitial: tags,
-        tagsUploaded: false,
+        tagsAdded: [],
+        featuresGenerated: false,
         permissions: [], // TODO - add permissions
         getProgress: function () {
             let _intersection = new Set([]);
@@ -200,18 +209,45 @@ function createFileProxy(file, tags) {
             }
             return (_intersection.size / EXPECTED_STEPS.size) * 100
         },
-        setIcon: function (newIcon){
+        setIcon: function (newIcon) {
             this.icon = newIcon
             this.iconElement.attr('src', newIcon)
+            this.iconElement.css('width', 'auto')
             this.iconGenerated = true
         },
         render: function () {
             this.progressElement.val(this.getProgress())
         },
         getTags: function () {
-            return this.tagsInitial
-        }
+            return this.tagsAdded
+        },
+        redrawTags: function () {
+            this.tagsElement.empty()
+            this.tagsElement.val(this.tagsAdded.join('\n'))
+        },
     }
+
+    tagsElement.change(function () {
+        proxy.tagsAdded = splitLines(tagsElement.val())
+    })
+
+    iconElement.click(function () {
+
+        if (!proxy.icon || !proxy.preview)
+            return
+
+        if (proxy.previewVisible) {
+            proxy.iconElement.attr('src', proxy.icon)
+            proxy.element.css('flex-direction', 'row');
+        } else {
+            proxy.iconElement.attr('src', proxy.preview)
+            proxy.element.css('flex-direction', 'column');
+        }
+
+        proxy.previewVisible = !proxy.previewVisible
+    })
+
+    return proxy
 }
 
 function getHandlerDescription(handler, label) {
@@ -230,12 +266,12 @@ function getHandlerDescription(handler, label) {
         text = `Processing icon ${label}`
     else if (handler.name === 'generateEXIForProxy')
         text = `Processing EXIF ${label}`
+    else if (handler.name === 'generateFeaturesForProxy')
+        text = `Getting info from EXIF ${label}`
     else if (handler.name === 'createItemForProxy')
         text = `Creating item ${label}`
     else if (handler.name === 'uploadMetaForProxy')
         text = `Uploading metainfo ${label}`
-    else if (handler.name === 'uploadTagsProxy')
-        text = `Uploading tags ${label}`
     else if (handler.name === 'uploadPermissionsForProxy')
         text = `Uploading permissions ${label}`
     else if (handler.name === 'uploadEXIFProxy')
@@ -261,7 +297,7 @@ async function doIf(targets, handler, uploadState, condition) {
             let action = getHandlerDescription(handler, label)
             uploadState.setAction(action)
             console.log(action)
-            await handler(target)
+            await handler(target, uploadState)
             progress += target.getProgress()
         }
     }
@@ -313,7 +349,10 @@ async function createItemForProxy(proxy) {
                 parent_uuid: proxy.parent_uuid,
                 name: '',
                 is_collection: false,
-                tags: proxy.getTags(),
+                tags: [
+                    ...splitLines($('#item_tags').val()),
+                    ...proxy.getTags()
+                ],
                 permissions: proxy.permissions,
             }),
             success: function (response) {
@@ -452,11 +491,91 @@ async function uploadMetaForProxy(proxy) {
     })
 }
 
-async function uploadTagsProxy(proxy) {
-    // upload tags
-    // TODO - add tags upload
-    proxy.tagsUploaded = true
-    proxy.actualSteps.add('uploadTagsProxy')
+async function generateFeaturesForProxy(proxy, uploadState) {
+    // handle additional feature extraction
+    proxy.ready = false
+
+    if (uploadState.features['extractYear'])
+        await _extractYearFeature(proxy)
+
+    if (uploadState.features['extractMonthEN'])
+        await _extractMonthENFeature(proxy)
+
+    if (uploadState.features['extractMonthRU'])
+        await _extractMonthRUFeature(proxy)
+
+    proxy.featuresGenerated = true
+    proxy.actualSteps.add('generateFeaturesForProxy')
+    proxy.redrawTags()
+    proxy.ready = true
+}
+
+async function _extractYearFeature(proxy) {
+    // extract year from EXIF tags as a string
+    let year = proxy.exif['DateTimeOriginal'].slice(0, 4)
+
+    if (year)
+        proxy.tagsAdded.push(year)
+}
+
+function getMonthNameByNumberEN(number) {
+    // return month name by its number in english
+    return {
+        '01': 'january',
+        '02': 'february',
+        '03': 'march',
+        '04': 'april',
+        '05': 'may',
+        '06': 'june',
+        '07': 'july',
+        '08': 'august',
+        '09': 'september',
+        '10': 'october',
+        '11': 'november',
+        '12': 'december',
+    }[number] || '???'
+}
+
+async function _extractMonthENFeature(proxy) {
+    // extract month from EXIF tags as a string (english)
+    let month = proxy.exif['DateTimeOriginal'].slice(5, 7)
+    let day = proxy.exif['DateTimeOriginal'].slice(8, 10)
+
+    if (month && day) {
+        let dayNumber = day.replace(/^0+/, '')
+        let text = `${getMonthNameByNumberEN(month)} ${dayNumber}`
+        proxy.tagsAdded.push(text)
+    }
+}
+
+function getMonthNameByNumberRU(number) {
+    // return month name by its number in russian
+    return {
+        '01': 'января',
+        '02': 'февраля',
+        '03': 'марта',
+        '04': 'апреля',
+        '05': 'мая',
+        '06': 'июня',
+        '07': 'июля',
+        '08': 'августа',
+        '09': 'сентября',
+        '10': 'октября',
+        '11': 'ноября',
+        '12': 'декабря',
+    }[number] || '???'
+}
+
+async function _extractMonthRUFeature(proxy) {
+    // extract month from EXIF tags as a string (russian)
+    let month = proxy.exif['DateTimeOriginal'].slice(5, 7)
+    let day = proxy.exif['DateTimeOriginal'].slice(8, 10)
+
+    if (month && day) {
+        let dayNumber = day.replace(/^0+/, '')
+        let text = `${dayNumber} ${getMonthNameByNumberRU(month)}`
+        proxy.tagsAdded.push(text)
+    }
 }
 
 async function uploadEXIFProxy(proxy) {
@@ -728,6 +847,8 @@ async function preprocessMedia(button, uploadState) {
         p => !p.iconGenerated && p.isValid)
     await doIf(targets, generateEXIForProxy, uploadState,
         p => !p.exifGenerated && p.isValid)
+    await doIf(targets, generateFeaturesForProxy, uploadState,
+        p => !p.featuresGenerated && p.isValid)
     $(button).removeClass('button-disabled')
 
     uploadState.setAction('Done processing')
@@ -744,8 +865,6 @@ async function uploadMedia(button, uploadState) {
         p => !p.uuid && p.isValid)
     await doIf(targets, uploadMetaForProxy, uploadState,
         p => !p.metaUploaded && p.uuid && p.isValid)
-    await doIf(targets, uploadTagsProxy, uploadState,
-        p => !p.tagsUploaded && p.uuid && p.isValid)
     await doIf(targets, uploadEXIFProxy, uploadState,
         p => !p.exifUploaded && p.uuid && p.isValid && handleEXIF)
     await doIf(targets, saveContentForProxy, uploadState,
@@ -828,6 +947,11 @@ function createUploadState(divId) {
             if (this.status === 'processed') {
                 $('#media_button').val('Upload media')
             }
+        },
+        features: {
+            extractYear: false,
+            extractMonthEN: false,
+            extractMonthRU: false,
         },
     }
 }

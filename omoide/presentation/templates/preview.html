@@ -47,9 +47,11 @@
 
         <div class="preview-tags">
             {% for tag in item.tags %}
-                <div class="tag-box">
-                    <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>
-                </div>
+                {% if tag %}
+                    <div class="tag-box">
+                        <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>
+                    </div>
+                {% endif %}
             {% endfor %}
         </div>
 

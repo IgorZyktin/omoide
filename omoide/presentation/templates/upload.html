@@ -44,7 +44,7 @@
             <option value="nothing">Do nothing (stay here)</option>
         </select>
 
-        <label for="item_tags">Tags for new items (one tag per line):<br>
+        <label for="item_tags">Tags for every new item (one tag per line):<br>
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
@@ -63,7 +63,7 @@
             <div>
                 <input type="checkbox" id="feature-exif-month-en">
                 <label for="feature-exif-month-en">Extract month from EXIF in
-                    english, like "10th of january"</label>
+                    english, like "10 january"</label>
             </div>
             <div>
                 <input type="checkbox" id="feature-exif-month-ru">
@@ -141,6 +141,18 @@
                 $('#all-features-exif').hide()
                 EXPECTED_STEPS.delete('uploadEXIFProxy')
             }
+        });
+
+        $('#feature-exif-year').on('change', function () {
+            UPLOAD_STATE.features['extractYear'] = $(this).is(':checked')
+        });
+
+        $('#feature-exif-month-en').on('change', function () {
+            UPLOAD_STATE.features['extractMonthEN'] = $(this).is(':checked')
+        });
+
+        $('#feature-exif-month-ru').on('change', function () {
+            UPLOAD_STATE.features['extractMonthRU'] = $(this).is(':checked')
         });
 
         let thumbnailElement = $('#parent_thumbnail')
