@@ -626,19 +626,16 @@ async function generateMetainfoForProxy(proxy, uploadState) {
 async function generateFeaturesForProxy(proxy, uploadState) {
     // handle additional feature extraction
     proxy.ready = false
+    let useBackoff = $('#feature-exif-backoff').is(':checked')
 
-    if (proxy.exif['DateTimeOriginal']) {
-        if (uploadState.features['extractYear'])
-            await _extractYearFeature(proxy)
+    if (uploadState.features['extractYear'], useBackoff)
+        await _extractYearFeature(proxy)
 
-        if (uploadState.features['extractMonthEN'])
-            await _extractMonthENFeature(proxy)
+    if (uploadState.features['extractMonthEN'], useBackoff)
+        await _extractMonthENFeature(proxy)
 
-        if (uploadState.features['extractMonthRU'])
-            await _extractMonthRUFeature(proxy)
-    } else {
-        console.log(`Found no DateTimeOriginal for ${proxy.filename}`)
-    }
+    if (uploadState.features['extractMonthRU'], useBackoff)
+        await _extractMonthRUFeature(proxy)
 
     proxy.featuresGenerated = true
     proxy.actualSteps.add('generateFeaturesForProxy')
@@ -646,16 +643,32 @@ async function generateFeaturesForProxy(proxy, uploadState) {
     proxy.ready = true
 }
 
-async function _extractYearFeature(proxy) {
+function extractYearNumberStr(string) {
+    // get year from textual DateTime
+    return string.slice(0, 4)
+}
+
+function extractMonthNumberStr(string) {
+    // get month from textual DateTime
+    return string.slice(5, 7)
+}
+
+function extractDayNumberStr(string) {
+    // get day from textual DateTime
+    return string.slice(8, 10)
+}
+
+async function _extractYearFeature(proxy, useBackoff) {
     // extract year from EXIF tags as a string
     let dt = extractDatetime(proxy.exif['DateTimeOriginal'])
 
-    if (!dt)
-        return null
+    if (!dt && useBackoff)
+        dt = new Date(proxy.file.lastModified).toISOString()
 
-    let year = dt.slice(0, 4)
-    if (year)
-        proxy.tagsAdded.push(year)
+    if (dt)
+        proxy.tagsAdded.push(extractYearNumberStr(dt))
+    else
+        console.log(`No year found for ${proxy.filename}`)
 }
 
 function getMonthNameByNumberEN(number) {
@@ -676,20 +689,20 @@ function getMonthNameByNumberEN(number) {
     }[number] || '???'
 }
 
-async function _extractMonthENFeature(proxy) {
+async function _extractMonthENFeature(proxy, useBackoff) {
     // extract month from EXIF tags as a string (english)
     let dt = extractDatetime(proxy.exif['DateTimeOriginal'])
 
-    if (!dt)
-        return null
+    if (!dt && useBackoff)
+        dt = new Date(proxy.file.lastModified).toISOString()
 
-    let month = dt.slice(5, 7)
-    let day = dt.slice(8, 10)
-
-    if (month && day) {
-        let dayNumber = day.replace(/^0+/, '')
-        let text = `${getMonthNameByNumberEN(month)} ${dayNumber}`
+    if (dt) {
+        let monthName = getMonthNameByNumberEN(extractMonthNumberStr(dt))
+        let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
+        let text = `${monthName} ${dayNumber}`
         proxy.tagsAdded.push(text)
+    } else {
+        console.log(`No EN month found for ${proxy.filename}`)
     }
 }
 
@@ -711,20 +724,20 @@ function getMonthNameByNumberRU(number) {
     }[number] || '???'
 }
 
-async function _extractMonthRUFeature(proxy) {
+async function _extractMonthRUFeature(proxy, useBackoff) {
     // extract month from EXIF tags as a string (russian)
     let dt = extractDatetime(proxy.exif['DateTimeOriginal'])
 
-    if (!dt)
-        return null
+    if (!dt && useBackoff)
+        dt = new Date(proxy.file.lastModified).toISOString()
 
-    let month = dt.slice(5, 7)
-    let day = dt.slice(8, 10)
-
-    if (month && day) {
-        let dayNumber = day.replace(/^0+/, '')
-        let text = `${dayNumber} ${getMonthNameByNumberRU(month)}`
+    if (dt) {
+        let monthName = getMonthNameByNumberRU(extractMonthNumberStr(dt))
+        let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
+        let text = `${dayNumber} ${monthName}`
         proxy.tagsAdded.push(text)
+    } else {
+        console.log(`No RU month found for ${proxy.filename}`)
     }
 }
 
@@ -746,8 +759,8 @@ async function uploadEXIFProxy(proxy) {
             }),
             success: function (response) {
                 proxy.exifUploaded = true
-                resolve('ok')
                 proxy.actualSteps.add('uploadEXIFProxy')
+                resolve('ok')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
