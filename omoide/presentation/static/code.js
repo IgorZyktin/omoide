@@ -250,3 +250,8 @@ function extractUUIDs(text) {
     // extract all UUIDs from given text
     return [...text.matchAll(UUID_REGEXP)].flat()
 }
+
+function jumpToTop() {
+    // scroll at the top
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
+}
