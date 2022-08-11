@@ -159,6 +159,7 @@ function createFileProxy(file) {
         previewExt: null,
         previewGenerated: false,
         previewUploaded: false,
+        previewVisible: false,
 
         // thumbnail
         thumbnail: null,
@@ -211,6 +212,7 @@ function createFileProxy(file) {
         setIcon: function (newIcon) {
             this.icon = newIcon
             this.iconElement.attr('src', newIcon)
+            this.iconElement.css('width', 'auto')
             this.iconGenerated = true
         },
         render: function () {
@@ -227,6 +229,22 @@ function createFileProxy(file) {
 
     tagsElement.change(function () {
         proxy.tagsAdded = splitLines(tagsElement.val())
+    })
+
+    iconElement.click(function () {
+
+        if (!proxy.icon || !proxy.preview)
+            return
+
+        if (proxy.previewVisible) {
+            proxy.iconElement.attr('src', proxy.icon)
+            proxy.element.css('flex-direction', 'row');
+        } else {
+            proxy.iconElement.attr('src', proxy.preview)
+            proxy.element.css('flex-direction', 'column');
+        }
+
+        proxy.previewVisible = !proxy.previewVisible
     })
 
     return proxy
