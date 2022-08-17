@@ -293,8 +293,7 @@ async function doIf(targets, handler, uploadState, condition) {
     let progress = 0
     for (let target of targets) {
         if (target.status !== 'fail' && condition(target)) {
-            let label = target.uuid || target.file.name
-            let action = getHandlerDescription(handler, label)
+            let action = getHandlerDescription(handler, target.filename)
             uploadState.setAction(action)
             console.log(action)
             await handler(target, uploadState)
