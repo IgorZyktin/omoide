@@ -12,6 +12,10 @@ from omoide.presentation import api_models
 class AbsUsersRepository(abc.ABC):
     """Repository that perform CRUD operations on users and their data."""
 
+    def __init__(self, db) -> None:
+        """Initialize instance."""
+        self.db = db
+
     @abc.abstractmethod
     def transaction(self):
         """Start transaction."""
@@ -25,6 +29,7 @@ class AbsUsersRepository(abc.ABC):
     async def create_user(
             self,
             payload: api_models.CreateUserIn,
+            password: bytes,
     ) -> UUID:
         """Return UUID for created user."""
 

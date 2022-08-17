@@ -25,12 +25,20 @@ class CreateUserUseCase:
 
     async def execute(
             self,
+            authenticator: interfaces.AbsAuthenticator,
             raw_user: api_models.CreateUserIn,
     ) -> UUID:
         """Business logic."""
+        raw_user.name = raw_user.name or raw_user.login
+        password = authenticator.encode_password(
+            raw_user.password.encode('utf-8')
+        )
+
         async with self.users_repo.transaction():
             raw_user.uuid = await self.users_repo.generate_uuid()
-            uuid = await self.users_repo.create_user(raw_user)
+            uuid = await self.users_repo.create_user(raw_user, password)
+
+        async with self.users_repo.transaction():
             user = await self.users_repo.read_user(uuid)
 
             if user is None:
@@ -46,5 +54,7 @@ class CreateUserUseCase:
                 permissions=[],
             )
             await self.items_repo.create_item(user, raw_item)
+            user.root_item = item_uuid
+            await self.users_repo.update_user(user)
 
         return uuid
