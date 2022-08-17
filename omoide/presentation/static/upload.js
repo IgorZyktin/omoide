@@ -133,12 +133,18 @@ function createFileProxy(file) {
 
     let tagsElementLabel = $('<label>',
         {text: 'Additional tags for this item (one tag per line):'})
-    let tagsElement = $('<textarea>', {rows: 3})
+    let tagsElement = $('<textarea>', {rows: 5})
     tagsElement.appendTo(tagsElementLabel)
+
+    let permissionsElementLabel = $('<label>',
+        {text: 'Additional permissions for this item (one user per line):'})
+    let permissionsElement = $('<textarea>', {rows: 5})
+    permissionsElement.appendTo(permissionsElementLabel)
 
     textElement.appendTo(linesElement)
     progressElement.appendTo(linesElement)
     tagsElementLabel.appendTo(linesElement)
+    permissionsElementLabel.appendTo(linesElement)
 
     iconElement.appendTo(element)
     linesElement.appendTo(element)
@@ -199,8 +205,8 @@ function createFileProxy(file) {
         description: '',
         actualSteps: new Set([]),
         tagsAdded: [],
+        permissionsAdded: [],
         featuresGenerated: false,
-        permissions: [], // TODO - add permissions
         getProgress: function () {
             let _intersection = new Set([]);
             for (let elem of EXPECTED_STEPS) {
@@ -221,6 +227,9 @@ function createFileProxy(file) {
         getTags: function () {
             return this.tagsAdded
         },
+        getPermissions: function () {
+            return this.permissionsAdded
+        },
         redrawTags: function () {
             this.tagsElement.empty()
             this.tagsElement.val(this.tagsAdded.join('\n'))
@@ -229,6 +238,10 @@ function createFileProxy(file) {
 
     tagsElement.change(function () {
         proxy.tagsAdded = splitLines(tagsElement.val())
+    })
+
+    permissionsElement.change(function () {
+        proxy.permissionsAdded = splitLines(permissionsElement.val())
     })
 
     iconElement.click(function () {
@@ -359,7 +372,10 @@ async function createItemForProxy(proxy) {
                     ...splitLines($('#item_tags').val()),
                     ...proxy.getTags()
                 ],
-                permissions: proxy.permissions,
+                permissions: [
+                    ...splitLines($('#item_permissions').val()),
+                    ...proxy.getPermissions()
+                ],
             }),
             success: function (response) {
                 proxy.uuid = response['uuid']
@@ -461,11 +477,6 @@ async function generateEXIForProxy(proxy) {
     proxy.exifGenerated = true
     proxy.actualSteps.add('generateEXIForProxy')
     proxy.ready = true
-}
-
-async function uploadPermissionsForProxy(proxy) {
-    // upload permissions
-    // TODO
 }
 
 async function uploadMetaForProxy(proxy) {
