@@ -88,6 +88,15 @@ class CreateItemIn(BaseModel):
         return values
 
 
+class CreateUserIn(BaseModel):
+    """Input info for user creation."""
+    uuid: Optional[UUID]
+    root_item: Optional[UUID]
+    login: str
+    password: str
+    name: Optional[str]
+
+
 class UpdateItemIn(CreateItemIn):
     """Input info for item update."""
     uuid: UUID
