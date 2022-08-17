@@ -26,19 +26,6 @@ BEGIN
 END
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION compute_permissions(given_uuid UUID,
-                                               OUT computed_permissions text[])
-AS
-$$
-BEGIN
-    SELECT INTO computed_permissions (
-        SELECT DISTINCT permissions
-        FROM items
-        WHERE uuid = given_uuid
-    );
-END
-$$ LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION insert_computed_tags() RETURNS TRIGGER AS
 $$
 BEGIN
@@ -52,9 +39,12 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION insert_computed_permissions() RETURNS TRIGGER AS
 $$
 BEGIN
-    INSERT INTO computed_permissions
-    SELECT NEW.uuid, compute_permissions(NEW.uuid)
-    ON CONFLICT (item_uuid) DO UPDATE SET permissions = excluded.permissions;
+    IF array_length(NEW.permissions, 1) > 0 THEN
+        INSERT INTO computed_permissions
+        SELECT NEW.uuid, NEW.permissions
+        ON CONFLICT (item_uuid) DO UPDATE SET permissions = excluded.permissions;
+    END IF;
+
     RETURN NULL;
 END
 $$ LANGUAGE 'plpgsql';
