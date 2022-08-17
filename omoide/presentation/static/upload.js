@@ -290,21 +290,28 @@ function getHandlerDescription(handler, label) {
 
 async function doIf(targets, handler, uploadState, condition) {
     // conditionally iterate on every element
-    let progress = 0
+    let progressStorage = new Set([])
     for (let target of targets) {
         if (target.status !== 'fail' && condition(target)) {
             let action = getHandlerDescription(handler, target.filename)
             uploadState.setAction(action)
             console.log(action)
             await handler(target, uploadState)
-            progress += target.getProgress()
+            progressStorage.add(target.getProgress())
         }
     }
 
     if (!targets.length)
         return
 
-    uploadState.setProgress(progress / targets.length)
+    let totalProgress = 0;
+    progressStorage.forEach(num => {
+        totalProgress += num;
+    });
+
+    if (!isNaN(totalProgress) && totalProgress && progressStorage.size) {
+        uploadState.setProgress(totalProgress / progressStorage.size)
+    }
 }
 
 async function validateProxy(proxy) {
