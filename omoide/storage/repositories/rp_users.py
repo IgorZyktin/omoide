@@ -88,6 +88,7 @@ class UsersRepository(repo_interfaces.AbsUsersRepository):
         """
 
         values = {
+            'uuid': user.uuid,
             'login': user.login,
             'password': user.password,
             'name': user.name,
