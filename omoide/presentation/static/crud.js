@@ -191,7 +191,7 @@ function getThumbnailContentUrl(item) {
     return getContentUrl(item, 'thumbnail')
 }
 
-function tryLoadingThumbnail(uuid_or_name, thumbnailElement) {
+function tryLoadingThumbnail(uuid_or_name, thumbnailElement, callback) {
     // try to load thumbnail for the item
     thumbnailElement.empty()
 
@@ -208,6 +208,9 @@ function tryLoadingThumbnail(uuid_or_name, thumbnailElement) {
         contentType: 'application/json',
         success: function (response) {
             renderThumbnailDynamic(thumbnailElement, response)
+
+            if (callback !== undefined)
+                callback(response)
         },
     })
 }

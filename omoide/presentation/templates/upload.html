@@ -162,12 +162,27 @@
         let thumbnailElement = $('#parent_thumbnail')
         let uuidElement = $('#parent_uuid')
 
+        function extractPermissionsFromParent(parent){
+            if (parent === undefined || parent.permissions.length === 0)
+                return
+
+            $('#item_permissions').val(parent.permissions.join('\n'))
+        }
+
         uuidElement.on('input', function () {
-            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
+            tryLoadingThumbnail(
+                uuidElement.val(),
+                thumbnailElement,
+                extractPermissionsFromParent,
+            )
         });
 
         $(document).ready(function () {
-            tryLoadingThumbnail(uuidElement.val(), thumbnailElement)
+            tryLoadingThumbnail(
+                uuidElement.val(),
+                thumbnailElement,
+                extractPermissionsFromParent,
+            )
         });
     </script>
 
