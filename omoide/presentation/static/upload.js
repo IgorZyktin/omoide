@@ -97,6 +97,16 @@ function addFiles(source) {
         proxy.render()
     }
 
+    let jump = document.createElement('a')
+    let linkText = document.createTextNode('Jump to top');
+    jump.classList.add('location')  // FIXME
+    jump.appendChild(linkText);
+    jump.title = 'Scroll back to top';
+    jump.onclick = () => {
+        document.body.scrollTop = document.documentElement.scrollTop = 0;
+    }
+    jump.appendTo(container)
+
     button.removeClass('upload-in-progress')
 }
 
@@ -232,7 +242,11 @@ function createFileProxy(file) {
         },
         redrawTags: function () {
             this.tagsElement.empty()
-            this.tagsElement.val(this.tagsAdded.join('\n'))
+            let allTags = this.tagsAdded.join('\n').trim()
+            if (allTags.length > 0) {
+                allTags += '\n'
+            }
+            this.tagsElement.val(allTags)
         },
     }
 
