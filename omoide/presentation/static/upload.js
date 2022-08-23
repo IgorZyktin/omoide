@@ -512,14 +512,18 @@ async function generateFeaturesForProxy(proxy, uploadState) {
     // handle additional feature extraction
     proxy.ready = false
 
-    if (uploadState.features['extractYear'])
-        await _extractYearFeature(proxy)
+    if (proxy.exif['DateTimeOriginal']) {
+        if (uploadState.features['extractYear'])
+            await _extractYearFeature(proxy)
 
-    if (uploadState.features['extractMonthEN'])
-        await _extractMonthENFeature(proxy)
+        if (uploadState.features['extractMonthEN'])
+            await _extractMonthENFeature(proxy)
 
-    if (uploadState.features['extractMonthRU'])
-        await _extractMonthRUFeature(proxy)
+        if (uploadState.features['extractMonthRU'])
+            await _extractMonthRUFeature(proxy)
+    } else {
+        console.log(`Found no DateTimeOriginal for ${proxy.filename}`)
+    }
 
     proxy.featuresGenerated = true
     proxy.actualSteps.add('generateFeaturesForProxy')
