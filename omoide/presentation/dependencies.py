@@ -9,11 +9,11 @@ from databases import Database
 from fastapi.security import HTTPBasicCredentials
 from starlette.templating import Jinja2Templates
 
+from omoide import infra
 from omoide import use_cases
 from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.presentation import app_config
-from omoide.presentation import infra
 from omoide.storage import repositories
 
 config = app_config.init()
@@ -34,6 +34,10 @@ items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
 exif_repository = repositories.EXIFRepository(db)
 meta_repository = repositories.MetaRepository(db)
+
+current_policy = infra.Policy(
+    items_repo=items_repository,
+)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
@@ -77,6 +81,11 @@ def get_auth_use_case():
 def get_authenticator():
     """Get authenticator instance."""
     return current_authenticator
+
+
+def get_policy():
+    """Get policy instance."""
+    return current_policy
 
 
 async def get_current_user(
@@ -178,18 +187,18 @@ def delete_media_use_case() -> use_cases.DeleteMediaUseCase:
 
 def read_exif_use_case() -> use_cases.ReadEXIFUseCase:
     """Get use case instance."""
-    return use_cases.ReadEXIFUseCase(items_repository, exif_repository)
+    return use_cases.ReadEXIFUseCase(exif_repository)
 
 
 def update_exif_use_case() -> use_cases.CreateOrUpdateEXIFUseCase:
     """Get use case instance."""
-    return use_cases.CreateOrUpdateEXIFUseCase(items_repository,
-                                               exif_repository)
+    return use_cases.CreateOrUpdateEXIFUseCase(exif_repository)
 
 
 def delete_exif_use_case() -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
-    return use_cases.DeleteEXIFUseCase(items_repository, exif_repository)
+    return use_cases.DeleteEXIFUseCase(exif_repository)
+
 
 # api meta related use cases -------------------------------------------------
 

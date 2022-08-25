@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Interface for authentication policy.
 """
-
 import abc
 
 

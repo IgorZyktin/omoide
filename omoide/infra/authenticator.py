@@ -5,10 +5,6 @@ import bcrypt
 
 from omoide.domain import interfaces
 
-__all__ = [
-    'BcryptAuthenticator',
-]
-
 
 class BcryptAuthenticator(interfaces.AbsAuthenticator):
     """Authenticator that uses bcrypt algorithm."""
