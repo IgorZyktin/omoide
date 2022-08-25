@@ -268,10 +268,7 @@ class EXIF(BaseModel):
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'EXIF':
         """Convert from arbitrary format to model."""
-        return cls(
-            item_uuid=utils.as_str(mapping, 'item_uuid'),
-            exif=mapping['exif'],
-        )
+        return cls(**mapping)  # TODO - maybe create base class for this?
 
 
 class Meta(BaseModel):

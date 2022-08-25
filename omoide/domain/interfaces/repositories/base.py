@@ -2,17 +2,23 @@
 """Base repository class.
 """
 import abc
+from typing import Any
 from typing import Optional
 
-from omoide.domain import auth, common
+from omoide.domain import auth
+from omoide.domain import common
 
 
 class AbsRepository(abc.ABC):
     """Base repository class."""
 
-    @abc.abstractmethod
-    def transaction(self):
+    def __init__(self, db) -> None:
+        """Initialize instance."""
+        self.db = db
+
+    def transaction(self) -> Any:
         """Start transaction."""
+        return self.db.transaction()
 
     @abc.abstractmethod
     async def get_location(

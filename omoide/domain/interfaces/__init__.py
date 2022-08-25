@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from omoide.domain.interfaces.infra.authenticator import AbsAuthenticator
+from omoide.domain.interfaces.infra.in_authenticator import AbsAuthenticator
+from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.domain.interfaces.repositories.base import AbsRepository
 from omoide.domain.interfaces.repositories.browse import AbsBrowseRepository
 from omoide.domain.interfaces.repositories.by_user import AbsByUserRepository
