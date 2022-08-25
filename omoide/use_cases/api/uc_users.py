@@ -3,7 +3,8 @@
 """
 from uuid import UUID
 
-from omoide.domain import interfaces, exceptions
+from omoide.domain import interfaces, errors
+from omoide.infra.special_types import Result, Success, Failure
 from omoide.presentation import api_models
 
 __all__ = [
@@ -27,7 +28,7 @@ class CreateUserUseCase:
             self,
             authenticator: interfaces.AbsAuthenticator,
             raw_user: api_models.CreateUserIn,
-    ) -> UUID:
+    ) -> Result[errors.Error, UUID]:
         """Business logic."""
         raw_user.name = raw_user.name or raw_user.login
         password = authenticator.encode_password(
@@ -42,7 +43,7 @@ class CreateUserUseCase:
             user = await self.users_repo.read_user(uuid)
 
             if user is None:
-                raise exceptions.NotFound(f'User {uuid} does not exist')
+                return Failure(errors.UserDoesNotExist(uuid=uuid))
 
             item_uuid = await self.items_repo.generate_uuid()
             raw_item = api_models.CreateItemIn(
@@ -57,4 +58,4 @@ class CreateUserUseCase:
             user.root_item = item_uuid
             await self.users_repo.update_user(user)
 
-        return uuid
+        return Success(uuid)
