@@ -2,7 +2,7 @@
 """Repository that perform CRUD operations on users and their data.
 """
 import abc
-from typing import Optional
+from typing import Optional, Any
 from uuid import UUID
 
 from omoide import domain
@@ -12,14 +12,13 @@ from omoide.presentation import api_models
 class AbsUsersRepository(abc.ABC):
     """Repository that perform CRUD operations on users and their data."""
 
-    def __init__(self, db) -> None:
+    def __init__(self, db) -> None:  # TODO - move to base class
         """Initialize instance."""
         self.db = db
 
-    @abc.abstractmethod
-    def transaction(self):
+    def transaction(self) -> Any:  # TODO - move to base class
         """Start transaction."""
-        # FIXME: parent repository should have this method
+        return self.db.transaction()
 
     @abc.abstractmethod
     async def generate_uuid(self) -> UUID:

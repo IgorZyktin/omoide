@@ -6,6 +6,7 @@ from typing import Optional
 
 import click
 
+from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
 from omoide.storage.repositories.rp_users import UsersRepository
@@ -38,9 +39,13 @@ def cmd_create_user(login: str, password: str, name: Optional[str]):
     async def _coro():
         print('Going to create new user')
         await dep.db.connect()
-        uuid = await use_case.execute(dep.current_authenticator, raw_user)
+        result = await use_case.execute(dep.current_authenticator, raw_user)
         await dep.db.disconnect()
-        print(uuid)
+
+        if isinstance(result, Failure):
+            print(str(result.error))
+        else:
+            print(result.value)
 
     asyncio.run(_coro())
 
