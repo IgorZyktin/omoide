@@ -105,7 +105,7 @@ function addFiles(source) {
     jump.onclick = () => {
         document.body.scrollTop = document.documentElement.scrollTop = 0;
     }
-    jump.appendTo(container)
+    $(jump).appendTo(container)
 
     button.removeClass('upload-in-progress')
 }
