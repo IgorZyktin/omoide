@@ -19,6 +19,7 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     http.HTTPStatus.NOT_FOUND: [
         errors.ItemDoesNotExist,
         errors.EXIFDoesNotExist,
+        errors.UserDoesNotExist,
     ],
 
     http.HTTPStatus.FORBIDDEN: [
@@ -41,13 +42,13 @@ def get_corresponding_error_code(error: errors.Error) -> int:
     )
 
 
-def safe_template(error: errors.Error) -> str:
+def safe_template(template, **kwargs) -> str:
     """Try converting error as correct as possible."""
-    message = error.template
+    message = template
 
-    for kev, value in error.kwargs.items():
+    for kev, value in kwargs.items():
         try:
-            message = message.format(kev=str(value))
+            message = message.replace('{' + str(kev) + '}', str(value))
         except KeyError:
             pass
 
@@ -68,6 +69,6 @@ def raise_from_error(
         message = error.template.format(**error.kwargs)
     except KeyError as exc:
         print(exc)  # TODO: replace with logger call
-        message = safe_template(error)
+        message = safe_template(error.template, **error.kwargs)
 
     raise HTTPException(status_code=code, detail=message)
