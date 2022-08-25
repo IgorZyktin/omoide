@@ -24,11 +24,9 @@ class BaseEXIFUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
             exif_repo: interfaces.AbsEXIFRepository,
     ) -> None:
         """Initialize instance."""
-        self.items_repo = items_repo
         self.exif_repo = exif_repo
 
 
@@ -43,8 +41,8 @@ class CreateOrUpdateEXIFUseCase(BaseEXIFUseCase):
             exif_in: api_models.EXIFIn,
     ) -> Result[errors.Error, bool]:
         """Business logic."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user,
+        async with self.exif_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
                                                actions.EXIF.CREATE_OR_UPDATE)
 
             if error:
@@ -53,7 +51,6 @@ class CreateOrUpdateEXIFUseCase(BaseEXIFUseCase):
             exif = domain.EXIF(
                 item_uuid=uuid,
                 exif=exif_in.exif,
-                # TODO - crated_at? updated_at?
             )
 
             created = await self.exif_repo.create_or_update_exif(user, exif)
@@ -70,8 +67,8 @@ class ReadEXIFUseCase(BaseEXIFUseCase):
             user: domain.User,
             uuid: UUID,
     ) -> Result[errors.Error, domain.EXIF]:
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, actions.EXIF.READ)
+        async with self.exif_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.EXIF.READ)
 
             if error:
                 return Failure(error)
@@ -94,8 +91,8 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
             uuid: UUID,
     ) -> Result[errors.Error, bool]:
         """Business logic."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, actions.EXIF.DELETE)
+        async with self.exif_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.EXIF.DELETE)
 
             if error:
                 return Failure(error)

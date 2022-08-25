@@ -65,8 +65,9 @@ def raise_from_error(
     assert language is None
 
     try:
-        message = error.template.format(error.kwargs)
-    except KeyError:
+        message = error.template.format(**error.kwargs)
+    except KeyError as exc:
+        print(exc)  # TODO: replace with logger call
         message = safe_template(error)
 
     raise HTTPException(status_code=code, detail=message)

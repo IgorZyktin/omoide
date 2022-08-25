@@ -31,12 +31,13 @@ class EXIFRepository(
 
         insert = pg_insert(models.EXIF).values(values)
         stmt = insert.on_conflict_do_update(
-            constraint='item_uuid',
-            set_={'exif': insert.excluded.name}
+            index_elements=[models.EXIF.item_uuid],
+            set_={'exif': insert.excluded.exif}
         )
 
-        response = await self.db.execute(stmt, values)
-        return response.rowcount == 1
+        await self.db.execute(stmt, values)
+
+        return True
 
     async def read_exif(
             self,
@@ -45,13 +46,26 @@ class EXIFRepository(
         """Return EXIF or None."""
         stmt = sa.select(models.EXIF).where(models.EXIF.item_uuid == uuid)
         response = await self.db.fetch_one(stmt)
-        return domain.EXIF.from_map(response) if response else None
+
+        if response is None:
+            return None
+
+        return domain.EXIF(
+            item_uuid=response['item_uuid'],
+            exif=json.loads(response['exif']),  # TODO - use ujson here
+        )
 
     async def delete_exif(
             self,
             uuid: UUID,
     ) -> bool:
         """Delete EXIF with given UUID and return True on success."""
-        stmt = sa.delete(models.EXIF).where(models.EXIF.item_uuid == uuid)
+        stmt = sa.delete(
+            models.EXIF
+        ).where(
+            models.EXIF.item_uuid == uuid
+        ).returning(1)
+
         response = await self.db.fetch_one(stmt)
-        return response.rowcount == 1
+
+        return response is not None

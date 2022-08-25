@@ -23,7 +23,7 @@ class Error:
 
     def __str__(self) -> str:
         """Return textual representation."""
-        message = self.template.format(self.kwargs)
+        message = self.template.format(**self.kwargs)
         if self.exception:
             message += f' [{type(self.exception)}({self.exception})]'
         return message
@@ -41,9 +41,9 @@ class ItemDoesNotExist(Error):
 
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
-    template = 'You are not allowed to modify item {uuid}'
+    template = 'You are not allowed to interact with item {uuid}'
 
 
 class EXIFDoesNotExist(Error):
     """EXIF for item does not exist or hidden from the user."""
-    template = 'EXIF for item with {uuid} does not exist'
+    template = 'EXIF for item {uuid} does not exist'

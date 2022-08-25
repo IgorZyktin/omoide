@@ -187,18 +187,17 @@ def delete_media_use_case() -> use_cases.DeleteMediaUseCase:
 
 def read_exif_use_case() -> use_cases.ReadEXIFUseCase:
     """Get use case instance."""
-    return use_cases.ReadEXIFUseCase(items_repository, exif_repository)
+    return use_cases.ReadEXIFUseCase(exif_repository)
 
 
 def update_exif_use_case() -> use_cases.CreateOrUpdateEXIFUseCase:
     """Get use case instance."""
-    return use_cases.CreateOrUpdateEXIFUseCase(items_repository,
-                                               exif_repository)
+    return use_cases.CreateOrUpdateEXIFUseCase(exif_repository)
 
 
 def delete_exif_use_case() -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
-    return use_cases.DeleteEXIFUseCase(items_repository, exif_repository)
+    return use_cases.DeleteEXIFUseCase(exif_repository)
 
 
 # api meta related use cases -------------------------------------------------
