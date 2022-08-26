@@ -20,6 +20,7 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
         errors.ItemDoesNotExist,
         errors.EXIFDoesNotExist,
         errors.UserDoesNotExist,
+        errors.MediaDoesNotExist,
     ],
 
     http.HTTPStatus.FORBIDDEN: [
