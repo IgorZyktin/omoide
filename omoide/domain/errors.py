@@ -45,10 +45,15 @@ class ItemRequiresAccess(Error):
 
 
 class EXIFDoesNotExist(Error):
-    """EXIF for item does not exist or hidden from the user."""
+    """EXIF for item does not exist."""
     template = 'EXIF for item {uuid} does not exist'
 
 
 class UserDoesNotExist(Error):
     """User with uuid does not exist."""
     template = 'User {uuid} does not exist'
+
+
+class MediaDoesNotExist(Error):
+    """Media for item does not exist."""
+    template = 'Media for item {uuid} does not exist'

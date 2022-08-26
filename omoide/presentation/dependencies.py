@@ -168,18 +168,17 @@ def api_browse_use_case() -> use_cases.APIBrowseUseCase:
 
 def read_media_use_case() -> use_cases.ReadMediaUseCase:
     """Get use case instance."""
-    return use_cases.ReadMediaUseCase(items_repository, media_repository)
+    return use_cases.ReadMediaUseCase(media_repository)
 
 
 def update_media_use_case() -> use_cases.CreateOrUpdateMediaUseCase:
     """Get use case instance."""
-    return use_cases.CreateOrUpdateMediaUseCase(items_repository,
-                                                media_repository)
+    return use_cases.CreateOrUpdateMediaUseCase(media_repository)
 
 
 def delete_media_use_case() -> use_cases.DeleteMediaUseCase:
     """Get use case instance."""
-    return use_cases.DeleteMediaUseCase(items_repository, media_repository)
+    return use_cases.DeleteMediaUseCase(media_repository)
 
 
 # api exif related use cases -------------------------------------------------

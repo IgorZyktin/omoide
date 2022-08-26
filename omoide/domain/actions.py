@@ -13,3 +13,10 @@ class EXIF(Action):
     CREATE_OR_UPDATE = enum.auto()
     READ = enum.auto()
     DELETE = enum.auto()
+
+
+class Media(Action):
+    """Operations on Media."""
+    CREATE_OR_UPDATE = enum.auto()
+    READ = enum.auto()
+    DELETE = enum.auto()
