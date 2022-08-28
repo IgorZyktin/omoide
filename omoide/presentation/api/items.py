@@ -78,7 +78,7 @@ async def api_partial_update_item(
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
 
-    return api_models.OnlyUUID(uuid=result.value)
+    return {'result': 'ok'}
 
 
 @router.delete(
