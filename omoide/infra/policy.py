@@ -33,11 +33,16 @@ class Policy(interfaces.AbsPolicy):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: UUID,
+            uuid: Optional[UUID],
             action: actions.Action,
     ) -> Optional[errors.Error]:
         """Return Error if action is not permitted."""
         error = None
+
+        if isinstance(action, actions.Item):
+            if uuid is None:
+                return errors.NoUUID(action=action.name)
+            return await self._is_restricted_for_item(user, uuid, action)
 
         if action in ITEM_RELATED:
             access = await self.items_repo.check_access(user, uuid)
@@ -50,5 +55,34 @@ class Policy(interfaces.AbsPolicy):
 
         else:
             error = errors.UnexpectedAction(action=action.name)
+
+        return error or None
+
+    async def _is_restricted_for_item(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            action: actions.Item,
+    ) -> Optional[errors.Error]:
+        """Check specifically for item related actions."""
+        error = None
+
+        access = await self.items_repo.check_access(user, uuid)
+
+        if access.does_not_exist:
+            return errors.ItemDoesNotExist(uuid=uuid)
+
+        if action in (actions.Item.CREATE, actions.Item.UPDATE, action.DELETE):
+            # on create we're using uuid of the parent, not the item itself
+            if user.is_anon():
+                error = errors.ItemModificationByAnon()
+
+            elif access.is_not_given or access.is_not_owner:
+                error = errors.ItemRequiresAccess(uuid=uuid)
+
+        else:
+            assert action is actions.Item.READ
+            if access.is_not_given:
+                error = errors.ItemRequiresAccess(uuid=uuid)
 
         return error or None

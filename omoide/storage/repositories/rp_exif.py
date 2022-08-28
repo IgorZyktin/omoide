@@ -5,7 +5,7 @@ import json
 from typing import Optional
 from uuid import UUID
 
-import sqlalchemy as sa
+import sqlalchemy
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
@@ -44,7 +44,12 @@ class EXIFRepository(
             uuid: UUID,
     ) -> Optional[domain.EXIF]:
         """Return EXIF or None."""
-        stmt = sa.select(models.EXIF).where(models.EXIF.item_uuid == uuid)
+        stmt = sqlalchemy.select(
+            models.EXIF
+        ).where(
+            models.EXIF.item_uuid == uuid
+        )
+
         response = await self.db.fetch_one(stmt)
 
         if response is None:
@@ -60,7 +65,7 @@ class EXIFRepository(
             uuid: UUID,
     ) -> bool:
         """Delete EXIF with given UUID and return True on success."""
-        stmt = sa.delete(
+        stmt = sqlalchemy.delete(
             models.EXIF
         ).where(
             models.EXIF.item_uuid == uuid

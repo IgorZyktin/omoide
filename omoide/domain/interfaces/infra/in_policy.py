@@ -17,7 +17,7 @@ class AbsPolicy(abc.ABC):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: UUID,
+            uuid: Optional[UUID],
             action: actions.Action,
     ) -> Optional[Error]:
         """Return Error if action is not permitted."""

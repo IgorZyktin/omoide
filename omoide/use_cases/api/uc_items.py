@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 """Use case for items.
 """
-from typing import Optional
 from uuid import UUID
 
-from omoide.presentation import api_models
 from omoide import domain
-from omoide.domain import interfaces, exceptions
+from omoide.domain import actions
+from omoide.domain import errors
+from omoide.domain import interfaces
+from omoide.infra.special_types import Failure
+from omoide.infra.special_types import Result
+from omoide.infra.special_types import Success
+from omoide.presentation import api_models
 
 __all__ = [
     'CreateItemUseCase',
@@ -19,30 +23,12 @@ __all__ = [
 class BaseItemUseCase:
     """Base use case."""
 
-    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
-        """Initialize instance."""
-        self._repo = repo
-
-    async def _assert_has_access(
+    def __init__(
             self,
-            user: domain.User,
-            uuid: UUID,
-    ) -> domain.AccessStatus:
-        """Raise if user has no access to this item."""
-        access = await self._repo.check_access(user, uuid)
-
-        if access.does_not_exist:
-            raise exceptions.NotFound(f'Item {uuid} does not exist')
-
-        if access.is_not_given:
-            raise exceptions.Forbidden(f'User {user.uuid} ({user.name}) '
-                                       f'has no access to item {uuid}')
-
-        if access.is_not_owner:
-            raise exceptions.Forbidden(f'You must own item {uuid} '
-                                       'to be able to modify it')
-
-        return access
+            items_repo: interfaces.AbsItemsRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
 
 
 class CreateItemUseCase(BaseItemUseCase):
@@ -50,24 +36,23 @@ class CreateItemUseCase(BaseItemUseCase):
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
             payload: api_models.CreateItemIn,
-    ) -> UUID:
+    ) -> Result[errors.Error, UUID]:
         """Business logic."""
-        if user.cannot_create_items():
-            raise exceptions.Forbidden('You are not allowed to create items')
+        async with self.items_repo.transaction():
+            parent_uuid = payload.parent_uuid or user.root_item
+            error = await policy.is_restricted(user, parent_uuid,
+                                               actions.Item.CREATE)
 
-        if payload.parent_uuid:
-            await self._assert_has_access(user, payload.parent_uuid)
-        else:
-            payload.parent_uuid = user.root_item
+            if error:
+                return Failure(error)
 
-        payload.uuid = await self._repo.generate_uuid()
+            payload.uuid = await self.items_repo.generate_uuid()
+            uuid = await self.items_repo.create_item(user, payload)
 
-        async with self._repo.transaction():
-            uuid = await self._repo.create_item(user, payload)
-
-        return uuid
+        return Success(uuid)
 
 
 class ReadItemUseCase(BaseItemUseCase):
@@ -75,17 +60,24 @@ class ReadItemUseCase(BaseItemUseCase):
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-    ) -> domain.Item:
+    ) -> Result[errors.Error, domain.Item]:
         """Business logic."""
-        await self._repo.assert_has_access(user, uuid, only_for_owner=False)
-        item = await self._repo.read_item(uuid)
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.READ)
 
-        if item is None:
-            raise exceptions.NotFound(f'Item {uuid} does not exist')
+            if error:
+                return Failure(error)
 
-        return item
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+        return Success(item)
 
 
 class UpdateItemUseCase(BaseItemUseCase):
@@ -93,21 +85,29 @@ class UpdateItemUseCase(BaseItemUseCase):
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
             operations: list[api_models.PatchOperation],
-    ) -> None:
+    ) -> Result[errors.Error, bool]:
         """Business logic."""
-        await self._assert_has_access(user, uuid)
-        item = await self._repo.read_item(uuid)
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.UPDATE)
 
-        if item is None:
-            raise exceptions.NotFound(f'Item {uuid} does not exist')
+            if error:
+                return Failure(error)
 
-        async with self._repo.transaction():
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
             for operation in operations:
                 if operation.path == '/is_collection':
                     await self.alter_is_collection(item, operation)
+
+        return Success(True)
 
     async def alter_is_collection(
             self,
@@ -116,7 +116,7 @@ class UpdateItemUseCase(BaseItemUseCase):
     ) -> None:
         """Alter collection field."""
         item.is_collection = bool(operation.value)
-        await self._repo.update_item(item)
+        await self.items_repo.update_item(item)
 
 
 class DeleteItemUseCase(BaseItemUseCase):
@@ -124,19 +124,27 @@ class DeleteItemUseCase(BaseItemUseCase):
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-    ) -> UUID:
+    ) -> Result[errors.Error, UUID]:
         """Business logic."""
-        await self._assert_has_access(user, uuid)
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.DELETE)
 
-        item = await self._repo.read_item(uuid)
-        parent_uuid = item.parent_uuid
+            if error:
+                return Failure(error)
 
-        if parent_uuid is None:
-            raise exceptions.Forbidden('You are not allowed '
-                                       'to delete root items')
+            item = await self.items_repo.read_item(uuid)
+            parent_uuid = item.parent_uuid
 
-        await self._repo.delete_item(uuid)
+            if parent_uuid is None:
+                return Failure(errors.ItemNoDeleteForRoot(uuid=uuid))
 
-        return parent_uuid
+            deleted = await self.items_repo.delete_item(uuid)
+
+            if not deleted:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+        return Success(parent_uuid)
