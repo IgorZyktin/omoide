@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests.
 """
-from omoide.presentation import infra
+from omoide import infra
 
 
 def test_authenticator():
