@@ -29,8 +29,9 @@ __all__ = [
     'ComplexLocation',
     'Media',
     'EXIF',
-    'Meta',
+    'Meta',  # TODO - delete this class
     'NewPermissions',
+    'Metainfo',
 ]
 
 
@@ -306,3 +307,27 @@ class NewPermissions(BaseModel):
     def combined(self) -> frozenset[UUID]:
         """Return all permissions."""
         return frozenset(self.permissions_before | self.permissions_after)
+
+
+class Metainfo(BaseModel):
+    """Metainfo for item."""
+    item_uuid: UUID
+
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: Optional[datetime]
+    user_time: Optional[datetime]
+
+    width: Optional[int]
+    height: Optional[int]
+    duration: Optional[float]
+    resolution: Optional[float]
+    size: int
+    media_type: str
+
+    author: Optional[str]
+    author_url: Optional[str]
+    saved_from_url: Optional[str]
+    description: Optional[str]
+
+    extras: dict

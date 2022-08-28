@@ -53,6 +53,8 @@ app.include_router(api.api_exif.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)
 app.include_router(api.api_meta.router)
+app.include_router(api.api_meta.router)  # TODO: delete this
+app.include_router(api.api_metainfo.router)
 
 # Application routes
 app.include_router(application.browse.router)

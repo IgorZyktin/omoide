@@ -14,7 +14,10 @@ from omoide.domain.interfaces.repositories.in_rp_media import (
     AbsMediaRepository
 )
 from omoide.domain.interfaces.repositories.in_rp_meta import (
-    AbsMetaRepository,
+    AbsMetaRepository,  # TODO - delete this
+)
+from omoide.domain.interfaces.repositories.in_rp_metainfo import (
+    AbsMetainfoRepository,
 )
 from omoide.domain.interfaces.repositories.in_rp_users import (
     AbsUsersRepository,
