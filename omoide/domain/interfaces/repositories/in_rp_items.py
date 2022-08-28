@@ -25,6 +25,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> domain.AccessStatus:
         """Check if user has access to the item."""
 
+    # TODO - remove this
     @abc.abstractmethod
     async def assert_has_access(
             self,
@@ -49,12 +50,15 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> Optional[domain.Item]:
         """Return item or None."""
 
+    # TODO - move to a separate repo
+    @abc.abstractmethod
     async def read_children(
             self,
             uuid: UUID,
     ) -> list[domain.Item]:
         """Return all direct descendants of the given item."""
 
+    @abc.abstractmethod
     async def update_item(
             self,
             item: domain.Item,
@@ -65,9 +69,10 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     async def delete_item(
             self,
             uuid: UUID,
-    ) -> None:
+    ) -> bool:
         """Delete item with given UUID."""
 
+    # TODO - move to a separate repo
     @abc.abstractmethod
     async def count_all_children(
             self,
@@ -75,6 +80,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> int:
         """Count dependant items (including the parent itself)."""
 
+    # TODO - move to a separate repo
     @abc.abstractmethod
     async def get_simple_location(
             self,
@@ -84,6 +90,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
 
+    # TODO - move to a separate repo
     @abc.abstractmethod
     async def simple_find_items_to_browse(
             self,
@@ -93,6 +100,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (simple)."""
 
+    # TODO - move to a separate repo
     @abc.abstractmethod
     async def complex_find_items_to_browse(
             self,
@@ -102,6 +110,7 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
 
+    # TODO - move to a separate repo
     @abc.abstractmethod
     async def update_tags_in_children(
             self,

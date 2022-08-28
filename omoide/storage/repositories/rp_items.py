@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on items and their data.
 """
-from typing import Optional, Callable, Awaitable
-from uuid import UUID, uuid4
+from typing import Awaitable
+from typing import Callable
+from typing import Optional
+from uuid import UUID
+from uuid import uuid4
 
 import sqlalchemy
 from sqlalchemy import func
@@ -101,6 +104,7 @@ class ItemsRepository(
             payload: api_models.CreateItemIn,
     ) -> UUID:
         """Create item and return UUID."""
+        # TODO - rewrite to sqlalchemy
         stmt = """
         INSERT INTO items (
             uuid,
@@ -148,9 +152,15 @@ class ItemsRepository(
             uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
-        stmt = sqlalchemy.select(models.Item).where(models.Item.uuid == uuid)
+        stmt = sqlalchemy.select(
+            models.Item
+        ).where(
+            models.Item.uuid == uuid
+        )
+
         response = await self.db.fetch_one(stmt)
-        return domain.Item.from_map(dict(response)) if response else None
+
+        return domain.Item(**response) if response else None
 
     async def read_children(
             self,
@@ -209,12 +219,17 @@ class ItemsRepository(
     async def delete_item(
             self,
             uuid: UUID,
-    ) -> None:
+    ) -> bool:
         """Delete item with given UUID."""
-        stmt = """
-        DELETE FROM items WHERE uuid = :uuid;
-        """
-        await self.db.execute(stmt, {'uuid': uuid})
+        stmt = sqlalchemy.delete(
+            models.Item
+        ).where(
+            models.Item.uuid == uuid
+        ).returning(1)
+
+        response = await self.db.fetch_one(stmt)
+
+        return response is not None
 
     async def count_all_children(
             self,

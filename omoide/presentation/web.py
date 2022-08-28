@@ -13,7 +13,11 @@ from omoide.domain import errors
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     # not supposed to be used, but just in case
     http.HTTPStatus.INTERNAL_SERVER_ERROR: [
-        errors.Error
+        errors.Error,
+    ],
+
+    http.HTTPStatus.BAD_REQUEST: [
+        errors.NoUUID,
     ],
 
     http.HTTPStatus.NOT_FOUND: [
@@ -25,6 +29,8 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
 
     http.HTTPStatus.FORBIDDEN: [
         errors.ItemRequiresAccess,
+        errors.ItemNoDeleteForRoot,
+        errors.ItemModificationByAnon,
     ]
 }
 

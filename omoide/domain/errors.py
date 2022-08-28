@@ -29,6 +29,11 @@ class Error:
         return message
 
 
+class NoUUID(Error):
+    """User has to give UUID but opted out it."""
+    template = 'No UUID specified for the action {name}'
+
+
 class UnexpectedAction(Error):
     """Policy was not programmed for this."""
     template = 'No rule for {action}'
@@ -42,6 +47,16 @@ class ItemDoesNotExist(Error):
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
     template = 'You are not allowed to interact with item {uuid}'
+
+
+class ItemNoDeleteForRoot(Error):
+    """User tries to delete root level item."""
+    template = 'Top level item {uuid} cannot be deleted'
+
+
+class ItemModificationByAnon(Error):
+    """Anon user tries to modify item."""
+    template = 'Anonymous users are not allowed to modify items'
 
 
 class EXIFDoesNotExist(Error):

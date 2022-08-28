@@ -28,7 +28,7 @@ jobs:
             -   name: Test with pytest
                 run: |
                     pip install pytest
-                    pytest ./tests/unit/
+                    pytest ./omoide/tests/unit/
             -   name: Test with mypy
                 run: |
                     pip install mypy
