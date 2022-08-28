@@ -377,10 +377,12 @@ class OrphanFiles(Base):
                                    name='media_type'))
 
     owner_uuid: UUID = sa.Column(pg.UUID(),
-                                 nullable=False)
+                                 nullable=False,
+                                 index=True)
 
     item_uuid: UUID = sa.Column(pg.UUID(),
-                                nullable=False)
+                                nullable=False,
+                                index=True)
 
     ext = sa.Column(sa.String(length=SMALL), nullable=False)
 
