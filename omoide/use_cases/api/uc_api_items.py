@@ -13,10 +13,10 @@ from omoide.infra.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [
-    'CreateItemUseCase',
-    'ReadItemUseCase',
+    'ApiItemCreateUseCase',
+    'ApiItemReadUseCase',
     'UpdateItemUseCase',
-    'DeleteItemUseCase',
+    'ApiItemDeleteUseCase',
 ]
 
 
@@ -31,7 +31,7 @@ class BaseItemUseCase:
         self.items_repo = items_repo
 
 
-class CreateItemUseCase(BaseItemUseCase):
+class ApiItemCreateUseCase(BaseItemUseCase):
     """Use case for creating an item."""
 
     async def execute(
@@ -55,7 +55,7 @@ class CreateItemUseCase(BaseItemUseCase):
         return Success(uuid)
 
 
-class ReadItemUseCase(BaseItemUseCase):
+class ApiItemReadUseCase(BaseItemUseCase):
     """Use case for getting an item."""
 
     async def execute(
@@ -119,7 +119,7 @@ class UpdateItemUseCase(BaseItemUseCase):
         await self.items_repo.update_item(item)
 
 
-class DeleteItemUseCase(BaseItemUseCase):
+class ApiItemDeleteUseCase(BaseItemUseCase):
     """Use case for deleting an item."""
 
     async def execute(

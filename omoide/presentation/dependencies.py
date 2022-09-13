@@ -9,6 +9,7 @@ from databases import Database
 from fastapi.security import HTTPBasicCredentials
 from starlette.templating import Jinja2Templates
 
+import omoide.use_cases.application.uc_app_items
 from omoide import infra
 from omoide import use_cases
 from omoide.domain import auth
@@ -110,16 +111,6 @@ async def get_current_user(
 # application related use cases -----------------------------------------------
 
 
-def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
-    """Get use case instance."""
-    return use_cases.AppItemUpdateUseCase(items_repository)
-
-
-def app_delete_item_use_case() -> use_cases.AppDeleteItemUseCase:
-    """Get use case instance."""
-    return use_cases.AppDeleteItemUseCase(items_repository)
-
-
 def get_search_use_case():
     """Get use case instance."""
     return search_use_case
@@ -140,32 +131,49 @@ def app_home_use_case() -> use_cases.HomeUseCase:
     return use_cases.HomeUseCase(items_repository)
 
 
+# app item related use cases --------------------------------------------------
+
+def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
+    """Get use case instance."""
+    return use_cases.AppItemUpdateUseCase(items_repository)
+
+
 # api item related use cases --------------------------------------------------
 
 
-def create_item_use_case() -> use_cases.CreateItemUseCase:
+def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
-    return use_cases.CreateItemUseCase(items_repository)
+    return use_cases.ApiItemCreateUseCase(items_repository)
 
 
-def read_item_use_case() -> use_cases.ReadItemUseCase:
+def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
     """Get use case instance."""
-    return use_cases.ReadItemUseCase(items_repository)
+    return use_cases.ApiItemReadUseCase(items_repository)
 
 
+# TODO: remove this
 def update_item_use_case() -> use_cases.UpdateItemUseCase:
     """Get use case instance."""
     return use_cases.UpdateItemUseCase(items_repository)
 
 
-def delete_item_use_case() -> use_cases.DeleteItemUseCase:
+def app_item_delete_use_case() -> omoide.use_cases.application.uc_app_items.AppItemDeleteUseCase:
     """Get use case instance."""
-    return use_cases.DeleteItemUseCase(items_repository)
+    return omoide.use_cases.application.uc_app_items.AppItemDeleteUseCase(items_repository)
 
+
+# api related use cases -------------------------------------------------------
 
 def api_browse_use_case() -> use_cases.APIBrowseUseCase:
     """Get use case instance."""
     return use_cases.APIBrowseUseCase(items_repository)
+
+
+# api item related use cases --------------------------------------------------
+
+def api_item_delete_use_case() -> use_cases.ApiItemDeleteUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemDeleteUseCase(items_repository)
 
 
 # api media related use cases -------------------------------------------------

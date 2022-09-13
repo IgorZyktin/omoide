@@ -5,6 +5,7 @@ import fastapi
 from fastapi import Depends, Request
 from starlette.responses import RedirectResponse
 
+import omoide.use_cases.application.uc_app_items
 from omoide import domain, utils, use_cases
 from omoide.domain import exceptions
 from omoide.presentation import dependencies as dep
@@ -15,12 +16,12 @@ router = fastapi.APIRouter()
 
 
 @router.get('/items/delete/{uuid}')
-async def app_delete_item(
+async def app_item_delete(
         request: Request,
         uuid: str,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.AppDeleteItemUseCase = Depends(
-            dep.app_delete_item_use_case),
+        use_case: omoide.use_cases.application.uc_app_items.AppItemDeleteUseCase = Depends(
+            dep.app_item_delete_use_case),
         config: Config = Depends(dep.config),
 ):
     """Delete item page."""

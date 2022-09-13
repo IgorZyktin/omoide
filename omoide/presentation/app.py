@@ -12,13 +12,13 @@ from omoide.presentation import api
 from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
+from omoide.presentation.application import app_item_update
 from omoide.presentation.application import auth
 from omoide.presentation.application import preview
 from omoide.presentation.application import profile
 from omoide.presentation.application import search
 from omoide.presentation.application import special
 from omoide.presentation.application import upload
-from omoide.presentation.application import app_item_update
 
 app = fastapi.FastAPI(
     openapi_url=None,
@@ -58,8 +58,8 @@ app.include_router(api.api_meta.router)
 app.include_router(application.browse.router)
 app.include_router(application.home.router)
 app.include_router(application.create_item.router)
-app.include_router(application.delete_item.router)
 app.include_router(application.app_item_update.router)
+app.include_router(application.app_item_delete.router)
 
 app.mount(
     '/static',

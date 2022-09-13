@@ -31,8 +31,8 @@ async def api_create_item(
         payload: api_models.CreateItemIn,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.CreateItemUseCase = Depends(
-            dep.create_item_use_case),
+        use_case: use_cases.ApiItemCreateUseCase = Depends(
+            dep.api_item_create_use_case),
 ):
     """Create item."""
     result = await use_case.execute(policy, user, payload)
@@ -51,8 +51,8 @@ async def api_read_item(
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ReadItemUseCase = Depends(
-            dep.read_item_use_case),
+        use_case: use_cases.ApiItemReadUseCase = Depends(
+            dep.api_item_read_use_case),
 ):
     """Get item."""
     result = await use_case.execute(policy, user, uuid)
@@ -89,8 +89,8 @@ async def api_delete_item(
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.DeleteItemUseCase = Depends(
-            dep.delete_item_use_case),
+        use_case: use_cases.ApiItemDeleteUseCase = Depends(
+            dep.api_item_delete_use_case),
 ):
     """Delete item.
 
