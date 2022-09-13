@@ -20,8 +20,73 @@
         <p>Target item: <strong>{{ item.name or item.uuid }}</strong>
             <br>Owner of the item: <strong>{{ user.name }}</strong></p>
 
-        <p><strong>This operation cannot be undone!</strong></p>
         <div id="alerts"></div>
+
+        <label for="item_name">Name<br>
+            <input id="item_name"
+                   type="text"
+                   value="{{ item.name }}"
+                   disabled
+                   class="height-auto">
+        </label>
+
+        <div>
+            <input type="checkbox"
+                    {{ 'checked' if item.is_collection else '' }}
+                   disabled
+                   id="item_is_collection">
+            <label for="item_is_collection">Item is collection</label>
+        </div>
+
+        <label for="item_content_ext">Content extension<br>
+            <input id="item_content_ext"
+                   type="text"
+                   value="{{ item.content_ext }}"
+                   disabled
+                   class="height-auto">
+        </label>
+
+        <label for="item_preview_ext">Preview extension<br>
+            <input id="item_preview_ext"
+                   type="text"
+                   value="{{ item.preview_ext }}"
+                   disabled
+                   class="height-auto">
+        </label>
+
+        <label for="item_thumbnail_ext">Thumbnail extension<br>
+            <input id="item_thumbnail_ext"
+                   type="text"
+                   value="{{ item.thumbnail_ext }}"
+                   disabled
+                   class="height-auto">
+        </label>
+
+        <label for="item_tags">Tags (one tag per line):<br>
+            <textarea id="item_tags" rows="7">
+                {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
+            </textarea>
+        </label>
+
+        <input id="media_button"
+               type="button"
+               class="button button-disabled"
+               disabled
+               value="Save tags">
+
+        <label for="item_permissions">Permissions (one user per line):<br>
+            <textarea id="item_permissions" rows="5">
+                {%- for permission in verbose_permissions -%}
+                    {{ permission|string + '\n' }}{% endfor -%}
+            </textarea>
+        </label>
+
+        <input id="media_button"
+               type="button"
+               class="button button-disabled"
+               disabled
+               value="Save permissions">
+
     </div>
 
     <script>
@@ -29,5 +94,8 @@
             tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
         });
     </script>
+
+    <br>
+    <br>
 
 {% endblock %}

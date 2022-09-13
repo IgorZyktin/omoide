@@ -3,16 +3,20 @@
 """
 import typing
 from datetime import datetime
-from typing import Optional, Mapping, Iterator
+from typing import Iterator
+from typing import Mapping
+from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
+from pydantic import validator
 
 from omoide import domain
 from omoide.domain import utils
 
 __all__ = [
     'Item',
+    'VerbosePermission',
     'PositionedItem',
     'PositionedByUserItem',
     'Location',
@@ -70,6 +74,16 @@ class Item(BaseModel):
     def from_map(cls, mapping: Mapping) -> 'Item':
         """Convert from arbitrary format to model."""
         return cls(**mapping)
+
+
+class VerbosePermission(BaseModel):
+    """User UUID + name."""
+    uuid: UUID
+    name: str
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return f'{self.uuid} {self.name}'
 
 
 class PositionedItem(BaseModel):

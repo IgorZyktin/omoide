@@ -29,7 +29,8 @@ class AppItemUpdateUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-    ) -> Result[errors.Error, None]:
+    ) -> Result[errors.Error,
+                tuple[domain.Item, int, list[domain.VerbosePermission]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -43,8 +44,9 @@ class AppItemUpdateUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             total = await self.items_repo.count_all_children(uuid)
+            permissions = await self.items_repo.get_verbose_permissions(item)
 
-        return Success((item, total))
+        return Success((item, total, permissions))
 
 
 class AppItemDeleteUseCase:

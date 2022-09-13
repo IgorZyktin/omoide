@@ -516,3 +516,25 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
         if not parent_first and item.uuid not in skip_items:
             await function(self, item)
+
+    async def get_verbose_permissions(
+            self,
+            item: domain.Item,
+    ) -> list[domain.VerbosePermission]:
+        """Read permissions with names."""
+        stmt = sqlalchemy.select(
+            models.User.uuid,
+            models.User.name,
+        ).where(
+            models.User.uuid.in_(tuple(item.permissions))  # noqa
+        )
+
+        response = await self.db.fetch_all(stmt)
+
+        return [
+            domain.VerbosePermission(
+                uuid=record['uuid'],
+                name=record['name'],
+            )
+            for record in response
+        ]
