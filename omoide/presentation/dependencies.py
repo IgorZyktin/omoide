@@ -9,7 +9,6 @@ from databases import Database
 from fastapi.security import HTTPBasicCredentials
 from starlette.templating import Jinja2Templates
 
-import omoide.use_cases.application.uc_app_items
 from omoide import infra
 from omoide import use_cases
 from omoide.domain import auth
@@ -138,6 +137,11 @@ def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     return use_cases.AppItemUpdateUseCase(items_repository)
 
 
+def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
+    """Get use case instance."""
+    return use_cases.AppItemDeleteUseCase(items_repository)
+
+
 # api item related use cases --------------------------------------------------
 
 
@@ -155,11 +159,6 @@ def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
 def update_item_use_case() -> use_cases.UpdateItemUseCase:
     """Get use case instance."""
     return use_cases.UpdateItemUseCase(items_repository)
-
-
-def app_item_delete_use_case() -> omoide.use_cases.application.uc_app_items.AppItemDeleteUseCase:
-    """Get use case instance."""
-    return omoide.use_cases.application.uc_app_items.AppItemDeleteUseCase(items_repository)
 
 
 # api related use cases -------------------------------------------------------

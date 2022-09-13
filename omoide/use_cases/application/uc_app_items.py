@@ -4,9 +4,8 @@
 from uuid import UUID
 
 from omoide import domain
-from omoide import utils
+from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
@@ -14,6 +13,7 @@ from omoide.infra.special_types import Success
 
 __all__ = [
     'AppItemUpdateUseCase',
+    'AppItemDeleteUseCase',
 ]
 
 
@@ -22,7 +22,7 @@ class AppItemUpdateUseCase:
 
     def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
         """Initialize instance."""
-        self._repo = repo
+        self.items_repo = repo
 
     async def execute(
             self,
@@ -40,22 +40,24 @@ class AppItemUpdateUseCase:
 class AppItemDeleteUseCase:
     """Use case for deleting an item."""
 
-    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
+    def __init__(self, items_repo: interfaces.AbsItemsRepository) -> None:
         """Initialize instance."""
-        self._repo = repo
+        self.items_repo = items_repo
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
-            raw_uuid: str,
-    ) -> tuple[int, domain.Item]:
+            uuid: UUID,
+    ) -> Result[errors.Error, tuple[int, domain.Item]]:
         """Business logic."""
-        if not utils.is_valid_uuid(raw_uuid):
-            raise exceptions.IncorrectUUID(f'Bad uuid {raw_uuid!r}')
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.DELETE)
 
-        uuid = UUID(raw_uuid)
-        await self._repo.assert_has_access(user, uuid, only_for_owner=True)
-        total = await self._repo.count_all_children(uuid)
-        item = await self._repo.read_item(uuid)
+            if error:
+                return Failure(error)
 
-        return total, item
+            total = await self.items_repo.count_all_children(uuid)
+            item = await self.items_repo.read_item(uuid)
+
+        return Success((item, total))

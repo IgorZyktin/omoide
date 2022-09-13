@@ -1,26 +1,33 @@
 # -*- coding: utf-8 -*-
 """Routes related to item deletion.
 """
-import fastapi
-from fastapi import Depends, Request
-from starlette.responses import RedirectResponse
+from uuid import UUID
 
-import omoide.use_cases.application.uc_app_items
-from omoide import domain, utils, use_cases
-from omoide.domain import exceptions
+import fastapi
+from fastapi import Depends
+from fastapi import Request
+
+from omoide import domain
+from omoide import use_cases
+from omoide import utils
+from omoide.domain import interfaces
+from omoide.infra.special_types import Failure
+from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants
+from omoide.presentation import infra
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
-router = fastapi.APIRouter()
+router = fastapi.APIRouter(prefix='/items/delete')
 
 
-@router.get('/items/delete/{uuid}')
+@router.get('{uuid}')
 async def app_item_delete(
         request: Request,
-        uuid: str,
+        uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: omoide.use_cases.application.uc_app_items.AppItemDeleteUseCase = Depends(
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.config),
 ):
@@ -33,14 +40,12 @@ async def app_item_delete(
     aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
 
-    try:
-        total, item = await use_case.execute(user, uuid)
-    except exceptions.IncorrectUUID:
-        return RedirectResponse(request.url_for('bad_request'))
-    except exceptions.NotFound:
-        return RedirectResponse(request.url_for('not_found') + f'?q={uuid}')
-    except exceptions.Unauthorized:
-        return RedirectResponse(request.url_for('unauthorized') + f'?q={uuid}')
+    result = await use_case.execute(policy, user, uuid)
+
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error, uuid)
+
+    item, total = result.value
 
     context = {
         'request': request,
@@ -54,4 +59,4 @@ async def app_item_delete(
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 
-    return dep.templates.TemplateResponse('delete_item.html', context)
+    return dep.templates.TemplateResponse('item_delete.html', context)
