@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from omoide import domain
 from omoide import use_cases
+from omoide import utils
 from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.presentation import constants
@@ -46,15 +47,18 @@ async def app_item_edit(
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error, uuid)
 
+    item, total = result.value
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim': aim,
-        'item': result,
+        'item': item,
+        'uuid': uuid,  # TODO - do we really need this?
+        'total': utils.sep_digits(total),
         'url': request.url_for('search'),
-        'uuid': uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 
-    return dep.templates.TemplateResponse('item_edit.html', context)
+    return dep.templates.TemplateResponse('item_update.html', context)

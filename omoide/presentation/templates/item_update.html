@@ -13,6 +13,21 @@
 
 {% block body %}
     <div class="narrow-block">
-        <h1>Edit</h1>
+        <h1>Modification of an item</h1>
+
+        <div id="thumbnail" class="thumbnail"></div>
+
+        <p>Target item: <strong>{{ item.name or item.uuid }}</strong>
+            <br>Owner of the item: <strong>{{ user.name }}</strong></p>
+
+        <p><strong>This operation cannot be undone!</strong></p>
+        <div id="alerts"></div>
     </div>
+
+    <script>
+        $(document).ready(function () {
+            tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
+        });
+    </script>
+
 {% endblock %}

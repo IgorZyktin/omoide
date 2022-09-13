@@ -31,10 +31,20 @@ class AppItemUpdateUseCase:
             uuid: UUID,
     ) -> Result[errors.Error, None]:
         """Business logic."""
-        error = None
-        if error:
-            return Failure(error)
-        return Success(None)
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
+
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            total = await self.items_repo.count_all_children(uuid)
+
+        return Success((item, total))
 
 
 class AppItemDeleteUseCase:
@@ -57,7 +67,11 @@ class AppItemDeleteUseCase:
             if error:
                 return Failure(error)
 
-            total = await self.items_repo.count_all_children(uuid)
             item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            total = await self.items_repo.count_all_children(uuid)
 
         return Success((item, total))
