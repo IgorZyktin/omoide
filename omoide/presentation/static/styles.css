@@ -26,14 +26,6 @@
         border-radius: var(--large-radius);
     }
 
-    .menu-container {
-        margin: auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        grid-column-gap: 0.1em;
-        justify-content: center;
-    }
-
     .query-container {
         margin: 5px;
         display: grid;
@@ -70,15 +62,6 @@
 
     textarea {
         border-radius: var(--radius);
-    }
-
-    .menu-container {
-        margin: auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        grid-column-gap: 1em;
-        max-width: 800px;
-        justify-content: center;
     }
 
     .query-container {
@@ -409,4 +392,12 @@ h3, h4, h5 {
 .upload-in-progress {
     /* FIXME */
     background-color: red;
+}
+
+.menu-container {
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1em;
 }

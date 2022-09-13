@@ -1,0 +1,18 @@
+{% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ url_for('static', path='crud.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', path='item_edit.js') }}"></script>
+    <link type="text/css"
+          href="{{ url_for('static', path='crud.css') }}"
+          rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="narrow-block">
+        <h1>Edit</h1>
+    </div>
+{% endblock %}

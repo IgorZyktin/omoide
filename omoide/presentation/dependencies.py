@@ -110,6 +110,11 @@ async def get_current_user(
 # application related use cases -----------------------------------------------
 
 
+def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
+    """Get use case instance."""
+    return use_cases.AppItemUpdateUseCase(items_repository)
+
+
 def app_delete_item_use_case() -> use_cases.AppDeleteItemUseCase:
     """Get use case instance."""
     return use_cases.AppDeleteItemUseCase(items_repository)
