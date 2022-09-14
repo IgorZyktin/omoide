@@ -139,7 +139,45 @@ function fillTextarea(elementId, values) {
 
 function saveBasic() {
     // save changes
-    alert('saveBasic')  // FIXME
+    $.ajax({
+        timeout: 5000, // 5 seconds
+        type: 'PATCH',
+        url: `/api/items/${newModel['uuid']}`,
+        contentType: 'application/json',
+        data: JSON.stringify([
+            {
+                'op': 'replace',
+                'path': '/name',
+                'value': newModel['name'],
+            },
+            {
+                'op': 'replace',
+                'path': '/content_ext',
+                'value': newModel['content_ext'],
+            },
+            {
+                'op': 'replace',
+                'path': '/preview_ext',
+                'value': newModel['preview_ext'],
+            },
+            {
+                'op': 'replace',
+                'path': '/thumbnail_ext',
+                'value': newModel['thumbnail_ext'],
+            },
+            {
+                'op': 'replace',
+                'path': '/is_collection',
+                'value': newModel['is_collection'],
+            },
+        ]),
+        success: function (response) {
+            console.log(response)
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON)
+        },
+    })
 }
 
 function saveParent(totalChildren) {
@@ -148,7 +186,23 @@ function saveParent(totalChildren) {
         if (!confirm(`New parent will affect ${totalChildren} items, are you sure?`))
             return
     }
-    alert('saveParent')  // FIXME
+    $.ajax({
+        timeout: 5000, // 5 seconds
+        type: 'PUT',
+        url: `/api/items/${newModel['uuid']}/parent`,
+        contentType: 'application/json',
+        data: JSON.stringify([
+            {
+                'parent_uuid': newModel['parent_uuid'],
+            }
+        ]),
+        success: function (response) {
+            console.log(response)
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON)
+        },
+    })
 }
 
 function saveTags(totalChildren) {
@@ -157,7 +211,24 @@ function saveTags(totalChildren) {
         if (!confirm(`New tags will affect ${totalChildren} items, are you sure?`))
             return
     }
-    alert('saveTags') // FIXME
+
+    $.ajax({
+        timeout: 5000, // 5 seconds
+        type: 'PUT',
+        url: `/api/items/${newModel['uuid']}/tags`,
+        contentType: 'application/json',
+        data: JSON.stringify([
+            {
+                'tags': newModel['tags'],
+            }
+        ]),
+        success: function (response) {
+            console.log(response)
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON)
+        },
+    })
 }
 
 function savePermissions(totalChildren) {
@@ -168,5 +239,24 @@ function savePermissions(totalChildren) {
     }
     let applyToParents = $('#item_perm_apply_to_parents').is(':checked')
     let applyToChildren = $('#item_perm_apply_to_children').is(':checked')
-    alert('savePermissions') // FIXME
+
+    $.ajax({
+        timeout: 5000, // 5 seconds
+        type: 'PUT',
+        url: `/api/items/${newModel['uuid']}/permissions`,
+        contentType: 'application/json',
+        data: JSON.stringify([
+            {
+                'apply_to_parents': applyToParents,
+                'apply_to_children': applyToChildren,
+                'permissions': newModel['permissions'],
+            }
+        ]),
+        success: function (response) {
+            console.log(response)
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON)
+        },
+    })
 }
