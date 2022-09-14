@@ -104,19 +104,62 @@ class UpdateItemUseCase(BaseItemUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             for operation in operations:
-                if operation.path == '/is_collection':
+                if operation.path == '/name':
+                    await self.alter_name(item, operation)
+                elif operation.path == '/is_collection':
                     await self.alter_is_collection(item, operation)
+                elif operation.path == '/content_ext':
+                    await self.alter_content_ext(item, operation)
+                elif operation.path == '/preview_ext':
+                    await self.alter_preview_ext(item, operation)
+                elif operation.path == '/thumbnail_ext':
+                    await self.alter_thumbnail_ext(item, operation)
+
+                # TODO - add validation
+
+            await self.items_repo.update_item(item)
 
         return Success(True)
 
+    @staticmethod
     async def alter_is_collection(
-            self,
             item: domain.Item,
             operation: api_models.PatchOperation,
     ) -> None:
         """Alter collection field."""
         item.is_collection = bool(operation.value)
-        await self.items_repo.update_item(item)
+
+    @staticmethod
+    async def alter_name(
+            item: domain.Item,
+            operation: api_models.PatchOperation,
+    ) -> None:
+        """Alter name field."""
+        item.name = str(operation.value)
+
+    @staticmethod
+    async def alter_content_ext(
+            item: domain.Item,
+            operation: api_models.PatchOperation,
+    ) -> None:
+        """Alter content_ext field."""
+        item.content_ext = str(operation.value) if operation.value else None
+
+    @staticmethod
+    async def alter_preview_ext(
+            item: domain.Item,
+            operation: api_models.PatchOperation,
+    ) -> None:
+        """Alter preview_ext field."""
+        item.preview_ext = str(operation.value) if operation.value else None
+
+    @staticmethod
+    async def alter_thumbnail_ext(
+            item: domain.Item,
+            operation: api_models.PatchOperation,
+    ) -> None:
+        """Alter thumbnail_ext field."""
+        item.thumbnail_ext = str(operation.value) if operation.value else None
 
 
 class ApiItemDeleteUseCase(BaseItemUseCase):

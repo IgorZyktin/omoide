@@ -172,7 +172,13 @@ function saveBasic() {
             },
         ]),
         success: function (response) {
-            console.log(response)
+            console.log('Saved basic fields', response)
+            for (let field of BASIC_FIELDS) {
+                oldModel[field] = newModel[field]
+            }
+            checkChangesBasic('save_basic')
+            tryLoadingThumbnail(oldModel['uuid'], $('#thumbnail'))
+            makeAnnounce('Basic fields saved')
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
@@ -197,7 +203,11 @@ function saveParent(totalChildren) {
             }
         ]),
         success: function (response) {
-            console.log(response)
+            console.log('Saved parent', response)
+            oldModel['parent_uuid'] = newModel['parent_uuid']
+            checkChangesParent('save_parent')
+            tryLoadingThumbnail(oldModel['parent_uuid'], $('#parent_thumbnail'))
+            makeAnnounce('Parent changed')
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
@@ -223,7 +233,10 @@ function saveTags(totalChildren) {
             }
         ]),
         success: function (response) {
-            console.log(response)
+            console.log('Saved tags', response)
+            oldModel['tags'] = newModel['tags']
+            checkChangesTags('save_tags')
+            makeAnnounce('Tags saved')
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
@@ -253,7 +266,11 @@ function savePermissions(totalChildren) {
             }
         ]),
         success: function (response) {
-            console.log(response)
+            console.log('Saved permissions', response)
+            oldModel['permissions'] = newModel['permissions']
+            initialPermissions = newModel['permissions']
+            checkChangesPermissions('save_permissions')
+            makeAnnounce('Permissions saved')
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)
