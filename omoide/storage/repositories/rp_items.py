@@ -312,7 +312,7 @@ class ItemsRepository(
             conditions = []
 
         if aim.nested:
-            conditions.append(models.Item.parent_uuid == uuid)  # noqa
+            conditions.append(models.Item.parent_uuid == str(uuid))  # noqa
 
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
@@ -331,8 +331,8 @@ class ItemsRepository(
                 )
             ).where(
                 sqlalchemy.or_(
-                    models.Item.owner_uuid == user.uuid,
-                    models.ComputedPermissions.permissions.any(user.uuid),
+                    models.Item.owner_uuid == str(user.uuid),
+                    models.ComputedPermissions.permissions.any(str(user.uuid)),
                 )
             )
 
@@ -360,7 +360,7 @@ class ItemsRepository(
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
         values = {
-            'uuid': uuid,
+            'uuid': str(uuid),
             'limit': aim.items_per_page,
         }
 
@@ -428,7 +428,7 @@ LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
 WHERE (owner_uuid = CAST(:user_uuid AS uuid)
     OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions))
             """
-            values['user_uuid'] = user.uuid
+            values['user_uuid'] = str(user.uuid)
 
         if aim.ordered:
             stmt += ' AND number > :last_seen'
