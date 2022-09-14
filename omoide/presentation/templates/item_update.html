@@ -5,7 +5,7 @@
     <script type="text/javascript"
             src="{{ url_for('static', path='crud.js') }}"></script>
     <script type="text/javascript"
-            src="{{ url_for('static', path='item_edit.js') }}"></script>
+            src="{{ url_for('static', path='item_update.js') }}"></script>
     <link type="text/css"
           href="{{ url_for('static', path='crud.css') }}"
           rel="stylesheet">
@@ -28,14 +28,14 @@
                 <input id="item_name"
                        type="text"
                        value="{{ item.name }}"
-                       disabled
+                       onchange="alterModelTextField(this, 'name')"
                        class="height-auto">
             </label>
 
             <div>
                 <input type="checkbox"
                         {{ 'checked' if item.is_collection else '' }}
-                       disabled
+                       onchange="alterModelBoolField(this, 'is_collection')"
                        id="item_is_collection">
                 <label for="item_is_collection">Item is collection</label>
             </div>
@@ -44,7 +44,7 @@
                 <input id="item_content_ext"
                        type="text"
                        value="{{ item.content_ext }}"
-                       disabled
+                       onchange="alterModelTextField(this, 'content_ext')"
                        class="height-auto">
             </label>
 
@@ -52,7 +52,7 @@
                 <input id="item_preview_ext"
                        type="text"
                        value="{{ item.preview_ext }}"
-                       disabled
+                       onchange="alterModelTextField(this, 'preview_ext')"
                        class="height-auto">
             </label>
 
@@ -60,36 +60,54 @@
                 <input id="item_thumbnail_ext"
                        type="text"
                        value="{{ item.thumbnail_ext }}"
-                       disabled
+                       onchange="alterModelTextField(this, 'thumbnail_ext')"
                        class="height-auto">
             </label>
 
-            <input id="media_button"
+            <input id="save_basic"
                    type="button"
                    class="button control-button button-disabled"
                    disabled
+                   onclick="saveBasic()"
                    value="Save basic parameters">
+
+            <input id="reset_basic"
+                   type="button"
+                   class="button control-button"
+                   onclick="resetBasic()"
+                   value="Reset changes">
         </div>
 
         <div>
             <h3>Tags fot the item and dependant items</h3>
             <label for="item_tags">Tags (one tag per line):<br>
-                <textarea id="item_tags" rows="7">
+                <textarea id="item_tags"
+                          onchange="alterModelTagsField(this)"
+                          rows="7">
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
             </label>
 
-            <input id="media_button"
+            <input id="save_tags"
                    type="button"
                    class="button control-button button-disabled"
                    disabled
+                   onclick="saveTags('{{ total }}')"
                    value="Save tags">
+
+            <input id="reset_tags"
+                   type="button"
+                   class="button control-button"
+                   onclick="resetTags()"
+                   value="Reset changes">
         </div>
 
         <div>
             <h3>Users who can see this item</h3>
             <label for="item_permissions">Permissions (one user per line):<br>
-                <textarea id="item_permissions" rows="5">
+                <textarea id="item_permissions"
+                          onchange="alterModelPermissionsField(this)"
+                          rows="5">
                 {%- for user in permissions -%}
                     {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}
             </textarea>
@@ -110,17 +128,27 @@
                     child items</label>
             </div>
 
-            <input id="media_button"
+            <input id="save_permissions"
                    type="button"
                    class="button control-button button-disabled"
                    disabled
+                   onclick="savePermissions('{{ total }}')"
                    value="Save permissions">
+
+            <input id="reset_permissions"
+                   type="button"
+                   class="button control-button"
+                   onclick="resetPermissions()"
+                   value="Reset changes">
         </div>
 
     </div>
 
     <script>
-        let model = {{ model|safe }}
+        let oldModel = {{ model | safe }};
+        let newModel = {{ model | safe }};
+        let initialPermissions = {{ initial_permissions | safe }};
+
         $(document).ready(function () {
             tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
         });

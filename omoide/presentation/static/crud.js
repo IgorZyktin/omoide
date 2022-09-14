@@ -1,10 +1,5 @@
 const UUID_PREFIX_LENGTH = 2
 
-function splitLines(text) {
-    // split string by line separators and return only non-empty
-    return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
-}
-
 function makeAlert(text) {
     // create alert popup message
     makeNotification(text, 'alert')

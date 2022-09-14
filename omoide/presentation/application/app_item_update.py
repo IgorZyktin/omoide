@@ -71,6 +71,9 @@ async def app_item_edit(
         'url': request.url_for('search'),
         'query': infra.query_maker.QueryWrapper(query, details),
         'model': json.dumps(item.dict(), cls=UUIDEncoder, ensure_ascii=False),
+        'initial_permissions': json.dumps([
+            f'{x.uuid} {x.name}' for x in permissions
+        ], ensure_ascii=False),
     }
 
     return dep.templates.TemplateResponse('item_update.html', context)
