@@ -26,6 +26,13 @@ function alterModelBoolField(element, fieldName) {
     checkChangesBasic('save_basic')
 }
 
+function alterModelParentField(element, fieldName) {
+    // change item model field
+    let value = $(element).val().trim()
+    newModel[fieldName] = value || null
+    checkChangesParent('save_parent')
+}
+
 function alterModelTagsField(element) {
     // change item model field
     newModel['tags'] = splitLines($(element).val())
@@ -41,6 +48,11 @@ function alterModelPermissionsField(element) {
 function checkChangesBasic(elementId) {
     // toggle save button for basic fields
     checkChanges(oldModel, newModel, elementId, BASIC_FIELDS, [])
+}
+
+function checkChangesParent(elementId) {
+    // toggle save button for basic fields
+    checkChanges(oldModel, newModel, elementId, ['parent_uuid'], [])
 }
 
 function checkChangesTags(elementId) {
@@ -111,6 +123,14 @@ function resetPermissions() {
     checkChangesPermissions('save_permissions')
 }
 
+function resetParent() {
+    // restore parameters
+    newModel['parent_uuid'] = oldModel['parent_uuid']
+    $('#item_parent').val(oldModel['parent_uuid'] || '')
+    tryLoadingThumbnail(oldModel['parent_uuid'], $('#parent_thumbnail'))
+    checkChangesParent('save_parent')
+}
+
 function fillTextarea(elementId, values) {
     // fill textarea using array
     let lines = values.join('\n').trim()
@@ -120,6 +140,15 @@ function fillTextarea(elementId, values) {
 function saveBasic() {
     // save changes
     alert('saveBasic')  // FIXME
+}
+
+function saveParent(totalChildren) {
+    // save changes
+    if (totalChildren !== '0' && totalChildren !== '1') {
+        if (!confirm(`New parent will affect ${totalChildren} items, are you sure?`))
+            return
+    }
+    alert('saveParent')  // FIXME
 }
 
 function saveTags(totalChildren) {

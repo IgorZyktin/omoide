@@ -23,13 +23,19 @@ from omoide.presentation.app_config import Config
 router = fastapi.APIRouter(prefix='/item/edit')
 
 
-# FIXME
-class UUIDEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            # if the obj is uuid, we simply return the value of uuid
-            return obj.hex
-        return json.JSONEncoder.default(self, obj)
+def serialize_item(item: domain.Item) -> dict[str, int | str | None]:
+    """Convert item to a simplified JSON form."""
+    return {
+        'uuid': str(item.uuid),
+        'parent_uuid': str(item.parent_uuid) if item.parent_uuid else '',
+        'name': item.name,
+        'is_collection': item.is_collection,
+        'content_ext': item.content_ext or '',
+        'preview_ext': item.preview_ext or '',
+        'thumbnail_ext': item.thumbnail_ext or '',
+        'tags': item.tags,
+        'permissions': list(item.permissions or []),
+    }
 
 
 @router.get('/{uuid}')
@@ -70,7 +76,7 @@ async def app_item_edit(
         'permissions': permissions,
         'url': request.url_for('search'),
         'query': infra.query_maker.QueryWrapper(query, details),
-        'model': json.dumps(item.dict(), cls=UUIDEncoder, ensure_ascii=False),
+        'model': json.dumps(serialize_item(item), ensure_ascii=False),
         'initial_permissions': json.dumps([
             f'{x.uuid} {x.name}' for x in permissions
         ], ensure_ascii=False),

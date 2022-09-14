@@ -43,7 +43,7 @@
             <label for="item_content_ext">Content extension<br>
                 <input id="item_content_ext"
                        type="text"
-                       value="{{ item.content_ext }}"
+                       value="{{ item.content_ext or '' }}"
                        onchange="alterModelTextField(this, 'content_ext')"
                        class="height-auto">
             </label>
@@ -51,7 +51,7 @@
             <label for="item_preview_ext">Preview extension<br>
                 <input id="item_preview_ext"
                        type="text"
-                       value="{{ item.preview_ext }}"
+                       value="{{ item.preview_ext or '' }}"
                        onchange="alterModelTextField(this, 'preview_ext')"
                        class="height-auto">
             </label>
@@ -59,7 +59,7 @@
             <label for="item_thumbnail_ext">Thumbnail extension<br>
                 <input id="item_thumbnail_ext"
                        type="text"
-                       value="{{ item.thumbnail_ext }}"
+                       value="{{ item.thumbnail_ext or '' }}"
                        onchange="alterModelTextField(this, 'thumbnail_ext')"
                        class="height-auto">
             </label>
@@ -79,11 +79,37 @@
         </div>
 
         <div>
+            <h3>Altering parent item</h3>
+            <label for="item_parent">Parent UUID<br>
+                <input id="item_parent"
+                       type="text"
+                       value="{{ (item.parent_uuid or '')|string }}"
+                       onchange="alterModelParentField(this, 'parent_uuid')"
+                       class="height-auto">
+            </label>
+
+            <div id="parent_thumbnail" class="thumbnail"></div>
+
+            <input id="save_parent"
+                   type="button"
+                   class="button control-button button-disabled"
+                   disabled
+                   onclick="saveParent('{{ total }}')"
+                   value="Save parent">
+
+            <input id="reset_parent"
+                   type="button"
+                   class="button control-button"
+                   onclick="resetParent()"
+                   value="Reset changes">
+        </div>
+
+        <div>
             <h3>Tags fot the item and dependant items</h3>
             <label for="item_tags">Tags (one tag per line):<br>
                 <textarea id="item_tags"
                           onchange="alterModelTagsField(this)"
-                          rows="7">
+                          rows="10">
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
             </label>
@@ -107,7 +133,7 @@
             <label for="item_permissions">Permissions (one user per line):<br>
                 <textarea id="item_permissions"
                           onchange="alterModelPermissionsField(this)"
-                          rows="5">
+                          rows="10">
                 {%- for user in permissions -%}
                     {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}
             </textarea>
@@ -151,6 +177,7 @@
 
         $(document).ready(function () {
             tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
+            tryLoadingThumbnail('{{ item.parent_uuid or '' }}', $('#parent_thumbnail'))
         });
     </script>
 
