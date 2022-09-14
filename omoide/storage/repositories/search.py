@@ -120,7 +120,7 @@ class SearchRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
         }
 
         response = await self.db.fetch_one(query, values)
@@ -144,7 +144,7 @@ class SearchRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
         }
 
         response = await self.db.fetch_one(_query, values)
@@ -175,7 +175,7 @@ class SearchRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
             'limit': details.items_per_page,
             'offset': details.offset,
         }
@@ -212,7 +212,7 @@ class SearchRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
             'limit': details.items_per_page,
             'offset': details.offset,
             'tags_include': query.tags_include,

@@ -76,8 +76,8 @@
 
         <label for="item_permissions">Permissions (one user per line):<br>
             <textarea id="item_permissions" rows="5">
-                {%- for permission in verbose_permissions -%}
-                    {{ permission|string + '\n' }}{% endfor -%}
+                {%- for user in permissions -%}
+                    {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}
             </textarea>
         </label>
 

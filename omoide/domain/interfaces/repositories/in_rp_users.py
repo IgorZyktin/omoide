@@ -40,6 +40,13 @@ class AbsUsersRepository(abc.ABC):
         """Return user or None."""
 
     @abc.abstractmethod
+    async def read_all_users(
+            self,
+            uuids: list[UUID | str],
+    ) -> list[domain.User]:
+        """Return list of users with given uuids."""
+
+    @abc.abstractmethod
     async def update_user(
             self,
             user: domain.User,

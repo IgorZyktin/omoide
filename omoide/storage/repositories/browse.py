@@ -88,7 +88,7 @@ class BrowseRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
             'item_uuid': item_uuid,
             'limit': details.items_per_page,
             'offset': details.offset,
@@ -113,7 +113,7 @@ class BrowseRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
             'item_uuid': item_uuid,
         }
 

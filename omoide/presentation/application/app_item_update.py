@@ -47,7 +47,7 @@ async def app_item_edit(
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error, uuid)
 
-    item, total, verbose_permissions = result.value
+    item, total, permissions = result.value
 
     context = {
         'request': request,
@@ -57,7 +57,7 @@ async def app_item_edit(
         'item': item,
         'uuid': uuid,  # TODO - do we really need this?
         'total': utils.sep_digits(total),
-        'verbose_permissions': verbose_permissions,
+        'permissions': permissions,
         'url': request.url_for('search'),
         'query': infra.query_maker.QueryWrapper(query, details),
     }

@@ -30,6 +30,7 @@ browse_repository = repositories.BrowseRepository(db)
 base_repository = repositories.BaseRepository(db)
 auth_use_case = use_cases.AuthUseCase(base_repository)
 
+users_repository = repositories.UsersRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
 exif_repository = repositories.EXIFRepository(db)
@@ -134,7 +135,7 @@ def app_home_use_case() -> use_cases.HomeUseCase:
 
 def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
-    return use_cases.AppItemUpdateUseCase(items_repository)
+    return use_cases.AppItemUpdateUseCase(items_repository, users_repository)
 
 
 def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:

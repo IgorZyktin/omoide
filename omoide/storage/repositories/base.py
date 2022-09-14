@@ -136,7 +136,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             """
 
             values = {
-                'user_uuid': user.uuid,
+                'user_uuid': str(user.uuid),
                 'item_uuid': item_uuid,
                 'child_uuid': child_uuid,
             }

@@ -20,9 +20,14 @@ __all__ = [
 class AppItemUpdateUseCase:
     """Use case for item modification."""
 
-    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsRepository,
+            users_repo: interfaces.AbsUsersRepository,
+    ) -> None:
         """Initialize instance."""
-        self.items_repo = repo
+        self.items_repo = items_repo
+        self.users_repo = users_repo
 
     async def execute(
             self,
@@ -30,7 +35,7 @@ class AppItemUpdateUseCase:
             user: domain.User,
             uuid: UUID,
     ) -> Result[errors.Error,
-                tuple[domain.Item, int, list[domain.VerbosePermission]]]:
+                tuple[domain.Item, int, list[domain.User]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -44,7 +49,8 @@ class AppItemUpdateUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             total = await self.items_repo.count_all_children(uuid)
-            permissions = await self.items_repo.get_verbose_permissions(item)
+            permissions = await self.users_repo.read_all_users(
+                item.permissions)
 
         return Success((item, total, permissions))
 

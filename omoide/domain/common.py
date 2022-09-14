@@ -16,7 +16,6 @@ from omoide.domain import utils
 
 __all__ = [
     'Item',
-    'VerbosePermission',
     'PositionedItem',
     'PositionedByUserItem',
     'Location',
@@ -74,16 +73,6 @@ class Item(BaseModel):
     def from_map(cls, mapping: Mapping) -> 'Item':
         """Convert from arbitrary format to model."""
         return cls(**mapping)
-
-
-class VerbosePermission(BaseModel):
-    """User UUID + name."""
-    uuid: UUID
-    name: str
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return f'{self.uuid} {self.name}'
 
 
 class PositionedItem(BaseModel):

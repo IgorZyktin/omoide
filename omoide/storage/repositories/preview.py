@@ -87,7 +87,7 @@ class PreviewRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
             'item_uuid': item_uuid,
         }
 

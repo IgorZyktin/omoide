@@ -72,12 +72,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> bool:
         """Delete item with given UUID."""
 
-    async def get_verbose_permissions(
-            self,
-            item: domain.Item,
-    ) -> list[domain.VerbosePermission]:
-        """Read permissions with names."""
-
     # TODO - move to a separate repo
     @abc.abstractmethod
     async def count_all_children(
