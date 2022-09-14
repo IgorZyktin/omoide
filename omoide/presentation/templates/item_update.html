@@ -13,7 +13,7 @@
 
 {% block body %}
     <div class="narrow-block">
-        <h1>Modification of an item</h1>
+        <h1>Item edit</h1>
 
         <div id="thumbnail" class="thumbnail"></div>
 
@@ -22,74 +22,105 @@
 
         <div id="alerts"></div>
 
-        <label for="item_name">Name<br>
-            <input id="item_name"
-                   type="text"
-                   value="{{ item.name }}"
-                   disabled
-                   class="height-auto">
-        </label>
-
         <div>
-            <input type="checkbox"
-                    {{ 'checked' if item.is_collection else '' }}
+            <h3>Basic parameters</h3>
+            <label for="item_name">Name<br>
+                <input id="item_name"
+                       type="text"
+                       value="{{ item.name }}"
+                       disabled
+                       class="height-auto">
+            </label>
+
+            <div>
+                <input type="checkbox"
+                        {{ 'checked' if item.is_collection else '' }}
+                       disabled
+                       id="item_is_collection">
+                <label for="item_is_collection">Item is collection</label>
+            </div>
+
+            <label for="item_content_ext">Content extension<br>
+                <input id="item_content_ext"
+                       type="text"
+                       value="{{ item.content_ext }}"
+                       disabled
+                       class="height-auto">
+            </label>
+
+            <label for="item_preview_ext">Preview extension<br>
+                <input id="item_preview_ext"
+                       type="text"
+                       value="{{ item.preview_ext }}"
+                       disabled
+                       class="height-auto">
+            </label>
+
+            <label for="item_thumbnail_ext">Thumbnail extension<br>
+                <input id="item_thumbnail_ext"
+                       type="text"
+                       value="{{ item.thumbnail_ext }}"
+                       disabled
+                       class="height-auto">
+            </label>
+
+            <input id="media_button"
+                   type="button"
+                   class="button control-button button-disabled"
                    disabled
-                   id="item_is_collection">
-            <label for="item_is_collection">Item is collection</label>
+                   value="Save basic parameters">
         </div>
 
-        <label for="item_content_ext">Content extension<br>
-            <input id="item_content_ext"
-                   type="text"
-                   value="{{ item.content_ext }}"
-                   disabled
-                   class="height-auto">
-        </label>
-
-        <label for="item_preview_ext">Preview extension<br>
-            <input id="item_preview_ext"
-                   type="text"
-                   value="{{ item.preview_ext }}"
-                   disabled
-                   class="height-auto">
-        </label>
-
-        <label for="item_thumbnail_ext">Thumbnail extension<br>
-            <input id="item_thumbnail_ext"
-                   type="text"
-                   value="{{ item.thumbnail_ext }}"
-                   disabled
-                   class="height-auto">
-        </label>
-
-        <label for="item_tags">Tags (one tag per line):<br>
-            <textarea id="item_tags" rows="7">
+        <div>
+            <h3>Tags fot the item and dependant items</h3>
+            <label for="item_tags">Tags (one tag per line):<br>
+                <textarea id="item_tags" rows="7">
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
-        </label>
+            </label>
 
-        <input id="media_button"
-               type="button"
-               class="button button-disabled"
-               disabled
-               value="Save tags">
+            <input id="media_button"
+                   type="button"
+                   class="button control-button button-disabled"
+                   disabled
+                   value="Save tags">
+        </div>
 
-        <label for="item_permissions">Permissions (one user per line):<br>
-            <textarea id="item_permissions" rows="5">
+        <div>
+            <h3>Users who can see this item</h3>
+            <label for="item_permissions">Permissions (one user per line):<br>
+                <textarea id="item_permissions" rows="5">
                 {%- for user in permissions -%}
                     {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}
             </textarea>
-        </label>
+            </label>
 
-        <input id="media_button"
-               type="button"
-               class="button button-disabled"
-               disabled
-               value="Save permissions">
+            <div>
+                <input type="checkbox"
+                       checked
+                       id="item_perm_apply_to_parents">
+                <label for="item_perm_apply_to_parents">Also apply to all
+                    parent items</label>
+            </div>
+
+            <div>
+                <input type="checkbox"
+                       id="item_perm_apply_to_children">
+                <label for="item_perm_apply_to_children">Also apply to all
+                    child items</label>
+            </div>
+
+            <input id="media_button"
+                   type="button"
+                   class="button control-button button-disabled"
+                   disabled
+                   value="Save permissions">
+        </div>
 
     </div>
 
     <script>
+        let model = {{ model|safe }}
         $(document).ready(function () {
             tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
         });

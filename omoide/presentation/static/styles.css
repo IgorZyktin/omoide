@@ -241,7 +241,7 @@ a:active {
     margin: 0;
 }
 
-h3, h4, h5 {
+h1, h2, h3, h4, h5 {
     margin: 0;
     text-align: center;
 }
@@ -400,4 +400,8 @@ h3, h4, h5 {
     flex-direction: row;
     justify-content: center;
     gap: 1em;
+}
+
+.control-button {
+    height: auto; !important;
 }

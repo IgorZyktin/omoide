@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Routes related to media edit.
 """
+import json
 from uuid import UUID
 
 import fastapi
@@ -20,6 +21,15 @@ from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter(prefix='/item/edit')
+
+
+# FIXME
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.hex
+        return json.JSONEncoder.default(self, obj)
 
 
 @router.get('/{uuid}')
@@ -60,6 +70,7 @@ async def app_item_edit(
         'permissions': permissions,
         'url': request.url_for('search'),
         'query': infra.query_maker.QueryWrapper(query, details),
+        'model': json.dumps(item.dict(), cls=UUIDEncoder, ensure_ascii=False),
     }
 
     return dep.templates.TemplateResponse('item_update.html', context)
