@@ -20,7 +20,7 @@ from omoide.presentation import infra
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
-router = fastapi.APIRouter(prefix='/item/edit')
+router = fastapi.APIRouter(prefix='/items/update')
 
 
 def serialize_item(item: domain.Item) -> dict[str, int | str | None]:
@@ -70,8 +70,8 @@ async def app_item_edit(
         'config': config,
         'user': user,
         'aim': aim,
+        'current_item': item,
         'item': item,
-        'uuid': uuid,  # TODO - do we really need this?
         'total': utils.sep_digits(total),
         'permissions': permissions,
         'url': request.url_for('search'),

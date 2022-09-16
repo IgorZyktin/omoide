@@ -21,7 +21,7 @@ from omoide.presentation.app_config import Config
 router = fastapi.APIRouter(prefix='/items/delete')
 
 
-@router.get('{uuid}')
+@router.get('/{uuid}')
 async def app_item_delete(
         request: Request,
         uuid: UUID,
@@ -52,6 +52,7 @@ async def app_item_delete(
         'config': config,
         'user': user,
         'aim': aim,
+        'current_item': item,
         'item': item,
         'url': request.url_for('search'),
         'uuid': uuid,

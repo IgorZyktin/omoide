@@ -127,7 +127,7 @@ function resetParent() {
     // restore parameters
     newModel['parent_uuid'] = oldModel['parent_uuid']
     $('#item_parent').val(oldModel['parent_uuid'] || '')
-    tryLoadingThumbnail(oldModel['parent_uuid'], $('#parent_thumbnail'))
+    tryLoadingThumbnail(oldModel['parent_uuid'], $('#thumbnail_parent'))
     checkChangesParent('save_parent')
 }
 
@@ -137,7 +137,24 @@ function fillTextarea(elementId, values) {
     $('#' + elementId).val(lines)
 }
 
-function saveBasic() {
+function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
+    // make parent use thumbnail from given item
+    $.ajax({
+        timeout: 5000, // 5 seconds
+        type: 'PUT',
+        url: `/api/items/${parentUUID}/copy_thumbnail/${childUUID}`,
+        contentType: 'application/json',
+        success: function (response) {
+            console.log('Enqueued thumbnail copying', response)
+            makeAnnounce('Enqueued thumbnail copying', alertsElementId)
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
+        },
+    })
+}
+
+function saveBasic(alertsElementId) {
     // save changes
     $.ajax({
         timeout: 5000, // 5 seconds
@@ -178,15 +195,15 @@ function saveBasic() {
             }
             checkChangesBasic('save_basic')
             tryLoadingThumbnail(oldModel['uuid'], $('#thumbnail'))
-            makeAnnounce('Basic fields saved')
+            makeAnnounce('Basic fields saved', alertsElementId)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
+            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
         },
     })
 }
 
-function saveParent(totalChildren) {
+function saveParent(totalChildren, alertsElementId) {
     // save changes
     if (totalChildren !== '0' && totalChildren !== '1') {
         if (!confirm(`New parent will affect ${totalChildren} items, are you sure?`))
@@ -206,16 +223,16 @@ function saveParent(totalChildren) {
             console.log('Saved parent', response)
             oldModel['parent_uuid'] = newModel['parent_uuid']
             checkChangesParent('save_parent')
-            tryLoadingThumbnail(oldModel['parent_uuid'], $('#parent_thumbnail'))
-            makeAnnounce('Parent changed')
+            tryLoadingThumbnail(oldModel['parent_uuid'], $('#thumbnail_parent'))
+            makeAnnounce('Parent changed', alertsElementId)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
+            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
         },
     })
 }
 
-function saveTags(totalChildren) {
+function saveTags(totalChildren, alertsElementId) {
     // save changes
     if (totalChildren !== '0' && totalChildren !== '1') {
         if (!confirm(`New tags will affect ${totalChildren} items, are you sure?`))
@@ -236,15 +253,15 @@ function saveTags(totalChildren) {
             console.log('Saved tags', response)
             oldModel['tags'] = newModel['tags']
             checkChangesTags('save_tags')
-            makeAnnounce('Tags saved')
+            makeAnnounce('Tags saved', alertsElementId)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
+            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
         },
     })
 }
 
-function savePermissions(totalChildren) {
+function savePermissions(totalChildren, alertsElementId) {
     // save changes
     if (totalChildren !== '0' && totalChildren !== '1') {
         if (!confirm(`New permissions will affect ${totalChildren} items, are you sure?`))
@@ -270,10 +287,10 @@ function savePermissions(totalChildren) {
             oldModel['permissions'] = newModel['permissions']
             initialPermissions = newModel['permissions']
             checkChangesPermissions('save_permissions')
-            makeAnnounce('Permissions saved')
+            makeAnnounce('Permissions saved', alertsElementId)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
+            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
         },
     })
 }

@@ -1,18 +1,18 @@
 const UUID_PREFIX_LENGTH = 2
 
-function makeAlert(text) {
+function makeAlert(text, alertsElementId) {
     // create alert popup message
-    makeNotification(text, 'alert')
+    makeNotification(text, alertsElementId, 'alert')
 }
 
-function makeAnnounce(text) {
+function makeAnnounce(text, alertsElementId) {
     // create announce popup message
-    makeNotification(text, 'announce')
+    makeNotification(text, alertsElementId, 'announce')
 }
 
-function makeNotification(text, css_class) {
+function makeNotification(text, alertsElementId, css_class) {
     // create user defined notification
-    let target = document.getElementById('alerts')
+    let target = document.getElementById(alertsElementId || 'alerts')
     let alert = document.createElement('div')
 
     alert.innerHTML = `
@@ -45,18 +45,18 @@ function gatherItemParameters() {
     }
 }
 
-function describeFail(response) {
+function describeFail(response, alertsElementId) {
     // generate human readable error message
     if (response === undefined) {
         // TODO - make message more adequate
-        makeAlert('Something bad happened')
+        makeAlert('Something bad happened', alertsElementId)
     } else if (typeof response['detail'] === 'string') {
         console.log('Error: ' + JSON.stringify(response['detail']))
-        makeAlert(response['detail'])
+        makeAlert(response['detail'], alertsElementId)
     } else {
         for (const problem of response['detail']) {
             console.log('Error: ' + JSON.stringify(problem))
-            makeAlert(problem.msg)
+            makeAlert(problem.msg, alertsElementId)
         }
     }
 }
