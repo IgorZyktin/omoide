@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for items.
 """
+import asyncio
 from uuid import UUID
 
 from omoide import domain
@@ -17,6 +18,7 @@ __all__ = [
     'ApiItemReadUseCase',
     'UpdateItemUseCase',
     'ApiItemDeleteUseCase',
+    'ApiItemAlterParentUseCase',
 ]
 
 
@@ -191,3 +193,47 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
         return Success(parent_uuid)
+
+
+class ApiItemAlterParentUseCase(BaseItemUseCase):
+    """Use case for changing parent item."""
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            new_parent_uuid: UUID,
+    ) -> Result[errors.Error, UUID]:
+        """Business logic."""
+        bad_parent_error = errors.ItemWrongParent(
+            uuid=uuid,
+            new_parent_uuid=new_parent_uuid,
+        )
+
+        if uuid == new_parent_uuid:
+            return Failure(bad_parent_error)
+
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            error = await policy.is_restricted(user, new_parent_uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            is_child = await self.items_repo.check_child(uuid, new_parent_uuid)
+            if is_child:
+                return Failure(bad_parent_error)
+
+            item = await self.items_repo.read_item(uuid)
+            item.parent_uuid = new_parent_uuid
+            await self.items_repo.update_item(item)
+            parent = await self.items_repo.read_item(new_parent_uuid)
+
+        asyncio.create_task(self.items_repo.update_tags_in_children(parent))
+
+        return Success(new_parent_uuid)

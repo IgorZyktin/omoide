@@ -136,16 +136,14 @@ async def api_item_alter_parent(
         new_parent_uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.UpdateItemUseCase = Depends(
-            dep.update_item_use_case),
+        use_case: use_cases.ApiItemAlterParentUseCase = Depends(
+            dep.api_item_alter_parent_use_case),
 ):
     """Set new parent for the item."""
-    # TODO
-    print(f'Must implement setting new parent for {uuid}: {new_parent_uuid}')
-    # result = await use_case.execute(policy, user, uuid, child_uuid)
+    result = await use_case.execute(policy, user, uuid, new_parent_uuid)
 
-    # if isinstance(result, Failure):
-    #     web.raise_from_error(result.error)
+    if isinstance(result, Failure):
+        web.raise_from_error(result.error)
 
     return {'result': 'ok'}
 

@@ -181,7 +181,7 @@ class ItemsRepository(
         WHERE parent_uuid = :uuid;
         """
 
-        response = await self.db.fetch_all(stmt, {'uuid': uuid})
+        response = await self.db.fetch_all(stmt, {'uuid': str(uuid)})
         return [domain.Item.from_map(each) for each in response]
 
     async def update_item(
@@ -311,8 +311,10 @@ class ItemsRepository(
         else:
             conditions = []
 
+        s_uuid = str(uuid) if uuid is not None else None
+
         if aim.nested:
-            conditions.append(models.Item.parent_uuid == str(uuid))  # noqa
+            conditions.append(models.Item.parent_uuid == s_uuid)  # noqa
 
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
@@ -454,26 +456,23 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             item: domain.Item,
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
-
         async def _update_tags(
                 _self: ItemsRepository,
                 _item: domain.Item,
         ) -> None:
             """Call DB function that updated everything."""
-            # Feature: this operation will recalculate same things
-            # many times. Possible place for an optimisation.
             await _self.db.execute(
                 sqlalchemy.select(func.compute_tags(_item.uuid))
             )
 
-        await self.apply_downwards(
-            item=item,
-            already_seen_items=set(),
-            # FIXME: use UUID here instead of str
-            skip_items={item.uuid},  # noqa
-            parent_first=True,
-            function=_update_tags,
-        )
+        async with self.transaction():
+            await self.apply_downwards(
+                item=item,
+                already_seen_items=set(),
+                skip_items={item.uuid},
+                parent_first=True,
+                function=_update_tags,
+            )
 
     async def apply_downwards(
             self,
@@ -496,14 +495,12 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         if item.uuid in already_seen_items:
             return
 
-        # FIXME: use UUID here instead of str
-        already_seen_items.add(item.uuid)  # noqa
+        already_seen_items.add(item.uuid)
 
         if parent_first and item.uuid not in skip_items:
             await function(self, item)
 
-        # FIXME: use UUID here instead of str
-        children = await self.read_children(item.uuid)  # noqa
+        children = await self.read_children(item.uuid)
 
         for child in children:
             await self.apply_downwards(
@@ -516,3 +513,41 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
         if not parent_first and item.uuid not in skip_items:
             await function(self, item)
+
+    async def check_child(
+            self,
+            possible_parent_uuid: UUID,
+            possible_child_uuid: UUID,
+    ) -> bool:
+        """Return True if given item is actually a child.
+
+        Before checking ensure that UUIDs are not equal.
+        """
+        stmt = """
+        WITH RECURSIVE nested_items AS (
+            SELECT parent_uuid,
+                   uuid
+            FROM items
+            WHERE uuid = :possible_parent_uuid
+            UNION ALL
+            SELECT i.parent_uuid,
+                   i.uuid
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+        )
+        SELECT count(*) AS total
+        FROM nested_items
+        WHERE uuid = :possible_child_uuid;
+        """
+
+        values = {
+            'possible_parent_uuid': str(possible_parent_uuid),
+            'possible_child_uuid': str(possible_child_uuid),
+        }
+
+        response = await self.db.fetch_one(stmt, values)
+
+        if response is None:
+            return False
+
+        return response['total'] >= 1
