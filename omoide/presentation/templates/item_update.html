@@ -17,7 +17,7 @@
 
         <div>
             <h3>Parent</h3>
-            <label for="item_parent">Parent UUID<br>
+            <label for="item_parent">Parent UUID:<br>
                 <input id="item_parent"
                        type="text"
                        value="{{ (item.parent_uuid or '')|string }}"
@@ -45,7 +45,7 @@
         <div>
             <h3>Basic parameters</h3>
 
-            <label for="item_uuid">UUID<br>
+            <label for="item_uuid">Item UUID:<br>
                 <input id="item_uuid"
                        type="text"
                        value="{{ item.uuid }}"
@@ -53,7 +53,7 @@
                        class="height-auto">
             </label>
 
-            <label for="item_name">Name<br>
+            <label for="item_name">Name:<br>
                 <input id="item_name"
                        type="text"
                        value="{{ item.name }}"
@@ -75,7 +75,7 @@
                 <label for="item_is_collection">Item is collection</label>
             </div>
 
-            <label for="item_content_ext">Content extension<br>
+            <label for="item_content_ext">Content extension:<br>
                 <input id="item_content_ext"
                        type="text"
                        value="{{ item.content_ext or '' }}"
@@ -83,7 +83,7 @@
                        class="height-auto">
             </label>
 
-            <label for="item_preview_ext">Preview extension<br>
+            <label for="item_preview_ext">Preview extension:<br>
                 <input id="item_preview_ext"
                        type="text"
                        value="{{ item.preview_ext or '' }}"
@@ -91,7 +91,7 @@
                        class="height-auto">
             </label>
 
-            <label for="item_thumbnail_ext">Thumbnail extension<br>
+            <label for="item_thumbnail_ext">Thumbnail extension:<br>
                 <input id="item_thumbnail_ext"
                        type="text"
                        value="{{ item.thumbnail_ext or '' }}"
@@ -141,7 +141,7 @@
 
         <div>
             <h3>Users who can see this item</h3>
-            <label for="item_permissions">Permissions (one user per line):<br>
+            <label for="item_permissions">One user per line, only UUID4:<br>
                 <textarea id="item_permissions"
                           onchange="alterModelPermissionsField(this)"
                           rows="10">

@@ -105,3 +105,86 @@ async def api_delete_item(
         web.raise_from_error(result.error)
 
     return api_models.OnlyUUID(uuid=result.value)
+
+
+# Not actually REST api endpoints >> heavy operations
+
+
+@router.put('/{uuid}/copy_thumbnail/{child_uuid}')
+async def api_copy_thumbnail_from_given_item(
+        uuid: UUID,
+        child_uuid: UUID,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.UpdateItemUseCase = Depends(
+            dep.update_item_use_case),
+):
+    """Copy thumbnail from given item."""
+    # TODO
+    print(f'Must implement thumbnail copy operation, {child_uuid} -> {uuid}')
+    # result = await use_case.execute(policy, user, uuid, child_uuid)
+
+    # if isinstance(result, Failure):
+    #     web.raise_from_error(result.error)
+
+    return {'result': 'ok'}
+
+
+@router.put('/{uuid}/parent/{new_parent_uuid}')
+async def api_item_alter_parent(
+        uuid: UUID,
+        new_parent_uuid: UUID,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.UpdateItemUseCase = Depends(
+            dep.update_item_use_case),
+):
+    """Set new parent for the item."""
+    # TODO
+    print(f'Must implement setting new parent for {uuid}: {new_parent_uuid}')
+    # result = await use_case.execute(policy, user, uuid, child_uuid)
+
+    # if isinstance(result, Failure):
+    #     web.raise_from_error(result.error)
+
+    return {'result': 'ok'}
+
+
+@router.put('/{uuid}/tags')
+async def api_item_alter_tags(
+        uuid: UUID,
+        new_tags: api_models.NewTagsIn,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.UpdateItemUseCase = Depends(
+            dep.update_item_use_case),
+):
+    """Set new tags for the item + all children."""
+    # TODO
+    print(f'Must implement updating tags for {uuid}: {new_tags}')
+    # result = await use_case.execute(policy, user, uuid, child_uuid)
+
+    # if isinstance(result, Failure):
+    #     web.raise_from_error(result.error)
+
+    return {'result': 'ok'}
+
+
+@router.put('/{uuid}/permissions')
+async def api_item_alter_permissions(
+        uuid: UUID,
+        new_permissions: api_models.NewPermissionsIn,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.UpdateItemUseCase = Depends(
+            dep.update_item_use_case),
+):
+    """Set new permissions for the item and possibly parents/children."""
+    # TODO
+    print(f'Must implement updating permissions for {uuid}: {new_permissions}')
+    # result = await use_case.execute(policy, user, uuid, child_uuid)
+
+    # if isinstance(result, Failure):
+    #     web.raise_from_error(result.error)
+
+    return {'result': 'ok'}

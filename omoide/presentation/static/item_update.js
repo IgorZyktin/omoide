@@ -212,13 +212,8 @@ function saveParent(totalChildren, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${newModel['uuid']}/parent`,
+        url: `/api/items/${newModel['uuid']}/parent/${newModel['parent_uuid']}`,
         contentType: 'application/json',
-        data: JSON.stringify([
-            {
-                'parent_uuid': newModel['parent_uuid'],
-            }
-        ]),
         success: function (response) {
             console.log('Saved parent', response)
             oldModel['parent_uuid'] = newModel['parent_uuid']
@@ -244,11 +239,9 @@ function saveTags(totalChildren, alertsElementId) {
         type: 'PUT',
         url: `/api/items/${newModel['uuid']}/tags`,
         contentType: 'application/json',
-        data: JSON.stringify([
-            {
-                'tags': newModel['tags'],
-            }
-        ]),
+        data: JSON.stringify({
+            'tags': newModel['tags'],
+        }),
         success: function (response) {
             console.log('Saved tags', response)
             oldModel['tags'] = newModel['tags']
@@ -275,13 +268,12 @@ function savePermissions(totalChildren, alertsElementId) {
         type: 'PUT',
         url: `/api/items/${newModel['uuid']}/permissions`,
         contentType: 'application/json',
-        data: JSON.stringify([
-            {
-                'apply_to_parents': applyToParents,
-                'apply_to_children': applyToChildren,
-                'permissions': newModel['permissions'],
-            }
-        ]),
+        data: JSON.stringify({
+            'apply_to_parents': applyToParents,
+            'apply_to_children': applyToChildren,
+            'permissions_before': oldModel['permissions'],
+            'permissions_after': newModel['permissions'],
+        }),
         success: function (response) {
             console.log('Saved permissions', response)
             oldModel['permissions'] = newModel['permissions']
