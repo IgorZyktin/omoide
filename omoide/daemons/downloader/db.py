@@ -2,7 +2,8 @@
 """Wrapper on SQL commands for downloader."""
 import contextlib
 import sys
-from typing import Optional, Iterator
+from typing import Iterator
+from typing import Optional
 from uuid import UUID
 
 import sqlalchemy
@@ -197,3 +198,78 @@ class Database:
             return '???'
 
         return '/'.join(reversed(segments))
+
+    def get_fs_operations_to_perform(
+            self
+    ) -> Iterator[models.FilesystemOperation]:
+        """Load all filesystem operations with batching."""
+        if self.config.limit == -1:
+            limit = sys.maxsize
+        else:
+            limit = self.config.limit
+
+        last_seen_id = -1
+        processed = 0
+
+        while processed < limit:
+            batch_size = min(self.config.batch_size, limit - processed)
+            candidates = self.get_next_fs_operations_batch(batch_size,
+                                                           last_seen_id)
+            if not candidates:
+                break
+
+            yield from candidates
+            processed += len(candidates)
+            last_seen_id = candidates[-1].id
+
+    def get_next_fs_operations_batch(
+            self,
+            limit: int,
+            last_seen_id: int,
+    ) -> list[models.FilesystemOperation]:
+        """Load new batch of models."""
+        query = self.session.query(
+            models.FilesystemOperation
+        ).where(
+            models.FilesystemOperation.status == 'init',
+            models.FilesystemOperation.id > last_seen_id,
+        ).order_by(
+            models.FilesystemOperation.id,
+        )
+
+        if limit > 0:
+            query = query.limit(limit)
+
+        return query.all()
+
+    def finalize_fs_operation(
+            self,
+            operation: models.FilesystemOperation,
+            status: str,
+            error: str,
+    ) -> None:
+        """Mark command as done or failed."""
+        operation.status = status
+        operation.error = error
+        operation.processed_at = utils.now()
+        self.session.commit()
+
+    def create_new_media(
+            self,
+            command: models.FilesystemOperation,
+            content: bytes,
+            ext: str,
+    ) -> None:
+        """Add new media record with content."""
+        new_media = models.Media(
+            item_uuid=command.target_uuid,
+            media_type='thumbnail',
+            created_at=utils.now(),
+            processed_at=None,
+            status='init',
+            content=content,
+            ext=ext,
+        )
+
+        self.session.add(new_media)
+        self.session.commit()
