@@ -16,40 +16,6 @@ class PreviewRepository(
 ):
     """Repository that performs all preview queries."""
 
-    async def get_extended_item(
-            self,
-            item_uuid: str,
-    ) -> Optional[domain.ExtendedItem]:
-        """Return instance of item."""
-        query = """
-        SELECT *
-        FROM items
-        WHERE uuid = :item_uuid;
-        """
-
-        response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
-        if response is not None:
-            # FIXME: refactor this
-            item = domain.ExtendedItem.from_map(response)
-            query_for_tags = """
-            SELECT tags
-            FROM computed_tags
-            WHERE item_uuid = :item_uuid;
-            """
-            all_tags = await self.db.fetch_one(query_for_tags,
-                                               {'item_uuid': item_uuid})
-            tags = [
-                tag
-                for tag in all_tags['tags']
-                if all((
-                    not tag.endswith('jpg'),
-                    not utils.is_valid_uuid(tag),
-                ))
-            ]
-            item.tags = tags
-            return item
-        return None
-
     async def get_neighbours(self, item_uuid: str) -> list[UUID]:
         """Return uuids of all the neighbours."""
         query = """
@@ -87,7 +53,7 @@ class PreviewRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
+            'user_uuid': str(user.uuid),
             'item_uuid': item_uuid,
         }
 

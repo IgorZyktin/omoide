@@ -15,7 +15,7 @@
 
         <div id="thumbnail" class="thumbnail"></div>
 
-        <p>Target item: <strong>{{ item.name }}</strong>
+        <p>Target item: <strong>{{ item.name or item.uuid }}</strong>
             <br>Owner of the item: <strong>{{ user.name }}</strong></p>
 
         <p>You are going to delete {{ total }} element(s).</p>

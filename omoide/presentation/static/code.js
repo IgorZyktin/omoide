@@ -227,3 +227,18 @@ function convertDatetimeToIsoString(datetime) {
       dif + pad(Math.floor(Math.abs(tzo) / 60)) +
       ':' + pad(Math.abs(tzo) % 60);
 }
+
+function splitLines(text) {
+    // split string by line separators and return only non-empty
+    return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
+}
+
+function arraysAreIdentical(arr1, arr2){
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0, len = arr1.length; i < len; i++){
+        if (arr1[i] !== arr2[i]){
+            return false;
+        }
+    }
+    return true;
+}

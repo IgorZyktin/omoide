@@ -45,6 +45,13 @@ async def preview(
     except exceptions.Forbidden:
         return RedirectResponse(request.url_for('forbidden') + f'?q={uuid}')
 
+    # TODO: put it inside use case
+    tags: set[str] = set()
+    tags.update(result.item.tags)
+
+    for each in result.location.items:
+        tags.update(each.item.tags)
+
     context = {
         'request': request,
         'config': config,
@@ -59,5 +66,6 @@ async def preview(
             items_on_page=constants.PAGES_IN_BLOCK,  # TODO: move to details
         ),
         'current_item': result.item,
+        'tags': sorted(tags),
     }
     return dep.templates.TemplateResponse('preview.html', context)

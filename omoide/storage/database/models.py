@@ -8,7 +8,8 @@ from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import relationship
 
 metadata = sa.MetaData()
 Base = declarative_base(metadata=metadata)
@@ -390,3 +391,28 @@ class OrphanFiles(Base):
                        nullable=False,
                        index=True,
                        server_default=sa.text("timezone('utc', now())"))
+
+
+class FilesystemOperation(Base):
+    """Operations that have to be executed on filesystem."""
+    __tablename__ = 'filesystem_operations'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: int = sa.Column(sa.BigInteger,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        primary_key=True)
+
+    # fields ------------------------------------------------------------------
+    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
+    status = sa.Column(sa.String(length=SMALL), index=True, nullable=False)
+    error = sa.Column(sa.Text)
+
+    source_uuid: UUID = sa.Column(pg.UUID(), nullable=False)
+    target_uuid: UUID = sa.Column(pg.UUID(), nullable=False)
+
+    operation = sa.Column(sa.String(length=MEDIUM), nullable=False)
+    extras = sa.Column(pg.JSON, nullable=False)

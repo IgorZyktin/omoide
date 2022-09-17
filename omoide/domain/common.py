@@ -3,10 +3,14 @@
 """
 import typing
 from datetime import datetime
-from typing import Optional, Mapping, Iterator
+from functools import cached_property
+from typing import Iterator
+from typing import Mapping
+from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
+from pydantic import validator
 
 from omoide import domain
 from omoide.domain import utils
@@ -26,6 +30,7 @@ __all__ = [
     'Media',
     'EXIF',
     'Meta',
+    'NewPermissions',
 ]
 
 
@@ -278,3 +283,26 @@ class Meta(BaseModel):
             item_uuid=utils.as_str(mapping, 'item_uuid'),
             meta=mapping['data'],
         )
+
+
+class NewPermissions(BaseModel):
+    """Input info for new permissions."""
+    apply_to_parents: bool
+    apply_to_children: bool
+    permissions_before: frozenset[UUID]
+    permissions_after: frozenset[UUID]
+
+    @property
+    def added(self) -> frozenset[UUID]:
+        """Return list of added permissions."""
+        return frozenset(self.permissions_after - self.permissions_before)
+
+    @property
+    def removed(self) -> frozenset[UUID]:
+        """Return list of removed permissions."""
+        return frozenset(self.permissions_before - self.permissions_after)
+
+    @property
+    def combined(self) -> frozenset[UUID]:
+        """Return all permissions."""
+        return frozenset(self.permissions_before | self.permissions_after)

@@ -34,6 +34,11 @@ class NoUUID(Error):
     template = 'No UUID specified for the action {name}'
 
 
+class InvalidUUID(Error):
+    """User gave us bad UUID."""
+    template = 'Invalid UUID: {uuid!r}'
+
+
 class UnexpectedAction(Error):
     """Policy was not programmed for this."""
     template = 'No rule for {action}'
@@ -57,6 +62,11 @@ class ItemNoDeleteForRoot(Error):
 class ItemModificationByAnon(Error):
     """Anon user tries to modify item."""
     template = 'Anonymous users are not allowed to modify items'
+
+
+class ItemWrongParent(Error):
+    """User tries to set item as a parent to itself or something like that."""
+    template = 'Item {new_parent_uuid} cannot be used as a parent for {uuid}'
 
 
 class EXIFDoesNotExist(Error):

@@ -73,6 +73,24 @@ class UsersRepository(repo_interfaces.AbsUsersRepository):
         response = await self.db.fetch_one(stmt)
         return domain.User.from_map(dict(response)) if response else None
 
+    async def read_all_users(
+            self,
+            uuids: list[UUID | str],
+    ) -> list[domain.User]:
+        """Return list of users with given uuids."""
+        stmt = sqlalchemy.select(
+            models.User
+        ).where(
+            models.User.uuid.in_(tuple(uuids))  # noqa
+        )
+
+        response = await self.db.fetch_all(stmt)
+
+        return [
+            domain.User.from_map(dict(record))
+            for record in response
+        ]
+
     async def update_user(
             self,
             user: domain.User,

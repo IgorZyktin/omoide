@@ -2,11 +2,11 @@
 """User related interfaces and objects.
 """
 from datetime import datetime
-from typing import Optional, Mapping
+from typing import Mapping
+from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
-
-from omoide.domain import utils
 
 __all__ = [
     'User',
@@ -15,11 +15,11 @@ __all__ = [
 
 class User(BaseModel):
     """User model."""
-    uuid: str
+    uuid: Optional[UUID]
     login: str
     password: str
     name: str
-    root_item: Optional[str]
+    root_item: Optional[UUID]
     visibility: Optional[str]
     language: Optional[str]
     last_seen: Optional[datetime]
@@ -30,7 +30,7 @@ class User(BaseModel):
 
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
-        return self.uuid == ''
+        return self.uuid is None
 
     def is_not_anon(self) -> bool:
         """Return True if user is registered one."""
@@ -39,19 +39,13 @@ class User(BaseModel):
     @classmethod
     def from_map(cls, mapping: Mapping) -> 'User':
         """Convert from arbitrary format to model."""
-        return cls(
-            uuid=utils.as_str(mapping, 'uuid'),
-            login=mapping['login'],
-            password=mapping['password'],
-            name=mapping['name'],
-            root_item=utils.as_str(mapping, 'root_item'),
-        )
+        return cls(**mapping)
 
     @classmethod
     def new_anon(cls) -> 'User':
         """Return new anon user."""
         return cls(
-            uuid='',
+            uuid=None,
             login='',
             password='',
             name='anon',

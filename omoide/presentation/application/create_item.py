@@ -49,4 +49,4 @@ async def create_item(
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 
-    return dep.templates.TemplateResponse('create_item.html', context)
+    return dep.templates.TemplateResponse('item_create.html', context)

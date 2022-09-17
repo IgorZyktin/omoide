@@ -6,4 +6,5 @@ from omoide.storage.repositories.rp_exif import EXIFRepository
 from omoide.storage.repositories.rp_items import ItemsRepository
 from omoide.storage.repositories.rp_media import MediaRepository
 from omoide.storage.repositories.rp_meta import MetaRepository
+from omoide.storage.repositories.rp_users import UsersRepository
 from omoide.storage.repositories.search import SearchRepository

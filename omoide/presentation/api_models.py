@@ -2,10 +2,13 @@
 """Input and output models for the API.
 """
 from datetime import datetime
-from typing import Optional, Any
+from typing import Any
+from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, validator, root_validator
+from pydantic import BaseModel
+from pydantic import root_validator
+from pydantic import validator
 
 
 class OnlyUUID(BaseModel):
@@ -122,3 +125,17 @@ class MetaIn(BaseModel):
     original_file_modified_at: Optional[datetime]
     file_type: str
     file_size: int
+
+
+class NewTagsIn(BaseModel):
+    """Input info for new tags."""
+    tags: list[str]
+    # TODO - add validation
+
+
+class NewPermissionsIn(BaseModel):
+    """Input info for new permissions."""
+    apply_to_parents: bool
+    apply_to_children: bool
+    permissions_before: list[str]
+    permissions_after: list[str]

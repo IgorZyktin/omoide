@@ -55,22 +55,3 @@ def get_output_instance_for_downloader(
     )
 
     return output
-
-
-def get_output_instance_for_fs_operator(
-        config: cfg.DownloaderConfig,
-) -> out.Output:
-    """Perform basic setup for the output."""
-    output = out.Output(silent=config.silent)
-
-    output.add_columns(
-        out.Column(name='Processed at (UTC)', width=21, alias='processed_at'),
-        out.Column(name='From UUID', width=38, alias='from_uuid'),
-        out.Column(name='To UUID', width=38, alias='to_uuid'),
-        out.Column(name='Operation', width=20, alias='operation'),
-        out.Column(name='Status', width=8, alias='status'),
-        out.Column(name='Location', width=95,
-                   alias='location', justify='left'),
-    )
-
-    return output

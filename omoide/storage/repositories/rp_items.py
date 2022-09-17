@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on items and their data.
 """
+import time
 from typing import Awaitable
 from typing import Callable
 from typing import Optional
@@ -8,7 +9,6 @@ from uuid import UUID
 from uuid import uuid4
 
 import sqlalchemy
-from sqlalchemy import func
 
 from omoide import domain
 from omoide.domain import exceptions
@@ -56,8 +56,8 @@ class ItemsRepository(
         """
 
         values = {
-            'user_uuid': user.uuid,
-            'uuid': uuid,
+            'user_uuid': str(user.uuid),
+            'uuid': str(uuid),
         }
         response = await self.db.fetch_one(query, values)
 
@@ -181,7 +181,7 @@ class ItemsRepository(
         WHERE parent_uuid = :uuid;
         """
 
-        response = await self.db.fetch_all(stmt, {'uuid': uuid})
+        response = await self.db.fetch_all(stmt, {'uuid': str(uuid)})
         return [domain.Item.from_map(each) for each in response]
 
     async def update_item(
@@ -203,15 +203,15 @@ class ItemsRepository(
         """
 
         values = {
-            'uuid': item.uuid,
-            'parent_uuid': item.parent_uuid,
+            'uuid': str(item.uuid),
+            'parent_uuid': str(item.parent_uuid) if item.parent_uuid else None,
             'name': item.name,
             'is_collection': item.is_collection,
             'content_ext': item.content_ext,
             'preview_ext': item.preview_ext,
             'thumbnail_ext': item.thumbnail_ext,
             'tags': item.tags,
-            'permissions': item.permissions,
+            'permissions': [str(x) for x in item.permissions],
         }
 
         return await self.db.execute(stmt, values)
@@ -311,8 +311,10 @@ class ItemsRepository(
         else:
             conditions = []
 
+        s_uuid = str(uuid) if uuid is not None else None
+
         if aim.nested:
-            conditions.append(models.Item.parent_uuid == uuid)  # noqa
+            conditions.append(models.Item.parent_uuid == s_uuid)  # noqa
 
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
@@ -331,8 +333,8 @@ class ItemsRepository(
                 )
             ).where(
                 sqlalchemy.or_(
-                    models.Item.owner_uuid == user.uuid,
-                    models.ComputedPermissions.permissions.any(user.uuid),
+                    models.Item.owner_uuid == str(user.uuid),
+                    models.ComputedPermissions.permissions.any(str(user.uuid)),
                 )
             )
 
@@ -360,7 +362,7 @@ class ItemsRepository(
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
         values = {
-            'uuid': uuid,
+            'uuid': str(uuid),
             'limit': aim.items_per_page,
         }
 
@@ -428,7 +430,7 @@ LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
 WHERE (owner_uuid = CAST(:user_uuid AS uuid)
     OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions))
             """
-            values['user_uuid'] = user.uuid
+            values['user_uuid'] = str(user.uuid)
 
         if aim.ordered:
             stmt += ' AND number > :last_seen'
@@ -454,31 +456,49 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             item: domain.Item,
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
+        total = 0
+        start = time.monotonic()
+
+        # TODO - replace with logger call
+        print(f'Started updating tags in children of {item.uuid}')
 
         async def _update_tags(
                 _self: ItemsRepository,
                 _item: domain.Item,
         ) -> None:
-            """Call DB function that updated everything."""
-            # Feature: this operation will recalculate same things
-            # many times. Possible place for an optimisation.
-            await _self.db.execute(
-                sqlalchemy.select(func.compute_tags(_item.uuid))
+            """Alter tags with themselves.
+
+            Actually we're expecting the database trigger to do all the work.
+            Trigger fires after update and computes new tags.
+            """
+            nonlocal total
+            stmt = sqlalchemy.update(
+                models.Item
+            ).where(
+                models.Item.uuid == _item.uuid
+            ).values(
+                tags=models.Item.tags
             )
+            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            total += 1
 
         await self.apply_downwards(
             item=item,
-            already_seen_items=set(),
-            # FIXME: use UUID here instead of str
-            skip_items={item.uuid},  # noqa
+            seen_items=set(),
+            skip_items=set(),
             parent_first=True,
             function=_update_tags,
         )
 
+        # TODO - replace with logger call
+        delta = time.monotonic() - start
+        print('Ended updating tags in '
+              f'children of {item.uuid}: {total} operations, {delta:0.3f} sec')
+
     async def apply_downwards(
             self,
             item: domain.Item,
-            already_seen_items: set[UUID],
+            seen_items: set[UUID],
             skip_items: set[UUID],
             parent_first: bool,
             function: Callable[['ItemsRepository',
@@ -493,22 +513,20 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             * We're doing something like update. Therefore, we must
               update all parents and then their children.
         """
-        if item.uuid in already_seen_items:
+        if item.uuid in seen_items:
             return
 
-        # FIXME: use UUID here instead of str
-        already_seen_items.add(item.uuid)  # noqa
+        seen_items.add(item.uuid)
 
         if parent_first and item.uuid not in skip_items:
             await function(self, item)
 
-        # FIXME: use UUID here instead of str
-        children = await self.read_children(item.uuid)  # noqa
+        children = await self.read_children(item.uuid)
 
         for child in children:
             await self.apply_downwards(
                 item=child,
-                already_seen_items=already_seen_items,
+                seen_items=seen_items,
                 skip_items=skip_items,
                 parent_first=parent_first,
                 function=function,
@@ -516,3 +534,157 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
         if not parent_first and item.uuid not in skip_items:
             await function(self, item)
+
+    async def apply_upwards(
+            self,
+            item: domain.Item,
+            top_first: bool,
+            function: Callable[['ItemsRepository',
+                                domain.Item], Awaitable[None]],
+    ) -> None:
+        """Apply given function to every ancestor item.
+
+        Can specify two ways:
+            Top -> Middle -> Low -> Current item (top first).
+            Current item -> Low -> Middle -> Top (top last).
+        """
+        ancestors = await self.get_simple_ancestors(item)
+
+        # original order is Top -> Middle -> Low -> Current
+        if not top_first:
+            ancestors.reverse()
+
+        for ancestor in ancestors:
+            await function(self, ancestor)
+
+    async def check_child(
+            self,
+            possible_parent_uuid: UUID,
+            possible_child_uuid: UUID,
+    ) -> bool:
+        """Return True if given item is actually a child.
+
+        Before checking ensure that UUIDs are not equal. Item is considered
+        of being child of itself. This check initially was added to ensure that
+        we could not create circular link when setting new parent for the item.
+        """
+        if possible_parent_uuid == possible_child_uuid:
+            return True
+
+        stmt = """
+        WITH RECURSIVE nested_items AS (
+            SELECT parent_uuid,
+                   uuid
+            FROM items
+            WHERE uuid = :possible_parent_uuid
+            UNION ALL
+            SELECT i.parent_uuid,
+                   i.uuid
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+        )
+        SELECT count(*) AS total
+        FROM nested_items
+        WHERE uuid = :possible_child_uuid;
+        """
+
+        values = {
+            'possible_parent_uuid': str(possible_parent_uuid),
+            'possible_child_uuid': str(possible_child_uuid),
+        }
+
+        response = await self.db.fetch_one(stmt, values)
+
+        if response is None:
+            return False
+
+        return response['total'] >= 1
+
+    async def update_permissions_in_parents(
+            self,
+            item: domain.Item,
+            new_permissions: domain.NewPermissions,
+    ) -> None:
+        """Apply new permissions to every parent."""
+        total = 0
+        start = time.monotonic()
+
+        # TODO - replace with logger call
+        print(f'Started updating permissions in parents of {item.uuid}')
+
+        async def _update_permissions(
+                _self: ItemsRepository,
+                _item: domain.Item,
+        ) -> None:
+            """Alter permissions."""
+            nonlocal total
+            _permissions = set(_item.permissions)
+            _permissions = _permissions | set(map(str,
+                                                  new_permissions.added))
+            _permissions = _permissions - set(map(str,
+                                                  new_permissions.removed))
+            stmt = sqlalchemy.update(
+                models.Item
+            ).where(
+                models.Item.uuid == _item.uuid
+            ).values(
+                permissions=sorted(str(x) for x in _permissions)
+            )
+            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            total += 1
+
+        await self.apply_upwards(
+            item=item,
+            top_first=True,
+            function=_update_permissions,
+        )
+
+        # TODO - replace with logger call
+        delta = time.monotonic() - start
+        print('Ended updating permissions in '
+              f'parents of {item.uuid}: {total} operations, {delta:0.3f} sec')
+
+    async def update_permissions_in_children(
+            self,
+            item: domain.Item,
+            new_permissions: domain.NewPermissions,
+    ) -> None:
+        """Apply new permissions to every child."""
+        total = 0
+        start = time.monotonic()
+
+        # TODO - replace with logger call
+        print(f'Started updating permissions in children of {item.uuid}')
+
+        async def _update_permissions(
+                _self: ItemsRepository,
+                _item: domain.Item,
+        ) -> None:
+            """Alter permissions."""
+            nonlocal total
+            _permissions = set(_item.permissions)
+            _permissions = _permissions | new_permissions.added
+            _permissions = _permissions - new_permissions.removed
+
+            stmt = sqlalchemy.update(
+                models.Item
+            ).where(
+                models.Item.uuid == _item.uuid
+            ).values(
+                permissions=sorted(str(x) for x in _permissions)
+            )
+            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            total += 1
+
+        await self.apply_downwards(
+            item=item,
+            seen_items=set(),
+            skip_items=set(),
+            parent_first=True,
+            function=_update_permissions,
+        )
+
+        # TODO - replace with logger call
+        delta = time.monotonic() - start
+        print('Ended updating permissions in '
+              f'children of {item.uuid}: {total} operations, {delta:0.3f} sec')

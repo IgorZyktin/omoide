@@ -6,7 +6,9 @@ import sys
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseSettings, validator, SecretStr
+from pydantic import BaseSettings
+from pydantic import SecretStr
+from pydantic import validator
 
 from omoide import utils
 

@@ -5,9 +5,9 @@ import time
 
 from omoide.daemons.common import utils as daemon_utils
 from omoide.daemons.downloader import cfg
-from omoide.daemons.downloader import core
 from omoide.daemons.downloader import db
 from omoide.daemons.downloader import misc
+from omoide.daemons.fs_operator import fs_operations
 
 
 @misc.cli_arguments
@@ -15,10 +15,10 @@ def main(**kwargs):
     """Entry point."""
     config = cfg.DownloaderConfig()
     daemon_utils.apply_cli_kwargs_to_config(config, **kwargs)
-    output = misc.get_output_instance_for_downloader(config)
+    output = misc.get_output_instance_for_fs_operator(config)
     database = db.Database(config=config)
 
-    output.print('Started <DOWNLOADER> as a daemon')
+    output.print('Started <FS Operator> as a daemon')
     output.print_config(config)
     output.print_line()
     output.print_header()
@@ -32,7 +32,7 @@ def main(**kwargs):
             next_invocation = time.monotonic() + config.download_interval
             time.sleep(delta)
 
-            core.download_items_from_database_to_storages(
+            fs_operations.perform_filesystem_operations(
                 config=config,
                 database=database,
                 output=output,

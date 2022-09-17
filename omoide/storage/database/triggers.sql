@@ -17,11 +17,10 @@ BEGIN
                i.tags
         FROM items i
                  INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
-        WHERE i.name <> ''
     )
     SELECT INTO computed_tags array_agg(DISTINCT tags) as tags
     FROM (SELECT uuid,
-                 unnest(array_cat (tags, ARRAY [lower(name), uuid::text])) as tags
+                 unnest(array_cat (tags, ARRAY [uuid::text])) as tags
           FROM nested_items) uniq;
 END
 $$ LANGUAGE 'plpgsql';
@@ -78,16 +77,16 @@ CREATE TRIGGER item_altering
     AFTER INSERT OR UPDATE
     ON items
     FOR EACH ROW
-    EXECUTE FUNCTION insert_computed_tags();
+EXECUTE FUNCTION insert_computed_tags();
 
 CREATE TRIGGER item_altering2
     AFTER INSERT OR UPDATE
     ON items
     FOR EACH ROW
-    EXECUTE FUNCTION insert_computed_permissions();
+EXECUTE FUNCTION insert_computed_permissions();
 
 CREATE TRIGGER item_deletion
     AFTER DELETE
     ON items
     FOR EACH ROW
-    EXECUTE PROCEDURE mark_files_as_orphans();
+EXECUTE PROCEDURE mark_files_as_orphans();
