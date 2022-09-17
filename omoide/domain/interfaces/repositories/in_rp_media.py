@@ -44,3 +44,13 @@ class AbsMediaRepository(abc.ABC):
             media_type: str,
     ) -> bool:
         """Delete media with given UUID."""
+
+    @abc.abstractmethod
+    async def create_filesystem_operation(
+            self,
+            source_uuid: UUID,
+            target_uuid: UUID,
+            operation: str,
+            extras: dict[str, str | int | bool | None]
+    ) -> bool:
+        """Save intention to init operation on the filesystem."""

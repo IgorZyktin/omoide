@@ -202,6 +202,15 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
 class ApiCopyThumbnailUseCase(BaseItemUseCase):
     """Use case for changing parent thumbnail."""
 
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsRepository,
+            media_repo: interfaces.AbsMediaRepository,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__(items_repo)
+        self.media_repo = media_repo
+
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
@@ -229,7 +238,17 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
             if error:
                 return Failure(error)
 
-            # TODO - copy thumbnail to parent
+            child = await self.items_repo.read_item(child_uuid)
+
+            await self.media_repo.create_filesystem_operation(
+                source_uuid=child_uuid,
+                target_uuid=uuid,
+                operation='copy-thumbnail',
+                extras={
+                    'ext': child.thumbnail_ext,
+                    'owner_uuid': str(child.owner_uuid),
+                },
+            )
 
         return Success(child_uuid)
 

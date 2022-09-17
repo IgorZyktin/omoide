@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on media.
 """
+import json
 from typing import Optional
 from uuid import UUID
 
@@ -8,6 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
+from omoide import utils
 from omoide.domain.interfaces import repositories as repo_interfaces
 from omoide.storage.database import models
 
@@ -91,3 +93,26 @@ class MediaRepository(
         response = await self.db.fetch_one(stmt)
 
         return response is not None
+
+    async def create_filesystem_operation(
+            self,
+            source_uuid: UUID,
+            target_uuid: UUID,
+            operation: str,
+            extras: dict[str, str | int | bool | None]
+    ) -> bool:
+        """Save intention to init operation on the filesystem."""
+        query = sa.insert(
+            models.FilesystemOperation
+        ).values(
+            created_at=utils.now(),
+            processed_at=None,
+            status='init',
+            error='',
+            source_uuid=str(source_uuid),
+            target_uuid=str(target_uuid),
+            operation=operation,
+            extras=json.dumps(extras, ensure_ascii=False),  # TODO - ujson
+        )
+        await self.db.execute(query)
+        return True

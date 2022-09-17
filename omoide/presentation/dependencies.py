@@ -164,7 +164,8 @@ def update_item_use_case() -> use_cases.UpdateItemUseCase:
 
 def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
-    return use_cases.ApiCopyThumbnailUseCase(items_repository)
+    return use_cases.ApiCopyThumbnailUseCase(items_repository,
+                                             media_repository)
 
 
 def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:

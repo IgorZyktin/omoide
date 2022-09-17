@@ -147,8 +147,6 @@ function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
         success: function (response) {
             console.log('Enqueued thumbnail copying', response)
             makeAnnounce('Enqueued thumbnail copying', alertsElementId)
-            // FIXME
-            alert('Thumbnail copy is not yet implemented')
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON, alertsElementId)
