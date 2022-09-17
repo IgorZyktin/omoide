@@ -9,7 +9,7 @@ from omoide.daemons.downloader import db
 from omoide.daemons.downloader import misc
 
 
-@misc.cli_arguments
+@misc.cli_arguments  # type: ignore
 def main(**kwargs):
     """Entry point."""
     config = cfg.DownloaderConfig()

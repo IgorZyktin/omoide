@@ -9,7 +9,7 @@ from omoide.daemons.fs_operator import fs_operations
 from omoide.daemons.fs_operator import misc
 
 
-@misc.cli_arguments
+@misc.cli_arguments  # type: ignore
 def main(**kwargs):
     """Entry point."""
     config = cfg.DownloaderConfig()

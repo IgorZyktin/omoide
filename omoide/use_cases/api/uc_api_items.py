@@ -245,7 +245,7 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
             child = await self.items_repo.read_item(child_uuid)
 
             if child is None:
-                return errors.ItemDoesNotExist(uuid=child_uuid)
+                return Failure(errors.ItemDoesNotExist(uuid=child_uuid))
 
             await self.media_repo.create_filesystem_operation(
                 source_uuid=child_uuid,
@@ -312,7 +312,7 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
             await self.items_repo.update_item(item)
             parent = await self.items_repo.read_item(new_parent_uuid)
 
-            if item is None:
+            if parent is None:
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not parent.thumbnail_ext and item.thumbnail_ext:
@@ -400,9 +400,9 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
             item = await self.items_repo.read_item(uuid)
 
             if item is None:
-                return errors.ItemDoesNotExist(uuid=uuid)
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            item.permissions = sorted(new_permissions.permissions_after)
+            item.permissions = list(new_permissions.permissions_after)
             await self.items_repo.update_item(item)
 
         if new_permissions.apply_to_parents:

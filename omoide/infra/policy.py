@@ -37,14 +37,14 @@ class Policy(interfaces.AbsPolicy):
             action: actions.Action,
     ) -> Optional[errors.Error]:
         """Return Error if action is not permitted."""
-        error = None
+        error: Optional[errors.Error] = None
 
         if isinstance(action, actions.Item):
             if uuid is None:
                 return errors.NoUUID(action=action.name)
             return await self._is_restricted_for_item(user, uuid, action)
 
-        if action in ITEM_RELATED:
+        if action in ITEM_RELATED and uuid is not None:
             access = await self.items_repo.check_access(user, uuid)
 
             if access.does_not_exist:
@@ -61,11 +61,11 @@ class Policy(interfaces.AbsPolicy):
     async def _is_restricted_for_item(
             self,
             user: domain.User,
-            uuid: Optional[UUID],
+            uuid: UUID,
             action: actions.Item,
     ) -> Optional[errors.Error]:
         """Check specifically for item related actions."""
-        error = None
+        error: Optional[errors.Error] = None
 
         access = await self.items_repo.check_access(user, uuid)
 
