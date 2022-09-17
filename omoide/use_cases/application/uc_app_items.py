@@ -67,7 +67,7 @@ class AppItemDeleteUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-    ) -> Result[errors.Error, tuple[int, domain.Item]]:
+    ) -> Result[errors.Error, tuple[domain.Item, int]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.DELETE)

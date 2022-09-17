@@ -82,7 +82,7 @@ def process_single_media(
     if config.dry_run:
         return True
 
-    if (config.copy_all or media.type == 'thumbnail') and config.use_hot:
+    if (config.copy_all or media.media_type == 'thumbnail') and config.use_hot:
         download_file_for_media(media, path=Path(config.hot_folder))
 
     download_file_for_media(media, path=Path(config.cold_folder))

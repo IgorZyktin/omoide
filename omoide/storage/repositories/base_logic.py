@@ -3,6 +3,7 @@
 """
 import abc
 from typing import Any, Optional
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -22,11 +23,11 @@ class BaseRepositoryLogic(interfaces.AbsRepository, abc.ABC):
     async def get_location(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
             details: domain.Details,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
-        current_item = await self.read_item(item_uuid)
+        current_item = await self.read_item(uuid)
 
         if current_item is None:
             return None

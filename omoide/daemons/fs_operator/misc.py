@@ -38,7 +38,7 @@ def cli_arguments(func: FunctionType) -> FunctionType:
     return func
 
 
-def get_output_instance_for_downloader(
+def get_output_instance_for_fs_operator(
         config: cfg.DownloaderConfig,
 ) -> out.Output:
     """Perform basic setup for the output."""
@@ -46,12 +46,13 @@ def get_output_instance_for_downloader(
 
     output.add_columns(
         out.Column(name='Processed at (UTC)', width=21, alias='processed_at'),
-        out.Column(name='UUID', width=38, alias='uuid'),
-        out.Column(name='Type', width=11, alias='type'),
-        out.Column(name='Size', width=14, alias='size'),
+        out.Column(name='From UUID', width=38, alias='from_uuid'),
+        out.Column(name='To UUID', width=38, alias='to_uuid'),
+        out.Column(name='Operation', width=20, alias='operation'),
         out.Column(name='Status', width=8, alias='status'),
         out.Column(name='Location', width=95,
                    alias='location', justify='left'),
     )
 
     return output
+

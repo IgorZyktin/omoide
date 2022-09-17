@@ -16,8 +16,8 @@ from omoide.domain import interfaces
 from omoide.presentation import app_config
 from omoide.storage import repositories
 
-config = app_config.init()
-db = Database(config.db_url.get_secret_value())
+_config = app_config.init()
+db = Database(_config.db_url.get_secret_value())
 current_authenticator = infra.BcryptAuthenticator(complexity=4)  # minimal
 
 search_repository = repositories.SearchRepository(db)

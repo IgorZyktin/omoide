@@ -41,7 +41,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
     async def get_user(
             self,
-            user_uuid: str,
+            user_uuid: UUID,
     ) -> Optional[domain.User]:
         """Return user or None."""
         query = """
@@ -50,7 +50,8 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         WHERE uuid = :user_uuid;
         """
 
-        response = await self.db.fetch_one(query, {'user_uuid': user_uuid})
+        response = await self.db.fetch_one(query,
+                                           {'user_uuid': str(user_uuid)})
         return domain.User.from_map(response) if response else None
 
     async def get_user_by_login(
@@ -79,8 +80,8 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
     async def get_item_with_position(
             self,
             user: domain.User,
-            item_uuid: str,
-            child_uuid: str,
+            item_uuid: UUID,
+            child_uuid: UUID,
             details: domain.Details,
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
@@ -108,7 +109,10 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
             FROM items
             WHERE uuid = :item_uuid;
             """
-            values = {'item_uuid': item_uuid, 'child_uuid': child_uuid}
+            values = {
+                'item_uuid': str(item_uuid),
+                'child_uuid': str(child_uuid),
+            }
         else:
             query = """
             WITH children AS (
@@ -139,8 +143,8 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
             values = {
                 'user_uuid': str(user.uuid),
-                'item_uuid': item_uuid,
-                'child_uuid': child_uuid,
+                'item_uuid': str(item_uuid),
+                'child_uuid': str(child_uuid),
             }
 
         response = await self.db.fetch_one(query, values)

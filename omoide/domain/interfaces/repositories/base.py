@@ -4,6 +4,7 @@
 import abc
 from typing import Any
 from typing import Optional
+from uuid import UUID
 
 from omoide.domain import auth
 from omoide.domain import common
@@ -24,7 +25,7 @@ class AbsRepository(abc.ABC):
     async def get_location(
             self,
             user: auth.User,
-            item_uuid: str,
+            uuid: UUID,
             details: common.Details,
     ) -> Optional[common.Location]:
         """Return Location of the item."""
@@ -39,7 +40,7 @@ class AbsRepository(abc.ABC):
     @abc.abstractmethod
     async def get_user(
             self,
-            user_uuid: str,
+            user_uuid: UUID,
     ) -> Optional[auth.User]:
         """Return user or None."""
 
@@ -54,8 +55,8 @@ class AbsRepository(abc.ABC):
     async def get_item_with_position(
             self,
             user: auth.User,
-            item_uuid: str,
-            child_uuid: str,
+            item_uuid: UUID,
+            child_uuid: UUID,
             details: common.Details,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""

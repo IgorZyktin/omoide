@@ -5,8 +5,8 @@ from omoide import utils
 from omoide.daemons.common import utils as daemon_utils
 from omoide.daemons.downloader import cfg
 from omoide.daemons.downloader import db
-from omoide.daemons.downloader import misc
 from omoide.daemons.fs_operator import fs_operations
+from omoide.daemons.fs_operator import misc
 
 
 @misc.cli_arguments

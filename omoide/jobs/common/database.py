@@ -61,6 +61,10 @@ def get_location_for_an_item(session: Session, item_uuid: UUID) -> str:
     while current_uuid:
         done_steps += 1
         item = session.query(models.Item).get(current_uuid)
+
+        if item is None:
+            break
+
         current_uuid = item.parent_uuid
         segments.append(item.name or str(item.uuid))
 

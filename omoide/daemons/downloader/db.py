@@ -142,7 +142,7 @@ class Database:
             media.item.thumbnail_ext = media.ext
         else:
             # TODO: replace it with proper logger call
-            print(f'Unknown media type: {media.type!r}')
+            print(f'Unknown media type: {media.media_type!r}')
 
         self.session.commit()
 
@@ -186,6 +186,10 @@ class Database:
         while current_uuid:
             done_steps += 1
             item = self.session.query(models.Item).get(current_uuid)
+
+            if item is None:
+                break
+
             current_uuid = item.parent_uuid
             segments.append(item.name or str(item.uuid))
 

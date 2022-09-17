@@ -78,7 +78,7 @@ class AppBrowseUseCase:
         else:
             items = await self._repo.get_specific_children(
                 user=user,
-                item_uuid=item.uuid,
+                uuid=item.uuid,
                 details=details,
             )
             total_items = await self._repo.count_specific_items(

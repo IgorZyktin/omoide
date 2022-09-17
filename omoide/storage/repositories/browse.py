@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
+from uuid import UUID
+
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.repositories import base
@@ -16,7 +18,7 @@ class BrowseRepository(
 
     async def get_children(
             self,
-            item_uuid: str,
+            uuid: UUID,
             details: domain.Details,
     ) -> list[domain.Item]:
         """Load all children and sub children of the record."""
@@ -31,14 +33,14 @@ class BrowseRepository(
                preview_ext,
                thumbnail_ext
         FROM items
-        WHERE parent_uuid = :item_uuid
-        AND uuid <> :item_uuid
+        WHERE parent_uuid = :uuid
+        AND uuid <> :uuid
         ORDER BY number
         LIMIT :limit OFFSET :offset;
         """
 
         values = {
-            'item_uuid': item_uuid,
+            'uuid': str(uuid),
             'limit': details.items_per_page,
             'offset': details.offset,
         }
@@ -48,22 +50,22 @@ class BrowseRepository(
 
     async def count_items(
             self,
-            item_uuid: str,
+            uuid: UUID,
     ) -> int:
         """Count all children with all required fields."""
         query = """
         SELECT count(*) AS total_items
         FROM items
-        WHERE parent_uuid = :item_uuid;
+        WHERE parent_uuid = :uuid;
         """
 
-        response = await self.db.fetch_one(query, {'item_uuid': item_uuid})
+        response = await self.db.fetch_one(query, {'uuid': str(uuid)})
         return int(response['total_items'])
 
     async def get_specific_children(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
             details: domain.Details,
     ) -> list[domain.Item]:
         """Load all children with all required fields (and access)."""
@@ -89,7 +91,7 @@ class BrowseRepository(
 
         values = {
             'user_uuid': str(user.uuid),
-            'item_uuid': item_uuid,
+            'item_uuid': str(uuid),
             'limit': details.items_per_page,
             'offset': details.offset,
         }
@@ -100,7 +102,7 @@ class BrowseRepository(
     async def count_specific_items(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
     ) -> int:
         """Count all children with all required fields (and access)."""
         query = """
@@ -114,7 +116,7 @@ class BrowseRepository(
 
         values = {
             'user_uuid': str(user.uuid),
-            'item_uuid': item_uuid,
+            'item_uuid': str(uuid),
         }
 
         response = await self.db.fetch_one(query, values)

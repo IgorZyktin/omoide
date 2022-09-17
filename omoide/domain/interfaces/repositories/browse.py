@@ -2,6 +2,7 @@
 """Repository that performs all browse queries.
 """
 import abc
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import common
@@ -20,7 +21,7 @@ class AbsBrowseRepository(
     @abc.abstractmethod
     async def get_children(
             self,
-            item_uuid: str,
+            uuid: UUID,
             details: common.Details,
     ) -> list[common.Item]:
         """Load all children with all required fields."""
@@ -28,7 +29,7 @@ class AbsBrowseRepository(
     @abc.abstractmethod
     async def count_items(
             self,
-            item_uuid: str,
+            uuid: UUID,
     ) -> int:
         """Count all children with all required fields."""
 
@@ -36,7 +37,7 @@ class AbsBrowseRepository(
     async def get_specific_children(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
             details: common.Details,
     ) -> list[common.Item]:
         """Load all children with all required fields (and access)."""
@@ -45,6 +46,6 @@ class AbsBrowseRepository(
     async def count_specific_items(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
     ) -> int:
         """Count all children with all required fields (and access)."""
