@@ -186,6 +186,10 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
                 return Failure(error)
 
             item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
             parent_uuid = item.parent_uuid
 
             if parent_uuid is None:
@@ -240,6 +244,9 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
 
             child = await self.items_repo.read_item(child_uuid)
 
+            if child is None:
+                return errors.ItemDoesNotExist(uuid=child_uuid)
+
             await self.media_repo.create_filesystem_operation(
                 source_uuid=child_uuid,
                 target_uuid=uuid,
@@ -255,6 +262,15 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
 
 class ApiItemAlterParentUseCase(BaseItemUseCase):
     """Use case for changing parent item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsRepository,
+            media_repo: interfaces.AbsMediaRepository,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__(items_repo)
+        self.media_repo = media_repo
 
     async def execute(
             self,
@@ -288,13 +304,27 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
                 return Failure(bad_parent_error)
 
             item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
             item.parent_uuid = new_parent_uuid
             await self.items_repo.update_item(item)
             parent = await self.items_repo.read_item(new_parent_uuid)
 
-            if not parent.thumbnail_ext:
-                # TODO - copy thumbnail to parent if it has none
-                pass
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
+
+            if not parent.thumbnail_ext and item.thumbnail_ext:
+                await self.media_repo.create_filesystem_operation(
+                    source_uuid=item.uuid,
+                    target_uuid=parent.uuid,
+                    operation='copy-thumbnail',
+                    extras={
+                        'ext': item.thumbnail_ext,
+                        'owner_uuid': str(item.owner_uuid),
+                    },
+                )
 
         asyncio.create_task(self.items_repo.update_tags_in_children(parent))
 
@@ -319,6 +349,10 @@ class ApiItemAlterTagsUseCase(BaseItemUseCase):
                 return Failure(error)
 
             item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
             item.tags = new_tags
             await self.items_repo.update_item(item)
 
@@ -364,6 +398,10 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
                 return Failure(error)
 
             item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return errors.ItemDoesNotExist(uuid=uuid)
+
             item.permissions = sorted(new_permissions.permissions_after)
             await self.items_repo.update_item(item)
 
