@@ -101,6 +101,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                    content_ext,
                    preview_ext,
                    thumbnail_ext,
+                   tags,
                    (select array_position(array(select uuid from children),
                                           :child_uuid)) as position,
                    (select count(*) from children) as total_items
@@ -128,6 +129,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                    content_ext,
                    preview_ext,
                    thumbnail_ext,
+                   tags,
                    (select array_position(array(select uuid from children),
                                           :child_uuid)) as position,
                    (select count(*) from children) as total_items

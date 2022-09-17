@@ -46,7 +46,17 @@
         <br>
 
         <div class="preview-tags">
-            {% for tag in item.tags %}
+            {% for wrapper in result.location.items %}
+                {% if wrapper.item.name %}
+                    <div class="tag-box tag-box-item">
+                        <a href="{{ url_for('search') }}?q={{ wrapper.item.uuid }}">{{ wrapper.item.name }}</a>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="preview-tags">
+            {% for tag in tags %}
                 {% if tag %}
                     <div class="tag-box">
                         <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>

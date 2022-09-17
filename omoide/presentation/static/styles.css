@@ -357,9 +357,17 @@ h1, h2, h3, h4, h5 {
     cursor: pointer;
 }
 
+.tag-box-item {
+    background-color: rgba(60, 82, 129, 0.18); !important;
+}
+
 .tag-box:hover {
     text-decoration: none;
     background-color: #46813CA3;
+}
+
+.tag-box-item:hover {
+    background-color: rgba(43, 120, 185, 0.64); !important;
 }
 
 .tag-box > a {
