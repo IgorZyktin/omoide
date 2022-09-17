@@ -172,15 +172,13 @@ async def api_item_alter_permissions(
         new_permissions: api_models.NewPermissionsIn,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.UpdateItemUseCase = Depends(
-            dep.update_item_use_case),
+        use_case: use_cases.ApiItemAlterPermissionsUseCase = Depends(
+            dep.api_item_alter_permissions_use_case),
 ):
     """Set new permissions for the item and possibly parents/children."""
-    # TODO
-    print(f'Must implement updating permissions for {uuid}: {new_permissions}')
-    # result = await use_case.execute(policy, user, uuid, child_uuid)
+    result = await use_case.execute(policy, user, uuid, new_permissions)
 
-    # if isinstance(result, Failure):
-    #     web.raise_from_error(result.error)
+    if isinstance(result, Failure):
+        web.raise_from_error(result.error)
 
     return {'result': 'ok'}

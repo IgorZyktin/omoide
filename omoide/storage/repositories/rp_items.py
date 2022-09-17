@@ -210,7 +210,7 @@ class ItemsRepository(
             'preview_ext': item.preview_ext,
             'thumbnail_ext': item.thumbnail_ext,
             'tags': item.tags,
-            'permissions': item.permissions,
+            'permissions': [str(x) for x in item.permissions],
         }
 
         return await self.db.execute(stmt, values)
@@ -522,6 +522,28 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         if not parent_first and item.uuid not in skip_items:
             await function(self, item)
 
+    async def apply_upwards(
+            self,
+            item: domain.Item,
+            top_first: bool,
+            function: Callable[['ItemsRepository',
+                                domain.Item], Awaitable[None]],
+    ) -> None:
+        """Apply given function to every ancestor item.
+
+        Can specify two ways:
+            Top -> Middle -> Low -> Current item (top first).
+            Current item -> Low -> Middle -> Top (top last).
+        """
+        ancestors = await self.get_simple_ancestors(item)
+
+        # original order is Top -> Middle -> Low -> Current
+        if not top_first:
+            ancestors.reverse()
+
+        for ancestor in ancestors:
+            await function(self, ancestor)
+
     async def check_child(
             self,
             possible_parent_uuid: UUID,
@@ -564,3 +586,68 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             return False
 
         return response['total'] >= 1
+
+    async def update_permissions_in_parents(
+            self,
+            item: domain.Item,
+            new_permissions: domain.NewPermissions,
+    ) -> None:
+        """Apply new permissions to every parent."""
+
+        async def _update_permissions(
+                _self: ItemsRepository,
+                _item: domain.Item,
+        ) -> None:
+            """Alter permissions."""
+            _permissions = set(_item.permissions)
+            _permissions = _permissions | set(map(str,
+                                                  new_permissions.added))
+            _permissions = _permissions - set(map(str,
+                                                  new_permissions.removed))
+            stmt = sqlalchemy.update(
+                models.Item
+            ).where(
+                models.Item.uuid == _item.uuid
+            ).values(
+                permissions=sorted(str(x) for x in _permissions)
+            )
+            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+
+        await self.apply_upwards(
+            item=item,
+            top_first=True,
+            function=_update_permissions,
+        )
+
+    async def update_permissions_in_children(
+            self,
+            item: domain.Item,
+            new_permissions: domain.NewPermissions,
+    ) -> None:
+        """Apply new permissions to every child."""
+
+        async def _update_permissions(
+                _self: ItemsRepository,
+                _item: domain.Item,
+        ) -> None:
+            """Alter permissions."""
+            _permissions = set(_item.permissions)
+            _permissions = _permissions | new_permissions.added
+            _permissions = _permissions - new_permissions.removed
+
+            stmt = sqlalchemy.update(
+                models.Item
+            ).where(
+                models.Item.uuid == _item.uuid
+            ).values(
+                permissions=sorted(str(x) for x in _permissions)
+            )
+            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+
+        await self.apply_downwards(
+            item=item,
+            seen_items=set(),
+            skip_items=set(),
+            parent_first=True,
+            function=_update_permissions,
+        )

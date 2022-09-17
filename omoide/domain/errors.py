@@ -34,6 +34,11 @@ class NoUUID(Error):
     template = 'No UUID specified for the action {name}'
 
 
+class InvalidUUID(Error):
+    """User gave us bad UUID."""
+    template = 'Invalid UUID: {uuid!r}'
+
+
 class UnexpectedAction(Error):
     """Policy was not programmed for this."""
     template = 'No rule for {action}'

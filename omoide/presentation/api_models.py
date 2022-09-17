@@ -139,4 +139,3 @@ class NewPermissionsIn(BaseModel):
     apply_to_children: bool
     permissions_before: list[str]
     permissions_after: list[str]
-    # TODO - add validation

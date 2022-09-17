@@ -256,12 +256,13 @@ function saveTags(totalChildren, alertsElementId) {
 
 function savePermissions(totalChildren, alertsElementId) {
     // save changes
-    if (totalChildren !== '0' && totalChildren !== '1') {
+    let applyToParents = $('#item_perm_apply_to_parents').is(':checked')
+    let applyToChildren = $('#item_perm_apply_to_children').is(':checked')
+
+    if (applyToChildren && totalChildren !== '0' && totalChildren !== '1') {
         if (!confirm(`New permissions will affect ${totalChildren} items, are you sure?`))
             return
     }
-    let applyToParents = $('#item_perm_apply_to_parents').is(':checked')
-    let applyToChildren = $('#item_perm_apply_to_children').is(':checked')
 
     $.ajax({
         timeout: 5000, // 5 seconds

@@ -21,6 +21,7 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
 
     http.HTTPStatus.BAD_REQUEST: [
         errors.NoUUID,
+        errors.InvalidUUID,
     ],
 
     http.HTTPStatus.NOT_FOUND: [

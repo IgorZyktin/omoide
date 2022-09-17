@@ -5,6 +5,7 @@ import asyncio
 from uuid import UUID
 
 from omoide import domain
+from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -20,6 +21,7 @@ __all__ = [
     'ApiItemDeleteUseCase',
     'ApiItemAlterParentUseCase',
     'ApiItemAlterTagsUseCase',
+    'ApiItemAlterPermissionsUseCase',
 ]
 
 
@@ -262,5 +264,60 @@ class ApiItemAlterTagsUseCase(BaseItemUseCase):
             await self.items_repo.update_item(item)
 
         asyncio.create_task(self.items_repo.update_tags_in_children(item))
+
+        return Success(uuid)
+
+
+class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
+    """Set new permissions for the item.
+
+    Optionally for children and parents.
+    """
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            raw_new_permissions: api_models.NewPermissionsIn,
+    ) -> Result[errors.Error, UUID]:
+        """Business logic."""
+        for string in [*raw_new_permissions.permissions_before,
+                       *raw_new_permissions.permissions_after]:
+            if not utils.is_valid_uuid(string):
+                return Failure(errors.InvalidUUID(uuid=string))
+
+        new_permissions = domain.NewPermissions(
+            apply_to_parents=raw_new_permissions.apply_to_parents,
+            apply_to_children=raw_new_permissions.apply_to_children,
+            permissions_before=frozenset(
+                UUID(x) for x in raw_new_permissions.permissions_before
+            ),
+            permissions_after=frozenset(
+                UUID(x) for x in raw_new_permissions.permissions_after
+            ),
+        )
+
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+            item.permissions = sorted(new_permissions.permissions_after)
+            await self.items_repo.update_item(item)
+
+        if new_permissions.apply_to_parents:
+            asyncio.create_task(
+                self.items_repo.update_permissions_in_parents(item,
+                                                              new_permissions)
+            )
+
+        if new_permissions.apply_to_children:
+            asyncio.create_task(
+                self.items_repo.update_permissions_in_children(item,
+                                                               new_permissions)
+            )
 
         return Success(uuid)

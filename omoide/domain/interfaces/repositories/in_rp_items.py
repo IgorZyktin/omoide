@@ -126,3 +126,21 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             possible_child_uuid: UUID,
     ) -> bool:
         """Return True if given item is actually a child."""
+
+    # TODO - move to a separate repo
+    @abc.abstractmethod
+    async def update_permissions_in_parents(
+            self,
+            item: domain.Item,
+            new_permissions: domain.NewPermissions,
+    ) -> None:
+        """Apply new permissions to every parent."""
+
+    # TODO - move to a separate repo
+    @abc.abstractmethod
+    async def update_permissions_in_children(
+            self,
+            item: domain.Item,
+            new_permissions: domain.NewPermissions,
+    ) -> None:
+        """Apply new permissions to every child."""
