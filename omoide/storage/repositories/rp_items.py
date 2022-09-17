@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on items and their data.
 """
+import time
 from typing import Awaitable
 from typing import Callable
 from typing import Optional
@@ -455,6 +456,11 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             item: domain.Item,
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
+        total = 0
+        start = time.monotonic()
+
+        # TODO - replace with logger call
+        print(f'Started updating tags in children of {item.uuid}')
 
         async def _update_tags(
                 _self: ItemsRepository,
@@ -465,6 +471,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             Actually we're expecting the database trigger to do all the work.
             Trigger fires after update and computes new tags.
             """
+            nonlocal total
             stmt = sqlalchemy.update(
                 models.Item
             ).where(
@@ -473,6 +480,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
                 tags=models.Item.tags
             )
             await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            total += 1
 
         await self.apply_downwards(
             item=item,
@@ -481,6 +489,11 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             parent_first=True,
             function=_update_tags,
         )
+
+        # TODO - replace with logger call
+        delta = time.monotonic() - start
+        print('Ended updating tags in '
+              f'children of {item.uuid}: {total} operations, {delta:0.3f} sec')
 
     async def apply_downwards(
             self,
@@ -593,12 +606,18 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             new_permissions: domain.NewPermissions,
     ) -> None:
         """Apply new permissions to every parent."""
+        total = 0
+        start = time.monotonic()
+
+        # TODO - replace with logger call
+        print(f'Started updating permissions in parents of {item.uuid}')
 
         async def _update_permissions(
                 _self: ItemsRepository,
                 _item: domain.Item,
         ) -> None:
             """Alter permissions."""
+            nonlocal total
             _permissions = set(_item.permissions)
             _permissions = _permissions | set(map(str,
                                                   new_permissions.added))
@@ -612,6 +631,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
                 permissions=sorted(str(x) for x in _permissions)
             )
             await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            total += 1
 
         await self.apply_upwards(
             item=item,
@@ -619,18 +639,29 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             function=_update_permissions,
         )
 
+        # TODO - replace with logger call
+        delta = time.monotonic() - start
+        print('Ended updating permissions in '
+              f'parents of {item.uuid}: {total} operations, {delta:0.3f} sec')
+
     async def update_permissions_in_children(
             self,
             item: domain.Item,
             new_permissions: domain.NewPermissions,
     ) -> None:
         """Apply new permissions to every child."""
+        total = 0
+        start = time.monotonic()
+
+        # TODO - replace with logger call
+        print(f'Started updating permissions in children of {item.uuid}')
 
         async def _update_permissions(
                 _self: ItemsRepository,
                 _item: domain.Item,
         ) -> None:
             """Alter permissions."""
+            nonlocal total
             _permissions = set(_item.permissions)
             _permissions = _permissions | new_permissions.added
             _permissions = _permissions - new_permissions.removed
@@ -643,6 +674,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
                 permissions=sorted(str(x) for x in _permissions)
             )
             await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            total += 1
 
         await self.apply_downwards(
             item=item,
@@ -651,3 +683,8 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             parent_first=True,
             function=_update_permissions,
         )
+
+        # TODO - replace with logger call
+        delta = time.monotonic() - start
+        print('Ended updating permissions in '
+              f'children of {item.uuid}: {total} operations, {delta:0.3f} sec')
