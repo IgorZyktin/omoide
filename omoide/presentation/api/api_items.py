@@ -116,16 +116,14 @@ async def api_copy_thumbnail_from_given_item(
         child_uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.UpdateItemUseCase = Depends(
-            dep.update_item_use_case),
+        use_case: use_cases.ApiCopyThumbnailUseCase = Depends(
+            dep.api_item_copy_thumbnail_use_case),
 ):
     """Copy thumbnail from given item."""
-    # TODO
-    print(f'Must implement thumbnail copy operation, {child_uuid} -> {uuid}')
-    # result = await use_case.execute(policy, user, uuid, child_uuid)
+    result = await use_case.execute(policy, user, uuid, child_uuid)
 
-    # if isinstance(result, Failure):
-    #     web.raise_from_error(result.error)
+    if isinstance(result, Failure):
+        web.raise_from_error(result.error)
 
     return {'result': 'ok'}
 

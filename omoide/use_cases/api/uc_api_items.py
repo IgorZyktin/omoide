@@ -19,6 +19,7 @@ __all__ = [
     'ApiItemReadUseCase',
     'UpdateItemUseCase',
     'ApiItemDeleteUseCase',
+    'ApiCopyThumbnailUseCase',
     'ApiItemAlterParentUseCase',
     'ApiItemAlterTagsUseCase',
     'ApiItemAlterPermissionsUseCase',
@@ -198,6 +199,41 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
         return Success(parent_uuid)
 
 
+class ApiCopyThumbnailUseCase(BaseItemUseCase):
+    """Use case for changing parent thumbnail."""
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            child_uuid: UUID,
+    ) -> Result[errors.Error, UUID]:
+        """Business logic."""
+        bad_parent_error = errors.ItemWrongParent(
+            uuid=uuid,
+            new_parent_uuid=child_uuid,
+        )
+
+        if uuid == child_uuid:
+            return Failure(bad_parent_error)
+
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            error = await policy.is_restricted(user, child_uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            # TODO - copy thumbnail to parent
+
+        return Success(child_uuid)
+
+
 class ApiItemAlterParentUseCase(BaseItemUseCase):
     """Use case for changing parent item."""
 
@@ -236,6 +272,10 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
             item.parent_uuid = new_parent_uuid
             await self.items_repo.update_item(item)
             parent = await self.items_repo.read_item(new_parent_uuid)
+
+            if not parent.thumbnail_ext:
+                # TODO - copy thumbnail to parent if it has none
+                pass
 
         asyncio.create_task(self.items_repo.update_tags_in_children(parent))
 
