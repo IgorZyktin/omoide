@@ -19,6 +19,7 @@ __all__ = [
     'UpdateItemUseCase',
     'ApiItemDeleteUseCase',
     'ApiItemAlterParentUseCase',
+    'ApiItemAlterTagsUseCase',
 ]
 
 
@@ -237,3 +238,29 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
         asyncio.create_task(self.items_repo.update_tags_in_children(parent))
 
         return Success(new_parent_uuid)
+
+
+class ApiItemAlterTagsUseCase(BaseItemUseCase):
+    """Set new tags for the item + all children."""
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            new_tags: list[str],
+    ) -> Result[errors.Error, UUID]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+            item.tags = new_tags
+            await self.items_repo.update_item(item)
+
+        asyncio.create_task(self.items_repo.update_tags_in_children(item))
+
+        return Success(uuid)

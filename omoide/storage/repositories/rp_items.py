@@ -8,7 +8,6 @@ from uuid import UUID
 from uuid import uuid4
 
 import sqlalchemy
-from sqlalchemy import func
 
 from omoide import domain
 from omoide.domain import exceptions
@@ -203,8 +202,8 @@ class ItemsRepository(
         """
 
         values = {
-            'uuid': item.uuid,
-            'parent_uuid': item.parent_uuid,
+            'uuid': str(item.uuid),
+            'parent_uuid': str(item.parent_uuid) if item.parent_uuid else None,
             'name': item.name,
             'is_collection': item.is_collection,
             'content_ext': item.content_ext,
@@ -456,28 +455,37 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             item: domain.Item,
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
+
         async def _update_tags(
                 _self: ItemsRepository,
                 _item: domain.Item,
         ) -> None:
-            """Call DB function that updated everything."""
-            await _self.db.execute(
-                sqlalchemy.select(func.compute_tags(_item.uuid))
-            )
+            """Alter tags with themselves.
 
-        async with self.transaction():
-            await self.apply_downwards(
-                item=item,
-                already_seen_items=set(),
-                skip_items={item.uuid},
-                parent_first=True,
-                function=_update_tags,
+            Actually we're expecting the database trigger to do all the work.
+            Trigger fires after update and computes new tags.
+            """
+            stmt = sqlalchemy.update(
+                models.Item
+            ).where(
+                models.Item.uuid == _item.uuid
+            ).values(
+                tags=models.Item.tags
             )
+            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+
+        await self.apply_downwards(
+            item=item,
+            seen_items=set(),
+            skip_items=set(),
+            parent_first=True,
+            function=_update_tags,
+        )
 
     async def apply_downwards(
             self,
             item: domain.Item,
-            already_seen_items: set[UUID],
+            seen_items: set[UUID],
             skip_items: set[UUID],
             parent_first: bool,
             function: Callable[['ItemsRepository',
@@ -492,10 +500,10 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             * We're doing something like update. Therefore, we must
               update all parents and then their children.
         """
-        if item.uuid in already_seen_items:
+        if item.uuid in seen_items:
             return
 
-        already_seen_items.add(item.uuid)
+        seen_items.add(item.uuid)
 
         if parent_first and item.uuid not in skip_items:
             await function(self, item)
@@ -505,7 +513,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         for child in children:
             await self.apply_downwards(
                 item=child,
-                already_seen_items=already_seen_items,
+                seen_items=seen_items,
                 skip_items=skip_items,
                 parent_first=parent_first,
                 function=function,
@@ -521,8 +529,13 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
     ) -> bool:
         """Return True if given item is actually a child.
 
-        Before checking ensure that UUIDs are not equal.
+        Before checking ensure that UUIDs are not equal. Item is considered
+        of being child of itself. This check initially was added to ensure that
+        we could not create circular link when setting new parent for the item.
         """
+        if possible_parent_uuid == possible_child_uuid:
+            return True
+
         stmt = """
         WITH RECURSIVE nested_items AS (
             SELECT parent_uuid,

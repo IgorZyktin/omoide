@@ -167,6 +167,11 @@ def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
     return use_cases.ApiItemAlterParentUseCase(items_repository)
 
 
+def api_item_alter_tags_use_case() -> use_cases.ApiItemAlterTagsUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemAlterTagsUseCase(items_repository)
+
+
 # api related use cases -------------------------------------------------------
 
 def api_browse_use_case() -> use_cases.APIBrowseUseCase:
