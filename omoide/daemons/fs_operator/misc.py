@@ -55,4 +55,3 @@ def get_output_instance_for_fs_operator(
     )
 
     return output
-
