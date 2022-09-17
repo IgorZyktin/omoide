@@ -2,7 +2,7 @@
 """Filesystem operations.
 """
 import json
-from pathlib import Path
+import os
 
 from omoide import utils
 from omoide.daemons.common import action_class
@@ -87,12 +87,12 @@ def process_copy_thumbnail(
     extras = json.loads(command.extras)
 
     bucket = utils.get_bucket(command.source_uuid)
-    filename = (
-            Path(config.hot_folder)
-            / 'thumbnail'
-            / extras['owner_uuid']
-            / bucket
-            / f'{command.source_uuid}.{extras["ext"]}'
+    filename = os.path.join(
+        config.hot_folder,
+        'thumbnail',
+        extras['owner_uuid'],
+        bucket,
+        f'{command.source_uuid}.{extras["ext"]}',
     )
 
     with open(filename, mode='rb') as file:
