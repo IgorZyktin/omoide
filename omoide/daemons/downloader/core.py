@@ -30,7 +30,7 @@ def download_items_from_database_to_storages(
             action = action_class.Action(status='work')
 
             try:
-                size = len(media.content)
+                size = len(media.content) if media.content else 0
                 if process_single_media(config, media):
                     action.done()
                 else:
