@@ -115,10 +115,13 @@ class Database:
         if last_seen_uuid is not None and last_seen_type is not None:
             query = query.where(
                 sqlalchemy.tuple_(
-                    str(models.Media.item_uuid),
-                    str(models.Media.media_type),
-                ) > sqlalchemy.tuple_(str(last_seen_uuid), last_seen_type),
-            )   # type: ignore
+                    str(models.Media.item_uuid),  # type: ignore
+                    str(models.Media.media_type),  # type: ignore
+                ) > sqlalchemy.tuple_(
+                    str(last_seen_uuid),  # type: ignore
+                    last_seen_type,  # type: ignore
+                ),
+            )  # type: ignore
 
         if limit > 0:
             query = query.limit(limit)

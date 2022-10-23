@@ -28,7 +28,7 @@ class AuthUseCase:
         if user is None:
             return auth.User.new_anon()
 
-        if env == 'prod' and user.uuid in set(test_users):
+        if env == 'prod' and user.uuid in test_users:
             return auth.User.new_anon()
 
         if authenticator.password_is_correct(credentials.password.encode(),

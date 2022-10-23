@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Auth related routes.
 """
+from typing import FrozenSet
 from uuid import UUID
 
 import fastapi
@@ -37,11 +38,15 @@ async def login(
         # already logged in
         return RedirectResponse(url)
 
+    test_users: FrozenSet[UUID] = frozenset({
+        UUID(x) for x in config.test_users
+    })
+
     new_user = await use_case.execute(
         credentials,
         authenticator,
         env=config.env,
-        test_users=frozenset(UUID(x) for x in config.test_users),
+        test_users=test_users,
     )
 
     if new_user.is_anon():
