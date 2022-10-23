@@ -29,12 +29,12 @@ class PreviewUseCase:
 
             if user.is_anon():
                 neighbours = await self._repo.get_neighbours(
-                    item_uuid=uuid,
+                    uuid=uuid,
                 )
             else:
                 neighbours = await self._repo.get_specific_neighbours(
                     user=user,
-                    item_uuid=uuid,
+                    uuid=uuid,
                 )
 
             result = domain.SingleResult(

@@ -18,13 +18,16 @@ class AbsPreviewRepository(
     """Repository that performs all preview queries."""
 
     @abc.abstractmethod
-    async def get_neighbours(self, item_uuid: str) -> list[UUID]:
-        """Return uuids of all the neighbours."""
+    async def get_neighbours(
+            self,
+            uuid: UUID,
+    ) -> list[UUID]:
+        """Return uuids of all the neighbours for given item UUID."""
 
     @abc.abstractmethod
     async def get_specific_neighbours(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
     ) -> list[UUID]:
         """Return uuids of all the neighbours (which we have access to)."""

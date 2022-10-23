@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Preview repository.
 """
-from typing import Optional
 from uuid import UUID
 
-from omoide import domain, utils
+from omoide import domain
 from omoide.domain import interfaces
-from omoide.storage.repositories import base, rp_items
+from omoide.storage.repositories import base
+from omoide.storage.repositories import rp_items
 
 
 class PreviewRepository(
@@ -16,8 +16,11 @@ class PreviewRepository(
 ):
     """Repository that performs all preview queries."""
 
-    async def get_neighbours(self, item_uuid: str) -> list[UUID]:
-        """Return uuids of all the neighbours."""
+    async def get_neighbours(
+            self,
+            uuid: UUID,
+    ) -> list[UUID]:
+        """Return uuids of all the neighbours for given item UUID."""
         query = """
         SELECT uuid
         FROM items
@@ -28,14 +31,17 @@ class PreviewRepository(
         )
         ORDER BY number;
         """
+        values = {
+            'item_uuid': str(uuid),
+        }
 
-        response = await self.db.fetch_all(query, {'item_uuid': item_uuid})
+        response = await self.db.fetch_all(query, values)
         return [row['uuid'] for row in response]
 
     async def get_specific_neighbours(
             self,
             user: domain.User,
-            item_uuid: str,
+            uuid: UUID,
     ) -> list[UUID]:
         """Return uuids of all the neighbours (which we have access to)."""
         query = """
@@ -54,7 +60,7 @@ class PreviewRepository(
 
         values = {
             'user_uuid': str(user.uuid),
-            'item_uuid': item_uuid,
+            'item_uuid': str(uuid),
         }
 
         response = await self.db.fetch_all(query, values)
