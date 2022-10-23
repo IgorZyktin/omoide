@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on EXIF.
 """
-import json
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy
+import ujson
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
@@ -26,7 +26,7 @@ class EXIFRepository(
         """Create EXIF and return True on success."""
         values = {
             'item_uuid': exif.item_uuid,
-            'exif': json.dumps(exif.exif, ensure_ascii=False),
+            'exif': ujson.dumps(exif.exif, ensure_ascii=False),
         }
 
         insert = pg_insert(models.EXIF).values(values)
@@ -57,7 +57,7 @@ class EXIFRepository(
 
         return domain.EXIF(
             item_uuid=response['item_uuid'],
-            exif=json.loads(response['exif']),  # TODO - use ujson here
+            exif=ujson.loads(response['exif']),
         )
 
     async def delete_exif(

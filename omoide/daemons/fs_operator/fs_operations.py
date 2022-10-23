@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Filesystem operations.
 """
-import json
+import ujson
 import os
 
 from omoide import utils
@@ -84,7 +84,7 @@ def process_copy_thumbnail(
     if config.dry_run:
         return True
 
-    extras = json.loads(command.extras)
+    extras = ujson.loads(command.extras)
 
     bucket = utils.get_bucket(command.source_uuid)
     filename = os.path.join(

@@ -430,6 +430,14 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "ujson"
+version = "5.5.0"
+description = "Ultra fast JSON encoder and decoder for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "uvicorn"
 version = "0.18.3"
 description = "The lightning-fast ASGI server."
@@ -447,7 +455,7 @@ standard = ["colorama (>=0.4)", "httptools (>=0.4.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "193f68eefc3f0a3c0215bc2a36ea2d0724e31a6195cfc8e1ea21c92c044352c3"
+content-hash = "a9864c5175596cbdc87ef78f393e82328bf05c1e9e9a8b33146ccad3d52eef84"
 
 [metadata.files]
 anyio = []
@@ -619,4 +627,5 @@ tomli = [
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
 typing-extensions = []
+ujson = []
 uvicorn = []

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on metas.
 """
-import json
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
+import ujson
 
 from omoide import domain
 from omoide.domain.interfaces import repositories as repo_interfaces
@@ -43,7 +43,7 @@ class MetaRepository(
 
         values = {
             'item_uuid': meta.item_uuid,
-            'data': json.dumps(meta.meta, ensure_ascii=False),
+            'data': ujson.dumps(meta.meta, ensure_ascii=False),
         }
 
         await self.db.execute(stmt, values)

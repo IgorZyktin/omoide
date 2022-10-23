@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Routes related to media edit.
 """
-import json
 from uuid import UUID
 
 import fastapi
+import ujson
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
@@ -76,8 +76,8 @@ async def app_item_edit(
         'permissions': permissions,
         'url': request.url_for('search'),
         'query': infra.query_maker.QueryWrapper(query, details),
-        'model': json.dumps(serialize_item(item), ensure_ascii=False),
-        'initial_permissions': json.dumps([
+        'model': ujson.dumps(serialize_item(item), ensure_ascii=False),
+        'initial_permissions': ujson.dumps([
             f'{x.uuid} {x.name}' for x in permissions
         ], ensure_ascii=False),
     }

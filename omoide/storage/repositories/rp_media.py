@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on media.
 """
-import json
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
+import ujson
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
@@ -112,7 +112,7 @@ class MediaRepository(
             source_uuid=str(source_uuid),
             target_uuid=str(target_uuid),
             operation=operation,
-            extras=json.dumps(extras, ensure_ascii=False),  # TODO - ujson
+            extras=ujson.dumps(extras, ensure_ascii=False),
         )
         await self.db.execute(query)
         return True
