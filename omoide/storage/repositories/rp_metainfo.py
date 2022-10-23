@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on metainfo.
 """
-import json
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy
+import ujson
 
 from omoide import domain
 from omoide import utils
@@ -90,5 +90,5 @@ class MetainfoRepository(
             saved_from_url=response['saved_from_url'],
             description=response['description'],
 
-            extras=json.loads(response['extras']),  # TODO - use ujson here
+            extras=ujson.loads(response['extras']),
         )

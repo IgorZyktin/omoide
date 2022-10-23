@@ -2,23 +2,15 @@
 """Repository that perform CRUD operations on metainfo records.
 """
 import abc
-from typing import Any
 from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide.domain.interfaces.repositories import base
 
 
-class AbsMetainfoRepository(abc.ABC):
+class AbsMetainfoRepository(base.AbsBaseRepository, abc.ABC):
     """Repository that perform CRUD operations on metainfo records."""
-
-    def __init__(self, db) -> None:  # TODO: move to base class
-        """Initialize instance."""
-        self.db = db
-
-    def transaction(self) -> Any:  # TODO: move to base class
-        """Start transaction."""
-        return self.db.transaction()
 
     @abc.abstractmethod
     async def create_empty_metainfo(
