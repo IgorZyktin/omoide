@@ -288,7 +288,7 @@ class Metainfo(Base):
     duration = sa.Column(sa.Float, nullable=True)
     resolution = sa.Column(sa.Float, nullable=True)
     size = sa.Column(sa.Integer, nullable=True)
-    media_type = sa.Column(sa.String(length=SMALL), nullable=False)
+    media_type = sa.Column(sa.String(length=SMALL), nullable=True)
 
     author = sa.Column(sa.String(length=MEDIUM), nullable=True)
     author_url = sa.Column(sa.String(length=HUGE), nullable=True)

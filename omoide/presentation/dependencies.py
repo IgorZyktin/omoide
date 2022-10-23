@@ -150,7 +150,8 @@ def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
 
 def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemCreateUseCase(items_repository)
+    return use_cases.ApiItemCreateUseCase(items_repository,
+                                          metainfo_repository)
 
 
 def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:

@@ -3,7 +3,6 @@
 """
 import typing
 from datetime import datetime
-from functools import cached_property
 from typing import Iterator
 from typing import Mapping
 from typing import Optional
@@ -322,8 +321,8 @@ class Metainfo(BaseModel):
     height: Optional[int]
     duration: Optional[float]
     resolution: Optional[float]
-    size: int
-    media_type: str
+    size: Optional[int]
+    media_type: Optional[str]
 
     author: Optional[str]
     author_url: Optional[str]

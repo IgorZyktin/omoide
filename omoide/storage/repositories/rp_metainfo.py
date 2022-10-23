@@ -5,7 +5,6 @@ from typing import Optional
 from uuid import UUID
 
 import sqlalchemy
-import ujson
 
 from omoide import domain
 from omoide import utils
@@ -30,6 +29,7 @@ class MetainfoRepository(
             item_uuid=uuid,
             created_at=utils.now(),
             updated_at=utils.now(),
+            extras={},
         )
 
         await self.db.execute(stmt)
@@ -90,5 +90,5 @@ class MetainfoRepository(
             saved_from_url=response['saved_from_url'],
             description=response['description'],
 
-            extras=ujson.loads(response['extras']),
+            extras=response['extras'],
         )
