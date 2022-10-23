@@ -2,6 +2,7 @@
 """Object that textual output for daemons.
 """
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseSettings, BaseModel
 
@@ -13,14 +14,15 @@ class Column(BaseModel):
     alias: str
     justify: str = 'center'
 
-    def use_value(self, value: str) -> str:
+    def use_value(self, value: Optional[str]) -> str:
         """Return textual representation."""
+        _value = str(value)
         if self.justify == 'center':
-            result = value.center(self.width)
+            result = _value.center(self.width)
         elif self.justify == 'left':
-            result = value.ljust(self.width)
+            result = _value.ljust(self.width)
         else:
-            result = value.rjust(self.width)
+            result = _value.rjust(self.width)
         return result
 
 
@@ -108,7 +110,7 @@ class Output:
 
         self.print('|' + '|'.join(segments) + '|')
 
-    def print_row(self, **kwargs: str) -> None:
+    def print_row(self, **kwargs: Optional[str]) -> None:
         """Print table row.
 
         Example:
