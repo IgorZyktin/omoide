@@ -118,7 +118,7 @@ class Database:
                     str(models.Media.item_uuid),
                     str(models.Media.media_type),
                 ) > sqlalchemy.tuple_(str(last_seen_uuid), last_seen_type),
-            )
+            )   # type: ignore
 
         if limit > 0:
             query = query.limit(limit)

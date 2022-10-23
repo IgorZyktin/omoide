@@ -84,7 +84,7 @@ def process_copy_thumbnail(
     if config.dry_run:
         return True
 
-    extras = ujson.loads(command.extras)
+    extras = ujson.loads(str(command.extras))
 
     bucket = utils.get_bucket(command.source_uuid)
     filename = os.path.join(

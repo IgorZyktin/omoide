@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """Miscellaneous tools for downloader.
 """
-from types import FunctionType
+from typing import Callable
+from typing import Sequence
 
 import click
 
 from omoide.daemons.common import out
 from omoide.daemons.downloader import cfg
 
-DECORATORS = (
+
+DECORATORS: Sequence[Callable] = (
     click.command(),
     click.option('--silent/--no-silent',
                  default=False,
@@ -28,7 +30,7 @@ DECORATORS = (
 )
 
 
-def cli_arguments(func: FunctionType) -> FunctionType:
+def cli_arguments(func: Callable) -> Callable:
     """Apply CLI arguments to a given entry point."""
     decorators = reversed(DECORATORS)
 

@@ -98,7 +98,7 @@ def download_file_for_media(media: models.Media, path: Path) -> None:
         str(media.media_type),
         str(media.item.owner_uuid),
         bucket,
-        f'{media.item_uuid}.{media.ext.lower()}'
+        f'{media.item_uuid}.{(media.ext or "").lower()}'
     )
 
     temp_filename = filename + '.tmp' + str(random.randint(1, 1000))
@@ -107,7 +107,7 @@ def download_file_for_media(media: models.Media, path: Path) -> None:
     drop_if_exists(temp_filename)
 
     with open(temp_filename, 'wb') as file:
-        file.write(media.content)
+        file.write(media.content or b'')
         file.flush()
         os.fsync(file.fileno())
 

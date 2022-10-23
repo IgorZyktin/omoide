@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Auth related routes.
 """
+from uuid import UUID
+
 import fastapi
 from fastapi import Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -39,7 +41,7 @@ async def login(
         credentials,
         authenticator,
         env=config.env,
-        test_users=frozenset(config.test_users),
+        test_users=frozenset(UUID(x) for x in config.test_users),
     )
 
     if new_user.is_anon():

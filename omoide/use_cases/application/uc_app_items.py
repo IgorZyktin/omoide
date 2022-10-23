@@ -49,7 +49,9 @@ class AppItemUpdateUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             total = await self.items_repo.count_all_children(uuid)
-            users = [str(x) for x in (item.permissions or [])]
+            users: list[str | UUID] = [
+                str(x) for x in (item.permissions or [])
+            ]
             permissions = await self.users_repo.read_all_users(users)
 
         return Success((item, total, permissions))

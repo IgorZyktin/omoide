@@ -16,7 +16,7 @@ __all__ = [
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
     item: domain.Item
-    location: domain.SimpleLocation | domain.Location
+    location: domain.SimpleLocation | domain.Location | None
     total_items: int
     total_pages: int
     items: list

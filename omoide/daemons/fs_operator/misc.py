@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Miscellaneous tools for downloader.
 """
-from types import FunctionType
 from typing import Callable
+from typing import Sequence
 
 import click
 
 from omoide.daemons.common import out
 from omoide.daemons.downloader import cfg
 
-DECORATORS = (
+DECORATORS: Sequence[Callable] = (
     click.command(),
     click.option('--silent/--no-silent',
                  default=False,
