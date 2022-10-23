@@ -39,7 +39,7 @@ async def login(
         credentials,
         authenticator,
         env=config.env,
-        test_users=config.test_users,
+        test_users=frozenset(config.test_users),
     )
 
     if new_user.is_anon():

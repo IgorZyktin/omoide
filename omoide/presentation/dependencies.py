@@ -104,7 +104,7 @@ async def get_current_user(
         credentials,
         authenticator,
         env=active_config.env,
-        test_users=active_config.test_users,
+        test_users=frozenset(active_config.test_users),
     )
 
 
