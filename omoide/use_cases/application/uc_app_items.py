@@ -50,7 +50,7 @@ class AppItemUpdateUseCase:
 
             total = await self.items_repo.count_all_children(uuid)
             permissions = await self.users_repo.read_all_users(
-                item.permissions)
+                item.permissions or [])
 
         return Success((item, total, permissions))
 
