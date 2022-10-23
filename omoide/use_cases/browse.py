@@ -83,7 +83,7 @@ class AppBrowseUseCase:
             )
             total_items = await self._repo.count_specific_items(
                 user=user,
-                item_uuid=item.uuid,
+                uuid=item.uuid,
             )
 
         return BrowseResult(
