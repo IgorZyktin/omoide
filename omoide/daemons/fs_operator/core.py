@@ -95,7 +95,7 @@ def download_file_for_media(media: models.Media, path: Path) -> None:
     bucket = utils.get_bucket(media.item_uuid)
     filename = create_folders_for_filename(
         path,
-        media.media_type,
+        str(media.media_type),
         str(media.item.owner_uuid),
         bucket,
         f'{media.item_uuid}.{media.ext.lower()}'
