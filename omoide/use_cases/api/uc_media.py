@@ -89,7 +89,7 @@ class ReadMediaUseCase(BaseMediaUseCase):
         if media is None:
             return Failure(errors.MediaDoesNotExist(uuid=uuid))
 
-        return media
+        return Success(media)
 
 
 class DeleteMediaUseCase(BaseMediaUseCase):
