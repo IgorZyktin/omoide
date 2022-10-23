@@ -77,7 +77,7 @@ def extract_int(
 ) -> int:
     """Safely extract int value from user input."""
     try:
-        result = int(params.get(key))  # noqa
+        result = int(params.get(key))  # type: ignore
     except (ValueError, TypeError):
         result = default
     return result

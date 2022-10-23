@@ -3,6 +3,7 @@
 """
 import contextlib
 from typing import Callable
+from typing import Iterator
 
 import sqlalchemy
 from sqlalchemy.engine import Engine
@@ -23,7 +24,7 @@ def apply_cli_kwargs_to_config(config: JobConfig, **kwargs) -> None:
 
 
 @contextlib.contextmanager
-def temporary_engine(config: JobConfig) -> Engine:
+def temporary_engine(config: JobConfig) -> Iterator[Engine]:
     """Create engine and dispose it after completion."""
     engine = sqlalchemy.create_engine(
         config.db_url.get_secret_value(),
@@ -82,7 +83,7 @@ class Output:
     def table_row(
             self,
             *columns: str,
-            row_formatter: Callable[[str, ...], list[str]],
+            row_formatter: Callable[..., list[str]],
             sep: str = '|',
     ) -> None:
         """Print row for the table.

@@ -36,7 +36,7 @@ class Output:
         if silent:
             self.print = self.print_dummy
         else:
-            self.print = print
+            self.print = print  # type: ignore
 
         self.columns: list[Column] = []
         self._columns_map: dict[str, Column] = {}
