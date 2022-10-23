@@ -24,7 +24,7 @@ async def api_update_metainfo(
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.UpdateMetainfoUseCase = Depends(
-            dep.update_meta_use_case),
+            dep.update_metainfo_use_case),
 ):
     """Update metainfo entry."""
     result = await use_case.execute(policy, user, uuid, metainfo_in)
