@@ -2,22 +2,15 @@
 """Repository that perform CRUD operations on EXIF records.
 """
 import abc
-from typing import Optional, Any
+from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide.domain.interfaces.repositories import base
 
 
-class AbsEXIFRepository(abc.ABC):
+class AbsEXIFRepository(base.AbsBaseRepository):
     """Repository that perform CRUD operations on EXIF records."""
-
-    def __init__(self, db) -> None:  # TODO - move to base class
-        """Initialize instance."""
-        self.db = db
-
-    def transaction(self) -> Any:  # TODO - move to base class
-        """Start transaction."""
-        return self.db.transaction()
 
     @abc.abstractmethod
     async def create_or_update_exif(

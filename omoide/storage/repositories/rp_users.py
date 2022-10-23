@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on users and their data.
 """
-from typing import Optional, Any
-from uuid import UUID, uuid4
+from typing import Optional
+from uuid import UUID
+from uuid import uuid4
 
 import sqlalchemy
 
@@ -15,13 +16,8 @@ from omoide.storage.database import models
 class UsersRepository(repo_interfaces.AbsUsersRepository):
     """Repository that perform CRUD operations on users and their data."""
 
-    def transaction(self) -> Any:
-        """Start transaction."""
-        return self.db.transaction()
-
-    async def generate_uuid(self) -> UUID:
-        """Generate new UUID4 for an item."""
-        # TODO(i.zyktin): must also check zombies table
+    async def generate_user_uuid(self) -> UUID:
+        """Generate new UUID4 for user."""
         stmt = """
         SELECT 1 FROM users WHERE uuid = :uuid;
         """

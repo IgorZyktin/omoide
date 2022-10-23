@@ -10,6 +10,7 @@ from omoide.domain import auth
 from omoide.domain import common
 
 
+# TODO: remove this class
 class AbsRepository(abc.ABC):
     """Base repository class."""
 
@@ -60,3 +61,15 @@ class AbsRepository(abc.ABC):
             details: common.Details,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
+
+
+class AbsBaseRepository(abc.ABC):
+    """Base repository class."""
+
+    def __init__(self, db) -> None:
+        """Initialize instance."""
+        self.db = db
+
+    def transaction(self) -> Any:
+        """Start transaction."""
+        return self.db.transaction()

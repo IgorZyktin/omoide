@@ -36,7 +36,7 @@ class CreateUserUseCase:
         )
 
         async with self.users_repo.transaction():
-            raw_user.uuid = await self.users_repo.generate_uuid()
+            raw_user.uuid = await self.users_repo.generate_user_uuid()
             uuid = await self.users_repo.create_user(raw_user, password)
 
         async with self.users_repo.transaction():
