@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """Auth related routes.
 """
-from typing import FrozenSet
-from uuid import UUID
-
 import fastapi
-from fastapi import Request, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.security import HTTPBasicCredentials, HTTPBasic
+from fastapi import Depends
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
+from fastapi.security import HTTPBasic
+from fastapi.security import HTTPBasicCredentials
 from starlette import status
 
-from omoide import domain, use_cases
+from omoide import domain
+from omoide import use_cases
 from omoide.domain import interfaces
+from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants
+from omoide.presentation import infra
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
@@ -38,15 +40,11 @@ async def login(
         # already logged in
         return RedirectResponse(url)
 
-    test_users: FrozenSet[UUID] = frozenset({
-        UUID(x) for x in config.test_users
-    })
-
     new_user = await use_case.execute(
         credentials,
         authenticator,
         env=config.env,
-        test_users=test_users,
+        test_users=config.get_test_users(),
     )
 
     if new_user.is_anon():

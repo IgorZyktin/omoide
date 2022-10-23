@@ -3,8 +3,6 @@
 """
 import binascii
 from base64 import b64decode
-from typing import FrozenSet
-from uuid import UUID
 
 import fastapi
 from databases import Database
@@ -103,14 +101,11 @@ async def get_current_user(
     if not credentials.username or not credentials.password:
         return auth.User.new_anon()
 
-    test_users: FrozenSet[UUID] = frozenset({
-        UUID(x) for x in active_config.test_users
-    })
     return await use_case.execute(
         credentials,
         authenticator,
         env=active_config.env,
-        test_users=test_users,
+        test_users=active_config.get_test_users(),
     )
 
 

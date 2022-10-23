@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Application settings.
 """
+from functools import cache
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseSettings, SecretStr, validator
+from pydantic import BaseSettings
+from pydantic import SecretStr
+from pydantic import validator
 
 
 class Config(BaseSettings):
@@ -26,6 +29,13 @@ class Config(BaseSettings):
                 if (clean := raw.strip())
             )
         return value
+
+    @cache
+    def get_test_users(self) -> frozenset[UUID]:
+        """Wrapper specifically for mypy."""
+        if isinstance(self.test_users, str):
+            return self.parse_test_users(self.test_users)
+        return self.test_users
 
     class Config:
         env_prefix = 'omoide_'
