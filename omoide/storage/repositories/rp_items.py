@@ -211,7 +211,7 @@ class ItemsRepository(
             'preview_ext': item.preview_ext,
             'thumbnail_ext': item.thumbnail_ext,
             'tags': item.tags,
-            'permissions': [str(x) for x in item.permissions],
+            'permissions': [str(x) for x in (item.permissions or [])],
         }
 
         return await self.db.execute(stmt, values)
