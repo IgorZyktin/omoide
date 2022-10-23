@@ -32,4 +32,5 @@ jobs:
             -   name: Test with mypy
                 run: |
                     pip install mypy
+                    pip install types-ujson
                     mypy ./omoide
