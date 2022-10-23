@@ -47,7 +47,7 @@ class Output:
         if silent:
             self.print = self.print_dummy
         else:
-            self.print = print
+            self.print = print  # type: ignore
 
     def print_dummy(self, *args, **kwargs) -> None:
         """Do nothing."""

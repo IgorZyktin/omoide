@@ -2,6 +2,7 @@
 """Miscellaneous tools for downloader.
 """
 from types import FunctionType
+from typing import Callable
 
 import click
 
@@ -28,7 +29,7 @@ DECORATORS = (
 )
 
 
-def cli_arguments(func: FunctionType) -> FunctionType:
+def cli_arguments(func: Callable) -> Callable:
     """Apply CLI arguments to a given entry point."""
     decorators = reversed(DECORATORS)
 

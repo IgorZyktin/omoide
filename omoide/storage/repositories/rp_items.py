@@ -328,7 +328,7 @@ class ItemsRepository(
         if user.is_not_anon():
             stmt = stmt.select_from(
                 models.Item.__table__.join(
-                    models.ComputedPermissions,
+                    models.ComputedPermissions,  # type: ignore
                     models.Item.uuid == models.ComputedPermissions.item_uuid,
                     isouter=True,
                 )
@@ -619,7 +619,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ) -> None:
             """Alter permissions."""
             nonlocal total
-            _permissions = set(_item.permissions)
+            _permissions = set(_item.permissions or [])
             _permissions = _permissions | set(map(str,
                                                   new_permissions.added))
             _permissions = _permissions - set(map(str,

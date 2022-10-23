@@ -90,7 +90,7 @@ def use_thumbnail_of_first_as_collection_cover(
         item = action.get_item_without_thumbnail(session, last_seen)
 
         while item is not None:
-            last_seen = item.number
+            last_seen = item.number  # type: ignore
 
             if 0 < config.limit <= copied:
                 break

@@ -13,7 +13,7 @@ class Config(BaseSettings):
     injection: str = ''
     env: str = 'dev'
     host: str = '0.0.0.0'
-    test_users: str | frozenset[UUID] = frozenset()
+    test_users: frozenset[UUID] = frozenset()
 
     @classmethod
     @validator('test_users', pre=True)

@@ -115,4 +115,4 @@ class DeleteMediaUseCase(BaseMediaUseCase):
             if not deleted:
                 return Failure(errors.MediaDoesNotExist(uuid=uuid))
 
-        return True
+        return Success(True)

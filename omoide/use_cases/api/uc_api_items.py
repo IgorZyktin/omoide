@@ -402,7 +402,9 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            item.permissions = list(new_permissions.permissions_after)
+            item.permissions = [
+                str(x) for x in new_permissions.permissions_after
+            ]
             await self.items_repo.update_item(item)
 
         if new_permissions.apply_to_parents:

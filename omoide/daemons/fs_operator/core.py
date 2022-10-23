@@ -30,7 +30,7 @@ def download_items_from_database_to_storages(
             action = action_class.Action(status='work')
 
             try:
-                size = len(media.content)
+                size = len(media.content) if media.content else 0
                 if process_single_media(config, media):
                     action.done()
                 else:
@@ -82,7 +82,7 @@ def process_single_media(
     if config.dry_run:
         return True
 
-    if (config.copy_all or media.type == 'thumbnail') and config.use_hot:
+    if (config.copy_all or media.media_type == 'thumbnail') and config.use_hot:
         download_file_for_media(media, path=Path(config.hot_folder))
 
     download_file_for_media(media, path=Path(config.cold_folder))
@@ -98,7 +98,7 @@ def download_file_for_media(media: models.Media, path: Path) -> None:
         str(media.media_type),
         str(media.item.owner_uuid),
         bucket,
-        f'{media.item_uuid}.{media.ext.lower()}'
+        f'{media.item_uuid}.{(media.ext or "").lower()}'
     )
 
     temp_filename = filename + '.tmp' + str(random.randint(1, 1000))
@@ -107,7 +107,7 @@ def download_file_for_media(media: models.Media, path: Path) -> None:
     drop_if_exists(temp_filename)
 
     with open(temp_filename, 'wb') as file:
-        file.write(media.content)
+        file.write(media.content or b'')
         file.flush()
         os.fsync(file.fileno())
 
