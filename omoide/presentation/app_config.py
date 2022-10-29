@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Application settings.
 """
-from functools import cache
 from typing import Optional
 from uuid import UUID
 
@@ -30,7 +29,6 @@ class Config(BaseSettings):
             )
         return value
 
-    @cache
     def get_test_users(self) -> frozenset[UUID]:
         """Wrapper specifically for mypy."""
         if isinstance(self.test_users, str):

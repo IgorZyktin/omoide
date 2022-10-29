@@ -34,7 +34,7 @@ users_repository = repositories.UsersRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
 exif_repository = repositories.EXIFRepository(db)
-meta_repository = repositories.MetaRepository(db)
+metainfo_repository = repositories.MetainfoRepository(db)
 
 current_policy = infra.Policy(
     items_repo=items_repository,
@@ -149,7 +149,8 @@ def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
 
 def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemCreateUseCase(items_repository)
+    return use_cases.ApiItemCreateUseCase(items_repository,
+                                          metainfo_repository)
 
 
 def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
@@ -236,15 +237,14 @@ def delete_exif_use_case() -> use_cases.DeleteEXIFUseCase:
     return use_cases.DeleteEXIFUseCase(exif_repository)
 
 
-# api meta related use cases -------------------------------------------------
+# api metainfo related use cases ----------------------------------------------
 
 
-def read_meta_use_case() -> use_cases.ReadMetaUseCase:
+def read_metainfo_use_case() -> use_cases.ReadMetainfoUseCase:
     """Get use case instance."""
-    return use_cases.ReadMetaUseCase(items_repository, meta_repository)
+    return use_cases.ReadMetainfoUseCase(metainfo_repository)
 
 
-def update_meta_use_case() -> use_cases.CreateOrUpdateMetaUseCase:
+def update_metainfo_use_case() -> use_cases.UpdateMetainfoUseCase:
     """Get use case instance."""
-    return use_cases.CreateOrUpdateMetaUseCase(items_repository,
-                                               meta_repository)
+    return use_cases.UpdateMetainfoUseCase(metainfo_repository)

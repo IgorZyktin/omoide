@@ -128,18 +128,27 @@ class Item(Base):
                                back_populates='items',
                                primaryjoin='Item.owner_uuid==User.uuid',
                                uselist=False)
+
     meta: 'Meta' = relationship('Meta',
                                 passive_deletes=True,
                                 back_populates='item',
                                 uselist=False)
+
+    metainfo: 'Metainfo' = relationship('Metainfo',
+                                        passive_deletes=True,
+                                        back_populates='item',
+                                        uselist=False)
+
     media: 'Media' = relationship('Media',
                                   passive_deletes=True,
                                   back_populates='item',
                                   uselist=True)
+
     exif: 'EXIF' = relationship('EXIF',
                                 passive_deletes=True,
                                 back_populates='item',
                                 uselist=True)
+
     # other -------------------------------------------------------------------
 
     __table_args__ = (
@@ -224,9 +233,9 @@ class ComputedPermissions(Base):
     )
 
 
-class Meta(Base):
+class Metainfo(Base):
     """Meta information for items."""
-    __tablename__ = 'meta'
+    __tablename__ = 'metainfo'
 
     # primary and foreign keys ------------------------------------------------
 
@@ -239,36 +248,35 @@ class Meta(Base):
 
     # fields ------------------------------------------------------------------
 
-    data = sa.Column(pg.JSONB, nullable=False)
+    created_at = sa.Column(sa.DateTime(timezone=True),
+                           nullable=False)
+    updated_at = sa.Column(sa.DateTime(timezone=True),
+                           nullable=False)
+    deleted_at = sa.Column(sa.DateTime(timezone=True),
+                           nullable=True)
+    user_time = sa.Column(sa.DateTime(timezone=False),
+                          nullable=True)
+
+    width = sa.Column(sa.Integer, nullable=True)
+    height = sa.Column(sa.Integer, nullable=True)
+    duration = sa.Column(sa.Float, nullable=True)
+    resolution = sa.Column(sa.Float, nullable=True)
+    size = sa.Column(sa.Integer, nullable=True)
+    media_type = sa.Column(sa.String(length=SMALL), nullable=True)
+
+    author = sa.Column(sa.String(length=MEDIUM), nullable=True)
+    author_url = sa.Column(sa.String(length=HUGE), nullable=True)
+    saved_from_url = sa.Column(sa.String(length=HUGE), nullable=True)
+    description = sa.Column(sa.String(length=HUGE), nullable=True)
+
+    extras = sa.Column(pg.JSONB, nullable=False)
 
     # relations ---------------------------------------------------------------
 
     item: Item = relationship('Item',
                               passive_deletes=True,
-                              back_populates='meta',
+                              back_populates='metainfo',
                               uselist=False)
-
-    # Feature: drop this table, it's useless
-
-
-# Feature: make new Metainfo table with specific fields.
-# Possible structure:
-# class Meta(Base):
-#   item_uuid: ...
-#   --- automatic ---
-#   width: ...
-#   height: ...
-#   duration: ...
-#   resolution: ...
-#   size: ...
-#   \type: ...
-#   added_at: ...
-#   updated_at: ...
-#   --- manual ---
-#   author: ...
-#   author_url: ...
-#   saved_from_url: ...
-#   description: ...
 
 
 class Media(Base):

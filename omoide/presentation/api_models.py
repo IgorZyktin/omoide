@@ -139,3 +139,22 @@ class NewPermissionsIn(BaseModel):
     apply_to_children: bool
     permissions_before: list[str]
     permissions_after: list[str]
+
+
+class MetainfoIn(BaseModel):
+    """Input info for metainfo creation."""
+    user_time: Optional[datetime]
+
+    width: Optional[int]
+    height: Optional[int]
+    duration: Optional[float]
+    resolution: Optional[float]
+    size: int
+    media_type: str
+
+    author: Optional[str]
+    author_url: Optional[str]
+    saved_from_url: Optional[str]
+    description: Optional[str]
+
+    extras: dict

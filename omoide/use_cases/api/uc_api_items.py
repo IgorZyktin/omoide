@@ -40,6 +40,15 @@ class BaseItemUseCase:
 class ApiItemCreateUseCase(BaseItemUseCase):
     """Use case for creating an item."""
 
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__(items_repo)
+        self.metainfo_repo = metainfo_repo
+
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
@@ -57,6 +66,7 @@ class ApiItemCreateUseCase(BaseItemUseCase):
 
             payload.uuid = await self.items_repo.generate_uuid()
             uuid = await self.items_repo.create_item(user, payload)
+            await self.metainfo_repo.create_empty_metainfo(user, uuid)
 
         return Success(uuid)
 

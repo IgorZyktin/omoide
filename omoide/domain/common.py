@@ -3,7 +3,6 @@
 """
 import typing
 from datetime import datetime
-from functools import cached_property
 from typing import Iterator
 from typing import Mapping
 from typing import Optional
@@ -29,8 +28,8 @@ __all__ = [
     'ComplexLocation',
     'Media',
     'EXIF',
-    'Meta',
     'NewPermissions',
+    'Metainfo',
 ]
 
 
@@ -271,20 +270,6 @@ class EXIF(BaseModel):
         return cls(**mapping)  # TODO - maybe create base class for this?
 
 
-class Meta(BaseModel):
-    """Metainfo for item."""
-    item_uuid: UUID
-    meta: dict
-
-    @classmethod
-    def from_map(cls, mapping: Mapping) -> 'Meta':
-        """Convert from arbitrary format to model."""
-        return cls(
-            item_uuid=utils.as_str(mapping, 'item_uuid'),
-            meta=mapping['data'],
-        )
-
-
 class NewPermissions(BaseModel):
     """Input info for new permissions."""
     apply_to_parents: bool
@@ -306,3 +291,27 @@ class NewPermissions(BaseModel):
     def combined(self) -> frozenset[UUID]:
         """Return all permissions."""
         return frozenset(self.permissions_before | self.permissions_after)
+
+
+class Metainfo(BaseModel):
+    """Metainfo for item."""
+    item_uuid: UUID
+
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: Optional[datetime]
+    user_time: Optional[datetime]
+
+    width: Optional[int]
+    height: Optional[int]
+    duration: Optional[float]
+    resolution: Optional[float]
+    size: Optional[int]
+    media_type: Optional[str]
+
+    author: Optional[str]
+    author_url: Optional[str]
+    saved_from_url: Optional[str]
+    description: Optional[str]
+
+    extras: dict
