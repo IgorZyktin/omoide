@@ -5,9 +5,6 @@ from omoide.domain.interfaces.repositories.by_user import AbsByUserRepository
 from omoide.domain.interfaces.repositories.in_rp_items import (
     AbsItemsRepository
 )
-from omoide.domain.interfaces.repositories.in_rp_media import (
-    AbsMediaRepository
-)
 from omoide.domain.interfaces.repositories.in_rp_users import (
     AbsUsersRepository
 )

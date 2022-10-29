@@ -10,13 +10,11 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
 from omoide import utils
-from omoide.domain.interfaces import repositories as repo_interfaces
+from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class MediaRepository(
-    repo_interfaces.AbsMediaRepository,
-):
+class MediaRepository(interfaces.AbsMediaRepository):
     """Repository that perform CRUD operations on media."""
 
     async def create_or_update_media(
@@ -24,7 +22,7 @@ class MediaRepository(
             user: domain.User,
             media: domain.Media,
     ) -> bool:
-        """Create item and return UUID."""
+        """Create/update Media, return True if media was created."""
         values = {
             'item_uuid': media.item_uuid,
             'created_at': media.created_at,
@@ -64,7 +62,7 @@ class MediaRepository(
             uuid: UUID,
             media_type: str,
     ) -> Optional[domain.Media]:
-        """Return media or None."""
+        """Return Media instance or None."""
         stmt = sa.select(
             models.Media
         ).where(
@@ -82,7 +80,7 @@ class MediaRepository(
             uuid: UUID,
             media_type: str,
     ) -> bool:
-        """Delete media for the item with given UUID."""
+        """Delete Media with given UUID, return True on success."""
         stmt = sa.delete(
             models.Media
         ).where(
@@ -99,7 +97,7 @@ class MediaRepository(
             source_uuid: UUID,
             target_uuid: UUID,
             operation: str,
-            extras: dict[str, str | int | bool | None]
+            extras: dict[str, str | int | bool | None],
     ) -> bool:
         """Save intention to init operation on the filesystem."""
         query = sa.insert(

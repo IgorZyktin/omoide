@@ -33,7 +33,7 @@ auth_use_case = use_cases.AuthUseCase(base_repository)
 
 users_repository = repositories.UsersRepository(db)
 items_repository = repositories.ItemsRepository(db)
-media_repository = repositories.MediaRepository(db)
+media_repository = asyncpg.MediaRepository(db)
 exif_repository = asyncpg.EXIFRepository(db)
 metainfo_repository = asyncpg.MetainfoRepository(db)
 

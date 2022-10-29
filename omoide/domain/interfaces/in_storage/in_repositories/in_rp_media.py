@@ -2,24 +2,15 @@
 """Repository that perform CRUD operations on media records.
 """
 import abc
-from typing import Any
 from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
-class AbsMediaRepository(abc.ABC):
-    """Repository that perform CRUD operations on media records.
-    """
-
-    def __init__(self, db) -> None:  # TODO - move to base class
-        """Initialize instance."""
-        self.db = db
-
-    def transaction(self) -> Any:  # TODO - move to base class
-        """Start transaction."""
-        return self.db.transaction()
+class AbsMediaRepository(in_rp_base.AbsBaseRepository):
+    """Repository that perform CRUD operations on media records."""
 
     @abc.abstractmethod
     async def create_or_update_media(
@@ -27,7 +18,7 @@ class AbsMediaRepository(abc.ABC):
             user: domain.User,
             media: domain.Media,
     ) -> bool:
-        """Return True if media was created."""
+        """Create/update Media, return True if media was created."""
 
     @abc.abstractmethod
     async def read_media(
@@ -35,7 +26,7 @@ class AbsMediaRepository(abc.ABC):
             uuid: UUID,
             media_type: str,
     ) -> Optional[domain.Media]:
-        """Return media or None."""
+        """Return Media instance or None."""
 
     @abc.abstractmethod
     async def delete_media(
@@ -43,7 +34,7 @@ class AbsMediaRepository(abc.ABC):
             uuid: UUID,
             media_type: str,
     ) -> bool:
-        """Delete media with given UUID."""
+        """Delete Media with given UUID, return True on success."""
 
     @abc.abstractmethod
     async def create_filesystem_operation(
@@ -51,6 +42,6 @@ class AbsMediaRepository(abc.ABC):
             source_uuid: UUID,
             target_uuid: UUID,
             operation: str,
-            extras: dict[str, str | int | bool | None]
+            extras: dict[str, str | int | bool | None],
     ) -> bool:
         """Save intention to init operation on the filesystem."""
