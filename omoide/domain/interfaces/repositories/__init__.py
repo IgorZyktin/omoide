@@ -11,9 +11,6 @@ from omoide.domain.interfaces.repositories.in_rp_items import (
 from omoide.domain.interfaces.repositories.in_rp_media import (
     AbsMediaRepository
 )
-from omoide.domain.interfaces.repositories.in_rp_meta import (
-    AbsMetaRepository
-)
 from omoide.domain.interfaces.repositories.in_rp_users import (
     AbsUsersRepository
 )

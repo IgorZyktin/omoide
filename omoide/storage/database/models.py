@@ -233,32 +233,6 @@ class ComputedPermissions(Base):
     )
 
 
-# TODO: drop this table, it's useless
-class Meta(Base):
-    """Meta information for items."""
-    __tablename__ = 'meta'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid: UUID = sa.Column(pg.UUID(),
-                                sa.ForeignKey('items.uuid',
-                                              ondelete='CASCADE'),
-                                nullable=False,
-                                index=True,
-                                primary_key=True)
-
-    # fields ------------------------------------------------------------------
-
-    data = sa.Column(pg.JSONB, nullable=False)
-
-    # relations ---------------------------------------------------------------
-
-    item: Item = relationship('Item',
-                              passive_deletes=True,
-                              back_populates='meta',
-                              uselist=False)
-
-
 class Metainfo(Base):
     """Meta information for items."""
     __tablename__ = 'metainfo'

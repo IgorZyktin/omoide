@@ -2,7 +2,6 @@
 from omoide.use_cases.api.uc_exif import *
 from omoide.use_cases.api.uc_api_items import *
 from omoide.use_cases.api.uc_media import *
-from omoide.use_cases.api.uc_meta import *
 from omoide.use_cases.api.uc_metainfo import *
 from omoide.use_cases.application.home import *
 from omoide.use_cases.application.uc_app_items import *

@@ -15,7 +15,6 @@ const EXPECTED_STEPS = new Set([
     'generateFeaturesForProxy',
     'generateMetainfoForProxy',
     'createItemForProxy',
-    'uploadMetaForProxy',  // TODO: deprecated
     'uploadMetainfoForProxy',
     'saveContentForProxy',
     'savePreviewForProxy',
@@ -209,9 +208,6 @@ function createFileProxy(file) {
             original_file_modified_at: null,
         },
 
-        // FIXME
-        metaUploaded: false,
-
         // exif
         exif: null,
         exifGenerated: false,
@@ -315,8 +311,6 @@ function getHandlerDescription(handler, label) {
         text = `Getting metainfo for ${label}`
     else if (handler.name === 'createItemForProxy')
         text = `Creating item ${label}`
-    else if (handler.name === 'uploadMetaForProxy') // TODO: deprecated
-        text = `Uploading metainfo ${label}`
     else if (handler.name === 'uploadMetainfoForProxy')
         text = `Uploading metainfo ${label}`
     else if (handler.name === 'uploadPermissionsForProxy')
@@ -520,36 +514,6 @@ function tryGettingUserTime(proxy){
         return rawTime.slice(0, 19)
     }
     return null
-}
-
-// TODO: deprecated
-async function uploadMetaForProxy(proxy) {
-    // upload metainfo
-    let date = new Date(proxy.file.lastModified)
-    let lastModified = convertDatetimeToIsoString(date)
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            timeout: 10000, // 10 seconds
-            type: 'PUT',
-            url: `/api/meta/${proxy.uuid}`,
-            contentType: 'application/json',
-            data: JSON.stringify({
-                original_file_name: proxy.file.name,
-                original_file_modified_at: lastModified,
-                file_type: proxy.file.type,
-                file_size: proxy.file.size,
-            }),
-            success: function (response) {
-                proxy.metaUploaded = true
-                proxy.actualSteps.add('uploadMetaForProxy')
-                resolve('ok')
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                describeFail(XMLHttpRequest.responseJSON)
-                reject('fail')
-            },
-        })
-    })
 }
 
 async function getImageDimensions(proxy) {
@@ -1016,9 +980,6 @@ async function uploadMedia(button, uploadState) {
     $(button).addClass('button-disabled')
     await doIf(targets, createItemForProxy, uploadState,
         p => !p.uuid && p.isValid)
-    // TODO: deprecated
-    await doIf(targets, uploadMetaForProxy, uploadState,
-        p => !p.metaUploaded && p.uuid && p.isValid)
     await doIf(targets, uploadMetainfoForProxy, uploadState,
         p => !p.metainfo.uploaded && p.uuid && p.isValid)
     await doIf(targets, uploadEXIFProxy, uploadState,

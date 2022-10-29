@@ -28,7 +28,6 @@ __all__ = [
     'ComplexLocation',
     'Media',
     'EXIF',
-    'Meta',  # TODO - delete this class
     'NewPermissions',
     'Metainfo',
 ]
@@ -269,20 +268,6 @@ class EXIF(BaseModel):
     def from_map(cls, mapping: Mapping) -> 'EXIF':
         """Convert from arbitrary format to model."""
         return cls(**mapping)  # TODO - maybe create base class for this?
-
-
-class Meta(BaseModel):
-    """Metainfo for item."""
-    item_uuid: UUID
-    meta: dict
-
-    @classmethod
-    def from_map(cls, mapping: Mapping) -> 'Meta':
-        """Convert from arbitrary format to model."""
-        return cls(
-            item_uuid=utils.as_str(mapping, 'item_uuid'),
-            meta=mapping['data'],
-        )
 
 
 class NewPermissions(BaseModel):
