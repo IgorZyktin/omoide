@@ -32,22 +32,15 @@ class BaseItemUseCase:
     def __init__(
             self,
             items_repo: interfaces.AbsItemsRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
 
 
 class ApiItemCreateUseCase(BaseItemUseCase):
     """Use case for creating an item."""
-
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-    ) -> None:
-        """Initialize instance."""
-        super().__init__(items_repo)
-        self.metainfo_repo = metainfo_repo
 
     async def execute(
             self,
@@ -134,6 +127,13 @@ class UpdateItemUseCase(BaseItemUseCase):
                 # TODO - add validation
 
             await self.items_repo.update_item(item)
+            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+
+            if metainfo is None:
+                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
+
+            metainfo.updated_at = utils.now()
+            await self.metainfo_repo.update_metainfo(user, metainfo)
 
         return Success(True)
 
@@ -219,10 +219,11 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
     def __init__(
             self,
             items_repo: interfaces.AbsItemsRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: interfaces.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
-        super().__init__(items_repo)
+        super().__init__(items_repo, metainfo_repo)
         self.media_repo = media_repo
 
     async def execute(
@@ -257,6 +258,14 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
             if child is None:
                 return Failure(errors.ItemDoesNotExist(uuid=child_uuid))
 
+            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+
+            if metainfo is None:
+                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
+
+            metainfo.updated_at = utils.now()
+            await self.metainfo_repo.update_metainfo(user, metainfo)
+
             await self.media_repo.create_filesystem_operation(
                 source_uuid=child_uuid,
                 target_uuid=uuid,
@@ -276,10 +285,11 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
     def __init__(
             self,
             items_repo: interfaces.AbsItemsRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: interfaces.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
-        super().__init__(items_repo)
+        super().__init__(items_repo, metainfo_repo)
         self.media_repo = media_repo
 
     async def execute(
@@ -336,6 +346,14 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
                     },
                 )
 
+            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+
+            if metainfo is None:
+                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
+
+            metainfo.updated_at = utils.now()
+            await self.metainfo_repo.update_metainfo(user, metainfo)
+
         asyncio.create_task(self.items_repo.update_tags_in_children(parent))
 
         return Success(new_parent_uuid)
@@ -365,6 +383,14 @@ class ApiItemAlterTagsUseCase(BaseItemUseCase):
 
             item.tags = new_tags
             await self.items_repo.update_item(item)
+
+            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+
+            if metainfo is None:
+                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
+
+            metainfo.updated_at = utils.now()
+            await self.metainfo_repo.update_metainfo(user, metainfo)
 
         asyncio.create_task(self.items_repo.update_tags_in_children(item))
 
@@ -416,6 +442,14 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
                 str(x) for x in new_permissions.permissions_after
             ]
             await self.items_repo.update_item(item)
+
+            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+
+            if metainfo is None:
+                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
+
+            metainfo.updated_at = utils.now()
+            await self.metainfo_repo.update_metainfo(user, metainfo)
 
         if new_permissions.apply_to_parents:
             asyncio.create_task(

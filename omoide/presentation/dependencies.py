@@ -156,36 +156,42 @@ def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
 
 def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemReadUseCase(items_repository)
+    return use_cases.ApiItemReadUseCase(items_repository,
+                                        metainfo_repository)
 
 
 # TODO: remove this
 def update_item_use_case() -> use_cases.UpdateItemUseCase:
     """Get use case instance."""
-    return use_cases.UpdateItemUseCase(items_repository)
+    return use_cases.UpdateItemUseCase(items_repository,
+                                       metainfo_repository)
 
 
 def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyThumbnailUseCase(items_repository,
+                                             metainfo_repository,
                                              media_repository)
 
 
 def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemAlterParentUseCase(items_repository,
+                                               metainfo_repository,
                                                media_repository)
 
 
 def api_item_alter_tags_use_case() -> use_cases.ApiItemAlterTagsUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterTagsUseCase(items_repository)
+    return use_cases.ApiItemAlterTagsUseCase(items_repository,
+                                             metainfo_repository)
 
 
 def api_item_alter_permissions_use_case() \
         -> use_cases.ApiItemAlterPermissionsUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterPermissionsUseCase(items_repository)
+    return use_cases.ApiItemAlterPermissionsUseCase(items_repository,
+                                                    metainfo_repository)
 
 
 # api related use cases -------------------------------------------------------
@@ -199,7 +205,8 @@ def api_browse_use_case() -> use_cases.APIBrowseUseCase:
 
 def api_item_delete_use_case() -> use_cases.ApiItemDeleteUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemDeleteUseCase(items_repository)
+    return use_cases.ApiItemDeleteUseCase(items_repository,
+                                          metainfo_repository)
 
 
 # api media related use cases -------------------------------------------------
