@@ -13,6 +13,7 @@ const EXPECTED_STEPS = new Set([
     'generateIconForProxy',
     'generateEXIForProxy',
     'generateFeaturesForProxy',
+    'generateMetainfoForProxy',
     'createItemForProxy',
     'uploadMetaForProxy',  // TODO: deprecated
     'uploadMetainfoForProxy',
@@ -194,10 +195,22 @@ function createFileProxy(file) {
         type: file.type,
         filename: file.name,
 
-        // meta
+        // metainfo
+        metainfo: {
+            generated: false,
+            uploaded: false,
+            user_time: null,
+            width: null,
+            height: null,
+            resolution: null,
+            size: null,
+            media_type: null,
+            original_file_name: null,
+            original_file_modified_at: null,
+        },
+
         // FIXME
         metaUploaded: false,
-        metainfoUploaded: false,
 
         // exif
         exif: null,
@@ -298,6 +311,8 @@ function getHandlerDescription(handler, label) {
         text = `Processing EXIF ${label}`
     else if (handler.name === 'generateFeaturesForProxy')
         text = `Getting info from EXIF ${label}`
+    else if (handler.name === 'generateMetainfoForProxy')
+        text = `Getting metainfo for ${label}`
     else if (handler.name === 'createItemForProxy')
         text = `Creating item ${label}`
     else if (handler.name === 'uploadMetaForProxy') // TODO: deprecated
@@ -498,6 +513,15 @@ async function generateEXIForProxy(proxy) {
     proxy.ready = true
 }
 
+function tryGettingUserTime(proxy){
+    // try to extract abstract user time
+    let rawTime = proxy.exif['DateTimeOriginal']
+    if (rawTime) {
+        return rawTime.slice(0, 19)
+    }
+    return null
+}
+
 // TODO: deprecated
 async function uploadMetaForProxy(proxy) {
     // upload metainfo
@@ -554,14 +578,6 @@ async function getImageDimensions(proxy) {
 
 async function uploadMetainfoForProxy(proxy) {
     // upload metainfo
-    let date = new Date(proxy.file.lastModified)
-    let lastModified = convertDatetimeToIsoString(date)
-    let width, height, resolution;
-    try {
-        [width, height, resolution] = await getImageDimensions(proxy)
-    } catch (error) {
-        [width, height, resolution] = [null, null, null]
-    }
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 10000, // 10 seconds
@@ -569,26 +585,25 @@ async function uploadMetainfoForProxy(proxy) {
             url: `/api/metainfo/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
-                // TODO: abstract time to search on
-                user_time: null,
-                width: width,
-                height: height,
+                user_time: proxy.metainfo.user_time,
+                width: proxy.metainfo.width,
+                height: proxy.metainfo.height,
                 duration: null,  // TODO: after we could handle gifs/video
-                resolution: resolution,
-                size: proxy.file.size,
-                media_type: proxy.file.type,
+                resolution: proxy.metainfo.resolution,
+                size: proxy.metainfo.size,
+                media_type: proxy.metainfo.media_type,
                 // TODO: add author metainfo to the form
                 author: null,
                 author_url: null,
                 saved_from_url: null,
                 description: null,
                 extras: {
-                    original_file_name: proxy.file.name,
-                    original_file_modified_at: lastModified,
+                    original_file_name: proxy.metainfo.original_file_name,
+                    original_file_modified_at: proxy.metainfo.original_file_modified_at,
                 },
             }),
             success: function (response) {
-                proxy.metainfoUploaded = true
+                proxy.metainfo.uploaded = true
                 proxy.actualSteps.add('uploadMetainfoForProxy')
                 resolve('ok')
             },
@@ -598,6 +613,29 @@ async function uploadMetainfoForProxy(proxy) {
             },
         })
     })
+}
+
+async function generateMetainfoForProxy(proxy, uploadState) {
+    // extract file size, dimensions and other metainfo
+    let date = new Date(proxy.file.lastModified)
+    let lastModified = convertDatetimeToIsoString(date)
+    let width, height, resolution;
+    try {
+        [width, height, resolution] = await getImageDimensions(proxy)
+    } catch (error) {
+        [width, height, resolution] = [null, null, null]
+    }
+
+    proxy.metainfo.generated = true
+    proxy.actualSteps.add('generateMetainfoForProxy')
+    proxy.metainfo.user_time = tryGettingUserTime(proxy)
+    proxy.metainfo.width = width
+    proxy.metainfo.height = height
+    proxy.metainfo.resolution = resolution
+    proxy.metainfo.size = proxy.file.size
+    proxy.metainfo.media_type = proxy.file.type
+    proxy.metainfo.original_file_name = proxy.file.name
+    proxy.metainfo.original_file_modified_at = lastModified
 }
 
 async function generateFeaturesForProxy(proxy, uploadState) {
@@ -962,6 +1000,8 @@ async function preprocessMedia(button, uploadState) {
         p => !p.exifGenerated && p.isValid)
     await doIf(targets, generateFeaturesForProxy, uploadState,
         p => !p.featuresGenerated && p.isValid)
+    await doIf(targets, generateMetainfoForProxy, uploadState,
+        p => !p.metainfo.generated && p.isValid)
     $(button).removeClass('button-disabled')
 
     uploadState.setAction('Done processing')
@@ -980,7 +1020,7 @@ async function uploadMedia(button, uploadState) {
     await doIf(targets, uploadMetaForProxy, uploadState,
         p => !p.metaUploaded && p.uuid && p.isValid)
     await doIf(targets, uploadMetainfoForProxy, uploadState,
-        p => !p.metainfoUploaded && p.uuid && p.isValid)
+        p => !p.metainfo.uploaded && p.uuid && p.isValid)
     await doIf(targets, uploadEXIFProxy, uploadState,
         p => !p.exifUploaded && p.uuid && p.isValid && handleEXIF)
     await doIf(targets, saveContentForProxy, uploadState,
