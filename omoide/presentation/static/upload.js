@@ -507,9 +507,30 @@ async function generateEXIForProxy(proxy) {
     proxy.ready = true
 }
 
-function tryGettingUserTime(proxy){
+function extractDatetime(rawString) {
+    // try to extract datetime from string
+    if (!rawString)
+        return null
+
+    let parsed = Date.parse(rawString)
+
+    if (isNaN(parsed)) {
+        // datetime could be in format "2022:10:29 20:39:00"
+        rawString = rawString.replace(':', '-')
+        rawString = rawString.replace(':', '-')
+    }
+
+    let parsed2 = Date.parse(rawString)
+    if (isNaN(parsed2))
+        return null
+
+    return rawString
+}
+
+function tryGettingUserTime(proxy) {
     // try to extract abstract user time
-    let rawTime = proxy.exif['DateTimeOriginal']
+    let rawTime = extractDatetime(proxy.exif['DateTimeOriginal'])
+
     if (rawTime) {
         return rawTime.slice(0, 19)
     }
@@ -627,8 +648,12 @@ async function generateFeaturesForProxy(proxy, uploadState) {
 
 async function _extractYearFeature(proxy) {
     // extract year from EXIF tags as a string
-    let year = proxy.exif['DateTimeOriginal'].slice(0, 4)
+    let dt = extractDatetime(proxy.exif['DateTimeOriginal'])
 
+    if (!dt)
+        return null
+
+    let year = dt.slice(0, 4)
     if (year)
         proxy.tagsAdded.push(year)
 }
@@ -653,8 +678,13 @@ function getMonthNameByNumberEN(number) {
 
 async function _extractMonthENFeature(proxy) {
     // extract month from EXIF tags as a string (english)
-    let month = proxy.exif['DateTimeOriginal'].slice(5, 7)
-    let day = proxy.exif['DateTimeOriginal'].slice(8, 10)
+    let dt = extractDatetime(proxy.exif['DateTimeOriginal'])
+
+    if (!dt)
+        return null
+
+    let month = dt.slice(5, 7)
+    let day = dt.slice(8, 10)
 
     if (month && day) {
         let dayNumber = day.replace(/^0+/, '')
@@ -683,8 +713,13 @@ function getMonthNameByNumberRU(number) {
 
 async function _extractMonthRUFeature(proxy) {
     // extract month from EXIF tags as a string (russian)
-    let month = proxy.exif['DateTimeOriginal'].slice(5, 7)
-    let day = proxy.exif['DateTimeOriginal'].slice(8, 10)
+    let dt = extractDatetime(proxy.exif['DateTimeOriginal'])
+
+    if (!dt)
+        return null
+
+    let month = dt.slice(5, 7)
+    let day = dt.slice(8, 10)
 
     if (month && day) {
         let dayNumber = day.replace(/^0+/, '')
@@ -712,6 +747,7 @@ async function uploadEXIFProxy(proxy) {
             success: function (response) {
                 proxy.exifUploaded = true
                 resolve('ok')
+                proxy.actualSteps.add('uploadEXIFProxy')
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
