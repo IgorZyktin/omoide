@@ -129,11 +129,6 @@ class Item(Base):
                                primaryjoin='Item.owner_uuid==User.uuid',
                                uselist=False)
 
-    meta: 'Meta' = relationship('Meta',
-                                passive_deletes=True,
-                                back_populates='item',
-                                uselist=False)
-
     metainfo: 'Metainfo' = relationship('Metainfo',
                                         passive_deletes=True,
                                         back_populates='item',
