@@ -12,9 +12,7 @@ from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class MetainfoRepository(
-    interfaces.AbsMetainfoRepository,
-):
+class MetainfoRepository(interfaces.AbsMetainfoRepository):
     """Repository that perform CRUD operations on metainfo."""
 
     async def create_empty_metainfo(
@@ -22,7 +20,7 @@ class MetainfoRepository(
             user: domain.User,
             uuid: UUID,
     ) -> bool:
-        """Return True if metainfo was created."""
+        """Create metainfo with blank fields."""
         stmt = sqlalchemy.insert(
             models.Metainfo
         ).values(

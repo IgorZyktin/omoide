@@ -35,7 +35,7 @@ users_repository = repositories.UsersRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
 exif_repository = asyncpg.EXIFRepository(db)
-metainfo_repository = repositories.MetainfoRepository(db)
+metainfo_repository = asyncpg.MetainfoRepository(db)
 
 current_policy = infra.Policy(
     items_repo=items_repository,
