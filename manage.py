@@ -9,7 +9,7 @@ import click
 from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
-from omoide.storage.repositories.rp_users import UsersRepository
+from omoide.storage.repositories.asyncpg.rp_users import UsersRepository
 from omoide.use_cases.api import uc_users
 
 

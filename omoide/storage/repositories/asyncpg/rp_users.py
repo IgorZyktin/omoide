@@ -8,12 +8,12 @@ from uuid import uuid4
 import sqlalchemy
 
 from omoide import domain
-from omoide.domain.interfaces import repositories as repo_interfaces
+from omoide.domain import interfaces
 from omoide.presentation import api_models
 from omoide.storage.database import models
 
 
-class UsersRepository(repo_interfaces.AbsUsersRepository):
+class UsersRepository(interfaces.AbsUsersRepository):
     """Repository that perform CRUD operations on users and their data."""
 
     async def generate_user_uuid(self) -> UUID:
@@ -64,7 +64,7 @@ class UsersRepository(repo_interfaces.AbsUsersRepository):
             self,
             uuid: UUID,
     ) -> Optional[domain.User]:
-        """Return user or None."""
+        """Return User or None."""
         stmt = sqlalchemy.select(models.User).where(models.User.uuid == uuid)
         response = await self.db.fetch_one(stmt)
         return domain.User.from_map(dict(response)) if response else None

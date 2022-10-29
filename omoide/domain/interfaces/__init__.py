@@ -13,7 +13,7 @@ from omoide.domain.interfaces.repositories.by_user import AbsByUserRepository
 from omoide.domain.interfaces.repositories.in_rp_items import (
     AbsItemsRepository
 )
-from omoide.domain.interfaces.repositories.in_rp_users import (
+from omoide.domain.interfaces.in_storage.in_repositories.in_rp_users import (
     AbsUsersRepository,
 )
 from omoide.domain.interfaces.repositories.preview import AbsPreviewRepository

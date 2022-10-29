@@ -6,11 +6,11 @@ from typing import Optional
 from uuid import UUID
 
 from omoide import domain
-from omoide.domain.interfaces.repositories import base
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 from omoide.presentation import api_models
 
 
-class AbsUsersRepository(base.AbsBaseRepository):
+class AbsUsersRepository(in_rp_base.AbsBaseRepository):
     """Repository that perform CRUD operations on users and their data."""
 
     @abc.abstractmethod
@@ -23,14 +23,14 @@ class AbsUsersRepository(base.AbsBaseRepository):
             payload: api_models.CreateUserIn,
             password: bytes,
     ) -> UUID:
-        """Return UUID for created user."""
+        """Create user and return UUID."""
 
     @abc.abstractmethod
     async def read_user(
             self,
             uuid: UUID,
     ) -> Optional[domain.User]:
-        """Return user or None."""
+        """Return User or None."""
 
     @abc.abstractmethod
     async def read_all_users(
