@@ -9,13 +9,11 @@ import ujson
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
-from omoide.domain.interfaces import repositories as repo_interfaces
+from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class EXIFRepository(
-    repo_interfaces.AbsEXIFRepository,
-):
+class EXIFRepository(interfaces.AbsEXIFRepository):
     """Repository that perform CRUD operations on EXIF."""
 
     async def create_or_update_exif(

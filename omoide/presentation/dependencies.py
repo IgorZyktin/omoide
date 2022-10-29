@@ -15,6 +15,7 @@ from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.presentation import app_config
 from omoide.storage import repositories
+from omoide.storage.repositories import asyncpg
 
 _config = app_config.init()
 db = Database(_config.db_url.get_secret_value())
@@ -33,7 +34,7 @@ auth_use_case = use_cases.AuthUseCase(base_repository)
 users_repository = repositories.UsersRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = repositories.MediaRepository(db)
-exif_repository = repositories.EXIFRepository(db)
+exif_repository = asyncpg.EXIFRepository(db)
 metainfo_repository = repositories.MetainfoRepository(db)
 
 current_policy = infra.Policy(
@@ -181,7 +182,7 @@ def api_item_alter_tags_use_case() -> use_cases.ApiItemAlterTagsUseCase:
     return use_cases.ApiItemAlterTagsUseCase(items_repository)
 
 
-def api_item_alter_permissions_use_case()\
+def api_item_alter_permissions_use_case() \
         -> use_cases.ApiItemAlterPermissionsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemAlterPermissionsUseCase(items_repository)
