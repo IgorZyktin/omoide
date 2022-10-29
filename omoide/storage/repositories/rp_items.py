@@ -5,7 +5,6 @@ import time
 from typing import Awaitable
 from typing import Callable
 from typing import Optional
-from typing import Set
 from uuid import UUID
 from uuid import uuid4
 
@@ -619,7 +618,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ) -> None:
             """Alter permissions."""
             nonlocal total
-            _permissions = set(_item.permissions or [])
+            _permissions = set(str(x) for x in (_item.permissions or []))
             _permissions = _permissions | set(map(str,
                                                   new_permissions.added))
             _permissions = _permissions - set(map(str,
@@ -631,7 +630,8 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             ).values(
                 permissions=sorted(str(x) for x in _permissions)
             )
-            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            async with self.transaction():
+                await _self.db.execute(stmt)
             total += 1
 
         await self.apply_upwards(
@@ -663,9 +663,20 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ) -> None:
             """Alter permissions."""
             nonlocal total
-            _permissions: Set[str | UUID] = set(_item.permissions or [])
-            _permissions = _permissions | new_permissions.added
-            _permissions = _permissions - new_permissions.removed
+            if item.parent_uuid is None:
+                return
+
+            parent = await self.read_item(item.parent_uuid)
+
+            if parent is None:
+                return
+
+            _permissions = set(str(x) for x in (_item.permissions or []))
+            _permissions.update(str(x) for x in (parent.permissions or []))
+            _permissions = _permissions | set(map(str,
+                                                  new_permissions.added))
+            _permissions = _permissions - set(map(str,
+                                                  new_permissions.removed))
 
             stmt = sqlalchemy.update(
                 models.Item
@@ -674,7 +685,9 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             ).values(
                 permissions=sorted(str(x) for x in _permissions)
             )
-            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
+            async with self.transaction():
+                await _self.db.execute(stmt)
+
             total += 1
 
         await self.apply_downwards(
