@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from omoide import domain
-from omoide.domain import utils
 
 __all__ = [
     'Item',
