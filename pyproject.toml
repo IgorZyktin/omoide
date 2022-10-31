@@ -20,7 +20,7 @@ click = "^8.1.2"
 ujson = "^5.5.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
+pytest = "^7.2.0"
 coverage = "^6.5"
 
 [build-system]
