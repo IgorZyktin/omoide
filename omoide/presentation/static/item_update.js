@@ -11,7 +11,6 @@ const BASIC_BOOL_FIELDS = [
 
 const BASIC_FIELDS = BASIC_TEXT_FIELDS.concat(BASIC_BOOL_FIELDS)
 
-const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
 function alterModelTextField(element, fieldName) {
     // change item model field

@@ -1,5 +1,3 @@
-const UUID_PREFIX_LENGTH = 2
-
 function makeAlert(text, alertsElementId) {
     // create alert popup message
     makeNotification(text, alertsElementId, 'alert')
@@ -26,12 +24,12 @@ function makeNotification(text, alertsElementId, css_class) {
 }
 
 function gatherItemParameters() {
-    // gather information from typical creation fields
-    let uuid_or_name = $('#parent_uuid_or_name').val()
+    // gather information for item creation
+    let raw_uuid = $('#parent_uuid').val()
     let parent_uuid
 
-    if (isUUID(uuid_or_name)){
-        parent_uuid = uuid_or_name
+    if (isUUID(raw_uuid)){
+        parent_uuid = raw_uuid
     } else {
         parent_uuid = null
     }
@@ -39,9 +37,9 @@ function gatherItemParameters() {
     return {
         parent_uuid: parent_uuid,
         is_collection: $('#treat-item-as').val() === 'collection',
-        name: $('#item_name').val(),
+        name: $('#item_name').val().trim(),
         tags: splitLines($('#item_tags').val()),
-        permissions: splitLines($('#item_permissions').val()),
+        permissions: extractUUIDs($('#item_permissions').val()),
     }
 }
 
@@ -148,7 +146,7 @@ async function request(endpoint, payload, callback) {
 
 function isUUID(uuid) {
     let s = "" + uuid;
-    s = s.match(/^[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}$/g);
+    s = s.match(UUID_REGEXP);
     return s !== null;
 }
 

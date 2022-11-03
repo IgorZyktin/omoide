@@ -20,15 +20,18 @@ from omoide.presentation import infra
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
-router = fastapi.APIRouter()
+router = fastapi.APIRouter(prefix='/items')
 
 
-@router.get('/items/create')
+@router.get('/create')
 @web.login_required
 async def app_item_create(
         request: Request,
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.AppItemCreateUseCase = Depends(
+            dep.app_item_create_use_case),
         config: Config = Depends(dep.config),
 ):
     """Create item page."""
@@ -41,7 +44,16 @@ async def app_item_create(
     query = infra.query_maker.from_request(request.query_params)
 
     if not utils.is_valid_uuid(parent_uuid):
-        parent_uuid = ''
+        _parent_uuid = None
+    else:
+        _parent_uuid = UUID(parent_uuid)
+
+    result = await use_case.execute(policy, user, _parent_uuid)
+
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error, _parent_uuid)
+
+    parent, permissions = result.value
 
     context = {
         'request': request,
@@ -49,7 +61,8 @@ async def app_item_create(
         'user': user,
         'aim': aim,
         'url': request.url_for('search'),
-        'parent_uuid': parent_uuid,
+        'parent': parent,
+        'permissions': permissions,
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 
@@ -73,7 +86,7 @@ def serialize_item(
     }
 
 
-@router.get('/{uuid}')
+@router.get('/update/{uuid}')
 @web.login_required
 async def app_item_update(
         request: Request,
@@ -121,7 +134,7 @@ async def app_item_update(
     return dep.templates.TemplateResponse('item_update.html', context)
 
 
-@router.get('/{uuid}')
+@router.get('/delete/{uuid}')
 @web.login_required
 async def app_item_delete(
         request: Request,
