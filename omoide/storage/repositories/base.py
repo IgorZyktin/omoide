@@ -52,7 +52,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
 
         response = await self.db.fetch_one(query,
                                            {'user_uuid': str(user_uuid)})
-        return domain.User.from_map(response) if response else None
+        return domain.User(**response) if response else None
 
     async def get_user_by_login(
             self,
@@ -66,7 +66,7 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
         """
 
         response = await self.db.fetch_one(query, {'user_login': user_login})
-        return domain.User.from_map(response) if response else None
+        return domain.User(**response) if response else None
 
     async def read_item(
             self,

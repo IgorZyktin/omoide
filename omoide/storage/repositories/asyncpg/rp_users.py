@@ -67,7 +67,7 @@ class UsersRepository(interfaces.AbsUsersRepository):
         """Return User or None."""
         stmt = sqlalchemy.select(models.User).where(models.User.uuid == uuid)
         response = await self.db.fetch_one(stmt)
-        return domain.User.from_map(dict(response)) if response else None
+        return domain.User(**response) if response else None
 
     async def read_all_users(
             self,
@@ -82,10 +82,7 @@ class UsersRepository(interfaces.AbsUsersRepository):
 
         response = await self.db.fetch_all(stmt)
 
-        return [
-            domain.User.from_map(dict(record))
-            for record in response
-        ]
+        return [domain.User(**record) for record in response]
 
     async def update_user(
             self,

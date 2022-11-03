@@ -2,7 +2,6 @@
 """User related interfaces and objects.
 """
 from datetime import datetime
-from typing import Mapping
 from typing import Optional
 from uuid import UUID
 
@@ -35,11 +34,6 @@ class User(BaseModel):
     def is_not_anon(self) -> bool:
         """Return True if user is registered one."""
         return not self.is_anon()
-
-    @classmethod
-    def from_map(cls, mapping: Mapping) -> 'User':
-        """Convert from arbitrary format to model."""
-        return cls(**mapping)
 
     @classmethod
     def new_anon(cls) -> 'User':
