@@ -158,7 +158,7 @@
                 {% set parent_hint = '' %}
             {% endif %}
 
-            <a href="{{ url_for('create_item') + parent_hint }}"
+            <a href="{{ url_for('app_item_create') + parent_hint }}"
                title="Create new item"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
@@ -177,7 +177,7 @@
             </a>
 
             {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
-                <a href="{{ url_for('app_item_edit', uuid=current_item.uuid) }}"
+                <a href="{{ url_for('app_item_update', uuid=current_item.uuid) }}"
                    title="Edit item"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"

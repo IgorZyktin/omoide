@@ -12,7 +12,7 @@ from omoide.presentation import api
 from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
-from omoide.presentation.application import app_item_update
+from omoide.presentation.application import app_item
 from omoide.presentation.application import auth
 from omoide.presentation.application import preview
 from omoide.presentation.application import profile
@@ -57,9 +57,7 @@ app.include_router(api.api_metainfo.router)
 # Application routes
 app.include_router(application.browse.router)
 app.include_router(application.home.router)
-app.include_router(application.create_item.router)
-app.include_router(application.app_item_update.router)
-app.include_router(application.app_item_delete.router)
+app.include_router(application.app_item.router)
 
 app.mount(
     '/static',

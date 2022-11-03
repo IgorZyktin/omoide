@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Routes related to media edit.
+"""Routes related to item operations.
 """
 from uuid import UUID
 
@@ -7,7 +7,7 @@ import fastapi
 import ujson
 from fastapi import Depends
 from fastapi import Request
-from fastapi.responses import HTMLResponse
+from starlette.responses import HTMLResponse
 
 from omoide import domain
 from omoide import use_cases
@@ -20,7 +20,40 @@ from omoide.presentation import infra
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
-router = fastapi.APIRouter(prefix='/items/update')
+router = fastapi.APIRouter()
+
+
+@router.get('/items/create')
+@web.login_required
+async def app_item_create(
+        request: Request,
+        parent_uuid: str = '',
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
+):
+    """Create item page."""
+    details = infra.parse.details_from_params(
+        params=request.query_params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
+
+    aim = domain.aim_from_params(dict(request.query_params))
+    query = infra.query_maker.from_request(request.query_params)
+
+    if not utils.is_valid_uuid(parent_uuid):
+        parent_uuid = ''
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim': aim,
+        'url': request.url_for('search'),
+        'parent_uuid': parent_uuid,
+        'query': infra.query_maker.QueryWrapper(query, details),
+    }
+
+    return dep.templates.TemplateResponse('item_create.html', context)
 
 
 def serialize_item(
@@ -42,7 +75,7 @@ def serialize_item(
 
 @router.get('/{uuid}')
 @web.login_required
-async def app_item_edit(
+async def app_item_update(
         request: Request,
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
@@ -86,3 +119,46 @@ async def app_item_edit(
     }
 
     return dep.templates.TemplateResponse('item_update.html', context)
+
+
+@router.get('/{uuid}')
+@web.login_required
+async def app_item_delete(
+        request: Request,
+        uuid: UUID,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.AppItemDeleteUseCase = Depends(
+            dep.app_item_delete_use_case),
+        config: Config = Depends(dep.config),
+):
+    """Delete item page."""
+    details = infra.parse.details_from_params(
+        params=request.query_params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
+
+    aim = domain.aim_from_params(dict(request.query_params))
+    query = infra.query_maker.from_request(request.query_params)
+
+    result = await use_case.execute(policy, user, uuid)
+
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error, uuid)
+
+    item, total = result.value
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim': aim,
+        'current_item': item,
+        'item': item,
+        'url': request.url_for('search'),
+        'uuid': uuid,
+        'total': utils.sep_digits(total),
+        'query': infra.query_maker.QueryWrapper(query, details),
+    }
+
+    return dep.templates.TemplateResponse('item_delete.html', context)
