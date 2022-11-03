@@ -2,18 +2,22 @@
 """Routes related to item creation.
 """
 import fastapi
-from fastapi import Depends, Request
-from starlette import status
+from fastapi import Depends
+from fastapi import Request
 
-from omoide import domain, utils
+from omoide import domain
+from omoide import utils
+from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants
+from omoide.presentation import infra
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/items/create')
+@web.login_required
 async def create_item(
         request: Request,
         parent_uuid: str = '',
@@ -21,13 +25,6 @@ async def create_item(
         config: Config = Depends(dep.config),
 ):
     """Create item page."""
-    if user.is_anon():  # TODO - move it to a separate decorator
-        raise fastapi.HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect login or password',
-            headers={'WWW-Authenticate': 'Basic realm="omoide"'},
-        )
-
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,

@@ -22,6 +22,7 @@ router = fastapi.APIRouter(prefix='/items/delete')
 
 
 @router.get('/{uuid}')
+@web.login_required
 async def app_item_delete(
         request: Request,
         uuid: UUID,

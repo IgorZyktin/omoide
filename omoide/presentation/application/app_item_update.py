@@ -41,6 +41,7 @@ def serialize_item(
 
 
 @router.get('/{uuid}')
+@web.login_required
 async def app_item_edit(
         request: Request,
         uuid: UUID,
