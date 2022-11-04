@@ -42,7 +42,7 @@ class AbsUsersRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_all_users(
             self,
-            uuids: list[UUID | str],
+            uuids: list[UUID],
     ) -> list[domain.User]:
         """Return list of users with given uuids."""
 

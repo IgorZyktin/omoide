@@ -80,13 +80,13 @@ class UsersRepository(interfaces.AbsUsersRepository):
 
     async def read_all_users(
             self,
-            uuids: list[UUID | str],
+            uuids: list[UUID],
     ) -> list[domain.User]:
         """Return list of users with given uuids."""
         stmt = sqlalchemy.select(
             models.User
         ).where(
-            models.User.uuid.in_(tuple(uuids))  # noqa
+            models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
         )
 
         response = await self.db.fetch_all(stmt)

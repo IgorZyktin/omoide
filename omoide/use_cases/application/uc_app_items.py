@@ -43,6 +43,9 @@ class AppItemCreateUseCase:
             if parent_uuid is None:
                 parent_uuid = user.root_item
 
+            if parent_uuid is None:
+                return Failure(errors.ItemDoesNotExist(uuid=parent_uuid))
+
             error = await policy.is_restricted(user, parent_uuid,
                                                actions.Item.CREATE)
             if error:
@@ -91,9 +94,8 @@ class AppItemUpdateUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             total = await self.items_repo.count_all_children(uuid)
-            users: list[str | UUID] = [
-                str(x) for x in (item.permissions or [])
-            ]
+
+            users: list[UUID] = [UUID(x) for x in (item.permissions or [])]
             permissions = await self.users_repo.read_all_users(users)
 
         return Success((item, total, permissions))
