@@ -20,7 +20,6 @@ def main():
         'omoide.presentation.app:app',
         host=config.host,
         port=8080,
-        debug=True,
         reload=True,
     )
 
