@@ -2,12 +2,17 @@
 """Routes related to media upload.
 """
 import fastapi
-from fastapi import Depends, Request
+from fastapi import Depends
+from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 
-from omoide import domain, utils
+from omoide import domain
+from omoide import utils
+from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants, web
+from omoide.presentation import infra
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
@@ -20,7 +25,7 @@ async def upload(
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Upload media page."""
     details = infra.parse.details_from_params(
@@ -39,7 +44,7 @@ async def upload(
         'config': config,
         'user': user,
         'aim': aim,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'parent_uuid': parent_uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
     }

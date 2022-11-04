@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
+from fastapi.responses import Response
 from fastapi.security import HTTPBasic
 from fastapi.security import HTTPBasicCredentials
 from starlette import status
@@ -23,17 +24,17 @@ security = HTTPBasic(realm='omoide')
 
 
 @router.get('/login')
-async def login(
+async def app_login(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         credentials: HTTPBasicCredentials = Depends(security),
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
-        response_class=RedirectResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Ask user for login and password."""
-    url = request.url_for('search')
+    url = request.url_for('app_search')
 
     if not user.is_anon():
         # already logged in
@@ -52,10 +53,10 @@ async def login(
 
 
 @router.get('/logout')
-async def logout(
+async def app_logout(
         request: Request,
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Clear authorization."""
     details = infra.parse.details_from_params(
@@ -71,7 +72,7 @@ async def logout(
         'config': config,
         'user': domain.User.new_anon(),
         'aim': aim,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 

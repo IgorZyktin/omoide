@@ -3,11 +3,9 @@
 """
 from omoide import domain
 from omoide.domain import interfaces
-from omoide.storage.repositories import base
 
 
 class SearchRepository(
-    base.BaseRepository,
     interfaces.AbsSearchRepository,
 ):
     """Repository that performs all search queries."""

@@ -8,6 +8,7 @@ import ujson
 from fastapi import Depends
 from fastapi import Request
 from starlette.responses import HTMLResponse
+from starlette.responses import Response
 
 from omoide import domain
 from omoide import use_cases
@@ -33,6 +34,7 @@ async def app_item_create(
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
         config: Config = Depends(dep.config),
+        response_class: Response = HTMLResponse,
 ):
     """Create item page."""
     details = infra.parse.details_from_params(
@@ -56,7 +58,7 @@ async def app_item_create(
         'config': config,
         'user': user,
         'aim': aim,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'parent': parent,
         'permissions': permissions,
         'query': infra.query_maker.QueryWrapper(query, details),
@@ -92,7 +94,7 @@ async def app_item_update(
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Edit item page."""
     details = infra.parse.details_from_params(
@@ -119,7 +121,7 @@ async def app_item_update(
         'item': item,
         'total': utils.sep_digits(total),
         'permissions': permissions,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'query': infra.query_maker.QueryWrapper(query, details),
         'model': ujson.dumps(serialize_item(item), ensure_ascii=False),
         'initial_permissions': ujson.dumps([
@@ -140,6 +142,7 @@ async def app_item_delete(
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.config),
+        response_class: Response = HTMLResponse,
 ):
     """Delete item page."""
     details = infra.parse.details_from_params(
@@ -164,7 +167,7 @@ async def app_item_delete(
         'aim': aim,
         'current_item': item,
         'item': item,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'uuid': uuid,
         'total': utils.sep_digits(total),
         'query': infra.query_maker.QueryWrapper(query, details),

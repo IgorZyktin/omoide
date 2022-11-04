@@ -11,7 +11,7 @@ from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
 from omoide.storage.repositories.asyncpg.rp_users import UsersRepository
-from omoide.use_cases.api import uc_users
+from omoide.use_cases import CreateUserUseCase
 
 
 @click.group()
@@ -26,8 +26,8 @@ def cli():
               help='Name for new user (if not specified will use login)')
 def cmd_create_user(login: str, password: str, name: Optional[str]):
     """Manually create user."""
-    use_case = uc_users.CreateUserUseCase(
-        items_repo=dep.items_repository,
+    use_case = CreateUserUseCase(
+        items_repo=dep.items_write_repository,
         users_repo=UsersRepository(dep.db),
     )
 
@@ -40,7 +40,7 @@ def cmd_create_user(login: str, password: str, name: Optional[str]):
     async def _coro():
         print('Going to create new user')
         await dep.db.connect()
-        result = await use_case.execute(dep.current_authenticator, raw_user)
+        result = await use_case.execute(dep.get_authenticator(), raw_user)
         await dep.db.disconnect()
 
         if isinstance(result, Failure):
@@ -66,7 +66,7 @@ def cmd_change_password(uuid: str, password: str):
             print(f'User with uuid {uuid} does not exist')
             return
 
-        user.password = dep.current_authenticator.encode_password(
+        user.password = dep.get_authenticator().encode_password(
             password).decode()
 
         await users_repo.update_user(user)

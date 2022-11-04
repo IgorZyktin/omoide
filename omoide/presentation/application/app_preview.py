@@ -2,27 +2,37 @@
 """Preview related routes.
 """
 import fastapi
-from fastapi import Depends, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import Depends
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 
-from omoide import use_cases, domain
-from omoide.domain import auth, exceptions
+from omoide import domain
+from omoide import use_cases
+from omoide import utils
+from omoide.domain import auth
+from omoide.domain import errors
+from omoide.domain import interfaces
+from omoide.infra.special_types import Failure
 from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/preview/{uuid}')
-async def preview(
+async def app_preview(
         request: Request,
         uuid: str,
         user: auth.User = Depends(dep.get_current_user),
-        use_case: use_cases.PreviewUseCase = Depends(dep.app_preview_use_case),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.AppPreviewUseCase = Depends(
+            dep.app_preview_use_case),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
     details = infra.parse.details_from_params(
@@ -30,20 +40,20 @@ async def preview(
         items_per_page=constants.ITEMS_PER_PAGE,
     )
 
-    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
+    aim = domain.aim_from_params(dict(request.query_params))
 
-    try:
-        valid_uuid = infra.parse.cast_uuid(uuid)
-        result = await use_case.execute(user, valid_uuid, details)
-    except exceptions.IncorrectUUID:
-        return RedirectResponse(request.url_for('bad_request'))
-    except exceptions.NotFound:
-        return RedirectResponse(request.url_for('not_found') + f'?q={uuid}')
-    except exceptions.Unauthorized:
-        return RedirectResponse(request.url_for('unauthorized') + f'?q={uuid}')
-    except exceptions.Forbidden:
-        return RedirectResponse(request.url_for('forbidden') + f'?q={uuid}')
+    valid_uuid = utils.cast_uuid(uuid)
+
+    if valid_uuid is None:
+        _result = Failure(errors.InvalidUUID(uuid=uuid))
+    else:
+        _result = await use_case.execute(policy, user, valid_uuid, details)
+
+    if isinstance(_result, Failure):
+        return web.redirect_from_error(request, _result.error, valid_uuid)
+
+    result = _result.value
 
     # TODO: put it inside use case
     tags: set[str] = set()
@@ -67,5 +77,8 @@ async def preview(
         ),
         'current_item': result.item,
         'tags': sorted(tags),
+        'block_ordered': True,
+        'block_nested': True,
+        'block_paginated': True,
     }
     return dep.templates.TemplateResponse('preview.html', context)

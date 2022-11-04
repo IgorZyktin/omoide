@@ -3,19 +3,28 @@
 """
 import abc
 
-from omoide.domain import common, auth
-from omoide.domain.interfaces.repositories.base import AbsRepository
+from omoide.domain import auth
+from omoide.domain import common
+from omoide.domain.interfaces.in_storage.in_repositories.in_rp_base import \
+    AbsBaseRepository
 
 
-class AbsSearchRepository(AbsRepository):
+class AbsSearchRepository(
+    AbsBaseRepository,
+):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def total_random_anon(self) -> int:
+    async def total_random_anon(
+            self
+    ) -> int:
         """Count all available items for unauthorised user."""
 
     @abc.abstractmethod
-    async def total_specific_anon(self, query: common.Query) -> int:
+    async def total_specific_anon(
+            self,
+            query: common.Query,
+    ) -> int:
         """Count specific available items for unauthorised user."""
 
     @abc.abstractmethod

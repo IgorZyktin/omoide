@@ -25,9 +25,9 @@ def to_simple_item(
 ) -> dict:
     """Convert Item object into simple renderable form."""
     if item.is_collection:
-        href = request.url_for('browse', uuid=item.uuid)
+        href = request.url_for('app_browse', uuid=item.uuid)
     else:
-        href = request.url_for('preview', uuid=item.uuid)
+        href = request.url_for('app_preview', uuid=item.uuid)
 
     if item.thumbnail_ext is None:
         thumbnail = empty_href

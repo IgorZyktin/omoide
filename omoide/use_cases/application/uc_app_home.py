@@ -4,28 +4,30 @@
 from omoide import domain
 from omoide.domain import interfaces
 
+from omoide.infra.special_types import Success
+
 __all__ = [
-    'HomeUseCase',
+    'AppHomeUseCase',
 ]
 
 
-class HomeUseCase:
+class AppHomeUseCase:
     """Use case for home page."""
 
-    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
+    def __init__(self, browse_repo: interfaces.AbsBrowseRepository) -> None:
         """Initialize instance."""
-        self._repo = repo
+        self.browse_repo = browse_repo
 
     async def execute(
             self,
             user: domain.User,
             aim: domain.Aim,
-    ) -> list[domain.Item]:
+    ) -> Success[list[domain.Item]]:
         """Perform request for home directory."""
-        async with self._repo.transaction():
-            items = await self._repo.simple_find_items_to_browse(
+        async with self.browse_repo.transaction():
+            items = await self.browse_repo.simple_find_items_to_browse(
                 user=user,
                 uuid=None,
                 aim=aim,
             )
-        return items
+        return Success(items)

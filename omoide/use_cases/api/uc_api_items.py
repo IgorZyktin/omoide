@@ -31,7 +31,7 @@ class BaseItemUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
+            items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
@@ -57,7 +57,7 @@ class ApiItemCreateUseCase(BaseItemUseCase):
             if error:
                 return Failure(error)
 
-            payload.uuid = await self.items_repo.generate_uuid()
+            payload.uuid = await self.items_repo.generate_item_uuid()
             uuid = await self.items_repo.create_item(user, payload)
             await self.metainfo_repo.create_empty_metainfo(user, uuid)
 
@@ -218,7 +218,7 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
+            items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: interfaces.AbsMediaRepository,
     ) -> None:
@@ -284,7 +284,7 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
+            items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: interfaces.AbsMediaRepository,
     ) -> None:

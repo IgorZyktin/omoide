@@ -4,12 +4,15 @@
 import http
 
 import fastapi
-from fastapi import Request, Depends
+from fastapi import Depends
+from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 
 from omoide import domain
+from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants
+from omoide.presentation import infra
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
@@ -20,7 +23,7 @@ async def not_found(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Show <not found> page."""
     details = infra.parse.details_from_params(
@@ -50,7 +53,7 @@ async def unauthorized(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Show <unauthorized> page."""
     details = infra.parse.details_from_params(
@@ -80,7 +83,7 @@ async def forbidden(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Show <forbidden> page."""
     details = infra.parse.details_from_params(
@@ -110,7 +113,7 @@ async def bad_request(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Show <bad request> page."""
     details = infra.parse.details_from_params(

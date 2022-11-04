@@ -2,15 +2,15 @@
 """Repository that perform CRUD operations on users and their data.
 """
 import abc
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
+from omoide.domain.interfaces.in_storage \
+    .in_repositories import in_rp_users_read
 from omoide.presentation import api_models
 
 
-class AbsUsersRepository(in_rp_base.AbsBaseRepository):
+class AbsUsersRepository(in_rp_users_read.AbsUsersReadRepository):
     """Repository that perform CRUD operations on users and their data."""
 
     @abc.abstractmethod
@@ -24,27 +24,6 @@ class AbsUsersRepository(in_rp_base.AbsBaseRepository):
             password: bytes,
     ) -> UUID:
         """Create user and return UUID."""
-
-    @abc.abstractmethod
-    async def read_user(
-            self,
-            uuid: UUID,
-    ) -> Optional[domain.User]:
-        """Return User or None."""
-
-    @abc.abstractmethod
-    async def read_user_by_login(
-            self,
-            login: str,
-    ) -> Optional[domain.User]:
-        """Return User or None."""
-
-    @abc.abstractmethod
-    async def read_all_users(
-            self,
-            uuids: list[UUID],
-    ) -> list[domain.User]:
-        """Return list of users with given uuids."""
 
     @abc.abstractmethod
     async def update_user(

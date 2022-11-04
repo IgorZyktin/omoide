@@ -12,18 +12,11 @@ from omoide.presentation import api
 from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
-from omoide.presentation.application import app_item
-from omoide.presentation.application import auth
-from omoide.presentation.application import preview
-from omoide.presentation.application import profile
-from omoide.presentation.application import search
-from omoide.presentation.application import special
-from omoide.presentation.application import upload
 
 app = fastapi.FastAPI(
-    openapi_url=None,
-    docs_url=None,
-    redoc_url=None,
+    # openapi_url=None,
+    # docs_url=None,
+    # redoc_url=None,
 )
 
 
@@ -39,24 +32,24 @@ async def shutdown():
     await dep.db.disconnect()
 
 
-app.include_router(auth.router)
-app.include_router(preview.router)
-app.include_router(search.router)
-app.include_router(special.router)
-app.include_router(profile.router)
-app.include_router(upload.router)
+app.include_router(application.auth.router)
+app.include_router(application.special.router)
+app.include_router(application.profile.router)
+app.include_router(application.upload.router)
 
 # API routes
-app.include_router(api.browse.router)
-app.include_router(api.home.router)
+app.include_router(api.api_browse.router)
+app.include_router(api.api_home.router)
 app.include_router(api.api_exif.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)
 app.include_router(api.api_metainfo.router)
 
 # Application routes
-app.include_router(application.browse.router)
-app.include_router(application.home.router)
+app.include_router(application.app_search.router)
+app.include_router(application.app_browse.router)
+app.include_router(application.app_preview.router)
+app.include_router(application.app_home.router)
 app.include_router(application.app_item.router)
 
 app.mount(
