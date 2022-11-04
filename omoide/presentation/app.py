@@ -13,10 +13,10 @@ from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
 from omoide.presentation.application import app_item
-from omoide.presentation.application import auth
 from omoide.presentation.application import app_preview
+from omoide.presentation.application import app_search
+from omoide.presentation.application import auth
 from omoide.presentation.application import profile
-from omoide.presentation.application import search
 from omoide.presentation.application import special
 from omoide.presentation.application import upload
 
@@ -40,7 +40,6 @@ async def shutdown():
 
 
 app.include_router(auth.router)
-app.include_router(search.router)
 app.include_router(special.router)
 app.include_router(profile.router)
 app.include_router(upload.router)
@@ -54,6 +53,7 @@ app.include_router(api.api_media.router)
 app.include_router(api.api_metainfo.router)
 
 # Application routes
+app.include_router(application.app_search.router)
 app.include_router(application.app_browse.router)
 app.include_router(application.app_preview.router)
 app.include_router(application.home.router)

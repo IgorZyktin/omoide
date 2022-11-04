@@ -2,21 +2,21 @@
 """Search related routes.
 """
 import fastapi
-from fastapi import Depends, Request
+from fastapi import Depends
+from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import use_cases
+from omoide.infra.special_types import Failure
 from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
 from omoide.presentation import utils
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
-
-templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 
 @router.get('/search')
@@ -34,10 +34,15 @@ async def search(
         items_per_page_async=constants.ITEMS_PER_UPLOAD,
     )
 
-    aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
+    aim = domain.aim_from_params(dict(request.query_params))
 
-    result, is_random = await use_case.execute(user, query, details)
+    _result = await use_case.execute(user, query, details)
+
+    if isinstance(_result, Failure):
+        return web.redirect_from_error(request, _result.error)
+
+    result, is_random = _result.value
 
     if is_random:
         template = 'search_random.html'

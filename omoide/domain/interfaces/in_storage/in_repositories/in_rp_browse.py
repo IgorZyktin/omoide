@@ -7,14 +7,14 @@ from uuid import UUID
 
 from omoide import domain
 from omoide.domain import common
-from omoide.domain.interfaces.in_storage.in_repositories import \
-    in_rp_base
-from omoide.domain.interfaces.in_storage.in_repositories import \
-    in_rp_users_read
+from omoide.domain.interfaces.in_storage \
+    .in_repositories.in_rp_base import AbsBaseRepository
+from omoide.domain.interfaces.in_storage \
+    .in_repositories.in_rp_users_read import AbsUsersReadRepository
 
 
 class AbsBrowseRepository(
-    in_rp_base.AbsBaseRepository
+    AbsBaseRepository
 ):
     """Repository that performs all browse queries."""
 
@@ -65,7 +65,7 @@ class AbsBrowseRepository(
             user: domain.User,
             uuid: UUID,
             details: common.Details,
-            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            users_repo: AbsUsersReadRepository,
     ) -> Optional[common.Location]:
         """Return Location of the item."""
 

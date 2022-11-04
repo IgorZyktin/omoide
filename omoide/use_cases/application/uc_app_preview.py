@@ -11,6 +11,10 @@ from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 
+__all__ = [
+    'AppPreviewUseCase',
+]
+
 
 class AppPreviewUseCase:
     """Use case for preview."""

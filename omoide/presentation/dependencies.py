@@ -21,9 +21,7 @@ from omoide.storage.repositories import asyncpg
 _config = app_config.init()
 db = Database(_config.db_url.get_secret_value())
 
-search_repository = repositories.SearchRepository(db)
-search_use_case = use_cases.SearchUseCase(search_repository)
-
+search_repository = asyncpg.SearchRepository(db)
 preview_repository = asyncpg.PreviewRepository(db)
 browse_repository = asyncpg.BrowseRepository(db)
 
@@ -109,9 +107,11 @@ async def get_current_user(
 # application related use cases -----------------------------------------------
 
 
-def get_search_use_case():
+def get_search_use_case() -> use_cases.SearchUseCase:
     """Get use case instance."""
-    return search_use_case
+    return use_cases.SearchUseCase(
+        search_repo=search_repository,
+    )
 
 
 def app_preview_use_case() -> use_cases.AppPreviewUseCase:

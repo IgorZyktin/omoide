@@ -45,14 +45,14 @@ async def preview(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        result = Failure(errors.InvalidUUID(uuid=uuid))
+        _result = Failure(errors.InvalidUUID(uuid=uuid))
     else:
-        result = await use_case.execute(policy, user, valid_uuid, details)
+        _result = await use_case.execute(policy, user, valid_uuid, details)
 
-    if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, valid_uuid)
+    if isinstance(_result, Failure):
+        return web.redirect_from_error(request, _result.error, valid_uuid)
 
-    result = result.value
+    result = _result.value
 
     # TODO: put it inside use case
     tags: set[str] = set()

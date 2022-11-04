@@ -12,6 +12,8 @@ from omoide.domain.interfaces.in_storage \
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_preview import AbsPreviewRepository
 from omoide.domain.interfaces.in_storage \
+    .in_repositories.in_rp_search import AbsSearchRepository
+from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_users import AbsUsersRepository
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_users_read import AbsUsersReadRepository
@@ -21,4 +23,3 @@ from omoide.domain.interfaces.repositories.base import AbsRepository
 from omoide.domain.interfaces.repositories.in_rp_items import (
     AbsItemsRepository
 )
-from omoide.domain.interfaces.repositories.search import AbsSearchRepository
