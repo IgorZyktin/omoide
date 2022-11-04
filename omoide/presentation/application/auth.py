@@ -34,7 +34,7 @@ async def app_login(
         response_class: Response = HTMLResponse,
 ):
     """Ask user for login and password."""
-    url = request.url_for('search')
+    url = request.url_for('app_search')
 
     if not user.is_anon():
         # already logged in
@@ -72,7 +72,7 @@ async def app_logout(
         'config': config,
         'user': domain.User.new_anon(),
         'aim': aim,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 

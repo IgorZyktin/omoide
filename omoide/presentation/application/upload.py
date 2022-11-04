@@ -44,7 +44,7 @@ async def upload(
         'config': config,
         'user': user,
         'aim': aim,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'parent_uuid': parent_uuid,
         'query': infra.query_maker.QueryWrapper(query, details),
     }

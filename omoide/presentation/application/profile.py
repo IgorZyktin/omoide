@@ -45,7 +45,7 @@ async def app_profile(
         'config': config,
         'user': user,
         'aim': aim,
-        'url': request.url_for('search'),
+        'url': request.url_for('app_search'),
         'query': infra.query_maker.QueryWrapper(query, details),
     }
 
