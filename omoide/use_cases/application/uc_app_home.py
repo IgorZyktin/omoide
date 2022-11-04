@@ -4,6 +4,8 @@
 from omoide import domain
 from omoide.domain import interfaces
 
+from omoide.infra.special_types import Success
+
 __all__ = [
     'AppHomeUseCase',
 ]
@@ -20,7 +22,7 @@ class AppHomeUseCase:
             self,
             user: domain.User,
             aim: domain.Aim,
-    ) -> list[domain.Item]:
+    ) -> Success[list[domain.Item]]:
         """Perform request for home directory."""
         async with self.browse_repo.transaction():
             items = await self.browse_repo.simple_find_items_to_browse(
@@ -28,4 +30,4 @@ class AppHomeUseCase:
                 uuid=None,
                 aim=aim,
             )
-        return items
+        return Success(items)

@@ -46,7 +46,7 @@ app.include_router(upload.router)
 
 # API routes
 app.include_router(api.api_browse.router)
-app.include_router(api.home.router)
+app.include_router(api.api_home.router)
 app.include_router(api.api_exif.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)
@@ -56,7 +56,7 @@ app.include_router(api.api_metainfo.router)
 app.include_router(application.app_search.router)
 app.include_router(application.app_browse.router)
 app.include_router(application.app_preview.router)
-app.include_router(application.home.router)
+app.include_router(application.app_home.router)
 app.include_router(application.app_item.router)
 
 app.mount(

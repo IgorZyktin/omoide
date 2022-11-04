@@ -2,17 +2,15 @@
 """Hope page related routes.
 """
 import fastapi
-from fastapi import Depends, Request
+from fastapi import Depends
+from fastapi import Request
 from fastapi.responses import HTMLResponse
-from starlette.templating import Jinja2Templates
 
 from omoide import domain
 from omoide.presentation import dependencies as dep
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
-
-templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 
 @router.get('/')
