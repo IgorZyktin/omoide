@@ -17,7 +17,7 @@ class CreateUserUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
+            items_repo: interfaces.AbsItemsWriteRepository,
             users_repo: interfaces.AbsUsersRepository,
     ) -> None:
         """Initialize instance."""
@@ -45,7 +45,7 @@ class CreateUserUseCase:
             if user is None:
                 return Failure(errors.UserDoesNotExist(uuid=uuid))
 
-            item_uuid = await self.items_repo.generate_uuid()
+            item_uuid = await self.items_repo.generate_item_uuid()
             raw_item = api_models.CreateItemIn(
                 uuid=item_uuid,
                 parent_uuid=None,

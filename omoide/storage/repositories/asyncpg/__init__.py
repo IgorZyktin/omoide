@@ -6,6 +6,8 @@ from omoide.storage.repositories.asyncpg \
 from omoide.storage.repositories.asyncpg \
     .rp_items_read import ItemsReadRepository
 from omoide.storage.repositories.asyncpg \
+    .rp_items_write import ItemsWriteRepository
+from omoide.storage.repositories.asyncpg \
     .rp_media import MediaRepository
 from omoide.storage.repositories.asyncpg \
     .rp_metainfo import MetainfoRepository

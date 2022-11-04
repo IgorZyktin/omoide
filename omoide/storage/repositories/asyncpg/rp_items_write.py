@@ -1,30 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Repository that perform CRUD operations on items and their data.
+"""Repository that performs write operations on items.
 """
 import time
 from typing import Awaitable
 from typing import Callable
-from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 
 import sqlalchemy
 
 from omoide import domain
-from omoide.domain import exceptions
-from omoide.domain.interfaces import repositories as repo_interfaces
+from omoide.domain import interfaces
 from omoide.presentation import api_models
-from omoide.storage import repositories as repo_implementations
 from omoide.storage.database import models
+from omoide.storage.repositories.asyncpg.rp_items_read import \
+    ItemsReadRepository
 
 
-class ItemsRepository(
-    repo_implementations.BaseRepository,
-    repo_interfaces.AbsItemsRepository,
+class ItemsWriteRepository(
+    ItemsReadRepository,
+    interfaces.AbsItemsWriteRepository,
 ):
-    """Repository that perform CRUD operations on items and their data."""
+    """Repository that performs write operations on items."""
 
-    async def generate_uuid(self) -> UUID:
+    async def generate_item_uuid(self) -> UUID:
         """Generate new UUID4 for an item."""
         # TODO(i.zyktin): must also check zombies table
         stmt = """
@@ -36,67 +35,6 @@ class ItemsRepository(
 
             if not exists:
                 return uuid
-
-    async def check_access(
-            self,
-            user: domain.User,
-            uuid: UUID,
-    ) -> domain.AccessStatus:
-        """Check access to the item."""
-        query = """
-        SELECT owner_uuid,
-               exists(SELECT 1
-                      FROM public_users pu
-                      WHERE pu.user_uuid = i.owner_uuid)  AS is_public,
-               (SELECT :user_uuid = ANY (cp.permissions)) AS is_permitted,
-               owner_uuid::text = :user_uuid AS is_owner
-        FROM items i
-                 LEFT JOIN computed_permissions cp ON cp.item_uuid = i.uuid
-        WHERE uuid = :uuid;
-        """
-
-        values = {
-            'user_uuid': str(user.uuid),
-            'uuid': str(uuid),
-        }
-        response = await self.db.fetch_one(query, values)
-
-        if response is None:
-            return domain.AccessStatus.not_found()
-
-        return domain.AccessStatus(
-            exists=True,
-            is_public=bool(response['is_public']),
-            is_permitted=bool(response['is_permitted']),
-            is_owner=bool(response['is_owner']),
-        )
-
-    async def assert_has_access(
-            self,
-            user: domain.User,
-            uuid: UUID,
-            only_for_owner: bool,
-    ) -> None:
-        """Raise if item does not exist or user has no access to it."""
-        access = await self.check_access(user, uuid)
-
-        if access.does_not_exist:
-            raise exceptions.NotFound(f'Item {uuid} does not exist')
-
-        if access.is_not_given:
-            if user.is_anon():
-                raise exceptions.Unauthorized(
-                    f'Anon user has no access to {uuid}'
-                )
-            else:
-                raise exceptions.Forbidden(
-                    f'User {user.uuid} ({user.name}) '
-                    f'has no access to {uuid}'
-                )
-
-        if access.is_not_owner and only_for_owner:
-            raise exceptions.Forbidden(f'You must own item {uuid} '
-                                       'to be able to modify it')
 
     async def create_item(
             self,
@@ -147,43 +85,6 @@ class ItemsRepository(
 
         return await self.db.execute(stmt, values)
 
-    async def read_item(
-            self,
-            uuid: UUID,
-    ) -> Optional[domain.Item]:
-        """Return item or None."""
-        stmt = sqlalchemy.select(
-            models.Item
-        ).where(
-            models.Item.uuid == uuid
-        )
-
-        response = await self.db.fetch_one(stmt)
-
-        return domain.Item(**response) if response else None
-
-    async def read_children(
-            self,
-            uuid: UUID,
-    ) -> list[domain.Item]:
-        """Return all direct descendants of the given item."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE parent_uuid = :uuid;
-        """
-
-        response = await self.db.fetch_all(stmt, {'uuid': str(uuid)})
-        return [domain.Item.from_map(each) for each in response]
-
     async def update_item(
             self,
             item: domain.Item,
@@ -225,7 +126,9 @@ class ItemsRepository(
             models.Item
         ).where(
             models.Item.uuid == uuid
-        ).returning(1)
+        ).returning(
+            1
+        )
 
         response = await self.db.fetch_one(stmt)
 
@@ -271,7 +174,7 @@ class ItemsRepository(
         print(f'Started updating tags in children of {item.uuid}')
 
         async def _update_tags(
-                _self: ItemsRepository,
+                _self: ItemsWriteRepository,
                 _item: domain.Item,
         ) -> None:
             """Alter tags with themselves.
@@ -309,7 +212,7 @@ class ItemsRepository(
             seen_items: set[UUID],
             skip_items: set[UUID],
             parent_first: bool,
-            function: Callable[['ItemsRepository',
+            function: Callable[['ItemsWriteRepository',
                                 domain.Item], Awaitable[None]],
     ) -> None:
         """Apply given function to every descendant item.
@@ -347,7 +250,7 @@ class ItemsRepository(
             self,
             item: domain.Item,
             top_first: bool,
-            function: Callable[['ItemsRepository',
+            function: Callable[['ItemsWriteRepository',
                                 domain.Item], Awaitable[None]],
     ) -> None:
         """Apply given function to every ancestor item.
@@ -421,7 +324,7 @@ class ItemsRepository(
         print(f'Started updating permissions in parents of {item.uuid}')
 
         async def _update_permissions(
-                _self: ItemsRepository,
+                _self: ItemsWriteRepository,
                 _item: domain.Item,
         ) -> None:
             """Alter permissions."""

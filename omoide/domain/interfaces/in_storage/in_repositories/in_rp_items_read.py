@@ -26,3 +26,10 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return Item or None."""
+
+    @abc.abstractmethod
+    async def read_children(
+            self,
+            uuid: UUID,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""

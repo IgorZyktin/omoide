@@ -24,8 +24,8 @@ class AppItemCreateUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
-            users_repo: interfaces.AbsUsersRepository,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -67,8 +67,8 @@ class AppItemUpdateUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepository,
-            users_repo: interfaces.AbsUsersRepository,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -104,7 +104,10 @@ class AppItemUpdateUseCase:
 class AppItemDeleteUseCase:
     """Use item deletion page."""
 
-    def __init__(self, items_repo: interfaces.AbsItemsRepository) -> None:
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+    ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
 

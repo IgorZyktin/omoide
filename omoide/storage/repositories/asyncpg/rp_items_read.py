@@ -62,3 +62,25 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         response = await self.db.fetch_one(stmt)
 
         return domain.Item(**response) if response else None
+
+    async def read_children(
+            self,
+            uuid: UUID,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""
+        stmt = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items
+        WHERE parent_uuid = :uuid;
+        """
+
+        response = await self.db.fetch_all(stmt, {'uuid': str(uuid)})
+        return [domain.Item(**each) for each in response]

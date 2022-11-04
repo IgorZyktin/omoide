@@ -27,7 +27,7 @@ def cli():
 def cmd_create_user(login: str, password: str, name: Optional[str]):
     """Manually create user."""
     use_case = CreateUserUseCase(
-        items_repo=dep.items_repository,
+        items_repo=dep.items_write_repository,
         users_repo=UsersRepository(dep.db),
     )
 

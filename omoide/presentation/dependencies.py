@@ -15,7 +15,6 @@ from omoide import use_cases
 from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.presentation import app_config
-from omoide.storage import repositories
 from omoide.storage.repositories import asyncpg
 
 _config = app_config.init()
@@ -28,8 +27,8 @@ browse_repository = asyncpg.BrowseRepository(db)
 users_repository = asyncpg.UsersRepository(db)
 users_read_repository = asyncpg.UsersReadRepository(db)
 
-items_repository = repositories.ItemsRepository(db)  # FIXME
 items_read_repository = asyncpg.ItemsReadRepository(db)
+items_write_repository = asyncpg.ItemsWriteRepository(db)
 
 media_repository = asyncpg.MediaRepository(db)
 exif_repository = asyncpg.EXIFRepository(db)
@@ -144,17 +143,25 @@ def app_home_use_case() -> use_cases.AppHomeUseCase:
 
 def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
     """Get use case instance."""
-    return use_cases.AppItemCreateUseCase(items_repository, users_repository)
+    return use_cases.AppItemCreateUseCase(
+        items_repo=items_write_repository,
+        users_repo=users_read_repository,
+    )
 
 
 def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
-    return use_cases.AppItemUpdateUseCase(items_repository, users_repository)
+    return use_cases.AppItemUpdateUseCase(
+        items_repo=items_write_repository,
+        users_repo=users_read_repository,
+    )
 
 
 def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
     """Get use case instance."""
-    return use_cases.AppItemDeleteUseCase(items_repository)
+    return use_cases.AppItemDeleteUseCase(
+        items_repo=items_write_repository,
+    )
 
 
 # api item related use cases --------------------------------------------------
@@ -162,48 +169,62 @@ def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
 
 def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemCreateUseCase(items_repository,
-                                          metainfo_repository)
+    return use_cases.ApiItemCreateUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
 
 
 def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemReadUseCase(items_repository,
-                                        metainfo_repository)
+    return use_cases.ApiItemReadUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
 
 
 # TODO: remove this
 def update_item_use_case() -> use_cases.UpdateItemUseCase:
     """Get use case instance."""
-    return use_cases.UpdateItemUseCase(items_repository,
-                                       metainfo_repository)
+    return use_cases.UpdateItemUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
 
 
 def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
-    return use_cases.ApiCopyThumbnailUseCase(items_repository,
-                                             metainfo_repository,
-                                             media_repository)
+    return use_cases.ApiCopyThumbnailUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+        media_repo=media_repository,
+    )
 
 
 def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterParentUseCase(items_repository,
-                                               metainfo_repository,
-                                               media_repository)
+    return use_cases.ApiItemAlterParentUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+        media_repo=media_repository,
+    )
 
 
 def api_item_alter_tags_use_case() -> use_cases.ApiItemAlterTagsUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterTagsUseCase(items_repository,
-                                             metainfo_repository)
+    return use_cases.ApiItemAlterTagsUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
 
 
 def api_item_alter_permissions_use_case() \
         -> use_cases.ApiItemAlterPermissionsUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterPermissionsUseCase(items_repository,
-                                                    metainfo_repository)
+    return use_cases.ApiItemAlterPermissionsUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
 
 
 # api related use cases -------------------------------------------------------
@@ -219,8 +240,10 @@ def api_browse_use_case() -> use_cases.APIBrowseUseCase:
 
 def api_item_delete_use_case() -> use_cases.ApiItemDeleteUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemDeleteUseCase(items_repository,
-                                          metainfo_repository)
+    return use_cases.ApiItemDeleteUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
 
 
 # api media related use cases -------------------------------------------------

@@ -1,39 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Repository that perform CRUD operations on items and their data.
+"""Repository that performs write operations on items.
 """
 import abc
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
-from omoide.domain.interfaces import repositories
+from omoide.domain.interfaces.in_storage \
+    .in_repositories.in_rp_items_read import AbsItemsReadRepository
 from omoide.presentation import api_models
 
 
-class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
-    """Repository that perform CRUD operations on items and their data."""
+class AbsItemsWriteRepository(AbsItemsReadRepository):
+    """Repository that performs write operations on items."""
 
     @abc.abstractmethod
-    async def generate_uuid(self) -> UUID:
-        """Generate new UUID4 for an item."""
-
-    @abc.abstractmethod
-    async def check_access(
-            self,
-            user: domain.User,
-            uuid: UUID,
-    ) -> domain.AccessStatus:
-        """Check if user has access to the item."""
-
-    # TODO - remove this
-    @abc.abstractmethod
-    async def assert_has_access(
-            self,
-            user: domain.User,
-            uuid: UUID,
-            only_for_owner: bool,
-    ) -> None:
-        """Raise if item does not exist or user has no access to it."""
+    async def generate_item_uuid(self) -> UUID:
+        """Generate new UUID4 for the item."""
 
     @abc.abstractmethod
     async def create_item(
@@ -42,21 +24,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
             payload: api_models.CreateItemIn,
     ) -> UUID:
         """Return UUID for created item."""
-
-    @abc.abstractmethod
-    async def read_item(
-            self,
-            uuid: UUID,
-    ) -> Optional[domain.Item]:
-        """Return item or None."""
-
-    # TODO - move to a separate repo
-    @abc.abstractmethod
-    async def read_children(
-            self,
-            uuid: UUID,
-    ) -> list[domain.Item]:
-        """Return all direct descendants of the given item."""
 
     @abc.abstractmethod
     async def update_item(
@@ -72,7 +39,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> bool:
         """Delete item with given UUID."""
 
-    # TODO - move to a separate repo
     @abc.abstractmethod
     async def count_all_children(
             self,
@@ -80,7 +46,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> int:
         """Count dependant items (including the parent itself)."""
 
-    # TODO - move to a separate repo
     @abc.abstractmethod
     async def update_tags_in_children(
             self,
@@ -88,7 +53,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
 
-    # TODO - move to a separate repo
     @abc.abstractmethod
     async def check_child(
             self,
@@ -97,7 +61,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> bool:
         """Return True if given item is actually a child."""
 
-    # TODO - move to a separate repo
     @abc.abstractmethod
     async def update_permissions_in_parents(
             self,
@@ -106,7 +69,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
     ) -> None:
         """Apply new permissions to every parent."""
 
-    # TODO - move to a separate repo
     @abc.abstractmethod
     async def update_permissions_in_children(
             self,
