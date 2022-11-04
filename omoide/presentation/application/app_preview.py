@@ -5,6 +5,7 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 
 from omoide import domain
 from omoide import use_cases
@@ -23,7 +24,7 @@ router = fastapi.APIRouter()
 
 
 @router.get('/preview/{uuid}')
-async def preview(
+async def app_preview(
         request: Request,
         uuid: str,
         user: auth.User = Depends(dep.get_current_user),
@@ -31,7 +32,7 @@ async def preview(
         use_case: use_cases.AppPreviewUseCase = Depends(
             dep.app_preview_use_case),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
     details = infra.parse.details_from_params(

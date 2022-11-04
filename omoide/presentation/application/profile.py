@@ -5,22 +5,24 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 from starlette import status
 
 from omoide import domain
+from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants
+from omoide.presentation import infra
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/profile')
-async def profile(
+async def app_profile(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Show user home page."""
     if user.is_anon():

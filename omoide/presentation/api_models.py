@@ -20,7 +20,7 @@ class PatchOperation(BaseModel):
     """Single operation in PATCH request."""
     op: str
     path: str
-    value: Any
+    value: str | None
 
 
 class CreateItemIn(BaseModel):
@@ -116,7 +116,7 @@ class CreateMediaIn(BaseModel):
 
 class EXIFIn(BaseModel):
     """Input info for EXIF creation."""
-    exif: dict[str, Any]
+    exif: dict[str, str | float | int | bool | None | list | dict]
 
 
 class MetaIn(BaseModel):

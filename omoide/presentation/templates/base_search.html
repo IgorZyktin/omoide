@@ -22,7 +22,7 @@
 <body>
 <div id="header">
     <div class="query-container">
-        <a href="{{ url_for('home') + aim.to_url() | safe }}"
+        <a href="{{ url_for('app_home') + aim.to_url() | safe }}"
            title="Clear search query and show random items"
            class="button">
             <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"
@@ -130,7 +130,7 @@
         {% endif %}
 
         {% if user.is_anon() %}
-            <a href="{{ url_for('login') }}"
+            <a href="{{ url_for('app_login') }}"
                title="Log in"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
@@ -139,7 +139,7 @@
                 <span class="wide-text">&nbsp;Login</span>
             </a>
         {% else %}
-            <a href="{{ url_for('profile') }}"
+            <a href="{{ url_for('app_profile') }}"
                title="Enter user profile"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"

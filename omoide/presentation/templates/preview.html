@@ -13,7 +13,7 @@
 
             {% if album.has_previous %}
                 <a class="preview-swipe"
-                   href="{{ url_for('preview', uuid=album.previous_item) }}">
+                   href="{{ url_for('app_preview', uuid=album.previous_item) }}">
                     <img src="{{ request.url_for('static', path='ic_arrow_back_24px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -33,7 +33,7 @@
 
             {% if album.has_next %}
                 <a class="preview-swipe"
-                   href="{{ url_for('preview', uuid=album.next_item) }}">
+                   href="{{ url_for('app_preview', uuid=album.next_item) }}">
                     <img src="{{ request.url_for('static', path='ic_arrow_forward_24px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -49,7 +49,7 @@
             {% for wrapper in result.location.items %}
                 {% if wrapper.item.name %}
                     <div class="tag-box tag-box-item">
-                        <a href="{{ url_for('search') }}?q={{ wrapper.item.uuid }}">{{ wrapper.item.name }}</a>
+                        <a href="{{ url_for('app_search') }}?q={{ wrapper.item.uuid }}">{{ wrapper.item.name }}</a>
                     </div>
                 {% endif %}
             {% endfor %}
@@ -59,7 +59,7 @@
             {% for tag in tags %}
                 {% if tag %}
                     <div class="tag-box">
-                        <a href="{{ url_for('search') }}?q={{ tag }}">{{ tag }}</a>
+                        <a href="{{ url_for('app_search') }}?q={{ tag }}">{{ tag }}</a>
                     </div>
                 {% endif %}
             {% endfor %}

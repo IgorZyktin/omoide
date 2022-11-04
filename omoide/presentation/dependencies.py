@@ -69,7 +69,7 @@ def config() -> app_config.Config:
 
 
 @cache
-def get_auth_use_case():
+def get_auth_use_case() -> use_cases.AuthUseCase:
     """Get use case instance."""
     return use_cases.AuthUseCase(
         users_repo=users_repository,
@@ -77,13 +77,13 @@ def get_auth_use_case():
 
 
 @cache
-def get_authenticator():
+def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator(complexity=4)  # minimal
 
 
 @cache
-def get_policy():
+def get_policy() -> interfaces.AbsPolicy:
     """Get policy instance."""
     return infra.Policy(
         items_repo=items_read_repository,

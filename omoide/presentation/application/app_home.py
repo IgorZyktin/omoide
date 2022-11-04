@@ -5,6 +5,7 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 
 from omoide import domain
 from omoide.presentation import dependencies as dep
@@ -14,11 +15,11 @@ router = fastapi.APIRouter()
 
 
 @router.get('/')
-async def home(
+async def app_home(
         request: Request,
         user: domain.User = fastapi.Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Home endpoint for user."""
     context = {

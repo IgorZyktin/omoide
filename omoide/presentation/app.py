@@ -14,9 +14,9 @@ from omoide.presentation import application
 from omoide.presentation import dependencies as dep
 
 app = fastapi.FastAPI(
-    openapi_url=None,
-    docs_url=None,
-    redoc_url=None,
+    # openapi_url=None,
+    # docs_url=None,
+    # redoc_url=None,
 )
 
 

@@ -5,6 +5,7 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 
 from omoide import domain
 from omoide import use_cases
@@ -20,12 +21,13 @@ router = fastapi.APIRouter()
 
 
 @router.get('/search')
-async def search(
+async def app_search(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.AppSearchUseCase = Depends(dep.get_search_use_case),
+        use_case: use_cases.AppSearchUseCase = Depends(
+            dep.get_search_use_case),
         config: Config = Depends(dep.config),
-        response_class=HTMLResponse,
+        response_class: Response = HTMLResponse,
 ):
     """Main page of the application."""
     details = infra.parse.details_from_params(
@@ -75,11 +77,13 @@ async def api_random(
         request: Request,
         items_per_page: int,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.AppSearchUseCase = Depends(dep.get_search_use_case),
+        use_case: use_cases.AppSearchUseCase = Depends(
+            dep.get_search_use_case),
 ):
     """Return portion of random items."""
     # TODO - random can return repeating items
     details = domain.Details(page=1, anchor=-1, items_per_page=items_per_page)
     query = domain.Query(raw_query='', tags_include=[], tags_exclude=[])
-    result, _ = await use_case.execute(user, query, details)
+    _result = await use_case.execute(user, query, details)
+    result, _ = _result.value
     return utils.to_simple_items(request, result.items)

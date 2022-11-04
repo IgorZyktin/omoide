@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
-import typing
 from datetime import datetime
 from typing import Iterator
 from typing import Mapping
@@ -261,12 +260,7 @@ class Media(BaseModel):
 class EXIF(BaseModel):
     """Exif media information."""
     item_uuid: UUID
-    exif: dict[str, typing.Any]
-
-    @classmethod
-    def from_map(cls, mapping: Mapping) -> 'EXIF':
-        """Convert from arbitrary format to model."""
-        return cls(**mapping)  # TODO - maybe create base class for this?
+    exif: dict[str, str | float | int | bool | None | list | dict]
 
 
 class NewPermissions(BaseModel):
