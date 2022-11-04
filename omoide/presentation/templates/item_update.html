@@ -30,8 +30,7 @@
             <div id="alerts_parent"></div>
             <input id="save_parent"
                    type="button"
-                   class="button control-button button-disabled"
-                   disabled
+                   class="button control-button"
                    onclick="saveParent('{{ total }}', 'alerts_parent')"
                    value="Save parent">
 
@@ -102,8 +101,7 @@
             <div id="alerts_basic"></div>
             <input id="save_basic"
                    type="button"
-                   class="button control-button button-disabled"
-                   disabled
+                   class="button control-button"
                    onclick="saveBasic('alerts_basic')"
                    value="Save basic parameters">
 
@@ -124,11 +122,16 @@
             </textarea>
             </label>
 
+            <label for="propagate_tags">Apply to children:</label>
+            <select id="propagate_tags">
+                <option value="delta">Only changes (added and deleted)</option>
+                <option value="copy">Overwrite everything with current</option>
+            </select>
+
             <div id="alerts_tags"></div>
             <input id="save_tags"
                    type="button"
-                   class="button control-button button-disabled"
-                   disabled
+                   class="button control-button"
                    onclick="saveTags('{{ total }}', 'alerts_tags')"
                    value="Save tags">
 
@@ -165,11 +168,18 @@
                     child items</label>
             </div>
 
+            <div>
+                <label for="propagate_permissions">Apply to children:</label>
+                <select id="propagate_permissions">
+                    <option value="delta">Only changes (added and deleted)</option>
+                    <option value="copy">Overwrite everything with current</option>
+                </select>
+            </div>
+
             <div id="alerts_permissions"></div>
             <input id="save_permissions"
                    type="button"
-                   class="button control-button button-disabled"
-                   disabled
+                   class="button control-button"
                    onclick="savePermissions('{{ total }}', 'alerts_permissions')"
                    value="Save permissions">
 
