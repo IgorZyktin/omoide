@@ -30,7 +30,6 @@ async def login(
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
-        config: Config = Depends(dep.config),
         response_class=RedirectResponse,
 ):
     """Ask user for login and password."""
@@ -40,12 +39,7 @@ async def login(
         # already logged in
         return RedirectResponse(url)
 
-    new_user = await use_case.execute(
-        credentials,
-        authenticator,
-        env=config.env,
-        test_users=config.get_test_users(),
-    )
+    new_user = await use_case.execute(credentials, authenticator)
 
     if new_user.is_anon():
         raise fastapi.HTTPException(

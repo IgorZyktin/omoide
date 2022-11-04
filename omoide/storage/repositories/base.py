@@ -54,20 +54,6 @@ class BaseRepository(base_logic.BaseRepositoryLogic):
                                            {'user_uuid': str(user_uuid)})
         return domain.User(**response) if response else None
 
-    async def get_user_by_login(
-            self,
-            user_login: str,
-    ) -> Optional[domain.User]:
-        """Return user or None."""
-        query = """
-        SELECT *
-        FROM users
-        WHERE login = :user_login;
-        """
-
-        response = await self.db.fetch_one(query, {'user_login': user_login})
-        return domain.User(**response) if response else None
-
     async def read_item(
             self,
             uuid: UUID,
