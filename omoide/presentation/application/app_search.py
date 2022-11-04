@@ -23,7 +23,7 @@ router = fastapi.APIRouter()
 async def search(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.SearchUseCase = Depends(dep.get_search_use_case),
+        use_case: use_cases.AppSearchUseCase = Depends(dep.get_search_use_case),
         config: Config = Depends(dep.config),
         response_class=HTMLResponse,
 ):
@@ -75,7 +75,7 @@ async def api_random(
         request: Request,
         items_per_page: int,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.SearchUseCase = Depends(dep.get_search_use_case),
+        use_case: use_cases.AppSearchUseCase = Depends(dep.get_search_use_case),
 ):
     """Return portion of random items."""
     # TODO - random can return repeating items

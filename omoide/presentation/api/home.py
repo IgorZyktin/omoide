@@ -13,7 +13,7 @@ router = fastapi.APIRouter()
 async def api_home(
         request: fastapi.Request,
         user: domain.User = fastapi.Depends(dep.get_current_user),
-        use_case: use_cases.HomeUseCase = fastapi.Depends(
+        use_case: use_cases.AppHomeUseCase = fastapi.Depends(
             dep.app_home_use_case),
 ):
     """Return portion of items for home directory."""

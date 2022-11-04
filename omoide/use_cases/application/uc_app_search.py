@@ -8,7 +8,7 @@ from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 
 
-class SearchUseCase:
+class AppSearchUseCase:
     """Use case for search."""
 
     def __init__(

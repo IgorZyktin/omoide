@@ -5,11 +5,11 @@ from omoide import domain
 from omoide.domain import interfaces
 
 __all__ = [
-    'HomeUseCase',
+    'AppHomeUseCase',
 ]
 
 
-class HomeUseCase:
+class AppHomeUseCase:
     """Use case for home page."""
 
     def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
