@@ -419,6 +419,7 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
         new_permissions = domain.NewPermissions(
             apply_to_parents=raw_new_permissions.apply_to_parents,
             apply_to_children=raw_new_permissions.apply_to_children,
+            override=raw_new_permissions.override,
             permissions_before=frozenset(
                 UUID(x) for x in raw_new_permissions.permissions_before
             ),

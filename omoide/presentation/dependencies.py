@@ -135,6 +135,12 @@ def app_home_use_case() -> use_cases.HomeUseCase:
 
 # app item related use cases --------------------------------------------------
 
+
+def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
+    """Get use case instance."""
+    return use_cases.AppItemCreateUseCase(items_repository, users_repository)
+
+
 def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.AppItemUpdateUseCase(items_repository, users_repository)

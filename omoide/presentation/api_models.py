@@ -137,6 +137,7 @@ class NewPermissionsIn(BaseModel):
     """Input info for new permissions."""
     apply_to_parents: bool
     apply_to_children: bool
+    override: bool
     permissions_before: list[str]
     permissions_after: list[str]
 

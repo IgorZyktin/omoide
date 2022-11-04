@@ -273,23 +273,31 @@ class NewPermissions(BaseModel):
     """Input info for new permissions."""
     apply_to_parents: bool
     apply_to_children: bool
-    permissions_before: frozenset[UUID]
-    permissions_after: frozenset[UUID]
+    override: bool
+    permissions_before: set[UUID]
+    permissions_after: set[UUID]
 
     @property
-    def added(self) -> frozenset[UUID]:
+    def added(self) -> set[UUID]:
         """Return list of added permissions."""
-        return frozenset(self.permissions_after - self.permissions_before)
+        return set(self.permissions_after - self.permissions_before)
 
     @property
-    def removed(self) -> frozenset[UUID]:
+    def removed(self) -> set[UUID]:
         """Return list of removed permissions."""
-        return frozenset(self.permissions_before - self.permissions_after)
+        return set(self.permissions_before - self.permissions_after)
 
     @property
-    def combined(self) -> frozenset[UUID]:
+    def combined(self) -> set[UUID]:
         """Return all permissions."""
-        return frozenset(self.permissions_before | self.permissions_after)
+        return set(self.permissions_before | self.permissions_after)
+
+    def apply_delta(self, item_permissions: set[UUID]) -> set[UUID]:
+        """Apply addition and subtraction of items."""
+        _result = set(item_permissions)
+        _result = _result - self.removed
+        _result = _result | self.added
+        return _result
 
 
 class Metainfo(BaseModel):

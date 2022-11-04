@@ -4,17 +4,17 @@
 import fastapi
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse
-from starlette import status
 
 from omoide import domain, utils
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra, constants
+from omoide.presentation import infra, constants, web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
 
 @router.get('/upload')
+@web.login_required
 async def upload(
         request: Request,
         parent_uuid: str = '',
@@ -23,13 +23,6 @@ async def upload(
         response_class=HTMLResponse,
 ):
     """Upload media page."""
-    if user.is_anon():  # TODO - move it to a separate decorator
-        raise fastapi.HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='You need to be authorized to make uploads',
-            headers={'WWW-Authenticate': 'Basic realm="omoide"'},
-        )
-
     details = infra.parse.details_from_params(
         params=request.query_params,
         items_per_page=constants.ITEMS_PER_PAGE,

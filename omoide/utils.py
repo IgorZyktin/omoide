@@ -3,6 +3,7 @@
 """
 import datetime
 import re
+from typing import Optional
 from uuid import UUID
 
 
@@ -34,8 +35,22 @@ def is_valid_uuid(uuid: UUID | str) -> bool:
     return UUID_TEMPLATE.match(uuid) is not None
 
 
+def cast_uuid(uuid: str | UUID | None) -> Optional[UUID]:
+    """Return UUID or None."""
+    if isinstance(uuid, UUID):
+        return uuid
+
+    if not uuid:
+        return None
+
+    if is_valid_uuid(uuid):
+        return UUID(uuid)
+
+    return None
+
+
 def sep_digits(number: int | float | str, precision: int = 2) -> str:
-    """Return number as string with separated thousands.
+    """Return number as a string with separated thousands.
 
     >>> sep_digits('12345678')
     '12345678'

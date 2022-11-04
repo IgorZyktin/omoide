@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Internet related tools.
 """
+import functools
 import http
+from typing import Callable
 from typing import NoReturn
 from typing import Optional
 from typing import Type
@@ -11,6 +13,7 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
+from omoide import domain
 from omoide.domain import errors
 
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
@@ -113,3 +116,22 @@ def redirect_from_error(
         response = RedirectResponse(request.url_for('bad_request'))
 
     return response
+
+
+def login_required(func: Callable) -> Callable:
+    """Redirect anon users to login."""
+
+    @functools.wraps(func)
+    async def wrapper(
+            request: Request,
+            *args,
+            user: domain.User,
+            **kwargs,
+    ):
+        """Wrapper."""
+        if user.is_anon():
+            # TODO: try keeping original link
+            return RedirectResponse(request.url_for('login'))
+        return await func(request, *args, user=user, **kwargs)
+
+    return wrapper
