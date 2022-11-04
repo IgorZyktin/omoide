@@ -78,7 +78,7 @@ def config() -> app_config.Config:
 @cache
 def get_auth_use_case():
     """Get use case instance."""
-    return use_cases.AuthUseCase(base_repository)
+    return use_cases.AuthUseCase(users_repository)
 
 
 def get_authenticator():

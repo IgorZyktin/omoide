@@ -33,6 +33,13 @@ class AbsUsersRepository(in_rp_base.AbsBaseRepository):
         """Return User or None."""
 
     @abc.abstractmethod
+    async def read_user_by_login(
+            self,
+            login: str,
+    ) -> Optional[domain.User]:
+        """Return User or None."""
+
+    @abc.abstractmethod
     async def read_all_users(
             self,
             uuids: list[UUID | str],

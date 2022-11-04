@@ -69,6 +69,15 @@ class UsersRepository(interfaces.AbsUsersRepository):
         response = await self.db.fetch_one(stmt)
         return domain.User(**response) if response else None
 
+    async def read_user_by_login(
+            self,
+            login: str,
+    ) -> Optional[domain.User]:
+        """Return User or None."""
+        stmt = sqlalchemy.select(models.User).where(models.User.login == login)
+        response = await self.db.fetch_one(stmt)
+        return domain.User(**response) if response else None
+
     async def read_all_users(
             self,
             uuids: list[UUID | str],
