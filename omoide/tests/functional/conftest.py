@@ -70,36 +70,36 @@ async def user(database):
     )
     await database.execute(
         """
-        INSERT INTO 
-        users (uuid, login, password, name, root_item) 
+        INSERT INTO
+        users (uuid, login, password, name, root_item)
         VALUES (
-        '00000000-0000-0000-0000-000000000000', 
-        'test', 
+        '00000000-0000-0000-0000-000000000000',
         'test',
-         'test', 
+        'test',
+         'test',
          null
          );
         """,
     )
     await database.execute(
         """
-        INSERT INTO 
+        INSERT INTO
         items (
-        uuid, 
-        parent_uuid, 
-        owner_uuid, 
-        number, 
-        name, 
-        is_collection, 
-        content_ext, 
-        preview_ext, 
-        thumbnail_ext, 
-        tags, 
+        uuid,
+        parent_uuid,
+        owner_uuid,
+        number,
+        name,
+        is_collection,
+        content_ext,
+        preview_ext,
+        thumbnail_ext,
+        tags,
         permissions
-        ) 
+        )
         VALUES (
         '00000000-0000-0000-0000-000000000000',
-        null, 
+        null,
         '00000000-0000-0000-0000-000000000000',
         1,
         'test item',

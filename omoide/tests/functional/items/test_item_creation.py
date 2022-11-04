@@ -31,6 +31,6 @@ async def test_item_creation(
         assert uuid.value is not None
     finally:
         database.execute(
-            f'DELETE FROM items WHERE uuid = :uuid',
+            'DELETE FROM items WHERE uuid = :uuid',
             {'uuid': str(uuid)},
         )
