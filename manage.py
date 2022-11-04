@@ -3,6 +3,7 @@
 """
 import asyncio
 from typing import Optional
+from uuid import UUID
 
 import click
 
@@ -46,6 +47,31 @@ def cmd_create_user(login: str, password: str, name: Optional[str]):
             print(str(result.error))
         else:
             print(result.value)
+
+    asyncio.run(_coro())
+
+
+@cli.command(name='change_password')
+@click.option('--uuid', required=True, help='UUID for existing user')
+@click.option('--password', required=True, help='New password')
+def cmd_change_password(uuid: str, password: str):
+    """Manually change password for user."""
+    users_repo = UsersRepository(dep.db)
+
+    async def _coro():
+        print(f'Going to change password for user {uuid}')
+        await dep.db.connect()
+        user = await users_repo.read_user(UUID(uuid))
+        if user is None:
+            print(f'User with uuid {uuid} does not exist')
+            return
+
+        user.password = dep.current_authenticator.encode_password(
+            password).decode()
+
+        await users_repo.update_user(user)
+        await dep.db.disconnect()
+        print(f'Successfully changed password for {user.uuid} {user.name}')
 
     asyncio.run(_coro())
 
