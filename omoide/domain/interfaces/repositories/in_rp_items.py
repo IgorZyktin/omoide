@@ -82,16 +82,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
 
     # TODO - move to a separate repo
     @abc.abstractmethod
-    async def get_simple_location(
-            self,
-            user: domain.User,
-            owner: domain.User,
-            item: domain.Item,
-    ) -> Optional[domain.SimpleLocation]:
-        """Return Location of the item (without pagination)."""
-
-    # TODO - move to a separate repo
-    @abc.abstractmethod
     async def simple_find_items_to_browse(
             self,
             user: domain.User,

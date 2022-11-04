@@ -23,15 +23,6 @@ class AbsRepository(abc.ABC):
         return self.db.transaction()
 
     @abc.abstractmethod
-    async def get_location(
-            self,
-            user: auth.User,
-            uuid: UUID,
-            details: common.Details,
-    ) -> Optional[common.Location]:
-        """Return Location of the item."""
-
-    @abc.abstractmethod
     async def user_is_public(
             self,
             owner_uuid: str,
@@ -44,16 +35,6 @@ class AbsRepository(abc.ABC):
             user_uuid: UUID,
     ) -> Optional[auth.User]:
         """Return user or None."""
-
-    @abc.abstractmethod
-    async def get_item_with_position(
-            self,
-            user: auth.User,
-            item_uuid: UUID,
-            child_uuid: UUID,
-            details: common.Details,
-    ) -> Optional[common.PositionedItem]:
-        """Return item with its position in siblings."""
 
 
 class AbsBaseRepository(abc.ABC):

@@ -5,14 +5,12 @@ from uuid import UUID
 
 from omoide import domain
 from omoide.domain import interfaces
-from omoide.storage.repositories import base
-from omoide.storage.repositories import rp_items
+from omoide.storage.repositories.asyncpg.rp_browse import BrowseRepository
 
 
 class PreviewRepository(
-    rp_items.ItemsRepository,
-    base.BaseRepository,
     interfaces.AbsPreviewRepository,
+    BrowseRepository,
 ):
     """Repository that performs all preview queries."""
 

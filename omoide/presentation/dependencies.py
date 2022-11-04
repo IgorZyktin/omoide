@@ -24,15 +24,15 @@ db = Database(_config.db_url.get_secret_value())
 search_repository = repositories.SearchRepository(db)
 search_use_case = use_cases.SearchUseCase(search_repository)
 
-preview_repository = repositories.PreviewRepository(db)
-
-browse_repository = repositories.BrowseRepository(db)
-
-base_repository = repositories.BaseRepository(db)
+preview_repository = asyncpg.PreviewRepository(db)
+browse_repository = asyncpg.BrowseRepository(db)
 
 users_repository = asyncpg.UsersRepository(db)
+users_read_repository = asyncpg.UsersReadRepository(db)
+
+items_repository = repositories.ItemsRepository(db)  # FIXME
 items_read_repository = asyncpg.ItemsReadRepository(db)
-items_repository = repositories.ItemsRepository(db)
+
 media_repository = asyncpg.MediaRepository(db)
 exif_repository = asyncpg.EXIFRepository(db)
 metainfo_repository = asyncpg.MetainfoRepository(db)
@@ -114,14 +114,22 @@ def get_search_use_case():
     return search_use_case
 
 
-def app_preview_use_case() -> use_cases.PreviewUseCase:
+def app_preview_use_case() -> use_cases.AppPreviewUseCase:
     """Get use case instance."""
-    return use_cases.PreviewUseCase(preview_repository)
+    return use_cases.AppPreviewUseCase(
+        preview_repo=preview_repository,
+        users_repo=users_read_repository,
+        items_repo=items_read_repository,
+    )
 
 
 def app_browse_use_case() -> use_cases.AppBrowseUseCase:
     """Get use case instance."""
-    return use_cases.AppBrowseUseCase(browse_repository)
+    return use_cases.AppBrowseUseCase(
+        browse_repo=browse_repository,
+        users_repo=users_read_repository,
+        items_repo=items_read_repository,
+    )
 
 
 def app_home_use_case() -> use_cases.HomeUseCase:

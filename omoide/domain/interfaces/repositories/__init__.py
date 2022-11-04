@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from omoide.domain.interfaces.repositories.base import AbsRepository
-from omoide.domain.interfaces.repositories.browse import AbsBrowseRepository
 from omoide.domain.interfaces.repositories.in_rp_items import (
     AbsItemsRepository
 )
-from omoide.domain.interfaces.repositories.preview import AbsPreviewRepository
 from omoide.domain.interfaces.repositories.search import AbsSearchRepository
