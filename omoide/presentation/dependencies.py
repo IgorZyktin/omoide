@@ -134,7 +134,9 @@ def app_browse_use_case() -> use_cases.AppBrowseUseCase:
 
 def app_home_use_case() -> use_cases.AppHomeUseCase:
     """Get use case instance."""
-    return use_cases.AppHomeUseCase(items_repository)
+    return use_cases.AppHomeUseCase(
+        browse_repo=browse_repository,
+    )
 
 
 # app item related use cases --------------------------------------------------
@@ -208,7 +210,9 @@ def api_item_alter_permissions_use_case() \
 
 def api_browse_use_case() -> use_cases.APIBrowseUseCase:
     """Get use case instance."""
-    return use_cases.APIBrowseUseCase(items_repository)
+    return use_cases.APIBrowseUseCase(
+        browse_repo=browse_repository,
+    )
 
 
 # api item related use cases --------------------------------------------------

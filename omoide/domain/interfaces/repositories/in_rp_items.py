@@ -82,26 +82,6 @@ class AbsItemsRepository(repositories.AbsRepository, abc.ABC):
 
     # TODO - move to a separate repo
     @abc.abstractmethod
-    async def simple_find_items_to_browse(
-            self,
-            user: domain.User,
-            uuid: Optional[UUID],
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items to browse depending on parent (simple)."""
-
-    # TODO - move to a separate repo
-    @abc.abstractmethod
-    async def complex_find_items_to_browse(
-            self,
-            user: domain.User,
-            uuid: Optional[UUID],
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items to browse depending on parent (including inheritance)."""
-
-    # TODO - move to a separate repo
-    @abc.abstractmethod
     async def update_tags_in_children(
             self,
             item: domain.Item,

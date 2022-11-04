@@ -4,7 +4,12 @@
 from uuid import UUID
 
 from omoide import domain
+from omoide.domain import actions
+from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.infra.special_types import Failure
+from omoide.infra.special_types import Result
+from omoide.infra.special_types import Success
 
 __all__ = [
     'APIBrowseUseCase',
@@ -14,34 +19,38 @@ __all__ = [
 class APIBrowseUseCase:
     """Use case for browse (api)."""
 
-    def __init__(self, repo: interfaces.AbsItemsRepository) -> None:
+    def __init__(
+            self,
+            browse_repo: interfaces.AbsBrowseRepository,
+    ) -> None:
         """Initialize instance."""
-        self._repo = repo
+        self.browse_repo = browse_repo
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
             aim: domain.Aim,
-    ) -> list[domain.Item]:
-        access = await self._repo.check_access(user, uuid)
+    ) -> Result[errors.Error, list[domain.Item]]:
+        async with self.browse_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.READ)
 
-        if access.does_not_exist or access.is_not_given:
-            return []
+            if error:
+                return Failure(error)
 
-        async with self._repo.transaction():
             if aim.nested:
-                items = await self._repo.simple_find_items_to_browse(
+                items = await self.browse_repo.simple_find_items_to_browse(
                     user=user,
                     uuid=uuid,
                     aim=aim,
                 )
 
             else:
-                items = await self._repo.complex_find_items_to_browse(
+                items = await self.browse_repo.complex_find_items_to_browse(
                     user=user,
                     uuid=uuid,
                     aim=aim,
                 )
 
-        return items
+        return Success(items)

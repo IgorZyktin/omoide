@@ -78,3 +78,21 @@ class AbsBrowseRepository(
             details: common.Details,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
+
+    @abc.abstractmethod
+    async def simple_find_items_to_browse(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items to browse depending on parent (simple)."""
+
+    @abc.abstractmethod
+    async def complex_find_items_to_browse(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items to browse depending on parent (including inheritance)."""

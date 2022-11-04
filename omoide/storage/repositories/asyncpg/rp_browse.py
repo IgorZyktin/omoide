@@ -4,10 +4,13 @@
 from typing import Optional
 from uuid import UUID
 
+import sqlalchemy
+
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
+from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg \
     .rp_items_read import ItemsReadRepository
 
@@ -306,3 +309,159 @@ class BrowseRepository(
             items_per_page=details.items_per_page,
             item=domain.Item.from_map(mapping),
         )
+
+    async def simple_find_items_to_browse(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items using simple request."""
+        if user.is_anon():
+            subquery = sqlalchemy.select(models.PublicUsers.user_uuid)
+            conditions = [
+                models.Item.owner_uuid.in_(subquery)  # noqa
+            ]
+
+        else:
+            conditions = []
+
+        s_uuid = str(uuid) if uuid is not None else None
+
+        if aim.nested:
+            conditions.append(models.Item.parent_uuid == s_uuid)  # noqa
+
+        if aim.ordered:
+            conditions.append(models.Item.number > aim.last_seen)
+
+        stmt = sqlalchemy.select(models.Item)
+
+        if conditions:
+            stmt = stmt.where(*conditions)
+
+        if user.is_not_anon():
+            stmt = stmt.select_from(
+                models.Item.__table__.join(
+                    models.ComputedPermissions,  # type: ignore
+                    models.Item.uuid == models.ComputedPermissions.item_uuid,
+                    isouter=True,
+                )
+            ).where(
+                sqlalchemy.or_(
+                    models.Item.owner_uuid == str(user.uuid),
+                    models.ComputedPermissions.permissions.any(str(user.uuid)),
+                )
+            )
+
+        if aim.ordered:
+            stmt = stmt.order_by(models.Item.number)
+        else:
+            stmt = stmt.order_by(sqlalchemy.func.random())
+
+        stmt = stmt.limit(aim.items_per_page)
+
+        response = await self.db.fetch_all(stmt)
+        # TODO - damn asyncpg tries to bee too smart
+        items = [
+            domain.Item.from_map(dict(zip(row.keys(), row.values())))
+            for row in response
+        ]
+
+        return items
+
+    async def complex_find_items_to_browse(
+            self,
+            user: domain.User,
+            uuid: Optional[UUID],
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items to browse depending on parent (including inheritance)."""
+        values = {
+            'uuid': str(uuid),
+            'limit': aim.items_per_page,
+        }
+
+        if user.is_anon():
+            stmt = """
+WITH RECURSIVE nested_items AS
+       (SELECT items.uuid          AS uuid,
+               items.parent_uuid   AS parent_uuid,
+               items.owner_uuid    AS owner_uuid,
+               items.number        AS number,
+               items.name          AS name,
+               items.is_collection AS is_collection,
+               items.content_ext   AS content_ext,
+               items.preview_ext   AS preview_ext,
+               items.thumbnail_ext AS thumbnail_ext
+        FROM items
+        WHERE items.parent_uuid = CAST(:uuid AS uuid)
+        UNION
+        SELECT items.uuid          AS uuid,
+               items.parent_uuid   AS parent_uuid,
+               items.owner_uuid    AS owner_uuid,
+               items.number        AS number,
+               items.name          AS name,
+               items.is_collection AS is_collection,
+               items.content_ext   AS content_ext,
+               items.preview_ext   AS preview_ext,
+               items.thumbnail_ext AS thumbnail_ext
+        FROM items
+                 INNER JOIN nested_items
+                            ON items.parent_uuid = nested_items.uuid)
+SELECT *
+FROM nested_items
+WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+            """
+        else:
+            stmt = """
+WITH RECURSIVE nested_items AS
+       (SELECT items.uuid          AS uuid,
+               items.parent_uuid   AS parent_uuid,
+               items.owner_uuid    AS owner_uuid,
+               items.number        AS number,
+               items.name          AS name,
+               items.is_collection AS is_collection,
+               items.content_ext   AS content_ext,
+               items.preview_ext   AS preview_ext,
+               items.thumbnail_ext AS thumbnail_ext
+        FROM items
+        WHERE items.parent_uuid = CAST(:uuid AS uuid)
+        UNION
+        SELECT items.uuid          AS uuid,
+               items.parent_uuid   AS parent_uuid,
+               items.owner_uuid    AS owner_uuid,
+               items.number        AS number,
+               items.name          AS name,
+               items.is_collection AS is_collection,
+               items.content_ext   AS content_ext,
+               items.preview_ext   AS preview_ext,
+               items.thumbnail_ext AS thumbnail_ext
+        FROM items
+                 INNER JOIN nested_items
+                            ON items.parent_uuid = nested_items.uuid)
+SELECT *
+FROM nested_items
+LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
+WHERE (owner_uuid = CAST(:user_uuid AS uuid)
+    OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions))
+            """
+            values['user_uuid'] = str(user.uuid)
+
+        if aim.ordered:
+            stmt += ' AND number > :last_seen'
+            values['last_seen'] = aim.last_seen
+
+        if aim.ordered:
+            stmt += ' ORDER BY number'
+        else:
+            stmt += ' ORDER BY random()'
+
+        stmt += ' LIMIT :limit;'
+
+        response = await self.db.fetch_all(stmt, values)
+        # TODO - damn asyncpg tries to bee too smart
+        items = [
+            domain.Item.from_map(dict(zip(row.keys(), row.values())))
+            for row in response
+        ]
+        return items
