@@ -439,7 +439,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "uvicorn"
-version = "0.18.3"
+version = "0.19.0"
 description = "The lightning-fast ASGI server."
 category = "main"
 optional = false
@@ -450,12 +450,12 @@ click = ">=7.0"
 h11 = ">=0.8"
 
 [package.extras]
-standard = ["colorama (>=0.4)", "httptools (>=0.4.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1)", "watchfiles (>=0.13)", "websockets (>=10.0)"]
+standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1)", "watchfiles (>=0.13)", "websockets (>=10.0)"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "bce6adf03ca004319bf192c022337561464fedc022461f101bb22611b9fe944a"
+content-hash = "2f31bb197ef2c3e0c6d9f142cbd46e495f7c06a51e507e930804b1ade0ba0755"
 
 [metadata.files]
 anyio = []
