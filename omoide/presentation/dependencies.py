@@ -3,6 +3,7 @@
 """
 import binascii
 from base64 import b64decode
+from functools import cache
 
 import fastapi
 from databases import Database
@@ -29,7 +30,6 @@ preview_repository = repositories.PreviewRepository(db)
 browse_repository = repositories.BrowseRepository(db)
 
 base_repository = repositories.BaseRepository(db)
-auth_use_case = use_cases.AuthUseCase(base_repository)
 
 users_repository = asyncpg.UsersRepository(db)
 items_repository = repositories.ItemsRepository(db)
@@ -75,9 +75,10 @@ def config() -> app_config.Config:
     return app_config.get_config()
 
 
+@cache
 def get_auth_use_case():
     """Get use case instance."""
-    return auth_use_case
+    return use_cases.AuthUseCase(base_repository)
 
 
 def get_authenticator():
@@ -96,18 +97,11 @@ async def get_current_user(
         authenticator: interfaces.AbsAuthenticator = fastapi.Depends(
             get_authenticator,
         ),
-        active_config: app_config.Config = fastapi.Depends(config),
 ) -> auth.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
         return auth.User.new_anon()
-
-    return await use_case.execute(
-        credentials,
-        authenticator,
-        env=active_config.env,
-        test_users=active_config.get_test_users(),
-    )
+    return await use_case.execute(credentials, authenticator)
 
 
 # application related use cases -----------------------------------------------
