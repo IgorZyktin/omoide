@@ -20,7 +20,6 @@ from omoide.storage.repositories import asyncpg
 
 _config = app_config.init()
 db = Database(_config.db_url.get_secret_value())
-current_authenticator = infra.BcryptAuthenticator(complexity=4)  # minimal
 
 search_repository = repositories.SearchRepository(db)
 search_use_case = use_cases.SearchUseCase(search_repository)
@@ -32,14 +31,11 @@ browse_repository = repositories.BrowseRepository(db)
 base_repository = repositories.BaseRepository(db)
 
 users_repository = asyncpg.UsersRepository(db)
+items_read_repository = asyncpg.ItemsReadRepository(db)
 items_repository = repositories.ItemsRepository(db)
 media_repository = asyncpg.MediaRepository(db)
 exif_repository = asyncpg.EXIFRepository(db)
 metainfo_repository = asyncpg.MetainfoRepository(db)
-
-current_policy = infra.Policy(
-    items_repo=items_repository,
-)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
 
@@ -78,17 +74,23 @@ def config() -> app_config.Config:
 @cache
 def get_auth_use_case():
     """Get use case instance."""
-    return use_cases.AuthUseCase(users_repository)
+    return use_cases.AuthUseCase(
+        users_repo=users_repository,
+    )
 
 
+@cache
 def get_authenticator():
     """Get authenticator instance."""
-    return current_authenticator
+    return infra.BcryptAuthenticator(complexity=4)  # minimal
 
 
+@cache
 def get_policy():
     """Get policy instance."""
-    return current_policy
+    return infra.Policy(
+        items_repo=items_read_repository,
+    )
 
 
 async def get_current_user(

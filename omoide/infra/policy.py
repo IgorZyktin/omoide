@@ -26,13 +26,6 @@ ITEM_RELATED = frozenset((
 class Policy(interfaces.AbsPolicy):
     """Policy checker."""
 
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-
     async def is_restricted(
             self,
             user: domain.User,
