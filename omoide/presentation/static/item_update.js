@@ -195,6 +195,7 @@ function savePermissions(totalChildren, alertsElementId) {
     // save changes
     let applyToParents = $('#item_perm_apply_to_parents').is(':checked')
     let applyToChildren = $('#item_perm_apply_to_children').is(':checked')
+    let override = $('#propagate_permissions').val() === 'copy'
 
     if (applyToChildren && totalChildren !== '0' && totalChildren !== '1') {
         if (!confirm(`New permissions will affect ${totalChildren} items, are you sure?`))
@@ -209,6 +210,7 @@ function savePermissions(totalChildren, alertsElementId) {
         data: JSON.stringify({
             'apply_to_parents': applyToParents,
             'apply_to_children': applyToChildren,
+            'override': override,
             'permissions_before': oldModel['permissions'],
             'permissions_after': newModel['permissions'],
         }),

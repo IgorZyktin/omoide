@@ -113,7 +113,7 @@
         </div>
 
         <div>
-            <h3>Tags fot the item and dependant items</h3>
+            <h3>Tags for the item and dependant items</h3>
             <label for="item_tags">Tags (one tag per line):<br>
                 <textarea id="item_tags"
                           onchange="alterModelTagsField(this)"
@@ -121,12 +121,6 @@
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
             </label>
-
-            <label for="propagate_tags">Apply to children:</label>
-            <select id="propagate_tags">
-                <option value="delta">Only changes (added and deleted)</option>
-                <option value="copy">Overwrite everything with current</option>
-            </select>
 
             <div id="alerts_tags"></div>
             <input id="save_tags"

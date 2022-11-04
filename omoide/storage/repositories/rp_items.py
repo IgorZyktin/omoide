@@ -618,11 +618,15 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ) -> None:
             """Alter permissions."""
             nonlocal total
-            _permissions = set(str(x) for x in (_item.permissions or []))
-            _permissions = _permissions | set(map(str,
-                                                  new_permissions.added))
-            _permissions = _permissions - set(map(str,
-                                                  new_permissions.removed))
+
+            valid_permissions = {UUID(x) for x in _item.permissions or []}
+            _permissions = new_permissions.apply_delta(valid_permissions)
+
+            print(f'\tSetting permissions in parents: {total:04d}. '
+                  f'{_item.uuid}: '
+                  f'{sorted(map(str, valid_permissions))} '
+                  f'-> {sorted(map(str, _permissions))}')
+
             stmt = sqlalchemy.update(
                 models.Item
             ).where(
@@ -630,8 +634,10 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             ).values(
                 permissions=sorted(str(x) for x in _permissions)
             )
+
             async with self.transaction():
                 await _self.db.execute(stmt)
+
             total += 1
 
         await self.apply_upwards(
@@ -663,20 +669,18 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ) -> None:
             """Alter permissions."""
             nonlocal total
-            if item.parent_uuid is None:
-                return
 
-            parent = await self.read_item(item.parent_uuid)
+            valid_permissions = {UUID(x) for x in _item.permissions or []}
 
-            if parent is None:
-                return
+            if new_permissions.override:
+                _permissions = new_permissions.permissions_after
+            else:
+                _permissions = new_permissions.apply_delta(valid_permissions)
 
-            _permissions = set(str(x) for x in (_item.permissions or []))
-            _permissions.update(str(x) for x in (parent.permissions or []))
-            _permissions = _permissions | set(map(str,
-                                                  new_permissions.added))
-            _permissions = _permissions - set(map(str,
-                                                  new_permissions.removed))
+            print(f'\tSetting permissions in children: {total:04d}. '
+                  f'{_item.uuid}: '
+                  f'{sorted(map(str, valid_permissions))} '
+                  f'-> {sorted(map(str, _permissions))}')
 
             stmt = sqlalchemy.update(
                 models.Item
@@ -685,6 +689,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             ).values(
                 permissions=sorted(str(x) for x in _permissions)
             )
+
             async with self.transaction():
                 await _self.db.execute(stmt)
 
