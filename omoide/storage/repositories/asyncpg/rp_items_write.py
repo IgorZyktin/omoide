@@ -375,7 +375,7 @@ class ItemsWriteRepository(
         print(f'Started updating permissions in children of {item.uuid}')
 
         async def _update_permissions(
-                _self: ItemsRepository,
+                _self: ItemsWriteRepository,
                 _item: domain.Item,
         ) -> None:
             """Alter permissions."""

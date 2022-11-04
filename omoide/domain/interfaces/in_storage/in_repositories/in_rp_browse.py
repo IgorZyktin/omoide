@@ -51,15 +51,6 @@ class AbsBrowseRepository(
         """Count all children with all required fields (and access)."""
 
     @abc.abstractmethod
-    async def get_simple_location(
-            self,
-            user: domain.User,
-            owner: domain.User,
-            item: domain.Item,
-    ) -> Optional[domain.SimpleLocation]:
-        """Return Location of the item (without pagination)."""
-
-    @abc.abstractmethod
     async def get_location(
             self,
             user: domain.User,

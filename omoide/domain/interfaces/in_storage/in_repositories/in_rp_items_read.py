@@ -33,3 +33,12 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             uuid: UUID,
     ) -> list[domain.Item]:
         """Return all direct descendants of the given item."""
+
+    @abc.abstractmethod
+    async def get_simple_location(
+            self,
+            user: domain.User,
+            owner: domain.User,
+            item: domain.Item,
+    ) -> Optional[domain.SimpleLocation]:
+        """Return Location of the item (without pagination)."""

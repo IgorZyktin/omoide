@@ -132,7 +132,7 @@ class AppBrowseUseCase:
             details: domain.Details,
     ) -> BrowseResult:
         """Browse without pagination."""
-        location = await self.browse_repo.get_simple_location(
+        location = await self.items_repo.get_simple_location(
             user=user,
             owner=owner,
             item=item,
