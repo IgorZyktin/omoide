@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Use case for preview.
 """
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
