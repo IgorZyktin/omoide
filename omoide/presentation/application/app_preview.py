@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Preview related routes.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -32,7 +34,7 @@ async def app_preview(
         use_case: use_cases.AppPreviewUseCase = Depends(
             dep.app_preview_use_case),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
     details = infra.parse.details_from_params(
@@ -46,9 +48,9 @@ async def app_preview(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        _result = Failure(errors.InvalidUUID(uuid=uuid))
-    else:
-        _result = await use_case.execute(policy, user, valid_uuid, details)
+        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
+
+    _result = await use_case.execute(policy, user, valid_uuid, details)
 
     if isinstance(_result, Failure):
         return web.redirect_from_error(request, _result.error, valid_uuid)

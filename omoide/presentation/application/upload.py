@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Routes related to media upload.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -25,7 +27,7 @@ async def upload(
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Upload media page."""
     details = infra.parse.details_from_params(

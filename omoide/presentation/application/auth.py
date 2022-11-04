@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Auth related routes.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -31,7 +33,7 @@ async def app_login(
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Ask user for login and password."""
     url = request.url_for('app_search')
@@ -56,7 +58,7 @@ async def app_login(
 async def app_logout(
         request: Request,
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Clear authorization."""
     details = infra.parse.details_from_params(

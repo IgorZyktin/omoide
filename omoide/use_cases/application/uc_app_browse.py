@@ -16,6 +16,8 @@ __all__ = [
     'AppBrowseUseCase',
 ]
 
+from omoide.infra.special_types import Success
+
 
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
@@ -74,7 +76,7 @@ class AppBrowseUseCase:
                 result = await self.go_browse_dynamic(
                     user, owner, item, details)
 
-            return result
+            return Success(result)
 
     async def go_browse_paginated(
             self,

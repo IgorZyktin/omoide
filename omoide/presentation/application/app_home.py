@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Hope page related routes.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -19,7 +21,7 @@ async def app_home(
         request: Request,
         user: domain.User = fastapi.Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Home endpoint for user."""
     context = {

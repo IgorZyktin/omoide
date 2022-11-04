@@ -2,6 +2,7 @@
 """Browse related routes.
 """
 import http
+from typing import Type
 
 import fastapi
 from fastapi import Depends
@@ -23,7 +24,7 @@ async def not_found(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Show <not found> page."""
     details = infra.parse.details_from_params(
@@ -53,7 +54,7 @@ async def unauthorized(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Show <unauthorized> page."""
     details = infra.parse.details_from_params(
@@ -83,7 +84,7 @@ async def forbidden(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Show <forbidden> page."""
     details = infra.parse.details_from_params(
@@ -113,7 +114,7 @@ async def bad_request(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Show <bad request> page."""
     details = infra.parse.details_from_params(

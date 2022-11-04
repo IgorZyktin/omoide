@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Browse related routes.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -31,7 +33,7 @@ async def app_browse(
         use_case: use_cases.AppBrowseUseCase = Depends(
             dep.app_browse_use_case),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item as collection."""
     details = infra.parse.details_from_params(
@@ -45,12 +47,14 @@ async def app_browse(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        result = Failure(errors.InvalidUUID(uuid=uuid))
-    else:
-        result = await use_case.execute(policy, user, valid_uuid, aim, details)
+        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
 
-    if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, valid_uuid)
+    _result = await use_case.execute(policy, user, valid_uuid, aim, details)
+
+    if isinstance(_result, Failure):
+        return web.redirect_from_error(request, _result.error, valid_uuid)
+
+    result = _result.value
 
     context = {
         'request': request,

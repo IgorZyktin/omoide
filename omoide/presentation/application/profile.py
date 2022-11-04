@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """User profile related routes.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -22,7 +24,7 @@ async def app_profile(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Show user home page."""
     if user.is_anon():

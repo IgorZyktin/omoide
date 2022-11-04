@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Search related routes.
 """
+from typing import Type
+
 import fastapi
 from fastapi import Depends
 from fastapi import Request
@@ -10,6 +12,7 @@ from fastapi.responses import Response
 from omoide import domain
 from omoide import use_cases
 from omoide.infra.special_types import Failure
+from omoide.infra.special_types import Success
 from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
@@ -27,7 +30,7 @@ async def app_search(
         use_case: use_cases.AppSearchUseCase = Depends(
             dep.get_search_use_case),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Main page of the application."""
     details = infra.parse.details_from_params(
@@ -88,5 +91,7 @@ async def api_random(
     details = domain.Details(page=1, anchor=-1, items_per_page=items_per_page)
     query = domain.Query(raw_query='', tags_include=[], tags_exclude=[])
     _result = await use_case.execute(user, query, details)
-    result, _ = _result.value
-    return utils.to_simple_items(request, result.items)
+    if isinstance(_result, Success):
+        result, _ = _result.value
+        return utils.to_simple_items(request, result.items)
+    return []

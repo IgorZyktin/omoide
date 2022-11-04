@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Routes related to item operations.
 """
+from typing import Type
 from uuid import UUID
 
 import fastapi
@@ -34,7 +35,7 @@ async def app_item_create(
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Create item page."""
     details = infra.parse.details_from_params(
@@ -94,7 +95,7 @@ async def app_item_update(
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Edit item page."""
     details = infra.parse.details_from_params(
@@ -142,7 +143,7 @@ async def app_item_delete(
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.config),
-        response_class: Response = HTMLResponse,
+        response_class: Type[Response] = HTMLResponse,
 ):
     """Delete item page."""
     details = infra.parse.details_from_params(
