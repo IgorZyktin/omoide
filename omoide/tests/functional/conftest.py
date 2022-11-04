@@ -13,7 +13,7 @@ from databases import Database
 from omoide import domain
 from omoide import infra
 from omoide.presentation import api_models
-from omoide.storage import repositories
+from omoide.storage.repositories import asyncpg
 from omoide.storage.database import models
 
 
@@ -41,18 +41,18 @@ async def database():
 
 
 @pytest.fixture(scope='session')
-def items_repository(database):
-    return repositories.ItemsRepository(database)
+def items_write_repository(database):
+    return asyncpg.ItemsWriteRepository(database)
 
 
 @pytest.fixture(scope='session')
 def metainfo_repository(database):
-    return repositories.MetainfoRepository(database)
+    return asyncpg.MetainfoRepository(database)
 
 
 @pytest.fixture(scope='session')
-def policy(items_repository):
-    return infra.Policy(items_repo=items_repository)
+def policy(items_write_repository):
+    return infra.Policy(items_repo=items_write_repository)
 
 
 @pytest.fixture(scope='session')

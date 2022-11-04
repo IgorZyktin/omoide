@@ -7,7 +7,7 @@ from omoide.infra.special_types import Success
 
 async def test_item_creation(
         database,
-        items_repository,
+        items_write_repository,
         metainfo_repository,
         policy,
         user,
@@ -15,7 +15,7 @@ async def test_item_creation(
 ):
     """Test that item gets created."""
     # arrange
-    use_case = use_cases.ApiItemCreateUseCase(items_repository,
+    use_case = use_cases.ApiItemCreateUseCase(items_write_repository,
                                               metainfo_repository)
 
     # act
