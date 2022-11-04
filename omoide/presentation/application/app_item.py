@@ -42,11 +42,7 @@ async def app_item_create(
 
     aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
-
-    if not utils.is_valid_uuid(parent_uuid):
-        _parent_uuid = None
-    else:
-        _parent_uuid = UUID(parent_uuid)
+    _parent_uuid = utils.cast_uuid(parent_uuid)
 
     result = await use_case.execute(policy, user, _parent_uuid)
 

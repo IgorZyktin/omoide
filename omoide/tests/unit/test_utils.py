@@ -8,6 +8,15 @@ import pytest
 from omoide import utils
 
 
+@pytest.mark.parametrize('uuid,length,result', [
+    ('fb6a8840-d6a8-4ab4-9555-be67917c8717', 2, 'fb'),
+    (UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717'), 3, 'fb6'),
+])
+def test_get_bucket(uuid, length, result):
+    """Must cut symbols from the start, but only if input is UUID."""
+    assert utils.get_bucket(uuid, length) == result
+
+
 @pytest.mark.parametrize('uuid,result', [
     ('something', False),
     (UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717'), True),
@@ -16,6 +25,21 @@ from omoide import utils
 def test_is_valid_uuid(uuid, result):
     """Must validate UUIDs and skip random strings."""
     assert utils.is_valid_uuid(uuid) is result
+
+
+@pytest.mark.parametrize('uuid,result', [
+    (None,
+     None),
+    ('something',
+     None),
+    (UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717'),
+     UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717')),
+    ('fb6a8840-d6a8-4ab4-9555-be67917c8717',
+     UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717')),
+])
+def test_cast_uuid(uuid, result):
+    """Must convert to UUID or None."""
+    assert utils.cast_uuid(uuid) == result
 
 
 @pytest.mark.parametrize('size, reference', [
@@ -77,4 +101,5 @@ def test_byte_count_to_text_en(size, reference):
     (99_658, '1d 3h 40m 58s'),
 ])
 def test_format_as_human_readable_time(seconds, reference):
+    """Must convert seconds into human-readable time."""
     assert utils.human_readable_time(seconds) == reference
