@@ -98,16 +98,6 @@ function addFiles(source) {
         proxy.render()
     }
 
-    let jump = document.createElement('a')
-    let linkText = document.createTextNode('Jump to top');
-    jump.classList.add('location')  // FIXME
-    jump.appendChild(linkText);
-    jump.title = 'Scroll back to top';
-    jump.onclick = () => {
-        document.body.scrollTop = document.documentElement.scrollTop = 0;
-    }
-    $(jump).appendTo(container)
-
     button.removeClass('upload-in-progress')
 }
 
@@ -628,14 +618,14 @@ async function generateFeaturesForProxy(proxy, uploadState) {
     proxy.ready = false
     let useBackoff = $('#feature-exif-backoff').is(':checked')
 
-    if (uploadState.features['extractYear'], useBackoff)
-        await _extractYearFeature(proxy)
+    if (uploadState.features['extractYear'])
+        await _extractYearFeature(proxy, useBackoff)
 
-    if (uploadState.features['extractMonthEN'], useBackoff)
-        await _extractMonthENFeature(proxy)
+    if (uploadState.features['extractMonthEN'])
+        await _extractMonthENFeature(proxy, useBackoff)
 
-    if (uploadState.features['extractMonthRU'], useBackoff)
-        await _extractMonthRUFeature(proxy)
+    if (uploadState.features['extractMonthRU'])
+        await _extractMonthRUFeature(proxy, useBackoff)
 
     proxy.featuresGenerated = true
     proxy.actualSteps.add('generateFeaturesForProxy')
