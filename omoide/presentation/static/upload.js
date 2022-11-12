@@ -3,7 +3,7 @@ const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
 const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
-const VALID_EXTENSIONS = ['jpg', 'jpeg']
+const VALID_EXTENSIONS = ['jpg', 'jpeg', 'png']
 const MAX_FILENAME_LENGTH = 255
 const EXPECTED_STEPS = new Set([
     'validateProxy',
