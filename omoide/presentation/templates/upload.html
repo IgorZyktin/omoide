@@ -54,6 +54,10 @@
 
         <div id="all-features-exif" style="display: none;">
             <div>
+                <input type="checkbox" id="feature-exif-backoff" checked>
+                <label for="feature-exif-backoff">Get time info from file if there is no EXIF</label>
+            </div>
+            <div>
                 <input type="checkbox" id="feature-exif-year">
                 <label for="feature-exif-year">Extract year from EXIF, like
                     "2022"</label>
@@ -91,6 +95,7 @@
     <br/>
     <div id="media" class="upload-container narrow-block"></div>
     <br/>
+    <a href="#" onclick="jumpToTop(); return false;" class="to-top-link">Jump to top</a>
     <br/>
 
     <script>
