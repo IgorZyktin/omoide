@@ -26,12 +26,6 @@
 
         <div id="parent_thumbnail" class="parent_thumbnail"></div>
 
-        <label for="complexity_of_upload">Complexity of upload:</label>
-        <select id="complexity_of_upload">
-            <option value="simple">Just upload all</option>
-            <option value="complex">Let me check before upload</option>
-        </select>
-
         <label for="upload_as">Upload media in a way that:</label>
         <select id="upload_as">
             <option value="children">Every file is a new item</option>
@@ -88,7 +82,7 @@
                type="button"
                title="Start operation"
                class="button"
-               value="Upload media">
+               value="Preprocess media">
 
         <div id="global-status"></div>
 
@@ -107,23 +101,10 @@
                 return
             }
 
-            if ($('#complexity_of_upload').val() === 'simple') {
-                oneShot(this, UPLOAD_STATE)
-            } else {
-                if (UPLOAD_STATE.status === 'init') {
-                    preprocessMedia(this, UPLOAD_STATE)
-                } else if (UPLOAD_STATE.status === 'processed') {
-                    uploadMedia(this, UPLOAD_STATE)
-                }
-            }
-        });
-
-        $('#complexity_of_upload').on('change', function () {
-            UPLOAD_STATE.setStatus('init')
-            if ($(this).val() === 'simple') {
-                $('#media_button').val('Upload media')
-            } else {
-                $('#media_button').val('Preprocess media')
+            if (UPLOAD_STATE.status === 'init') {
+                preprocessMedia(this, UPLOAD_STATE)
+            } else if (UPLOAD_STATE.status === 'processed') {
+                uploadMedia(this, UPLOAD_STATE)
             }
         });
 
@@ -162,7 +143,7 @@
         let thumbnailElement = $('#parent_thumbnail')
         let uuidElement = $('#parent_uuid')
 
-        function extractPermissionsFromParent(parent){
+        function extractPermissionsFromParent(parent) {
             if (parent === undefined || parent.permissions.length === 0)
                 return
 

@@ -975,12 +975,6 @@ async function ensureParentIsCollection(parent) {
     }
 }
 
-async function oneShot(button, uploadState) {
-    // preprocess + upload
-    await preprocessMedia(button, uploadState)
-    await uploadMedia(button, uploadState)
-}
-
 async function preprocessMedia(button, uploadState) {
     // prepare given media for upload
     let targets = getTargets()
