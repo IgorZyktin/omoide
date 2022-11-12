@@ -20,7 +20,9 @@ class UsersRepository(
     async def generate_user_uuid(self) -> UUID:
         """Generate new UUID4 for user."""
         stmt = """
-        SELECT 1 FROM users WHERE uuid = :uuid;
+        SELECT 1 FROM users WHERE uuid = :uuid
+        UNION 
+        SELECT 1 FROM orphan_files WHERE owner_uuid = :uuid;
         """
         while True:
             uuid = uuid4()

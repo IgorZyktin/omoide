@@ -25,9 +25,10 @@ class ItemsWriteRepository(
 
     async def generate_item_uuid(self) -> UUID:
         """Generate new UUID4 for an item."""
-        # TODO(i.zyktin): must also check zombies table
         stmt = """
-        SELECT 1 FROM items WHERE uuid = :uuid;
+        SELECT 1 FROM items WHERE uuid = :uuid
+        UNION
+        SELECT 1 FROM orphan_files WHERE item_uuid = :uuid;
         """
         while True:
             uuid = uuid4()
