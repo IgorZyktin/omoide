@@ -21,15 +21,33 @@
                 <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
             {% endif %}
 
-            <a href="/content/content/{{ item.owner_uuid }}/{{ item.content_path }}">
-                {%- if item.preview_ext is none -%}
-                    <img src="{{ url_for('static', path='empty.png') }}"
-                         alt="{{ item.name }}"/>
-                {%- else -%}
-                    <img src="/content/preview/{{ item.owner_uuid }}/{{ item.preview_path }}"
-                         alt="{{ item.name }}"/>
-                {%- endif -%}
-            </a>
+            {% if item.is_collection %}
+                <div class="envelope env-collection">
+                    {%- if item.is_collection and item.name -%}
+                        <p>{{ item.name }}</p>
+                    {%- endif -%}
+
+                    <a href="{{ request.url_for('app_browse', uuid=item.uuid) + aim.to_url(page=1) | safe }}">
+                        {%- if item.thumbnail_ext is none -%}
+                            <img src="{{ url_for('static', path='empty.png') }}"
+                                 alt="{{ item.name }}"/>
+                        {%- else -%}
+                            <img src="/content/thumbnail/{{ item.owner_uuid }}/{{ item.thumbnail_path }}"
+                                 alt="{{ item.name }}"/>
+                        {%- endif -%}
+                    </a>
+                </div>
+            {% else %}
+                <a href="/content/content/{{ item.owner_uuid }}/{{ item.content_path }}">
+                    {%- if item.preview_ext is none -%}
+                        <img src="{{ url_for('static', path='empty.png') }}"
+                             alt="{{ item.name }}"/>
+                    {%- else -%}
+                        <img src="/content/preview/{{ item.owner_uuid }}/{{ item.preview_path }}"
+                             alt="{{ item.name }}"/>
+                    {%- endif -%}
+                </a>
+            {% endif %}
 
             {% if album.has_next %}
                 <a class="preview-swipe"
