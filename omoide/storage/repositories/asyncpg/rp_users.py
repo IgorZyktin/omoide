@@ -21,7 +21,7 @@ class UsersRepository(
         """Generate new UUID4 for user."""
         stmt = """
         SELECT 1 FROM users WHERE uuid = :uuid
-        UNION 
+        UNION
         SELECT 1 FROM orphan_files WHERE owner_uuid = :uuid;
         """
         while True:
