@@ -83,7 +83,9 @@ def cmd_du():
     """Show disk usage for every user."""
     config = commands.du.get_config()
     with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
-        with helpers.timing():
+        with helpers.timing(
+            start_template='Calculating total disk usage...',
+        ):
             commands.run_du(engine, config)
 
 

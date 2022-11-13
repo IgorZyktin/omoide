@@ -32,7 +32,7 @@ def timing(
         callback: Callable = print,
         start_template: TPL = lambda: None,
         end_template: TPL = 'Finished in {delta:0.2f} seconds',
-) -> None:
+) -> Iterator[None]:
     """Create engine and dispose it after completion."""
 
     def _get_template(template: TPL) -> str | None:
