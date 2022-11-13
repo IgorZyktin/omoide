@@ -22,7 +22,7 @@ router = fastapi.APIRouter()
 
 @router.get('/upload')
 @web.login_required
-async def upload(
+async def app_upload(
         request: Request,
         parent_uuid: str = '',
         user: domain.User = Depends(dep.get_current_user),
