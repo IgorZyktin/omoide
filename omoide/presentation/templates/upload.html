@@ -1,4 +1,5 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
 
 {% block head %}
     <script type="text/javascript"
@@ -17,14 +18,17 @@
 {% block body %}
     <div class="narrow-block">
         <h1>Upload media</h1>
-        <label for="parent_uuid">Parent item (optional):
+        <label for="parent_uuid">Parent item:
             <input id="parent_uuid"
                    type="text"
-                   value="{{ parent_uuid }}"
+                   value="{{ item.uuid }}"
+                   disabled
                    class="height-auto"/>
         </label>
 
-        <div id="parent_thumbnail" class="parent_thumbnail"></div>
+        <div id="parent_thumbnail" class="parent_thumbnail">
+            {{ render_thumbnail_for_item(request, item, aim) }}
+        </div>
 
         <label for="upload_as">Upload media in a way that:</label>
         <select id="upload_as">
@@ -42,8 +46,10 @@
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
-        <label for="item_permissions">Permissions for every new item (one user per line):<br>
-            <textarea id="item_permissions" rows="10"></textarea>
+        <label for="item_permissions">Permissions (one user per line):<br>
+            <textarea id="item_permissions" rows="10">
+                {%- for user in permissions -%}
+                    {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}</textarea>
         </label>
 
         <div>
@@ -54,11 +60,12 @@
 
         <div id="all-features-exif" style="display: none;">
             <div>
-                <input type="checkbox" id="feature-exif-backoff" checked>
-                <label for="feature-exif-backoff">Get time info from file if there is no EXIF</label>
+                <input type="checkbox" id="feature-exif-backoff">
+                <label for="feature-exif-backoff">Get time info from file if
+                    there is no EXIF</label>
             </div>
             <div>
-                <input type="checkbox" id="feature-exif-year">
+                <input type="checkbox" id="feature-exif-year" checked>
                 <label for="feature-exif-year">Extract year from EXIF, like
                     "2022"</label>
             </div>
@@ -68,7 +75,7 @@
                     english, like "10 january"</label>
             </div>
             <div>
-                <input type="checkbox" id="feature-exif-month-ru">
+                <input type="checkbox" id="feature-exif-month-ru" checked>
                 <label for="feature-exif-month-ru">Extract month from EXIF in
                     russian, like "10 января"</label>
             </div>
@@ -95,7 +102,8 @@
     <br/>
     <div id="media" class="upload-container narrow-block"></div>
     <br/>
-    <a href="#" onclick="jumpToTop(); return false;" class="to-top-link">Jump to top</a>
+    <a href="#" onclick="jumpToTop(); return false;" class="to-top-link">Jump
+        to top</a>
     <br/>
 
     <script>
@@ -143,32 +151,6 @@
 
         $('#feature-exif-month-ru').on('change', function () {
             UPLOAD_STATE.features['extractMonthRU'] = $(this).is(':checked')
-        });
-
-        let thumbnailElement = $('#parent_thumbnail')
-        let uuidElement = $('#parent_uuid')
-
-        function extractPermissionsFromParent(parent) {
-            if (parent === undefined || parent.permissions.length === 0)
-                return
-
-            $('#item_permissions').val(parent.permissions.join('\n'))
-        }
-
-        uuidElement.on('input', function () {
-            tryLoadingThumbnail(
-                uuidElement.val(),
-                thumbnailElement,
-                extractPermissionsFromParent,
-            )
-        });
-
-        $(document).ready(function () {
-            tryLoadingThumbnail(
-                uuidElement.val(),
-                thumbnailElement,
-                extractPermissionsFromParent,
-            )
         });
     </script>
 

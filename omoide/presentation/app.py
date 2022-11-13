@@ -35,22 +35,22 @@ async def shutdown():
 app.include_router(application.auth.router)
 app.include_router(application.special.router)
 app.include_router(application.profile.router)
-app.include_router(application.upload.router)
 
 # API routes
 app.include_router(api.api_browse.router)
-app.include_router(api.api_home.router)
 app.include_router(api.api_exif.router)
+app.include_router(api.api_home.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)
 app.include_router(api.api_metainfo.router)
 
 # Application routes
-app.include_router(application.app_search.router)
 app.include_router(application.app_browse.router)
-app.include_router(application.app_preview.router)
 app.include_router(application.app_home.router)
 app.include_router(application.app_item.router)
+app.include_router(application.app_preview.router)
+app.include_router(application.app_search.router)
+app.include_router(application.app_upload.router)
 
 app.mount(
     '/static',

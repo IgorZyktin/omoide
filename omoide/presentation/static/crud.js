@@ -75,7 +75,7 @@ async function createItem(button, parameters) {
             let action = $('#action_after_creation').val()
             let uuid = response['uuid']
             if (action === 'upload') {
-                relocateWithAim(`/upload`, {'parent_uuid': uuid})
+                relocateWithAim(`/upload/${uuid}`)
             } else if (action === 'nothing') {
                 makeAnnounce(`Created ${uuid}`)
             } else if (parameters['is_collection']) {

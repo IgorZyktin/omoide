@@ -36,7 +36,7 @@ async def app_login(
         response_class: Type[Response] = HTMLResponse,
 ):
     """Ask user for login and password."""
-    url = request.url_for('app_search')
+    url = request.url_for('app_home')
 
     if not user.is_anon():
         # already logged in

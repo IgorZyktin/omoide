@@ -138,6 +138,14 @@ def app_home_use_case() -> use_cases.AppHomeUseCase:
     )
 
 
+def app_upload_use_case() -> use_cases.AppUploadUseCase:
+    """Get use case instance."""
+    return use_cases.AppUploadUseCase(
+        items_repo=items_read_repository,
+        users_repo=users_read_repository,
+    )
+
+
 # app item related use cases --------------------------------------------------
 
 
