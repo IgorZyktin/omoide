@@ -46,9 +46,10 @@
             <textarea id="item_tags" rows="10"></textarea>
         </label>
 
-        <label for="item_permissions">Permissions for every new item (one user
-            per line):<br>
-            <textarea id="item_permissions" rows="10"></textarea>
+        <label for="item_permissions">Permissions (one user per line):<br>
+            <textarea id="item_permissions" rows="10">
+                {%- for user in permissions -%}
+                    {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}</textarea>
         </label>
 
         <div>
