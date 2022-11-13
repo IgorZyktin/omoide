@@ -25,11 +25,11 @@ from omoide.presentation.app_config import Config
 router = fastapi.APIRouter(prefix='/items')
 
 
-@router.get('/create')
+@router.get('/create/{uuid}')
 @web.login_required
 async def app_item_create(
         request: Request,
-        parent_uuid: str = '',
+        uuid: str,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemCreateUseCase = Depends(
@@ -45,12 +45,13 @@ async def app_item_create(
 
     aim = domain.aim_from_params(dict(request.query_params))
     query = infra.query_maker.from_request(request.query_params)
-    _parent_uuid = utils.cast_uuid(parent_uuid)
 
-    result = await use_case.execute(policy, user, _parent_uuid)
+    valid_uuid = utils.cast_uuid(uuid)
+
+    result = await use_case.execute(policy, user, valid_uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, _parent_uuid)
+        return web.redirect_from_error(request, result.error, valid_uuid)
 
     parent, permissions = result.value
 

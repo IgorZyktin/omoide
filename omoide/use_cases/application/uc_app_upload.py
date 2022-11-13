@@ -37,7 +37,7 @@ class AppUploadUseCase:
         """Return preview model suitable for rendering."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid,
-                                               actions.Item.READ)
+                                               actions.Item.UPDATE)
             if error:
                 return Failure(error)
 
