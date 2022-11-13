@@ -185,9 +185,9 @@
     {% if not user.is_anon() %}
         <div class="menu-container">
             {% if current_item %}
-                {% set parent_hint = '?parent_uuid=' + current_item.uuid|string %}
+                {% set parent_hint = current_item.uuid | string %}
             {% else %}
-                {% set parent_hint = '' %}
+                {% set parent_hint = user.root_item | string %}
             {% endif %}
 
             <a href="{{ url_for('app_item_create') + parent_hint }}"
@@ -199,7 +199,7 @@
                 <span class="wide-text">&nbsp;Create item</span>
             </a>
 
-            <a href="{{ url_for('app_upload') + parent_hint }}"
+            <a href="{{ url_for('app_upload', uuid=parent_hint ) }}"
                title="Upload media"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"

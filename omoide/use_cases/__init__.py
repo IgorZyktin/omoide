@@ -10,4 +10,5 @@ from omoide.use_cases.application.uc_app_home import *
 from omoide.use_cases.application.uc_app_items import *
 from omoide.use_cases.application.uc_app_preview import *
 from omoide.use_cases.application.uc_app_search import *
+from omoide.use_cases.application.uc_app_upload import *
 from omoide.use_cases.auth import AuthUseCase
