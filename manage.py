@@ -7,6 +7,8 @@ from uuid import UUID
 
 import click
 
+from omoide import commands
+from omoide.commands.common import helpers
 from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
@@ -74,6 +76,17 @@ def cmd_change_password(uuid: str, password: str):
         print(f'Successfully changed password for {user.uuid} {user.name}')
 
     asyncio.run(_coro())
+
+
+@cli.command(name='du')
+def cmd_du():
+    """Show disk usage for every user."""
+    config = commands.du.get_config()
+    with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
+        with helpers.timing(
+            start_template='Calculating total disk usage...',
+        ):
+            commands.run_du(engine, config)
 
 
 if __name__ == '__main__':
