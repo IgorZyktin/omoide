@@ -50,7 +50,7 @@ async def app_search(
     result, is_random = _result.value
 
     if is_random:
-        template = 'search_random.html'
+        template = 'search_dynamic.html'
         paginator = None
     else:
         template = 'search.html'

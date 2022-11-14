@@ -1,6 +1,11 @@
 {% extends "base_search.html" %}
 {% from "macros.html" import render_paginator, render_thumbnail_for_item %}
 
+{% block head %}
+    <script type="text/javascript"
+            src="{{ url_for('static', path='scroller.js') }}"></script>
+{% endblock %}
+
 {% block body %}
 
     <div class="envelope-container">
