@@ -69,13 +69,14 @@ class Scroller {
             last_item = item
 
             this.lastSeen = Math.max(this.lastSeen, item['number'] || -1)
-            this.alreadySeen.add(item['uuid'])
 
             if (this.alreadySeen.has(item['uuid'])) {
                 continue
             } else {
                 actuallyInjected += 1
             }
+
+            this.alreadySeen.add(item['uuid'])
 
             let envelope = document.createElement('div')
             envelope.classList.add('envelope')

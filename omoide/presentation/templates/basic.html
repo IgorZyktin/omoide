@@ -1,69 +1,22 @@
 {% extends "base_search.html" %}
 
+{% block head %}
+    <script type="text/javascript"
+            src="{{ url_for('static', path='scroller.js') }}"></script>
+{% endblock %}
+
 {% block body %}
     <div class="envelope-container"></div>
     <script>
-        let container = document.querySelector('.envelope-container');
-        let endpoint = '{{ api_url }}';
-        let searchParams = new URLSearchParams(window.location.search);
-        let lastSeen = -1;
-        let nextUpload = new Date().getTime();
-        let mustLoadMore = true;
-        let mustStop = false;
-        let alreadySeen = new Set();
-
-        function callback(item) {
-            lastSeen = Math.max(lastSeen, item['number'] || -1);
-            searchParams.set('last_seen', lastSeen);
-
-            if (searchParams.get('ordered') === 'on')
-                return false
-
-            // TODO - ignore mechanism can filter out all received items
-            // more correct way to do it is to request until we
-            // get N needed items (or response will return less than N items)
-            let ignore = alreadySeen.has(item['uuid'])
-            alreadySeen.add(item['uuid'])
-            return ignore
+        let container = document.querySelector('.envelope-container')
+        let endpoint = '{{ api_url }}'
+        let scroller = new Scroller(container, endpoint)
+        let callback = function () {
+            scroller.trigger()
         }
 
-        function stopCallback() {
-            if (!mustStop) {
-                let jump = document.createElement('a')
-                let linkText = document.createTextNode('Jump to top');
-                jump.classList.add('to-top-link')
-                jump.appendChild(linkText);
-                jump.title = 'Scroll back to top';
-                jump.onclick = jumpToTop
-                document.body.appendChild(jump);
-            }
-            mustStop = true
-        }
-
-        function loadTrigger() {
-            if (new Date().getTime() >= nextUpload && atTheBottom()) {
-                nextUpload = new Date().getTime() + 500; // half of a second
-                mustLoadMore = true
-            }
-        }
-
-        function loadAction() {
-            if (mustLoadMore && !mustStop) {
-                dynamicallyLoadMoreItems(
-                    endpoint + '?' + searchParams.toString(),
-                    container,
-                    callback,
-                    stopCallback,
-                    lastSeen,
-                );
-
-                if (!atTheBottom())
-                    mustLoadMore = false
-            }
-        }
-
-        window.addEventListener('scroll', loadTrigger)
-        setInterval(loadAction, 500) // half of a second
-        loadAction()
+        window.addEventListener('scroll', callback)
+        scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
+        callback()
     </script>
 {% endblock %}
