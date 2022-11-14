@@ -70,9 +70,6 @@ async def app_search(
         'details': details,
         'paginator': paginator,
         'result': result,
-        'block_ordered': True,
-        'block_nested': True,
-        'block_paginated': True,
     }
 
     return dep.templates.TemplateResponse(template, context)
