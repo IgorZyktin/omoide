@@ -15,16 +15,16 @@
     </div>
 
     <script>
-        let container = document.querySelector('.envelope-container');
+        let container = document.querySelector('.envelope-container')
+        let endpoint = '{{ request.url_for('api_random') }}'
+        let scroller = new Scroller(container, endpoint)
+        let callback = function () {
+            scroller.trigger()
+        }
 
-        window.addEventListener('scroll', function () {
-            setTimeout(() => {
-                loadMoreItems(
-                    '{{ request.url_for('api_random', items_per_page=details.items_per_page_async) }}',
-                    container,
-                );
-            }, 1000); // one second
-        });
+        window.addEventListener('scroll', callback)
+        scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
+        callback()
     </script>
 
 {% endblock %}

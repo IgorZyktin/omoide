@@ -75,7 +75,7 @@ async def app_search(
     return dep.templates.TemplateResponse(template, context)
 
 
-@router.get('/api/random/{items_per_page}')
+@router.get('/api/random')
 async def api_random(
         request: Request,
         items_per_page: int,
