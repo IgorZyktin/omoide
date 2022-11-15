@@ -22,77 +22,34 @@ class AppSearchUseCase:
             self,
             user: domain.User,
             query: domain.Query,
-            details: domain.Details,
-    ) -> Result[errors.Error, tuple[domain.Results, bool]]:
+    ) -> Result[errors.Error, int]:
         """Perform search request."""
         async with self.search_repo.transaction():
             if user.is_anon():
-                result = await self._search_for_anon(query, details)
+                result = await self._search_for_anon(query)
             else:
-                result = await self._search_for_known(user, query, details)
+                result = await self._search_for_known(user, query)
 
         return Success(result)
 
     async def _search_for_anon(
             self,
             query: domain.Query,
-            details: domain.Details,
-    ) -> tuple[domain.Results, bool]:
+    ) -> tuple[int, int]:
         """Perform search request for anon user."""
-        if query:
-            is_random = False
-            total_items = await self.search_repo.total_specific_anon(query)
-            items = await self.search_repo.search_specific_anon(query, details)
-
-        else:
-            is_random = True
-            total_items = await self.search_repo.total_random_anon()
-            items = await self.search_repo.search_random_anon(query, details)
-
-        result = domain.Results(
-            total_items=total_items,
-            total_pages=details.calc_total_pages(total_items),
-            items=items,
-            details=details,
-        )
-
-        return result, is_random
+        total_items = await self.search_repo.total_items_anon()
+        matching_items = await self.search_repo.total_matching_anon(query)
+        return matching_items, total_items
 
     async def _search_for_known(
             self,
             user: domain.User,
             query: domain.Query,
-            details: domain.Details,
-    ) -> tuple[domain.Results, bool]:
+    ) -> tuple[int, int]:
         """Perform search request for known user."""
-        total_items = await self.search_repo.total_specific_known(
+        total_items = await self.search_repo.total_items_known(user)
+        matching_items = await self.search_repo.total_matching_known(
             user=user,
             query=query,
         )
-
-        if query:
-            is_random = False
-            items = await self.search_repo.search_specific_known(
-                user=user,
-                query=query,
-                details=details,
-            )
-
-        else:
-            is_random = True
-            items = await self.search_repo.search_random_known(
-                user=user,
-                query=query,
-                details=details,
-            )
-
-        result = domain.Results(
-            item=None,
-            total_items=total_items,
-            total_pages=details.calc_total_pages(total_items),
-            items=items,
-            details=details,
-            location=None,
-        )
-
-        return result, is_random
+        return matching_items, total_items

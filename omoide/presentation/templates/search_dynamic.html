@@ -8,15 +8,12 @@
 
 {% block body %}
 
-    <div class="envelope-container">
-        {% for item in result.items %}
-            {{ render_thumbnail_for_item(request, item, aim) }}
-        {% endfor %}
-    </div>
+    <h3>Got {{ matching_items }} of {{ total_items }} items in {{ delta }} sec.</h3>
+    <div class="envelope-container"></div>
 
     <script>
         let container = document.querySelector('.envelope-container')
-        let endpoint = '{{ request.url_for('api_random') }}'
+        let endpoint = '{{ endpoint }}'
         let scroller = new Scroller(container, endpoint)
         let callback = function () {
             scroller.trigger()
