@@ -1,4 +1,5 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_paginator, render_thumbnail_for_item %}
 
 {% block head %}
     <script type="text/javascript"
@@ -6,10 +7,16 @@
 {% endblock %}
 
 {% block body %}
-    <div class="envelope-container"></div>
+
+    <div class="envelope-container">
+        {% for item in result.items %}
+            {{ render_thumbnail_for_item(request, item, aim) }}
+        {% endfor %}
+    </div>
+
     <script>
         let container = document.querySelector('.envelope-container')
-        let endpoint = '{{ api_url }}'
+        let endpoint = '{{ request.url_for('api_random') }}'
         let scroller = new Scroller(container, endpoint)
         let callback = function () {
             scroller.trigger()
@@ -19,4 +26,5 @@
         scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
         callback()
     </script>
+
 {% endblock %}

@@ -50,7 +50,7 @@ async def app_search(
     result, is_random = _result.value
 
     if is_random:
-        template = 'search_random.html'
+        template = 'search_dynamic.html'
         paginator = None
     else:
         template = 'search.html'
@@ -70,15 +70,12 @@ async def app_search(
         'details': details,
         'paginator': paginator,
         'result': result,
-        'block_ordered': True,
-        'block_nested': True,
-        'block_paginated': True,
     }
 
     return dep.templates.TemplateResponse(template, context)
 
 
-@router.get('/api/random/{items_per_page}')
+@router.get('/api/random')
 async def api_random(
         request: Request,
         items_per_page: int,
