@@ -125,6 +125,7 @@ class Scroller {
         let searchParams = new URLSearchParams(window.location.search)
         let self = this
         searchParams.set('items_per_page', searchParams.get('items_per_page') || DEFAULT_LOAD_AMOUNT)
+        searchParams.set('last_seen', this.lastSeen)
 
         $.ajax({
             url: this.endpoint + '?' + searchParams.toString(),

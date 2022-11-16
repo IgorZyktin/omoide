@@ -12,68 +12,85 @@ class SearchRepository(
 
     async def total_items_anon(
             self,
+            aim: domain.Aim,
     ) -> int:
         """Count all available items for unauthorised user."""
-        # FIXME
-        query = """
+        # TODO - rewrite to sqlalchemy
+        _query = """
         SELECT count(*) AS total_items
         FROM items
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users);
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
         """
-        response = await self.db.fetch_one(query)
+
+        if aim.nested:
+            _query += '\nAND is_collection'
+
+        _query += ';'
+        response = await self.db.fetch_one(_query)
         return int(response['total_items'])
 
     async def total_matching_anon(
             self,
             query: domain.Query,
+            aim: domain.Aim,
     ) -> int:
         """Count matching items for unauthorised user."""
-        # FIXME
+        # TODO - rewrite to sqlalchemy
         _query = """
         SELECT count(*) AS total_items
         FROM items it
                  RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
         WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
           AND ct.tags @> :tags_include
-          AND NOT ct.tags && :tags_exclude;
+          AND NOT ct.tags && :tags_exclude
         """
+
+        if aim.nested:
+            _query += '\nAND it.is_collection'
 
         values = {
             'tags_include': query.tags_include,
             'tags_exclude': query.tags_exclude,
         }
 
+        _query += ';'
         response = await self.db.fetch_one(_query, values)
         return int(response['total_items'])
 
     async def total_items_known(
             self,
             user: domain.User,
+            aim: domain.Aim,
     ) -> int:
         """Count all available items for authorised user."""
-        # FIXME
-        query = """
+        # TODO - rewrite to sqlalchemy
+        _query = """
         SELECT count(*) AS total_items
         FROM items it
                 RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
         WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid);
+               OR it.owner_uuid::text = :user_uuid)
         """
+
+        if aim.nested:
+            _query += '\nAND it.is_collection'
 
         values = {
             'user_uuid': str(user.uuid),
         }
 
-        response = await self.db.fetch_one(query, values)
+        _query += ';'
+        response = await self.db.fetch_one(_query, values)
         return int(response['total_items'])
 
     async def total_matching_known(
             self,
             user: domain.User,
             query: domain.Query,
+            aim: domain.Aim,
     ) -> int:
         """Count available items for authorised user."""
-        # FIXME
+        # TODO - rewrite to sqlalchemy
         _query = """
         SELECT count(*) AS total_items
         FROM items it
@@ -82,151 +99,148 @@ class SearchRepository(
         WHERE (:user_uuid = ANY(cp.permissions)
                OR it.owner_uuid::text = :user_uuid)
           AND ct.tags @> :tags_include
-          AND NOT ct.tags && :tags_exclude;
+          AND NOT ct.tags && :tags_exclude
         """
+
+        if aim.nested:
+            _query += '\nAND it.is_collection'
 
         values = {
             'user_uuid': str(user.uuid),
         }
 
+        _query += ';'
         response = await self.db.fetch_one(_query, values)
         return int(response['total_items'])
 
-    # async def search_random_anon(
-    #         self,
-    #         query: domain.Query,
-    #         details: domain.Details,
-    # ) -> list[domain.Item]:
-    #     """Find random items for unauthorised user."""
-    #     _query = """
-    #     SELECT uuid,
-    #            parent_uuid,
-    #            owner_uuid,
-    #            number,
-    #            name,
-    #            is_collection,
-    #            content_ext,
-    #            preview_ext,
-    #            thumbnail_ext
-    #     FROM items
-    #     WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-    #     ORDER BY random() LIMIT :limit OFFSET :offset;
-    #     """
-    #
-    #     values = {
-    #         'limit': details.items_per_page,
-    #         'offset': details.offset,
-    #     }
-    #
-    #     response = await self.db.fetch_all(_query, values)
-    #     return [domain.Item.from_map(row) for row in response]
-    #
-    # async def search_specific_anon(
-    #         self,
-    #         query: domain.Query,
-    #         details: domain.Details,
-    # ) -> list[domain.Item]:
-    #     """Find specific items for unauthorised user."""
-    #     _query = """
-    #     SELECT uuid,
-    #            parent_uuid,
-    #            owner_uuid,
-    #            number,
-    #            name,
-    #            is_collection,
-    #            content_ext,
-    #            preview_ext,
-    #            thumbnail_ext,
-    #            ct.tags
-    #     FROM items it
-    #              RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
-    #     WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-    #       AND ct.tags @> :tags_include
-    #       AND NOT ct.tags && :tags_exclude
-    #     ORDER BY number LIMIT :limit OFFSET :offset;
-    #     """
-    #
-    #     values = {
-    #         'limit': details.items_per_page,
-    #         'offset': details.offset,
-    #         'tags_include': query.tags_include,
-    #         'tags_exclude': query.tags_exclude,
-    #     }
-    #
-    #     response = await self.db.fetch_all(_query, values)
-    #     return [domain.Item.from_map(row) for row in response]
-    #
+    async def search_dynamic_anon(
+            self,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items for unauthorised user."""
+        # TODO - rewrite to sqlalchemy
+        _query = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items it
+                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+          AND it.number > :last_seen
+          AND ct.tags @> :tags_include
+          AND NOT ct.tags && :tags_exclude
+        """
 
-    #
-    #
-    # async def search_random_known(
-    #         self,
-    #         user: domain.User,
-    #         query: domain.Query,
-    #         details: domain.Details,
-    # ) -> list[domain.Item]:
-    #     """Find random items for authorised user."""
-    #     _query = """
-    #     SELECT uuid,
-    #            parent_uuid,
-    #            owner_uuid,
-    #            number,
-    #            name,
-    #            is_collection,
-    #            content_ext,
-    #            preview_ext,
-    #            thumbnail_ext
-    #     FROM items it
-    #         LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-    #     WHERE (:user_uuid = ANY(cp.permissions)
-    #            OR it.owner_uuid::text = :user_uuid)
-    #     ORDER BY random() LIMIT :limit OFFSET :offset;
-    #     """
-    #
-    #     values = {
-    #         'user_uuid': str(user.uuid),
-    #         'limit': details.items_per_page,
-    #         'offset': details.offset,
-    #     }
-    #
-    #     response = await self.db.fetch_all(_query, values)
-    #     return [domain.Item.from_map(row) for row in response]
-    #
-    # async def search_specific_known(
-    #         self,
-    #         user: domain.User,
-    #         query: domain.Query,
-    #         details: domain.Details,
-    # ) -> list[domain.Item]:
-    #     """Find specific items for authorised user."""
-    #     _query = """
-    #     SELECT uuid,
-    #            parent_uuid,
-    #            owner_uuid,
-    #            number,
-    #            name,
-    #            is_collection,
-    #            content_ext,
-    #            preview_ext,
-    #            thumbnail_ext,
-    #            ct.tags
-    #     FROM items it
-    #              RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
-    #              LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-    #     WHERE (:user_uuid = ANY(cp.permissions)
-    #            OR it.owner_uuid::text = :user_uuid)
-    #       AND ct.tags @> :tags_include
-    #       AND NOT ct.tags && :tags_exclude
-    #     ORDER BY number LIMIT :limit OFFSET :offset;
-    #     """
-    #
-    #     values = {
-    #         'user_uuid': str(user.uuid),
-    #         'limit': details.items_per_page,
-    #         'offset': details.offset,
-    #         'tags_include': query.tags_include,
-    #         'tags_exclude': query.tags_exclude,
-    #     }
-    #
-    #     response = await self.db.fetch_all(_query, values)
-    #     return [domain.Item.from_map(row) for row in response]
+        if aim.nested:
+            _query += '\nAND it.is_collection'
+
+        values = {
+            'limit': details.items_per_page,
+            'tags_include': query.tags_include,
+            'tags_exclude': query.tags_exclude,
+            'last_seen': -1,
+        }
+
+        if aim.ordered:
+            _query += '\nORDER BY number LIMIT :limit;'
+            values['last_seen'] = aim.last_seen
+        else:
+            _query += '\nORDER BY random() LIMIT :limit;'
+
+        response = await self.db.fetch_all(_query, values)
+        return [domain.Item(**row) for row in response]
+
+    async def search_dynamic_known(
+            self,
+            user: domain.User,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find specific items for authorised user."""
+        # TODO - rewrite to sqlalchemy
+        _query = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext,
+               ct.tags
+        FROM items it
+                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
+                 LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+        WHERE (:user_uuid = ANY(cp.permissions)
+               OR it.owner_uuid::text = :user_uuid)
+          AND it.number > :last_seen
+          AND ct.tags @> :tags_include
+          AND NOT ct.tags && :tags_exclude
+        """
+
+        if aim.nested:
+            _query += '\nAND it.is_collection'
+
+        values = {
+            'user_uuid': str(user.uuid),
+            'limit': details.items_per_page,
+            'tags_include': query.tags_include,
+            'tags_exclude': query.tags_exclude,
+            'last_seen': -1,
+        }
+
+        if aim.ordered:
+            _query += 'ORDER BY number LIMIT :limit;'
+            values['last_seen'] = aim.last_seen
+        else:
+            _query += 'ORDER BY random() LIMIT :limit;'
+
+        response = await self.db.fetch_all(_query, values)
+        return [domain.Item(**row) for row in response]
+
+    async def search_paged_anon(
+            self,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items for unauthorised user."""
+        # FIXME
+        return []
+
+    async def search_paged_known(
+            self,
+            user: domain.User,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Find items for authorised user."""
+        # FIXME
+        return []
+
+        values = {
+            'user_uuid': str(user.uuid),
+            'limit': details.items_per_page,
+            'tags_include': query.tags_include,
+            'tags_exclude': query.tags_exclude,
+            'offset': details.offset,
+        }
+
+        if aim.ordered:
+            _query += 'ORDER BY number LIMIT :limit OFFSET :offset;;'
+        else:
+            _query += 'ORDER BY random() LIMIT :limit OFFSET :offset;;'
+
+        response = await self.db.fetch_all(_query, values)
+        return [domain.Item(**row) for row in response]

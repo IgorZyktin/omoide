@@ -1,15 +1,17 @@
 {% extends "base_search.html" %}
-{% from "macros.html" import render_paginator %}
+{% from "macros.html" import render_paginator, render_thumbnail_for_item %}
 
 {% block body %}
 
-    <h3>Got {{ matching_items }} of {{ total_items }} items in {{ delta }} sec.</h3>
+    <h3>Got {{ matching_items }} results in {{ delta }} sec.</h3>
 
-    {% if paginator %}
-        {{ render_paginator(request, paginator, query) }}
-    {% endif %}
+    {{ render_paginator(request, paginator, query) }}
 
-    <div class="envelope-container"></div>
+    <div class="envelope-container">
+        {% for item in result.items %}
+            {{ render_thumbnail_for_item(request, item, aim) }}
+        {% endfor %}
+    </div>
 
     {% if paginator %}
         {{ render_paginator(request, paginator, query) }}

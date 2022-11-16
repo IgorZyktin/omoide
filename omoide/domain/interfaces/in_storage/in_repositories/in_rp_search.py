@@ -3,6 +3,7 @@
 """
 import abc
 
+from omoide.domain import aim as aim_module
 from omoide.domain import auth
 from omoide.domain import common
 from omoide.domain.interfaces.in_storage.in_repositories.in_rp_base import \
@@ -16,7 +17,8 @@ class AbsSearchRepository(
 
     @abc.abstractmethod
     async def total_items_anon(
-            self
+            self,
+            aim: aim_module.Aim,
     ) -> int:
         """Count all available items for unauthorised user."""
 
@@ -24,6 +26,7 @@ class AbsSearchRepository(
     async def total_matching_anon(
             self,
             query: common.Query,
+            aim: aim_module.Aim,
     ) -> int:
         """Count matching items for unauthorised user."""
 
@@ -31,6 +34,7 @@ class AbsSearchRepository(
     async def total_items_known(
             self,
             user: auth.User,
+            aim: aim_module.Aim,
     ) -> int:
         """Count available items for authorised user."""
 
@@ -39,47 +43,44 @@ class AbsSearchRepository(
             self,
             user: auth.User,
             query: common.Query,
+            aim: aim_module.Aim,
     ) -> int:
         """Return total matching items for authorised user."""
 
-    # @abc.abstractmethod
-    # async def search_random_anon(
-    #         self,
-    #         query: common.Query,
-    #         details: common.Details,
-    # ) -> list[common.Item]:
-    #     """Find random items for unauthorised user."""
+    @abc.abstractmethod
+    async def search_dynamic_anon(
+            self,
+            query: common.Query,
+            details: common.Details,
+            aim: aim_module.Aim,
+    ) -> list[common.Item]:
+        """Find items for unauthorised user."""
 
-    # @abc.abstractmethod
-    # async def search_specific_anon(
-    #         self,
-    #         query: common.Query,
-    #         details: common.Details,
-    # ) -> list[common.Item]:
-    #     """Find specific items for unauthorised user."""
+    @abc.abstractmethod
+    async def search_dynamic_known(
+            self,
+            user: auth.User,
+            query: common.Query,
+            details: common.Details,
+            aim: aim_module.Aim,
+    ) -> list[common.Item]:
+        """Find items for authorised user."""
 
-    # @abc.abstractmethod
-    # async def total_random_known(
-    #         self,
-    #         user: auth.User,
-    # ) -> int:
-    #     """Count all available items for authorised user."""
+    @abc.abstractmethod
+    async def search_paged_anon(
+            self,
+            query: common.Query,
+            details: common.Details,
+            aim: aim_module.Aim,
+    ) -> list[common.Item]:
+        """Find items for unauthorised user."""
 
-
-    # @abc.abstractmethod
-    # async def search_random_known(
-    #         self,
-    #         user: auth.User,
-    #         query: common.Query,
-    #         details: common.Details,
-    # ) -> list[common.Item]:
-    #     """Find random items for authorised user."""
-
-    # @abc.abstractmethod
-    # async def search_specific_known(
-    #         self,
-    #         user: auth.User,
-    #         query: common.Query,
-    #         details: common.Details,
-    # ) -> list[common.Item]:
-    #     """Find specific items for authorised user."""
+    @abc.abstractmethod
+    async def search_paged_known(
+            self,
+            user: auth.User,
+            query: common.Query,
+            details: common.Details,
+            aim: aim_module.Aim,
+    ) -> list[common.Item]:
+        """Find items for authorised user."""

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Search related API operations.
 """
-
 from fastapi import APIRouter
 from fastapi import Depends
 from starlette.requests import Request
@@ -21,22 +20,22 @@ router = APIRouter(prefix='/api/search')
 async def api_search(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.AppSearchUseCase = Depends(
-            dep.get_search_use_case),
+        use_case: use_cases.ApiSearchUseCase = Depends(
+            dep.api_search_use_case),
 ):
     """Return portion of random items."""
-    # details = infra.parse.details_from_params(
-    #     params=request.query_params,
-    #     items_per_page=constants.ITEMS_PER_PAGE,
-    #     items_per_page_async=constants.ITEMS_PER_UPLOAD,
-    # )
-    #
-    # aim = domain.aim_from_params(dict(request.query_params))
-    # query = infra.query_maker.from_request(request.query_params)
-    # _result = await use_case.execute(user, query, details)
+    details = infra.parse.details_from_params(
+        params=request.query_params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+        items_per_page_async=constants.ITEMS_PER_UPLOAD,
+    )
 
-    # if isinstance(_result, Success):
-    #     result, _ = _result.value
-    #     return utils.to_simple_items(request, result.items)
+    aim = domain.aim_from_params(dict(request.query_params))
+    query = infra.query_maker.from_request(request.query_params)
+
+    result = await use_case.execute(user, query, details, aim)
+
+    if isinstance(result, Success):
+        return utils.to_simple_items(request, result.value)
 
     return []

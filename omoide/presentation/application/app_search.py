@@ -28,7 +28,7 @@ async def app_search(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.AppSearchUseCase = Depends(
-            dep.get_search_use_case),
+            dep.app_search_use_case),
         config: Config = Depends(dep.config),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -43,7 +43,7 @@ async def app_search(
     query = infra.query_maker.from_request(request.query_params)
     start = time.perf_counter()
 
-    result = await use_case.execute(user, query)
+    result = await use_case.execute(user, query, aim)
 
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error)
@@ -51,12 +51,14 @@ async def app_search(
     matching_items, total_items = result.value
     delta = time.perf_counter() - start
 
+    # TODO - use separate use case for paged search
+
     if aim.paged:
         template = 'search_paged.html'
         paginator = infra.Paginator(
             page=details.page,
             items_per_page=details.items_per_page,
-            total_items=total_items,
+            total_items=matching_items,
             pages_in_block=constants.PAGES_IN_BLOCK,
         )
     else:

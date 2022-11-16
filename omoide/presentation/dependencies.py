@@ -106,7 +106,7 @@ async def get_current_user(
 # application related use cases -----------------------------------------------
 
 
-def get_search_use_case() -> use_cases.AppSearchUseCase:
+def app_search_use_case() -> use_cases.AppSearchUseCase:
     """Get use case instance."""
     return use_cases.AppSearchUseCase(
         search_repo=search_repository,
@@ -147,6 +147,13 @@ def app_upload_use_case() -> use_cases.AppUploadUseCase:
 
 
 # app item related use cases --------------------------------------------------
+
+
+def api_search_use_case() -> use_cases.ApiSearchUseCase:
+    """Get use case instance."""
+    return use_cases.ApiSearchUseCase(
+        search_repo=search_repository,
+    )
 
 
 def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:

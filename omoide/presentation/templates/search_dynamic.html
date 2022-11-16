@@ -1,5 +1,4 @@
 {% extends "base_search.html" %}
-{% from "macros.html" import render_paginator, render_thumbnail_for_item %}
 
 {% block head %}
     <script type="text/javascript"
@@ -8,7 +7,7 @@
 
 {% block body %}
 
-    <h3>Got {{ matching_items }} of {{ total_items }} items in {{ delta }} sec.</h3>
+    <h3>Got {{ matching_items }} results in {{ delta }} sec.</h3>
     <div class="envelope-container"></div>
 
     <script>
