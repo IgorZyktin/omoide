@@ -53,13 +53,13 @@ app.include_router(application.app_preview.router)
 app.include_router(application.app_search.router)
 app.include_router(application.app_upload.router)
 
-if app_config.get_config().env != 'prod':
-    app.mount(
-        '/static',
-        StaticFiles(directory='omoide/presentation/static'),
-        name='static',
-    )
+app.mount(
+    '/static',
+    StaticFiles(directory='omoide/presentation/static'),
+    name='static',
+)
 
+if app_config.get_config().env != 'prod':
     app.mount(
         '/content',
         StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
