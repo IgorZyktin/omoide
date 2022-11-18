@@ -170,8 +170,41 @@ class SearchRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items for unauthorised user."""
-        # FIXME
-        return []
+        # TODO - rewrite to sqlalchemy
+        _query = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext
+        FROM items it
+                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
+        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+          AND ct.tags @> :tags_include
+          AND NOT ct.tags && :tags_exclude
+        """
+
+        if aim.nested:
+            _query += '\nAND it.is_collection'
+
+        values = {
+            'tags_include': query.tags_include,
+            'tags_exclude': query.tags_exclude,
+            'limit': details.items_per_page,
+            'offset': details.offset,
+        }
+
+        if aim.ordered:
+            _query += '\nORDER BY number LIMIT :limit OFFSET :offset;'
+        else:
+            _query += '\nORDER BY random() LIMIT :limit OFFSET :offset;'
+
+        response = await self.db.fetch_all(_query, values)
+        return [domain.Item(**row) for row in response]
 
     async def search_paged_known(
             self,
@@ -181,8 +214,29 @@ class SearchRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items for authorised user."""
-        # FIXME
-        return []
+        # TODO - rewrite to sqlalchemy
+        _query = """
+        SELECT uuid,
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext,
+               ct.tags
+        FROM items it
+                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
+                 LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+        WHERE (:user_uuid = ANY(cp.permissions)
+               OR it.owner_uuid::text = :user_uuid)
+          AND ct.tags @> :tags_include
+          AND NOT ct.tags && :tags_exclude
+        """
+
+        if aim.nested:
+            _query += '\nAND it.is_collection'
 
         values = {
             'user_uuid': str(user.uuid),
@@ -193,9 +247,9 @@ class SearchRepository(
         }
 
         if aim.ordered:
-            _query += 'ORDER BY number LIMIT :limit OFFSET :offset;;'
+            _query += 'ORDER BY number LIMIT :limit OFFSET :offset;'
         else:
-            _query += 'ORDER BY random() LIMIT :limit OFFSET :offset;;'
+            _query += 'ORDER BY random() LIMIT :limit OFFSET :offset;'
 
         response = await self.db.fetch_all(_query, values)
         return [domain.Item(**row) for row in response]

@@ -74,4 +74,52 @@ class AppDynamicSearchUseCase(BaseSearchUseCase):
 
 class AppPagedSearchUseCase(BaseSearchUseCase):
     """Use case for paged search."""
-    # TODO
+
+    async def execute(
+            self,
+            user: domain.User,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> Result[errors.Error, list[domain.Item]]:
+        """Perform search request."""
+        async with self.search_repo.transaction():
+            if user.is_anon():
+                matching_items = await self \
+                    ._search_for_anon(query, details, aim)
+            else:
+                matching_items = await self \
+                    ._search_for_known(user, query, details, aim)
+
+        return Success(matching_items)
+
+    async def _search_for_anon(
+            self,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Return corresponding items for anon user."""
+        if query:
+            matching_items = await self.search_repo \
+                .search_paged_anon(query, details, aim)
+        else:
+            matching_items = []
+
+        return matching_items
+
+    async def _search_for_known(
+            self,
+            user: domain.User,
+            query: domain.Query,
+            details: domain.Details,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Calculate all possible search results for known user."""
+        if query:
+            matching_items = await self.search_repo \
+                .search_paged_known(user, query, details, aim)
+        else:
+            matching_items = []
+
+        return matching_items

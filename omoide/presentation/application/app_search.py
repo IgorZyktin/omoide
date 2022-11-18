@@ -45,25 +45,31 @@ async def app_search(
     query = infra.query_maker.from_request(request.query_params)
     start = time.perf_counter()
 
+    result = await use_case_dynamic.execute(user, query, aim)
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error)
+
+    matching_items = result.value
+
     if aim.paged:
         template = 'search_paged.html'
-        result = await use_case_paged.execute(user, query, aim)
-        matching_items = -1
+        result = await use_case_paged.execute(user, query, details, aim)
+
+        if isinstance(result, Failure):
+            return web.redirect_from_error(request, result.error)
+
+        items = result.value
         paginator = infra.Paginator(
-            page=details.page,
+            page=aim.page,
             items_per_page=details.items_per_page,
             total_items=matching_items,
             pages_in_block=constants.PAGES_IN_BLOCK,
         )
 
     else:
+        items = []
         template = 'search_dynamic.html'
-        result = await use_case_dynamic.execute(user, query, aim)
-        matching_items = result.value
         paginator = None
-
-    if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error)
 
     delta = time.perf_counter() - start
 
@@ -75,6 +81,7 @@ async def app_search(
         'query': infra.query_maker.QueryWrapper(query, details),
         'details': details,
         'paginator': paginator,
+        'items': items,
         'matching_items': utils.sep_digits(matching_items),
         'delta': f'{delta:0.3f}',
         'endpoint': request.url_for('api_search'),
