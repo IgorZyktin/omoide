@@ -44,7 +44,15 @@ class Aim(BaseModel):
         def _str(value: bool) -> str:
             return 'on' if value else 'off'
 
-        return '?' + '&'.join([
+        # FIXME
+        no_spacer = kwargs.pop('no_spacer', None)
+
+        if no_spacer:
+            spacer = ''
+        else:
+            spacer = '?'
+
+        return spacer + '&'.join([
             f'ordered={_str(values["ordered"])}',
             f'nested={_str(values["nested"])}',
             f'paged={_str(values["paged"])}',

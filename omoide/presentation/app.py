@@ -43,6 +43,7 @@ app.include_router(api.api_home.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)
 app.include_router(api.api_metainfo.router)
+app.include_router(api.api_search.router)
 
 # Application routes
 app.include_router(application.app_browse.router)
