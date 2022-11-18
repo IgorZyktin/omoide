@@ -4,6 +4,7 @@
 import concurrent
 import concurrent.futures
 import os
+from collections import defaultdict
 from pathlib import Path
 from typing import Iterator
 from uuid import UUID
@@ -43,7 +44,13 @@ def scan(
             print(f'Folder {folder.name} does not exist!')
             continue
 
-        scan_top_level_folder(engine, folder, stats)
+        files_counter = scan_top_level_folder(engine, folder, stats)
+
+        for user, maximum in files_counter.items():
+            if isinstance(user, bytes):
+                stats.store_files_counter(user.decode(), maximum)
+            else:
+                stats.store_files_counter(user, maximum)
 
     return stats
 
@@ -206,27 +213,39 @@ def describe_result(
 
     _print_line()
 
+    max_files = sorted(stats.max_files.items(),
+                       key=lambda x: x[1], reverse=True)
+    if max_files:
+        print(f'Maximum files: {max_files[0][0]}: {max_files[0][1]}')
+
 
 def scan_top_level_folder(
         engine: Engine,
         path: Path,
         stats: Stats,
-) -> None:
+) -> dict[bytes, int]:
     """Gather info about top level folder."""
     users = os.listdir(path)
     futures = []
+    files_counter: dict[bytes, int] = defaultdict(int)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         for user in users:
             uuid = UUID(str(user))
             files = scan_user_folder(engine, path, stats, uuid)
 
+            total_files = 0
             for file in files:
                 futures.append(executor.submit(get_size, uuid, file))
+                total_files += 1
+
+            files_counter[user] = len(os.listdir(path / str(uuid)))
 
         for future in concurrent.futures.as_completed(futures):
             uuid, size = future.result()
             stats.store_size(uuid, path, file, size)
+
+    return files_counter
 
 
 def scan_user_folder(

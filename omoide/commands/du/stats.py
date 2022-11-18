@@ -47,6 +47,7 @@ class Stats:
     def __init__(self):
         """Initialize instance."""
         self.users: dict[UUID, UserData] = {}
+        self.max_files: dict[UUID, int] = {}
 
     def store_user(self, uuid: UUID, name: str) -> None:
         """Save user in stats."""
@@ -70,3 +71,12 @@ class Stats:
             return
 
         user.store_size(path, size)
+
+    def store_files_counter(self, user: str, maximum: int) -> None:
+        """Store maximum amount of files in single folder."""
+        uuid = UUID(user)
+
+        if uuid in self.max_files:
+            self.max_files[uuid] = max(maximum, self.max_files[uuid])
+        else:
+            self.max_files[uuid] = maximum
