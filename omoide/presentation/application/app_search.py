@@ -53,12 +53,12 @@ async def app_search(
 
     if aim.paged:
         template = 'search_paged.html'
-        result = await use_case_paged.execute(user, query, details, aim)
+        paged_result = await use_case_paged.execute(user, query, details, aim)
 
-        if isinstance(result, Failure):
-            return web.redirect_from_error(request, result.error)
+        if isinstance(paged_result, Failure):
+            return web.redirect_from_error(request, paged_result.error)
 
-        items = result.value
+        items = paged_result.value
         paginator = infra.Paginator(
             page=aim.page,
             items_per_page=details.items_per_page,
