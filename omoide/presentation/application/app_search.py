@@ -27,8 +27,10 @@ router = fastapi.APIRouter()
 async def app_search(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        use_case: use_cases.AppSearchUseCase = Depends(
-            dep.app_search_use_case),
+        use_case_dynamic: use_cases.AppDynamicSearchUseCase = Depends(
+            dep.app_dynamic_search_use_case),
+        use_case_paged: use_cases.AppPagedSearchUseCase = Depends(
+            dep.app_paged_search_use_case),
         config: Config = Depends(dep.config),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -43,27 +45,27 @@ async def app_search(
     query = infra.query_maker.from_request(request.query_params)
     start = time.perf_counter()
 
-    result = await use_case.execute(user, query, aim)
-
-    if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error)
-
-    matching_items, total_items = result.value
-    delta = time.perf_counter() - start
-
-    # TODO - use separate use case for paged search
-
     if aim.paged:
         template = 'search_paged.html'
+        result = await use_case_paged.execute(user, query, aim)
+        matching_items = -1
         paginator = infra.Paginator(
             page=details.page,
             items_per_page=details.items_per_page,
             total_items=matching_items,
             pages_in_block=constants.PAGES_IN_BLOCK,
         )
+
     else:
         template = 'search_dynamic.html'
+        result = await use_case_dynamic.execute(user, query, aim)
+        matching_items = result.value
         paginator = None
+
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error)
+
+    delta = time.perf_counter() - start
 
     context = {
         'request': request,
@@ -74,7 +76,6 @@ async def app_search(
         'details': details,
         'paginator': paginator,
         'matching_items': utils.sep_digits(matching_items),
-        'total_items': utils.sep_digits(total_items),
         'delta': f'{delta:0.3f}',
         'endpoint': request.url_for('api_search'),
     }
