@@ -61,7 +61,7 @@
             {% if paginator.has_previous %}
                 {# TODO - create general class for url handling #}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + query.at_page(paginator.previous_page).as_str() + aim.to_url(page=paginator.previous_page, no_spacer=True) }}">
+                   href="{{ request.url_for('app_search') + query.at_page(paginator.previous_page).as_str() + '&' + aim.to_url(page=paginator.previous_page, no_spacer=True) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -90,11 +90,11 @@
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
                     {# TODO - create general class for url handling #}
-                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() + aim.to_url(page=page.number, no_spacer=True) }}"
+                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() + '&' + aim.to_url(page=page.number, no_spacer=True) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
                     {# TODO - create general class for url handling #}
-                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() + aim.to_url(page=page.number, no_spacer=True) }}"
+                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() + '&' + aim.to_url(page=page.number, no_spacer=True) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -103,7 +103,7 @@
             {% if paginator.has_next %}
                 {# TODO - create general class for url handling #}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + query.at_page(paginator.next_page).as_str() + aim.to_url(page=paginator.next_page, no_spacer=True) }}">
+                   href="{{ request.url_for('app_search') + query.at_page(paginator.next_page).as_str() + '&' + aim.to_url(page=paginator.next_page, no_spacer=True) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
