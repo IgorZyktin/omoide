@@ -10,25 +10,6 @@ class SearchRepository(
 ):
     """Repository that performs all search queries."""
 
-    async def total_items_anon(
-            self,
-            aim: domain.Aim,
-    ) -> int:
-        """Count all available items for unauthorised user."""
-        # TODO - rewrite to sqlalchemy
-        _query = """
-        SELECT count(*) AS total_items
-        FROM items
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-        """
-
-        if aim.nested:
-            _query += '\nAND is_collection'
-
-        _query += ';'
-        response = await self.db.fetch_one(_query)
-        return int(response['total_items'])
-
     async def total_matching_anon(
             self,
             query: domain.Query,
@@ -51,32 +32,6 @@ class SearchRepository(
         values = {
             'tags_include': query.tags_include,
             'tags_exclude': query.tags_exclude,
-        }
-
-        _query += ';'
-        response = await self.db.fetch_one(_query, values)
-        return int(response['total_items'])
-
-    async def total_items_known(
-            self,
-            user: domain.User,
-            aim: domain.Aim,
-    ) -> int:
-        """Count all available items for authorised user."""
-        # TODO - rewrite to sqlalchemy
-        _query = """
-        SELECT count(*) AS total_items
-        FROM items it
-                RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid)
-        """
-
-        if aim.nested:
-            _query += '\nAND it.is_collection'
-
-        values = {
-            'user_uuid': str(user.uuid),
         }
 
         _query += ';'
