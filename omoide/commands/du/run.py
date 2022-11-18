@@ -223,11 +223,11 @@ def scan_top_level_folder(
         engine: Engine,
         path: Path,
         stats: Stats,
-) -> dict[bytes, int]:
+) -> dict[bytes | str, int]:
     """Gather info about top level folder."""
     users = os.listdir(path)
     futures = []
-    files_counter: dict[bytes, int] = defaultdict(int)
+    files_counter: dict[bytes | str, int] = defaultdict(int)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         for user in users:
