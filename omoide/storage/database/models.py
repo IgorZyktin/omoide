@@ -256,7 +256,6 @@ class Metainfo(Base):
     height = sa.Column(sa.Integer, nullable=True)
     duration = sa.Column(sa.Float, nullable=True)
     resolution = sa.Column(sa.Float, nullable=True)
-    size = sa.Column(sa.Integer, nullable=True)
     media_type = sa.Column(sa.String(length=SMALL), nullable=True)
 
     author = sa.Column(sa.String(length=MEDIUM), nullable=True)
@@ -265,6 +264,10 @@ class Metainfo(Base):
     description = sa.Column(sa.String(length=HUGE), nullable=True)
 
     extras = sa.Column(pg.JSONB, nullable=False)
+
+    content_size = sa.Column(sa.Integer, nullable=True)
+    preview_size = sa.Column(sa.Integer, nullable=True)
+    thumbnail_size = sa.Column(sa.Integer, nullable=True)
 
     # relations ---------------------------------------------------------------
 

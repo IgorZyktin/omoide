@@ -4,7 +4,7 @@
 from typing import Optional
 from uuid import UUID
 
-import sqlalchemy
+import sqlalchemy as sa
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -19,7 +19,11 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             uuid: UUID,
     ) -> Optional[domain.User]:
         """Return User or None."""
-        stmt = sqlalchemy.select(models.User).where(models.User.uuid == uuid)
+        stmt = sa.select(
+            models.User
+        ).where(
+            models.User.uuid == uuid
+        )
         response = await self.db.fetch_one(stmt)
         return domain.User(**response) if response else None
 
@@ -28,7 +32,11 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             login: str,
     ) -> Optional[domain.User]:
         """Return User or None."""
-        stmt = sqlalchemy.select(models.User).where(models.User.login == login)
+        stmt = sa.select(
+            models.User
+        ).where(
+            models.User.login == login
+        )
         response = await self.db.fetch_one(stmt)
         return domain.User(**response) if response else None
 
@@ -37,12 +45,10 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             uuids: list[UUID],
     ) -> list[domain.User]:
         """Return list of users with given uuids."""
-        stmt = sqlalchemy.select(
+        stmt = sa.select(
             models.User
         ).where(
             models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
         )
-
         response = await self.db.fetch_all(stmt)
-
         return [domain.User(**record) for record in response]

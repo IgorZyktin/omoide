@@ -3,8 +3,11 @@
 """
 from uuid import UUID
 
-from omoide.domain import interfaces, errors
-from omoide.infra.special_types import Result, Success, Failure
+from omoide.domain import errors
+from omoide.domain import interfaces
+from omoide.infra.special_types import Failure
+from omoide.infra.special_types import Result
+from omoide.infra.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [

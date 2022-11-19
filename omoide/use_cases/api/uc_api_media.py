@@ -4,9 +4,14 @@
 import base64
 from uuid import UUID
 
-from omoide import domain, utils
-from omoide.domain import interfaces, errors, actions
-from omoide.infra.special_types import Result, Failure, Success
+from omoide import domain
+from omoide import utils
+from omoide.domain import actions
+from omoide.domain import errors
+from omoide.domain import interfaces
+from omoide.infra.special_types import Failure
+from omoide.infra.special_types import Result
+from omoide.infra.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [
@@ -49,7 +54,6 @@ class CreateOrUpdateMediaUseCase(BaseMediaUseCase):
         async with self.media_repo.transaction():
             error = await policy.is_restricted(user, uuid,
                                                actions.Media.CREATE_OR_UPDATE)
-
             if error:
                 return Failure(error)
 

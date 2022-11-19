@@ -80,7 +80,6 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             height=response['height'],
             duration=response['duration'],
             resolution=response['resolution'],
-            size=response['size'],
             media_type=response['media_type'],
 
             author=response['author'],
@@ -89,4 +88,8 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             description=response['description'],
 
             extras=response['extras'],
+
+            content_size=response['content_size'],
+            preview_size=response['preview_size'],
+            thumbnail_size=response['thumbnail_size'],
         )

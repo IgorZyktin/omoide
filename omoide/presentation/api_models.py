@@ -150,7 +150,6 @@ class MetainfoIn(BaseModel):
     height: Optional[int]
     duration: Optional[float]
     resolution: Optional[float]
-    size: int
     media_type: str
 
     author: Optional[str]
@@ -159,3 +158,7 @@ class MetainfoIn(BaseModel):
     description: Optional[str]
 
     extras: dict
+
+    content_size: Optional[int] = None
+    preview_size: Optional[int] = None
+    thumbnail_size: Optional[int] = None
