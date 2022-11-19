@@ -67,7 +67,7 @@ async def app_preview(
         'album': infra.Album(
             sequence=result.neighbours,
             position=result.item.uuid,
-            items_on_page=constants.PAGES_IN_BLOCK,  # TODO: move to details
+            items_on_page=constants.PAGES_IN_BLOCK,
         ),
         'current_item': result.item,
         'tags': sorted(tags),

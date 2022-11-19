@@ -19,8 +19,6 @@ __all__ = [
     'Location',
     'AccessStatus',
     'Query',
-    'Details',
-    'Results',
     'SingleResult',
     'SimpleLocation',
     'ComplexLocation',
@@ -196,47 +194,6 @@ class Query(BaseModel):
     def __bool__(self) -> bool:
         """Return True if query has tags to search."""
         return any((self.tags_include, self.tags_exclude))
-
-
-class Details(BaseModel):
-    """Additional request parameters."""
-    page: int
-    anchor: int
-    items_per_page: int
-    items_per_page_async: int = -1
-
-    def at_page(self, page: int, anchor: int) -> 'Details':
-        """Return details with different page."""
-        return type(self)(
-            page=page,
-            anchor=anchor,
-            items_per_page=self.items_per_page,
-            items_per_page_async=self.items_per_page_async,
-        )
-
-    @property
-    def offset(self) -> int:
-        """Return offset from start of the result block."""
-        return self.items_per_page * (self.page - 1)
-
-    def calc_total_pages(self, total_items: int) -> int:
-        """Calculate how many pages we need considering this query."""
-        return int(total_items / (self.items_per_page or 1))
-
-
-class Results(BaseModel):
-    """Result of a search request."""
-    item: Optional[Item]
-    total_items: int
-    total_pages: int
-    items: list[Item]
-    details: Details
-    location: Optional[Location]
-
-    @property
-    def page(self) -> int:
-        """Return current page number."""
-        return self.details.page
 
 
 class Media(BaseModel):

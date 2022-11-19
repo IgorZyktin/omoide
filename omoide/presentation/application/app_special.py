@@ -11,9 +11,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 
 from omoide import domain
-from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
@@ -24,23 +23,15 @@ async def not_found(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <not found> page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     context = {
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
-        'query': infra.query_maker.QueryWrapper(query, details),
+        'aim_wrapper': aim_wrapper,
     }
     return dep.templates.TemplateResponse(
         name='exc_not_found.html',
@@ -54,23 +45,15 @@ async def unauthorized(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <unauthorized> page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     context = {
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
-        'query': infra.query_maker.QueryWrapper(query, details),
+        'aim_wrapper': aim_wrapper,
     }
     return dep.templates.TemplateResponse(
         name='exc_unauthorized.html',
@@ -84,23 +67,15 @@ async def forbidden(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <forbidden> page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     context = {
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
-        'query': infra.query_maker.QueryWrapper(query, details),
+        'aim_wrapper': aim_wrapper,
     }
     return dep.templates.TemplateResponse(
         name='exc_forbidden.html',
@@ -114,23 +89,15 @@ async def bad_request(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <bad request> page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     context = {
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
-        'query': infra.query_maker.QueryWrapper(query, details),
+        'aim_wrapper': aim_wrapper,
     }
     return dep.templates.TemplateResponse(
         name='exc_bad_request.html',

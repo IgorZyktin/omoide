@@ -16,9 +16,8 @@ from starlette import status
 from omoide import domain
 from omoide import use_cases
 from omoide.domain import interfaces
-from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra
+from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
@@ -58,26 +57,17 @@ async def app_login(
 async def app_logout(
         request: Request,
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Clear authorization."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     context = {
         'request': request,
         'config': config,
         'user': domain.User.new_anon(),
-        'aim': aim,
+        'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
-        'query': infra.query_maker.QueryWrapper(query, details),
     }
-
     return dep.templates.TemplateResponse(
         name='logout.html',
         context=context,

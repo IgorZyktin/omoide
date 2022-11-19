@@ -32,9 +32,10 @@ async def shutdown():
     await dep.db.disconnect()
 
 
-app.include_router(application.auth.router)
-app.include_router(application.special.router)
-app.include_router(application.profile.router)
+# Special application routes
+app.include_router(application.app_auth.router)
+app.include_router(application.app_special.router)
+app.include_router(application.app_profile.router)
 
 # API routes
 app.include_router(api.api_browse.router)

@@ -66,7 +66,7 @@ class AbsBrowseRepository(
             user: domain.User,
             item_uuid: UUID,
             child_uuid: UUID,
-            details: common.Details,
+            aim: common.Aim,
     ) -> Optional[common.PositionedItem]:
         """Return item with its position in siblings."""
 
