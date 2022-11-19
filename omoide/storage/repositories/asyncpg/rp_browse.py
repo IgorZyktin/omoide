@@ -24,7 +24,7 @@ class BrowseRepository(
     async def get_children(
             self,
             uuid: UUID,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children and sub children of the record."""
         _query = """
@@ -46,8 +46,8 @@ class BrowseRepository(
 
         values = {
             'uuid': str(uuid),
-            'limit': details.items_per_page,
-            'offset': details.offset,
+            'limit': aim.items_per_page,
+            'offset': aim.offset,
         }
 
         response = await self.db.fetch_all(_query, values)
@@ -71,7 +71,7 @@ class BrowseRepository(
             self,
             user: domain.User,
             uuid: UUID,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children with all required fields (and access)."""
         _query = """
@@ -97,8 +97,8 @@ class BrowseRepository(
         values = {
             'user_uuid': str(user.uuid),
             'item_uuid': str(uuid),
-            'limit': details.items_per_page,
-            'offset': details.offset,
+            'limit': aim.items_per_page,
+            'offset': aim.offset,
         }
 
         response = await self.db.fetch_all(_query, values)
@@ -131,7 +131,7 @@ class BrowseRepository(
             self,
             user: domain.User,
             uuid: UUID,
-            details: domain.Details,
+            aim: domain.Aim,
             users_repo: interfaces.AbsUsersReadRepository,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
@@ -148,7 +148,7 @@ class BrowseRepository(
         ancestors = await self.get_complex_ancestors(
             user=user,
             item=current_item,
-            details=details,
+            aim=aim,
         )
 
         return domain.Location(
@@ -161,7 +161,7 @@ class BrowseRepository(
             self,
             user: domain.User,
             item: domain.Item,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> list[domain.PositionedItem]:
         """Return list of positioned ancestors of given item."""
         ancestors = []
@@ -177,7 +177,7 @@ class BrowseRepository(
                 user=user,
                 item_uuid=item_uuid,
                 child_uuid=child_uuid,
-                details=details,
+                aim=aim,
             )
 
             if ancestor is None:
@@ -195,7 +195,7 @@ class BrowseRepository(
             user: domain.User,
             item_uuid: UUID,
             child_uuid: UUID,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
         if user.is_anon():
@@ -270,7 +270,7 @@ class BrowseRepository(
         return domain.PositionedItem(
             position=mapping.pop('position') or 1,
             total_items=mapping.pop('total_items') or 1,
-            items_per_page=details.items_per_page,
+            items_per_page=aim.items_per_page,
             item=domain.Item.from_map(mapping),
         )
 

@@ -55,13 +55,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_paginator_search(request, paginator, query, aim) %}
+{% macro render_paginator_search(request, paginator, aim) %}
     {% if paginator %}
         <div class="pages">
             {% if paginator.has_previous %}
-                {# TODO - create general class for url handling #}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + query.at_page(paginator.previous_page).as_str() + '&' + aim.to_url(page=paginator.previous_page, no_spacer=True) }}">
+                   href="{{ request.url_for('app_search') + '?' + aim.to_url(page=paginator.previous_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -89,21 +88,18 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    {# TODO - create general class for url handling #}
-                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() + '&' + aim.to_url(page=page.number, no_spacer=True) }}"
+                    <a href="{{ request.url_for('app_search') + '?' + aim.to_url(page=page.number) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    {# TODO - create general class for url handling #}
-                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() + '&' + aim.to_url(page=page.number, no_spacer=True) }}"
+                    <a href="{{ request.url_for('app_search') + '?' + aim.to_url(page=page.number) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
 
             <span>&nbsp;</span>
             {% if paginator.has_next %}
-                {# TODO - create general class for url handling #}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + query.at_page(paginator.next_page).as_str() + '&' + aim.to_url(page=paginator.next_page, no_spacer=True) }}">
+                   href="{{ request.url_for('app_search') + '?' + aim.to_url(page=paginator.next_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -117,12 +113,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_paginator_by_item(request, paginator, query, uuid, aim) %}
+{% macro render_paginator_by_item(request, paginator, uuid, aim_wrapper) %}
     {% if paginator %}
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_browse', uuid=uuid) + aim.to_url(page=paginator.previous_page) | safe }}">
+                   href="{{ request.url_for('app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=paginator.previous_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -149,10 +145,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_browse', uuid=uuid) + aim.to_url(page=page.number) | safe }}"
+                    <a href="{{ request.url_for('app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=page.number) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ request.url_for('app_browse', uuid=uuid) + aim.to_url(page=page.number) | safe }}"
+                    <a href="{{ request.url_for('app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=page.number) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -160,7 +156,7 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_browse', uuid=uuid) + aim.to_url(page=paginator.next_page) | safe }}">
+                   href="{{ request.url_for('app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=paginator.next_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -230,7 +226,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_location(request, location, aim) %}
+{% macro render_location(request, location, aim_wrapper) %}
     {% if location is not none %}
         <div class="location">
             <h3>
@@ -240,11 +236,11 @@
                     {% endif %}
 
                     {% if pos.item.is_collection %}
-                        <a href="{{ request.url_for('app_browse', uuid=pos.item.uuid) + aim.to_url(page=pos.page) | safe }}">
+                        <a href="{{ request.url_for('app_browse', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url(page=pos.page) }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% else %}
-                        <a href="{{ request.url_for('app_preview', uuid=pos.item.uuid) + aim.to_url() | safe }}">
+                        <a href="{{ request.url_for('app_preview', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url() }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% endif %}
@@ -261,7 +257,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_simple_location(request, location, aim) %}
+{% macro render_simple_location(request, location, aim_wrapper) %}
     {% if location is not none %}
         <div class="location">
             <h3>
@@ -274,11 +270,11 @@
                         {{ item.name }}
                     {% else %}
                         {% if item.is_collection %}
-                            <a href="{{ request.url_for('app_browse', uuid=item.uuid) + aim.to_url() | safe }}">
+                            <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url() }}">
                                 {{ item.name or '???' }}
                             </a>
                         {% else %}
-                            <a href="{{ request.url_for('app_preview', uuid=item.uuid) + aim.to_url() | safe }}">
+                            <a href="{{ request.url_for('app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url() }}">
                                 {{ item.name or '???' }}
                             </a>
                         {% endif %}
@@ -289,7 +285,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_thumbnail_for_item(request, item, aim) %}
+{% macro render_thumbnail_for_item(request, item, aim_wrapper) %}
     {% if item.is_collection %}
         {% set additional_style = ' env-collection' %}
     {% else %}
@@ -299,9 +295,9 @@
     <div class="envelope {{ additional_style }}">
 
         {%- if item.is_collection %}
-            <a href="{{ request.url_for('app_browse', uuid=item.uuid) + aim.to_url(page=1) | safe }}">
+            <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
         {% else %}
-            <a href="{{ request.url_for('app_preview', uuid=item.uuid) + aim.to_url(page=1) | safe }}">
+            <a href="{{ request.url_for('app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
         {% endif -%}
 
         {%- if item.is_collection and item.name -%}

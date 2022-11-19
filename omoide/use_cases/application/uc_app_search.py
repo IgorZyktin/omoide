@@ -30,40 +30,35 @@ class AppDynamicSearchUseCase(BaseSearchUseCase):
     async def execute(
             self,
             user: domain.User,
-            query: domain.Query,
             aim: domain.Aim,
     ) -> Result[errors.Error, int]:
         """Return amount of items that correspond to query (not items)."""
         async with self.search_repo.transaction():
             if user.is_anon():
-                total = await self._search_for_anon(query, aim)
+                total = await self._search_for_anon(aim)
             else:
-                total = await self._search_for_known(user, query, aim)
+                total = await self._search_for_known(user, aim)
         return Success(total)
 
     async def _search_for_anon(
             self,
-            query: domain.Query,
             aim: domain.Aim,
     ) -> int:
         """Count all possible search results for anon user."""
         total = 0
-        if query:
-            total = await self.search_repo \
-                .count_matching_anon(query, aim)
+        if aim.query:
+            total = await self.search_repo.count_matching_anon(aim)
         return total
 
     async def _search_for_known(
             self,
             user: domain.User,
-            query: domain.Query,
             aim: domain.Aim,
     ) -> int:
         """Count all possible search results for known user."""
         total = 0
-        if query:
-            total = await self.search_repo \
-                .count_matching_known(user, query, aim)
+        if aim.query:
+            total = await self.search_repo.count_matching_known(user, aim)
         return total
 
 
@@ -73,41 +68,33 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
     async def execute(
             self,
             user: domain.User,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> Result[errors.Error, list[domain.Item]]:
         """Return items that correspond to query."""
         async with self.search_repo.transaction():
             if user.is_anon():
-                items = await self._search_for_anon(query, details, aim)
+                items = await self._search_for_anon(aim)
             else:
-                items = await self._search_for_known(user, query, details, aim)
+                items = await self._search_for_known(user, aim)
         return Success(items)
 
     async def _search_for_anon(
             self,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Return corresponding items for anon user."""
         items = []
-        if query:
-            items = await self.search_repo \
-                .search_paged_anon(query, details, aim)
+        if aim.query:
+            items = await self.search_repo.search_paged_anon(aim)
         return items
 
     async def _search_for_known(
             self,
             user: domain.User,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Return corresponding items for known user."""
         items = []
-        if query:
-            items = await self.search_repo \
-                .search_paged_known(user, query, details, aim)
+        if aim.query:
+            items = await self.search_repo.search_paged_known(user, aim)
         return items

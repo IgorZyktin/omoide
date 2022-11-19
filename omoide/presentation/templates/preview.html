@@ -3,7 +3,7 @@
 
 {% block body %}
 
-    {{ render_location(request, result.location, aim) }}
+    {{ render_location(request, result.location, aim_wrapper) }}
 
     <div class="preview">
 
@@ -27,7 +27,7 @@
                         <p>{{ item.name }}</p>
                     {%- endif -%}
 
-                    <a href="{{ request.url_for('app_browse', uuid=item.uuid) + aim.to_url(page=1) | safe }}">
+                    <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
                         {%- if item.thumbnail_ext is none -%}
                             <img src="{{ url_for('static', path='empty.png') }}"
                                  alt="{{ item.name }}"/>

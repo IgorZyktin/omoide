@@ -10,6 +10,7 @@ from typing import Callable
 from typing import NoReturn
 from typing import Optional
 from typing import Type
+from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -220,6 +221,21 @@ class AimWrapper:
         except (ValueError, TypeError):
             result = default
         return result
+
+    def to_url(self, **kwargs) -> str:
+        """Convert to URL string."""
+        local_params = self.aim.url_safe()
+        local_params.update(kwargs)
+
+        for key, value in local_params.items():
+            if value is True:
+                local_params[key] = 'on'
+            elif value is False:
+                local_params[key] = 'off'
+            else:
+                local_params[key] = str(value)
+
+        return urlencode(local_params)
 
 
 PATTERN = re.compile(r'(\s\+\s|\s-\s)')

@@ -38,9 +38,8 @@ async def app_search(
     """Main page of the application."""
     start = time.perf_counter()
     aim = aim_wrapper.aim
-    query = infra.query_maker.from_request(request.query_params)
 
-    result = await use_case_dynamic.execute(user, query, aim_wrapper.aim)
+    result = await use_case_dynamic.execute(user, aim_wrapper.aim)
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error)
 
@@ -48,7 +47,7 @@ async def app_search(
 
     if aim.paged:
         template = 'search_paged.html'
-        paged_result = await use_case_paged.execute(user, query, aim)
+        paged_result = await use_case_paged.execute(user, aim)
 
         if isinstance(paged_result, Failure):
             return web.redirect_from_error(request, paged_result.error)
@@ -72,9 +71,7 @@ async def app_search(
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
-        'query': infra.query_maker.QueryWrapper(query, details),
-        'details': details,
+        'aim_wrapper': aim_wrapper,
         'paginator': paginator,
         'items': items,
         'matching_items': utils.sep_digits(matching_items),

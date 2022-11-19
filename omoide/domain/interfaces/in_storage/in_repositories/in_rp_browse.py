@@ -22,7 +22,7 @@ class AbsBrowseRepository(
     async def get_children(
             self,
             uuid: UUID,
-            details: common.Details,
+            aim: common.Aim,
     ) -> list[common.Item]:
         """Load all children with all required fields."""
 
@@ -38,7 +38,7 @@ class AbsBrowseRepository(
             self,
             user: domain.User,
             uuid: UUID,
-            details: common.Details,
+            aim: common.Aim,
     ) -> list[common.Item]:
         """Load all children with all required fields (and access)."""
 
@@ -55,7 +55,7 @@ class AbsBrowseRepository(
             self,
             user: domain.User,
             uuid: UUID,
-            details: common.Details,
+            aim: common.Aim,
             users_repo: AbsUsersReadRepository,
     ) -> Optional[common.Location]:
         """Return Location of the item."""
