@@ -271,7 +271,7 @@ class BrowseRepository(
             position=mapping.pop('position') or 1,
             total_items=mapping.pop('total_items') or 1,
             items_per_page=aim.items_per_page,
-            item=domain.Item.from_map(mapping),
+            item=domain.Item(**response),
         )
 
     async def simple_find_items_to_browse(

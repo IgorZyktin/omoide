@@ -42,15 +42,7 @@ class Item(BaseModel):
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
     tags: list[str] = []
-    permissions: Optional[list[str]] = None
-
-    @validator('permissions', pre=True, always=True)
-    def set_default_permissions(
-            cls,
-            permissions: Optional[list[str]],
-    ) -> list[str]:
-        """Set permissions if item does not have it."""
-        return permissions or []
+    permissions: list[UUID] = []
 
     @property
     def content_path(self) -> str:
@@ -66,11 +58,6 @@ class Item(BaseModel):
     def thumbnail_path(self) -> str:
         """Return file system path segment that will allow to find file."""
         return f'{str(self.uuid)[:2]}/{self.uuid}.{self.thumbnail_ext}'
-
-    @classmethod
-    def from_map(cls, mapping: Mapping) -> 'Item':
-        """Convert from arbitrary format to model."""
-        return cls(**mapping)
 
 
 class PositionedItem(BaseModel):

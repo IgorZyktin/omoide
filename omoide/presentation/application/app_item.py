@@ -72,7 +72,7 @@ def serialize_item(
         'preview_ext': item.preview_ext or '',
         'thumbnail_ext': item.thumbnail_ext or '',
         'tags': item.tags,
-        'permissions': list(item.permissions or []),
+        'permissions': [str(x) for x in item.permissions],
     }
 
 
