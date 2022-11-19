@@ -2,6 +2,7 @@
 """Refresh size command.
 """
 from pathlib import Path
+from typing import Any
 from typing import Iterator
 from typing import NamedTuple
 from typing import Optional
@@ -27,7 +28,7 @@ class Pack(NamedTuple):
 def get_metainfo(
         config: Config,
         session: Session,
-) -> Iterator[tuple[UUID, UUID, Optional[str], Optional[str], Optional[str]]]:
+) -> Any:
     """Get every item with some content."""
     stmt = sa.select(
         models.Metainfo.item_uuid,
