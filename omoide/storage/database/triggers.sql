@@ -38,11 +38,9 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION insert_computed_permissions() RETURNS TRIGGER AS
 $$
 BEGIN
-    IF array_length(NEW.permissions, 1) > 0 THEN
-        INSERT INTO computed_permissions
-        SELECT NEW.uuid, NEW.permissions
-        ON CONFLICT (item_uuid) DO UPDATE SET permissions = excluded.permissions;
-    END IF;
+    INSERT INTO computed_permissions
+    SELECT NEW.uuid, NEW.permissions
+    ON CONFLICT (item_uuid) DO UPDATE SET permissions = excluded.permissions;
 
     RETURN NULL;
 END

@@ -26,7 +26,7 @@ class BrowseResult(NamedTuple):
     total_items: int
     total_pages: int
     items: list
-    details: domain.Details
+    aim: domain.Aim
     paginated: bool = True
 
 
@@ -50,7 +50,6 @@ class AppBrowseUseCase:
             user: domain.User,
             uuid: UUID,
             aim: domain.Aim,
-            details: domain.Details,
     ) -> Result[errors.Error, BrowseResult]:
         """Return browse model suitable for rendering."""
         async with self.browse_repo.transaction():
@@ -70,11 +69,11 @@ class AppBrowseUseCase:
 
             if aim.paged:
                 result = await self.go_browse_paginated(
-                    user, owner, item, details)
+                    user, owner, item, aim)
 
             else:
                 result = await self.go_browse_dynamic(
-                    user, owner, item, details)
+                    user, owner, item, aim)
 
             return Success(result)
 
@@ -83,13 +82,13 @@ class AppBrowseUseCase:
             user: domain.User,
             owner: domain.User,
             item: domain.Item,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> BrowseResult:
         """Browse with pagination."""
         location = await self.browse_repo.get_location(
             user=user,
             uuid=item.uuid,
-            details=details,
+            aim=aim,
             users_repo=self.users_repo,
         )
 
@@ -99,7 +98,7 @@ class AppBrowseUseCase:
         if user.is_anon():
             items = await self.browse_repo.get_children(
                 uuid=item.uuid,
-                details=details,
+                aim=aim,
             )
             total_items = await self.browse_repo.count_items(
                 uuid=item.uuid,
@@ -109,7 +108,7 @@ class AppBrowseUseCase:
             items = await self.browse_repo.get_specific_children(
                 user=user,
                 uuid=item.uuid,
-                details=details,
+                aim=aim,
             )
             total_items = await self.browse_repo.count_specific_items(
                 user=user,
@@ -119,9 +118,9 @@ class AppBrowseUseCase:
         return BrowseResult(
             item=item,
             total_items=total_items,
-            total_pages=details.calc_total_pages(total_items),
+            total_pages=aim.calc_total_pages(total_items),
             items=items,
-            details=details,
+            aim=aim,
             location=location,
             paginated=True,
         )
@@ -131,7 +130,7 @@ class AppBrowseUseCase:
             user: domain.User,
             owner: domain.User,
             item: domain.Item,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> BrowseResult:
         """Browse without pagination."""
         location = await self.items_repo.get_simple_location(
@@ -145,7 +144,7 @@ class AppBrowseUseCase:
             total_items=-1,
             total_pages=-1,
             items=[],
-            details=details,
+            aim=aim,
             location=location,
             paginated=False,
         )

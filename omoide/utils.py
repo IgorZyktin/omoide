@@ -3,6 +3,10 @@
 """
 import datetime
 import re
+from itertools import zip_longest
+from typing import Any
+from typing import Iterable
+from typing import Iterator
 from typing import Optional
 from uuid import UUID
 
@@ -196,3 +200,15 @@ def no_longer_than(string: str, max_len: int, fill: str = '...') -> str:
     if trim_to < len(string):
         return string[:trim_to] + fill_with
     return string
+
+
+def group_to_size(iterable: Iterable, group_size: int = 2,
+                  default: Any = '?') -> Iterator[tuple]:
+    """Return contents of the iterable grouped in blocks of given size.
+
+    >>> list(group_to_size([1, 2, 3, 4, 5, 6, 7], 2, '?'))
+    [(1, 2), (3, 4), (5, 6), (7, '?')]
+    >>> list(group_to_size([1, 2, 3, 4, 5, 6, 7], 3, '?'))
+    [(1, 2, 3), (4, 5, 6), (7, '?', '?')]
+    """
+    return zip_longest(*[iter(iterable)] * group_size, fillvalue=default)

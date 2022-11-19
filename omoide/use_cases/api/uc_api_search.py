@@ -26,35 +26,27 @@ class ApiSearchUseCase:
     async def execute(
             self,
             user: domain.User,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> Result[errors.Error, list[domain.Item]]:
         """Perform search request."""
-        if not query:
+        if not aim.query:
             return Success([])
 
         assert not aim.paged
 
         async with self.search_repo.transaction():
-            result = await self._search_dynamic(user, query, details, aim)
+            result = await self._search_dynamic(user, aim)
 
         return Success(result)
 
     async def _search_dynamic(
             self,
             user: domain.User,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items in dynamic mode."""
         if user.is_anon():
-            items = await self.search_repo \
-                .search_dynamic_anon(query, details, aim)
-
+            items = await self.search_repo.search_dynamic_anon(aim)
         else:
-            items = await self.search_repo \
-                .search_dynamic_known(user, query, details, aim)
-
+            items = await self.search_repo.search_dynamic_known(user, aim)
         return items

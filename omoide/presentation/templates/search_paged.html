@@ -5,14 +5,14 @@
 
     <h3>Got {{ matching_items }} results in {{ delta }} sec.</h3>
 
-    {{ render_paginator_search(request, paginator, query, aim) }}
+    {{ render_paginator_search(request, paginator, aim_wrapper) }}
 
     <div class="envelope-container">
         {% for item in items %}
-            {{ render_thumbnail_for_item(request, item, aim) }}
+            {{ render_thumbnail_for_item(request, item, aim_wrapper) }}
         {% endfor %}
     </div>
 
-    {{ render_paginator_search(request, paginator, query, aim) }}
+    {{ render_paginator_search(request, paginator, aim_wrapper) }}
 
 {% endblock %}

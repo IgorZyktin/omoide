@@ -16,9 +16,7 @@ from omoide import use_cases
 from omoide import utils
 from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
-from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
-from omoide.presentation import infra
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
@@ -35,17 +33,10 @@ async def app_item_create(
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Create item page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     valid_uuid = utils.cast_uuid(uuid)
 
     result = await use_case.execute(policy, user, valid_uuid)
@@ -59,11 +50,10 @@ async def app_item_create(
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
+        'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
         'parent': parent,
         'permissions': permissions,
-        'query': infra.query_maker.QueryWrapper(query, details),
     }
 
     return dep.templates.TemplateResponse('item_create.html', context)
@@ -82,7 +72,7 @@ def serialize_item(
         'preview_ext': item.preview_ext or '',
         'thumbnail_ext': item.thumbnail_ext or '',
         'tags': item.tags,
-        'permissions': list(item.permissions or []),
+        'permissions': [str(x) for x in item.permissions],
     }
 
 
@@ -96,17 +86,10 @@ async def app_item_update(
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Edit item page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
@@ -118,13 +101,12 @@ async def app_item_update(
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
+        'aim_wrapper': aim_wrapper,
         'current_item': item,
         'item': item,
         'total': utils.sep_digits(total),
         'permissions': permissions,
         'url': request.url_for('app_search'),
-        'query': infra.query_maker.QueryWrapper(query, details),
         'model': ujson.dumps(serialize_item(item), ensure_ascii=False),
         'initial_permissions': ujson.dumps([
             f'{x.uuid} {x.name}' for x in permissions
@@ -144,17 +126,10 @@ async def app_item_delete(
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Delete item page."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    aim = domain.aim_from_params(dict(request.query_params))
-    query = infra.query_maker.from_request(request.query_params)
-
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
@@ -166,13 +141,12 @@ async def app_item_delete(
         'request': request,
         'config': config,
         'user': user,
-        'aim': aim,
+        'aim_wrapper': aim_wrapper,
         'current_item': item,
         'item': item,
         'url': request.url_for('app_search'),
         'uuid': uuid,
         'total': utils.sep_digits(total),
-        'query': infra.query_maker.QueryWrapper(query, details),
     }
 
     return dep.templates.TemplateResponse('item_delete.html', context)

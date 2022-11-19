@@ -19,8 +19,6 @@ __all__ = [
     'Location',
     'AccessStatus',
     'Query',
-    'Details',
-    'Results',
     'SingleResult',
     'SimpleLocation',
     'ComplexLocation',
@@ -28,6 +26,7 @@ __all__ = [
     'EXIF',
     'NewPermissions',
     'Metainfo',
+    'Aim',
 ]
 
 
@@ -43,15 +42,7 @@ class Item(BaseModel):
     preview_ext: Optional[str]
     thumbnail_ext: Optional[str]
     tags: list[str] = []
-    permissions: Optional[list[str]] = None
-
-    @validator('permissions', pre=True, always=True)
-    def set_default_permissions(
-            cls,
-            permissions: Optional[list[str]],
-    ) -> list[str]:
-        """Set permissions if item does not have it."""
-        return permissions or []
+    permissions: list[UUID] = []
 
     @property
     def content_path(self) -> str:
@@ -67,11 +58,6 @@ class Item(BaseModel):
     def thumbnail_path(self) -> str:
         """Return file system path segment that will allow to find file."""
         return f'{str(self.uuid)[:2]}/{self.uuid}.{self.thumbnail_ext}'
-
-    @classmethod
-    def from_map(cls, mapping: Mapping) -> 'Item':
-        """Convert from arbitrary format to model."""
-        return cls(**mapping)
 
 
 class PositionedItem(BaseModel):
@@ -197,55 +183,6 @@ class Query(BaseModel):
         return any((self.tags_include, self.tags_exclude))
 
 
-class Details(BaseModel):
-    """Additional request parameters."""
-    page: int
-    anchor: int
-    items_per_page: int
-    items_per_page_async: int = -1
-
-    def at_page(self, page: int, anchor: int) -> 'Details':
-        """Return details with different page."""
-        return type(self)(
-            page=page,
-            anchor=anchor,
-            items_per_page=self.items_per_page,
-            items_per_page_async=self.items_per_page_async,
-        )
-
-    @property
-    def offset(self) -> int:
-        """Return offset from start of the result block."""
-        return self.items_per_page * (self.page - 1)
-
-    def calc_total_pages(self, total_items: int) -> int:
-        """Calculate how many pages we need considering this query."""
-        return int(total_items / (self.items_per_page or 1))
-
-
-class Results(BaseModel):
-    """Result of a search request."""
-    item: Optional[Item]
-    total_items: int
-    total_pages: int
-    items: list[Item]
-    details: Details
-    location: Optional[Location]
-
-    @property
-    def page(self) -> int:
-        """Return current page number."""
-        return self.details.page
-
-
-class SingleResult(BaseModel):
-    """Result of a request for a single item."""
-    item: Item
-    details: Details
-    location: Location
-    neighbours: list[UUID]
-
-
 class Media(BaseModel):
     """Transient content fot the item."""
     item_uuid: UUID
@@ -316,3 +253,47 @@ class Metainfo(BaseModel):
     description: Optional[str]
 
     extras: dict
+
+
+class Aim(BaseModel):
+    """Object that describes user's desired output."""
+    query: Query
+    ordered: bool
+    nested: bool
+    paged: bool
+    page: int
+    last_seen: int
+    items_per_page: int
+
+    @property
+    def offset(self) -> int:
+        """Return offset from start of the result block."""
+        return self.items_per_page * (self.page - 1)
+
+    def calc_total_pages(self, total_items: int) -> int:
+        """Calculate how many pages we need considering this query."""
+        return int(total_items / (self.items_per_page or 1))
+
+    def using(
+            self,
+            **kwargs,
+    ) -> 'Aim':
+        """Create new instance with given params."""
+        values = self.dict()
+        values.update(kwargs)
+        return type(self)(**kwargs)
+
+    def url_safe(self) -> dict:
+        """Return dict that can be converted to URL."""
+        params = self.dict()
+        params['q'] = self.query.raw_query
+        params.pop('query', None)
+        return params
+
+
+class SingleResult(BaseModel):
+    """Result of a request for a single item."""
+    item: Item
+    aim: Aim
+    location: Location
+    neighbours: list[UUID]

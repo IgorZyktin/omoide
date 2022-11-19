@@ -18,7 +18,6 @@ class SearchRepository(
 
     async def count_matching_anon(
             self,
-            query: domain.Query,
             aim: domain.Aim,
     ) -> int:
         """Count matching items for unauthorised user."""
@@ -34,8 +33,8 @@ class SearchRepository(
             models.User.uuid == models.Item.owner_uuid,
         ).where(
             models.User.uuid.in_(self._get_public_users()),
-            models.ComputedTags.tags.contains(query.tags_include),
-            ~models.ComputedTags.tags.overlap(query.tags_exclude)
+            models.ComputedTags.tags.contains(aim.query.tags_include),
+            ~models.ComputedTags.tags.overlap(aim.query.tags_exclude)
         )
 
         if aim.nested:
@@ -47,7 +46,6 @@ class SearchRepository(
     async def count_matching_known(
             self,
             user: domain.User,
-            query: domain.Query,
             aim: domain.Aim,
     ) -> int:
         """Count available items for authorised user."""
@@ -67,8 +65,8 @@ class SearchRepository(
                 models.ComputedPermissions.permissions.any(str(user.uuid))
             ),
             models.ComputedPermissions.permissions != None,  # noqa
-            models.ComputedTags.tags.contains(query.tags_include),
-            ~models.ComputedTags.tags.overlap(query.tags_exclude)
+            models.ComputedTags.tags.contains(aim.query.tags_include),
+            ~models.ComputedTags.tags.overlap(aim.query.tags_exclude)
         )
 
         if aim.nested:
@@ -148,12 +146,10 @@ class SearchRepository(
 
     async def search_dynamic_anon(
             self,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items for unauthorised user."""
-        stmt = self._search_anon(query)
+        stmt = self._search_anon(aim.query)
         stmt = self._maybe_trim(stmt, aim)
         stmt = stmt.limit(min(aim.items_per_page, MAX_ITEMS_TO_RETURN))
         response = await self.db.fetch_all(stmt)
@@ -162,12 +158,10 @@ class SearchRepository(
     async def search_dynamic_known(
             self,
             user: domain.User,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find specific items for authorised user."""
-        stmt = self._search_known(user, query)
+        stmt = self._search_known(user, aim.query)
         stmt = self._maybe_trim(stmt, aim)
         stmt = stmt.limit(min(aim.items_per_page, MAX_ITEMS_TO_RETURN))
         response = await self.db.fetch_all(stmt)
@@ -175,14 +169,12 @@ class SearchRepository(
 
     async def search_paged_anon(
             self,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items for unauthorised user."""
-        stmt = self._search_anon(query)
+        stmt = self._search_anon(aim.query)
         stmt = self._maybe_trim(stmt, aim)
-        stmt = stmt.offset(details.offset)
+        stmt = stmt.offset(aim.offset)
         stmt = stmt.limit(min(aim.items_per_page, MAX_ITEMS_TO_RETURN))
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**row) for row in response]
@@ -190,14 +182,12 @@ class SearchRepository(
     async def search_paged_known(
             self,
             user: domain.User,
-            query: domain.Query,
-            details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items for authorised user."""
-        stmt = self._search_known(user, query)
+        stmt = self._search_known(user, aim.query)
         stmt = self._maybe_trim(stmt, aim)
-        stmt = stmt.offset(details.offset)
+        stmt = stmt.offset(aim.offset)
         stmt = stmt.limit(min(aim.items_per_page, MAX_ITEMS_TO_RETURN))
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**row) for row in response]

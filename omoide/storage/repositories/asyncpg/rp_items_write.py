@@ -113,7 +113,7 @@ class ItemsWriteRepository(
             'preview_ext': item.preview_ext,
             'thumbnail_ext': item.thumbnail_ext,
             'tags': item.tags,
-            'permissions': [str(x) for x in (item.permissions or [])],
+            'permissions': [str(x) for x in item.permissions],
         }
 
         return await self.db.execute(stmt, values)
@@ -331,12 +331,11 @@ class ItemsWriteRepository(
             """Alter permissions."""
             nonlocal total
 
-            valid_permissions = {UUID(x) for x in _item.permissions or []}
-            _permissions = new_permissions.apply_delta(valid_permissions)
+            _permissions = new_permissions.apply_delta(set(_item.permissions))
 
             print(f'\tSetting permissions in parents: {total:04d}. '
                   f'{_item.uuid}: '
-                  f'{sorted(map(str, valid_permissions))} '
+                  f'{sorted(map(str, _item.permissions))} '
                   f'-> {sorted(map(str, _permissions))}')
 
             stmt = sqlalchemy.update(
@@ -382,16 +381,16 @@ class ItemsWriteRepository(
             """Alter permissions."""
             nonlocal total
 
-            valid_permissions = {UUID(x) for x in _item.permissions or []}
-
             if new_permissions.override:
                 _permissions = new_permissions.permissions_after
             else:
-                _permissions = new_permissions.apply_delta(valid_permissions)
+                _permissions = new_permissions.apply_delta(
+                    set(_item.permissions)
+                )
 
             print(f'\tSetting permissions in children: {total:04d}. '
                   f'{_item.uuid}: '
-                  f'{sorted(map(str, valid_permissions))} '
+                  f'{sorted(map(str, _item.permissions))} '
                   f'-> {sorted(map(str, _permissions))}')
 
             stmt = sqlalchemy.update(

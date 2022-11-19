@@ -33,23 +33,17 @@ async def app_browse(
         use_case: use_cases.AppBrowseUseCase = Depends(
             dep.app_browse_use_case),
         config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item as collection."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    query = infra.query_maker.from_request(request.query_params)
-    aim = domain.aim_from_params(dict(request.query_params))
-
+    aim = aim_wrapper.aim
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
         return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
 
-    _result = await use_case.execute(policy, user, valid_uuid, aim, details)
+    _result = await use_case.execute(policy, user, valid_uuid, aim)
 
     if isinstance(_result, Failure):
         return web.redirect_from_error(request, _result.error, valid_uuid)
@@ -61,8 +55,7 @@ async def app_browse(
         'config': config,
         'user': user,
         'uuid': uuid,
-        'aim': aim,
-        'query': infra.query_maker.QueryWrapper(query, details),
+        'aim_wrapper': aim_wrapper,
         'location': result.location,
         'api_url': request.url_for('api_browse', uuid=uuid),
         'result': result,
@@ -72,8 +65,8 @@ async def app_browse(
     if result.paginated:
         template = 'browse_paginated.html'
         paginator = infra.Paginator(
-            page=details.page,
-            items_per_page=details.items_per_page,
+            page=aim.page,
+            items_per_page=aim.items_per_page,
             total_items=result.total_items,
             pages_in_block=constants.PAGES_IN_BLOCK,
         )

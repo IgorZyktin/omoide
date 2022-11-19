@@ -35,7 +35,7 @@ class AppPreviewUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-            details: domain.Details,
+            aim: domain.Aim,
     ) -> Result[errors.Error, domain.SingleResult]:
         """Return preview model suitable for rendering."""
         async with self.preview_repo.transaction():
@@ -47,7 +47,7 @@ class AppPreviewUseCase:
             location = await self.preview_repo.get_location(
                 user=user,
                 uuid=uuid,
-                details=details,
+                aim=aim,
                 users_repo=self.users_repo,
             )
 
@@ -65,7 +65,7 @@ class AppPreviewUseCase:
 
             result = domain.SingleResult(
                 item=item,
-                details=details,
+                aim=aim,
                 location=location,
                 neighbours=neighbours,
             )

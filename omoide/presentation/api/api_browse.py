@@ -12,6 +12,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import utils
+from omoide.presentation import web
 
 router = fastapi.APIRouter()
 
@@ -24,6 +25,7 @@ async def api_browse(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.APIBrowseUseCase = Depends(
             dep.api_browse_use_case),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
 ):
     """Return portion of items for browse template."""
     valid_uuid = global_utils.cast_uuid(uuid)
@@ -31,8 +33,7 @@ async def api_browse(
     if valid_uuid is None:
         return []
 
-    aim = domain.aim_from_params(dict(request.query_params))
-    result = await use_case.execute(policy, user, valid_uuid, aim)
+    result = await use_case.execute(policy, user, valid_uuid, aim_wrapper.aim)
 
     if isinstance(result, Failure):
         return []

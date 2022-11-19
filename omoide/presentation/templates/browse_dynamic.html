@@ -2,6 +2,6 @@
 {% from "macros.html" import render_simple_location %}
 
 {% block body %}
-    {{ render_simple_location(request, location, aim) }}
+    {{ render_simple_location(request, location, aim_wrapper) }}
     {{ super() }}
 {% endblock %}

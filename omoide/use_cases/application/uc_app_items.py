@@ -56,10 +56,9 @@ class AppItemCreateUseCase:
             if parent is None:
                 return Failure(errors.ItemDoesNotExist(uuid=parent_uuid))
 
-            users: list[UUID] = [UUID(x) for x in (parent.permissions or [])]
-            permissions = await self.users_repo.read_all_users(users)
+            can_see = await self.users_repo.read_all_users(parent.permissions)
 
-        return Success((parent, permissions))
+        return Success((parent, can_see))
 
 
 class AppItemUpdateUseCase:
@@ -95,10 +94,9 @@ class AppItemUpdateUseCase:
 
             total = await self.items_repo.count_all_children(uuid)
 
-            users: list[UUID] = [UUID(x) for x in (item.permissions or [])]
-            permissions = await self.users_repo.read_all_users(users)
+            can_see = await self.users_repo.read_all_users(item.permissions)
 
-        return Success((item, total, permissions))
+        return Success((item, total, can_see))
 
 
 class AppItemDeleteUseCase:

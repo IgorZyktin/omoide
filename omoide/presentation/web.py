@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 """Internet related tools.
 """
+import copy
 import functools
 import http
+import re
+from typing import Any
 from typing import Callable
 from typing import NoReturn
 from typing import Optional
 from typing import Type
+from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -14,7 +18,9 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import domain
+from omoide import utils
 from omoide.domain import errors
+from omoide.presentation import constants
 
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     # not supposed to be used, but just in case
@@ -135,3 +141,125 @@ def login_required(func: Callable) -> Callable:
         return await func(request, *args, user=user, **kwargs)
 
     return wrapper
+
+
+class AimWrapper:
+    """Wrapper around aim object."""
+
+    def __init__(
+            self,
+            aim: domain.Aim,
+    ) -> None:
+        """Initialize instance."""
+        self.aim = aim
+
+    def __getattr__(self, item: str) -> Any:
+        """Send all requests to the aim."""
+        return getattr(self.aim, item)
+
+    @classmethod
+    def from_params(
+            cls,
+            params: dict,
+            **kwargs,
+    ) -> 'AimWrapper':
+        """Build Aim object from raw params."""
+        raw_query = params.get('q', '')
+        tags_include, tags_exclude = parse_tags(raw_query)
+
+        local_params = copy.deepcopy(params)
+        local_params['query'] = domain.Query(
+            raw_query=raw_query,
+            tags_include=tags_include,
+            tags_exclude=tags_exclude,
+        )
+
+        local_params.update(kwargs)
+        cls._fill_defaults(local_params)
+        aim = domain.Aim(**local_params)
+        return cls(aim)
+
+    @classmethod
+    def _fill_defaults(
+            cls,
+            params: dict,
+    ) -> None:
+        """Add default values if they were not supplied."""
+        params['ordered'] = cls.extract_bool(params, 'ordered', False)
+        params['nested'] = cls.extract_bool(params, 'nested', False)
+        params['paged'] = cls.extract_bool(params, 'paged', False)
+        params['page'] = cls.extract_int(params, 'page', 1)
+        params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
+        params['items_per_page'] = cls.extract_int(params, 'items_per_page',
+                                                   constants.ITEMS_PER_PAGE)
+
+    @staticmethod
+    def extract_bool(
+            params: dict,
+            key: str,
+            default: bool,
+    ) -> bool:
+        """Safely extract boolean value from user input."""
+        value = params.get(key)
+
+        if value is None:
+            result = default
+        else:
+            result = value == 'on'
+
+        return result
+
+    @staticmethod
+    def extract_int(
+            params: dict,
+            key: str,
+            default: int,
+    ) -> int:
+        """Safely extract int value from user input."""
+        try:
+            result = int(params.get(key))  # type: ignore
+        except (ValueError, TypeError):
+            result = default
+        return result
+
+    def to_url(self, **kwargs) -> str:
+        """Convert to URL string."""
+        local_params = self.aim.url_safe()
+        local_params.update(kwargs)
+
+        for key, value in local_params.items():
+            if value is True:
+                local_params[key] = 'on'
+            elif value is False:
+                local_params[key] = 'off'
+            else:
+                local_params[key] = str(value)
+
+        return urlencode(local_params)
+
+
+PATTERN = re.compile(r'(\s\+\s|\s-\s)')
+
+
+def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
+    """Split  user query into tags."""
+    tags_include = []
+    tags_exclude = []
+
+    parts = PATTERN.split(raw_query)
+    clean_parts = [x.strip() for x in parts if x.strip()]
+
+    if not clean_parts:
+        return [], []
+
+    if clean_parts[0] not in ('+', '-'):
+        clean_parts.insert(0, '+')
+
+    for operator, tag in utils.group_to_size(clean_parts):
+        tag = str(tag).lower()
+        if operator == '+':
+            tags_include.append(tag)
+        else:
+            tags_exclude.append(tag)
+
+    return tags_include, tags_exclude
