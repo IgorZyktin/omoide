@@ -325,13 +325,7 @@ class BrowseRepository(
         stmt = stmt.limit(aim.items_per_page)
 
         response = await self.db.fetch_all(stmt)
-        # TODO - damn asyncpg tries to bee too smart
-        items = [
-            domain.Item.from_map(dict(zip(row.keys(), row.values())))
-            for row in response
-        ]
-
-        return items
+        return [domain.Item(**x) for x in response]
 
     async def complex_find_items_to_browse(
             self,
@@ -423,9 +417,4 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         stmt += ' LIMIT :limit;'
 
         response = await self.db.fetch_all(stmt, values)
-        # TODO - damn asyncpg tries to bee too smart
-        items = [
-            domain.Item.from_map(dict(zip(row.keys(), row.values())))
-            for row in response
-        ]
-        return items
+        return [domain.Item(**x) for x in response]
