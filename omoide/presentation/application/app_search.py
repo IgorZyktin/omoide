@@ -31,25 +31,16 @@ async def app_search(
             dep.app_dynamic_search_use_case),
         use_case_paged: use_cases.AppPagedSearchUseCase = Depends(
             dep.app_paged_search_use_case),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         config: Config = Depends(dep.config),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Main page of the application."""
-    details = infra.parse.details_from_params(
-        params=request.query_params,
-        items_per_page=constants.ITEMS_PER_PAGE,
-        items_per_page_async=constants.ITEMS_PER_UPLOAD,
-    )
-
-    aim = web.AimWrapper.from_params(
-        params=dict(request.query_params),
-        items_per_page=constants.ITEMS_PER_PAGE,
-    )
-
-    query = infra.query_maker.from_request(request.query_params)
     start = time.perf_counter()
+    aim = aim_wrapper.aim
+    query = infra.query_maker.from_request(request.query_params)
 
-    result = await use_case_dynamic.execute(user, query, aim)
+    result = await use_case_dynamic.execute(user, query, aim_wrapper.aim)
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error)
 
@@ -57,7 +48,7 @@ async def app_search(
 
     if aim.paged:
         template = 'search_paged.html'
-        paged_result = await use_case_paged.execute(user, query, details, aim)
+        paged_result = await use_case_paged.execute(user, query, aim)
 
         if isinstance(paged_result, Failure):
             return web.redirect_from_error(request, paged_result.error)
@@ -65,7 +56,7 @@ async def app_search(
         items = paged_result.value
         paginator = infra.Paginator(
             page=aim.page,
-            items_per_page=details.items_per_page,
+            items_per_page=aim.items_per_page,
             total_items=matching_items,
             pages_in_block=constants.PAGES_IN_BLOCK,
         )

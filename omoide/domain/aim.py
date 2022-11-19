@@ -6,7 +6,7 @@ Contains all parameters about pagination, ordering etc.
 from pydantic import BaseModel
 
 from omoide.presentation import constants
-
+from omoide.domain import common
 __all__ = [
     'Aim',
     'aim_from_params',
@@ -17,6 +17,7 @@ __all__ = [
 
 class Aim(BaseModel):
     """Object that describes user's desired output."""
+    query: common.Query
     ordered: bool
     nested: bool
     paged: bool
@@ -42,32 +43,32 @@ class Aim(BaseModel):
         values.update(kwargs)
         return type(self)(**kwargs)
 
-    def to_url(self, **kwargs) -> str:
-        """Encode into url."""
-        values = {
-            **self.dict(),
-            **kwargs,
-        }
-
-        def _str(value: bool) -> str:
-            return 'on' if value else 'off'
-
-        # FIXME
-        no_spacer = kwargs.pop('no_spacer', None)
-
-        if no_spacer:
-            spacer = ''
-        else:
-            spacer = '?'
-
-        return spacer + '&'.join([
-            f'ordered={_str(values["ordered"])}',
-            f'nested={_str(values["nested"])}',
-            f'paged={_str(values["paged"])}',
-            f'page={values["page"]}',
-            f'last_seen={values["last_seen"]}',
-            f'items_per_page={values["items_per_page"]}',
-        ])
+    # def to_url(self, **kwargs) -> str:
+    #     """Encode into url."""
+    #     values = {
+    #         **self.dict(),
+    #         **kwargs,
+    #     }
+    #
+    #     def _str(value: bool) -> str:
+    #         return 'on' if value else 'off'
+    #
+    #     # FIXME
+    #     no_spacer = kwargs.pop('no_spacer', None)
+    #
+    #     if no_spacer:
+    #         spacer = ''
+    #     else:
+    #         spacer = '?'
+    #
+    #     return spacer + '&'.join([
+    #         f'ordered={_str(values["ordered"])}',
+    #         f'nested={_str(values["nested"])}',
+    #         f'paged={_str(values["paged"])}',
+    #         f'page={values["page"]}',
+    #         f'last_seen={values["last_seen"]}',
+    #         f'items_per_page={values["items_per_page"]}',
+    #     ])
 
 
 def extract_bool(

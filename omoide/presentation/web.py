@@ -4,6 +4,7 @@
 import copy
 import functools
 import http
+import re
 from typing import Any
 from typing import Callable
 from typing import NoReturn
@@ -16,6 +17,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import domain
+from omoide import utils
 from omoide.domain import errors
 from omoide.presentation import constants
 
@@ -161,7 +163,16 @@ class AimWrapper:
             **kwargs,
     ) -> 'AimWrapper':
         """Build Aim object from raw params."""
+        raw_query = params.get('q', '')
+        tags_include, tags_exclude = parse_tags(raw_query)
+
         local_params = copy.deepcopy(params)
+        local_params['query'] = domain.Query(
+            raw_query=raw_query,
+            tags_include=tags_include,
+            tags_exclude=tags_exclude,
+        )
+
         local_params.update(kwargs)
         cls._fill_defaults(local_params)
         aim = domain.Aim(**local_params)
@@ -209,3 +220,30 @@ class AimWrapper:
         except (ValueError, TypeError):
             result = default
         return result
+
+
+PATTERN = re.compile(r'(\s\+\s|\s-\s)')
+
+
+def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
+    """Split  user query into tags."""
+    tags_include = []
+    tags_exclude = []
+
+    parts = PATTERN.split(raw_query)
+    clean_parts = [x.strip() for x in parts if x.strip()]
+
+    if not clean_parts:
+        return [], []
+
+    if clean_parts[0] not in ('+', '-'):
+        clean_parts.insert(0, '+')
+
+    for operator, tag in utils.group_to_size(clean_parts):
+        tag = str(tag).lower()
+        if operator == '+':
+            tags_include.append(tag)
+        else:
+            tags_exclude.append(tag)
+
+    return tags_include, tags_exclude

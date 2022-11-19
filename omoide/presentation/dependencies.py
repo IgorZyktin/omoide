@@ -15,6 +15,8 @@ from omoide import use_cases
 from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.presentation import app_config
+from omoide.presentation import constants
+from omoide.presentation import web
 from omoide.storage.repositories import asyncpg
 
 _config = app_config.init()
@@ -35,6 +37,17 @@ exif_repository = asyncpg.EXIFRepository(db)
 metainfo_repository = asyncpg.MetainfoRepository(db)
 
 templates = Jinja2Templates(directory='omoide/presentation/templates')
+
+
+def get_aim(
+        request: fastapi.Request,
+) -> web.AimWrapper:
+    """General way of getting aim."""
+    params = dict(request.query_params)
+    return web.AimWrapper.from_params(
+        params=params,
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
 
 
 def get_credentials(
