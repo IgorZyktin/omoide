@@ -36,8 +36,7 @@ class AppItemCreateUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             parent_uuid: Optional[UUID],
-    ) -> Result[errors.Error,
-                tuple[domain.Item, list[domain.User]]]:
+    ) -> Result[errors.Error, tuple[domain.Item, list[domain.User]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             if parent_uuid is None:
@@ -78,8 +77,7 @@ class AppItemUpdateUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-    ) -> Result[errors.Error,
-                tuple[domain.Item, int, list[domain.User]]]:
+    ) -> Result[errors.Error, tuple[domain.Item, int, list[domain.User]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -93,7 +91,6 @@ class AppItemUpdateUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             total = await self.items_repo.count_all_children(uuid)
-
             can_see = await self.users_repo.read_all_users(item.permissions)
 
         return Success((item, total, can_see))

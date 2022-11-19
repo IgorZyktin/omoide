@@ -86,7 +86,6 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
         async with self.meta_repo.transaction():
             error = await policy.is_restricted(user, uuid,
                                                actions.Metainfo.READ)
-
             if error:
                 return Failure(error)
 

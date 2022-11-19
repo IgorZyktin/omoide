@@ -39,8 +39,8 @@ class AppPreviewUseCase:
     ) -> Result[errors.Error, domain.SingleResult]:
         """Return preview model suitable for rendering."""
         async with self.preview_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.READ)
+            error = await policy.is_restricted(user, uuid, actions.Item.READ)
+
             if error:
                 return Failure(error)
 
@@ -54,11 +54,11 @@ class AppPreviewUseCase:
             item = await self.items_repo.read_item(uuid)
 
             if user.is_anon():
-                neighbours = await self.preview_repo.get_neighbours(
+                neighbours = await self.preview_repo.get_neighbours_anon(
                     uuid=uuid,
                 )
             else:
-                neighbours = await self.preview_repo.get_specific_neighbours(
+                neighbours = await self.preview_repo.get_neighbours_known(
                     user=user,
                     uuid=uuid,
                 )

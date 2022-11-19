@@ -53,7 +53,6 @@ class ApiItemCreateUseCase(BaseItemUseCase):
             parent_uuid = payload.parent_uuid or user.root_item
             error = await policy.is_restricted(user, parent_uuid,
                                                actions.Item.CREATE)
-
             if error:
                 return Failure(error)
 
@@ -75,9 +74,7 @@ class ApiItemReadUseCase(BaseItemUseCase):
     ) -> Result[errors.Error, domain.Item]:
         """Business logic."""
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.READ)
-
+            error = await policy.is_restricted(user, uuid, actions.Item.READ)
             if error:
                 return Failure(error)
 
@@ -101,8 +98,7 @@ class UpdateItemUseCase(BaseItemUseCase):
     ) -> Result[errors.Error, bool]:
         """Business logic."""
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.UPDATE)
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
 
             if error:
                 return Failure(error)
@@ -189,8 +185,7 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.DELETE)
+            error = await policy.is_restricted(user, uuid, actions.Item.DELETE)
 
             if error:
                 return Failure(error)
@@ -243,8 +238,8 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
             return Failure(bad_parent_error)
 
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.UPDATE)
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
+
             if error:
                 return Failure(error)
 
@@ -371,8 +366,8 @@ class ApiItemAlterTagsUseCase(BaseItemUseCase):
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.UPDATE)
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
+
             if error:
                 return Failure(error)
 

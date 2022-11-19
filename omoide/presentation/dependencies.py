@@ -3,11 +3,12 @@
 """
 import binascii
 from base64 import b64decode
-from functools import cache
+from typing import Optional
 
-import fastapi
 from databases import Database
+from fastapi import Depends
 from fastapi.security import HTTPBasicCredentials
+from starlette.requests import Request
 from starlette.templating import Jinja2Templates
 
 from omoide import infra
@@ -40,7 +41,7 @@ templates = Jinja2Templates(directory='omoide/presentation/templates')
 
 
 def get_aim(
-        request: fastapi.Request,
+        request: Request,
 ) -> web.AimWrapper:
     """General way of getting aim."""
     params = dict(request.query_params)
@@ -51,10 +52,10 @@ def get_aim(
 
 
 def get_credentials(
-        request: fastapi.Request,
+        request: Request,
 ) -> HTTPBasicCredentials:
     """Try extraction credentials from user request, but not trigger login."""
-    authorization: str = request.headers.get('Authorization')
+    authorization: Optional[str] = request.headers.get('Authorization')
     anon = HTTPBasicCredentials(username='', password='')
 
     if authorization:
@@ -81,21 +82,20 @@ def config() -> app_config.Config:
     return app_config.get_config()
 
 
-@cache
 def get_auth_use_case() -> use_cases.AuthUseCase:
     """Get use case instance."""
     return use_cases.AuthUseCase(
-        users_repo=users_repository,
+        users_repo=users_read_repository,
     )
 
 
-@cache
 def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
-    return infra.BcryptAuthenticator(complexity=4)  # minimal
+    return infra.BcryptAuthenticator(
+        complexity=4,  # minimal
+    )
 
 
-@cache
 def get_policy() -> interfaces.AbsPolicy:
     """Get policy instance."""
     return infra.Policy(
@@ -104,11 +104,9 @@ def get_policy() -> interfaces.AbsPolicy:
 
 
 async def get_current_user(
-        credentials: HTTPBasicCredentials = fastapi.Depends(get_credentials),
-        use_case: use_cases.AuthUseCase = fastapi.Depends(get_auth_use_case),
-        authenticator: interfaces.AbsAuthenticator = fastapi.Depends(
-            get_authenticator,
-        ),
+        credentials: HTTPBasicCredentials = Depends(get_credentials),
+        use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
+        authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
 ) -> auth.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
