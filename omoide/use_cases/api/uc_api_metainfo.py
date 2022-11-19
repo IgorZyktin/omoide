@@ -60,7 +60,6 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
             metainfo.height = metainfo_in.height
             metainfo.duration = metainfo_in.duration
             metainfo.resolution = metainfo_in.resolution
-            metainfo.size = metainfo_in.size
             metainfo.media_type = metainfo_in.media_type
 
             metainfo.author = metainfo_in.author
@@ -68,6 +67,10 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
             metainfo.saved_from_url = metainfo_in.saved_from_url
             metainfo.description = metainfo_in.description
             metainfo.extras = metainfo_in.extras
+
+            metainfo.content_size = metainfo_in.content_size
+            metainfo.preview_size = metainfo_in.preview_size
+            metainfo.thumbnail_size = metainfo_in.thumbnail_size
 
             updated = await self.meta_repo.update_metainfo(user, metainfo)
 

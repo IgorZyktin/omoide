@@ -192,7 +192,6 @@ function createFileProxy(file) {
             width: null,
             height: null,
             resolution: null,
-            size: null,
             media_type: null,
             original_file_name: null,
             original_file_modified_at: null,
@@ -565,7 +564,6 @@ async function uploadMetainfoForProxy(proxy) {
                 height: proxy.metainfo.height,
                 duration: null,  // TODO: after we could handle gifs/video
                 resolution: proxy.metainfo.resolution,
-                size: proxy.metainfo.size,
                 media_type: proxy.metainfo.media_type,
                 // TODO: add author metainfo to the form
                 author: null,
@@ -607,7 +605,6 @@ async function generateMetainfoForProxy(proxy, uploadState) {
     proxy.metainfo.width = width
     proxy.metainfo.height = height
     proxy.metainfo.resolution = resolution
-    proxy.metainfo.size = proxy.file.size
     proxy.metainfo.media_type = proxy.file.type
     proxy.metainfo.original_file_name = proxy.file.name
     proxy.metainfo.original_file_modified_at = lastModified
