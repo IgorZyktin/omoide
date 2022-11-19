@@ -33,28 +33,25 @@ class AppDynamicSearchUseCase(BaseSearchUseCase):
             query: domain.Query,
             aim: domain.Aim,
     ) -> Result[errors.Error, int]:
-        """Perform search request."""
+        """Return amount of items that correspond to query (not items)."""
         async with self.search_repo.transaction():
             if user.is_anon():
-                matching_items = await self._search_for_anon(query, aim)
+                total = await self._search_for_anon(query, aim)
             else:
-                matching_items = await self._search_for_known(user, query, aim)
-
-        return Success(matching_items)
+                total = await self._search_for_known(user, query, aim)
+        return Success(total)
 
     async def _search_for_anon(
             self,
             query: domain.Query,
             aim: domain.Aim,
     ) -> int:
-        """Calculate all possible search results for anon user."""
+        """Count all possible search results for anon user."""
+        total = 0
         if query:
-            matching_items = await self.search_repo \
-                .total_matching_anon(query, aim)
-        else:
-            matching_items = 0
-
-        return matching_items
+            total = await self.search_repo \
+                .count_matching_anon(query, aim)
+        return total
 
     async def _search_for_known(
             self,
@@ -62,14 +59,12 @@ class AppDynamicSearchUseCase(BaseSearchUseCase):
             query: domain.Query,
             aim: domain.Aim,
     ) -> int:
-        """Calculate all possible search results for known user."""
+        """Count all possible search results for known user."""
+        total = 0
         if query:
-            matching_items = await self.search_repo \
-                .total_matching_known(user, query, aim)
-        else:
-            matching_items = 0
-
-        return matching_items
+            total = await self.search_repo \
+                .count_matching_known(user, query, aim)
+        return total
 
 
 class AppPagedSearchUseCase(BaseSearchUseCase):
@@ -82,16 +77,13 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
             details: domain.Details,
             aim: domain.Aim,
     ) -> Result[errors.Error, list[domain.Item]]:
-        """Perform search request."""
+        """Return items that correspond to query."""
         async with self.search_repo.transaction():
             if user.is_anon():
-                matching_items = await self \
-                    ._search_for_anon(query, details, aim)
+                items = await self._search_for_anon(query, details, aim)
             else:
-                matching_items = await self \
-                    ._search_for_known(user, query, details, aim)
-
-        return Success(matching_items)
+                items = await self._search_for_known(user, query, details, aim)
+        return Success(items)
 
     async def _search_for_anon(
             self,
@@ -100,13 +92,11 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Return corresponding items for anon user."""
+        items = []
         if query:
-            matching_items = await self.search_repo \
+            items = await self.search_repo \
                 .search_paged_anon(query, details, aim)
-        else:
-            matching_items = []
-
-        return matching_items
+        return items
 
     async def _search_for_known(
             self,
@@ -115,11 +105,9 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
             details: domain.Details,
             aim: domain.Aim,
     ) -> list[domain.Item]:
-        """Calculate all possible search results for known user."""
+        """Return corresponding items for known user."""
+        items = []
         if query:
-            matching_items = await self.search_repo \
+            items = await self.search_repo \
                 .search_paged_known(user, query, details, aim)
-        else:
-            matching_items = []
-
-        return matching_items
+        return items

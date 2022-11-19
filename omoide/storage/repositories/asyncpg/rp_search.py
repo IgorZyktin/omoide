@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """Search repository.
 """
+import sqlalchemy as sa
+
 from omoide import domain
 from omoide.domain import interfaces
+from omoide.storage.database import models
+
+MAX_ITEMS_TO_RETURN = 1000
 
 
 class SearchRepository(
@@ -10,63 +15,69 @@ class SearchRepository(
 ):
     """Repository that performs all search queries."""
 
-    async def total_matching_anon(
+    async def count_matching_anon(
             self,
             query: domain.Query,
             aim: domain.Aim,
     ) -> int:
         """Count matching items for unauthorised user."""
-        # TODO - rewrite to sqlalchemy
-        _query = """
-        SELECT count(*) AS total_items
-        FROM items it
-                 RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
-        WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-          AND ct.tags @> :tags_include
-          AND NOT ct.tags && :tags_exclude
-        """
+        public_users = sa.select(models.PublicUsers.user_uuid)
+
+        stmt = sa.select(
+            sa.func.count().label('total')
+        ).select_from(
+            models.ComputedTags
+        ).join(
+            models.Item,
+            models.Item.uuid == models.ComputedTags.item_uuid,
+            isouter=True,
+        ).join(
+            models.User,
+            models.User.uuid == models.Item.owner_uuid,
+        ).where(
+            models.User.uuid.in_(public_users),
+            models.ComputedTags.tags.contains(query.tags_include),
+            ~models.ComputedTags.tags.overlap(query.tags_exclude)
+        )
 
         if aim.nested:
-            _query += '\nAND it.is_collection'
+            stmt = stmt.where(models.Item.is_collection == True)  # noqa
 
-        values = {
-            'tags_include': query.tags_include,
-            'tags_exclude': query.tags_exclude,
-        }
+        response = await self.db.fetch_one(stmt)
+        return int(response['total'])
 
-        _query += ';'
-        response = await self.db.fetch_one(_query, values)
-        return int(response['total_items'])
-
-    async def total_matching_known(
+    async def count_matching_known(
             self,
             user: domain.User,
             query: domain.Query,
             aim: domain.Aim,
     ) -> int:
         """Count available items for authorised user."""
-        # TODO - rewrite to sqlalchemy
-        _query = """
-        SELECT count(*) AS total_items
-        FROM items it
-                RIGHT JOIN computed_tags ct ON ct.item_uuid = it.uuid
-                RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE (:user_uuid = ANY(cp.permissions)
-               OR it.owner_uuid::text = :user_uuid)
-          AND ct.tags @> :tags_include
-          AND NOT ct.tags && :tags_exclude
-        """
+        stmt = sa.select(
+            sa.func.count().label('total')
+        ).select_from(
+            models.Item
+        ).join(
+            models.ComputedPermissions,
+            models.Item.uuid == models.ComputedPermissions.item_uuid,
+        ).join(
+            models.ComputedTags,
+            models.Item.uuid == models.ComputedTags.item_uuid,
+        ).where(
+            sa.or_(
+                models.Item.owner_uuid == str(user.uuid),
+                models.ComputedPermissions.permissions.any(str(user.uuid))
+            ),
+            models.ComputedPermissions.permissions != None,  # noqa
+            models.ComputedTags.tags.contains(query.tags_include),
+            ~models.ComputedTags.tags.overlap(query.tags_exclude)
+        )
 
         if aim.nested:
-            _query += '\nAND it.is_collection'
+            stmt = stmt.where(models.Item.is_collection == True)  # noqa
 
-        values = {
-            'user_uuid': str(user.uuid),
-        }
-
-        _query += ';'
-        response = await self.db.fetch_one(_query, values)
-        return int(response['total_items'])
+        response = await self.db.fetch_one(stmt)
+        return int(response['total'])
 
     async def search_dynamic_anon(
             self,

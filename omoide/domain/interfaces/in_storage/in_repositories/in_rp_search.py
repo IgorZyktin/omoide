@@ -16,7 +16,7 @@ class AbsSearchRepository(
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def total_matching_anon(
+    async def count_matching_anon(
             self,
             query: common.Query,
             aim: aim_module.Aim,
@@ -24,7 +24,7 @@ class AbsSearchRepository(
         """Count matching items for unauthorised user."""
 
     @abc.abstractmethod
-    async def total_matching_known(
+    async def count_matching_known(
             self,
             user: auth.User,
             query: common.Query,
