@@ -244,7 +244,6 @@ class Metainfo(BaseModel):
     height: Optional[int]
     duration: Optional[float]
     resolution: Optional[float]
-    size: Optional[int]
     media_type: Optional[str]
 
     author: Optional[str]
@@ -253,6 +252,10 @@ class Metainfo(BaseModel):
     description: Optional[str]
 
     extras: dict
+
+    content_size: Optional[int]
+    preview_size: Optional[int]
+    thumbnail_size: Optional[int]
 
 
 class Aim(BaseModel):
