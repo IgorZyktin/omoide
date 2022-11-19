@@ -30,16 +30,16 @@ class AppProfileUseCase:
             user: domain.User,
     ) -> Result[errors.Error, tuple[domain.SpaceUsage, int]]:
         """Return amount of items that correspond to query (not items)."""
-        if user.is_anon():
+        if user.is_anon() or user.uuid is None:
             return Failure(errors.AuthenticationRequired())
 
         if user.root_item is None:
-            return Success(domain.SpaceUsage.empty(user.uuid))
+            return Success((domain.SpaceUsage.empty(user.uuid), 0))
 
         async with self.users_repo.transaction():
             root = await self.items_repo.read_item(user.root_item)
             if root is None:
-                return Success(domain.SpaceUsage.empty(user.uuid))
+                return Success((domain.SpaceUsage.empty(user.uuid), 0))
 
             size = await self.users_repo.calc_total_space_used(user, root)
             total = await self.items_repo.count_items_by_owner(user.uuid)
