@@ -439,9 +439,7 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            item.permissions = [
-                str(x) for x in new_permissions.permissions_after
-            ]
+            item.permissions = list(new_permissions.permissions_after)
             await self.items_repo.update_item(item)
 
             metainfo = await self.metainfo_repo.read_metainfo(uuid)
