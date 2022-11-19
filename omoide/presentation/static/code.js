@@ -10,6 +10,7 @@ function goSearch() {
 
     let searchParams = new URLSearchParams(window.location.search)
     searchParams.set('q', element.value)
+    searchParams.set('page', '1')
     window.location.href = "/search?" + searchParams.toString();
 }
 
