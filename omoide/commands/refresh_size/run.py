@@ -36,6 +36,11 @@ def main(
         for i, pack in enumerate(get_metainfo(config, session), start=1):
             target = Pack(*pack)
             metainfo = session.query(models.Metainfo).get(target.uuid)
+
+            if metainfo is None:
+                print(f'Cannot find metainfo {target.uuid}')
+                continue
+
             changed += update_size(config, metainfo, target, path)
             session.commit()
             print(f'\rChanged {i} items ({changed} operations)', end='')
