@@ -72,11 +72,8 @@ def update_size(
     for each in ['content', 'preview', 'thumbnail']:
         ext = getattr(target, f'{each}_ext')
         if ext:
-            path = (base
-                    / each
-                    / str(target.owner_uuid)
-                    / prefix
-                    / f'{target.uuid}.{ext}')
+            owner = str(target.owner_uuid)
+            path = base / each / owner / prefix / f'{target.uuid}.{ext}'
             size = get_size(path)
 
             if size is not None:
