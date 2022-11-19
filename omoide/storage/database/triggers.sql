@@ -7,14 +7,14 @@ BEGIN
         SELECT parent_uuid,
                uuid,
                name,
-               tags
+               ARRAY(SELECT LOWER(UNNEST(tags))) as tags
         FROM items
         WHERE uuid = given_uuid
         UNION ALL
         SELECT i.parent_uuid,
                i.uuid,
                i.name,
-               i.tags
+               ARRAY(SELECT LOWER(UNNEST(i.tags))) as tags
         FROM items i
                  INNER JOIN nested_items it2 ON i.uuid = it2.parent_uuid
     )

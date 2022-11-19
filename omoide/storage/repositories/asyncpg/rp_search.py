@@ -64,7 +64,6 @@ class SearchRepository(
                 models.Item.owner_uuid == str(user.uuid),
                 models.ComputedPermissions.permissions.any(str(user.uuid))
             ),
-            models.ComputedPermissions.permissions != None,  # noqa
             models.ComputedTags.tags.contains(aim.query.tags_include),
             ~models.ComputedTags.tags.overlap(aim.query.tags_exclude)
         )
