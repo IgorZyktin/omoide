@@ -25,14 +25,22 @@ class Aim(BaseModel):
     items_per_page: int
 
     @property
-    def random(self) -> bool:
-        """Return True if items must be returned in random order."""
-        return not self.ordered
+    def offset(self) -> int:
+        """Return offset from start of the result block."""
+        return self.items_per_page * (self.page - 1)
 
-    @property
-    def flat(self) -> bool:
-        """Return True if items must be returned only from the first layer."""
-        return not self.nested
+    def calc_total_pages(self, total_items: int) -> int:
+        """Calculate how many pages we need considering this query."""
+        return int(total_items / (self.items_per_page or 1))
+
+    def using(
+            self,
+            **kwargs,
+    ) -> 'Aim':
+        """Create new instance with given params."""
+        values = self.dict()
+        values.update(kwargs)
+        return type(self)(**kwargs)
 
     def to_url(self, **kwargs) -> str:
         """Encode into url."""

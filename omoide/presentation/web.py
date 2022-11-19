@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Internet related tools.
 """
+import copy
 import functools
 import http
+from typing import Any
 from typing import Callable
 from typing import NoReturn
 from typing import Optional
@@ -15,6 +17,7 @@ from starlette.responses import RedirectResponse
 
 from omoide import domain
 from omoide.domain import errors
+from omoide.presentation import constants
 
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     # not supposed to be used, but just in case
@@ -135,3 +138,74 @@ def login_required(func: Callable) -> Callable:
         return await func(request, *args, user=user, **kwargs)
 
     return wrapper
+
+
+class AimWrapper:
+    """Wrapper around aim object."""
+
+    def __init__(
+            self,
+            aim: domain.Aim,
+    ) -> None:
+        """Initialize instance."""
+        self.aim = aim
+
+    def __getattr__(self, item: str) -> Any:
+        """Send all requests to the aim."""
+        return getattr(self.aim, item)
+
+    @classmethod
+    def from_params(
+            cls,
+            params: dict,
+            **kwargs,
+    ) -> 'AimWrapper':
+        """Build Aim object from raw params."""
+        local_params = copy.deepcopy(params)
+        local_params.update(kwargs)
+        cls._fill_defaults(local_params)
+        aim = domain.Aim(**local_params)
+        return cls(aim)
+
+    @classmethod
+    def _fill_defaults(
+            cls,
+            params: dict,
+    ) -> None:
+        """Add default values if they were not supplied."""
+        params['ordered'] = cls.extract_bool(params, 'ordered', False)
+        params['nested'] = cls.extract_bool(params, 'nested', False)
+        params['paged'] = cls.extract_bool(params, 'paged', False)
+        params['page'] = cls.extract_int(params, 'page', 1)
+        params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
+        params['items_per_page'] = cls.extract_int(params, 'items_per_page',
+                                                   constants.ITEMS_PER_PAGE)
+
+    @staticmethod
+    def extract_bool(
+            params: dict,
+            key: str,
+            default: bool,
+    ) -> bool:
+        """Safely extract boolean value from user input."""
+        value = params.get(key)
+
+        if value is None:
+            result = default
+        else:
+            result = value == 'on'
+
+        return result
+
+    @staticmethod
+    def extract_int(
+            params: dict,
+            key: str,
+            default: int,
+    ) -> int:
+        """Safely extract int value from user input."""
+        try:
+            result = int(params.get(key))  # type: ignore
+        except (ValueError, TypeError):
+            result = default
+        return result

@@ -41,7 +41,11 @@ async def app_search(
         items_per_page_async=constants.ITEMS_PER_UPLOAD,
     )
 
-    aim = domain.aim_from_params(dict(request.query_params))
+    aim = web.AimWrapper.from_params(
+        params=dict(request.query_params),
+        items_per_page=constants.ITEMS_PER_PAGE,
+    )
+
     query = infra.query_maker.from_request(request.query_params)
     start = time.perf_counter()
 
