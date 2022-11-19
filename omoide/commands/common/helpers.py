@@ -5,6 +5,7 @@ import contextlib
 import time
 from typing import Callable
 from typing import Iterator
+from uuid import UUID
 
 import sqlalchemy
 from sqlalchemy.engine import Engine
@@ -59,3 +60,8 @@ def timing(
         ended_at = time.perf_counter()
         delta = ended_at - started_at
         _maybe_print(full_end_template, delta=delta)
+
+
+def get_prefix(uuid: UUID, prefix_size: int) -> str:
+    """Return prefix for given uuid."""
+    return str(uuid)[0:prefix_size]

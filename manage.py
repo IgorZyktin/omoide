@@ -69,7 +69,7 @@ def cmd_change_password(uuid: str, password: str):
             return
 
         user.password = dep.get_authenticator().encode_password(
-            password).decode()
+            password.encode()).decode()
 
         await users_repo.update_user(user)
         await dep.db.disconnect()
@@ -84,9 +84,30 @@ def cmd_du():
     config = commands.du.get_config()
     with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
         with helpers.timing(
-            start_template='Calculating total disk usage...',
+                start_template='Calculating total disk usage...',
         ):
             commands.run_du(engine, config)
+
+
+@cli.command(name='refresh_size')
+@click.option('--limit',
+              type=int,
+              default=-1,
+              help='Maximum amount of items to process (-1 for infinity)')
+@click.option('--marker',
+              type=UUID,
+              default=None,
+              help='Item from which we should start')
+def cmd_refresh_size(limit: int, marker: Optional[UUID]):
+    """Recalculate storage size for every item."""
+    config = commands.refresh_size.get_config()
+    with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
+        with helpers.timing(
+                start_template='Refreshing actual disk usage...',
+        ):
+            config.limit = limit
+            config.marker = marker
+            commands.run_refresh_size(engine, config)
 
 
 if __name__ == '__main__':
