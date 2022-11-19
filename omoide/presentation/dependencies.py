@@ -326,3 +326,12 @@ def read_metainfo_use_case() -> use_cases.ReadMetainfoUseCase:
 def update_metainfo_use_case() -> use_cases.UpdateMetainfoUseCase:
     """Get use case instance."""
     return use_cases.UpdateMetainfoUseCase(metainfo_repository)
+
+
+# app profile related use cases -----------------------------------------------
+def profile_use_case() -> use_cases.AppProfileUseCase:
+    """Get use case instance."""
+    return use_cases.AppProfileUseCase(
+        users_repo=users_read_repository,
+        items_repo=items_read_repository,
+    )

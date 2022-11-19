@@ -4,7 +4,7 @@
 from typing import Optional
 from uuid import UUID
 
-import sqlalchemy
+import sqlalchemy as sa
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -53,7 +53,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
             uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
-        stmt = sqlalchemy.select(
+        stmt = sa.select(
             models.Item
         ).where(
             models.Item.uuid == uuid
@@ -120,3 +120,18 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
         ancestors.reverse()
         return ancestors
+
+    async def count_items_by_owner(
+            self,
+            uuid: UUID,
+    ) -> int:
+        """Return total amount of items for given user uuid."""
+        stmt = sa.select(
+            sa.func.count().label('total')
+        ).select_from(
+            models.Item
+        ).where(
+            models.Item.owner_uuid == str(uuid)
+        )
+        response = await self.db.fetch_one(stmt)
+        return response['total']

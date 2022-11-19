@@ -32,3 +32,11 @@ class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
             uuids: list[UUID],
     ) -> list[domain.User]:
         """Return list of users with given uuids."""
+
+    @abc.abstractmethod
+    async def calc_total_space_used(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> domain.SpaceUsage:
+        """Return total amount of used space for user."""

@@ -52,3 +52,27 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
         )
         response = await self.db.fetch_all(stmt)
         return [domain.User(**record) for record in response]
+
+    async def calc_total_space_used(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> domain.SpaceUsage:
+        """Return total amount of used space for user."""
+        stmt = sa.select(
+            sa.func.sum(models.Metainfo.content_size).label('content_size'),
+            sa.func.sum(models.Metainfo.preview_size).label('preview_size'),
+            sa.func.sum(models.Metainfo.thumbnail_size).label('thumbnail_size')
+        ).join(
+            models.Item,
+            models.Item.uuid == models.Metainfo.item_uuid,
+        ).where(
+            models.Item.owner_uuid == str(user.uuid)
+        )
+        response = await self.db.fetch_one(stmt)
+        return domain.SpaceUsage(
+            uuid=user.uuid,
+            content_size=response['content_size'],
+            preview_size=response['preview_size'],
+            thumbnail_size=response['thumbnail_size'],
+        )

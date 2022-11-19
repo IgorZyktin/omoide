@@ -42,3 +42,10 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
+
+    @abc.abstractmethod
+    async def count_items_by_owner(
+            self,
+            uuid: UUID,
+    ) -> int:
+        """Return total amount of items for given user uuid."""

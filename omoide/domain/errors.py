@@ -87,3 +87,8 @@ class MediaDoesNotExist(Error):
 class MetainfoDoesNotExist(Error):
     """Metainfo for item does not exist."""
     template = 'Metainfo for item {uuid} does not exist'
+
+
+class AuthenticationRequired(Error):
+    """User must log in."""
+    template = 'You must be logged in to do this'
