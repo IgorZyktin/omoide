@@ -138,13 +138,13 @@ class Database:
 
         if media.media_type == 'content':
             media.item.content_ext = media.ext
-            media.item.metainfo.content_size = len(media.content)
+            media.item.metainfo.content_size = len(media.content or b'')
         elif media.media_type == 'preview':
             media.item.preview_ext = media.ext
-            media.item.metainfo.preview_size = len(media.content)
+            media.item.metainfo.preview_size = len(media.content or b'')
         elif media.media_type == 'thumbnail':
             media.item.thumbnail_ext = media.ext
-            media.item.metainfo.thumbnail_size = len(media.content)
+            media.item.metainfo.thumbnail_size = len(media.content or b'')
         else:
             # TODO: replace it with proper logger call
             print(f'Unknown media type: {media.media_type!r}')
