@@ -124,6 +124,21 @@ function extractUUIDs(text) {
     return [...text.matchAll(UUID_REGEXP)].flat()
 }
 
+function extractAllUUIDs(array) {
+    // extract all UUIDs from given text
+    let result = []
+    for (const element of array) {
+        let uuids = extractUUIDs(element) || []
+        result = result.concat(uuids)
+    }
+    return getNonEmptyValues(result)
+}
+
+function getNonEmptyValues(array){
+    // Return array without empty values
+    return array.filter(x => x)
+}
+
 function jumpToTop() {
     // scroll at the top
     document.body.scrollTop = document.documentElement.scrollTop = 0;

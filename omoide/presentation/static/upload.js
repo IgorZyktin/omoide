@@ -389,10 +389,10 @@ async function createItemForProxy(proxy) {
                     ...splitLines($('#item_tags').val()),
                     ...proxy.getTags()
                 ],
-                permissions: [
+                permissions: extractAllUUIDs([
                     ...splitLines($('#item_permissions').val()),
                     ...proxy.getPermissions()
-                ],
+                ]),
             }),
             success: function (response) {
                 proxy.uuid = response['uuid']
