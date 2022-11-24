@@ -159,29 +159,9 @@ textarea:focus, input:focus {
     margin-right: 5px;
 }
 
-/*a {*/
-/*    color: #ffffff;*/
-/*    display: inline-block;*/
-/*}*/
-
-/*a:link {*/
-/*    color: #ffffff;*/
-/*    text-decoration: none;*/
-/*}*/
-
-/*a:visited {*/
-/*    color: #ffffff;*/
-/*}*/
-
-/*a:hover {*/
-/*text-decoration: underline;*/
-/*cursor: pointer;*/
-/*color: #198754; !important;*/
-/*}*/
-
-/*a:active {*/
-/*    color: #ffffff;*/
-/*}*/
+a:active {
+    color: #ffffff;
+}
 
 .pages {
     width: 100%;
@@ -295,6 +275,13 @@ h1, h2, h3, h4, h5 {
     margin: auto;
 }
 
+.medium-block {
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+}
+
 .preview {
     display: flex;
     flex-direction: column;
@@ -399,6 +386,12 @@ h1, h2, h3, h4, h5 {
     display: block;
     text-align: center;
     margin: auto;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.to-top-link:hover {
+    color: #ffffff;
 }
 
 #query_element {
@@ -409,4 +402,79 @@ h1, h2, h3, h4, h5 {
 
 progress {
     width: 100%;
+}
+
+input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    margin: 1em;
+}
+
+select {
+    width: 100%;
+}
+
+.upload-element {
+    background-color: #c1c1c1;
+    border-radius: 5px;
+    border: 1px solid #414141;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    margin: 5px;
+}
+
+.upload-element img {
+    max-width: 100%;
+}
+
+.upload-lines {
+    display: flex;
+    flex-direction: column;
+    margin: 0.5em;
+    justify-content: center;
+}
+
+.notification {
+    padding: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
+
+.om-alert {
+    background-color: #f44336;
+    color: white;
+}
+
+.om-announce {
+    background-color: #77ec88;
+    color: #000000;
+}
+
+.closebtn {
+    margin-left: 15px;
+    color: white;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.closebtn:hover {
+    color: black;
+}
+
+.upload-container {
+    max-width: 1024px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: auto;
+}
+
+#global-status {
+    margin-top: 15px;
 }

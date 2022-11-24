@@ -1,7 +1,6 @@
 const FILES = {}
 const PREVIEW_SIZE = 1024
 const THUMBNAIL_SIZE = 384
-const ICON_SIZE = 128
 const EMPTY_FILE = '/static/empty.png'
 const VALID_EXTENSIONS = ['jpg', 'jpeg', 'png']
 const MAX_FILENAME_LENGTH = 255
@@ -10,7 +9,6 @@ const EXPECTED_STEPS = new Set([
     'generateContentForProxy',
     'generatePreviewForProxy',
     'generateThumbnailForProxy',
-    'generateIconForProxy',
     'generateEXIForProxy',
     'generateFeaturesForProxy',
     'generateMetainfoForProxy',
@@ -116,8 +114,6 @@ function createFileProxy(file) {
 
     let iconElement = $('<img>', {
         src: EMPTY_FILE,
-        width: ICON_SIZE,
-        height: 'auto',
     })
 
     let progressElement = $('<progress>', {
@@ -130,7 +126,8 @@ function createFileProxy(file) {
         text: file.name,
     })
 
-    let linesElement = $('<div>', {class: 'upload-lines'})
+    let linesElement0 = $('<div>', {class: 'upload-lines'})
+    let linesElement1 = $('<div>', {class: 'upload-lines'})
 
     let tagsElementLabel = $('<label>',
         {text: 'Additional tags for this item (one tag per line):'})
@@ -142,13 +139,14 @@ function createFileProxy(file) {
     let permissionsElement = $('<textarea>', {rows: 5})
     permissionsElement.appendTo(permissionsElementLabel)
 
-    textElement.appendTo(linesElement)
-    progressElement.appendTo(linesElement)
-    tagsElementLabel.appendTo(linesElement)
-    permissionsElementLabel.appendTo(linesElement)
+    textElement.appendTo(linesElement1)
+    progressElement.appendTo(linesElement1)
+    tagsElementLabel.appendTo(linesElement1)
+    permissionsElementLabel.appendTo(linesElement1)
 
-    iconElement.appendTo(element)
-    linesElement.appendTo(element)
+    iconElement.appendTo(linesElement0)
+    linesElement0.appendTo(element)
+    linesElement1.appendTo(element)
     let proxy = {
         ready: false,
         uuid: null,
@@ -173,10 +171,6 @@ function createFileProxy(file) {
         thumbnailExt: null,
         thumbnailGenerated: false,
         thumbnailUploaded: false,
-
-        // icon
-        icon: null,
-        iconGenerated: false,
 
         // file
         file: file,
@@ -205,7 +199,7 @@ function createFileProxy(file) {
         // html
         'element': element,
         'progressElement': progressElement,
-        'labelElement': linesElement,
+        'labelElement': linesElement1,
         'iconElement': iconElement,
         'textElement': textElement,
         'tagsElement': tagsElement,
@@ -229,8 +223,6 @@ function createFileProxy(file) {
         setIcon: function (newIcon) {
             this.icon = newIcon
             this.iconElement.attr('src', newIcon)
-            this.iconElement.css('width', 'auto')
-            this.iconGenerated = true
         },
         render: function () {
             this.progressElement.val(this.getProgress())
@@ -261,15 +253,19 @@ function createFileProxy(file) {
 
     iconElement.click(function () {
 
-        if (!proxy.icon || !proxy.preview)
+        if (!proxy.preview)
             return
 
         if (proxy.previewVisible) {
-            proxy.iconElement.attr('src', proxy.icon)
-            proxy.element.css('flex-direction', 'row');
+            proxy.iconElement.attr('src', proxy.thumbnail)
+            proxy.element.css('display', 'grid');
+            proxy.element.css('flex-direction', 'unset');
+            proxy.element.css('grid-template-columns', '1fr 3fr');
         } else {
             proxy.iconElement.attr('src', proxy.preview)
+            proxy.element.css('display', 'flex');
             proxy.element.css('flex-direction', 'column');
+            proxy.element.css('grid-template-columns', 'unset');
         }
 
         proxy.previewVisible = !proxy.previewVisible
@@ -290,8 +286,6 @@ function getHandlerDescription(handler, label) {
         text = `Processing preview ${label}`
     else if (handler.name === 'generateThumbnailForProxy')
         text = `Processing thumbnail ${label}`
-    else if (handler.name === 'generateIconForProxy')
-        text = `Processing icon ${label}`
     else if (handler.name === 'generateEXIForProxy')
         text = `Processing EXIF ${label}`
     else if (handler.name === 'generateFeaturesForProxy')
@@ -320,6 +314,9 @@ function getHandlerDescription(handler, label) {
 
 async function doIf(targets, handler, uploadState, condition) {
     // conditionally iterate on every element
+    if (!targets.length)
+        return
+
     let progressStorage = new Set([])
     for (let target of targets) {
         if (target.status !== 'fail' && condition(target)) {
@@ -330,9 +327,6 @@ async function doIf(targets, handler, uploadState, condition) {
             progressStorage.add(target.getProgress())
         }
     }
-
-    if (!targets.length)
-        return
 
     let totalProgress = 0;
     progressStorage.forEach(num => {
@@ -455,15 +449,7 @@ async function generateThumbnailForProxy(proxy) {
     proxy.thumbnailExt = 'jpg'
     proxy.actualSteps.add('generateThumbnailForProxy')
     proxy.ready = true
-    proxy.render()
-}
-
-async function generateIconForProxy(proxy) {
-    // generate tiny thumbnail for proxy
-    proxy.ready = false
-    proxy.setIcon(await resizeFromFile(proxy.file, ICON_SIZE))
-    proxy.actualSteps.add('generateIconForProxy')
-    proxy.ready = true
+    proxy.setIcon(proxy.thumbnail)
     proxy.render()
 }
 
@@ -988,8 +974,6 @@ async function preprocessMedia(button, uploadState) {
         p => !p.previewGenerated && p.isValid)
     await doIf(targets, generateThumbnailForProxy, uploadState,
         p => !p.thumbnailGenerated && p.isValid)
-    await doIf(targets, generateIconForProxy, uploadState,
-        p => !p.iconGenerated && p.isValid)
     await doIf(targets, generateEXIForProxy, uploadState,
         p => !p.exifGenerated && p.isValid)
     await doIf(targets, generateFeaturesForProxy, uploadState,

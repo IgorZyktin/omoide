@@ -1,11 +1,11 @@
 function makeAlert(text, alertsElementId) {
     // create alert popup message
-    makeNotification(text, alertsElementId, 'alert')
+    makeNotification(text, alertsElementId, 'om-alert')
 }
 
 function makeAnnounce(text, alertsElementId) {
     // create announce popup message
-    makeNotification(text, alertsElementId, 'announce')
+    makeNotification(text, alertsElementId, 'om-announce')
 }
 
 function makeNotification(text, alertsElementId, css_class) {
@@ -28,7 +28,7 @@ function gatherItemParameters() {
     let raw_uuid = $('#parent_uuid').val()
     let parent_uuid
 
-    if (isUUID(raw_uuid)){
+    if (isUUID(raw_uuid)) {
         parent_uuid = raw_uuid
     } else {
         parent_uuid = null
