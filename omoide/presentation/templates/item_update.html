@@ -6,24 +6,22 @@
             src="{{ url_for('static', path='crud.js') }}"></script>
     <script type="text/javascript"
             src="{{ url_for('static', path='item_update.js') }}"></script>
-    <link type="text/css"
-          href="{{ url_for('static', path='crud.css') }}"
-          rel="stylesheet">
 {% endblock %}
 
 {% block body %}
     <div class="narrow-block">
         <h1>Item update</h1>
 
+        <hr>
+
         <div>
             <h3>Parent</h3>
-            <label for="item_parent">Parent UUID:<br>
-                <input id="item_parent"
-                       type="text"
-                       value="{{ (item.parent_uuid or '')|string }}"
-                       onchange="alterModelParentField(this, 'parent_uuid')"
-                       class="height-auto">
-            </label>
+            <label for="item_parent">Parent UUID: </label>
+            <input id="item_parent"
+                   type="text"
+                   value="{{ (item.parent_uuid or '')|string }}"
+                   onchange="alterModelParentField(this, 'parent_uuid')"
+                   class="height-auto">
 
             <div id="thumbnail_parent" class="thumbnail"></div>
 
@@ -41,24 +39,26 @@
                    value="Reset changes">
         </div>
 
+        <hr>
+
         <div>
             <h3>Basic parameters</h3>
 
-            <label for="item_uuid">Item UUID:<br>
-                <input id="item_uuid"
-                       type="text"
-                       value="{{ item.uuid }}"
-                       disabled
-                       class="height-auto">
+            <label for="item_uuid">Item UUID:
             </label>
+            <input id="item_uuid"
+                   type="text"
+                   value="{{ item.uuid }}"
+                   disabled
+                   class="height-auto">
 
-            <label for="item_name">Name:<br>
-                <input id="item_name"
-                       type="text"
-                       value="{{ item.name }}"
-                       onchange="alterModelTextField(this, 'name')"
-                       class="height-auto">
+            <label for="item_name">Name:
             </label>
+            <input id="item_name"
+                   type="text"
+                   value="{{ item.name }}"
+                   onchange="alterModelTextField(this, 'name')"
+                   class="height-auto">
 
             <div id="thumbnail" class="thumbnail"></div>
             <input id="new_thumbnail_parent"
@@ -74,29 +74,26 @@
                 <label for="item_is_collection">Item is collection</label>
             </div>
 
-            <label for="item_content_ext">Content extension:<br>
-                <input id="item_content_ext"
-                       type="text"
-                       value="{{ item.content_ext or '' }}"
-                       onchange="alterModelTextField(this, 'content_ext')"
-                       class="height-auto">
-            </label>
+            <label for="item_content_ext">Content extension:</label>
+            <input id="item_content_ext"
+                   type="text"
+                   value="{{ item.content_ext or '' }}"
+                   onchange="alterModelTextField(this, 'content_ext')"
+                   class="height-auto">
 
-            <label for="item_preview_ext">Preview extension:<br>
-                <input id="item_preview_ext"
-                       type="text"
-                       value="{{ item.preview_ext or '' }}"
-                       onchange="alterModelTextField(this, 'preview_ext')"
-                       class="height-auto">
-            </label>
+            <label for="item_preview_ext">Preview extension:</label>
+            <input id="item_preview_ext"
+                   type="text"
+                   value="{{ item.preview_ext or '' }}"
+                   onchange="alterModelTextField(this, 'preview_ext')"
+                   class="height-auto">
 
-            <label for="item_thumbnail_ext">Thumbnail extension:<br>
-                <input id="item_thumbnail_ext"
-                       type="text"
-                       value="{{ item.thumbnail_ext or '' }}"
-                       onchange="alterModelTextField(this, 'thumbnail_ext')"
-                       class="height-auto">
-            </label>
+            <label for="item_thumbnail_ext">Thumbnail extension:</label>
+            <input id="item_thumbnail_ext"
+                   type="text"
+                   value="{{ item.thumbnail_ext or '' }}"
+                   onchange="alterModelTextField(this, 'thumbnail_ext')"
+                   class="height-auto">
 
             <div id="alerts_basic"></div>
             <input id="save_basic"
@@ -112,15 +109,16 @@
                    value="Reset changes">
         </div>
 
+        <hr>
+
         <div>
             <h3>Tags for the item and dependant items</h3>
-            <label for="item_tags">Tags (one tag per line):<br>
-                <textarea id="item_tags"
-                          onchange="alterModelTagsField(this)"
-                          rows="10">
+            <label for="item_tags">Tags (one tag per line): </label>
+            <textarea id="item_tags"
+                      onchange="alterModelTagsField(this)"
+                      rows="10">
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
-            </label>
 
             <div id="alerts_tags"></div>
             <input id="save_tags"
@@ -136,16 +134,18 @@
                    value="Reset changes">
         </div>
 
+        <hr>
+
         <div>
             <h3>Users who can see this item</h3>
-            <label for="item_permissions">One user per line, only UUID4:<br>
-                <textarea id="item_permissions"
-                          onchange="alterModelPermissionsField(this)"
-                          rows="10">
+            <label for="item_permissions">One user per line, only
+                UUID4: </label>
+            <textarea id="item_permissions"
+                      onchange="alterModelPermissionsField(this)"
+                      rows="10">
                 {%- for user in permissions -%}
                     {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}
             </textarea>
-            </label>
 
             <div>
                 <input type="checkbox"
@@ -162,13 +162,13 @@
                     child items</label>
             </div>
 
-            <div>
-                <label for="propagate_permissions">Apply to children:</label>
-                <select id="propagate_permissions">
-                    <option value="delta">Only changes (added and deleted)</option>
-                    <option value="copy">Overwrite everything with current</option>
-                </select>
-            </div>
+            <label for="propagate_permissions">Apply to children:</label><br>
+            <select id="propagate_permissions">
+                <option value="delta">Only changes (added and deleted)
+                </option>
+                <option value="copy">Overwrite everything with current
+                </option>
+            </select>
 
             <div id="alerts_permissions"></div>
             <input id="save_permissions"
@@ -197,14 +197,9 @@
                 $('#thumbnail_parent')
             )
 
-            tryLoadingThumbnail(
-                '{{ item.uuid }}',
-                $('#thumbnail')
-            )
+            tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
         });
     </script>
-
-    <br>
     <br>
 
 {% endblock %}
