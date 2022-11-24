@@ -1,77 +1,73 @@
-.notification {
-    padding: 20px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-}
+/*.notification {*/
+/*    padding: 20px;*/
+/*    margin-bottom: 15px;*/
+/*    border-radius: 10px;*/
+/*}*/
 
-.alert {
-    background-color: #f44336;
-    color: white;
-}
+/*.alert {*/
+/*    background-color: #f44336;*/
+/*    color: white;*/
+/*}*/
 
-.announce {
-    background-color: #77ec88;
-    color: #000000;
-}
+/*.announce {*/
+/*    background-color: #77ec88;*/
+/*    color: #000000;*/
+/*}*/
 
-.closebtn {
-    margin-left: 15px;
-    color: white;
-    font-weight: bold;
-    float: right;
-    font-size: 22px;
-    line-height: 20px;
-    cursor: pointer;
-    transition: 0.3s;
-}
+/*.closebtn {*/
+/*    margin-left: 15px;*/
+/*    color: white;*/
+/*    font-weight: bold;*/
+/*    float: right;*/
+/*    font-size: 22px;*/
+/*    line-height: 20px;*/
+/*    cursor: pointer;*/
+/*    transition: 0.3s;*/
+/*}*/
 
-.closebtn:hover {
-    color: black;
-}
+/*.closebtn:hover {*/
+/*    color: black;*/
+/*}*/
 
-.height-auto {
-    height: auto;
-}
+/*.height-auto {*/
+/*    height: auto;*/
+/*}*/
 
-input[type="checkbox"] {
-    width: auto;
-    height: auto;
-}
+/*input[type="checkbox"] {*/
+/*    width: auto;*/
+/*    height: auto;*/
+/*}*/
 
-.parent_thumbnail {
-    width: 100%;
-    text-align: center;
-}
+/*.parent_thumbnail {*/
+/*    width: 100%;*/
+/*    text-align: center;*/
+/*}*/
 
-.parent_thumbnail img {
-    max-width: 256px;
-    max-height: 256px;
-    border-radius: 10px;
-}
+/*.parent_thumbnail img {*/
+/*    max-width: 256px;*/
+/*    max-height: 256px;*/
+/*    border-radius: 10px;*/
+/*}*/
 
-.upload-container {
-    max-width: 1024px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    margin: auto;
-}
+/*.upload-container {*/
+/*    max-width: 1024px;*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    align-items: stretch;*/
+/*    margin: auto;*/
+/*}*/
 
-.upload-element {
-    background-color: #c1c1c1;
-    border-radius: 5px;
-    border: 1px solid #414141;
-    padding: 10px;
-    display: flex;
-    flex-direction: row;
-    margin: 5px;
-}
+/*.upload-element {*/
+/*    background-color: #c1c1c1;*/
+/*    border-radius: 5px;*/
+/*    border: 1px solid #414141;*/
+/*    padding: 10px;*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*    margin: 5px;*/
+/*}*/
 
-.upload-lines {
-    width: 100%;
-    padding: 10px;
-}
-
-progress {
-    width: 100%;
-}
+/*.upload-lines {*/
+/*    width: 100%;*/
+/*    padding: 10px;*/
+/*}*/

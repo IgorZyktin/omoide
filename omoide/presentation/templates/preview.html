@@ -61,18 +61,16 @@
 
         </div>
 
-        <br>
-
         <div class="preview-tags">
             {% for wrapper in result.location.items %}
                 {% if wrapper.item.name %}
-                    <div class="tag-box tag-box-item">
                     {% if wrapper.item.is_collection %}
-                        <a href="{{ url_for('app_browse', uuid=wrapper.item.uuid) }}">{{ wrapper.item.name }}</a>
+                        <a href="{{ url_for('app_browse', uuid=wrapper.item.uuid) }}"
+                           class="tag-box tag-box-item">{{ wrapper.item.name }}</a>
                     {% else %}
-                        <a href="{{ url_for('app_search') }}?q={{ wrapper.item.uuid }}">{{ wrapper.item.name }}</a>
+                        <a href="{{ url_for('app_search') + '?' + aim_wrapper.to_url(q=wrapper.item.uuid) }}"
+                           class="tag-box tag-box-item">{{ wrapper.item.name }}</a>
                     {% endif %}
-                    </div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -80,9 +78,8 @@
         <div class="preview-tags">
             {% for tag in tags %}
                 {% if tag %}
-                    <div class="tag-box">
-                        <a href="{{ url_for('app_search') }}?q={{ tag | urlencode }}">{{ tag }}</a>
-                    </div>
+                    <a href="{{ url_for('app_search') }}?q={{ tag | urlencode }}"
+                       class="tag-box">{{ tag }}</a>
                 {% endif %}
             {% endfor %}
         </div>

@@ -17,13 +17,12 @@
 
         <div>
             <h3>Parent</h3>
-            <label for="item_parent">Parent UUID:<br>
-                <input id="item_parent"
-                       type="text"
-                       value="{{ (item.parent_uuid or '')|string }}"
-                       onchange="alterModelParentField(this, 'parent_uuid')"
-                       class="height-auto">
-            </label>
+            <label for="item_parent">Parent UUID: </label>
+            <input id="item_parent"
+                   type="text"
+                   value="{{ (item.parent_uuid or '')|string }}"
+                   onchange="alterModelParentField(this, 'parent_uuid')"
+                   class="height-auto">
 
             <div id="thumbnail_parent" class="thumbnail"></div>
 
@@ -44,21 +43,21 @@
         <div>
             <h3>Basic parameters</h3>
 
-            <label for="item_uuid">Item UUID:<br>
-                <input id="item_uuid"
-                       type="text"
-                       value="{{ item.uuid }}"
-                       disabled
-                       class="height-auto">
+            <label for="item_uuid">Item UUID:
             </label>
+            <input id="item_uuid"
+                   type="text"
+                   value="{{ item.uuid }}"
+                   disabled
+                   class="height-auto">
 
-            <label for="item_name">Name:<br>
-                <input id="item_name"
-                       type="text"
-                       value="{{ item.name }}"
-                       onchange="alterModelTextField(this, 'name')"
-                       class="height-auto">
+            <label for="item_name">Name:
             </label>
+            <input id="item_name"
+                   type="text"
+                   value="{{ item.name }}"
+                   onchange="alterModelTextField(this, 'name')"
+                   class="height-auto">
 
             <div id="thumbnail" class="thumbnail"></div>
             <input id="new_thumbnail_parent"
@@ -114,13 +113,12 @@
 
         <div>
             <h3>Tags for the item and dependant items</h3>
-            <label for="item_tags">Tags (one tag per line):<br>
-                <textarea id="item_tags"
-                          onchange="alterModelTagsField(this)"
-                          rows="10">
+            <label for="item_tags">Tags (one tag per line): </label>
+            <textarea id="item_tags"
+                      onchange="alterModelTagsField(this)"
+                      rows="10">
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
-            </label>
 
             <div id="alerts_tags"></div>
             <input id="save_tags"
@@ -138,14 +136,14 @@
 
         <div>
             <h3>Users who can see this item</h3>
-            <label for="item_permissions">One user per line, only UUID4:<br>
-                <textarea id="item_permissions"
-                          onchange="alterModelPermissionsField(this)"
-                          rows="10">
+            <label for="item_permissions">One user per line, only
+                UUID4: </label>
+            <textarea id="item_permissions"
+                      onchange="alterModelPermissionsField(this)"
+                      rows="10">
                 {%- for user in permissions -%}
                     {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}
             </textarea>
-            </label>
 
             <div>
                 <input type="checkbox"
@@ -165,8 +163,10 @@
             <div>
                 <label for="propagate_permissions">Apply to children:</label>
                 <select id="propagate_permissions">
-                    <option value="delta">Only changes (added and deleted)</option>
-                    <option value="copy">Overwrite everything with current</option>
+                    <option value="delta">Only changes (added and deleted)
+                    </option>
+                    <option value="copy">Overwrite everything with current
+                    </option>
                 </select>
             </div>
 

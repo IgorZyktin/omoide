@@ -232,7 +232,7 @@
             <h3>
                 {% for pos in location %}
                     {% if not loop.first %}
-                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                        <span>&nbsp;/&nbsp;</span>
                     {% endif %}
 
                     {% if pos.item.is_collection %}
@@ -248,7 +248,7 @@
 
                 {% if location.current_item and location.current_item.is_collection %}
                     {% if location.items | length != 0 %}
-                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                        <span>&nbsp;/&nbsp;</span>
                     {% endif %}
                     {{ location.current_item.name }}
                 {% endif %}
@@ -263,7 +263,7 @@
             <h3>
                 {% for item in location %}
                     {% if not loop.first %}
-                        <span class="location-separator">&nbsp;/&nbsp;</span>
+                        <span>&nbsp;/&nbsp;</span>
                     {% endif %}
 
                     {% if loop.last %}
