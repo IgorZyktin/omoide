@@ -284,11 +284,6 @@ class Media(Base):
     to a desired size. At this point we're using database as a storage. Worker
     process must perform download job and save data to actual storage device.
     """
-    # TODO(i.zyktin): Theoretically, we can serve content directly from
-    #  the database during time before download job completes. This way it
-    #  will be 50x times slower than from the filesystem but could give better
-    #  user experience. Especially if download job will launch rarely
-    #  (like every 30 minutes or so).
     __tablename__ = 'media'
 
     # primary and foreign keys ------------------------------------------------
