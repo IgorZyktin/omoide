@@ -30,6 +30,8 @@ class PreviewRepository(
             ).where(
                 models.Item.uuid == str(uuid)
             ).scalar_subquery()
+        ).order_by(
+            models.Item.number
         )
         response = await self.db.fetch_all(stmt)
         return [row['uuid'] for row in response]
@@ -57,6 +59,8 @@ class PreviewRepository(
                 ),
                 models.Item.owner_uuid == str(user.uuid),
             )
+        ).order_by(
+            models.Item.number
         )
         response = await self.db.fetch_all(stmt)
         return [row['uuid'] for row in response]
