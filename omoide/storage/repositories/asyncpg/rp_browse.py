@@ -4,7 +4,7 @@
 from typing import Optional
 from uuid import UUID
 
-import sqlalchemy
+import sqlalchemy as sa
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -27,30 +27,19 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children and sub children of the record."""
-        _query = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE parent_uuid = :uuid
-        AND uuid <> :uuid
-        ORDER BY number
-        LIMIT :limit OFFSET :offset;
-        """
-
-        values = {
-            'uuid': str(uuid),
-            'limit': aim.items_per_page,
-            'offset': aim.offset,
-        }
-
-        response = await self.db.fetch_all(_query, values)
+        stmt = sa.select(
+            models.Item.uuid
+        ).where(
+            models.Item.parent_uuid == str(uuid),
+            models.Item.uuid != str(uuid),
+        ).order_by(
+            models.Item.number
+        ).limit(
+            aim.items_per_page
+        ).offset(
+            aim.offset
+        )
+        response = await self.db.fetch_all(stmt)
         return [domain.Item(**x) for x in response]
 
     async def count_items(
@@ -282,7 +271,7 @@ class BrowseRepository(
     ) -> list[domain.Item]:
         """Find items using simple request."""
         if user.is_anon():
-            subquery = sqlalchemy.select(models.PublicUsers.user_uuid)
+            subquery = sa.select(models.PublicUsers.user_uuid)
             conditions = [
                 models.Item.owner_uuid.in_(subquery)  # noqa
             ]
@@ -298,7 +287,7 @@ class BrowseRepository(
         if aim.ordered:
             conditions.append(models.Item.number > aim.last_seen)
 
-        stmt = sqlalchemy.select(models.Item)
+        stmt = sa.select(models.Item)
 
         if conditions:
             stmt = stmt.where(*conditions)
@@ -311,7 +300,7 @@ class BrowseRepository(
                     isouter=True,
                 )
             ).where(
-                sqlalchemy.or_(
+                sa.or_(
                     models.Item.owner_uuid == str(user.uuid),
                     models.ComputedPermissions.permissions.any(str(user.uuid)),
                 )
@@ -320,7 +309,7 @@ class BrowseRepository(
         if aim.ordered:
             stmt = stmt.order_by(models.Item.number)
         else:
-            stmt = stmt.order_by(sqlalchemy.func.random())
+            stmt = stmt.order_by(sa.func.random())
 
         stmt = stmt.limit(aim.items_per_page)
 
