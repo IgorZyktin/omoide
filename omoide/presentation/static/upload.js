@@ -1080,9 +1080,9 @@ function createUploadState(divId) {
             }
         },
         features: {
-            extractYear: false,
+            extractYear: true,
             extractMonthEN: false,
-            extractMonthRU: false,
+            extractMonthRU: true,
         },
     }
 }
