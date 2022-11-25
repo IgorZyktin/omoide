@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Filesystem operations.
 """
+import traceback
+
 import ujson
 import os
 
@@ -26,25 +28,40 @@ def perform_filesystem_operations(
             action = action_class.Action(status='work')
 
             error = ''
+            # noinspection PyBroadException
             try:
                 if process_single_command(config, database, command):
                     action.done()
                 else:
                     action.fail()
-            except Exception as exc:
+            except Exception:
                 action.fail()
+                error = traceback.format_exc()
 
                 if config.strict:
                     raise
 
                 # TODO: replace it with proper logger call
-                print(f'{type(exc).__name__}: {exc}')
+                print(error)
 
             action.ended_at = utils.now()
             actions.append(action)
 
-            if not config.dry_run:
-                database.finalize_fs_operation(command, action.status, error)
+            # noinspection PyBroadException
+            try:
+                if not config.dry_run:
+                    database.finalize_fs_operation(
+                        command, action.status, error)
+            except Exception:
+                database.session.rollback()
+                new_error = traceback.format_exc()
+                action.fail()
+                action.ended_at = utils.now()
+                actions.append(action)
+
+                if not config.dry_run:
+                    database.finalize_fs_operation(
+                        command, action.status, error + new_error)
 
             location = database.get_cached_location_for_an_item(
                 item_uuid=command.target_uuid,
