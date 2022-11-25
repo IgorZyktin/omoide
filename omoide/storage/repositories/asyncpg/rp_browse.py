@@ -28,7 +28,7 @@ class BrowseRepository(
     ) -> list[domain.Item]:
         """Load all children and sub children of the record."""
         stmt = sa.select(
-            models.Item.uuid
+            models.Item
         ).where(
             models.Item.parent_uuid == str(uuid),
             models.Item.uuid != str(uuid),
