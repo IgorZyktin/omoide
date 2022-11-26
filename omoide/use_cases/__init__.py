@@ -11,6 +11,6 @@ from omoide.use_cases.application.uc_app_browse import *
 from omoide.use_cases.application.uc_app_home import *
 from omoide.use_cases.application.uc_app_items import *
 from omoide.use_cases.application.uc_app_preview import *
-from omoide.use_cases.application.uc_app_profile import *
+from omoide.use_cases.application.uc_app_profile_quotas import *
 from omoide.use_cases.application.uc_app_search import *
 from omoide.use_cases.application.uc_app_upload import *
