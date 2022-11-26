@@ -478,3 +478,11 @@ select {
 #global-status {
     margin-top: 15px;
 }
+
+table {
+    text-align: center;
+}
+
+table td {
+    padding: 0.5em;
+}
