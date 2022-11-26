@@ -26,7 +26,13 @@ async def api_search(
     """Return portion of random items."""
     result = await use_case.execute(user, aim_wrapper.aim)
 
+    items = []
     if isinstance(result, Success):
-        return utils.to_simple_items(request, result.value)
+        items = utils.to_simple_items(request, result.value)
 
-    return []
+    # TODO - save search statistics
+    # start = time.perf_counter()
+    # delta = time.perf_counter() - start
+    # print(aim_wrapper.aim.stats(delta, len(items), None))
+
+    return items
