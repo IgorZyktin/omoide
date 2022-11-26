@@ -35,18 +35,6 @@ class ApiSearchUseCase:
         assert not aim.paged
 
         async with self.search_repo.transaction():
-            result = await self._search_dynamic(user, aim)
+            items = await self.search_repo.get_matching_items(user, aim)
 
-        return Success(result)
-
-    async def _search_dynamic(
-            self,
-            user: domain.User,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items in dynamic mode."""
-        if user.is_anon():
-            items = await self.search_repo.search_dynamic_anon(aim)
-        else:
-            items = await self.search_repo.search_dynamic_known(user, aim)
-        return items
+        return Success(items)

@@ -15,46 +15,17 @@ class AbsSearchRepository(
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def count_matching_anon(
-            self,
-            aim: common.Aim,
-    ) -> int:
-        """Count matching items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def count_matching_known(
+    async def count_matching_items(
             self,
             user: auth.User,
             aim: common.Aim,
     ) -> int:
-        """Return total matching items for authorised user."""
+        """Count matching items for search query."""
 
     @abc.abstractmethod
-    async def search_dynamic_anon(
-            self,
-            aim: common.Aim,
-    ) -> list[common.Item]:
-        """Find items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def search_dynamic_known(
+    async def get_matching_items(
             self,
             user: auth.User,
             aim: common.Aim,
     ) -> list[common.Item]:
-        """Find items for authorised user."""
-
-    @abc.abstractmethod
-    async def search_paged_anon(
-            self,
-            aim: common.Aim,
-    ) -> list[common.Item]:
-        """Find items for unauthorised user."""
-
-    @abc.abstractmethod
-    async def search_paged_known(
-            self,
-            user: auth.User,
-            aim: common.Aim,
-    ) -> list[common.Item]:
-        """Find items for authorised user."""
+        """Return matching items for search query."""

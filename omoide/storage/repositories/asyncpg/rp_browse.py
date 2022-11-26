@@ -5,13 +5,13 @@ from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy.sql import Select
 
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
 from omoide.storage.database import models
+from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
     .rp_items_read import ItemsReadRepository
 
@@ -21,32 +21,6 @@ class BrowseRepository(
     ItemsReadRepository,
 ):
     """Repository that performs all browse queries."""
-
-    @staticmethod
-    def _get_public_users() -> Select:
-        """Shorthand for public user selection."""
-        # TODO - probably move it to come common module
-        return sa.select(models.PublicUsers.user_uuid)
-
-    @staticmethod
-    def _check_permissions(
-            user: domain.User,
-            stmt: Select,
-    ) -> Select:
-        """Shorthand for permissions check."""
-        # TODO - probably move it to come common module
-        return stmt.select_from(
-            models.Item.__table__.join(
-                models.ComputedPermissions,  # type: ignore
-                models.Item.uuid == models.ComputedPermissions.item_uuid,
-                isouter=True,
-            )
-        ).where(
-            sa.or_(
-                models.Item.owner_uuid == str(user.uuid),
-                models.ComputedPermissions.permissions.any(str(user.uuid)),
-            )
-        )
 
     async def get_children(
             self,
@@ -58,15 +32,10 @@ class BrowseRepository(
         stmt = sa.select(
             models.Item
         ).where(
-            models.Item.parent_uuid == str(uuid),
+            models.Item.parent_uuid == uuid,
         )
 
-        if user.is_anon():
-            stmt = stmt.where(
-                models.Item.owner_uuid.in_(self._get_public_users())
-            )
-        else:
-            stmt = self._check_permissions(user, stmt)
+        stmt = queries.ensure_user_has_permissions(user, stmt)
 
         stmt = stmt.order_by(
             models.Item.number
@@ -90,15 +59,10 @@ class BrowseRepository(
         ).select_from(
             models.Item
         ).where(
-            models.Item.parent_uuid == str(uuid)
+            models.Item.parent_uuid == uuid
         )
 
-        if user.is_anon():
-            stmt = stmt.where(
-                models.Item.owner_uuid.in_(self._get_public_users())
-            )
-        else:
-            stmt = self._check_permissions(user, stmt)
+        stmt = queries.ensure_user_has_permissions(user, stmt)
 
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
@@ -257,44 +221,24 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items using simple request."""
-        if user.is_anon():
-            subquery = sa.select(models.PublicUsers.user_uuid)
-            conditions = [
-                models.Item.owner_uuid.in_(subquery)  # noqa
-            ]
+        stmt = sa.select(
+            models.Item
+        )
 
-        else:
-            conditions = []
-
-        s_uuid = str(uuid) if uuid is not None else None
+        stmt = queries.ensure_user_has_permissions(user, stmt)
 
         if aim.nested:
-            conditions.append(models.Item.parent_uuid == s_uuid)  # noqa
-
-        if aim.ordered:
-            conditions.append(models.Item.number > aim.last_seen)
-
-        stmt = sa.select(models.Item)
-
-        if conditions:
-            stmt = stmt.where(*conditions)
-
-        if user.is_not_anon():
-            stmt = stmt.select_from(
-                models.Item.__table__.join(
-                    models.ComputedPermissions,  # type: ignore
-                    models.Item.uuid == models.ComputedPermissions.item_uuid,
-                    isouter=True,
-                )
-            ).where(
-                sa.or_(
-                    models.Item.owner_uuid == str(user.uuid),
-                    models.ComputedPermissions.permissions.any(str(user.uuid)),
-                )
+            stmt = stmt.where(
+                models.Item.parent_uuid == uuid
             )
 
         if aim.ordered:
-            stmt = stmt.order_by(models.Item.number)
+            stmt = stmt.where(
+                models.Item.number > aim.last_seen
+            ).order_by(
+                models.Item.number
+            )
+
         else:
             stmt = stmt.order_by(sa.func.random())
 
