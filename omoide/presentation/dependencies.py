@@ -47,7 +47,8 @@ def get_aim(
     params = dict(request.query_params)
     return web.AimWrapper.from_params(
         params=params,
-        items_per_page=constants.ITEMS_PER_PAGE,
+        items_per_page=min(constants.ITEMS_PER_PAGE,
+                           constants.MAX_ITEMS_PER_PAGE),
     )
 
 
