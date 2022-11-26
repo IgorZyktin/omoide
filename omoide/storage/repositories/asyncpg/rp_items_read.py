@@ -127,11 +127,11 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
     ) -> int:
         """Return total amount of items for given user uuid."""
         stmt = sa.select(
-            sa.func.count().label('total')
+            sa.func.count().label('total_items')
         ).select_from(
             models.Item
         ).where(
-            models.Item.owner_uuid == str(uuid)
+            models.Item.owner_uuid == uuid
         )
         response = await self.db.fetch_one(stmt)
-        return response['total']
+        return int(response['total_items'])

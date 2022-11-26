@@ -67,8 +67,7 @@ class AppBrowseUseCase:
                 return Failure(errors.UserDoesNotExist(uuid=item.owner_uuid))
 
             if aim.paged:
-                result = await self.go_browse_paginated(
-                    user, owner, item, aim)
+                result = await self.go_browse_paginated(user, item, aim)
 
             else:
                 result = await self.go_browse_dynamic(
@@ -79,7 +78,6 @@ class AppBrowseUseCase:
     async def go_browse_paginated(
             self,
             user: domain.User,
-            owner: domain.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> BrowseResult:
@@ -91,28 +89,16 @@ class AppBrowseUseCase:
             users_repo=self.users_repo,
         )
 
-        # TODO(i.zyktin): must consider owner when gathering children
-        assert owner
+        items = await self.browse_repo.get_children(
+            user=user,
+            uuid=item.uuid,
+            aim=aim,
+        )
 
-        if user.is_anon():
-            items = await self.browse_repo.get_children(
-                uuid=item.uuid,
-                aim=aim,
-            )
-            total_items = await self.browse_repo.count_items(
-                uuid=item.uuid,
-            )
-
-        else:
-            items = await self.browse_repo.get_specific_children(
-                user=user,
-                uuid=item.uuid,
-                aim=aim,
-            )
-            total_items = await self.browse_repo.count_specific_items(
-                user=user,
-                uuid=item.uuid,
-            )
+        total_items = await self.browse_repo.count_children(
+            user=user,
+            uuid=item.uuid,
+        )
 
         return BrowseResult(
             item=item,

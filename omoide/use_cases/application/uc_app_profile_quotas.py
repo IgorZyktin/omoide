@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Use case for user profile.
+"""Use case for user profile quotas.
 """
 from omoide import domain
 from omoide.domain import errors
@@ -9,12 +9,12 @@ from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 
 __all__ = [
-    'AppProfileUseCase',
+    'AppProfileQuotasUseCase',
 ]
 
 
-class AppProfileUseCase:
-    """Use case for user profile."""
+class AppProfileQuotasUseCase:
+    """Use case for user profile quotas."""
 
     def __init__(
             self,

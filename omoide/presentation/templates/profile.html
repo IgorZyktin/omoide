@@ -7,6 +7,11 @@
 
     <div class="narrow-block">
 
+        <a href="{{ url_for('app_profile_quotas') }}"
+           class="button">Show used space</a>
+
+        <br>
+
         <a href="{{ url_for('app_logout') }}"
            title="Log out"
            class="button">
@@ -15,18 +20,6 @@
                  alt="Log out icon"/>
             <span class="wide-text">&nbsp;Log out</span>
         </a>
-
-        <br>
-
-        <div>
-            <h3>Total items: {{ sep_digits(total_items) }}</h3>
-            <h3>Total space used:</h3>
-            <ul>
-                <li>Content: {{ byte_count_to_text(items_size.content_size) }}</li>
-                <li>Preview: {{ byte_count_to_text(items_size.preview_size) }}</li>
-                <li>Thumbnails: {{ byte_count_to_text(items_size.thumbnail_size) }}</li>
-            </ul>
-        </div>
 
     </div>
 

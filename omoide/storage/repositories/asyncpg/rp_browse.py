@@ -11,6 +11,7 @@ from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
 from omoide.storage.database import models
+from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
     .rp_items_read import ItemsReadRepository
 
@@ -23,98 +24,47 @@ class BrowseRepository(
 
     async def get_children(
             self,
+            user: domain.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> list[domain.Item]:
-        """Load all children and sub children of the record."""
-        # TODO: consider checking access rights
+        """Load all children of an item with given UUID."""
         stmt = sa.select(
             models.Item
         ).where(
-            models.Item.parent_uuid == str(uuid),
-            models.Item.uuid != str(uuid),
-        ).order_by(
+            models.Item.parent_uuid == uuid,
+        )
+
+        stmt = queries.ensure_user_has_permissions(user, stmt)
+
+        stmt = stmt.order_by(
             models.Item.number
         ).limit(
             aim.items_per_page
         ).offset(
             aim.offset
         )
+
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**x) for x in response]
 
-    async def count_items(
-            self,
-            uuid: UUID,
-    ) -> int:
-        """Count all children with all required fields."""
-        query = """
-        SELECT count(*) AS total_items
-        FROM items
-        WHERE parent_uuid = :uuid;
-        """
-
-        response = await self.db.fetch_one(query, {'uuid': str(uuid)})
-        return int(response['total_items'])
-
-    async def get_specific_children(
-            self,
-            user: domain.User,
-            uuid: UUID,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Load all children with all required fields (and access)."""
-        _query = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items it
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE parent_uuid = :item_uuid
-            AND uuid <> :item_uuid
-            AND (:user_uuid = ANY(cp.permissions)
-                 OR it.owner_uuid::text = :user_uuid)
-        ORDER BY number
-        LIMIT :limit OFFSET :offset;
-        """
-
-        values = {
-            'user_uuid': str(user.uuid),
-            'item_uuid': str(uuid),
-            'limit': aim.items_per_page,
-            'offset': aim.offset,
-        }
-
-        response = await self.db.fetch_all(_query, values)
-        return [domain.Item(**x) for x in response]
-
-    async def count_specific_items(
+    async def count_children(
             self,
             user: domain.User,
             uuid: UUID,
     ) -> int:
-        """Count all children with all required fields (and access)."""
-        query = """
-        SELECT count(*) AS total_items
-        FROM items it
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
-        WHERE parent_uuid = :item_uuid
-            AND (:user_uuid = ANY(cp.permissions)
-                 OR it.owner_uuid::text = :user_uuid);
-        """
+        """Count all children of an item with given UUID."""
+        stmt = sa.select(
+            sa.func.count().label('total_items')
+        ).select_from(
+            models.Item
+        ).where(
+            models.Item.parent_uuid == uuid
+        )
 
-        values = {
-            'user_uuid': str(user.uuid),
-            'item_uuid': str(uuid),
-        }
+        stmt = queries.ensure_user_has_permissions(user, stmt)
 
-        response = await self.db.fetch_one(query, values)
+        response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
 
     async def get_location(
@@ -271,44 +221,24 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items using simple request."""
-        if user.is_anon():
-            subquery = sa.select(models.PublicUsers.user_uuid)
-            conditions = [
-                models.Item.owner_uuid.in_(subquery)  # noqa
-            ]
+        stmt = sa.select(
+            models.Item
+        )
 
-        else:
-            conditions = []
-
-        s_uuid = str(uuid) if uuid is not None else None
+        stmt = queries.ensure_user_has_permissions(user, stmt)
 
         if aim.nested:
-            conditions.append(models.Item.parent_uuid == s_uuid)  # noqa
-
-        if aim.ordered:
-            conditions.append(models.Item.number > aim.last_seen)
-
-        stmt = sa.select(models.Item)
-
-        if conditions:
-            stmt = stmt.where(*conditions)
-
-        if user.is_not_anon():
-            stmt = stmt.select_from(
-                models.Item.__table__.join(
-                    models.ComputedPermissions,  # type: ignore
-                    models.Item.uuid == models.ComputedPermissions.item_uuid,
-                    isouter=True,
-                )
-            ).where(
-                sa.or_(
-                    models.Item.owner_uuid == str(user.uuid),
-                    models.ComputedPermissions.permissions.any(str(user.uuid)),
-                )
+            stmt = stmt.where(
+                models.Item.parent_uuid == uuid
             )
 
         if aim.ordered:
-            stmt = stmt.order_by(models.Item.number)
+            stmt = stmt.where(
+                models.Item.number > aim.last_seen
+            ).order_by(
+                models.Item.number
+            )
+
         else:
             stmt = stmt.order_by(sa.func.random())
 

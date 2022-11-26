@@ -21,34 +21,19 @@ class AbsBrowseRepository(
     @abc.abstractmethod
     async def get_children(
             self,
-            uuid: UUID,
-            aim: common.Aim,
-    ) -> list[common.Item]:
-        """Load all children with all required fields."""
-
-    @abc.abstractmethod
-    async def count_items(
-            self,
-            uuid: UUID,
-    ) -> int:
-        """Count all children with all required fields."""
-
-    @abc.abstractmethod
-    async def get_specific_children(
-            self,
             user: domain.User,
             uuid: UUID,
             aim: common.Aim,
     ) -> list[common.Item]:
-        """Load all children with all required fields (and access)."""
+        """Load all children of an item with given UUID."""
 
     @abc.abstractmethod
-    async def count_specific_items(
+    async def count_children(
             self,
             user: domain.User,
             uuid: UUID,
     ) -> int:
-        """Count all children with all required fields (and access)."""
+        """Count all children of an item with given UUID."""
 
     @abc.abstractmethod
     async def get_location(

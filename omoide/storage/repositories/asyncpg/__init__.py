@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
     .rp_browse import BrowseRepository
 from omoide.storage.repositories.asyncpg \

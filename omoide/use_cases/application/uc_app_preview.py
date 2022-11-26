@@ -52,16 +52,10 @@ class AppPreviewUseCase:
             )
 
             item = await self.items_repo.read_item(uuid)
-
-            if user.is_anon():
-                neighbours = await self.preview_repo.get_neighbours_anon(
-                    uuid=uuid,
-                )
-            else:
-                neighbours = await self.preview_repo.get_neighbours_known(
-                    user=user,
-                    uuid=uuid,
-                )
+            neighbours = await self.preview_repo.get_neighbours(
+                user=user,
+                uuid=uuid,
+            )
 
             result = domain.SingleResult(
                 item=item,
