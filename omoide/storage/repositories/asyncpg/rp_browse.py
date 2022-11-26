@@ -27,6 +27,7 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children and sub children of the record."""
+        # TODO: consider checking access rights
         stmt = sa.select(
             models.Item
         ).where(
