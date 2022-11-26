@@ -59,6 +59,8 @@ class UsersRepository(
         """Update existing user."""
         stmt = sa.update(
             models.User
+        ).where(
+            models.User.uuid == str(user.uuid)
         ).values(
             login=user.login,
             password=user.password,
