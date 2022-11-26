@@ -72,7 +72,7 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
         response = await self.db.fetch_one(stmt)
         return domain.SpaceUsage(
             uuid=user.uuid,
-            content_size=response['content_size'],
-            preview_size=response['preview_size'],
-            thumbnail_size=response['thumbnail_size'],
+            content_size=response['content_size'] or 0,
+            preview_size=response['preview_size'] or 0,
+            thumbnail_size=response['thumbnail_size'] or 0,
         )
