@@ -38,7 +38,7 @@
 
 @media (min-width: 1080px) {
     html, body {
-        font-size: var(--bs-body-font-size);
+        font-size: 16px;
     }
 
     .query-container {
