@@ -139,7 +139,7 @@ class UpdateItemUseCase(BaseItemUseCase):
             operation: api_models.PatchOperation,
     ) -> None:
         """Alter collection field."""
-        item.is_collection = bool(operation.value)
+        item.is_collection = str(operation.value).lower() == 'true'
 
     @staticmethod
     async def alter_name(
