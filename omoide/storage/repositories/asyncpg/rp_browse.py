@@ -138,6 +138,7 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
+        # TODO - rewrite to sqlalchemy
         if user.is_anon():
             query = """
             WITH children AS (
@@ -259,6 +260,7 @@ class BrowseRepository(
             'limit': aim.items_per_page,
         }
 
+        # TODO - rewrite to sqlalchemy
         if user.is_anon():
             stmt = """
 WITH RECURSIVE nested_items AS
@@ -336,5 +338,62 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
         stmt += ' LIMIT :limit;'
 
+        response = await self.db.fetch_all(stmt, values)
+        return [domain.Item(**x) for x in response]
+
+    async def get_recent_items(
+            self,
+            user: domain.User,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Return portion of recently loaded items."""
+        # TODO - rewrite to sqlalchemy
+        stmt = """
+        WITH valid_items AS (
+            SELECT uuid,
+                   parent_uuid,
+                   owner_uuid,
+                   number,
+                   name,
+                   is_collection,
+                   content_ext,
+                   preview_ext,
+                   thumbnail_ext,
+                   tags, 
+                   it.permissions,
+                   me.created_at 
+            FROM items it 
+            LEFT JOIN metainfo me on it.uuid = me.item_uuid
+            LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
+            WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
+                OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions)))
+        )
+        SELECT uuid,
+                   parent_uuid,
+                   owner_uuid,
+                   number,
+                   name,
+                   is_collection,
+                   content_ext,
+                   preview_ext,
+                   thumbnail_ext,
+                   tags, 
+                   permissions
+        FROM valid_items 
+        WHERE
+            date(valid_items.created_at) = (
+                SELECT max(date(created_at)) FROM valid_items
+            )
+            AND number > :last_seen
+            ORDER BY number
+            OFFSET :offset
+            LIMIT :limit;
+        """
+        values = {
+            'user_uuid': str(user.uuid),
+            'last_seen': aim.last_seen,
+            'limit': aim.items_per_page,
+            'offset': aim.offset,
+        }
         response = await self.db.fetch_all(stmt, values)
         return [domain.Item(**x) for x in response]

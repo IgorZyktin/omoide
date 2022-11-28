@@ -330,9 +330,17 @@ def update_metainfo_use_case() -> use_cases.UpdateMetainfoUseCase:
 
 
 # app profile related use cases -----------------------------------------------
+
 def profile_quotas_use_case() -> use_cases.AppProfileQuotasUseCase:
     """Get use case instance."""
     return use_cases.AppProfileQuotasUseCase(
         users_repo=users_read_repository,
         items_repo=items_read_repository,
+    )
+
+
+def profile_new_use_case() -> use_cases.APIProfileNewUseCase:
+    """Get use case instance."""
+    return use_cases.APIProfileNewUseCase(
+        browse_repo=browse_repository,
     )

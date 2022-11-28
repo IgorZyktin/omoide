@@ -72,3 +72,11 @@ class AbsBrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
+
+    @abc.abstractmethod
+    async def get_recent_items(
+            self,
+            user: domain.User,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Return portion of recently loaded items."""

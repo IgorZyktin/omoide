@@ -1,0 +1,23 @@
+{% extends "base_search.html" %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ url_for('static', path='scroller.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="envelope-container"></div>
+    <script>
+        let container = document.querySelector('.envelope-container')
+        let endpoint = '{{ endpoint }}'
+        let scroller = new Scroller(container, endpoint)
+        let callback = function () {
+            scroller.trigger()
+        }
+
+        window.addEventListener('scroll', callback)
+        scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
+        callback()
+    </script>
+
+{% endblock %}
