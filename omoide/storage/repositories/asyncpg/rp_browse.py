@@ -338,3 +338,11 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
         response = await self.db.fetch_all(stmt, values)
         return [domain.Item(**x) for x in response]
+
+    async def get_recent_items(
+            self,
+            user: domain.User,
+            aim: domain.Aim,
+    ) -> list[domain.Item]:
+        """Return portion of recently loaded items."""
+        return []

@@ -72,3 +72,24 @@ async def app_profile_quotas(
     }
 
     return dep.templates.TemplateResponse('profile_quotas.html', context)
+
+
+@router.get('/profile/new')
+@web.login_required
+async def app_profile_new(
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        response_class: Type[Response] = HTMLResponse,
+):
+    """Show recent updates."""
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim_wrapper': aim_wrapper,
+        'url': request.url_for('api_profile_new'),
+    }
+
+    return dep.templates.TemplateResponse('profile_new.html', context)
