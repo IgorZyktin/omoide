@@ -359,27 +359,27 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
                    content_ext,
                    preview_ext,
                    thumbnail_ext,
-                   tags, 
+                   tags,
                    it.permissions,
-                   me.created_at 
-            FROM items it 
+                   me.created_at
+            FROM items it
             LEFT JOIN metainfo me on it.uuid = me.item_uuid
             LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
             WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
                 OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions)))
         )
         SELECT uuid,
-                   parent_uuid,
-                   owner_uuid,
-                   number,
-                   name,
-                   is_collection,
-                   content_ext,
-                   preview_ext,
-                   thumbnail_ext,
-                   tags, 
-                   permissions
-        FROM valid_items 
+               parent_uuid,
+               owner_uuid,
+               number,
+               name,
+               is_collection,
+               content_ext,
+               preview_ext,
+               thumbnail_ext,
+               tags,
+               permissions
+        FROM valid_items
         WHERE
             date(valid_items.created_at) = (
                 SELECT max(date(created_at)) FROM valid_items
