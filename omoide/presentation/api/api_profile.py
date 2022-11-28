@@ -7,6 +7,7 @@ from starlette.requests import Request
 
 from omoide import domain
 from omoide import use_cases
+from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import utils
 from omoide.presentation import web
@@ -25,4 +26,8 @@ async def api_profile_new(
 ):
     """Return portion of recently loaded items."""
     result = await use_case.execute(user, aim_wrapper.aim)
+
+    if isinstance(result, Failure):
+        web.raise_from_error(result.error)
+
     return utils.to_simple_items(request, result.value)
