@@ -89,7 +89,7 @@ async def app_profile_new(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': request.url_for('api_profile_new'),
+        'endpoint': request.url_for('api_profile_new'),
     }
 
     return dep.templates.TemplateResponse('profile_new.html', context)
