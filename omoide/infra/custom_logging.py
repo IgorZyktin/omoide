@@ -8,7 +8,7 @@ from typing import TypeAlias
 
 import loguru
 
-Logger: TypeAlias = loguru.Logger
+Logger: TypeAlias = 'loguru.Logger'
 
 
 def init_logging(level: str, diagnose: bool) -> None:

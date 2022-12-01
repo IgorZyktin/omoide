@@ -127,6 +127,20 @@ from omoide.infra.custom_logging import Logger
     help='Amount of symbols from UUID to form bucket',
     show_default=True,
 )
+@click.option(
+    '--single-run/--no-single-run',
+    type=bool,
+    default=False,
+    help='Run once and then stop',
+    show_default=True,
+)
+@click.option(
+    '--echo/--no-echo',
+    type=bool,
+    default=False,
+    help='Verbose output of database operations',
+    show_default=True,
+)
 def main(**kwargs):
     """Entry point."""
     db_url = SecretStr(kwargs.pop('db_url'))
@@ -153,7 +167,7 @@ def _run(
         worker: Worker,
 ) -> None:
     """Actual execution start."""
-    with database.life_cycle():
+    with database.life_cycle(echo=worker.config.echo):
         with database.start_session():
             meta_config = database.get_meta_config()
 
@@ -173,6 +187,10 @@ def _run(
 
             worker.adjust_interval(did_something)
             logger.debug('Sleeping for {:0.3f} seconds', worker.sleep_interval)
+
+            if worker.config.single_run:
+                break
+
             time.sleep(worker.sleep_interval)
 
 
@@ -189,7 +207,9 @@ def _do_media_operations(
     if worker.config.media_downloading:
         did_something = worker.download_media(logger, database)
 
-    if worker.config.drop_after_saving:
+    if worker.config.drop_after_saving and meta_config.replication_formula:
+        logger.debug('Dropping all media that fits into formula: {}',
+                     meta_config.replication_formula)
         did_something_else = worker.delete_media(
             logger=logger,
             database=database,

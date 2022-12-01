@@ -314,7 +314,7 @@ class Media(Base):
     media_type = sa.Column(sa.Enum('content',
                                    'preview',
                                    'thumbnail',
-                                   name='media_type'))
+                                   name='media_type'), nullable=False)
 
     # fields ------------------------------------------------------------------
 
@@ -334,7 +334,7 @@ class Media(Base):
 
     owner: User = relationship('User',
                                passive_deletes=True,
-                               back_populates='items',
+                               back_populates='media',
                                primaryjoin='Media.owner_uuid==User.uuid',
                                uselist=False)
 
@@ -439,3 +439,17 @@ class FilesystemOperation(Base):
 
     operation = sa.Column(sa.String(length=MEDIUM), nullable=False)
     extras = sa.Column(pg.JSON, nullable=False)
+
+
+class MetaConfigEntry(Base):
+    """General configuration for different components and instances."""
+    __tablename__ = 'meta_config'
+
+    # primary and foreign keys ------------------------------------------------
+
+    key = sa.Column(sa.String(length=MEDIUM),
+                    index=True,
+                    nullable=False,
+                    primary_key=True)
+    value = sa.Column(sa.String(length=HUGE), nullable=True)
+    type = sa.Column(sa.String(length=MEDIUM), nullable=False)

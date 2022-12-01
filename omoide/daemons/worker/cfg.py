@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 """Worker configuration.
 """
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel
 from pydantic import SecretStr
 from pydantic import root_validator
 from pydantic import validator
-
-from omoide import utils
 
 _LOG_LEVEL = Literal['DEBUG', 'INFO', 'WARNING', 'CRITICAL', 'ERROR', 'NOTSET']
 
@@ -31,8 +28,9 @@ class Config(BaseModel):
     batch_size: int
     log_level: _LOG_LEVEL
     debug: bool
-    prefix_size: int = 2
-    started_at: datetime = utils.now()
+    prefix_size: int
+    single_run: bool
+    echo: bool
 
     class Config:
         allow_mutation = False

@@ -22,7 +22,6 @@ class Database(BaseDatabase):
         stmt = sa.select(
             models.Media.id
         ).where(
-            models.Media.processed_at != None,  # noqa
             ~models.Media.replication.contains(formula),
             models.Media.attempts < max_attempts,
         ).order_by(
@@ -33,7 +32,7 @@ class Database(BaseDatabase):
         with self.engine.begin() as conn:
             response = conn.execute(stmt).fetchall()
 
-        return list(response)
+        return [x for x, in response]
 
     def select_media(
             self,
@@ -48,6 +47,22 @@ class Database(BaseDatabase):
             id=media_id
         ).first()
         return result
+
+    def drop_media(
+            self,
+            formula: dict[str, bool],
+    ) -> int:
+        """Delete fully downloaded media rows, return total amount."""
+        stmt = sa.delete(
+            models.Media
+        ).where(
+            models.Media.replication.contains(formula),
+        )
+
+        with self.engine.begin() as conn:
+            response = conn.execute(stmt)
+
+        return int(response.rowcount)
 
     def get_filesystem_operations(
             self,
@@ -69,21 +84,18 @@ class Database(BaseDatabase):
         with self.engine.begin() as conn:
             response = conn.execute(stmt).fetchall()
 
-        return list(response)
+        return [x for x, in response]
 
-    def drop_media(
+    def select_filesystem_operation(
             self,
-            formula: dict[str, bool],
-    ) -> int:
-        """Delete fully downloaded media rows, return total amount."""
-        stmt = sa.delete(
-            models.Media
-        ).where(
-            models.Media.replication.contains(formula),
-            models.Media.replication.has_all(formula),
-        )
-
-        with self.engine.begin() as conn:
-            response = conn.execute(stmt).fetchall()
-
-        return int(response.rowcount)
+            operation_id: int,
+    ) -> Optional[models.FilesystemOperation]:
+        """Select FilesystemOperation for update."""
+        result = self.session.query(
+            models.FilesystemOperation
+        ).with_for_update(
+            skip_locked=True
+        ).filter_by(
+            id=operation_id
+        ).first()
+        return result

@@ -3,6 +3,8 @@
 """
 from typing import Optional
 
+from sqlalchemy.orm.attributes import flag_modified
+
 from omoide import utils
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
@@ -111,7 +113,7 @@ class Worker:
             media_id: int,
     ) -> Optional[bool]:
         """Save single media record, return True on success."""
-        with database.start_session() as session:
+        with database.start_session():
             # noinspection PyBroadException
             try:
                 media = database.select_media(media_id)
@@ -124,9 +126,9 @@ class Worker:
             except Exception:
                 result = False
                 logger.exception('Failed to handle media {}', media_id)
-                session.rollback()
+                database.session.rollback()
             else:
-                session.commit()
+                database.session.commit()
 
         return result
 
@@ -136,8 +138,10 @@ class Worker:
             media: models.Media,
     ) -> None:
         """Save single media record."""
+        media.attempts += 1
         media.processed_at = utils.now()
         media.replication.update(self.formula)
+        flag_modified(media, 'replication')
 
     def process_filesystem_operation(
             self,
@@ -146,5 +150,29 @@ class Worker:
             operation_id: int,
     ) -> Optional[bool]:
         """Perform filesystem operation, return True on success."""
+        with database.start_session():
+            # noinspection PyBroadException
+            try:
+                operation = database.select_filesystem_operation(operation_id)
+
+                if operation is None:
+                    result = None
+                else:
+                    self._process_filesystem_operation(logger, operation)
+                    result = True
+            except Exception:
+                result = False
+                logger.exception('Failed to handle operation {}', operation_id)
+                database.session.rollback()
+            else:
+                database.session.commit()
+
+        return result
+
+    def _process_filesystem_operation(
+            self,
+            logger: Logger,
+            operation: models.FilesystemOperation,
+    ) -> None:
+        """Perform filesystem operation."""
         # TODO
-        return False
