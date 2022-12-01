@@ -318,12 +318,17 @@ class Media(Base):
 
     # fields ------------------------------------------------------------------
 
-    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
-    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
+    created_at = sa.Column(sa.DateTime(timezone=True),
+                           nullable=False,
+                           index=True)
+    processed_at = sa.Column(sa.DateTime(timezone=True),
+                             nullable=True,
+                             index=True)
     content = sa.Column(pg.BYTEA, nullable=False)
     ext = sa.Column(sa.String(length=SMALL), nullable=False)
     replication = sa.Column(pg.JSONB, nullable=False)
     error = sa.Column(sa.Text, nullable=False)
+    attempts = sa.Column(sa.Integer, nullable=False)
 
     # relations ---------------------------------------------------------------
 
@@ -427,6 +432,7 @@ class FilesystemOperation(Base):
     processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
     status = sa.Column(sa.String(length=SMALL), index=True, nullable=False)
     error = sa.Column(sa.Text)
+    attempts = sa.Column(sa.Integer, nullable=False)
 
     source_uuid: UUID = sa.Column(pg.UUID(), nullable=False)
     target_uuid: UUID = sa.Column(pg.UUID(), nullable=False)

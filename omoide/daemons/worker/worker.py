@@ -3,9 +3,11 @@
 """
 from typing import Optional
 
+from omoide import utils
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
 from omoide.infra.custom_logging import Logger
+from omoide.storage.database import models
 
 
 class Worker:
@@ -15,6 +17,14 @@ class Worker:
         """Initialize instance."""
         self.config = config
         self.sleep_interval = float(config.max_interval)
+
+    @property
+    def formula(self) -> dict[str, bool]:
+        """Return formula of this worker."""
+        return {
+            f'{self.config.name}-hot': self.config.save_hot,
+            f'{self.config.name}-cold': self.config.save_cold,
+        }
 
     def adjust_interval(self, did_something: bool) -> None:
         """Change interval based on previous actions."""
@@ -32,17 +42,12 @@ class Worker:
             database: Database,
     ) -> bool:
         """Download media from the database, return True if did something."""
-        formula = {
-            self.config.name: {
-                'hot': self.config.save_hot,
-                'cold': self.config.save_cold,
-            }
-        }
-
         media_ids = database.get_media_ids(
-            formula=formula,
+            formula=self.formula,
             limit=self.config.batch_size,
         )
+
+        logger.debug('Got {} media records: {}', len(media_ids), media_ids)
 
         did_something = False
         for media_id in media_ids:
@@ -50,11 +55,11 @@ class Worker:
             did_something = did_something or bool(did_something_more)
 
             if did_something is None:
-                logger.debug('Skipped downloading media {}', media_id)
+                logger.debug('\tSkipped downloading media {}', media_id)
             elif did_something:
-                logger.debug('Downloaded media {}', media_id)
+                logger.debug('\tDownloaded media {}', media_id)
             else:
-                logger.error('Failed to download media {}', media_id)
+                logger.error('\tFailed to download media {}', media_id)
 
         return bool(did_something)
 
@@ -62,7 +67,7 @@ class Worker:
     def delete_media(
             logger: Logger,
             database: Database,
-            replication_formula: dict[str, dict[str, bool]],
+            replication_formula: dict[str, bool],
     ) -> bool:
         """Delete media from the database, return True if did something."""
         dropped = database.drop_media(replication_formula)
@@ -82,6 +87,8 @@ class Worker:
             limit=self.config.batch_size,
         )
 
+        logger.debug('Got {} operations: {}', len(operations), operations)
+
         did_something = False
         for operation_id in operations:
             did_something_more = self.process_filesystem_operation(
@@ -89,11 +96,11 @@ class Worker:
             did_something = did_something or bool(did_something_more)
 
             if did_something is None:
-                logger.debug('Skipped processing operation {}', operation_id)
+                logger.debug('\tSkipped processing operation {}', operation_id)
             elif did_something:
-                logger.debug('Processed operation {}', operation_id)
+                logger.debug('\tProcessed operation {}', operation_id)
             else:
-                logger.error('Failed to process operation {}', operation_id)
+                logger.error('\tFailed to process operation {}', operation_id)
 
         return bool(did_something)
 
@@ -104,8 +111,33 @@ class Worker:
             media_id: int,
     ) -> Optional[bool]:
         """Save single media record, return True on success."""
-        # TODO
-        return False
+        with database.start_session() as session:
+            # noinspection PyBroadException
+            try:
+                media = database.select_media(media_id)
+
+                if media is None:
+                    result = None
+                else:
+                    self._process_media(logger, media)
+                    result = True
+            except Exception:
+                result = False
+                logger.exception('Failed to handle media {}', media_id)
+                session.rollback()
+            else:
+                session.commit()
+
+        return result
+
+    def _process_media(
+            self,
+            logger: Logger,
+            media: models.Media,
+    ) -> None:
+        """Save single media record."""
+        media.processed_at = utils.now()
+        media.replication.update(self.formula)
 
     def process_filesystem_operation(
             self,

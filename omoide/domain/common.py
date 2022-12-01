@@ -195,6 +195,7 @@ class Media(BaseModel):
     media_type: Literal['content', 'preview', 'thumbnail']
     replication: dict[str, dict]
     error: str
+    attempts: int
 
 
 class EXIF(BaseModel):

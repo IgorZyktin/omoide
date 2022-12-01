@@ -67,6 +67,7 @@ class CreateMediaUseCase(BaseMediaUseCase):
                 media_type=media.media_type,
                 replication={},
                 error='',
+                attempts=0,
             )
 
             media_id = await self.media_repo.create_media(user, valid_media)

@@ -33,6 +33,7 @@ class MediaRepository(interfaces.AbsMediaRepository):
             media_type=media.media_type,
             replication={},
             error='',
+            attempts=0,
         ).returning(models.Media.id)
         return await self.db.execute(stmt)
 
