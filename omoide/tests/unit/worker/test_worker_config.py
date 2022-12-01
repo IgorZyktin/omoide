@@ -27,6 +27,7 @@ def valid_worker_config_dict():
         warm_up_coefficient=25.4,
         batch_size=15,
         log_level='NOTSET',
+        debug=False,
     )
 
 

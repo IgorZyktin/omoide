@@ -28,6 +28,7 @@ class Config(BaseModel):
     warm_up_coefficient: float
     batch_size: int
     log_level: _LOG_LEVEL
+    debug: bool
     started_at: datetime = utils.now()
 
     class Config:

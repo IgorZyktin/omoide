@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 """Logging tools.
 """
-import logging
+from __future__ import annotations
+
 import sys
 
-from loguru import logger
+import loguru
+
+Logger = loguru.logger
 
 
-def init_logging(level: str) -> None:
+def init_logging(level: str, diagnose: bool) -> None:
     """Configure logger."""
-    logger.remove()
+    loguru.logger.remove()
 
     if level != 'NOTSET':
-        logger.add(sys.stderr, level=level)
+        loguru.logger.add(sys.stderr, level=level, diagnose=diagnose)
 
 
-def get_logger(name: str) -> logging.Logger:
+def get_logger(name: str) -> Logger:
     """Return configured logger instance."""
     _ = name  # to be able to switch to the default logger
-    return logger
+    return loguru.logger

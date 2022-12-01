@@ -97,29 +97,40 @@ from omoide.infra import custom_logging
     help='Log level of the worker',
     show_default=True,
 )
+@click.option(
+    '--debug/--no-debug',
+    type=bool,
+    default=False,
+    help='Shows verbose stack trace on exceptions',
+    show_default=True,
+)
 def main(**kwargs):
     """Entry point."""
     db_url = SecretStr(kwargs.pop('db_url'))
     config = cfg.Config(db_url=db_url, **kwargs)
 
-    custom_logging.init_logging(config.log_level)
+    custom_logging.init_logging(config.log_level, diagnose=config.debug)
     logger = custom_logging.get_logger(__name__)
     logger.info('Started Omoide Worker daemon')
     logger.info('\nConfig:\n\t{}', config.verbose())
 
     try:
-        _run(config)
+        _run(config, logger)
     except KeyboardInterrupt:
         logger.warning('Worker was manually stopped')
 
 
-def _run(config: cfg.Config):
+def _run(
+        config: cfg.Config,
+        logger: custom_logging.Logger,
+):
     """Actual execution start."""
     _ = config
 
     while True:
-        time.sleep(1)
-        # TODO
+        with logger.catch():
+            time.sleep(1)
+            # TODO
 
 
 if __name__ == '__main__':
