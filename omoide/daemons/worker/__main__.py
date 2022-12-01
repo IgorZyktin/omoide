@@ -7,6 +7,8 @@ import click
 from pydantic import SecretStr
 
 from omoide.daemons.worker import cfg
+from omoide.daemons.worker.db import Database
+from omoide.daemons.worker.worker import Worker
 from omoide.infra import custom_logging
 
 
@@ -114,8 +116,11 @@ def main(**kwargs):
     logger.info('Started Omoide Worker daemon')
     logger.info('\nConfig:\n\t{}', config.verbose())
 
+    database = Database(db_url=config.db_url.get_secret_value())
+    worker = Worker(config=config)
+
     try:
-        _run(config, logger)
+        _run(config, logger, database, worker)
     except KeyboardInterrupt:
         logger.warning('Worker was manually stopped')
 
@@ -123,9 +128,13 @@ def main(**kwargs):
 def _run(
         config: cfg.Config,
         logger: custom_logging.Logger,
-):
+        database: Database,
+        worker: Worker,
+) -> None:
     """Actual execution start."""
     _ = config
+    _ = database
+    _ = worker
 
     while True:
         with logger.catch():
