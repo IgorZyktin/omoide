@@ -61,15 +61,15 @@ from omoide.infra.custom_logging import Logger
 )
 @click.option(
     '--min-interval',
-    type=int,
-    default=5,
+    type=float,
+    default=0.1,
     help='Minimum amount of seconds between database checks',
     show_default=True,
 )
 @click.option(
     '--max-interval',
-    type=int,
-    default=300,
+    type=float,
+    default=300.0,
     help='Maximum amount of seconds between database checks',
     show_default=True,
 )
