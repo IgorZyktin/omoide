@@ -6,10 +6,12 @@ import time
 import click
 from pydantic import SecretStr
 
+from omoide.daemons.common.meta_cfg import MetaConfig
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
 from omoide.daemons.worker.worker import Worker
 from omoide.infra import custom_logging
+from omoide.infra.custom_logging import Logger
 
 
 @click.command()
@@ -144,17 +146,47 @@ def _run(
             meta_config = database.get_meta_config()
 
         while True:
-            did_something = worker.download_media(logger, database)
-            did_something_more = worker.delete_media(
-                logger=logger,
-                database=database,
-                replication_formula=meta_config.replication_formula,
-            )
+            # noinspection PyBroadException
+            try:
+                did_something = _do_media_operations(
+                    logger, database, worker, meta_config)
 
-            did_something = did_something or did_something_more
+                did_something_else = _do_filesystem_operations(
+                    logger, database, worker)
+
+                did_something = did_something or did_something_else
+            except Exception:
+                logger.exception('Failed to execute worker operation!')
+                did_something = False
 
             worker.adjust_interval(did_something)
+            logger.debug('Sleeping for {:0.3f} seconds', worker.sleep_interval)
             time.sleep(worker.sleep_interval)
+
+
+def _do_media_operations(
+        logger: Logger,
+        database: Database,
+        worker: Worker,
+        meta_config: MetaConfig,
+) -> bool:
+    """Wrapper for media operations."""
+    did_something = worker.download_media(logger, database)
+    did_something_else = worker.delete_media(
+        logger=logger,
+        database=database,
+        replication_formula=meta_config.replication_formula,
+    )
+    return did_something or did_something_else
+
+
+def _do_filesystem_operations(
+        logger: Logger,
+        database: Database,
+        worker: Worker,
+) -> bool:
+    """Wrapper for filesystem operations."""
+    return worker.do_filesystem_operations(logger, database)
 
 
 if __name__ == '__main__':

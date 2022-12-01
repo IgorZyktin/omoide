@@ -77,3 +77,12 @@ class Worker:
         """Save single media record, return True on success."""
         # TODO
         return False
+
+    def do_filesystem_operations(
+            self,
+            logger: Logger,
+            database: Database,
+    ) -> bool:
+        """Perform filesystem operations, return True if did something."""
+        # TODO
+        return False
