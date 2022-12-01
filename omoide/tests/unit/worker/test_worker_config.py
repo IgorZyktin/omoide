@@ -21,6 +21,8 @@ def valid_worker_config_dict():
         cold_folder='',
         save_hot=True,
         save_cold=False,
+        media_downloading=True,
+        filesystem_operations=True,
         drop_after_saving=False,
         min_interval=5,
         max_interval=300,
@@ -38,6 +40,7 @@ def valid_worker_config_argv():
         '--db-url', 'test',
         '--hot-folder', '/',
         '--save-hot',
+        '--media-downloading',
     ]
 
 
@@ -62,6 +65,7 @@ def test_worker_config_folders(
         save_cold,
 ):
     """Must raise on inadequate combinations."""
+    valid_worker_config_dict['media_downloading'] = True
     valid_worker_config_dict['hot_folder'] = hot_folder
     valid_worker_config_dict['cold_folder'] = cold_folder
     valid_worker_config_dict['save_hot'] = save_hot
@@ -119,6 +123,30 @@ def test_worker_config_batch_size(
 ):
     """Must raise on inadequate batch sizes."""
     valid_worker_config_dict['batch_size'] = batch_size
+
+    with pytest.raises(ValidationError):
+        cfg.Config(**valid_worker_config_dict)
+
+
+def test_worker_is_allowed_to_save(
+        valid_worker_config_dict,
+):
+    """Must raise if user wants to save something but cannot."""
+    valid_worker_config_dict['media_downloading'] = False
+    valid_worker_config_dict['save_hot'] = True
+    valid_worker_config_dict['save_cold'] = True
+
+    with pytest.raises(ValidationError):
+        cfg.Config(**valid_worker_config_dict)
+
+
+def test_worker_will_do_something(
+        valid_worker_config_dict,
+):
+    """Must raise if there is nothing to do."""
+    valid_worker_config_dict['media_downloading'] = False
+    valid_worker_config_dict['filesystem_operations'] = False
+    valid_worker_config_dict['drop_after_saving'] = False
 
     with pytest.raises(ValidationError):
         cfg.Config(**valid_worker_config_dict)

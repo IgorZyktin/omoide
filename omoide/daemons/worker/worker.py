@@ -59,17 +59,18 @@ class Worker:
 
         return bool(did_something)
 
+    @staticmethod
     def delete_media(
-            self,
             logger: Logger,
             database: Database,
             replication_formula: dict[str, dict[str, bool]],
     ) -> bool:
         """Delete media from the database, return True if did something."""
-        dropped = 0
-        if self.config.drop_after_saving:
-            dropped = database.drop_media(replication_formula)
+        dropped = database.drop_media(replication_formula)
+
+        if dropped:
             logger.debug('Dropped {} rows', dropped)
+
         return dropped != 0
 
     def process_filesystem_operations(

@@ -54,6 +54,18 @@ from omoide.infra.custom_logging import Logger
     show_default=True,
 )
 @click.option(
+    '--media-downloading/--no-media-downloading',
+    default=False,
+    help='Download media from the database to the filesystem',
+    show_default=True,
+)
+@click.option(
+    '--filesystem-operations/--no-filesystem-operations',
+    default=False,
+    help='Perform scheduled operations with filesystem',
+    show_default=True,
+)
+@click.option(
     '--drop-after-saving/--no-drop-after-saving',
     default=False,
     help='Drop input row from the database after all workers are saved it',
@@ -171,13 +183,20 @@ def _do_media_operations(
         meta_config: MetaConfig,
 ) -> bool:
     """Wrapper for media operations."""
-    did_something = worker.download_media(logger, database)
-    did_something_else = worker.delete_media(
-        logger=logger,
-        database=database,
-        replication_formula=meta_config.replication_formula,
-    )
-    return did_something or did_something_else
+    did_something = False
+    did_something_else = False
+
+    if worker.config.media_downloading:
+        did_something = worker.download_media(logger, database)
+
+    if worker.config.drop_after_saving:
+        did_something_else = worker.delete_media(
+            logger=logger,
+            database=database,
+            replication_formula=meta_config.replication_formula,
+        )
+
+    return did_something or bool(did_something_else)
 
 
 def _do_filesystem_operations(
@@ -186,7 +205,9 @@ def _do_filesystem_operations(
         worker: Worker,
 ) -> bool:
     """Wrapper for filesystem operations."""
-    return worker.process_filesystem_operations(logger, database)
+    if worker.config.filesystem_operations:
+        return worker.process_filesystem_operations(logger, database)
+    return False
 
 
 if __name__ == '__main__':
