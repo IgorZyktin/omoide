@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 import sys
+from typing import TypeAlias
 
 import loguru
 
-Logger = loguru.logger
+Logger: TypeAlias = loguru.logger
 
 
 def init_logging(level: str, diagnose: bool) -> None:
