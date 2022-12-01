@@ -106,6 +106,13 @@ from omoide.infra import custom_logging
     help='Shows verbose stack trace on exceptions',
     show_default=True,
 )
+@click.option(
+    '--prefix-size',
+    type=int,
+    default=2,
+    help='Amount of symbols from UUID to form bucket',
+    show_default=True,
+)
 def main(**kwargs):
     """Entry point."""
     db_url = SecretStr(kwargs.pop('db_url'))

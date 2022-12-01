@@ -29,6 +29,7 @@ class Config(BaseModel):
     batch_size: int
     log_level: _LOG_LEVEL
     debug: bool
+    prefix_size: int = 2
     started_at: datetime = utils.now()
 
     class Config:
