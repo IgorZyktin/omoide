@@ -120,26 +120,28 @@ def main(**kwargs):
     worker = Worker(config=config)
 
     try:
-        _run(config, logger, database, worker)
+        with logger.catch():
+            _run(logger, database, worker)
     except KeyboardInterrupt:
         logger.warning('Worker was manually stopped')
 
 
 def _run(
-        config: cfg.Config,
         logger: custom_logging.Logger,
         database: Database,
         worker: Worker,
 ) -> None:
     """Actual execution start."""
-    _ = config
-    _ = database
-    _ = worker
+    with database.life_cycle():
+        while True:
+            did_something = worker.download_media(logger, database)
 
-    while True:
-        with logger.catch():
-            time.sleep(1)
-            # TODO
+            if worker.config.drop_after_saving:
+                did_something_more = worker.delete_media(logger, database)
+                did_something = did_something or did_something_more
+
+            worker.adjust_interval(did_something)
+            time.sleep(worker.sleep_interval)
 
 
 if __name__ == '__main__':
