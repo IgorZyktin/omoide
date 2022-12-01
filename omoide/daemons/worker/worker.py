@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Worker class.
 """
+import traceback
 from typing import Iterator
 from typing import Optional
 
@@ -151,13 +152,22 @@ class Worker:
         if not media.ext or not media.content:
             return
 
+        if media.media_type == 'thumbnail':
+            sub_folder = 'thumbnails'
+        elif media.media_type == 'preview':
+            sub_folder = 'preview'
+        elif media.media_type == 'content':
+            sub_folder = 'content'
+        else:
+            raise RuntimeError(f'Unknown media type: {media.media_type}')
+
         for folder in self.get_folders():
             path = self.filesystem.ensure_folder_exists(
                 logger,
                 folder,
-                media.media_type,
+                sub_folder,
                 str(media.owner_uuid),
-                str(media.owner_uuid)[:self.config.prefix_size],
+                str(media.item_uuid)[:self.config.prefix_size],
             )
             filename = f'{media.item_uuid}.{media.ext}'
             self.filesystem.safely_save(logger, path, filename, media.content)
@@ -183,7 +193,8 @@ class Worker:
                 if operation is None:
                     result = None
                 else:
-                    self._process_filesystem_operation(logger, operation)
+                    self._process_filesystem_operation(
+                        logger, database, operation)
                     result = True
             except Exception:
                 result = False
@@ -198,7 +209,27 @@ class Worker:
     def _process_filesystem_operation(
             self,
             logger: Logger,
+            database: Database,
             operation: models.FilesystemOperation,
     ) -> None:
         """Perform filesystem operation."""
-        # TODO
+        folder = self.config.hot_folder or self.config.cold_folder
+        # noinspection PyBroadException
+        try:
+            self.filesystem.raise_if_not_exist(folder)
+            content = self.filesystem.execute_operation(
+                folder=folder,
+                operation=operation,
+                prefix_size=self.config.prefix_size,
+            )
+
+            database.create_media_from_operation(
+                operation, 'thumbnail', content)
+
+            operation.status = 'done'
+        except Exception:
+            logger.exception('Failed to execute {}', operation)
+            operation.status = 'fail'
+            operation.error += traceback.format_exc()
+
+        operation.processed_at = utils.now()

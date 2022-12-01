@@ -80,15 +80,16 @@ class Config(BaseModel):
         return values
 
     @root_validator
-    def check_at_least_one_folder_is_saved(cls, values):
+    def check_at_least_one_folder_is_present(cls, values):
         save_hot = values.get('save_hot')
         save_cold = values.get('save_cold')
 
-        if values.get('media_downloading'):
+        if values.get('media_downloading') \
+                or values.get('filesystem_operations'):
             if not any((save_hot, save_cold)):
                 raise ValueError(
                     'At least one of hot/cold folders '
-                    'must be specified as a save target'
+                    'must be specified'
                 )
         return values
 

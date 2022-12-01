@@ -432,7 +432,6 @@ class FilesystemOperation(Base):
     processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
     status = sa.Column(sa.String(length=SMALL), index=True, nullable=False)
     error = sa.Column(sa.Text)
-    attempts = sa.Column(sa.Integer, nullable=False)
 
     source_uuid: UUID = sa.Column(pg.UUID(), nullable=False)
     target_uuid: UUID = sa.Column(pg.UUID(), nullable=False)

@@ -2,9 +2,12 @@
 """Database tools for worker.
 """
 from typing import Optional
+from uuid import UUID
 
 import sqlalchemy as sa
+import ujson
 
+from omoide import utils
 from omoide.daemons.common.base_db import BaseDatabase
 from omoide.storage.database import models
 
@@ -67,15 +70,13 @@ class Database(BaseDatabase):
     def get_filesystem_operations(
             self,
             limit: int,
-            max_attempts: int = 5,
     ) -> list[int]:
         """Extract operations to process."""
         stmt = sa.select(
             models.FilesystemOperation.id
         ).where(
-            models.FilesystemOperation.processed_at != None,  # noqa
+            models.FilesystemOperation.processed_at == None,  # noqa
             models.FilesystemOperation.status == 'init',
-            models.FilesystemOperation.attempts < max_attempts,
         ).order_by(
             models.FilesystemOperation.id
         ).limit(
@@ -99,3 +100,27 @@ class Database(BaseDatabase):
             id=operation_id
         ).first()
         return result
+
+    def create_media_from_operation(
+            self,
+            operation: models.FilesystemOperation,
+            media_type: str,
+            content: bytes,
+    ) -> None:
+        """Convert filesystem operation into media."""
+        extras = ujson.loads(str(operation.extras))
+
+        media = models.Media(
+            owner_uuid=extras['owner_uuid'],
+            item_uuid=operation.target_uuid,
+            media_type=media_type,
+            created_at=utils.now(),
+            processed_at=None,
+            content=content,
+            ext=extras['ext'],
+            replication={},
+            error='',
+            attempts=0,
+        )
+
+        self.session.add(media)

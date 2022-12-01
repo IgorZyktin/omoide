@@ -30,6 +30,9 @@ def valid_worker_config_dict():
         batch_size=15,
         log_level='NOTSET',
         debug=False,
+        prefix_size=3,
+        single_run=False,
+        echo=False,
     )
 
 
@@ -66,6 +69,30 @@ def test_worker_config_folders(
 ):
     """Must raise on inadequate combinations."""
     valid_worker_config_dict['media_downloading'] = True
+    valid_worker_config_dict['hot_folder'] = hot_folder
+    valid_worker_config_dict['cold_folder'] = cold_folder
+    valid_worker_config_dict['save_hot'] = save_hot
+    valid_worker_config_dict['save_cold'] = save_cold
+
+    with pytest.raises(ValidationError):
+        cfg.Config(**valid_worker_config_dict)
+
+
+@pytest.mark.parametrize('hot_folder,cold_folder,save_hot,save_cold', [
+    ('', '', False, False),
+    ('/', '/', False, False),
+    ('/', '', False, True),
+    ('', '/', True, False),
+])
+def test_worker_config_folders(
+        valid_worker_config_dict,
+        hot_folder,
+        cold_folder,
+        save_hot,
+        save_cold,
+):
+    """Must raise on inadequate combinations."""
+    valid_worker_config_dict['filesystem_operations'] = True
     valid_worker_config_dict['hot_folder'] = hot_folder
     valid_worker_config_dict['cold_folder'] = cold_folder
     valid_worker_config_dict['save_hot'] = save_hot
