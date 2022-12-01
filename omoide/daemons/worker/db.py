@@ -16,6 +16,14 @@ class Database(BaseDatabase):
         # TODO
         return []
 
+    def download_filesystem_operations(
+            self,
+            limit: int,
+    ) -> list:
+        """Extract operations to process."""
+        # TODO
+        return []
+
     def drop_media(
             self,
             replication_formula: dict[str, dict[str, bool]],

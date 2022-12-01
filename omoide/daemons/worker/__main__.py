@@ -186,7 +186,7 @@ def _do_filesystem_operations(
         worker: Worker,
 ) -> bool:
     """Wrapper for filesystem operations."""
-    return worker.do_filesystem_operations(logger, database)
+    return worker.process_filesystem_operations(logger, database)
 
 
 if __name__ == '__main__':
