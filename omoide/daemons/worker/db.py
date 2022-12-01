@@ -7,19 +7,19 @@ from omoide.daemons.common.base_db import BaseDatabase
 class Database(BaseDatabase):
     """Wrapper on SQL commands for worker."""
 
-    def download_media(
+    def get_media_ids(
             self,
             formula: dict[str, dict[str, bool]],
             limit: int,
-    ) -> list:
+    ) -> list[int]:
         """Extract media resources to save."""
         # TODO
         return []
 
-    def download_filesystem_operations(
+    def get_filesystem_operations(
             self,
             limit: int,
-    ) -> list:
+    ) -> list[int]:
         """Extract operations to process."""
         # TODO
         return []

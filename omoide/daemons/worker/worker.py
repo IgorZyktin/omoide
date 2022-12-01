@@ -6,7 +6,6 @@ from typing import Optional
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
 from omoide.infra.custom_logging import Logger
-from omoide.storage.database import models
 
 
 class Worker:
@@ -40,22 +39,22 @@ class Worker:
             }
         }
 
-        medias = database.download_media(
+        media_ids = database.get_media_ids(
             formula=formula,
             limit=self.config.batch_size,
         )
 
         did_something = False
-        for media in medias:
-            did_something_more = self.process_media(logger, database, media)
+        for media_id in media_ids:
+            did_something_more = self.process_media(logger, database, media_id)
             did_something = did_something or bool(did_something_more)
 
             if did_something is None:
-                logger.debug('Skipped downloading  {}', media)
+                logger.debug('Skipped downloading media {}', media_id)
             elif did_something:
-                logger.debug('Downloaded {}', media)
+                logger.debug('Downloaded media {}', media_id)
             else:
-                logger.error('Failed to download {}', media)
+                logger.error('Failed to download media {}', media_id)
 
         return bool(did_something)
 
@@ -79,22 +78,22 @@ class Worker:
             database: Database,
     ) -> bool:
         """Perform filesystem operations, return True if did something."""
-        operations = database.download_filesystem_operations(
+        operations = database.get_filesystem_operations(
             limit=self.config.batch_size,
         )
 
         did_something = False
-        for operation in operations:
+        for operation_id in operations:
             did_something_more = self.process_filesystem_operation(
-                logger, database, operation)
+                logger, database, operation_id)
             did_something = did_something or bool(did_something_more)
 
             if did_something is None:
-                logger.debug('Skipped processing {}', operation)
+                logger.debug('Skipped processing operation {}', operation_id)
             elif did_something:
-                logger.debug('Processed {}', operation)
+                logger.debug('Processed operation {}', operation_id)
             else:
-                logger.error('Failed to process {}', operation)
+                logger.error('Failed to process operation {}', operation_id)
 
         return bool(did_something)
 
@@ -102,7 +101,7 @@ class Worker:
             self,
             logger: Logger,
             database: Database,
-            media: models.Media,
+            media_id: int,
     ) -> Optional[bool]:
         """Save single media record, return True on success."""
         # TODO
@@ -112,7 +111,7 @@ class Worker:
             self,
             logger: Logger,
             database: Database,
-            operation: models.FilesystemOperation,
+            operation_id: int,
     ) -> Optional[bool]:
         """Perform filesystem operation, return True on success."""
         # TODO
