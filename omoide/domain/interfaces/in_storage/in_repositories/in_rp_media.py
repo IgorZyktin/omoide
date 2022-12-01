@@ -13,28 +13,26 @@ class AbsMediaRepository(in_rp_base.AbsBaseRepository):
     """Repository that perform CRUD operations on media records."""
 
     @abc.abstractmethod
-    async def create_or_update_media(
+    async def create_media(
             self,
             user: domain.User,
             media: domain.Media,
-    ) -> bool:
-        """Create/update Media, return True if media was created."""
+    ) -> int:
+        """Create Media, return media id."""
 
     @abc.abstractmethod
     async def read_media(
             self,
-            uuid: UUID,
-            media_type: str,
+            media_id: int,
     ) -> Optional[domain.Media]:
         """Return Media instance or None."""
 
     @abc.abstractmethod
     async def delete_media(
             self,
-            uuid: UUID,
-            media_type: str,
+            media_id: int,
     ) -> bool:
-        """Delete Media with given UUID, return True on success."""
+        """Delete Media with given id, return True on success."""
 
     @abc.abstractmethod
     async def create_filesystem_operation(

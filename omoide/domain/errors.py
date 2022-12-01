@@ -80,8 +80,8 @@ class UserDoesNotExist(Error):
 
 
 class MediaDoesNotExist(Error):
-    """Media for item does not exist."""
-    template = 'Media for item {uuid} does not exist'
+    """Media does not exist."""
+    template = 'Media with id {id} for item {uuid} does not exist'
 
 
 class MetainfoDoesNotExist(Error):

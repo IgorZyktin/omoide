@@ -3,6 +3,7 @@
 """
 from datetime import datetime
 from typing import Iterator
+from typing import Literal
 from typing import Optional
 from uuid import UUID
 
@@ -184,13 +185,16 @@ class Query(BaseModel):
 
 class Media(BaseModel):
     """Transient content fot the item."""
+    id: int
+    owner_uuid: UUID
     item_uuid: UUID
     created_at: datetime
     processed_at: Optional[datetime]
-    status: str
     content: bytes
     ext: str
-    media_type: str
+    media_type: Literal['content', 'preview', 'thumbnail']
+    replication: dict[str, dict]
+    error: str
 
 
 class EXIF(BaseModel):

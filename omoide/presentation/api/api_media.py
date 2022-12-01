@@ -17,18 +17,17 @@ from omoide.presentation import web
 router = APIRouter(prefix='/api/media')
 
 
-@router.put('/{uuid}/{media_type}')
-async def api_create_or_update_media(
+@router.post('/{uuid}')
+async def api_create_media(
         uuid: UUID,
-        media_type: str,
         media_in: api_models.CreateMediaIn,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.CreateOrUpdateMediaUseCase = Depends(
-            dep.update_media_use_case),
+        use_case: use_cases.CreateMediaUseCase = Depends(
+            dep.create_media_use_case),
 ):
     """Create or update media entry."""
-    result = await use_case.execute(policy, user, uuid, media_type, media_in)
+    result = await use_case.execute(policy, user, uuid, media_in)
 
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
@@ -36,17 +35,17 @@ async def api_create_or_update_media(
     return {'result': 'ok'}
 
 
-@router.get('/{uuid}/{media_type}')
+@router.get('/{uuid}/{media_id}')
 async def api_read_media(
         uuid: UUID,
-        media_type: str,
+        media_id: int,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ReadMediaUseCase = Depends(
             dep.read_media_use_case),
 ):
     """Get media."""
-    result = await use_case.execute(policy, user, uuid, media_type)
+    result = await use_case.execute(policy, user, uuid, media_id)
 
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
@@ -54,10 +53,10 @@ async def api_read_media(
     return result.value
 
 
-@router.delete('/{uuid}/{media_type}')
+@router.delete('/{uuid}/{media_id}')
 async def api_delete_media(
         uuid: UUID,
-        media_type: str,
+        media_id: int,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.DeleteMediaUseCase = Depends(
@@ -68,7 +67,7 @@ async def api_delete_media(
     If media does not exist return 404.
     If media was successfully deleted, 200.
     """
-    result = await use_case.execute(policy, user, uuid, media_type)
+    result = await use_case.execute(policy, user, uuid, media_id)
 
     if isinstance(result, Failure):
         web.raise_from_error(result.error)

@@ -751,11 +751,12 @@ async function saveContentForProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 100000, // 100 seconds
-            type: 'PUT',
-            url: `/api/media/${proxy.uuid}/content`,
+            type: 'POST',
+            url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.content,
+                media_type: 'content',
                 ext: proxy.contentExt,
             }),
             success: function (response) {
@@ -782,11 +783,12 @@ async function savePreviewForProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 100000, // 100 seconds
-            type: 'PUT',
-            url: `/api/media/${proxy.uuid}/preview`,
+            type: 'POST',
+            url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.preview,
+                media_type: 'preview',
                 ext: proxy.previewExt,
             }),
             success: function (response) {
@@ -813,11 +815,12 @@ async function saveThumbnailForProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 100000, // 100 seconds
-            type: 'PUT',
-            url: `/api/media/${proxy.uuid}/thumbnail`,
+            type: 'POST',
+            url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.thumbnail,
+                media_type: 'thumbnail',
                 ext: proxy.thumbnailExt,
             }),
             success: function (response) {

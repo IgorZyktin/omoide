@@ -16,7 +16,7 @@ from omoide.presentation import api_models
 
 __all__ = [
     'ReadMediaUseCase',
-    'CreateOrUpdateMediaUseCase',
+    'CreateMediaUseCase',
     'DeleteMediaUseCase',
 ]
 
@@ -32,7 +32,7 @@ class BaseMediaUseCase:
         self.media_repo = media_repo
 
 
-class CreateOrUpdateMediaUseCase(BaseMediaUseCase):
+class CreateMediaUseCase(BaseMediaUseCase):
     """Use case for updating an item."""
 
     @staticmethod
@@ -47,29 +47,31 @@ class CreateOrUpdateMediaUseCase(BaseMediaUseCase):
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-            media_type: str,
             media: api_models.CreateMediaIn,
-    ) -> Result[errors.Error, bool]:
+    ) -> Result[errors.Error, int]:
         """Business logic."""
         async with self.media_repo.transaction():
             error = await policy.is_restricted(user, uuid,
-                                               actions.Media.CREATE_OR_UPDATE)
+                                               actions.Media.CREATE)
             if error:
                 return Failure(error)
 
             valid_media = domain.Media(
+                id=-1,
+                owner_uuid=user.uuid,
                 item_uuid=uuid,
                 created_at=utils.now(),
                 processed_at=None,
-                status='init',
                 content=self.extract_binary_content(media.content),
                 ext=media.ext,
-                media_type=media_type,
+                media_type=media.media_type,
+                replication={},
+                error='',
             )
 
-            created = await self.media_repo.create_or_update_media(user,
-                                                                   valid_media)
-        return Success(created)
+            media_id = await self.media_repo.create_media(user, valid_media)
+
+        return Success(media_id)
 
 
 class ReadMediaUseCase(BaseMediaUseCase):
@@ -80,18 +82,18 @@ class ReadMediaUseCase(BaseMediaUseCase):
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-            media_type: str,
+            media_id: int,
     ) -> Result[errors.Error, domain.Media]:
         async with self.media_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Media.READ)
+            if error:
+                return Failure(error)
 
-        if error:
-            return Failure(error)
-
-        media = await self.media_repo.read_media(uuid, media_type)
-
-        if media is None:
-            return Failure(errors.MediaDoesNotExist(uuid=uuid))
+            media = await self.media_repo.read_media(media_id)
+            if media is None:
+                return Failure(
+                    errors.MediaDoesNotExist(uuid=uuid, id=media_id)
+                )
 
         return Success(media)
 
@@ -104,19 +106,27 @@ class DeleteMediaUseCase(BaseMediaUseCase):
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-            media_type: str,
+            media_id: int,
     ) -> Result[errors.Error, bool]:
         """Business logic."""
         async with self.media_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Media.DELETE)
+            media = await self.media_repo.read_media(media_id)
 
+            if media is None:
+                return Failure(
+                    errors.MediaDoesNotExist(uuid=uuid, id=media_id)
+                )
+
+            error = await policy.is_restricted(user, media.item_uuid,
+                                               actions.Media.DELETE)
             if error:
                 return Failure(error)
 
-            deleted = await self.media_repo.delete_media(uuid, media_type)
+            deleted = await self.media_repo.delete_media(media_id)
 
             if not deleted:
-                return Failure(errors.MediaDoesNotExist(uuid=uuid))
+                return Failure(
+                    errors.MediaDoesNotExist(uuid=uuid, id=media_id)
+                )
 
         return Success(True)

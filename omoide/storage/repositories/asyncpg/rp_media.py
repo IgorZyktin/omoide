@@ -6,7 +6,6 @@ from uuid import UUID
 
 import sqlalchemy as sa
 import ujson
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
 from omoide import utils
@@ -17,79 +16,50 @@ from omoide.storage.database import models
 class MediaRepository(interfaces.AbsMediaRepository):
     """Repository that perform CRUD operations on media."""
 
-    async def create_or_update_media(
+    async def create_media(
             self,
             user: domain.User,
             media: domain.Media,
-    ) -> bool:
-        """Create/update Media, return True if media was created."""
-        values = {
-            'item_uuid': media.item_uuid,
-            'created_at': media.created_at,
-            'processed_at': media.processed_at,
-            'status': media.status,
-            'content': media.content,
-            'ext': media.ext,
-            'media_type': media.media_type,
-        }
-
-        insert = pg_insert(
+    ) -> int:
+        """Create Media, return media id."""
+        stmt = sa.insert(
             models.Media
         ).values(
-            values
-        )
-
-        stmt = insert.on_conflict_do_update(
-            index_elements=[
-                models.Media.item_uuid,
-                models.Media.media_type,
-            ],
-            set_={
-                'created_at': insert.excluded.created_at,
-                'processed_at': insert.excluded.processed_at,
-                'status': insert.excluded.status,
-                'ext': insert.excluded.ext,
-                'media_type': insert.excluded.media_type,
-            }
-        )
-
-        await self.db.execute(stmt, values)
-
-        return True
+            item_uuid=media.item_uuid,
+            created_at=media.created_at,
+            processed_at=media.processed_at,
+            content=media.content,
+            ext=media.ext,
+            media_type=media.media_type,
+            replication={},
+            error='',
+        ).returning(models.Media.id)
+        return await self.db.execute(stmt)
 
     async def read_media(
             self,
-            uuid: UUID,
-            media_type: str,
+            media_id: int,
     ) -> Optional[domain.Media]:
         """Return Media instance or None."""
         stmt = sa.select(
             models.Media
         ).where(
-            models.Media.item_uuid == uuid,
-            models.Media.media_type == media_type,
-            sa.literal(media_type).label('media_type'),
+            models.Media.id == media_id,
         )
-
         response = await self.db.fetch_one(stmt)
-
         return domain.Media(**response) if response else None
 
     async def delete_media(
             self,
-            uuid: UUID,
-            media_type: str,
+            media_id: int,
     ) -> bool:
-        """Delete Media with given UUID, return True on success."""
+        """Delete Media with given id, return True on success."""
         stmt = sa.delete(
             models.Media
         ).where(
-            models.Media.item_uuid == uuid,
-            models.Media.media_type == media_type,
+            models.Media.id == media_id,
         ).returning(1)
-
         response = await self.db.fetch_one(stmt)
-
         return response is not None
 
     async def create_filesystem_operation(

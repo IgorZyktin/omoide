@@ -2,7 +2,7 @@
 """Input and output models for the API.
 """
 from datetime import datetime
-from typing import Any
+from typing import Literal
 from typing import Optional
 from uuid import UUID
 
@@ -111,6 +111,7 @@ class UpdateItemIn(CreateItemIn):
 class CreateMediaIn(BaseModel):
     """Input info for media creation."""
     content: str
+    media_type: Literal['content', 'preview', 'thumbnail']
     ext: str
 
 
