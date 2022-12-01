@@ -9,6 +9,7 @@ from pydantic import SecretStr
 from omoide.daemons.common.meta_cfg import MetaConfig
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
+from omoide.daemons.worker.filesystem import Filesystem
 from omoide.daemons.worker.worker import Worker
 from omoide.infra import custom_logging
 from omoide.infra.custom_logging import Logger
@@ -152,7 +153,7 @@ def main(**kwargs):
     logger.info('\nConfig:\n\t{}', config.verbose())
 
     database = Database(db_url=config.db_url.get_secret_value())
-    worker = Worker(config=config)
+    worker = Worker(config=config, filesystem=Filesystem())
 
     try:
         with logger.catch():

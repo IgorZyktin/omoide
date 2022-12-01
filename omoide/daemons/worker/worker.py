@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Worker class.
 """
+from typing import Iterator
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
@@ -8,6 +9,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from omoide import utils
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
+from omoide.daemons.worker.filesystem import Filesystem
 from omoide.infra.custom_logging import Logger
 from omoide.storage.database import models
 
@@ -15,10 +17,18 @@ from omoide.storage.database import models
 class Worker:
     """Worker class."""
 
-    def __init__(self, config: cfg.Config) -> None:
+    def __init__(self, config: cfg.Config, filesystem: Filesystem) -> None:
         """Initialize instance."""
         self.config = config
+        self.filesystem = filesystem
         self.sleep_interval = float(config.max_interval)
+
+    def get_folders(self) -> Iterator[str]:
+        """Return all folders where we plan to save anything."""
+        if self.config.save_hot:
+            yield self.config.hot_folder
+        if self.config.save_cold:
+            yield self.config.cold_folder
 
     @property
     def formula(self) -> dict[str, bool]:
@@ -57,11 +67,11 @@ class Worker:
             did_something = did_something or bool(did_something_more)
 
             if did_something is None:
-                logger.debug('\tSkipped downloading media {}', media_id)
+                logger.debug('Skipped downloading media {}', media_id)
             elif did_something:
-                logger.debug('\tDownloaded media {}', media_id)
+                logger.debug('Downloaded media {}', media_id)
             else:
-                logger.error('\tFailed to download media {}', media_id)
+                logger.error('Failed to download media {}', media_id)
 
         return bool(did_something)
 
@@ -98,11 +108,11 @@ class Worker:
             did_something = did_something or bool(did_something_more)
 
             if did_something is None:
-                logger.debug('\tSkipped processing operation {}', operation_id)
+                logger.debug('Skipped processing operation {}', operation_id)
             elif did_something:
-                logger.debug('\tProcessed operation {}', operation_id)
+                logger.debug('Processed operation {}', operation_id)
             else:
-                logger.error('\tFailed to process operation {}', operation_id)
+                logger.error('Failed to process operation {}', operation_id)
 
         return bool(did_something)
 
@@ -138,6 +148,20 @@ class Worker:
             media: models.Media,
     ) -> None:
         """Save single media record."""
+        if not media.ext or not media.content:
+            return
+
+        for folder in self.get_folders():
+            path = self.filesystem.ensure_folder_exists(
+                logger,
+                folder,
+                media.media_type,
+                str(media.owner_uuid),
+                str(media.owner_uuid)[:self.config.prefix_size],
+            )
+            filename = f'{media.item_uuid}.{media.ext}'
+            self.filesystem.safely_save(logger, path, filename, media.content)
+
         media.attempts += 1
         media.processed_at = utils.now()
         media.replication.update(self.formula)
@@ -153,7 +177,8 @@ class Worker:
         with database.start_session():
             # noinspection PyBroadException
             try:
-                operation = database.select_filesystem_operation(operation_id)
+                operation = database.select_filesystem_operation(
+                    operation_id)
 
                 if operation is None:
                     result = None
@@ -162,7 +187,8 @@ class Worker:
                     result = True
             except Exception:
                 result = False
-                logger.exception('Failed to handle operation {}', operation_id)
+                logger.exception('Failed to handle operation {}',
+                                 operation_id)
                 database.session.rollback()
             else:
                 database.session.commit()
