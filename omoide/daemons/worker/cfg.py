@@ -23,8 +23,8 @@ class Config(BaseModel):
     save_hot: bool
     save_cold: bool
     drop_after_saving: bool
-    min_interval: int
-    max_interval: int
+    min_interval: float
+    max_interval: float
     warm_up_coefficient: float
     batch_size: int
     log_level: _LOG_LEVEL
@@ -36,22 +36,22 @@ class Config(BaseModel):
 
     @validator('min_interval')
     def check_min_interval(cls, v):
-        if v <= 0:
+        if v <= 0.0:
             raise ValueError('Minimum interval is too small')
 
-        if v >= 3600:
+        if v >= 3600.0:
             raise ValueError('Minimum interval is too large')
 
         return v
 
     @validator('max_interval')
     def check_max_interval(cls, v, values):
-        min_interval = values.get('min_interval', 0)
+        min_interval = values.get('min_interval', 0.0)
 
         if v <= min_interval:
             raise ValueError('Maximum interval is too small')
 
-        if v >= 8760:
+        if v >= 8760.0:
             raise ValueError('Maximum interval is too large')
 
         return v
