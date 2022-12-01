@@ -133,12 +133,18 @@ def _run(
 ) -> None:
     """Actual execution start."""
     with database.life_cycle():
+        with database.start_session():
+            meta_config = database.get_meta_config()
+
         while True:
             did_something = worker.download_media(logger, database)
+            did_something_more = worker.delete_media(
+                logger=logger,
+                database=database,
+                replication_formula=meta_config.replication_formula,
+            )
 
-            if worker.config.drop_after_saving:
-                did_something_more = worker.delete_media(logger, database)
-                did_something = did_something or did_something_more
+            did_something = did_something or did_something_more
 
             worker.adjust_interval(did_something)
             time.sleep(worker.sleep_interval)

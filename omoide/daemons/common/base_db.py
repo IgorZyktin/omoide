@@ -7,6 +7,8 @@ import sqlalchemy
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
+from omoide.daemons.common.meta_cfg import MetaConfig
+
 
 class BaseDatabase:
     """Generic database wrapper."""
@@ -62,3 +64,10 @@ class BaseDatabase:
             self.session = session
             yield
         self.session = None
+
+    def get_meta_config(self) -> MetaConfig:
+        """Load meta config from the database."""
+        params = {
+            'replication_formula': {}  # TODO
+        }
+        return MetaConfig(**params)
