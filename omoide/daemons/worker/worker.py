@@ -82,11 +82,24 @@ class Worker:
             database: Database,
             replication_formula: dict[str, bool],
     ) -> bool:
-        """Delete media from the database, return True if did something."""
+        """Delete media from the DB, return True if did something."""
         dropped = database.drop_media(replication_formula)
 
         if dropped:
-            logger.debug('Dropped {} rows', dropped)
+            logger.debug('Dropped {} rows with media', dropped)
+
+        return dropped != 0
+
+    @staticmethod
+    def delete_filesystem_operations(
+            logger: Logger,
+            database: Database,
+    ) -> bool:
+        """Delete operations from the DB, return True if did something."""
+        dropped = database.drop_operations()
+
+        if dropped:
+            logger.debug('Dropped {} rows with operations', dropped)
 
         return dropped != 0
 

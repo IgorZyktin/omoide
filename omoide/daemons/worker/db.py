@@ -2,7 +2,6 @@
 """Database tools for worker.
 """
 from typing import Optional
-from uuid import UUID
 
 import sqlalchemy as sa
 import ujson
@@ -60,6 +59,19 @@ class Database(BaseDatabase):
             models.Media
         ).where(
             models.Media.replication.contains(formula),
+        )
+
+        with self.engine.begin() as conn:
+            response = conn.execute(stmt)
+
+        return int(response.rowcount)
+
+    def drop_operations(self) -> int:
+        """Delete complete operations, return total amount."""
+        stmt = sa.delete(
+            models.FilesystemOperation
+        ).where(
+            models.FilesystemOperation.status == 'done'
         )
 
         with self.engine.begin() as conn:

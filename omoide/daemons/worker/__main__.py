@@ -204,20 +204,32 @@ def _do_media_operations(
     """Wrapper for media operations."""
     did_something = False
     did_something_else = False
+    did_something_more = False
 
     if worker.config.media_downloading:
         did_something = worker.download_media(logger, database)
 
-    if worker.config.drop_after_saving and meta_config.replication_formula:
-        logger.debug('Dropping all media that fits into formula: {}',
-                     meta_config.replication_formula)
-        did_something_else = worker.delete_media(
-            logger=logger,
-            database=database,
-            replication_formula=meta_config.replication_formula,
-        )
+    if worker.config.drop_after_saving:
+        if meta_config.replication_formula:
+            logger.debug('Dropping all media that fits into formula: {}',
+                         meta_config.replication_formula)
+            did_something_else = worker.delete_media(
+                logger=logger,
+                database=database,
+                replication_formula=meta_config.replication_formula,
+            )
 
-    return did_something or bool(did_something_else)
+        if worker.config.filesystem_operations:
+            did_something_more = worker.delete_filesystem_operations(
+                logger=logger,
+                database=database,
+            )
+
+    return (
+            did_something
+            or bool(did_something_else)
+            or bool(did_something_more)
+    )
 
 
 def _do_filesystem_operations(
