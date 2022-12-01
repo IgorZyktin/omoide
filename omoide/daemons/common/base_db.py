@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Generic database wrapper."""
 import contextlib
+from typing import Any
 from typing import Optional
 
 import sqlalchemy
@@ -67,7 +68,7 @@ class BaseDatabase:
 
     def get_meta_config(self) -> MetaConfig:
         """Load meta config from the database."""
-        params = {
+        params: dict[str, Any] = {
             'replication_formula': {}  # TODO
         }
         return MetaConfig(**params)

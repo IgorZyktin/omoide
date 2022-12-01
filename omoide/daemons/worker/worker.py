@@ -48,7 +48,7 @@ class Worker:
         did_something = False
         for media in medias:
             did_something_more = self.process_media(logger, database, media)
-            did_something = did_something or did_something_more
+            did_something = did_something or bool(did_something_more)
 
             if did_something is None:
                 logger.debug('Skipped downloading  {}', media)
@@ -86,7 +86,7 @@ class Worker:
         for operation in operations:
             did_something_more = self.process_filesystem_operation(
                 logger, database, operation)
-            did_something = did_something or did_something_more
+            did_something = did_something or bool(did_something_more)
 
             if did_something is None:
                 logger.debug('Skipped processing {}', operation)
