@@ -232,6 +232,9 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
         if target_uuid == source_uuid:
             return Failure(errors.ItemItself(uuid=target_uuid))
 
+        if user.uuid is None:
+            return Failure(errors.ItemModificationByAnon())
+
         async with self.items_repo.transaction():
 
             error = await policy.is_restricted(user, source_uuid,
@@ -248,6 +251,9 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
 
             if source is None:
                 return Failure(errors.ItemDoesNotExist(uuid=source_uuid))
+
+            if source.thumbnail_ext is None:
+                return Failure(errors.ItemHasNoThumbnail(uuid=source_uuid))
 
             metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
 

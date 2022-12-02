@@ -26,6 +26,9 @@ class Worker:
 
     def get_folders(self) -> Iterator[str]:
         """Return all folders where we plan to save anything."""
+        if not self.config.save_hot and not self.config.save_cold:
+            raise RuntimeError('No folders to use')
+
         if self.config.save_hot:
             yield self.config.hot_folder
         if self.config.save_cold:
@@ -117,7 +120,7 @@ class Worker:
                 str(media.owner_uuid),
                 str(media.item_uuid)[:self.config.prefix_size],
             )
-            filename = f'{media.item_uuid}.{media.ext}'
+            filename = f'{media.item_uuid}.{media.ext or ""}'
             self.filesystem.safely_save(logger, path, filename, media.content)
 
         media.attempts += 1
@@ -212,7 +215,7 @@ class Worker:
 
         content = self.filesystem.load_from_filesystem(
             folder,
-            copy.target_folder,
+            str(copy.target_folder),
             str(copy.owner_uuid),
             str(copy.target_uuid),
             bucket,

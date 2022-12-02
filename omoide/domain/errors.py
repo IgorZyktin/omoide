@@ -49,6 +49,11 @@ class ItemDoesNotExist(Error):
     template = 'Item {uuid} does not exist'
 
 
+class ItemHasNoThumbnail(Error):
+    """Item has no thumbnail."""
+    template = 'Item {uuid} has no thumbnail'
+
+
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
     template = 'You are not allowed to interact with item {uuid}'

@@ -38,6 +38,8 @@ class Filesystem:
         if not path.exists():
             raise FileNotFoundError(f'Path {path} does not exist!')
 
+        return None
+
     def safely_save(
             self,
             logger: custom_logging.Logger,
