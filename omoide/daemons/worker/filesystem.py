@@ -33,7 +33,8 @@ class Filesystem:
             content: bytes,
     ) -> Path:
         """Save file but not overwrite."""
-        old_path = Path(path) / filename
+        path = Path(path)
+        old_path = path / filename
         target_path = old_path
 
         while old_path.exists():
