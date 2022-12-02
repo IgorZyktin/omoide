@@ -6,7 +6,6 @@ import time
 import click
 from pydantic import SecretStr
 
-from omoide.daemons.common.meta_cfg import MetaConfig
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.db import Database
 from omoide.daemons.worker.filesystem import Filesystem

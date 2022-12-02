@@ -438,17 +438,3 @@ class FilesystemOperation(Base):
 
     operation = sa.Column(sa.String(length=MEDIUM), nullable=False)
     extras = sa.Column(pg.JSON, nullable=False)
-
-
-class MetaConfigEntry(Base):
-    """General configuration for different components and instances."""
-    __tablename__ = 'meta_config'
-
-    # primary and foreign keys ------------------------------------------------
-
-    key = sa.Column(sa.String(length=MEDIUM),
-                    index=True,
-                    nullable=False,
-                    primary_key=True)
-    value = sa.Column(sa.String(length=HUGE), nullable=True)
-    type = sa.Column(sa.String(length=MEDIUM), nullable=False)

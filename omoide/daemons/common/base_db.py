@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 """Generic database wrapper."""
 import contextlib
-from typing import Any
 from typing import Optional
 
 import sqlalchemy
-import ujson
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
-
-from omoide.daemons.common.meta_cfg import MetaConfig
-from omoide.storage.database import models
 
 
 class BaseDatabase:
@@ -67,46 +62,3 @@ class BaseDatabase:
             self.session = session
             yield
         self.session = None
-
-    def get_meta_config(self) -> MetaConfig:
-        """Load meta config from the database."""
-        values = self._get_meta_config_values()
-        params = parse_meta_config_values(values)
-        return MetaConfig(**params)
-
-    def _get_meta_config_values(self) -> list[models.MetaConfigEntry]:
-        """Load config values from DB."""
-        return self.session.query(models.MetaConfigEntry).all()
-
-
-def parse_meta_config_value(raw_value: str, target_type: str) -> Any:
-    """Convert meta value to appropriate type."""
-    target_type = target_type.lower()
-
-    if target_type == 'str':
-        result = str(raw_value)
-    elif target_type == 'int':
-        result = int(raw_value)
-    elif target_type == 'float':
-        result = float(raw_value)
-    elif target_type == 'json':
-        result = ujson.loads(raw_value)
-    elif target_type == 'none':
-        result = None
-    else:
-        raise RuntimeError(f'Unknown target type: {target_type!r}')
-
-    return result
-
-
-def parse_meta_config_values(
-        values: list[models.MetaConfigEntry],
-) -> dict[str, Any]:
-    """Convert meta config values to appropriate types."""
-    params: dict[str, Any] = {}
-
-    for each in values:
-        valid_value = parse_meta_config_value(each.value, each.type)
-        params[each.key] = valid_value
-
-    return params
