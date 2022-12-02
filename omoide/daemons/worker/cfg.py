@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Worker configuration.
 """
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
@@ -97,6 +98,30 @@ class Config(BaseModel):
             raise ValueError(
                 'You have to specify location of the cold folder to save there'
             )
+
+        return values
+
+    @root_validator
+    def check_folders_exist(cls, values):
+        save_hot = values.get('save_hot')
+        save_cold = values.get('save_cold')
+        hot_folder = values.get('hot_folder')
+        cold_folder = values.get('cold_folder')
+
+        hot_does_not_exist = not Path(hot_folder).exists()
+        cold_does_not_exist = not Path(cold_folder).exists()
+
+        if hot_does_not_exist and cold_does_not_exist:
+            raise ValueError(
+                'Both hot and cold folders do not exist: '
+                f'hot_folder={hot_folder}, cold_folder={cold_folder!r}'
+            )
+
+        if save_hot and hot_does_not_exist:
+            raise ValueError(f'Hot folder does not exist: {hot_folder!r}')
+
+        if save_cold and cold_does_not_exist:
+            raise ValueError(f'Cold folder does not exist: {cold_folder!r}')
 
         return values
 

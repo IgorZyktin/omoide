@@ -3,16 +3,13 @@
 """
 import os.path
 from pathlib import Path
-from typing import NoReturn
-from typing import Optional
 
 from omoide import utils
 from omoide.infra import custom_logging
 
 
 class Filesystem:
-    """Special class that works with filesystem.
-    """
+    """Special class that works with filesystem."""
 
     @staticmethod
     def ensure_folder_exists(
@@ -27,18 +24,6 @@ class Filesystem:
 
         path.mkdir(parents=True, exist_ok=True)
         return path
-
-    @staticmethod
-    def raise_if_not_exist(
-            *args: str,
-    ) -> Optional[NoReturn]:
-        """Create folder if needed."""
-        path = Path().joinpath(*args)
-
-        if not path.exists():
-            raise FileNotFoundError(f'Path {path} does not exist!')
-
-        return None
 
     def safely_save(
             self,

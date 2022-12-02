@@ -209,8 +209,6 @@ class Worker:
     ) -> None:
         """Perform filesystem operation."""
         folder = self.config.hot_folder or self.config.cold_folder
-        self.filesystem.raise_if_not_exist(folder)
-
         bucket = utils.get_bucket(copy.target_uuid, self.config.prefix_size)
 
         content = self.filesystem.load_from_filesystem(

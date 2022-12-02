@@ -41,10 +41,7 @@ def test_worker_config_folders(
 
 
 @pytest.mark.parametrize('min_interval', [0, 9999999999999])
-def test_worker_config_min_interval(
-        valid_worker_config_dict,
-        min_interval,
-):
+def test_worker_config_min_interval(valid_worker_config_dict, min_interval):
     """Must raise on inadequate min intervals."""
     valid_worker_config_dict['min_interval'] = min_interval
 
@@ -82,10 +79,7 @@ def test_worker_config_warm_up_coefficient(
 
 
 @pytest.mark.parametrize('batch_size', [0, 9999999999999])
-def test_worker_config_batch_size(
-        valid_worker_config_dict,
-        batch_size,
-):
+def test_worker_config_batch_size(valid_worker_config_dict, batch_size):
     """Must raise on inadequate batch sizes."""
     valid_worker_config_dict['batch_size'] = batch_size
 
@@ -93,9 +87,7 @@ def test_worker_config_batch_size(
         cfg.Config(**valid_worker_config_dict)
 
 
-def test_worker_is_allowed_to_save(
-        valid_worker_config_dict,
-):
+def test_worker_is_allowed_to_save(valid_worker_config_dict):
     """Must raise if user wants to save something but cannot."""
     valid_worker_config_dict['media_downloading'] = False
     valid_worker_config_dict['save_hot'] = True
@@ -126,3 +118,40 @@ def test_worker_config_interrupt(valid_worker_config_argv):
 
     assert result.exit_code == 0
     fake_run.assert_called_once()
+
+
+def test_worker_config_no_folders_exist(valid_worker_config_dict):
+    """Must raise because no folder was found."""
+    valid_worker_config_dict['hot_folder'] = 'nonexistent'
+    valid_worker_config_dict['cold_folder'] = 'nonexistent'
+
+    with pytest.raises(ValidationError, match='Both hot and cold folders*'):
+        cfg.Config(**valid_worker_config_dict)
+
+
+def test_worker_config_hot_does_not_exist(valid_worker_config_dict):
+    """Must raise because hot folder is required and does not exist."""
+    existing = valid_worker_config_dict['_existing_folder']
+
+    valid_worker_config_dict['save_hot'] = True
+    valid_worker_config_dict['hot_folder'] = 'nonexistent'
+
+    valid_worker_config_dict['save_cold'] = False
+    valid_worker_config_dict['cold_folder'] = existing
+
+    with pytest.raises(ValidationError, match='Hot folder does not exist*'):
+        cfg.Config(**valid_worker_config_dict)
+
+
+def test_worker_config_cold_does_not_exist(valid_worker_config_dict):
+    """Must raise because cold folder is required and does not exist."""
+    existing = valid_worker_config_dict['_existing_folder']
+
+    valid_worker_config_dict['save_hot'] = False
+    valid_worker_config_dict['hot_folder'] = existing
+
+    valid_worker_config_dict['save_cold'] = True
+    valid_worker_config_dict['cold_folder'] = 'nonexistent'
+
+    with pytest.raises(ValidationError, match='Cold folder does not exist*'):
+        cfg.Config(**valid_worker_config_dict)
