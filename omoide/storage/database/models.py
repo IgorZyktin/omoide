@@ -3,6 +3,7 @@
 
 PostgreSQL specific because application needs arrays.
 """
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -251,14 +252,14 @@ class Metainfo(Base):
 
     # fields ------------------------------------------------------------------
 
-    created_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=False)
-    updated_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=False)
-    deleted_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=True)
-    user_time = sa.Column(sa.DateTime(timezone=False),
-                          nullable=True)
+    created_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False)
+    updated_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False)
+    deleted_at: Optional[datetime] = sa.Column(sa.DateTime(timezone=True),
+                                               nullable=True)
+    user_time: Optional[datetime] = sa.Column(sa.DateTime(timezone=False),
+                                              nullable=True)
 
     width = sa.Column(sa.Integer, nullable=True)
     height = sa.Column(sa.Integer, nullable=True)
@@ -271,11 +272,11 @@ class Metainfo(Base):
     saved_from_url = sa.Column(sa.String(length=HUGE), nullable=True)
     description = sa.Column(sa.String(length=HUGE), nullable=True)
 
-    extras = sa.Column(pg.JSONB, nullable=False)
+    extras: dict = sa.Column(pg.JSONB, nullable=False)
 
-    content_size = sa.Column(sa.Integer, nullable=True)
-    preview_size = sa.Column(sa.Integer, nullable=True)
-    thumbnail_size = sa.Column(sa.Integer, nullable=True)
+    content_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    preview_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    thumbnail_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
 
     # relations ---------------------------------------------------------------
 
@@ -311,24 +312,25 @@ class Media(Base):
                                               ondelete='CASCADE'),
                                 nullable=False,
                                 index=True)
-    target_folder = sa.Column(sa.Enum('content',
-                                      'preview',
-                                      'thumbnails',
-                                      name='target_folder'), nullable=False)
+    target_folder: str = sa.Column(sa.Enum('content',
+                                           'preview',
+                                           'thumbnails',
+                                           name='target_folder'),
+                                   nullable=False)
 
     # fields ------------------------------------------------------------------
 
-    created_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=False,
-                           index=True)
-    processed_at = sa.Column(sa.DateTime(timezone=True),
-                             nullable=True,
-                             index=True)
-    content = sa.Column(pg.BYTEA, nullable=False)
-    ext = sa.Column(sa.String(length=SMALL), nullable=False)
-    replication = sa.Column(pg.JSONB, nullable=False)
-    error = sa.Column(sa.Text, nullable=False)
-    attempts = sa.Column(sa.Integer, nullable=False)
+    created_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False,
+                                     index=True)
+    processed_at: Optional[datetime] = sa.Column(sa.DateTime(timezone=True),
+                                                 nullable=True,
+                                                 index=True)
+    content: bytes = sa.Column(pg.BYTEA, nullable=False)
+    ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
+    replication: dict[str, bool] = sa.Column(pg.JSONB, nullable=False)
+    error: str = sa.Column(sa.Text, nullable=False)
+    attempts: int = sa.Column(sa.Integer, nullable=False)
 
     # relations ---------------------------------------------------------------
 
@@ -367,7 +369,7 @@ class EXIF(Base):
 
     # fields ------------------------------------------------------------------
 
-    exif = sa.Column(pg.JSONB, nullable=False)
+    exif: dict = sa.Column(pg.JSONB, nullable=False)
 
     # relations ---------------------------------------------------------------
 
@@ -394,10 +396,10 @@ class OrphanFiles(Base):
 
     # fields ------------------------------------------------------------------
 
-    media_type = sa.Column(sa.Enum('content',
-                                   'preview',
-                                   'thumbnail',
-                                   name='media_type'))
+    media_type: str = sa.Column(sa.Enum('content',
+                                        'preview',
+                                        'thumbnail',
+                                        name='media_type'))
 
     owner_uuid: UUID = sa.Column(pg.UUID(),
                                  nullable=False,
@@ -407,12 +409,13 @@ class OrphanFiles(Base):
                                 nullable=False,
                                 index=True)
 
-    ext = sa.Column(sa.String(length=SMALL), nullable=False)
+    ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
 
-    moment = sa.Column(sa.DateTime(timezone=True),
-                       nullable=False,
-                       index=True,
-                       server_default=sa.text("timezone('utc', now())"))
+    moment: datetime = sa.Column(sa.DateTime(timezone=True),
+                                 nullable=False,
+                                 index=True,
+                                 server_default=sa.text(
+                                     "timezone('utc', now())"))
 
 
 class ManualCopy(Base):
@@ -429,10 +432,14 @@ class ManualCopy(Base):
 
     # fields ------------------------------------------------------------------
 
-    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
-    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
-    status = sa.Column(sa.String(length=SMALL), index=True, nullable=False)
-    error = sa.Column(sa.Text)
+    created_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False)
+    processed_at: Optional[datetime] = sa.Column(sa.DateTime(timezone=True),
+                                                 nullable=True)
+    status: str = sa.Column(sa.String(length=SMALL),
+                            index=True,
+                            nullable=False)
+    error: str = sa.Column(sa.Text, nullable=False)
 
     owner_uuid: UUID = sa.Column(pg.UUID(),
                                  sa.ForeignKey('users.uuid',
@@ -448,5 +455,5 @@ class ManualCopy(Base):
                                   sa.ForeignKey('items.uuid',
                                                 ondelete='CASCADE'),
                                   nullable=False)
-    ext = sa.Column(sa.String(length=SMALL), nullable=False)
-    target_folder = sa.Column(sa.String(length=MEDIUM), nullable=False)
+    ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
+    target_folder: str = sa.Column(sa.String(length=MEDIUM), nullable=False)
