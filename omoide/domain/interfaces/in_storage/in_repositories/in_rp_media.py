@@ -2,7 +2,6 @@
 """Repository that perform CRUD operations on media records.
 """
 import abc
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
@@ -21,25 +20,12 @@ class AbsMediaRepository(in_rp_base.AbsBaseRepository):
         """Create Media, return media id."""
 
     @abc.abstractmethod
-    async def read_media(
+    async def copy_media(
             self,
-            media_id: int,
-    ) -> Optional[domain.Media]:
-        """Return Media instance or None."""
-
-    @abc.abstractmethod
-    async def delete_media(
-            self,
-            media_id: int,
-    ) -> bool:
-        """Delete Media with given id, return True on success."""
-
-    @abc.abstractmethod
-    async def create_filesystem_operation(
-            self,
+            owner_uuid: UUID,
             source_uuid: UUID,
             target_uuid: UUID,
-            operation: str,
-            extras: dict[str, str | int | bool | None],
+            ext: str,
+            target_folder: str,
     ) -> bool:
-        """Save intention to init operation on the filesystem."""
+        """Save intention to copy data between items."""

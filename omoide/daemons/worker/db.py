@@ -82,14 +82,14 @@ class Database(BaseDatabase):
             self,
             limit: int,
     ) -> list[int]:
-        """Extract operations to process."""
+        """Extract copy operations to process."""
         stmt = sa.select(
-            models.FilesystemOperation.id
+            models.ManualCopy.id
         ).where(
-            models.FilesystemOperation.processed_at == None,  # noqa
-            models.FilesystemOperation.status == 'init',
+            models.ManualCopy.processed_at == None,  # noqa
+            models.ManualCopy.status == 'init',
         ).order_by(
-            models.FilesystemOperation.id
+            models.ManualCopy.id
         ).limit(
             limit
         )

@@ -69,6 +69,11 @@ class ItemWrongParent(Error):
     template = 'Item {new_parent_uuid} cannot be used as a parent for {uuid}'
 
 
+class ItemItself(Error):
+    """User tries to set item as a parent to itself or something like that."""
+    template = 'Item {uuid} cannot be a target to itself'
+
+
 class EXIFDoesNotExist(Error):
     """EXIF for item does not exist."""
     template = 'EXIF for item {uuid} does not exist'

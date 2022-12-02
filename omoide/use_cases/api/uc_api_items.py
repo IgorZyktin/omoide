@@ -225,53 +225,47 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,
-            uuid: UUID,
-            child_uuid: UUID,
+            source_uuid: UUID,
+            target_uuid: UUID,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
-        bad_parent_error = errors.ItemWrongParent(
-            uuid=uuid,
-            new_parent_uuid=child_uuid,
-        )
-
-        if uuid == child_uuid:
-            return Failure(bad_parent_error)
+        if target_uuid == source_uuid:
+            return Failure(errors.ItemItself(uuid=target_uuid))
 
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
 
-            if error:
-                return Failure(error)
-
-            error = await policy.is_restricted(user, child_uuid,
+            error = await policy.is_restricted(user, source_uuid,
                                                actions.Item.UPDATE)
             if error:
                 return Failure(error)
 
-            child = await self.items_repo.read_item(child_uuid)
+            error = await policy.is_restricted(user, target_uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
 
-            if child is None:
-                return Failure(errors.ItemDoesNotExist(uuid=child_uuid))
+            source = await self.items_repo.read_item(source_uuid)
 
-            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+            if source is None:
+                return Failure(errors.ItemDoesNotExist(uuid=source_uuid))
+
+            metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
 
             if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
+                return Failure(errors.MetainfoDoesNotExist(uuid=target_uuid))
 
             metainfo.updated_at = utils.now()
             await self.metainfo_repo.update_metainfo(user, metainfo)
 
-            await self.media_repo.create_filesystem_operation(
-                source_uuid=child_uuid,
-                target_uuid=uuid,
-                operation='copy-thumbnail',
-                extras={
-                    'ext': child.thumbnail_ext,
-                    'owner_uuid': str(child.owner_uuid),
-                },
+            await self.media_repo.copy_media(
+                owner_uuid=user.uuid,
+                source_uuid=source_uuid,
+                target_uuid=target_uuid,
+                ext=source.thumbnail_ext,
+                target_folder='thumbnails',
             )
 
-        return Success(child_uuid)
+        return Success(source_uuid)
 
 
 class ApiItemAlterParentUseCase(BaseItemUseCase):
@@ -331,14 +325,12 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not parent.thumbnail_ext and item.thumbnail_ext:
-                await self.media_repo.create_filesystem_operation(
+                await self.media_repo.copy_media(
+                    owner_uuid=parent.owner_uuid,
                     source_uuid=item.uuid,
                     target_uuid=parent.uuid,
-                    operation='copy-thumbnail',
-                    extras={
-                        'ext': item.thumbnail_ext,
-                        'owner_uuid': str(item.owner_uuid),
-                    },
+                    ext=item.thumbnail_ext,
+                    target_folder='thumbnails',
                 )
 
             metainfo = await self.metainfo_repo.read_metainfo(uuid)

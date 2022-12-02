@@ -110,17 +110,17 @@ async def api_delete_item(
 # Not actually REST api endpoints >> heavy operations
 
 
-@router.put('/{uuid}/copy_thumbnail/{child_uuid}')
+@router.put('/{source_uuid}/copy_thumbnail/{target_uuid}')
 async def api_copy_thumbnail_from_given_item(
-        uuid: UUID,
-        child_uuid: UUID,
+        source_uuid: UUID,
+        target_uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiCopyThumbnailUseCase = Depends(
             dep.api_item_copy_thumbnail_use_case),
 ):
     """Copy thumbnail from given item."""
-    result = await use_case.execute(policy, user, uuid, child_uuid)
+    result = await use_case.execute(policy, user, source_uuid, target_uuid)
 
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
