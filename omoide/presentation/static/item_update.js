@@ -82,7 +82,7 @@ function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${parentUUID}/copy_thumbnail/${childUUID}`,
+        url: `/api/items/${childUUID}/copy_thumbnail/${parentUUID}`,
         contentType: 'application/json',
         success: function (response) {
             console.log('Enqueued thumbnail copying', response)

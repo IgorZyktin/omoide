@@ -3,6 +3,7 @@
 
 PostgreSQL specific because application needs arrays.
 """
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -50,6 +51,14 @@ class User(Base):
                                        ),
                                        back_populates='owner',
                                        uselist=True)
+
+    media: 'Media' = relationship('Media',
+                                  passive_deletes=True,
+                                  primaryjoin=(
+                                      'Media.owner_uuid==User.uuid'
+                                  ),
+                                  back_populates='owner',
+                                  uselist=True)
 
     # Feature: Add email field so users could change passwords by themselves
 
@@ -243,14 +252,14 @@ class Metainfo(Base):
 
     # fields ------------------------------------------------------------------
 
-    created_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=False)
-    updated_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=False)
-    deleted_at = sa.Column(sa.DateTime(timezone=True),
-                           nullable=True)
-    user_time = sa.Column(sa.DateTime(timezone=False),
-                          nullable=True)
+    created_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False)
+    updated_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False)
+    deleted_at: Optional[datetime] = sa.Column(sa.DateTime(timezone=True),
+                                               nullable=True)
+    user_time: Optional[datetime] = sa.Column(sa.DateTime(timezone=False),
+                                              nullable=True)
 
     width = sa.Column(sa.Integer, nullable=True)
     height = sa.Column(sa.Integer, nullable=True)
@@ -263,11 +272,11 @@ class Metainfo(Base):
     saved_from_url = sa.Column(sa.String(length=HUGE), nullable=True)
     description = sa.Column(sa.String(length=HUGE), nullable=True)
 
-    extras = sa.Column(pg.JSONB, nullable=False)
+    extras: dict = sa.Column(pg.JSONB, nullable=False)
 
-    content_size = sa.Column(sa.Integer, nullable=True)
-    preview_size = sa.Column(sa.Integer, nullable=True)
-    thumbnail_size = sa.Column(sa.Integer, nullable=True)
+    content_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    preview_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    thumbnail_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
 
     # relations ---------------------------------------------------------------
 
@@ -288,39 +297,53 @@ class Media(Base):
 
     # primary and foreign keys ------------------------------------------------
 
+    id: int = sa.Column(sa.BigInteger,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        primary_key=True)
+    owner_uuid: UUID = sa.Column(pg.UUID(),
+                                 sa.ForeignKey('users.uuid',
+                                               ondelete='CASCADE'),
+                                 nullable=False,
+                                 index=True)
     item_uuid: UUID = sa.Column(pg.UUID(),
                                 sa.ForeignKey('items.uuid',
                                               ondelete='CASCADE'),
-                                primary_key=True,
                                 nullable=False,
                                 index=True)
-    media_type = sa.Column(sa.Enum('content',
-                                   'preview',
-                                   'thumbnail',
-                                   name='media_type'),
-                           primary_key=True)
+    target_folder: str = sa.Column(sa.Enum('content',
+                                           'preview',
+                                           'thumbnails',
+                                           name='target_folder'),
+                                   nullable=False)
 
     # fields ------------------------------------------------------------------
 
-    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
-    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
-    status = sa.Column(sa.Enum('init', 'work', 'done', 'fail', name='status'),
-                       index=True)
-    content = sa.Column(pg.BYTEA, nullable=False)
-    ext = sa.Column(sa.String(length=SMALL), nullable=False)
+    created_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False,
+                                     index=True)
+    processed_at: Optional[datetime] = sa.Column(sa.DateTime(timezone=True),
+                                                 nullable=True,
+                                                 index=True)
+    content: bytes = sa.Column(pg.BYTEA, nullable=False)
+    ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
+    replication: dict[str, bool] = sa.Column(pg.JSONB, nullable=False)
+    error: str = sa.Column(sa.Text, nullable=False)
+    attempts: int = sa.Column(sa.Integer, nullable=False)
 
     # relations ---------------------------------------------------------------
+
+    owner: User = relationship('User',
+                               passive_deletes=True,
+                               back_populates='media',
+                               primaryjoin='Media.owner_uuid==User.uuid',
+                               uselist=False)
 
     item: Item = relationship('Item',
                               passive_deletes=True,
                               back_populates='media',
                               uselist=False)
-
-    # other -------------------------------------------------------------------
-
-    __table_args__ = (
-        sa.UniqueConstraint('item_uuid', 'media_type', name='uix_media'),
-    )
 
 
 # Feature: Add table for signatures. This will allow us to distinguish same
@@ -346,7 +369,7 @@ class EXIF(Base):
 
     # fields ------------------------------------------------------------------
 
-    exif = sa.Column(pg.JSONB, nullable=False)
+    exif: dict = sa.Column(pg.JSONB, nullable=False)
 
     # relations ---------------------------------------------------------------
 
@@ -373,10 +396,10 @@ class OrphanFiles(Base):
 
     # fields ------------------------------------------------------------------
 
-    media_type = sa.Column(sa.Enum('content',
-                                   'preview',
-                                   'thumbnail',
-                                   name='media_type'))
+    media_type: str = sa.Column(sa.Enum('content',
+                                        'preview',
+                                        'thumbnail',
+                                        name='media_type'))
 
     owner_uuid: UUID = sa.Column(pg.UUID(),
                                  nullable=False,
@@ -386,17 +409,18 @@ class OrphanFiles(Base):
                                 nullable=False,
                                 index=True)
 
-    ext = sa.Column(sa.String(length=SMALL), nullable=False)
+    ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
 
-    moment = sa.Column(sa.DateTime(timezone=True),
-                       nullable=False,
-                       index=True,
-                       server_default=sa.text("timezone('utc', now())"))
+    moment: datetime = sa.Column(sa.DateTime(timezone=True),
+                                 nullable=False,
+                                 index=True,
+                                 server_default=sa.text(
+                                     "timezone('utc', now())"))
 
 
-class FilesystemOperation(Base):
-    """Operations that have to be executed on filesystem."""
-    __tablename__ = 'filesystem_operations'
+class ManualCopy(Base):
+    """Operations that request loading data from the filesystem."""
+    __tablename__ = 'manual_copies'
 
     # primary and foreign keys ------------------------------------------------
 
@@ -407,13 +431,29 @@ class FilesystemOperation(Base):
                         primary_key=True)
 
     # fields ------------------------------------------------------------------
-    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
-    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
-    status = sa.Column(sa.String(length=SMALL), index=True, nullable=False)
-    error = sa.Column(sa.Text)
 
-    source_uuid: UUID = sa.Column(pg.UUID(), nullable=False)
-    target_uuid: UUID = sa.Column(pg.UUID(), nullable=False)
+    created_at: datetime = sa.Column(sa.DateTime(timezone=True),
+                                     nullable=False)
+    processed_at: Optional[datetime] = sa.Column(sa.DateTime(timezone=True),
+                                                 nullable=True)
+    status: str = sa.Column(sa.String(length=SMALL),
+                            index=True,
+                            nullable=False)
+    error: str = sa.Column(sa.Text, nullable=False)
 
-    operation = sa.Column(sa.String(length=MEDIUM), nullable=False)
-    extras = sa.Column(pg.JSON, nullable=False)
+    owner_uuid: UUID = sa.Column(pg.UUID(),
+                                 sa.ForeignKey('users.uuid',
+                                               ondelete='CASCADE'),
+                                 nullable=False)
+
+    source_uuid: UUID = sa.Column(pg.UUID(),
+                                  sa.ForeignKey('items.uuid',
+                                                ondelete='CASCADE'),
+                                  nullable=False)
+
+    target_uuid: UUID = sa.Column(pg.UUID(),
+                                  sa.ForeignKey('items.uuid',
+                                                ondelete='CASCADE'),
+                                  nullable=False)
+    ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
+    target_folder: str = sa.Column(sa.String(length=MEDIUM), nullable=False)

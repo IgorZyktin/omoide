@@ -19,9 +19,7 @@ class EXIF(Action):
 # noinspection PyArgumentList
 class Media(Action):
     """Operations on Media."""
-    CREATE_OR_UPDATE = enum.auto()
-    READ = enum.auto()
-    DELETE = enum.auto()
+    CREATE = enum.auto()
 
 
 # noinspection PyArgumentList

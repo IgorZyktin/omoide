@@ -33,4 +33,5 @@ jobs:
                 run: |
                     pip install mypy
                     pip install types-ujson
+                    pip install loguru-mypy
                     mypy ./omoide

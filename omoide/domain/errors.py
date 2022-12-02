@@ -49,6 +49,11 @@ class ItemDoesNotExist(Error):
     template = 'Item {uuid} does not exist'
 
 
+class ItemHasNoThumbnail(Error):
+    """Item has no thumbnail."""
+    template = 'Item {uuid} has no thumbnail'
+
+
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
     template = 'You are not allowed to interact with item {uuid}'
@@ -69,6 +74,11 @@ class ItemWrongParent(Error):
     template = 'Item {new_parent_uuid} cannot be used as a parent for {uuid}'
 
 
+class ItemItself(Error):
+    """User tries to set item as a parent to itself or something like that."""
+    template = 'Item {uuid} cannot be a target to itself'
+
+
 class EXIFDoesNotExist(Error):
     """EXIF for item does not exist."""
     template = 'EXIF for item {uuid} does not exist'
@@ -80,8 +90,8 @@ class UserDoesNotExist(Error):
 
 
 class MediaDoesNotExist(Error):
-    """Media for item does not exist."""
-    template = 'Media for item {uuid} does not exist'
+    """Media does not exist."""
+    template = 'Media with id {id} for item {uuid} does not exist'
 
 
 class MetainfoDoesNotExist(Error):
