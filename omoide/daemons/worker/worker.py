@@ -91,7 +91,7 @@ class Worker:
                     result = None
                 else:
                     result = self._process_media(logger, media)
-            except Exception as e:
+            except Exception:
                 result = 0
                 logger.exception('Failed to download media {}', media_id)
                 database.session.rollback()
