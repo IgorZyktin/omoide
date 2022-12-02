@@ -7,6 +7,8 @@ import tempfile
 import pytest
 from pydantic import SecretStr
 
+from omoide.daemons.worker import cfg
+
 
 @pytest.fixture
 def valid_worker_config_dict():
@@ -34,6 +36,11 @@ def valid_worker_config_dict():
             replication_formula={'test-hot': True, 'test-cold': True},
             _existing_folder=tmp_dir,
         )
+
+
+@pytest.fixture
+def valid_worker_config(valid_worker_config_dict):
+    return cfg.Config(**valid_worker_config_dict)
 
 
 @pytest.fixture

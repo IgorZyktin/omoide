@@ -176,12 +176,12 @@ def main(**kwargs):
 
     try:
         with logger.catch():
-            _run(logger, database, worker)
+            run(logger, database, worker)
     except KeyboardInterrupt:
         logger.warning('Worker was manually stopped')
 
 
-def _run(
+def run(
         logger: custom_logging.Logger,
         database: Database,
         worker: Worker,
@@ -191,7 +191,7 @@ def _run(
         while True:
             # noinspection PyBroadException
             try:
-                operations = _do_stuff(logger, database, worker)
+                operations = do_stuff(logger, database, worker)
             except Exception:
                 operations = 0
                 logger.exception('Failed to execute worker operation!')
@@ -206,7 +206,7 @@ def _run(
             time.sleep(worker.sleep_interval)
 
 
-def _do_stuff(
+def do_stuff(
         logger: custom_logging.Logger,
         database: Database,
         worker: Worker,
@@ -234,4 +234,4 @@ def _do_stuff(
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pragma: no cover

@@ -29,7 +29,7 @@ def test_filesystem_ensure_folder_exists():
         assert path.exists()
 
 
-def test_filesystem_safely_save():
+def test_filesystem_safely_save(worker_dt):
     """Must save without destroying existing files."""
     filesystem = Filesystem()
 
@@ -41,9 +41,19 @@ def test_filesystem_safely_save():
         with open(path, mode='wb') as file:
             file.write(b'initial')
 
-        filesystem.safely_save(mock.Mock(), Path(tmp_dir), 'a.txt', b'a')
-        filesystem.safely_save(mock.Mock(), Path(tmp_dir), 'a.txt', b'b')
-        new = filesystem.safely_save(mock.Mock(), Path(tmp_dir), 'a.txt', b'c')
+        with mock.patch('omoide.utils.now') as fake_now:
+            fake_now.side_effect = [
+                worker_dt,
+                worker_dt,
+                worker_dt + timedelta(seconds=1),
+                worker_dt + timedelta(seconds=2),
+            ]
+            filesystem.safely_save(
+                mock.Mock(), Path(tmp_dir), 'a.txt', b'a')
+            filesystem.safely_save(
+                mock.Mock(), Path(tmp_dir), 'a.txt', b'b')
+            new = filesystem.safely_save(
+                mock.Mock(), Path(tmp_dir), 'a.txt', b'c')
 
         assert filesystem.load_from_filesystem(new) == b'c'
         assert len(os.listdir(tmp_dir)) == 4

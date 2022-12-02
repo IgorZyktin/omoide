@@ -99,7 +99,7 @@ def test_worker_is_allowed_to_save(valid_worker_config_dict):
 
 def test_worker_config_generation(valid_worker_config_argv):
     """Must create config instance from CLI args."""
-    with mock.patch('omoide.daemons.worker.__main__._run') as fake_run, \
+    with mock.patch('omoide.daemons.worker.__main__.run') as fake_run, \
             mock.patch('omoide.daemons.worker.__main__.Database'):
         runner = CliRunner()
         result = runner.invoke(main, valid_worker_config_argv)  # noqa
@@ -110,7 +110,7 @@ def test_worker_config_generation(valid_worker_config_argv):
 
 def test_worker_config_interrupt(valid_worker_config_argv):
     """Must stop on keyboard interrupt."""
-    with mock.patch('omoide.daemons.worker.__main__._run') as fake_run, \
+    with mock.patch('omoide.daemons.worker.__main__.run') as fake_run, \
             mock.patch('omoide.daemons.worker.__main__.Database'):
         fake_run.side_effect = KeyboardInterrupt
         runner = CliRunner()

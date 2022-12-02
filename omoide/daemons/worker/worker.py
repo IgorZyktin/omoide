@@ -26,9 +26,6 @@ class Worker:
 
     def get_folders(self) -> Iterator[str]:
         """Return all folders where we plan to save anything."""
-        if not self.config.save_hot and not self.config.save_cold:
-            raise RuntimeError('No folders to use')
-
         if self.config.save_hot:
             yield self.config.hot_folder
         if self.config.save_cold:
@@ -42,7 +39,7 @@ class Worker:
             f'{self.config.name}-cold': self.config.save_cold,
         }
 
-    def adjust_interval(self, operations: int) -> None:
+    def adjust_interval(self, operations: int) -> float:
         """Change interval based on amount of operations done."""
         if operations:
             self.sleep_interval = self.config.min_interval
@@ -51,6 +48,7 @@ class Worker:
                 self.sleep_interval * self.config.warm_up_coefficient,
                 self.config.max_interval,
             ))
+        return self.sleep_interval
 
     def download_media(
             self,
@@ -92,14 +90,14 @@ class Worker:
                 if media is None:
                     result = None
                 else:
-                    self._process_media(logger, media)
-                    result = 1
-            except Exception:
+                    result = self._process_media(logger, media)
+            except Exception as e:
                 result = 0
                 logger.exception('Failed to download media {}', media_id)
                 database.session.rollback()
             else:
-                database.session.commit()
+                if result:
+                    database.session.commit()
 
         return result
 
@@ -107,10 +105,10 @@ class Worker:
             self,
             logger: Logger,
             media: models.Media,
-    ) -> None:
+    ) -> int:
         """Save single media record."""
         if not media.ext or not media.content:
-            return
+            return 0
 
         for folder in self.get_folders():
             path = self.filesystem.ensure_folder_exists(
@@ -127,6 +125,7 @@ class Worker:
         media.processed_at = utils.now()
         media.replication.update(self.formula)
         flag_modified(media, 'replication')
+        return 1
 
     def drop_media(
             self,
@@ -182,9 +181,8 @@ class Worker:
                 if copy is not None:
                     # noinspection PyBroadException
                     try:
-                        self._process_copy(database, copy)
+                        result = self._process_copy(database, copy)
                         copy.status = 'done'
-                        result = 1
                     except Exception:
                         logger.exception('Failed to copy {}', copy_id)
                         result = 0
@@ -198,7 +196,8 @@ class Worker:
                 database.session.rollback()
                 result = 0
             else:
-                database.session.commit()
+                if result:
+                    database.session.commit()
 
         return result
 
@@ -206,7 +205,7 @@ class Worker:
             self,
             database: Database,
             copy: models.ManualCopy,
-    ) -> None:
+    ) -> int:
         """Perform filesystem operation."""
         folder = self.config.hot_folder or self.config.cold_folder
         bucket = utils.get_bucket(copy.target_uuid, self.config.prefix_size)
@@ -221,6 +220,7 @@ class Worker:
         )
 
         database.create_media_from_copy(copy, content)
+        return 1
 
     @staticmethod
     def drop_manual_copies(

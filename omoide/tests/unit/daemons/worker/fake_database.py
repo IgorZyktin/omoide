@@ -1,0 +1,53 @@
+# -*- coding: utf-8 -*-
+"""Fake database."""
+import contextlib
+from typing import Any
+from typing import Optional
+from unittest import mock
+from unittest.mock import MagicMock
+
+from omoide.storage.database import models
+
+
+class FakeDatabase(MagicMock):
+    """Fake database."""
+
+    def __init__(self, *args: Any, **kw: Any) -> None:
+        super().__init__(*args, **kw)
+        self.engine = mock.Mock()
+        self.session = mock.Mock()
+
+    @contextlib.contextmanager
+    def start_session(self):
+        yield self.session
+
+    @contextlib.contextmanager
+    def life_cycle(self, echo: bool):
+        _ = echo
+        yield self.engine
+
+    @staticmethod
+    def select_media(media_id: int) -> Optional[models.Media]:
+        if media_id == 1:
+            return models.Media(
+                attempts=0,
+                replication={},
+            )
+        elif media_id in (2, 3):
+            return models.Media(
+                attempts=0,
+                ext='test',
+                content=b'test',
+                replication={},
+            )
+        elif media_id == 5:
+            fake_media = mock.Mock()
+            fake_media.attempts.side_effect = AttributeError
+            return fake_media
+        return None
+
+    @staticmethod
+    def select_copy_operation(copy_id: int) -> Optional[models.ManualCopy]:
+        if copy_id in (1, 2, 3, 5):
+            return models.ManualCopy(id=copy_id)
+        return None
