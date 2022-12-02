@@ -28,38 +28,41 @@ class Filesystem:
     def safely_save(
             self,
             logger: custom_logging.Logger,
-            path: Path,
+            path: str | Path,
             filename: str,
             content: bytes,
-    ) -> None:
+    ) -> Path:
         """Save file but not overwrite."""
-        old_path = path / filename
+        old_path = Path(path) / filename
         target_path = old_path
 
         while old_path.exists():
-            new_name = self.make_new_filename(filename)
-            new_path = path / new_name
+            new_filename = self.make_new_filename(filename)
+            new_path = path / new_filename
 
             if new_path.exists():
+                logger.debug('New name is already taken: {}', new_path)
                 continue
 
-            logger.debug('Renaming {} to {}', old_path, new_name)
+            logger.debug('Renaming {} to {}', old_path, new_filename)
             old_path.replace(new_path)
             break
 
         logger.debug('Saving {}', target_path)
         target_path.write_bytes(content)
+        return target_path
 
     @staticmethod
-    def make_new_filename(filename: str) -> str:
-        """Generate new name to save existing file."""
+    def make_new_filename(filename: str, separator: str = '___') -> str:
+        """Generate new name using old name."""
         name, ext = os.path.splitext(filename)
+        left_segment, *_ = name.split(separator)
         moment = utils.now().isoformat()
-        return f'{name}___{moment}{ext}'
+        return f'{left_segment}{separator}{moment}{ext}'
 
     @staticmethod
-    def load_from_filesystem(*args: str) -> bytes:
-        """Copy thumbnail from one item to another."""
+    def load_from_filesystem(*args: str | Path) -> bytes:
+        """Load binary data from filesystem."""
         filename = Path().joinpath(*args)
         content = filename.read_bytes()
         return content

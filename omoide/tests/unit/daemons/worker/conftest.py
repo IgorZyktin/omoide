@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests.
 """
+import datetime
 import tempfile
 
 import pytest
@@ -46,3 +47,9 @@ def valid_worker_config_argv():
             '--download-media',
             '--replication-formula', '{"test-hot": true}'
         ]
+
+
+@pytest.fixture
+def worker_dt():
+    return datetime.datetime(
+        2022, 12, 2, 20, 10, 15, 128, tzinfo=datetime.timezone.utc)
