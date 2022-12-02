@@ -4,6 +4,7 @@
 import time
 
 import click
+import ujson
 from pydantic import SecretStr
 
 from omoide.daemons.worker import cfg
@@ -54,21 +55,27 @@ from omoide.infra.custom_logging import Logger
     show_default=True,
 )
 @click.option(
-    '--media-downloading/--no-media-downloading',
+    '--download-media/--no-download-media',
     default=False,
     help='Download media from the database to the filesystem',
     show_default=True,
 )
 @click.option(
-    '--filesystem-operations/--no-filesystem-operations',
+    '--copy-thumbnails/--no-copy-thumbnails',
     default=False,
-    help='Perform scheduled operations with filesystem',
+    help='Copy thumbnails between items',
     show_default=True,
 )
 @click.option(
-    '--drop-after-saving/--no-drop-after-saving',
+    '--drop-done-media/--no-drop-done-media',
     default=False,
-    help='Drop input row from the database after all workers are saved it',
+    help='Drop media row from the database after all workers are saved it',
+    show_default=True,
+)
+@click.option(
+    '--drop-done-thumbnails/--no-drop-done-thumbnails',
+    default=False,
+    help='Drop thumbnail row from the database after saving',
     show_default=True,
 )
 @click.option(
@@ -141,10 +148,22 @@ from omoide.infra.custom_logging import Logger
     help='Verbose output of database operations',
     show_default=True,
 )
+@click.option(
+    '--replication-formula',
+    type=str,
+    default='{}',
+    help='Can delete media after its replication state goes into this (JSON)',
+    show_default=True,
+)
 def main(**kwargs):
     """Entry point."""
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    replication_formula = ujson.loads(kwargs.pop('replication_formula'))
+    config = cfg.Config(
+        db_url=db_url,
+        replication_formula=replication_formula,
+        **kwargs,
+    )
 
     custom_logging.init_logging(config.log_level, diagnose=config.debug)
     logger = custom_logging.get_logger(__name__)
@@ -198,7 +217,6 @@ def _do_media_operations(
         logger: Logger,
         database: Database,
         worker: Worker,
-        meta_config: MetaConfig,
 ) -> bool:
     """Wrapper for media operations."""
     did_something = False

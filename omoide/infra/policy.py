@@ -15,8 +15,6 @@ ITEM_RELATED = frozenset((
     actions.EXIF.DELETE,
 
     actions.Media.CREATE,
-    actions.Media.READ,
-    actions.Media.DELETE,
 
     actions.Metainfo.READ,
     actions.Metainfo.UPDATE,

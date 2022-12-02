@@ -19,9 +19,10 @@ class Config(BaseModel):
     cold_folder: str
     save_hot: bool
     save_cold: bool
-    media_downloading: bool
-    filesystem_operations: bool
-    drop_after_saving: bool
+    download_media: bool
+    copy_thumbnails: bool
+    drop_done_media: bool
+    drop_done_thumbnails: bool
     min_interval: float
     max_interval: float
     warm_up_coefficient: float
@@ -31,6 +32,7 @@ class Config(BaseModel):
     prefix_size: int
     single_run: bool
     echo: bool
+    replication_formula: dict[str, bool]
 
     class Config:
         allow_mutation = False
@@ -72,25 +74,11 @@ class Config(BaseModel):
         hot_folder = values.get('hot_folder')
         cold_folder = values.get('cold_folder')
 
-        if values.get('media_downloading'):
-            if not any((hot_folder, cold_folder)):
-                raise ValueError(
-                    'At least one of hot/cold folders must be given'
-                )
-        return values
+        if not any((hot_folder, cold_folder)):
+            raise ValueError(
+                'At least one of hot-folder/cold-folder folders must be given'
+            )
 
-    @root_validator
-    def check_at_least_one_folder_is_present(cls, values):
-        save_hot = values.get('save_hot')
-        save_cold = values.get('save_cold')
-
-        if values.get('media_downloading') \
-                or values.get('filesystem_operations'):
-            if not any((save_hot, save_cold)):
-                raise ValueError(
-                    'At least one of hot/cold folders '
-                    'must be specified'
-                )
         return values
 
     @root_validator
@@ -110,31 +98,6 @@ class Config(BaseModel):
                 'You have to specify location of the cold folder to save there'
             )
 
-        return values
-
-    @root_validator
-    def check_doing_something(cls, values):
-        media_downloading = values.get('media_downloading')
-        filesystem_operations = values.get('filesystem_operations')
-        drop_after_saving = values.get('drop_after_saving')
-
-        if not any((
-                media_downloading,
-                filesystem_operations,
-                drop_after_saving,
-        )):
-            raise ValueError(
-                'You have to specify at least one operation: '
-                'download something, '
-                'do filesystem operations '
-                'or delete downloaded records'
-            )
-
-        if (values.get('save_hot') or values.get('save_cold')) \
-                and not values.get('media_downloading'):
-            raise ValueError(
-                'If you want to download something, you have to allow it'
-            )
         return values
 
     @validator('batch_size')

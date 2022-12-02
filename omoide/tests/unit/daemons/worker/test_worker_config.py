@@ -5,46 +5,10 @@ from unittest import mock
 
 import pytest
 from click.testing import CliRunner
-from pydantic import SecretStr
 from pydantic import ValidationError
 
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.__main__ import main
-
-
-@pytest.fixture
-def valid_worker_config_dict():
-    return dict(
-        name='test',
-        db_url=SecretStr('test'),
-        hot_folder='test',
-        cold_folder='',
-        save_hot=True,
-        save_cold=False,
-        media_downloading=True,
-        filesystem_operations=True,
-        drop_after_saving=False,
-        min_interval=5,
-        max_interval=300,
-        warm_up_coefficient=25.4,
-        batch_size=15,
-        log_level='NOTSET',
-        debug=False,
-        prefix_size=3,
-        single_run=False,
-        echo=False,
-    )
-
-
-@pytest.fixture
-def valid_worker_config_argv():
-    return [
-        '--name', 'test',
-        '--db-url', 'test',
-        '--hot-folder', '/',
-        '--save-hot',
-        '--media-downloading',
-    ]
 
 
 def test_worker_config_correct(valid_worker_config_dict):
@@ -56,7 +20,6 @@ def test_worker_config_correct(valid_worker_config_dict):
 
 @pytest.mark.parametrize('hot_folder,cold_folder,save_hot,save_cold', [
     ('', '', False, False),
-    ('/', '/', False, False),
     ('/', '', False, True),
     ('', '/', True, False),
 ])
@@ -68,31 +31,6 @@ def test_worker_config_folders(
         save_cold,
 ):
     """Must raise on inadequate combinations."""
-    valid_worker_config_dict['media_downloading'] = True
-    valid_worker_config_dict['hot_folder'] = hot_folder
-    valid_worker_config_dict['cold_folder'] = cold_folder
-    valid_worker_config_dict['save_hot'] = save_hot
-    valid_worker_config_dict['save_cold'] = save_cold
-
-    with pytest.raises(ValidationError):
-        cfg.Config(**valid_worker_config_dict)
-
-
-@pytest.mark.parametrize('hot_folder,cold_folder,save_hot,save_cold', [
-    ('', '', False, False),
-    ('/', '/', False, False),
-    ('/', '', False, True),
-    ('', '/', True, False),
-])
-def test_worker_config_folders(
-        valid_worker_config_dict,
-        hot_folder,
-        cold_folder,
-        save_hot,
-        save_cold,
-):
-    """Must raise on inadequate combinations."""
-    valid_worker_config_dict['filesystem_operations'] = True
     valid_worker_config_dict['hot_folder'] = hot_folder
     valid_worker_config_dict['cold_folder'] = cold_folder
     valid_worker_config_dict['save_hot'] = save_hot
@@ -162,18 +100,6 @@ def test_worker_is_allowed_to_save(
     valid_worker_config_dict['media_downloading'] = False
     valid_worker_config_dict['save_hot'] = True
     valid_worker_config_dict['save_cold'] = True
-
-    with pytest.raises(ValidationError):
-        cfg.Config(**valid_worker_config_dict)
-
-
-def test_worker_will_do_something(
-        valid_worker_config_dict,
-):
-    """Must raise if there is nothing to do."""
-    valid_worker_config_dict['media_downloading'] = False
-    valid_worker_config_dict['filesystem_operations'] = False
-    valid_worker_config_dict['drop_after_saving'] = False
 
     with pytest.raises(ValidationError):
         cfg.Config(**valid_worker_config_dict)
