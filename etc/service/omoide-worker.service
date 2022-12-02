@@ -1,11 +1,11 @@
 [Unit]
-Description=Omoide filesystem operator daemon
+Description=Omoide worker daemon
 After=network.target
 
 [Service]
 User=omoide
 WorkingDirectory=/home/omoide/omoide
-ExecStart=/home/omoide/omoide/run_fs_operator.sh
+ExecStart=/home/omoide/omoide/run_worker.sh
 EnvironmentFile=/etc/omoide/env
 CPUAccounting=true
 MemoryAccounting=true
