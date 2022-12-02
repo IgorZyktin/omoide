@@ -311,10 +311,10 @@ class Media(Base):
                                               ondelete='CASCADE'),
                                 nullable=False,
                                 index=True)
-    media_type = sa.Column(sa.Enum('content',
-                                   'preview',
-                                   'thumbnail',
-                                   name='media_type'), nullable=False)
+    target_folder = sa.Column(sa.Enum('content',
+                                      'preview',
+                                      'thumbnails',
+                                      name='target_folder'), nullable=False)
 
     # fields ------------------------------------------------------------------
 

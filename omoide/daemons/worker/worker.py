@@ -165,20 +165,11 @@ class Worker:
         if not media.ext or not media.content:
             return
 
-        if media.media_type == 'thumbnail':
-            sub_folder = 'thumbnails'
-        elif media.media_type == 'preview':
-            sub_folder = 'preview'
-        elif media.media_type == 'content':
-            sub_folder = 'content'
-        else:
-            raise RuntimeError(f'Unknown media type: {media.media_type}')
-
         for folder in self.get_folders():
             path = self.filesystem.ensure_folder_exists(
                 logger,
                 folder,
-                sub_folder,
+                media.target_folder,
                 str(media.owner_uuid),
                 str(media.item_uuid)[:self.config.prefix_size],
             )
@@ -237,7 +228,7 @@ class Worker:
             )
 
             database.create_media_from_operation(
-                operation, 'thumbnail', content)
+                operation, 'thumbnails', content)
 
             operation.status = 'done'
         except Exception:

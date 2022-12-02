@@ -192,7 +192,7 @@ class Media(BaseModel):
     processed_at: Optional[datetime]
     content: bytes
     ext: str
-    media_type: Literal['content', 'preview', 'thumbnail']
+    target_folder: Literal['content', 'preview', 'thumbnails']
     replication: dict[str, dict]
     error: str
     attempts: int

@@ -111,21 +111,13 @@ class UpdateItemIn(CreateItemIn):
 class CreateMediaIn(BaseModel):
     """Input info for media creation."""
     content: str
-    media_type: Literal['content', 'preview', 'thumbnail']
+    target_folder: Literal['content', 'preview', 'thumbnails']
     ext: str
 
 
 class EXIFIn(BaseModel):
     """Input info for EXIF creation."""
     exif: dict[str, str | float | int | bool | None | list | dict]
-
-
-class MetaIn(BaseModel):
-    """Input info for meta creation."""
-    original_file_name: str
-    original_file_modified_at: Optional[datetime]
-    file_type: str
-    file_size: int
 
 
 class NewTagsIn(BaseModel):

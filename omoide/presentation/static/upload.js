@@ -756,7 +756,7 @@ async function saveContentForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.content,
-                media_type: 'content',
+                target_folder: 'content',
                 ext: proxy.contentExt,
             }),
             success: function (response) {
@@ -788,7 +788,7 @@ async function savePreviewForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.preview,
-                media_type: 'preview',
+                target_folder: 'preview',
                 ext: proxy.previewExt,
             }),
             success: function (response) {
@@ -820,7 +820,7 @@ async function saveThumbnailForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.thumbnail,
-                media_type: 'thumbnail',
+                target_folder: 'thumbnails',
                 ext: proxy.thumbnailExt,
             }),
             success: function (response) {

@@ -116,7 +116,7 @@ class Database(BaseDatabase):
     def create_media_from_operation(
             self,
             operation: models.FilesystemOperation,
-            media_type: str,
+            target_folder: str,
             content: bytes,
     ) -> None:
         """Convert filesystem operation into media."""
@@ -125,7 +125,7 @@ class Database(BaseDatabase):
         media = models.Media(
             owner_uuid=extras['owner_uuid'],
             item_uuid=operation.target_uuid,
-            media_type=media_type,
+            target_folder=target_folder,
             created_at=utils.now(),
             processed_at=None,
             content=content,
