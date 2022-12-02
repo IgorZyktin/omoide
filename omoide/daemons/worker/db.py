@@ -6,7 +6,7 @@ from typing import Optional
 import sqlalchemy as sa
 
 from omoide import utils
-from omoide.daemons.common.base_db import BaseDatabase
+from omoide.commands.common.base_db import BaseDatabase
 from omoide.storage.database import models
 
 

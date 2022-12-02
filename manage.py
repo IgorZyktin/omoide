@@ -7,6 +7,7 @@ from uuid import UUID
 
 import click
 
+from omoide.commands.common import base_db
 from omoide.commands.common import helpers
 from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
@@ -20,11 +21,24 @@ def cli():
     """Manual CLI operations."""
 
 
-@cli.command(name='create_user')
-@click.option('--login', required=True, help='Login for new user')
-@click.option('--password', required=True, help='Password for new user')
-@click.option('--name', default=None,
-              help='Name for new user (if not specified will use login)')
+@cli.command(
+    name='create_user',
+)
+@click.option(
+    '--login',
+    required=True,
+    help='Login for new user',
+)
+@click.option(
+    '--password',
+    required=True,
+    help='Password for new user',
+)
+@click.option(
+    '--name',
+    default=None,
+    help='Name for new user (if not specified will use login)',
+)
 def cmd_create_user(login: str, password: str, name: Optional[str]):
     """Manually create user."""
     use_case = CreateUserUseCase(
@@ -95,7 +109,9 @@ def cmd_du():
     from omoide.commands.filesystem.du import cfg, run
 
     config = cfg.get_config()
-    with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle() as engine:
         with helpers.timing(
                 start_template='Calculating total disk usage...',
         ):
@@ -122,7 +138,9 @@ def cmd_refresh_size(limit: int, marker: Optional[UUID]):
     from omoide.commands.filesystem.refresh_size import cfg, run
 
     config = cfg.get_config()
-    with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle() as engine:
         with helpers.timing(
                 start_template='Refreshing actual disk usage...',
         ):

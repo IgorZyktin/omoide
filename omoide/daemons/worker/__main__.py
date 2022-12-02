@@ -17,11 +17,13 @@ from omoide.infra import custom_logging
 @click.command()
 @click.option(
     '--name',
+    required=True,
     type=str,
     help='Name of the worker instance (used for replication check)',
 )
 @click.option(
     '--db-url',
+    required=True,
     type=str,
     help='Database URL',
 )
@@ -216,7 +218,7 @@ def _do_stuff(
         done = worker.download_media(logger, database)
         operations += done
 
-        if worker.config.drop_done_media:
+        if worker.config.drop_done_media and worker.config.replication_formula:
             done = worker.drop_media(logger, database)
             operations += done
 

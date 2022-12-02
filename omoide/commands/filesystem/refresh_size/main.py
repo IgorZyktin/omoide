@@ -10,7 +10,7 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from omoide.commands.common import helpers
+from omoide import utils
 from omoide.commands.filesystem.refresh_size.cfg import Config
 from omoide.storage.database import models
 
@@ -66,14 +66,14 @@ def update_size(
         base: Path,
 ) -> int:
     """Get actual file size."""
-    prefix = helpers.get_prefix(target.uuid, config.prefix_size)
+    bucket = utils.get_bucket(target.uuid, config.prefix_size)
 
     changed = 0
     for each in ['content', 'preview', 'thumbnail']:
         ext = getattr(target, f'{each}_ext')
         if ext:
             owner = str(target.owner_uuid)
-            path = base / each / owner / prefix / f'{target.uuid}.{ext}'
+            path = base / each / owner / bucket / f'{target.uuid}.{ext}'
             size = get_size(path)
 
             if size is not None:
