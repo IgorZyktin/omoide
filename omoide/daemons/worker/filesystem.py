@@ -3,15 +3,11 @@
 """
 import os.path
 from pathlib import Path
-from typing import Any
 from typing import NoReturn
 from typing import Optional
 
-import ujson
-
 from omoide import utils
 from omoide.infra import custom_logging
-from omoide.storage.database import models
 
 
 class Filesystem:
@@ -74,45 +70,9 @@ class Filesystem:
         moment = utils.now().isoformat()
         return f'{name}___{moment}{ext}'
 
-    def execute_operation(
-            self,
-            folder: str,
-            operation: models.FilesystemOperation,
-            prefix_size: int,
-    ) -> bytes:
-        """Execute generic operation."""
-        extras = ujson.loads(str(operation.extras))
-
-        if operation.operation == 'copy-thumbnail':
-            result = self.execute_copy_thumbnail(
-                folder=folder,
-                operation=operation,
-                extras=extras,
-                prefix_size=prefix_size,
-            )
-        else:
-            raise RuntimeError(f'Unknown operation: {operation.operation!r}')
-
-        return result
-
     @staticmethod
-    def execute_copy_thumbnail(
-            folder: str,
-            operation: models.FilesystemOperation,
-            extras: dict[str, Any],
-            prefix_size: int,
-    ) -> bytes:
+    def load_from_filesystem(*args: str) -> bytes:
         """Copy thumbnail from one item to another."""
-        ext = extras['ext']
-        bucket = utils.get_bucket(operation.source_uuid, prefix_size)
-
-        filename = Path().joinpath(
-            folder,
-            'thumbnails',
-            extras['owner_uuid'],
-            bucket,
-            f'{operation.source_uuid}.{ext}',
-        )
-
+        filename = Path().joinpath(*args)
         content = filename.read_bytes()
         return content

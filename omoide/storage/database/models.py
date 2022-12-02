@@ -438,3 +438,40 @@ class FilesystemOperation(Base):
 
     operation = sa.Column(sa.String(length=MEDIUM), nullable=False)
     extras = sa.Column(pg.JSON, nullable=False)
+
+
+class ManualCopy(Base):
+    """Operations that request loading data from the filesystem."""
+    __tablename__ = 'manual_copies'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: int = sa.Column(sa.BigInteger,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    created_at = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    processed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
+    status = sa.Column(sa.String(length=SMALL), index=True, nullable=False)
+    error = sa.Column(sa.Text)
+
+    owner_uuid: UUID = sa.Column(pg.UUID(),
+                                 sa.ForeignKey('users.uuid',
+                                               ondelete='CASCADE'),
+                                 nullable=False)
+
+    source_uuid: UUID = sa.Column(pg.UUID(),
+                                  sa.ForeignKey('items.uuid',
+                                                ondelete='CASCADE'),
+                                  nullable=False)
+
+    target_uuid: UUID = sa.Column(pg.UUID(),
+                                  sa.ForeignKey('items.uuid',
+                                                ondelete='CASCADE'),
+                                  nullable=False)
+    ext = sa.Column(sa.String(length=SMALL), nullable=False)
+    target_folder = sa.Column(sa.String(length=MEDIUM), nullable=False)

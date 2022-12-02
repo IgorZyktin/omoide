@@ -20,9 +20,9 @@ class Config(BaseModel):
     save_hot: bool
     save_cold: bool
     download_media: bool
-    copy_thumbnails: bool
+    manual_copy: bool
     drop_done_media: bool
-    drop_done_thumbnails: bool
+    drop_done_copies: bool
     min_interval: float
     max_interval: float
     warm_up_coefficient: float

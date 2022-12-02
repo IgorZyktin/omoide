@@ -4,7 +4,6 @@
 from typing import Optional
 
 import sqlalchemy as sa
-import ujson
 
 from omoide import utils
 from omoide.daemons.common.base_db import BaseDatabase
@@ -66,12 +65,12 @@ class Database(BaseDatabase):
 
         return int(response.rowcount)
 
-    def drop_operations(self) -> int:
-        """Delete complete operations, return total amount."""
+    def drop_manual_copies(self) -> int:
+        """Delete complete copy operations, return total amount."""
         stmt = sa.delete(
-            models.FilesystemOperation
+            models.ManualCopy
         ).where(
-            models.FilesystemOperation.status == 'done'
+            models.ManualCopy.status == 'done'
         )
 
         with self.engine.begin() as conn:
@@ -79,7 +78,7 @@ class Database(BaseDatabase):
 
         return int(response.rowcount)
 
-    def get_filesystem_operations(
+    def get_manual_copy_targets(
             self,
             limit: int,
     ) -> list[int]:
@@ -99,37 +98,34 @@ class Database(BaseDatabase):
 
         return [x for x, in response]
 
-    def select_filesystem_operation(
+    def select_copy_operation(
             self,
-            operation_id: int,
-    ) -> Optional[models.FilesystemOperation]:
-        """Select FilesystemOperation for update."""
+            copy_id: int,
+    ) -> Optional[models.ManualCopy]:
+        """Select manual copy operation for update."""
         result = self.session.query(
-            models.FilesystemOperation
+            models.ManualCopy
         ).with_for_update(
             skip_locked=True
         ).filter_by(
-            id=operation_id
+            id=copy_id
         ).first()
         return result
 
-    def create_media_from_operation(
+    def create_media_from_copy(
             self,
-            operation: models.FilesystemOperation,
-            target_folder: str,
+            copy: models.ManualCopy,
             content: bytes,
     ) -> None:
-        """Convert filesystem operation into media."""
-        extras = ujson.loads(str(operation.extras))
-
+        """Convert copy operation into media."""
         media = models.Media(
-            owner_uuid=extras['owner_uuid'],
-            item_uuid=operation.target_uuid,
-            target_folder=target_folder,
+            owner_uuid=copy.owner_uuid,
+            item_uuid=copy.target_uuid,
+            target_folder=copy.target_folder,
             created_at=utils.now(),
             processed_at=None,
             content=content,
-            ext=extras['ext'],
+            ext=copy.ext,
             replication={},
             error='',
             attempts=0,

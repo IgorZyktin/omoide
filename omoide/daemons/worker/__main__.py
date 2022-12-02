@@ -12,7 +12,6 @@ from omoide.daemons.worker.db import Database
 from omoide.daemons.worker.filesystem import Filesystem
 from omoide.daemons.worker.worker import Worker
 from omoide.infra import custom_logging
-from omoide.infra.custom_logging import Logger
 
 
 @click.command()
@@ -61,9 +60,9 @@ from omoide.infra.custom_logging import Logger
     show_default=True,
 )
 @click.option(
-    '--copy-thumbnails/--no-copy-thumbnails',
+    '--manual-copy/--no-manual-copy',
     default=False,
-    help='Copy thumbnails between items',
+    help='Copy data between items',
     show_default=True,
 )
 @click.option(
@@ -73,9 +72,9 @@ from omoide.infra.custom_logging import Logger
     show_default=True,
 )
 @click.option(
-    '--drop-done-thumbnails/--no-drop-done-thumbnails',
+    '--drop-done-copies/--no-drop-done-copies',
     default=False,
-    help='Drop thumbnail row from the database after saving',
+    help='Drop manual copy requests after uploading',
     show_default=True,
 )
 @click.option(
@@ -187,25 +186,17 @@ def _run(
 ) -> None:
     """Actual execution start."""
     with database.life_cycle(echo=worker.config.echo):
-        with database.start_session():
-            meta_config = database.get_meta_config()
-
         while True:
             # noinspection PyBroadException
             try:
-                did_something = _do_media_operations(
-                    logger, database, worker, meta_config)
-
-                did_something_else = _do_filesystem_operations(
-                    logger, database, worker)
-
-                did_something = did_something or did_something_else
+                operations = _do_stuff(logger, database, worker)
             except Exception:
+                operations = 0
                 logger.exception('Failed to execute worker operation!')
-                did_something = False
 
-            worker.adjust_interval(did_something)
-            logger.debug('Sleeping for {:0.3f} seconds', worker.sleep_interval)
+            worker.adjust_interval(operations)
+            logger.debug('Sleeping for {:0.3f} seconds after {} operations',
+                         worker.sleep_interval, operations)
 
             if worker.config.single_run:
                 break
@@ -213,51 +204,31 @@ def _run(
             time.sleep(worker.sleep_interval)
 
 
-def _do_media_operations(
-        logger: Logger,
+def _do_stuff(
+        logger: custom_logging.Logger,
         database: Database,
         worker: Worker,
-) -> bool:
-    """Wrapper for media operations."""
-    did_something = False
-    did_something_else = False
-    did_something_more = False
+) -> int:
+    """Perform all worker related duties."""
+    operations = 0
 
-    if worker.config.media_downloading:
-        did_something = worker.download_media(logger, database)
+    if worker.config.download_media:
+        done = worker.download_media(logger, database)
+        operations += done
 
-    if worker.config.drop_after_saving:
-        if meta_config.replication_formula:
-            logger.debug('Dropping all media that fits into formula: {}',
-                         meta_config.replication_formula)
-            did_something_else = worker.delete_media(
-                logger=logger,
-                database=database,
-                replication_formula=meta_config.replication_formula,
-            )
+        if worker.config.drop_done_media:
+            done = worker.drop_media(logger, database)
+            operations += done
 
-        if worker.config.filesystem_operations:
-            did_something_more = worker.delete_filesystem_operations(
-                logger=logger,
-                database=database,
-            )
+    if worker.config.manual_copy:
+        done = worker.manual_copy(logger, database)
+        operations += done
 
-    return (
-            did_something
-            or bool(did_something_else)
-            or bool(did_something_more)
-    )
+        if worker.config.drop_done_copies:
+            done = worker.drop_manual_copies(logger, database)
+            operations += done
 
-
-def _do_filesystem_operations(
-        logger: Logger,
-        database: Database,
-        worker: Worker,
-) -> bool:
-    """Wrapper for filesystem operations."""
-    if worker.config.filesystem_operations:
-        return worker.process_filesystem_operations(logger, database)
-    return False
+    return operations
 
 
 if __name__ == '__main__':

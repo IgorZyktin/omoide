@@ -39,9 +39,9 @@ class Worker:
             f'{self.config.name}-cold': self.config.save_cold,
         }
 
-    def adjust_interval(self, did_something: bool) -> None:
-        """Change interval based on previous actions."""
-        if did_something:
+    def adjust_interval(self, operations: int) -> None:
+        """Change interval based on amount of operations done."""
+        if operations:
             self.sleep_interval = self.config.min_interval
         else:
             self.sleep_interval = min((
@@ -53,7 +53,7 @@ class Worker:
             self,
             logger: Logger,
             database: Database,
-    ) -> bool:
+    ) -> int:
         """Download media from the database, return True if did something."""
         media_ids = database.get_media_ids(
             formula=self.formula,
@@ -62,80 +62,24 @@ class Worker:
 
         logger.debug('Got {} media records: {}', len(media_ids), media_ids)
 
-        did_something = False
+        operations = 0
         for media_id in media_ids:
-            did_something_more = self.process_media(logger, database, media_id)
-            did_something = did_something or bool(did_something_more)
+            done = self.process_media(logger, database, media_id)
 
-            if did_something is None:
+            if done is None:
                 logger.debug('Skipped downloading media {}', media_id)
-            elif did_something:
+            elif done:
+                operations += done
                 logger.debug('Downloaded media {}', media_id)
-            else:
-                logger.error('Failed to download media {}', media_id)
 
-        return bool(did_something)
-
-    @staticmethod
-    def delete_media(
-            logger: Logger,
-            database: Database,
-            replication_formula: dict[str, bool],
-    ) -> bool:
-        """Delete media from the DB, return True if did something."""
-        dropped = database.drop_media(replication_formula)
-
-        if dropped:
-            logger.debug('Dropped {} rows with media', dropped)
-
-        return dropped != 0
-
-    @staticmethod
-    def delete_filesystem_operations(
-            logger: Logger,
-            database: Database,
-    ) -> bool:
-        """Delete operations from the DB, return True if did something."""
-        dropped = database.drop_operations()
-
-        if dropped:
-            logger.debug('Dropped {} rows with operations', dropped)
-
-        return dropped != 0
-
-    def process_filesystem_operations(
-            self,
-            logger: Logger,
-            database: Database,
-    ) -> bool:
-        """Perform filesystem operations, return True if did something."""
-        operations = database.get_filesystem_operations(
-            limit=self.config.batch_size,
-        )
-
-        logger.debug('Got {} operations: {}', len(operations), operations)
-
-        did_something = False
-        for operation_id in operations:
-            did_something_more = self.process_filesystem_operation(
-                logger, database, operation_id)
-            did_something = did_something or bool(did_something_more)
-
-            if did_something is None:
-                logger.debug('Skipped processing operation {}', operation_id)
-            elif did_something:
-                logger.debug('Processed operation {}', operation_id)
-            else:
-                logger.error('Failed to process operation {}', operation_id)
-
-        return bool(did_something)
+        return operations
 
     def process_media(
             self,
             logger: Logger,
             database: Database,
             media_id: int,
-    ) -> Optional[bool]:
+    ) -> Optional[int]:
         """Save single media record, return True on success."""
         with database.start_session():
             # noinspection PyBroadException
@@ -146,10 +90,10 @@ class Worker:
                     result = None
                 else:
                     self._process_media(logger, media)
-                    result = True
+                    result = 1
             except Exception:
-                result = False
-                logger.exception('Failed to handle media {}', media_id)
+                result = 0
+                logger.exception('Failed to download media {}', media_id)
                 database.session.rollback()
             else:
                 database.session.commit()
@@ -181,59 +125,111 @@ class Worker:
         media.replication.update(self.formula)
         flag_modified(media, 'replication')
 
-    def process_filesystem_operation(
+    def drop_media(
             self,
             logger: Logger,
             database: Database,
-            operation_id: int,
-    ) -> Optional[bool]:
+    ) -> int:
+        """Delete media from the DB, return amount of rows affected."""
+        logger.debug('Dropping all media that fits into formula: {}',
+                     self.config.replication_formula)
+
+        dropped = database.drop_media(self.config.replication_formula)
+
+        if dropped:
+            logger.debug('Dropped {} rows with media', dropped)
+
+        return dropped
+
+    def manual_copy(
+            self,
+            logger: Logger,
+            database: Database,
+    ) -> int:
+        """Perform manual copy operations."""
+        targets = database.get_manual_copy_targets(self.config.batch_size)
+
+        logger.debug('Got {} items to copy: {}', len(targets), targets)
+
+        operations = 0
+        for copy_id in targets:
+            done = self.process_copying(logger, database, copy_id)
+
+            if done is None:
+                logger.debug('Skipped copy for id {}', copy_id)
+            elif done:
+                operations += done
+                logger.debug('Copied id {}', copy_id)
+
+        return operations
+
+    def process_copying(
+            self,
+            logger: Logger,
+            database: Database,
+            copy_id: int,
+    ) -> Optional[int]:
         """Perform filesystem operation, return True on success."""
+        result = None
         with database.start_session():
             # noinspection PyBroadException
             try:
-                operation = database.select_filesystem_operation(
-                    operation_id)
+                copy = database.select_copy_operation(copy_id)
 
-                if operation is None:
-                    result = None
-                else:
-                    self._process_filesystem_operation(
-                        logger, database, operation)
-                    result = True
+                if copy is not None:
+                    # noinspection PyBroadException
+                    try:
+                        self._process_copy(database, copy)
+                        copy.status = 'done'
+                        result = 1
+                    except Exception:
+                        logger.exception('Failed to copy {}', copy_id)
+                        result = 0
+                        copy.status = 'fail'
+                        copy.error += traceback.format_exc()
+                    finally:
+                        copy.processed_at = utils.now()
+
             except Exception:
-                result = False
-                logger.exception('Failed to handle operation {}',
-                                 operation_id)
+                logger.exception('Failed to save changes in copy {}', copy_id)
                 database.session.rollback()
+                result = 0
             else:
                 database.session.commit()
 
         return result
 
-    def _process_filesystem_operation(
+    def _process_copy(
             self,
-            logger: Logger,
             database: Database,
-            operation: models.FilesystemOperation,
+            copy: models.ManualCopy,
     ) -> None:
         """Perform filesystem operation."""
         folder = self.config.hot_folder or self.config.cold_folder
-        # noinspection PyBroadException
-        try:
-            self.filesystem.raise_if_not_exist(folder)
-            content = self.filesystem.execute_operation(
-                folder=folder,
-                operation=operation,
-                prefix_size=self.config.prefix_size,
-            )
+        self.filesystem.raise_if_not_exist(folder)
 
-            database.create_media_from_operation(
-                operation, 'thumbnails', content)
+        bucket = utils.get_bucket(copy.target_uuid, self.config.prefix_size)
 
-            operation.status = 'done'
-        except Exception:
-            logger.exception('Failed to execute {}', operation)
-            operation.status = 'fail'
-            operation.error += traceback.format_exc()
+        content = self.filesystem.load_from_filesystem(
+            folder,
+            copy.target_folder,
+            str(copy.owner_uuid),
+            str(copy.target_uuid),
+            bucket,
+            f'{copy.target_uuid}.{(copy.ext or "").lower()}'
+        )
 
-        operation.processed_at = utils.now()
+        database.create_media_from_copy(copy, content)
+
+    @staticmethod
+    def drop_manual_copies(
+            logger: Logger,
+            database: Database,
+    ) -> int:
+        """Delete thumbnails from the DB, return amount of rows affected."""
+        dropped = database.drop_manual_copies()
+
+        if dropped:
+            logger.debug('Dropped {} rows with manual copies', dropped)
+
+        return dropped
