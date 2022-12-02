@@ -6,10 +6,10 @@ from pathlib import Path
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from omoide.commands.refresh_size.cfg import Config
-from omoide.commands.refresh_size.main import Pack
-from omoide.commands.refresh_size.main import get_metainfo
-from omoide.commands.refresh_size.main import update_size
+from omoide.commands.filesystem.refresh_size.cfg import Config
+from omoide.commands.filesystem.refresh_size.main import Pack
+from omoide.commands.filesystem.refresh_size.main import get_metainfo
+from omoide.commands.filesystem.refresh_size.main import update_size
 from omoide.storage.database import models
 
 

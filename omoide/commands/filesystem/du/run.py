@@ -12,9 +12,9 @@ from uuid import UUID
 from sqlalchemy.engine import Engine
 
 from omoide import utils
-from omoide.commands.du import database
-from omoide.commands.du.cfg import Config
-from omoide.commands.du.stats import Stats
+from omoide.commands.filesystem.du import database
+from omoide.commands.filesystem.du.cfg import Config
+from omoide.commands.filesystem.du.stats import Stats
 
 
 def main(

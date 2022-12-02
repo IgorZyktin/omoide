@@ -7,7 +7,6 @@ from uuid import UUID
 
 import click
 
-from omoide import commands
 from omoide.commands.common import helpers
 from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
@@ -53,9 +52,19 @@ def cmd_create_user(login: str, password: str, name: Optional[str]):
     asyncio.run(_coro())
 
 
-@cli.command(name='change_password')
-@click.option('--uuid', required=True, help='UUID for existing user')
-@click.option('--password', required=True, help='New password')
+@cli.command(
+    name='change_password',
+)
+@click.option(
+    '--uuid',
+    required=True,
+    help='UUID for existing user',
+)
+@click.option(
+    '--password',
+    required=True,
+    help='New password',
+)
 def cmd_change_password(uuid: str, password: str):
     """Manually change password for user."""
     users_repo = UsersRepository(dep.db)
@@ -78,36 +87,48 @@ def cmd_change_password(uuid: str, password: str):
     asyncio.run(_coro())
 
 
-@cli.command(name='du')
+@cli.command(
+    name='du',
+)
 def cmd_du():
     """Show disk usage for every user."""
-    config = commands.du.get_config()
+    from omoide.commands.filesystem.du import cfg, run
+
+    config = cfg.get_config()
     with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
         with helpers.timing(
                 start_template='Calculating total disk usage...',
         ):
-            commands.run_du(engine, config)
+            run.main(engine, config)
 
 
-@cli.command(name='refresh_size')
-@click.option('--limit',
-              type=int,
-              default=-1,
-              help='Maximum amount of items to process (-1 for infinity)')
-@click.option('--marker',
-              type=UUID,
-              default=None,
-              help='Item from which we should start')
+@cli.command(
+    name='refresh_size',
+)
+@click.option(
+    '--limit',
+    type=int,
+    default=-1,
+    help='Maximum amount of items to process (-1 for infinity)',
+)
+@click.option(
+    '--marker',
+    type=UUID,
+    default=None,
+    help='Item from which we should start',
+)
 def cmd_refresh_size(limit: int, marker: Optional[UUID]):
     """Recalculate storage size for every item."""
-    config = commands.refresh_size.get_config()
+    from omoide.commands.filesystem.refresh_size import cfg, run
+
+    config = cfg.get_config()
     with helpers.temporary_engine(config.db_url.get_secret_value()) as engine:
         with helpers.timing(
                 start_template='Refreshing actual disk usage...',
         ):
             config.limit = limit
             config.marker = marker
-            commands.run_refresh_size(engine, config)
+            run.main(engine, config)
 
 
 if __name__ == '__main__':

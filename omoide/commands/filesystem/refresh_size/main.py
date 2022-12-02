@@ -3,7 +3,6 @@
 """
 from pathlib import Path
 from typing import Any
-from typing import Iterator
 from typing import NamedTuple
 from typing import Optional
 from uuid import UUID
@@ -12,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from omoide.commands.common import helpers
-from omoide.commands.refresh_size.cfg import Config
+from omoide.commands.filesystem.refresh_size.cfg import Config
 from omoide.storage.database import models
 
 
