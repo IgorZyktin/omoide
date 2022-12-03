@@ -133,13 +133,13 @@ class Worker:
         """Store changes in item description."""
         if media.target_folder == 'content':
             media.item.content_ext = media.ext
-            media.item.metainfo.content_size = len(media.content or 0)
+            media.item.metainfo.content_size = len(media.content or b'')
         elif media.target_folder == 'preview':
             media.item.preview_ext = media.ext
-            media.item.metainfo.preview_size = len(media.content or 0)
+            media.item.metainfo.preview_size = len(media.content or b'')
         else:
             media.item.thumbnail_ext = media.ext
-            media.item.metainfo.thumbnail_size = len(media.content or 0)
+            media.item.metainfo.thumbnail_size = len(media.content or b'')
 
         media.item.metainfo.updated_at = utils.now()
 
