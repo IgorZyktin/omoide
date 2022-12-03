@@ -67,19 +67,6 @@ class Database(BaseDatabase):
 
         return int(response.rowcount)
 
-    def drop_manual_copies(self) -> int:
-        """Delete complete copy operations, return total amount."""
-        stmt = sa.delete(
-            models.ManualCopy
-        ).where(
-            models.ManualCopy.status == 'done'
-        )
-
-        with self.engine.begin() as conn:
-            response = conn.execute(stmt)
-
-        return int(response.rowcount)
-
     def get_manual_copy_targets(
             self,
             limit: int,
@@ -100,12 +87,13 @@ class Database(BaseDatabase):
 
         return [x for x, in response]
 
+    @staticmethod
     def select_copy_operation(
-            self,
+            session: Session,
             copy_id: int,
     ) -> Optional[models.ManualCopy]:
         """Select manual copy operation for update."""
-        result = self.session.query(
+        result = session.query(
             models.ManualCopy
         ).with_for_update(
             skip_locked=True
@@ -114,13 +102,13 @@ class Database(BaseDatabase):
         ).first()
         return result
 
+    @staticmethod
     def create_media_from_copy(
-            self,
             copy: models.ManualCopy,
             content: bytes,
-    ) -> None:
+    ) -> models.Media:
         """Convert copy operation into media."""
-        media = models.Media(
+        return models.Media(
             owner_uuid=copy.owner_uuid,
             item_uuid=copy.target_uuid,
             target_folder=copy.target_folder,
@@ -133,4 +121,15 @@ class Database(BaseDatabase):
             attempts=0,
         )
 
-        self.session.add(media)
+    def drop_manual_copies(self) -> int:
+        """Delete complete copy operations, return total amount."""
+        stmt = sa.delete(
+            models.ManualCopy
+        ).where(
+            models.ManualCopy.status == 'done'
+        )
+
+        with self.engine.begin() as conn:
+            response = conn.execute(stmt)
+
+        return int(response.rowcount)

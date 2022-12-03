@@ -173,16 +173,18 @@ class Worker:
     ) -> Optional[int]:
         """Perform filesystem operation, return True on success."""
         result = None
-        with database.start_session():
+        with database.start_session() as session:
             # noinspection PyBroadException
             try:
-                copy = database.select_copy_operation(copy_id)
+                copy = database.select_copy_operation(session, copy_id)
 
                 if copy is not None:
                     # noinspection PyBroadException
                     try:
-                        result = self._process_copy(database, copy)
+                        media = self._process_copy(database, copy)
                         copy.status = 'done'
+                        session.add(media)
+                        result = 1
                     except Exception:
                         logger.exception('Failed to copy {}', copy_id)
                         result = 0
@@ -193,11 +195,11 @@ class Worker:
 
             except Exception:
                 logger.exception('Failed to save changes in copy {}', copy_id)
-                database.session.rollback()
+                session.rollback()
                 result = 0
             else:
                 if result:
-                    database.session.commit()
+                    session.commit()
 
         return result
 
@@ -205,7 +207,7 @@ class Worker:
             self,
             database: Database,
             copy: models.ManualCopy,
-    ) -> int:
+    ) -> models.Media:
         """Perform filesystem operation."""
         folder = self.config.hot_folder or self.config.cold_folder
         bucket = utils.get_bucket(copy.target_uuid, self.config.prefix_size)
@@ -219,8 +221,7 @@ class Worker:
             f'{copy.target_uuid}.{(copy.ext or "").lower()}'
         )
 
-        database.create_media_from_copy(copy, content)
-        return 1
+        return database.create_media_from_copy(copy, content)
 
     @staticmethod
     def drop_manual_copies(
