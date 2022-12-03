@@ -212,23 +212,32 @@ def do_stuff(
         worker: Worker,
 ) -> int:
     """Perform all worker related duties."""
+
+    def _maybe_save(key: str, value: int) -> None:
+        if value:
+            database.save_statistic(key=key, value=done)
+
     operations = 0
 
     if worker.config.download_media:
         done = worker.download_media(logger, database)
         operations += done
+        _maybe_save(f'worker-save-media-{worker.config.name}', done)
 
         if worker.config.drop_done_media and worker.config.replication_formula:
             done = worker.drop_media(logger, database)
             operations += done
+            _maybe_save(f'worker-drop-media-{worker.config.name}', done)
 
     if worker.config.manual_copy:
         done = worker.manual_copy(logger, database)
         operations += done
+        _maybe_save(f'worker-save-copy-{worker.config.name}', done)
 
         if worker.config.drop_done_copies:
             done = worker.drop_manual_copies(logger, database)
             operations += done
+            _maybe_save(f'worker-drop-copy-{worker.config.name}', done)
 
     return operations
 

@@ -457,3 +457,27 @@ class ManualCopy(Base):
                                   nullable=False)
     ext: str = sa.Column(sa.String(length=SMALL), nullable=False)
     target_folder: str = sa.Column(sa.String(length=MEDIUM), nullable=False)
+
+
+class Statistic(Base):
+    """Various statistics."""
+    __tablename__ = 'statistic'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: int = sa.Column(sa.BigInteger,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    moment: datetime = sa.Column(sa.DateTime(timezone=True),
+                                 nullable=False,
+                                 index=True,
+                                 server_default=sa.text(
+                                     "timezone('utc', now())"))
+
+    key: str = sa.Column(sa.String(length=SMALL), nullable=False)
+    value: int = sa.Column(sa.Integer, nullable=False)
