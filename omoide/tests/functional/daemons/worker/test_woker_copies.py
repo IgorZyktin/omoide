@@ -134,6 +134,9 @@ def _do_testing(
     dropped = database.drop_manual_copies()
     assert dropped == 1
 
+    dropped = database.drop_media(formula={})
+    assert dropped == 1
+
 
 def test_worker_copy_life_cycle(
         worker_database,

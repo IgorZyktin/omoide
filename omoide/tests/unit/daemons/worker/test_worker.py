@@ -121,9 +121,10 @@ def test_worker_manual_copy(valid_worker_config):
 
     # noinspection PyUnresolvedReferences
     worker.filesystem.assert_has_calls([
-        mock.call.load_from_filesystem(*[mock.ANY] * 6),
-        mock.call.load_from_filesystem(*[mock.ANY] * 6),
-        mock.call.load_from_filesystem(*[mock.ANY] * 6),
+        mock.call.load_from_filesystem(*[mock.ANY] * 5),
+        mock.call.load_from_filesystem(*[mock.ANY] * 5),
+        mock.call.load_from_filesystem(*[mock.ANY] * 5),
+        mock.call.load_from_filesystem(*[mock.ANY] * 5),
     ])
 
 

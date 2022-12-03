@@ -31,10 +31,14 @@ class FakeDatabase(MagicMock):
             session,
             media_id: int,
     ) -> Optional[models.Media]:
+        fake_meta = models.Metainfo()
+        fake_item = models.Item(metainfo=fake_meta)
+
         if media_id == 1:
             return models.Media(
                 attempts=0,
                 replication={},
+                item=fake_item,
             )
         elif media_id in (2, 3):
             return models.Media(
@@ -42,6 +46,7 @@ class FakeDatabase(MagicMock):
                 ext='test',
                 content=b'test',
                 replication={},
+                item=fake_item,
             )
         elif media_id == 5:
             fake_media = mock.Mock()
