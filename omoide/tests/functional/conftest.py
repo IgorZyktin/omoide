@@ -17,6 +17,37 @@ from omoide.storage.repositories import asyncpg
 from omoide.storage.database import models
 
 
+@pytest.fixture(scope='session')
+def db_test_user():
+    """Return permanent user (always exists in the database)."""
+    return models.User(
+        uuid='00000000-0000-0000-0000-000000000000',
+        login='test-user',
+        password='$2b$04$XRT/zbfYO8jB.M68OYMi'
+                 'DOJRPSrGkK5m1iNiAYutDIBpf/9iHMHXm',
+        name='test',
+        root_item='00000000-0000-0000-0000-000000000000',
+    )
+
+
+@pytest.fixture(scope='session')
+def db_test_item():
+    """Return permanent item (always exists in the database)."""
+    return models.Item(
+        uuid='00000000-0000-0000-0000-000000000000',
+        parent_uuid=None,
+        owner_uuid='00000000-0000-0000-0000-000000000000',
+        number=0,
+        name='test-item',
+        is_collection=False,
+        content_ext=None,
+        preview_ext=None,
+        thumbnail_ext=None,
+        tags=[],
+        permissions=[],
+    )
+
+
 @pytest_asyncio.fixture(scope='session')
 async def database():
     url = os.environ.get('OMOIDE_TEST_DB_URL')
