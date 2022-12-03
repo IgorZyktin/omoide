@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Generic database wrapper."""
 import contextlib
+from typing import Generator
 from typing import Optional
 
 import sqlalchemy
@@ -30,7 +31,7 @@ class BaseDatabase:
         self._engine = new_engine
 
     @contextlib.contextmanager
-    def life_cycle(self, echo: bool = False):
+    def life_cycle(self, echo: bool = False) -> Generator[Engine, None, None]:
         """Ensure that connection is closed at the end."""
         self.engine = sqlalchemy.create_engine(
             self._db_url,
@@ -39,12 +40,12 @@ class BaseDatabase:
         )
 
         try:
-            yield
+            yield self.engine
         finally:
             self.engine.dispose()
 
     @contextlib.contextmanager
-    def start_session(self) -> Session:
+    def start_session(self) -> Generator[Session, None, None]:
         """Wrapper around SA session."""
         with Session(self.engine) as session:
             yield session
