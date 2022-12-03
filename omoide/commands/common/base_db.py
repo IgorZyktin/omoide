@@ -29,18 +29,6 @@ class BaseDatabase:
         """Engine setter."""
         self._engine = new_engine
 
-    @property
-    def session(self) -> Session:
-        """Session getter."""
-        if self._session is None:
-            raise RuntimeError('You must use start_session context manager')
-        return self._session
-
-    @session.setter
-    def session(self, new_session: Optional[Session]) -> None:
-        """Session setter."""
-        self._session = new_session
-
     @contextlib.contextmanager
     def life_cycle(self, echo: bool = False):
         """Ensure that connection is closed at the end."""
@@ -56,9 +44,7 @@ class BaseDatabase:
             self.engine.dispose()
 
     @contextlib.contextmanager
-    def start_session(self):
+    def start_session(self) -> Session:
         """Wrapper around SA session."""
         with Session(self.engine) as session:
-            self.session = session
-            yield
-        self.session = None
+            yield session

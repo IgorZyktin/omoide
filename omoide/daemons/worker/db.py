@@ -4,6 +4,7 @@
 from typing import Optional
 
 import sqlalchemy as sa
+from sqlalchemy.orm import Session
 
 from omoide import utils
 from omoide.commands.common.base_db import BaseDatabase
@@ -35,12 +36,13 @@ class Database(BaseDatabase):
 
         return [x for x, in response]
 
+    @staticmethod
     def select_media(
-            self,
+            session: Session,
             media_id: int,
     ) -> Optional[models.Media]:
         """Select Media for update."""
-        result = self.session.query(
+        result = session.query(
             models.Media
         ).with_for_update(
             skip_locked=True
