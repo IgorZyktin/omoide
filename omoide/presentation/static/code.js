@@ -1,5 +1,5 @@
 const UUID_PREFIX_LENGTH = 2
-const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/ig
+const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
 function goSearch() {
     // escape special symbols in query and relocate
