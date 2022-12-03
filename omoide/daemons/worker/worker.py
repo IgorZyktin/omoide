@@ -91,6 +91,7 @@ class Worker:
                     result = None
                 else:
                     result = self._process_media(logger, media)
+                    self._process_item(media)
             except Exception:
                 result = 0
                 logger.exception('Failed to download media {}', media_id)
@@ -126,6 +127,21 @@ class Worker:
         media.replication.update(self.formula)
         flag_modified(media, 'replication')
         return 1
+
+    @staticmethod
+    def _process_item(media: models.Media) -> None:
+        """Store changes in item description."""
+        if media.target_folder == 'content':
+            media.item.content_ext = media.ext
+            media.item.metainfo.content_size = len(media.content or 0)
+        elif media.target_folder == 'preview':
+            media.item.preview_ext = media.ext
+            media.item.metainfo.preview_size = len(media.content or 0)
+        else:
+            media.item.thumbnail_ext = media.ext
+            media.item.metainfo.thumbnail_size = len(media.content or 0)
+
+        media.item.metainfo.updated_at = utils.now()
 
     def drop_media(
             self,
@@ -210,15 +226,14 @@ class Worker:
     ) -> models.Media:
         """Perform filesystem operation."""
         folder = self.config.hot_folder or self.config.cold_folder
-        bucket = utils.get_bucket(copy.target_uuid, self.config.prefix_size)
+        bucket = utils.get_bucket(copy.source_uuid, self.config.prefix_size)
 
         content = self.filesystem.load_from_filesystem(
             folder,
             str(copy.target_folder),
             str(copy.owner_uuid),
-            str(copy.target_uuid),
             bucket,
-            f'{copy.target_uuid}.{(copy.ext or "").lower()}'
+            f'{copy.source_uuid}.{(copy.ext or "").lower()}'
         )
 
         return database.create_media_from_copy(copy, content)
