@@ -103,12 +103,6 @@ def test_worker_manual_copy(valid_worker_config):
 
     database.get_manual_copy_targets.return_value = [1, 2, 3, 4, 5]
 
-    def fake_create_media_from_copy(copy, content):
-        if copy.id == 5:
-            raise ValueError('test')
-
-    database.create_media_from_copy = fake_create_media_from_copy
-
     # act
     total = worker.manual_copy(mock.Mock(), database)
 
@@ -117,8 +111,11 @@ def test_worker_manual_copy(valid_worker_config):
 
     database.assert_has_calls([
         mock.call.get_manual_copy_targets(mock.ANY),
+        mock.call.session.add(mock.ANY),
         mock.call.session.commit(),
+        mock.call.session.add(mock.ANY),
         mock.call.session.commit(),
+        mock.call.session.add(mock.ANY),
         mock.call.session.commit(),
     ])
 

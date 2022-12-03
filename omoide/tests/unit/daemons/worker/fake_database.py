@@ -27,7 +27,10 @@ class FakeDatabase(MagicMock):
         yield self.engine
 
     @staticmethod
-    def select_media(media_id: int) -> Optional[models.Media]:
+    def select_media(
+            session,
+            media_id: int,
+    ) -> Optional[models.Media]:
         if media_id == 1:
             return models.Media(
                 attempts=0,
@@ -47,7 +50,23 @@ class FakeDatabase(MagicMock):
         return None
 
     @staticmethod
-    def select_copy_operation(copy_id: int) -> Optional[models.ManualCopy]:
+    def select_copy_operation(
+            session,
+            copy_id: int,
+    ) -> Optional[models.ManualCopy]:
         if copy_id in (1, 2, 3, 5):
             return models.ManualCopy(id=copy_id)
         return None
+
+    @staticmethod
+    def create_media_from_copy(
+            copy: models.ManualCopy,
+            content: bytes,
+    ) -> models.Media:
+        if copy.id == 5:
+            raise ValueError('test')
+
+        return models.Media(
+            owner_uuid=copy.owner_uuid,
+            content=content,
+        )
