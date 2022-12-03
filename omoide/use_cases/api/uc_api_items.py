@@ -268,7 +268,7 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
                 source_uuid=source_uuid,
                 target_uuid=target_uuid,
                 ext=source.thumbnail_ext,
-                target_folder='thumbnails',
+                target_folder='thumbnail',
             )
 
         return Success(source_uuid)
@@ -336,7 +336,7 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
                     source_uuid=item.uuid,
                     target_uuid=parent.uuid,
                     ext=item.thumbnail_ext,
-                    target_folder='thumbnails',
+                    target_folder='thumbnail',
                 )
 
             metainfo = await self.metainfo_repo.read_metainfo(uuid)

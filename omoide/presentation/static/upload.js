@@ -820,7 +820,7 @@ async function saveThumbnailForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 content: proxy.thumbnail,
-                target_folder: 'thumbnails',
+                target_folder: 'thumbnail',
                 ext: proxy.thumbnailExt,
             }),
             success: function (response) {
@@ -906,11 +906,12 @@ async function ensureParentHasThumbnail(parent, firstChild) {
         return new Promise(function (resolve, reject) {
             $.ajax({
                 timeout: 5000, // 5 seconds
-                type: 'PUT',
-                url: `/api/media/${parent.uuid}/thumbnail`,
+                type: 'POST',
+                url: `/api/media/${parent.uuid}`,
                 contentType: 'application/json',
                 data: JSON.stringify({
                     content: firstChild.thumbnail,
+                    target_folder: 'thumbnail',
                     ext: firstChild.thumbnailExt,
                 }),
                 success: function (response) {

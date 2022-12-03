@@ -24,6 +24,7 @@ class MediaRepository(interfaces.AbsMediaRepository):
         stmt = sa.insert(
             models.Media
         ).values(
+            owner_uuid=user.uuid,
             item_uuid=media.item_uuid,
             created_at=media.created_at,
             processed_at=media.processed_at,

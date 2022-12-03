@@ -111,7 +111,7 @@ class UpdateItemIn(CreateItemIn):
 class CreateMediaIn(BaseModel):
     """Input info for media creation."""
     content: str
-    target_folder: Literal['content', 'preview', 'thumbnails']
+    target_folder: Literal['content', 'preview', 'thumbnail']
     ext: str
 
 

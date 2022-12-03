@@ -314,7 +314,7 @@ class Media(Base):
                                 index=True)
     target_folder: str = sa.Column(sa.Enum('content',
                                            'preview',
-                                           'thumbnails',
+                                           'thumbnail',
                                            name='target_folder'),
                                    nullable=False)
 

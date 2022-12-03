@@ -29,7 +29,7 @@ def _fill_database(
             models.Media(
                 owner_uuid=user.uuid,
                 item_uuid=item.uuid,
-                target_folder='thumbnails',
+                target_folder='thumbnail',
                 created_at=utils.now(),
                 processed_at=None,
                 content=b'test',
@@ -47,7 +47,7 @@ def _fill_database(
             models.Media(
                 owner_uuid=user.uuid,
                 item_uuid=item.uuid,
-                target_folder='thumbnails',
+                target_folder='thumbnail',
                 created_at=utils.now(),
                 processed_at=None,
                 content=b'test',
@@ -65,7 +65,7 @@ def _fill_database(
             models.Media(
                 owner_uuid=user.uuid,
                 item_uuid=item.uuid,
-                target_folder='thumbnails',
+                target_folder='thumbnail',
                 created_at=utils.now(),
                 processed_at=None,
                 content=b'test',
@@ -83,7 +83,7 @@ def _fill_database(
             models.Media(
                 owner_uuid=user.uuid,
                 item_uuid=item.uuid,
-                target_folder='thumbnails',
+                target_folder='thumbnail',
                 created_at=utils.now(),
                 processed_at=None,
                 content=b'test',

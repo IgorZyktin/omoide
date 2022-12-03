@@ -34,7 +34,7 @@ def _fill_database(
                 source_uuid=item.uuid,
                 target_uuid=item.uuid,
                 ext='jpg',
-                target_folder='thumbnails',
+                target_folder='thumbnail',
             )
         )
         ids.append(new_id)
@@ -51,7 +51,7 @@ def _fill_database(
                 source_uuid=item.uuid,
                 target_uuid=item.uuid,
                 ext='jpg',
-                target_folder='thumbnails',
+                target_folder='thumbnail',
             )
         )
         ids.append(new_id)
@@ -68,7 +68,7 @@ def _fill_database(
                 source_uuid=item.uuid,
                 target_uuid=item.uuid,
                 ext='jpg',
-                target_folder='thumbnails',
+                target_folder='thumbnail',
             )
         )
         ids.append(new_id)
@@ -85,7 +85,7 @@ def _fill_database(
                 source_uuid=item.uuid,
                 target_uuid=item.uuid,
                 ext='jpg',
-                target_folder='thumbnails',
+                target_folder='thumbnail',
             )
         )
         ids.append(new_id)
