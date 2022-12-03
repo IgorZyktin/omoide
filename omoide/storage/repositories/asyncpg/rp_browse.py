@@ -288,7 +288,15 @@ WITH RECURSIVE nested_items AS
         FROM items
                  INNER JOIN nested_items
                             ON items.parent_uuid = nested_items.uuid)
-SELECT *
+SELECT uuid,
+       parent_uuid,
+       owner_uuid,
+       number,
+       name,
+       is_collection,
+       content_ext,
+       preview_ext,
+       thumbnail_ext
 FROM nested_items
 WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
             """
@@ -319,7 +327,15 @@ WITH RECURSIVE nested_items AS
         FROM items
                  INNER JOIN nested_items
                             ON items.parent_uuid = nested_items.uuid)
-SELECT *
+SELECT uuid,
+       parent_uuid,
+       owner_uuid,
+       number,
+       name,
+       is_collection,
+       content_ext,
+       preview_ext,
+       thumbnail_ext
 FROM nested_items
 LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
 WHERE (owner_uuid = CAST(:user_uuid AS uuid)
