@@ -262,24 +262,6 @@ class Metainfo(BaseModel):
     thumbnail_size: Optional[int]
 
 
-class SearchStats(BaseModel):
-    """Basic statistic for search request."""
-    query_length: int
-    tags_include: int
-    tags_exclude: int
-    ordered: bool
-    nested: bool
-    paged: bool
-    duration: float
-    matching_items: int
-    total_items: Optional[int]
-
-    @property
-    def is_from_app(self) -> bool:
-        """Return True if user got this from page rendering (not API)."""
-        return self.total_items is None
-
-
 class Aim(BaseModel):
     """Object that describes user's desired output."""
     query: Query
@@ -314,25 +296,6 @@ class Aim(BaseModel):
         params['q'] = self.query.raw_query
         params.pop('query', None)
         return params
-
-    def stats(
-            self,
-            duration: float,
-            matching_items: int,
-            total_items: Optional[int],
-    ) -> SearchStats:
-        """Gather anonymous stats."""
-        return SearchStats(
-            query_length=len(self.query.raw_query),
-            tags_include=len(self.query.tags_include),
-            tags_exclude=len(self.query.tags_exclude),
-            ordered=self.ordered,
-            nested=self.nested,
-            paged=self.paged,
-            duration=duration,
-            matching_items=matching_items,
-            total_items=total_items,
-        )
 
 
 class SingleResult(BaseModel):

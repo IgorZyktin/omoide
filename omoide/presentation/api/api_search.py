@@ -30,9 +30,4 @@ async def api_search(
     if isinstance(result, Success):
         items = utils.to_simple_items(request, result.value)
 
-    # TODO - save search statistics
-    # start = time.perf_counter()
-    # delta = time.perf_counter() - start
-    # print(aim_wrapper.aim.stats(delta, len(items), None))
-
     return items

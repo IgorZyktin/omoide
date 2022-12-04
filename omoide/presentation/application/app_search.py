@@ -67,9 +67,6 @@ async def app_search(
 
     delta = time.perf_counter() - start
 
-    # TODO - save search statistics
-    # print(aim.stats(delta, len(items), matching_items))
-
     context = {
         'request': request,
         'config': config,
