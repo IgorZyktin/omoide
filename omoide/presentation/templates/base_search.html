@@ -43,7 +43,8 @@
                class="query_input qc-input"
                placeholder="Enter one or more tags here" autofocus/>
 
-        <a href="javascript:void(0)"
+        <a id="search_button"
+           href="javascript:void(0)"
            title="Press to perform search"
            onclick="goSearch()"
            class="button qc-search">
@@ -231,6 +232,17 @@
 </div>
 
 {% block body %}{% endblock %}
+
+<script>
+    let input = document.getElementById('query_element');
+
+    input.addEventListener('keyup', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            document.getElementById('search_button').click();
+        }
+    });
+</script>
 
 </body>
 </html>
