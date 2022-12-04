@@ -36,7 +36,7 @@ function gatherItemParameters() {
 
     return {
         parent_uuid: parent_uuid,
-        is_collection: $('#treat-item-as').val() === 'collection',
+        is_collection: $('#item_is_collection').is(':checked'),
         name: $('#item_name').val().trim(),
         tags: splitLines($('#item_tags').val()),
         permissions: extractUUIDs($('#item_permissions').val()),

@@ -26,14 +26,15 @@
 
         <div id="parent_thumbnail" class="parent_thumbnail">
             {{ render_thumbnail_for_item(request, parent, aim_wrapper) }}
+
         </div>
 
-        <label for="treat_item_as">Treat this item as:</label>
-        <select id="treat_item_as">
-            <option value="collection">Collection of items (like album cover)
-            </option>
-            <option value="single">Singular item</option>
-        </select>
+        <div>
+            <input type="checkbox"
+                   id="item_is_collection"
+                   checked>
+            <label for="item_is_collection">New item is a collection</label>
+        </div>
 
         <label for="action_after_creation">What to do after creation:</label>
         <select id="action_after_creation">
