@@ -601,14 +601,16 @@ async function generateFeaturesForProxy(proxy, uploadState) {
     proxy.ready = false
     let useBackoff = $('#feature-exif-backoff').is(':checked')
 
-    if (uploadState.features['extractYear'])
-        await _extractYearFeature(proxy, useBackoff)
+    if ($('#feature-exif').is(':checked')) {
+        if (uploadState.features['extractYear'])
+            await _extractYearFeature(proxy, useBackoff)
 
-    if (uploadState.features['extractMonthEN'])
-        await _extractMonthENFeature(proxy, useBackoff)
+        if (uploadState.features['extractMonthEN'])
+            await _extractMonthENFeature(proxy, useBackoff)
 
-    if (uploadState.features['extractMonthRU'])
-        await _extractMonthRUFeature(proxy, useBackoff)
+        if (uploadState.features['extractMonthRU'])
+            await _extractMonthRUFeature(proxy, useBackoff)
+    }
 
     proxy.featuresGenerated = true
     proxy.actualSteps.add('generateFeaturesForProxy')
