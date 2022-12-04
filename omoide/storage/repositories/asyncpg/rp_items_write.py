@@ -7,7 +7,7 @@ from typing import Callable
 from uuid import UUID
 from uuid import uuid4
 
-import sqlalchemy
+import sqlalchemy as sa
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -43,48 +43,28 @@ class ItemsWriteRepository(
             payload: api_models.CreateItemIn,
     ) -> UUID:
         """Create item and return UUID."""
-        # TODO - rewrite to sqlalchemy
-        stmt = """
-        INSERT INTO items (
-            uuid,
-            parent_uuid,
-            owner_uuid,
-            number,
-            name,
-            is_collection,
-            content_ext,
-            preview_ext,
-            thumbnail_ext,
-            tags,
-            permissions
+        select_stmt = sa.select(
+            sa.literal(str(payload.uuid)).label('uuid'),
+            sa.literal(str(payload.parent_uuid)).label('parent_uuid'),
+            sa.literal(str(user.uuid)).label('owner_uuid'),
+            (sa.func.max(models.Item.number) + 1).label('number'),
+            sa.literal(payload.name).label('name'),
+            sa.literal(payload.is_collection).label('is_collection'),
+            sa.literal(None).label('content_ext'),
+            sa.literal(None).label('preview_ext'),
+            sa.literal(None).label('thumbnail_ext'),
+            sa.literal(payload.safe_tags).label('tags'),
+            sa.literal(payload.safe_permissions).label('permissions'),
         )
-        SELECT
-            :uuid,
-            :parent_uuid,
-            :owner_uuid,
-            max(number) + 1 as new_number,
-            :name,
-            :is_collection,
-            NULL,
-            NULL,
-            NULL,
-            :tags,
-            :permissions
-        FROM items
-        RETURNING uuid;
-        """
 
-        values = {
-            'uuid': payload.uuid,
-            'parent_uuid': payload.parent_uuid,
-            'owner_uuid': user.uuid,
-            'name': payload.name,
-            'is_collection': payload.is_collection,
-            'tags': payload.tags,
-            'permissions': payload.permissions,
-        }
+        stmt = sa.insert(
+            models.Item
+        ).from_select(
+            [*select_stmt.columns],
+            select_stmt
+        ).returning(models.Item.uuid)
 
-        return await self.db.execute(stmt, values)
+        return await self.db.execute(stmt)
 
     async def update_item(
             self,
@@ -123,13 +103,11 @@ class ItemsWriteRepository(
             uuid: UUID,
     ) -> bool:
         """Delete item with given UUID."""
-        stmt = sqlalchemy.delete(
+        stmt = sa.delete(
             models.Item
         ).where(
             models.Item.uuid == uuid
-        ).returning(
-            1
-        )
+        ).returning(1)
 
         response = await self.db.fetch_one(stmt)
 
@@ -184,7 +162,7 @@ class ItemsWriteRepository(
             Trigger fires after update and computes new tags.
             """
             nonlocal total
-            stmt = sqlalchemy.update(
+            stmt = sa.update(
                 models.Item
             ).where(
                 models.Item.uuid == _item.uuid
@@ -338,7 +316,7 @@ class ItemsWriteRepository(
                   f'{sorted(map(str, _item.permissions))} '
                   f'-> {sorted(map(str, _permissions))}')
 
-            stmt = sqlalchemy.update(
+            stmt = sa.update(
                 models.Item
             ).where(
                 models.Item.uuid == _item.uuid
@@ -393,7 +371,7 @@ class ItemsWriteRepository(
                   f'{sorted(map(str, _item.permissions))} '
                   f'-> {sorted(map(str, _permissions))}')
 
-            stmt = sqlalchemy.update(
+            stmt = sa.update(
                 models.Item
             ).where(
                 models.Item.uuid == _item.uuid
