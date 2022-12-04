@@ -21,7 +21,7 @@ class CreateUserUseCase:
     def __init__(
             self,
             items_repo: interfaces.AbsItemsWriteRepository,
-            users_repo: interfaces.AbsUsersRepository,
+            users_repo: interfaces.AbsUsersWriteRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo

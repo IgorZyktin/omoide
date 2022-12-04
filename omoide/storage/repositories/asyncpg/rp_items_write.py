@@ -45,7 +45,7 @@ class ItemsWriteRepository(
         """Create item and return UUID."""
         select_stmt = sa.select(
             sa.literal(str(payload.uuid)).label('uuid'),
-            sa.literal(str(payload.parent_uuid)).label('parent_uuid'),
+            sa.literal(payload.safe_parent_uuid).label('parent_uuid'),
             sa.literal(str(user.uuid)).label('owner_uuid'),
             (sa.func.max(models.Item.number) + 1).label('number'),
             sa.literal(payload.name).label('name'),

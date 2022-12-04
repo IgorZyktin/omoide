@@ -16,7 +16,7 @@ from omoide.domain.interfaces.in_storage \
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_search import AbsSearchRepository
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_users import AbsUsersRepository
+    .in_repositories.in_rp_users import AbsUsersWriteRepository
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_users_read import AbsUsersReadRepository
 from omoide.domain.interfaces.infra.in_authenticator import AbsAuthenticator

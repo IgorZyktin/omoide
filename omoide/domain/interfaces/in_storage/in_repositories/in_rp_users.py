@@ -10,7 +10,7 @@ from omoide.domain.interfaces.in_storage \
 from omoide.presentation import api_models
 
 
-class AbsUsersRepository(in_rp_users_read.AbsUsersReadRepository):
+class AbsUsersWriteRepository(in_rp_users_read.AbsUsersReadRepository):
     """Repository that perform CRUD operations on users and their data."""
 
     @abc.abstractmethod

@@ -30,7 +30,22 @@ class CreateItemIn(BaseModel):
     name: str
     is_collection: bool
     tags: list[str]
-    permissions: list[str]
+    permissions: list[UUID]
+
+    @property
+    def safe_parent_uuid(self) -> Optional[str]:
+        """Render parent_uuid into string."""
+        return str(self.parent_uuid) if self.parent_uuid else None
+
+    @property
+    def safe_tags(self) -> tuple[str, ...]:
+        """Render tags into tuple."""
+        return tuple(self.tags)
+
+    @property
+    def safe_permissions(self) -> tuple[str, ...]:
+        """Render permissions into tuple."""
+        return tuple(str(x) for x in self.permissions)
 
     @validator('name')
     def name_must_have_adequate_length(cls, v):

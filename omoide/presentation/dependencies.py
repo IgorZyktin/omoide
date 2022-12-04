@@ -3,6 +3,7 @@
 """
 import binascii
 from base64 import b64decode
+from functools import cache
 from typing import Optional
 
 from databases import Database
@@ -27,8 +28,8 @@ search_repository = asyncpg.SearchRepository(db)
 preview_repository = asyncpg.PreviewRepository(db)
 browse_repository = asyncpg.BrowseRepository(db)
 
-users_repository = asyncpg.UsersRepository(db)
 users_read_repository = asyncpg.UsersReadRepository(db)
+users_write_repository = asyncpg.UsersWriteRepository(db)
 
 items_read_repository = asyncpg.ItemsReadRepository(db)
 items_write_repository = asyncpg.ItemsWriteRepository(db)
@@ -90,6 +91,7 @@ def get_auth_use_case() -> use_cases.AuthUseCase:
     )
 
 
+@cache
 def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator(

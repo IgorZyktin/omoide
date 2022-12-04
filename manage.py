@@ -9,11 +9,9 @@ import click
 
 from omoide.commands.common import base_db
 from omoide.commands.common import helpers
-from omoide.infra.special_types import Failure
-from omoide.presentation import api_models
+from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
-from omoide.storage.repositories.asyncpg.rp_users import UsersRepository
-from omoide.use_cases import CreateUserUseCase
+from omoide.storage.repositories.asyncpg.rp_users import UsersWriteRepository
 
 
 @click.group()
@@ -39,31 +37,18 @@ def cli():
     default=None,
     help='Name for new user (if not specified will use login)',
 )
-def cmd_create_user(login: str, password: str, name: Optional[str]):
+def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
     """Manually create user."""
-    use_case = CreateUserUseCase(
+    from omoide.commands.application.create_user import main
+    asyncio.run(main.run(
+        logger=custom_logging.get_logger(__name__),
+        authenticator=dep.get_authenticator(),
         items_repo=dep.items_write_repository,
-        users_repo=UsersRepository(dep.db),
-    )
-
-    raw_user = api_models.CreateUserIn(
+        users_repo=dep.users_write_repository,
         login=login,
         password=password,
         name=name,
-    )
-
-    async def _coro():
-        print('Going to create new user')
-        await dep.db.connect()
-        result = await use_case.execute(dep.get_authenticator(), raw_user)
-        await dep.db.disconnect()
-
-        if isinstance(result, Failure):
-            print(str(result.error))
-        else:
-            print(result.value)
-
-    asyncio.run(_coro())
+    ))
 
 
 @cli.command(
@@ -81,7 +66,7 @@ def cmd_create_user(login: str, password: str, name: Optional[str]):
 )
 def cmd_change_password(uuid: str, password: str):
     """Manually change password for user."""
-    users_repo = UsersRepository(dep.db)
+    users_repo = UsersWriteRepository(dep.db)
 
     async def _coro():
         print(f'Going to change password for user {uuid}')

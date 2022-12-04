@@ -14,8 +14,8 @@ from omoide.storage.repositories \
     .asyncpg.rp_users_read import UsersReadRepository
 
 
-class UsersRepository(
-    interfaces.AbsUsersRepository,
+class UsersWriteRepository(
+    interfaces.AbsUsersWriteRepository,
     UsersReadRepository,
 ):
     """Repository that perform CRUD operations on users and their data."""
