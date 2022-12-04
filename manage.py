@@ -11,7 +11,6 @@ from omoide.commands.common import base_db
 from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
-from omoide.storage.repositories.asyncpg.rp_users import UsersWriteRepository
 
 
 @click.group()
@@ -66,24 +65,14 @@ def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
 )
 def cmd_change_password(uuid: str, password: str):
     """Manually change password for user."""
-    users_repo = UsersWriteRepository(dep.db)
-
-    async def _coro():
-        print(f'Going to change password for user {uuid}')
-        await dep.db.connect()
-        user = await users_repo.read_user(UUID(uuid))
-        if user is None:
-            print(f'User with uuid {uuid} does not exist')
-            return
-
-        user.password = dep.get_authenticator().encode_password(
-            password.encode()).decode()
-
-        await users_repo.update_user(user)
-        await dep.db.disconnect()
-        print(f'Successfully changed password for {user.uuid} {user.name}')
-
-    asyncio.run(_coro())
+    from omoide.commands.application.change_password import main
+    asyncio.run(main.run(
+        logger=custom_logging.get_logger(__name__),
+        authenticator=dep.get_authenticator(),
+        users_repo=dep.users_write_repository,
+        raw_uuid=uuid,
+        new_password=password,
+    ))
 
 
 @cli.command(
