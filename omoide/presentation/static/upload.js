@@ -20,6 +20,7 @@ const EXPECTED_STEPS = new Set([
 ])
 
 let parentProcessed = false
+let NUMBER = 1
 
 let reducer = new window.ImageBlobReduce({
     pica: window.ImageBlobReduce.pica({features: ['js', 'wasm', 'ww']})
@@ -77,10 +78,17 @@ function addFiles(source) {
         if (file.name in FILES)
             continue
 
-        let proxy = createFileProxy(file)
+        let proxy = createFileProxy(file, NUMBER)
+        NUMBER += 1
         FILES[file.name] = proxy
         local_files.push(proxy)
 
+        proxy.element.deleteElement.click(function () {
+            if (confirm(`Are you sure you want ot delete\n${proxy.file.name}?`)) {
+                delete FILES[proxy.file.name]
+                $('#' + proxy.element.id).remove()
+            }
+        })
 
         if (upload_as === 'target') {
             proxy.uuid = parent_uuid
@@ -92,7 +100,7 @@ function addFiles(source) {
 
     local_files.sort((a, b) => a.filename > b.filename ? 1 : -1)
     for (let proxy of local_files) {
-        proxy.element.appendTo(container)
+        proxy.element.element.appendTo(container)
         proxy.render()
     }
 
@@ -108,50 +116,62 @@ function extractExt(filename) {
     return ext.toLowerCase()
 }
 
-function createFileProxy(file) {
+class FileProxyElement {
+    // Helper object that controls drawing of a file proxy
+    constructor(filename, number) {
+        this.id = `upload-element-${number}`
+        this.element = $('<div>', {
+            id: this.id,
+            class: 'upload-element'
+        })
+        this.iconElement = $('<img>', {src: EMPTY_FILE})
+
+        this.progressElement = $('<progress>', {
+            id: 'global-progress',
+            value: 0,
+            max: 100,
+        })
+
+        this.textElement = $('<p>', {text: filename})
+        this.deleteElement = $('<a>', {
+            href: 'javascript:void(0)',
+            class: 'button',
+        })
+        this.deleteLabel = $('<span>', {text: 'Delete'})
+        this.deleteElement.append(this.deleteLabel)
+        this.linesElement0 = $('<div>', {class: 'upload-lines'})
+        this.linesElement1 = $('<div>', {class: 'upload-lines'})
+
+        this.tagsElementLabel = $('<label>',
+            {text: 'Additional tags for this item (one tag per line):'})
+        this.tagsElement = $('<textarea>', {rows: 5})
+        this.tagsElement.appendTo(this.tagsElementLabel)
+
+        this.permissionsElementLabel = $('<label>',
+            {text: 'Additional permissions for this item (one user per line):'})
+        this.permissionsElement = $('<textarea>', {rows: 5})
+        this.permissionsElement.appendTo(this.permissionsElementLabel)
+
+        this.deleteElement.appendTo(this.linesElement1)
+        this.textElement.appendTo(this.linesElement1)
+        this.progressElement.appendTo(this.linesElement1)
+        this.tagsElementLabel.appendTo(this.linesElement1)
+        this.permissionsElementLabel.appendTo(this.linesElement1)
+
+        this.iconElement.appendTo(this.linesElement0)
+        this.linesElement0.appendTo(this.element)
+        this.linesElement1.appendTo(this.element)
+    }
+}
+
+function createFileProxy(file, number) {
     // create new proxy that stores file upload progress
-    let element = $('<div>', {class: 'upload-element'})
-
-    let iconElement = $('<img>', {
-        src: EMPTY_FILE,
-    })
-
-    let progressElement = $('<progress>', {
-        id: 'global-progress',
-        value: 0,
-        max: 100,
-    })
-
-    let textElement = $('<p>', {
-        text: file.name,
-    })
-
-    let linesElement0 = $('<div>', {class: 'upload-lines'})
-    let linesElement1 = $('<div>', {class: 'upload-lines'})
-
-    let tagsElementLabel = $('<label>',
-        {text: 'Additional tags for this item (one tag per line):'})
-    let tagsElement = $('<textarea>', {rows: 5})
-    tagsElement.appendTo(tagsElementLabel)
-
-    let permissionsElementLabel = $('<label>',
-        {text: 'Additional permissions for this item (one user per line):'})
-    let permissionsElement = $('<textarea>', {rows: 5})
-    permissionsElement.appendTo(permissionsElementLabel)
-
-    textElement.appendTo(linesElement1)
-    progressElement.appendTo(linesElement1)
-    tagsElementLabel.appendTo(linesElement1)
-    permissionsElementLabel.appendTo(linesElement1)
-
-    iconElement.appendTo(linesElement0)
-    linesElement0.appendTo(element)
-    linesElement1.appendTo(element)
     let proxy = {
         ready: false,
         uuid: null,
         parentUuid: null,
         isValid: null,
+        number: number,
 
         // content
         content: null,
@@ -197,13 +217,7 @@ function createFileProxy(file) {
         exifUploaded: false,
 
         // html
-        'element': element,
-        'progressElement': progressElement,
-        'labelElement': linesElement1,
-        'iconElement': iconElement,
-        'textElement': textElement,
-        'tagsElement': tagsElement,
-        'tagsElementLabel': tagsElementLabel,
+        element: new FileProxyElement(file.name, number),
 
         features: new Set([]),
         status: 'init',
@@ -222,10 +236,10 @@ function createFileProxy(file) {
         },
         setIcon: function (newIcon) {
             this.icon = newIcon
-            this.iconElement.attr('src', newIcon)
+            this.element.iconElement.attr('src', newIcon)
         },
         render: function () {
-            this.progressElement.val(this.getProgress())
+            this.element.progressElement.val(this.getProgress())
         },
         getTags: function () {
             return this.tagsAdded
@@ -234,24 +248,26 @@ function createFileProxy(file) {
             return this.permissionsAdded
         },
         redrawTags: function () {
-            this.tagsElement.empty()
+            this.element.tagsElement.empty()
             let allTags = this.tagsAdded.join('\n').trim()
             if (allTags.length > 0) {
                 allTags += '\n'
             }
-            this.tagsElement.val(allTags)
+            this.element.tagsElement.val(allTags)
         },
     }
 
-    tagsElement.change(function () {
-        proxy.tagsAdded = splitLines(tagsElement.val())
+    proxy.element.tagsElement.change(function () {
+        proxy.tagsAdded = splitLines(proxy.element.tagsElement.val())
     })
 
-    permissionsElement.change(function () {
-        proxy.permissionsAdded = splitLines(permissionsElement.val())
+    proxy.element.permissionsElement.change(function () {
+        proxy.permissionsAdded = splitLines(
+            proxy.element.permissionsElement.val()
+        )
     })
 
-    iconElement.click(function () {
+    proxy.element.iconElement.click(function () {
 
         if (!proxy.preview)
             return

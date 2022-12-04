@@ -86,7 +86,7 @@ class CreateItemIn(BaseModel):
 
         permissions_name_limit = 255
         for permission in v:
-            if len(permission) > permissions_name_limit:
+            if len(str(permission)) > permissions_name_limit:
                 raise ValueError(
                     'Permission name is too long '
                     f'(maximum {permissions_name_limit} characters)'

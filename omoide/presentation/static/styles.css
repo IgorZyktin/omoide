@@ -149,6 +149,7 @@ textarea:focus, input:focus {
     color: #d3d4d5;
     background-color: #7c9271;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .button:active {
