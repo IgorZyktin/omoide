@@ -70,10 +70,10 @@ graph TD
 
 ```mermaid
 graph TD
-    NGINX(Web server) -->|Request| APP
-    APP -->|Response| NGINX
-    APP(Application) <-->|Save| DB
-    DB(Database) <-->|Load| W(Worker)
+    NGINX(Веб сервер) -->|Запрос| APP
+    APP -->|Ответ| NGINX
+    APP(Приложение) <-->|Обработка| DB
+    DB(База данных) <-->|Обработка| W(Worker)
 ```
 
 Система состоит из трёх элементов:
