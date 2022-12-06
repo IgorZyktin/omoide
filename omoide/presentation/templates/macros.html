@@ -251,6 +251,10 @@
                         <span>&nbsp;/&nbsp;</span>
                     {% endif %}
                     {{ location.current_item.name }}
+                    <a href="{{ request.url_for('app_items_download', uuid=location.current_item.uuid) }}">
+                        <img class="download"
+                             src="{{ request.url_for('static', path='download_48.svg') }}"
+                             alt="Download inner items"/></a>
                 {% endif %}
             </h3>
         </div>
@@ -268,6 +272,10 @@
 
                     {% if loop.last %}
                         {{ item.name }}
+                        <a href="{{ request.url_for('app_items_download', uuid=item.uuid) }}">
+                            <img class="download"
+                                 src="{{ request.url_for('static', path='download_48.svg') }}"
+                                 alt="Download inner items"/></a>
                     {% else %}
                         {% if item.is_collection %}
                             <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url() }}">

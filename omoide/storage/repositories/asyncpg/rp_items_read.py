@@ -9,6 +9,7 @@ import sqlalchemy as sa
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.database import models
+from omoide.storage.repositories.asyncpg import queries
 
 
 class ItemsReadRepository(interfaces.AbsItemsReadRepository):
@@ -48,6 +49,34 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
             is_owner=bool(response['is_owner']),
         )
 
+    async def count_all_children(
+            self,
+            uuid: UUID,
+    ) -> int:
+        """Count dependant items (including the parent itself)."""
+        stmt = """
+        WITH RECURSIVE nested_items AS (
+            SELECT parent_uuid,
+                   uuid
+            FROM items
+            WHERE uuid = :uuid
+            UNION ALL
+            SELECT i.parent_uuid,
+                   i.uuid
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+        )
+        SELECT count(*) AS total
+        FROM nested_items;
+        """
+
+        response = await self.db.fetch_one(stmt, {'uuid': uuid})
+
+        if response is None:
+            return 0
+
+        return response['total']
+
     async def read_item(
             self,
             uuid: UUID,
@@ -83,6 +112,34 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         """
 
         response = await self.db.fetch_all(stmt, {'uuid': str(uuid)})
+        return [domain.Item(**each) for each in response]
+
+    async def read_children_safe(
+            self,
+            user: domain.User,
+            uuid: UUID,
+            ignore_collections: bool = False,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""
+        # TODO: this method is supposed to be universal
+        stmt = sa.select(
+            models.Item
+        ).where(
+            models.Item.parent_uuid == uuid
+        )
+
+        stmt = queries.ensure_user_has_permissions(user, stmt)
+
+        if ignore_collections:
+            stmt = stmt.where(
+                models.Item.is_collection == False,  # noqa
+            )
+
+        stmt = stmt.order_by(
+            models.Item.number
+        )
+
+        response = await self.db.fetch_all(stmt)
         return [domain.Item(**each) for each in response]
 
     async def get_simple_location(

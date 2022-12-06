@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Download {{ uuid|string }}</title>
+    {%- if config.injection %}
+        {{ config.injection|safe }}
+    {% endif -%}
+</head>
+
+<body>
+{% if numerated_items %}
+    {% for number, item in numerated_items %}
+        <a href="/content/content/{{ item.owner_uuid }}/{{ item.content_path }}"
+           download="{{ number }}__{{ item.uuid }}.{{ item.thumbnail_ext }}">{{ number }}__{{ item.uuid }}.{{ item.thumbnail_ext }}</a>
+        <br>
+    {% endfor %}
+{% else %}
+    <p>This item has nothing to download. It is empty or contains only
+        collections.</p>
+{% endif %}
+</body>
+</html>
