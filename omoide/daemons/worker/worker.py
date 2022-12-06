@@ -94,15 +94,17 @@ class Worker:
                 self._process_item(media)
             except Exception:
                 result = 0
-                media.error += traceback.format_exc()
+                media.error = (media.error or '') + traceback.format_exc()
                 logger.exception('Failed to download media {}', media_id)
             else:
-                if result:
+                if result and media:
                     media.replication.update(self.formula)
                     flag_modified(media, 'replication')
 
-            media.attempts += 1
-            media.processed_at = utils.now()
+            if media:
+                media.attempts = (media.attempts or 0) + 1
+                media.processed_at = utils.now()
+
             session.commit()
 
         return result
