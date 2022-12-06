@@ -26,6 +26,7 @@ class Database(BaseDatabase):
         ).where(
             ~models.Media.replication.contains(formula),
             models.Media.attempts < max_attempts,
+            models.Media.error == '',
         ).order_by(
             models.Media.id
         ).limit(

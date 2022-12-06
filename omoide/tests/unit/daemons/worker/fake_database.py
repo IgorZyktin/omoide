@@ -48,10 +48,6 @@ class FakeDatabase(MagicMock):
                 replication={},
                 item=fake_item,
             )
-        elif media_id == 5:
-            fake_media = mock.Mock()
-            fake_media.attempts.side_effect = AttributeError
-            return fake_media
         return None
 
     @staticmethod

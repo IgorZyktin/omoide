@@ -88,17 +88,22 @@ class Worker:
                 media = database.select_media(session, media_id)
 
                 if media is None:
-                    result = None
-                else:
-                    result = self._process_media(logger, media)
-                    self._process_item(media)
+                    return None
+
+                result = self._process_media(logger, media)
+                self._process_item(media)
             except Exception:
                 result = 0
+                media.error += traceback.format_exc()
                 logger.exception('Failed to download media {}', media_id)
-                session.rollback()
             else:
                 if result:
-                    session.commit()
+                    media.replication.update(self.formula)
+                    flag_modified(media, 'replication')
+
+            media.attempts += 1
+            media.processed_at = utils.now()
+            session.commit()
 
         return result
 
@@ -122,10 +127,6 @@ class Worker:
             filename = f'{media.item_uuid}.{media.ext or ""}'
             self.filesystem.safely_save(logger, path, filename, media.content)
 
-        media.attempts += 1
-        media.processed_at = utils.now()
-        media.replication.update(self.formula)
-        flag_modified(media, 'replication')
         return 1
 
     @staticmethod
