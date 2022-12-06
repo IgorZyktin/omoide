@@ -200,6 +200,12 @@ def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
     )
 
 
+def app_items_download_use_case() -> use_cases.AppItemsDownloadUseCase:
+    """Get use case instance."""
+    return use_cases.AppItemsDownloadUseCase(
+        items_repo=items_read_repository,
+    )
+
 # api item related use cases --------------------------------------------------
 
 

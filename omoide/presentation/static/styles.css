@@ -487,3 +487,9 @@ table {
 table td {
     padding: 0.5em;
 }
+
+.download {
+    height: 1em;
+    vertical-align: center;
+    filter: invert(1);
+}

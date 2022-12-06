@@ -137,7 +137,7 @@ def login_required(func: Callable) -> Callable:
         """Wrapper."""
         if user.is_anon():
             # TODO: try keeping original link
-            return RedirectResponse(request.url_for('login'))
+            return RedirectResponse(request.url_for('app_login'))
         return await func(request, *args, user=user, **kwargs)
 
     return wrapper

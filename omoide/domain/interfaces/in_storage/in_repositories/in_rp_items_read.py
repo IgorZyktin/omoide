@@ -35,6 +35,16 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
         """Return all direct descendants of the given item."""
 
     @abc.abstractmethod
+    async def read_children_safe(
+            self,
+            user: domain.User,
+            uuid: UUID,
+            ignore_collections: bool = False,
+    ) -> list[domain.Item]:
+        """Return all direct descendants of the given item."""
+        # TODO: this method is supposed to be universal
+
+    @abc.abstractmethod
     async def get_simple_location(
             self,
             user: domain.User,
@@ -49,3 +59,10 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             uuid: UUID,
     ) -> int:
         """Return total amount of items for given user uuid."""
+
+    @abc.abstractmethod
+    async def count_all_children(
+            self,
+            uuid: UUID,
+    ) -> int:
+        """Count dependant items (including the parent itself)."""

@@ -150,3 +150,32 @@ async def app_item_delete(
     }
 
     return dep.templates.TemplateResponse('item_delete.html', context)
+
+
+@router.get('/download/{uuid}')
+async def app_items_download(
+        request: Request,
+        uuid: UUID,
+        user: domain.User = Depends(dep.get_current_user),
+        use_case: use_cases.AppItemsDownloadUseCase = Depends(
+            dep.app_items_download_use_case),
+        config: Config = Depends(dep.config),
+        response_class: Type[Response] = HTMLResponse,
+):
+    """Return links of children to download them."""
+    result = await use_case.execute(user, uuid)
+
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error, uuid)
+
+    numerated_items = result.value
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'uuid': uuid,
+        'numerated_items': numerated_items,
+    }
+
+    return dep.templates.TemplateResponse('items_download.html', context)

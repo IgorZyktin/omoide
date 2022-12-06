@@ -16,6 +16,7 @@ __all__ = [
     'AppItemCreateUseCase',
     'AppItemUpdateUseCase',
     'AppItemDeleteUseCase',
+    'AppItemsDownloadUseCase',
 ]
 
 
@@ -97,7 +98,7 @@ class AppItemUpdateUseCase:
 
 
 class AppItemDeleteUseCase:
-    """Use item deletion page."""
+    """Use case for item deletion page."""
 
     def __init__(
             self,
@@ -127,3 +128,38 @@ class AppItemDeleteUseCase:
             total = await self.items_repo.count_all_children(uuid)
 
         return Success((item, total))
+
+
+class AppItemsDownloadUseCase:
+    """Use case for item download page."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsReadRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+
+    async def execute(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> Result[errors.Error, list[tuple[str, domain.Item]]]:
+        """Business logic."""
+        numerated_items: list[tuple[str, domain.Item]] = []
+
+        async with self.items_repo.transaction():
+            # TODO: read_children_safe -> read_children
+            items = await self.items_repo.read_children_safe(
+                user, uuid, ignore_collections=True)
+            total = len(items)
+
+            if total:
+                digits = len(str(total))
+                number = 1
+                template = f'{{:0{digits}d}}'
+                for item in items:
+                    numerated_items.append((template.format(number), item))
+                    number += 1
+
+        return Success(numerated_items)

@@ -113,34 +113,6 @@ class ItemsWriteRepository(
 
         return response is not None
 
-    async def count_all_children(
-            self,
-            uuid: UUID,
-    ) -> int:
-        """Count dependant items (including the parent itself)."""
-        stmt = """
-        WITH RECURSIVE nested_items AS (
-            SELECT parent_uuid,
-                   uuid
-            FROM items
-            WHERE uuid = :uuid
-            UNION ALL
-            SELECT i.parent_uuid,
-                   i.uuid
-            FROM items i
-                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
-        )
-        SELECT count(*) AS total
-        FROM nested_items;
-        """
-
-        response = await self.db.fetch_one(stmt, {'uuid': uuid})
-
-        if response is None:
-            return 0
-
-        return response['total']
-
     async def update_tags_in_children(
             self,
             item: domain.Item,

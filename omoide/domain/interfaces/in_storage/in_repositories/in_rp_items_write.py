@@ -40,13 +40,6 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Delete item with given UUID."""
 
     @abc.abstractmethod
-    async def count_all_children(
-            self,
-            uuid: UUID,
-    ) -> int:
-        """Count dependant items (including the parent itself)."""
-
-    @abc.abstractmethod
     async def update_tags_in_children(
             self,
             item: domain.Item,
