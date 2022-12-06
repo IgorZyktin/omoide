@@ -82,6 +82,7 @@ class Worker:
             media_id: int,
     ) -> Optional[int]:
         """Save single media record, return True on success."""
+        media = None
         with database.start_session() as session:
             # noinspection PyBroadException
             try:
@@ -94,7 +95,8 @@ class Worker:
                 self._process_item(media)
             except Exception:
                 result = 0
-                media.error = (media.error or '') + traceback.format_exc()
+                if media:
+                    media.error = (media.error or '') + traceback.format_exc()
                 logger.exception('Failed to download media {}', media_id)
             else:
                 if result and media:
