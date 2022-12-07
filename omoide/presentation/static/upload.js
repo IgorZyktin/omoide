@@ -85,11 +85,6 @@ function addFiles(source) {
         FILES[file.name] = proxy
         local_files.push(proxy)
 
-        if (Object.keys(FILES).length === 1) {
-            UPLOAD_STATE.filenames.first = file.name
-        }
-        UPLOAD_STATE.filenames.last = file.name
-
         proxy.element.deleteElement.click(function () {
             if (confirm(`Are you sure you want ot delete\n${proxy.file.name}?`)) {
                 delete FILES[proxy.file.name]
@@ -1062,6 +1057,9 @@ async function uploadMedia(button, uploadState) {
             relocateWithAim(`/browse/${parentUUID}`)
         } else if (uploadSelector.val() === 'again') {
             clearProxies()
+            uploadState.reset()
+            uploadState.setStatus('init')
+            uploadState.setAction('Ready for new batch')
         }
     }
 }
@@ -1121,8 +1119,16 @@ function createUploadState(divId) {
         },
         markDone: function () {
             // Save the fact that we uploaded one batch
-            if (this.filenames.first !== null
-                && this.filenames.last !== null) {
+            let filenames = Object.keys(FILES)
+            filenames.sort((a, b) => a > b ? 1 : -1)
+            if (filenames.length !== 0) {
+                let first = filenames[0]
+                let last = first
+
+                if (filenames.length > 1) {
+                    last = filenames[filenames.length - 1]
+                }
+
                 let target = $('#media-log')
                 let div = $('<div>', {class: 'upload-element upload-lines'})
                 div.append($('<h4>', {
@@ -1130,10 +1136,10 @@ function createUploadState(divId) {
                 }))
                 div.append($('<hr>'))
                 div.append($('<h4>', {
-                    text: `First filename: ${this.filenames.first}`
+                    text: `First filename: ${first}`
                 }))
                 div.append($('<h4>', {
-                    text: `Last filename: ${this.filenames.last}`
+                    text: `Last filename: ${last}`
                 }))
                 div.appendTo(target)
             }
