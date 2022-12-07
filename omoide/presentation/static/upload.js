@@ -56,11 +56,13 @@ function clearProxies() {
         delete FILES[key];
     })
     $('#media').empty()
-    $('#global-progress').attr('value', 0)
+    hideNavButtons()
+    UPLOAD_STATE.reset()
 }
 
 function addFiles(source) {
     // react on file upload
+    showNavButtons()
     let button = $('#upload_media_button')
     button.addClass('upload-in-progress')
 
@@ -82,6 +84,11 @@ function addFiles(source) {
         NUMBER += 1
         FILES[file.name] = proxy
         local_files.push(proxy)
+
+        if (Object.keys(FILES).length === 1) {
+            UPLOAD_STATE.filenames.first = file.name
+        }
+        UPLOAD_STATE.filenames.last = file.name
 
         proxy.element.deleteElement.click(function () {
             if (confirm(`Are you sure you want ot delete\n${proxy.file.name}?`)) {
@@ -273,15 +280,15 @@ function createFileProxy(file, number) {
             return
 
         if (proxy.previewVisible) {
-            proxy.iconElement.attr('src', proxy.thumbnail)
-            proxy.element.css('display', 'grid');
-            proxy.element.css('flex-direction', 'unset');
-            proxy.element.css('grid-template-columns', '1fr 3fr');
+            proxy.element.iconElement.attr('src', proxy.thumbnail)
+            proxy.element.element.css('display', 'grid');
+            proxy.element.element.css('flex-direction', 'unset');
+            proxy.element.element.css('grid-template-columns', '1fr 3fr');
         } else {
-            proxy.iconElement.attr('src', proxy.preview)
-            proxy.element.css('display', 'flex');
-            proxy.element.css('flex-direction', 'column');
-            proxy.element.css('grid-template-columns', 'unset');
+            proxy.element.iconElement.attr('src', proxy.preview)
+            proxy.element.element.css('display', 'flex');
+            proxy.element.element.css('flex-direction', 'column');
+            proxy.element.element.css('grid-template-columns', 'unset');
         }
 
         proxy.previewVisible = !proxy.previewVisible
@@ -1046,10 +1053,15 @@ async function uploadMedia(button, uploadState) {
     if (allDone()) {
         uploadState.setStatus('uploaded')
         uploadState.setAction('Done uploading')
+        uploadState.markDone()
 
-        if ($('#after_upload').val() === 'parent'
+        let uploadSelector = $('#after_upload')
+
+        if (uploadSelector.val() === 'parent'
             && parentUUID !== null) {
             relocateWithAim(`/browse/${parentUUID}`)
+        } else if (uploadSelector.val() === 'again') {
+            clearProxies()
         }
     }
 }
@@ -1085,6 +1097,12 @@ function createUploadState(divId) {
         progressElement: progressElement,
         labelElement: labelElement,
         actionElement: actionElement,
+        reset: function () {
+            // Clear all progress
+            this.setStatus('init')
+            this.setProgress(0)
+            this.setAction('Ready for work')
+        },
         setAction: function (newAction) {
             this.action = newAction
             this.actionElement.text(newAction)
@@ -1101,10 +1119,47 @@ function createUploadState(divId) {
                 $('#media_button').val('Upload media')
             }
         },
+        markDone: function () {
+            // Save the fact that we uploaded one batch
+            if (this.filenames.first !== null
+                && this.filenames.last !== null) {
+                let target = $('#media-log')
+                let div = $('<div>', {class: 'upload-element upload-lines'})
+                div.append($('<h4>', {
+                    text: `Total files: ${Object.keys(FILES).length}`
+                }))
+                div.append($('<hr>'))
+                div.append($('<h4>', {
+                    text: `First filename: ${this.filenames.first}`
+                }))
+                div.append($('<h4>', {
+                    text: `Last filename: ${this.filenames.last}`
+                }))
+                div.appendTo(target)
+            }
+        },
+        filenames: {
+            first: null,
+            last: null,
+        },
         features: {
             extractYear: true,
             extractMonthEN: false,
             extractMonthRU: true,
         },
     }
+}
+
+function showNavButtons() {
+    // Make scrolling buttons visible
+    $('#clear-button').show()
+    $('#scroll-bottom').show()
+    $('#scroll-top').show()
+}
+
+function hideNavButtons() {
+    // Make scrolling buttons invisible
+    $('#clear-button').hide()
+    $('#scroll-bottom').hide()
+    $('#scroll-top').hide()
 }

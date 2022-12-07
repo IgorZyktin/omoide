@@ -37,6 +37,7 @@
         <select id="after_upload">
             <option value="parent">Go browse result</option>
             <option value="nothing">Do nothing (stay here)</option>
+            <option value="again">Clear and load more</option>
         </select>
 
         <label for="item_tags">Tags for every new item (one tag per line):<br>
@@ -78,6 +79,13 @@
             </div>
         </div>
 
+        <input id="clear-button"
+               type="button"
+               class="button"
+               style="display: none"
+               onclick="clearProxies()"
+               value="Clear all">
+
         <input type="file"
                id="upload-input"
                multiple
@@ -88,7 +96,6 @@
 
         <input id="media_button"
                type="button"
-               title="Start operation"
                class="button"
                value="Preprocess media">
 
@@ -97,9 +104,29 @@
     </div>
 
     <br/>
-    <div id="media" class="upload-container medium-block"></div>
+    <div id="media-log" class="upload-container medium-block"></div>
     <br/>
-    <a href="#" onclick="jumpToTop(); return false;" class="to-top-link">Jump to top</a>
+
+    <div id="scroll-bottom"
+         style="display: none"
+         class="narrow-block">
+        <input type="button"
+               class="button-nav"
+               onclick="jumpToBottom()"
+               value="Jump to bottom">
+    </div>
+
+    <div id="media" class="upload-container medium-block"></div>
+
+    <div id="scroll-top"
+         style="display: none"
+         class="narrow-block">
+        <input type="button"
+               class="button-nav"
+               onclick="jumpToTop('scroll-bottom')"
+               value="Jump to top">
+    </div>
+
     <br/>
 
     <script>
