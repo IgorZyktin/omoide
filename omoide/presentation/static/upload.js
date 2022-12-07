@@ -273,15 +273,15 @@ function createFileProxy(file, number) {
             return
 
         if (proxy.previewVisible) {
-            proxy.iconElement.attr('src', proxy.thumbnail)
-            proxy.element.css('display', 'grid');
-            proxy.element.css('flex-direction', 'unset');
-            proxy.element.css('grid-template-columns', '1fr 3fr');
+            proxy.element.iconElement.attr('src', proxy.thumbnail)
+            proxy.element.element.css('display', 'grid');
+            proxy.element.element.css('flex-direction', 'unset');
+            proxy.element.element.css('grid-template-columns', '1fr 3fr');
         } else {
-            proxy.iconElement.attr('src', proxy.preview)
-            proxy.element.css('display', 'flex');
-            proxy.element.css('flex-direction', 'column');
-            proxy.element.css('grid-template-columns', 'unset');
+            proxy.element.iconElement.attr('src', proxy.preview)
+            proxy.element.element.css('display', 'flex');
+            proxy.element.element.css('flex-direction', 'column');
+            proxy.element.element.css('grid-template-columns', 'unset');
         }
 
         proxy.previewVisible = !proxy.previewVisible
