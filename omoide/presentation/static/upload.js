@@ -61,6 +61,7 @@ function clearProxies() {
 
 function addFiles(source) {
     // react on file upload
+    toggleScrollingButtons()
     let button = $('#upload_media_button')
     button.addClass('upload-in-progress')
 
@@ -1107,4 +1108,10 @@ function createUploadState(divId) {
             extractMonthRU: true,
         },
     }
+}
+
+function toggleScrollingButtons() {
+    // Make scrolling buttons visible
+    $('#scroll-bottom').show()
+    $('#scroll-top').show()
 }

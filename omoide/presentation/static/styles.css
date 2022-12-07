@@ -124,7 +124,7 @@ textarea:focus, input:focus {
     margin: auto;
 }
 
-.button, .button-disabled {
+.button, .button-disabled, .button-nav {
     padding: 5px;
     display: flex;
     justify-content: center;
@@ -140,6 +140,13 @@ textarea:focus, input:focus {
     border: 1px solid black;
 }
 
+.button-nav {
+    background-color: #8095a0;
+    color: #000000;
+    border: 1px solid black;
+}
+
+
 .button-disabled {
     background-color: #232323;
     color: #7a7a7a;
@@ -150,6 +157,19 @@ textarea:focus, input:focus {
     background-color: #7c9271;
     text-decoration: none;
     cursor: pointer;
+}
+
+.button-nav:hover {
+    color: #d3d4d5;
+    background-color: #678a99;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button-disabled:hover {
+    background-color: #232323;
+    color: #7a7a7a;
+    text-decoration: none;
 }
 
 .button:active {

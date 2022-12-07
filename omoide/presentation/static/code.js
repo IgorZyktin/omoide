@@ -88,20 +88,20 @@ function renderThumbnailDynamic(container, item) {
 }
 
 function convertDatetimeToIsoString(datetime) {
-  let tzo = -datetime.getTimezoneOffset(),
-      dif = tzo >= 0 ? '+' : '-',
-      pad = function(num) {
-          return (num < 10 ? '0' : '') + num;
-      };
+    let tzo = -datetime.getTimezoneOffset(),
+        dif = tzo >= 0 ? '+' : '-',
+        pad = function (num) {
+            return (num < 10 ? '0' : '') + num;
+        };
 
-  return datetime.getFullYear() +
-      '-' + pad(datetime.getMonth() + 1) +
-      '-' + pad(datetime.getDate()) +
-      ' ' + pad(datetime.getHours()) +
-      ':' + pad(datetime.getMinutes()) +
-      ':' + pad(datetime.getSeconds()) +
-      dif + pad(Math.floor(Math.abs(tzo) / 60)) +
-      ':' + pad(Math.abs(tzo) % 60);
+    return datetime.getFullYear() +
+        '-' + pad(datetime.getMonth() + 1) +
+        '-' + pad(datetime.getDate()) +
+        ' ' + pad(datetime.getHours()) +
+        ':' + pad(datetime.getMinutes()) +
+        ':' + pad(datetime.getSeconds()) +
+        dif + pad(Math.floor(Math.abs(tzo) / 60)) +
+        ':' + pad(Math.abs(tzo) % 60);
 }
 
 function splitLines(text) {
@@ -109,10 +109,10 @@ function splitLines(text) {
     return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
 }
 
-function arraysAreIdentical(arr1, arr2){
+function arraysAreIdentical(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
-    for (let i = 0, len = arr1.length; i < len; i++){
-        if (arr1[i] !== arr2[i]){
+    for (let i = 0, len = arr1.length; i < len; i++) {
+        if (arr1[i] !== arr2[i]) {
             return false;
         }
     }
@@ -134,12 +134,23 @@ function extractAllUUIDs(array) {
     return getNonEmptyValues(result)
 }
 
-function getNonEmptyValues(array){
+function getNonEmptyValues(array) {
     // Return array without empty values
     return array.filter(x => x)
 }
 
-function jumpToTop() {
-    // scroll at the top
-    document.body.scrollTop = document.documentElement.scrollTop = 0;
+function jumpToBottom() {
+    // scroll to the bottom
+    const scrollingElement = (document.scrollingElement || document.body);
+    scrollingElement.scrollTop = scrollingElement.scrollHeight;
+}
+
+function jumpToTop(targetId) {
+    // scroll to the top
+    const scrollingElement = (document.scrollingElement || document.body);
+    if (targetId === undefined) {
+        scrollingElement.scrollTop = 0;
+    } else {
+        document.getElementById(targetId).scrollIntoView()
+    }
 }

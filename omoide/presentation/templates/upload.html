@@ -46,7 +46,8 @@
         <label for="item_permissions">Permissions (one user per line):<br>
             <textarea id="item_permissions" rows="10">
                 {%- for user in permissions -%}
-                    {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}</textarea>
+                    {{ user.uuid|string }}
+                    {{ user.name + '\n' }}{% endfor -%}</textarea>
         </label>
 
         <div>
@@ -97,9 +98,28 @@
     </div>
 
     <br/>
-    <div id="media" class="upload-container medium-block"></div>
     <br/>
-    <a href="#" onclick="jumpToTop(); return false;" class="to-top-link">Jump to top</a>
+
+    <div id="scroll-bottom"
+         style="display: none"
+         class="narrow-block">
+        <input type="button"
+               class="button-nav"
+               onclick="jumpToBottom()"
+               value="Jump to bottom">
+    </div>
+
+    <div id="media" class="upload-container medium-block"></div>
+
+    <div id="scroll-top"
+         style="display: none"
+         class="narrow-block">
+        <input type="button"
+               class="button-nav"
+               onclick="jumpToTop('scroll-bottom')"
+               value="Jump to top">
+    </div>
+
     <br/>
 
     <script>
