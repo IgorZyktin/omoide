@@ -37,6 +37,7 @@
         <select id="after_upload">
             <option value="parent">Go browse result</option>
             <option value="nothing">Do nothing (stay here)</option>
+            <option value="again">Clear and load more</option>
         </select>
 
         <label for="item_tags">Tags for every new item (one tag per line):<br>
@@ -46,8 +47,7 @@
         <label for="item_permissions">Permissions (one user per line):<br>
             <textarea id="item_permissions" rows="10">
                 {%- for user in permissions -%}
-                    {{ user.uuid|string }}
-                    {{ user.name + '\n' }}{% endfor -%}</textarea>
+                    {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}</textarea>
         </label>
 
         <div>
@@ -79,6 +79,13 @@
             </div>
         </div>
 
+        <input id="clear-button"
+               type="button"
+               class="button"
+               style="display: none"
+               onclick="clearProxies()"
+               value="Clear all">
+
         <input type="file"
                id="upload-input"
                multiple
@@ -89,7 +96,6 @@
 
         <input id="media_button"
                type="button"
-               title="Start operation"
                class="button"
                value="Preprocess media">
 
@@ -98,6 +104,7 @@
     </div>
 
     <br/>
+    <div id="media-log" class="upload-container medium-block"></div>
     <br/>
 
     <div id="scroll-bottom"
