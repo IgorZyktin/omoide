@@ -33,7 +33,7 @@ async def api_search(
     return items
 
 
-@router.get('/suggest/{text}')
+@router.get('/suggest')
 async def api_suggest_tag(
         user: domain.User = Depends(dep.get_current_user),
         text: str = '',

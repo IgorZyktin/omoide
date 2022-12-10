@@ -160,40 +160,51 @@ function clearGuesses() {
     $('div.autocomplete-items').remove();
 }
 
-function getGuessVariants(text) {
+async function getGuessVariants(tag, endpoint) {
     // Load possible variants
-    // FIXME
-    return [
-        text + '-alpha',
-        text + '-beta',
-        text + '-gamma',
-    ]
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${endpoint}?text=${tag.trim()}`,
+            type: 'GET',
+            timeout: 10000,
+            success: (response) => {
+                resolve(response['variants']);
+            },
+            error: (response) => {
+                reject(response);
+            }
+        })
+    })
 }
+
 
 function splitLastTag(text) {
     // Extract last tag from user input
-    let tags = text.split(/(\s+\+\s+|\s+-\s+)/gi)
-    let body = ''
-    let lastTag = ''
-    for (let i = 0; i < tags.length; i++) {
-        let current = tags[i].trim()
+    let plusIndex = text.lastIndexOf(' + ')
+    let minusIndex = text.lastIndexOf(' - ')
 
-        if (i < tags.length - 1) {
-            if (current === '+') {
-                body += ' + '
-            } else if (current === '-') {
-                body += ' - '
-            } else {
-                body += current
-            }
-        } else {
-            lastTag = current
-        }
+    let index = -1
+    let separator = ''
+
+    if (plusIndex > minusIndex) {
+        separator = ' + '
+        index = plusIndex
+    } else if (minusIndex > -1) {
+        separator = ' - '
+        index = minusIndex
     }
-    return [body, lastTag]
+
+    if (index === -1) {
+        return [text, separator, '']
+    }
+
+    let body = text.substring(0, index)
+    let lastTag = text.substring(index + 3, text.length)
+
+    return [body, separator, lastTag]
 }
 
-function guessTag(element) {
+async function guessTag(element, endpoint) {
     // Help user by guessing tag
     clearGuesses();
 
@@ -203,7 +214,7 @@ function guessTag(element) {
         return
     }
 
-    const [body, tag] = splitLastTag(text)
+    const [body, separator, tag] = splitLastTag(text)
 
     if (tag.length <= 1) {
         clearGuesses();
@@ -214,17 +225,17 @@ function guessTag(element) {
     dropdown.setAttribute('class', 'autocomplete-items');
     element.parentNode.appendChild(dropdown);
 
-    let variants = getGuessVariants(tag)
+    let variants = await getGuessVariants(tag, endpoint)
 
     for (const variant of variants) {
         let item = document.createElement('div');
-        item.innerHTML = body + ' '
+        item.innerHTML = body + separator
         item.innerHTML += '<strong>' + variant.substring(0, tag.length) + '</strong>';
         item.innerHTML += variant.substring(tag.length);
         item.innerHTML += "<input type='hidden' value='" + variant + "'>";
         item.addEventListener('click', function (e) {
             let ending = this.getElementsByTagName('input')[0].value;
-            element.value = body + ending
+            element.value = body + separator + ending
             clearGuesses();
         });
         dropdown.appendChild(item);

@@ -61,9 +61,10 @@ class ApiSuggestTagUseCase:
         #     pass
 
         variants = [
-            'alpha',
-            'beta',
-            'gamma',
+            text,
+            f'{text}-alpha',
+            f'{text}-beta',
+            f'{text}-gamma',
         ]
 
         return Success(variants)

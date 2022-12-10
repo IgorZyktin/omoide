@@ -43,7 +43,7 @@
                    value="{{ aim_wrapper.query.raw_query or '' }}"
                    class="query_input"
                    autocomplete="off"
-                   onKeyUp="guessTag(this)"
+                   onKeyUp="guessTag(this, '{{ request.url_for('api_suggest_tag') }}')"
                    placeholder="Enter one or more tags here" autofocus/>
         </div>
 
