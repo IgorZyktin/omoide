@@ -36,12 +36,16 @@
             <span>Home</span>
         </a>
 
-        <input id="query_element"
-               name="query"
-               type="search"
-               value="{{ aim_wrapper.query.raw_query or '' }}"
-               class="query_input qc-input"
-               placeholder="Enter one or more tags here" autofocus/>
+        <div id="guess" class="guess qc-input">
+            <input id="query_element"
+                   name="query"
+                   type="search"
+                   value="{{ aim_wrapper.query.raw_query or '' }}"
+                   class="query_input"
+                   autocomplete="off"
+                   onKeyUp="guessTag(this)"
+                   placeholder="Enter one or more tags here" autofocus/>
+        </div>
 
         <a id="search_button"
            href="javascript:void(0)"
@@ -234,14 +238,20 @@
 {% block body %}{% endblock %}
 
 <script>
-    let input = document.getElementById('query_element');
+    $(document).ready(function () {
+        let input = document.getElementById('query_element');
 
-    input.addEventListener('keyup', function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            document.getElementById('search_button').click();
-        }
-    });
+        input.addEventListener('keyup', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('search_button').click();
+            }
+        });
+
+        document.addEventListener('click', function () {
+            clearGuesses();
+        })
+    })
 </script>
 
 </body>

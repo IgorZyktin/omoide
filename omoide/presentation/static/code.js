@@ -154,3 +154,79 @@ function jumpToTop(targetId) {
         document.getElementById(targetId).scrollIntoView()
     }
 }
+
+function clearGuesses() {
+    // Hide all guess variants for tag
+    $('div.autocomplete-items').remove();
+}
+
+function getGuessVariants(text) {
+    // Load possible variants
+    // FIXME
+    return [
+        text + '-alpha',
+        text + '-beta',
+        text + '-gamma',
+    ]
+}
+
+function splitLastTag(text) {
+    // Extract last tag from user input
+    let tags = text.split(/(\s+\+\s+|\s+-\s+)/gi)
+    let body = ''
+    let lastTag = ''
+    for (let i = 0; i < tags.length; i++) {
+        let current = tags[i].trim()
+
+        if (i < tags.length - 1) {
+            if (current === '+') {
+                body += ' + '
+            } else if (current === '-') {
+                body += ' - '
+            } else {
+                body += current
+            }
+        } else {
+            lastTag = current
+        }
+    }
+    return [body, lastTag]
+}
+
+function guessTag(element) {
+    // Help user by guessing tag
+    clearGuesses();
+
+    let text = element.value
+
+    if (!text) {
+        return
+    }
+
+    const [body, tag] = splitLastTag(text)
+
+    if (tag.length <= 1) {
+        clearGuesses();
+        return
+    }
+
+    let dropdown = document.createElement('div');
+    dropdown.setAttribute('class', 'autocomplete-items');
+    element.parentNode.appendChild(dropdown);
+
+    let variants = getGuessVariants(tag)
+
+    for (const variant of variants) {
+        let item = document.createElement('div');
+        item.innerHTML = body + ' '
+        item.innerHTML += '<strong>' + variant.substring(0, tag.length) + '</strong>';
+        item.innerHTML += variant.substring(tag.length);
+        item.innerHTML += "<input type='hidden' value='" + variant + "'>";
+        item.addEventListener('click', function (e) {
+            let ending = this.getElementsByTagName('input')[0].value;
+            element.value = body + ending
+            clearGuesses();
+        });
+        dropdown.appendChild(item);
+    }
+}
