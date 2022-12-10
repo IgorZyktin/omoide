@@ -177,6 +177,13 @@ def api_search_use_case() -> use_cases.ApiSearchUseCase:
     )
 
 
+def api_suggest_tag_use_case() -> use_cases.ApiSuggestTagUseCase:
+    """Get use case instance."""
+    return use_cases.ApiSuggestTagUseCase(
+        search_repo=search_repository,
+    )
+
+
 def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
     """Get use case instance."""
     return use_cases.AppItemCreateUseCase(

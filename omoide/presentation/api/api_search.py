@@ -31,3 +31,26 @@ async def api_search(
         items = utils.to_simple_items(request, result.value)
 
     return items
+
+
+@router.get('/suggest/{text}')
+async def api_suggest_tag(
+        user: domain.User = Depends(dep.get_current_user),
+        text: str = '',
+        use_case: use_cases.ApiSuggestTagUseCase = Depends(
+            dep.api_suggest_tag_use_case),
+):
+    """Help user by suggesting possible tags."""
+    if len(text) <= 1:
+        variants = []
+
+    else:
+        result = await use_case.execute(user, text)
+
+        variants = []
+        if isinstance(result, Success):
+            variants = result.value
+
+    return {
+        'variants': variants,
+    }
