@@ -130,7 +130,7 @@ class SearchRepository(
     ) -> list[str]:
         """Guess tag for known user."""
         return await self._guess_generic(
-            models.KnownTagsAnon, user, text, limit)
+            models.KnownTags, user, text, limit)
 
     async def _guess_generic(
             self,
@@ -146,7 +146,10 @@ class SearchRepository(
             model.tag.ilike(text + '%')  # noqa
         )
 
-        if user is not None:
+        if user is None:
+            assert issubclass(model, models.KnownTagsAnon)
+        else:
+            assert issubclass(model, models.KnownTags)
             stmt = stmt.where(
                 models.KnownTags.user_uuid == user.uuid,
             )
