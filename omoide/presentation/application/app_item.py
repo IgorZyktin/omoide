@@ -157,13 +157,14 @@ async def app_items_download(
         request: Request,
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemsDownloadUseCase = Depends(
             dep.app_items_download_use_case),
         config: Config = Depends(dep.config),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Return links of children to download them."""
-    result = await use_case.execute(user, uuid)
+    result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error, uuid)

@@ -113,8 +113,9 @@ class ItemsWriteRepository(
 
         return response is not None
 
-    async def update_tags_in_children(
+    async def update_tags_in_children_of(
             self,
+            user: domain.User,
             item: domain.Item,
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
@@ -145,6 +146,7 @@ class ItemsWriteRepository(
             total += 1
 
         await self.apply_downwards(
+            user=user,
             item=item,
             seen_items=set(),
             skip_items=set(),
@@ -159,6 +161,7 @@ class ItemsWriteRepository(
 
     async def apply_downwards(
             self,
+            user: domain.User,
             item: domain.Item,
             seen_items: set[UUID],
             skip_items: set[UUID],
@@ -183,10 +186,12 @@ class ItemsWriteRepository(
         if parent_first and item.uuid not in skip_items:
             await function(self, item)
 
-        children = await self.read_children(item.uuid)
+        children = await self.read_children_of(
+            user, item, ignore_collections=False)
 
         for child in children:
             await self.apply_downwards(
+                user=user,
                 item=child,
                 seen_items=seen_items,
                 skip_items=skip_items,
@@ -199,6 +204,7 @@ class ItemsWriteRepository(
 
     async def apply_upwards(
             self,
+            user: domain.User,
             item: domain.Item,
             top_first: bool,
             function: Callable[['ItemsWriteRepository',
@@ -210,7 +216,7 @@ class ItemsWriteRepository(
             Top -> Middle -> Low -> Current item (top first).
             Current item -> Low -> Middle -> Top (top last).
         """
-        ancestors = await self.get_simple_ancestors(item)
+        ancestors = await self.get_simple_ancestors(user, item)
 
         # original order is Top -> Middle -> Low -> Current
         if not top_first:
@@ -264,6 +270,7 @@ class ItemsWriteRepository(
 
     async def update_permissions_in_parents(
             self,
+            user: domain.User,
             item: domain.Item,
             new_permissions: domain.NewPermissions,
     ) -> None:
@@ -302,6 +309,7 @@ class ItemsWriteRepository(
             total += 1
 
         await self.apply_upwards(
+            user=user,
             item=item,
             top_first=True,
             function=_update_permissions,
@@ -314,6 +322,7 @@ class ItemsWriteRepository(
 
     async def update_permissions_in_children(
             self,
+            user: domain.User,
             item: domain.Item,
             new_permissions: domain.NewPermissions,
     ) -> None:
@@ -357,6 +366,7 @@ class ItemsWriteRepository(
             total += 1
 
         await self.apply_downwards(
+            user=user,
             item=item,
             seen_items=set(),
             skip_items=set(),

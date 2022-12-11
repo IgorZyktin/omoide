@@ -41,7 +41,7 @@ class AppProfileQuotasUseCase:
             if root is None:
                 return Success((domain.SpaceUsage.empty(user.uuid), 0))
 
-            size = await self.users_repo.calc_total_space_used(user, root)
-            total = await self.items_repo.count_items_by_owner(user.uuid)
+            size = await self.users_repo.calc_total_space_used_by(user)
+            total = await self.items_repo.count_items_by_owner(user)
 
         return Success((size, total))

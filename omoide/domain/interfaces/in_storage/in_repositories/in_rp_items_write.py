@@ -40,8 +40,9 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Delete item with given UUID."""
 
     @abc.abstractmethod
-    async def update_tags_in_children(
+    async def update_tags_in_children_of(
             self,
+            user: domain.User,
             item: domain.Item,
     ) -> None:
         """Apply parent tags to every item (and their children too)."""
@@ -57,6 +58,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     @abc.abstractmethod
     async def update_permissions_in_parents(
             self,
+            user: domain.User,
             item: domain.Item,
             new_permissions: domain.NewPermissions,
     ) -> None:
@@ -65,6 +67,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     @abc.abstractmethod
     async def update_permissions_in_children(
             self,
+            user: domain.User,
             item: domain.Item,
             new_permissions: domain.NewPermissions,
     ) -> None:
