@@ -481,3 +481,62 @@ class Statistic(Base):
 
     key: str = sa.Column(sa.String(length=SMALL), nullable=False)
     value: int = sa.Column(sa.Integer, nullable=False)
+
+
+class KnownTags(Base):
+    """User accessible cache of known tags.
+
+    Requires:
+        CREATE EXTENSION pg_trgm;
+        CREATE EXTENSION btree_gin;
+    """
+    __tablename__ = 'known_tags'
+
+    # primary and foreign keys ------------------------------------------------
+
+    user_uuid: UUID = sa.Column(pg.UUID(),
+                                sa.ForeignKey('users.uuid',
+                                              ondelete='CASCADE'),
+                                index=True,
+                                primary_key=True)
+    tag: str = sa.Column(sa.String(length=MEDIUM),
+                         nullable=False,
+                         index=True,
+                         primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    counter: int = sa.Column(sa.Integer, nullable=False)
+
+    __table_args__ = (
+        sa.Index(
+            'ix_known_tags',
+            tag,
+            postgresql_ops={'tag': 'text_pattern_ops'},
+        ),
+    )
+
+
+class KnownTagsAnon(Base):
+    """Anon user accessible cache of known tags."""
+    __tablename__ = 'known_tags_anon'
+
+    # primary and foreign keys ------------------------------------------------
+
+    tag: str = sa.Column(sa.String(length=MEDIUM),
+                         unique=True,
+                         nullable=False,
+                         index=True,
+                         primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    counter: int = sa.Column(sa.Integer, nullable=False)
+
+    __table_args__ = (
+        sa.Index(
+            'ix_known_tags_anon',
+            tag,
+            postgresql_ops={'tag': 'text_pattern_ops'},
+        ),
+    )

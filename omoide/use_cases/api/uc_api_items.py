@@ -59,6 +59,7 @@ class ApiItemCreateUseCase(BaseItemUseCase):
             payload.uuid = await self.items_repo.generate_item_uuid()
             uuid = await self.items_repo.create_item(user, payload)
             await self.metainfo_repo.create_empty_metainfo(user, uuid)
+            # TODO - consider updating known tags
 
         return Success(uuid)
 
@@ -121,6 +122,7 @@ class UpdateItemUseCase(BaseItemUseCase):
                     await self.alter_thumbnail_ext(item, operation)
 
                 # TODO - add validation
+                # TODO - consider updating known tags
 
             await self.items_repo.update_item(item)
             metainfo = await self.metainfo_repo.read_metainfo(uuid)
@@ -204,6 +206,8 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
 
             if not deleted:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            # TODO - consider updating known tags
 
         return Success(parent_uuid)
 
@@ -348,6 +352,7 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
             await self.metainfo_repo.update_metainfo(user, metainfo)
 
         asyncio.create_task(self.items_repo.update_tags_in_children(parent))
+        # TODO - consider updating known tags
 
         return Success(new_parent_uuid)
 
@@ -386,6 +391,7 @@ class ApiItemAlterTagsUseCase(BaseItemUseCase):
             await self.metainfo_repo.update_metainfo(user, metainfo)
 
         asyncio.create_task(self.items_repo.update_tags_in_children(item))
+        # TODO - consider updating known tags
 
         return Success(uuid)
 
@@ -454,5 +460,6 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
                 self.items_repo.update_permissions_in_children(item,
                                                                new_permissions)
             )
+            # TODO - consider updating known tags
 
         return Success(uuid)

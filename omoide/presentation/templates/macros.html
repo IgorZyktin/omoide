@@ -170,12 +170,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_album(request, album) %}
+{% macro render_album(request, album, aim_wrapper) %}
     {% if album %}
         <div class="pages">
             {% if album.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_preview', uuid=album.previous_item) }}">
+                   href="{{ request.url_for('app_preview', uuid=album.previous_item) + '?' + aim_wrapper.to_url_no_q() }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -201,10 +201,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_preview', uuid=page.value) }}"
+                    <a href="{{ request.url_for('app_preview', uuid=page.value) + '?' + aim_wrapper.to_url_no_q() }}"
                        class="active-page{{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ request.url_for('app_preview', uuid=page.value) }}"
+                    <a href="{{ request.url_for('app_preview', uuid=page.value)+ '?' + aim_wrapper.to_url_no_q() }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -212,7 +212,7 @@
             <span>&nbsp;</span>
             {% if album.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_preview', uuid=album.next_item) }}">
+                   href="{{ request.url_for('app_preview', uuid=album.next_item) + '?' + aim_wrapper.to_url_no_q() }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -236,11 +236,11 @@
                     {% endif %}
 
                     {% if pos.item.is_collection %}
-                        <a href="{{ request.url_for('app_browse', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url(page=pos.page) }}">
+                        <a href="{{ request.url_for('app_browse', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url_no_q(page=pos.page) }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% else %}
-                        <a href="{{ request.url_for('app_preview', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url() }}">
+                        <a href="{{ request.url_for('app_preview', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% endif %}
@@ -278,11 +278,11 @@
                                  alt="Download inner items"/></a>
                     {% else %}
                         {% if item.is_collection %}
-                            <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url() }}">
+                            <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
                                 {{ item.name or '???' }}
                             </a>
                         {% else %}
-                            <a href="{{ request.url_for('app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url() }}">
+                            <a href="{{ request.url_for('app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
                                 {{ item.name or '???' }}
                             </a>
                         {% endif %}

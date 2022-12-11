@@ -154,3 +154,118 @@ function jumpToTop(targetId) {
         document.getElementById(targetId).scrollIntoView()
     }
 }
+
+function clearGuesses(element) {
+    // Hide all guess variants for tag
+    let items = document.getElementsByClassName('autocomplete-items')
+    let inp = document.getElementById('query_element')
+
+    for (let i = 0; i < items.length; i++) {
+        if (element !== items[i] && element !== inp) {
+            items[i].parentNode.removeChild(items[i]);
+        }
+    }
+}
+
+function addActiveGuess(items, currentFocus) {
+    // Mark guess item as active
+    if (!items)
+        return -1
+
+    removeActive(items);
+
+    if (currentFocus >= items.length) currentFocus = 0
+    if (currentFocus < 0) currentFocus = (items.length - 1)
+    items[currentFocus].classList.add('autocomplete-active')
+    return currentFocus
+}
+
+function removeActive(element) {
+    // Mark all guesses as inactive
+    for (let i = 0; i < element.length; i++) {
+        element[i].classList.remove('autocomplete-active');
+    }
+}
+
+async function getGuessVariants(tag, endpoint) {
+    // Load possible variants
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${endpoint}?text=${tag.trim()}`,
+            type: 'GET',
+            timeout: 10000,
+            success: (response) => {
+                resolve(response['variants']);
+            },
+            error: (response) => {
+                reject(response);
+            }
+        })
+    })
+}
+
+
+function splitLastTag(text) {
+    // Extract last tag from user input
+    let plusIndex = text.lastIndexOf(' + ')
+    let minusIndex = text.lastIndexOf(' - ')
+
+    let index = -1
+    let separator = ''
+
+    if (plusIndex > minusIndex) {
+        separator = ' + '
+        index = plusIndex
+    } else if (minusIndex > -1) {
+        separator = ' - '
+        index = minusIndex
+    }
+
+    if (index === -1) {
+        return ['', '', text]
+    }
+
+    let body = text.substring(0, index)
+    let lastTag = text.substring(index + 3, text.length)
+
+    return [body, separator, lastTag]
+}
+
+async function guessTag(element, endpoint) {
+    // Help user by guessing tag
+    clearGuesses();
+
+    let text = element.value
+
+    if (!text) {
+        return
+    }
+
+    const [body, separator, tag] = splitLastTag(text)
+
+    if (tag.length <= 1) {
+        clearGuesses();
+        return
+    }
+
+    let dropdown = document.createElement('div');
+    dropdown.setAttribute('id', element.id + 'autocomplete-list');
+    dropdown.setAttribute('class', 'autocomplete-items');
+    element.parentNode.appendChild(dropdown);
+
+    let variants = await getGuessVariants(tag, endpoint)
+
+    for (const variant of variants) {
+        let item = document.createElement('div');
+        item.innerHTML = body + separator
+        item.innerHTML += '<strong>' + variant.substring(0, tag.length) + '</strong>';
+        item.innerHTML += variant.substring(tag.length);
+        item.innerHTML += "<input type='hidden' value='" + variant + "'>";
+        item.addEventListener('click', function (e) {
+            let ending = this.getElementsByTagName('input')[0].value;
+            element.value = body + separator + ending
+            clearGuesses();
+        });
+        dropdown.appendChild(item);
+    }
+}

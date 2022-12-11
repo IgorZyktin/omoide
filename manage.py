@@ -6,16 +6,22 @@ from typing import Optional
 from uuid import UUID
 
 import click
+from pydantic import SecretStr
 
 from omoide.commands.common import base_db
 from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
 
+LOG = custom_logging.get_logger(__name__)
+
 
 @click.group()
 def cli():
     """Manual CLI operations."""
+
+
+# Application related commands ------------------------------------------------
 
 
 @cli.command(
@@ -73,6 +79,44 @@ def cmd_change_password(uuid: str, password: str):
         raw_uuid=uuid,
         new_password=password,
     ))
+
+
+@cli.command(
+    name='refresh_known_tags',
+)
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--anon/--no-anon',
+    default=True,
+    help='Refresh known tags for anon user',
+)
+@click.option(
+    '--known/--no-known',
+    default=True,
+    help='Refresh known tags for known users',
+)
+def cmd_refresh_known_tags(**kwargs: str | bool):
+    """Refresh cache for known tags."""
+    from omoide.commands.application.refresh_known_tags import main, cfg
+
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle():
+        with helpers.timing(
+                callback=LOG.info,
+                start_template='Refreshing known tags...',
+        ):
+            main.run(config=config, database=database)
+
+
+# Filesystem related commands -------------------------------------------------
 
 
 @cli.command(

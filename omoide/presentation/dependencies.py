@@ -21,6 +21,7 @@ from omoide.presentation import constants
 from omoide.presentation import web
 from omoide.storage.repositories import asyncpg
 
+# TODO - use post init for this
 _config = app_config.init()
 db = Database(_config.db_url.get_secret_value())
 
@@ -173,6 +174,13 @@ def app_upload_use_case() -> use_cases.AppUploadUseCase:
 def api_search_use_case() -> use_cases.ApiSearchUseCase:
     """Get use case instance."""
     return use_cases.ApiSearchUseCase(
+        search_repo=search_repository,
+    )
+
+
+def api_suggest_tag_use_case() -> use_cases.ApiSuggestTagUseCase:
+    """Get use case instance."""
+    return use_cases.ApiSuggestTagUseCase(
         search_repo=search_repository,
     )
 

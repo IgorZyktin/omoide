@@ -27,7 +27,7 @@
 <body>
 <div id="header">
     <div class="query-container">
-        <a href="{{ url_for('app_home') + '?' + aim_wrapper.to_url() }}"
+        <a href="{{ url_for('app_home') + '?' + aim_wrapper.to_url_no_q() }}"
            title="Go to starting page"
            class="button qc-home">
             <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"
@@ -36,12 +36,15 @@
             <span>Home</span>
         </a>
 
-        <input id="query_element"
-               name="query"
-               type="search"
-               value="{{ aim_wrapper.query.raw_query or '' }}"
-               class="query_input qc-input"
-               placeholder="Enter one or more tags here" autofocus/>
+        <div id="guess" class="guess qc-input">
+            <input id="query_element"
+                   name="query"
+                   type="search"
+                   value="{{ aim_wrapper.query.raw_query or '' }}"
+                   class="query_input"
+                   autocomplete="off"
+                   placeholder="Enter one or more tags here" autofocus/>
+        </div>
 
         <a id="search_button"
            href="javascript:void(0)"
@@ -179,7 +182,7 @@
                 {% set parent_hint = user.root_item | string %}
             {% endif %}
 
-            <a href="{{ url_for('app_item_create', uuid=parent_hint) }}"
+            <a href="{{ url_for('app_item_create', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q() }}"
                title="Create new item"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
@@ -187,7 +190,7 @@
                 <span>Create</span>
             </a>
 
-            <a href="{{ url_for('app_upload', uuid=parent_hint) }}"
+            <a href="{{ url_for('app_upload', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q() }}"
                title="Upload media"
                class="button">
                 <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"
@@ -196,28 +199,28 @@
             </a>
 
             {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
-                <a href="{{ url_for('app_item_update', uuid=parent_hint) }}"
+                <a href="{{ url_for('app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q() }}"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
                          alt="Edit"/>
                     <span>Edit</span>
                 </a>
 
-                <a href="{{ url_for('app_item_delete', uuid=parent_hint) }}"
+                <a href="{{ url_for('app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q() }}"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
                          alt="Delete"/>
                     <span>Delete</span>
                 </a>
             {% else %}
-                <a href="{{ url_for('app_item_update', uuid=parent_hint) }}"
+                <a href="{{ url_for('app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q() }}"
                    class="button-disabled">
                     <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
                          alt="Edit"/>
                     <span>Edit</span>
                 </a>
 
-                <a href="{{ url_for('app_item_delete', uuid=parent_hint) }}"
+                <a href="{{ url_for('app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q() }}"
                    class="button-disabled">
                     <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
                          alt="Delete"/>
@@ -234,14 +237,45 @@
 {% block body %}{% endblock %}
 
 <script>
-    let input = document.getElementById('query_element');
+    $(document).ready(function () {
+        let input = document.getElementById('query_element');
+        let textLen = (input.value || '').length
+        input.focus();
+        input.setSelectionRange(textLen, textLen);
 
-    input.addEventListener('keyup', function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            document.getElementById('search_button').click();
-        }
-    });
+        let currentFocus = -1;
+
+        input.addEventListener('keyup', function (e) {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+                guessTag(this, '{{ request.url_for('api_suggest_tag') }}')
+            }
+        })
+
+        input.addEventListener('keydown', function (e) {
+            let cont = document.getElementById(this.id + 'autocomplete-list');
+            let items = []
+            if (cont) items = cont.getElementsByTagName('div');
+            if (e.key === 'ArrowDown') {
+                currentFocus++;
+                currentFocus = addActiveGuess(items, currentFocus);
+            } else if (e.key === 'ArrowUp') {
+                currentFocus--;
+                currentFocus = addActiveGuess(items, currentFocus);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentFocus > -1 && items && currentFocus < items.length) {
+                    items[currentFocus].click();
+                    currentFocus = -1
+                } else {
+                    goSearch()
+                }
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            clearGuesses(e.target);
+        })
+    })
 </script>
 
 </body>
