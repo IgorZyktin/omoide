@@ -13,16 +13,21 @@ class BcryptAuthenticator(interfaces.AbsAuthenticator):
         """Initialize instance."""
         self.complexity = complexity
 
-    def encode_password(self, given_password: bytes | str) -> bytes:
+    def encode_password(self, given_password: str) -> str:
         """Encode user password with chosen algorithm."""
-        if isinstance(given_password, str):
-            given_password = given_password.encode('utf-8')
-        return bcrypt.hashpw(given_password, bcrypt.gensalt(self.complexity))
+        result = bcrypt.hashpw(
+            password=given_password.encode('utf-8'),
+            salt=bcrypt.gensalt(self.complexity),
+        )
+        return result.decode('utf-8')
 
     def password_is_correct(
             self,
-            given_password: bytes,
-            reference: bytes,
+            given_password: str,
+            reference: str,
     ) -> bool:
         """Return True if user password is correct."""
-        return bcrypt.checkpw(given_password, reference)
+        return bcrypt.checkpw(
+            password=given_password.encode('utf-8'),
+            hashed_password=reference.encode('utf-8'),
+        )

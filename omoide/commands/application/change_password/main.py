@@ -29,10 +29,7 @@ async def run(
             logger.error('User with uuid {} does not exist', uuid)
 
         else:
-            as_bytes = new_password.encode()
-            new_encoded_password = authenticator.encode_password(as_bytes)
-            as_string = new_encoded_password.decode('utf-8')
-            user.password = as_string
+            user.password = authenticator.encode_password(new_password)
             await users_repo.update_user(user)
             logger.info('Changed password for user {} {}',
                         user.uuid, user.name)

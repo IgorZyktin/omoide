@@ -11,10 +11,13 @@ import sqlalchemy as sa
 
 from omoide import domain
 from omoide.domain import interfaces
+from omoide.infra import custom_logging
 from omoide.presentation import api_models
 from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg.rp_items_read import \
     ItemsReadRepository
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class ItemsWriteRepository(
@@ -71,32 +74,22 @@ class ItemsWriteRepository(
             item: domain.Item,
     ) -> UUID:
         """Update existing item."""
-        stmt = """
-        UPDATE items SET
-            parent_uuid = :parent_uuid,
-            name = :name,
-            is_collection = :is_collection,
-            content_ext = :content_ext,
-            preview_ext = :preview_ext,
-            thumbnail_ext = :thumbnail_ext,
-            tags = :tags,
-            permissions = :permissions
-        WHERE uuid = :uuid;
-        """
+        stmt = sa.update(
+            models.Item
+        ).values(
+            parent_uuid=item.parent_uuid,
+            name=item.name,
+            is_collection=item.is_collection,
+            content_ext=item.content_ext,
+            preview_ext=item.preview_ext,
+            thumbnail_ext=item.thumbnail_ext,
+            tags=item.tags,
+            permissions=[str(x) for x in item.permissions],
+        ).where(
+            models.Item.uuid == item.uuid,
+        )
 
-        values = {
-            'uuid': str(item.uuid),
-            'parent_uuid': str(item.parent_uuid) if item.parent_uuid else None,
-            'name': item.name,
-            'is_collection': item.is_collection,
-            'content_ext': item.content_ext,
-            'preview_ext': item.preview_ext,
-            'thumbnail_ext': item.thumbnail_ext,
-            'tags': item.tags,
-            'permissions': [str(x) for x in item.permissions],
-        }
-
-        return await self.db.execute(stmt, values)
+        return await self.db.execute(stmt)
 
     async def delete_item(
             self,
@@ -110,7 +103,6 @@ class ItemsWriteRepository(
         ).returning(1)
 
         response = await self.db.fetch_one(stmt)
-
         return response is not None
 
     async def update_tags_in_children_of(
@@ -122,8 +114,10 @@ class ItemsWriteRepository(
         total = 0
         start = time.monotonic()
 
-        # TODO - replace with logger call
-        print(f'Started updating tags in children of {item.uuid}')
+        LOG.info(
+            'Started updating tags in children of: {}',
+            item.uuid,
+        )
 
         async def _update_tags(
                 _self: ItemsWriteRepository,
@@ -154,10 +148,14 @@ class ItemsWriteRepository(
             function=_update_tags,
         )
 
-        # TODO - replace with logger call
         delta = time.monotonic() - start
-        print('Ended updating tags in '
-              f'children of {item.uuid}: {total} operations, {delta:0.3f} sec')
+        LOG.info(
+            'Ended updating tags in children of {}: '
+            '{} operations, {:0.3f} sec',
+            item.uuid,
+            total,
+            delta,
+        )
 
     async def apply_downwards(
             self,
@@ -278,8 +276,10 @@ class ItemsWriteRepository(
         total = 0
         start = time.monotonic()
 
-        # TODO - replace with logger call
-        print(f'Started updating permissions in parents of {item.uuid}')
+        LOG.info(
+            'Started updating permissions in parents of: {}',
+            item.uuid,
+        )
 
         async def _update_permissions(
                 _self: ItemsWriteRepository,
@@ -290,10 +290,13 @@ class ItemsWriteRepository(
 
             _permissions = new_permissions.apply_delta(set(_item.permissions))
 
-            print(f'\tSetting permissions in parents: {total:04d}. '
-                  f'{_item.uuid}: '
-                  f'{sorted(map(str, _item.permissions))} '
-                  f'-> {sorted(map(str, _permissions))}')
+            LOG.info(
+                'Setting permissions in parents: {:04d}. {}: {} -> {}',
+                total,
+                _item.uuid,
+                sorted(map(str, _item.permissions)),
+                sorted(map(str, _permissions)),
+            )
 
             stmt = sa.update(
                 models.Item
@@ -315,10 +318,14 @@ class ItemsWriteRepository(
             function=_update_permissions,
         )
 
-        # TODO - replace with logger call
         delta = time.monotonic() - start
-        print('Ended updating permissions in '
-              f'parents of {item.uuid}: {total} operations, {delta:0.3f} sec')
+        LOG.info(
+            'Ended updating permissions in '
+            'parents of {}: {} operations, {:0.3f} sec',
+            item.uuid,
+            total,
+            delta,
+        )
 
     async def update_permissions_in_children(
             self,
@@ -330,8 +337,10 @@ class ItemsWriteRepository(
         total = 0
         start = time.monotonic()
 
-        # TODO - replace with logger call
-        print(f'Started updating permissions in children of {item.uuid}')
+        LOG.info(
+            'Started updating permissions in children of: {}',
+            item.uuid,
+        )
 
         async def _update_permissions(
                 _self: ItemsWriteRepository,
@@ -347,10 +356,13 @@ class ItemsWriteRepository(
                     set(_item.permissions)
                 )
 
-            print(f'\tSetting permissions in children: {total:04d}. '
-                  f'{_item.uuid}: '
-                  f'{sorted(map(str, _item.permissions))} '
-                  f'-> {sorted(map(str, _permissions))}')
+            LOG.info(
+                'Setting permissions in children: {:04d}. {}: {} -> {}',
+                total,
+                _item.uuid,
+                sorted(map(str, _item.permissions)),
+                sorted(map(str, _permissions)),
+            )
 
             stmt = sa.update(
                 models.Item
@@ -374,7 +386,11 @@ class ItemsWriteRepository(
             function=_update_permissions,
         )
 
-        # TODO - replace with logger call
         delta = time.monotonic() - start
-        print('Ended updating permissions in '
-              f'children of {item.uuid}: {total} operations, {delta:0.3f} sec')
+        LOG.info(
+            'Ended updating permissions in children of {}: '
+            '{} operations, {:0.3f} sec',
+            item.uuid,
+            total,
+            delta,
+        )

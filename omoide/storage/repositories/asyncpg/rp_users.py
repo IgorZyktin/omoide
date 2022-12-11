@@ -37,7 +37,7 @@ class UsersWriteRepository(
     async def create_user(
             self,
             raw_user: api_models.CreateUserIn,
-            password: bytes,
+            password: str,
     ) -> UUID:
         """Create user and return UUID."""
         stmt = sa.insert(
@@ -45,7 +45,7 @@ class UsersWriteRepository(
         ).values(
             uuid=raw_user.uuid,
             login=raw_user.login,
-            password=password.decode('utf-8'),
+            password=password,
             name=raw_user.name,
         ).returning(
             models.User.uuid

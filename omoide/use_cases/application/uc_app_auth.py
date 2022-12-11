@@ -30,8 +30,8 @@ class AuthUseCase:
             return domain.User.new_anon()
 
         if authenticator.password_is_correct(
-                given_password=credentials.password.encode(),
-                reference=user.password.encode(),
+                given_password=credentials.password,
+                reference=user.password,
         ):
             return user
 
