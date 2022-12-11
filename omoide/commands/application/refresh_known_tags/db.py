@@ -12,10 +12,10 @@ from omoide.commands.common.base_db import BaseDatabase
 from omoide.storage.database import models
 
 
-def get_users(database: BaseDatabase) -> list[models.User]:
+def get_users(database: BaseDatabase) -> Iterator[models.User]:
     """Get all registered users."""
     with database.start_session() as session:
-        return session.query(models.User).order_by(models.User.name).all()
+        return session.query(models.User).order_by(models.User.name)
 
 
 # Functions for known users ---------------------------------------------------
@@ -24,23 +24,41 @@ def get_users(database: BaseDatabase) -> list[models.User]:
 def refresh_known_tags_for_known_user(
         database: BaseDatabase,
         user: models.User,
-) -> tuple[int, int, list[str]]:
+) -> tuple[int, int, set[str]]:
     """Refresh known tags for known user (without dropping)."""
-    total_tags = 0
     total_count = 0
-    to_drop: list[str] = []
+    actual_tags: set[str] = set()
+    to_drop: set[str] = set()
+
     with database.engine.begin() as conn:
+        cached_tags = get_all_cached_tags_for_known_user(conn, user)
         for tag in get_all_tags_for_known_user(conn, user):
-            total_tags += 1
+            actual_tags.add(tag)
             counter = count_presence_for_known_user(conn, user, tag)
             total_count += counter
 
             if counter == 0:
-                to_drop.append(tag)
+                to_drop.add(tag)
             else:
                 refresh_tag_counter_for_known_user(conn, user, tag, counter)
 
-    return total_tags, total_count, to_drop
+    to_drop.update(cached_tags - actual_tags)
+
+    return len(actual_tags), total_count, to_drop
+
+
+def get_all_cached_tags_for_known_user(
+        conn: Connection,
+        user: models.User,
+) -> set[str]:
+    """Get all unique tags from known tags table."""
+    stmt = sa.select(
+        sa.distinct(models.KnownTags.tag)
+    ).where(
+        models.KnownTags.user_uuid == user.uuid
+    )
+    response = conn.execute(stmt).fetchall()
+    return {x for x, in response}
 
 
 def get_all_tags_for_known_user(
@@ -114,7 +132,7 @@ def refresh_tag_counter_for_known_user(
 def drop_known_tags_for_known_user(
         database: BaseDatabase,
         user: models.User,
-        tags: list[str],
+        tags: set[str],
 ) -> int:
     """Drop given list of tags for user."""
     with database.engine.begin() as conn:
@@ -133,23 +151,38 @@ def drop_known_tags_for_known_user(
 
 def refresh_known_tags_for_anon_user(
         database: BaseDatabase,
-) -> tuple[int, int, list[str]]:
+) -> tuple[int, int, set[str]]:
     """Refresh known tags for anon user (without dropping)."""
-    total_tags = 0
     total_count = 0
-    to_drop: list[str] = []
+    actual_tags: set[str] = set()
+    to_drop: set[str] = set()
+
     with database.engine.begin() as conn:
+        cached_tags = get_all_cached_tags_for_anon_user(conn)
         for tag in get_all_tags_for_anon_user(conn):
-            total_tags += 1
+            actual_tags.add(tag)
             counter = count_presence_for_anon_user(conn, tag)
             total_count += counter
 
             if counter == 0:
-                to_drop.append(tag)
+                to_drop.add(tag)
             else:
                 refresh_tag_counter_for_anon_user(conn, tag, counter)
 
-    return total_tags, total_count, to_drop
+    to_drop.update(cached_tags - actual_tags)
+
+    return len(actual_tags), total_count, to_drop
+
+
+def get_all_cached_tags_for_anon_user(
+        conn: Connection,
+) -> set[str]:
+    """Get all unique tags for anon user (but not UUIDs)."""
+    stmt = sa.select(
+        sa.distinct(models.KnownTagsAnon.tag)
+    )
+    response = conn.execute(stmt).fetchall()
+    return {x for x, in response}
 
 
 def get_all_tags_for_anon_user(
@@ -222,7 +255,7 @@ def refresh_tag_counter_for_anon_user(
 
 def drop_known_tags_for_anon_user(
         database: BaseDatabase,
-        tags: list[str],
+        tags: set[str],
 ) -> int:
     """Drop given list of tags for anon user."""
     with database.engine.begin() as conn:
