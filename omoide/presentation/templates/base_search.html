@@ -239,6 +239,10 @@
 <script>
     $(document).ready(function () {
         let input = document.getElementById('query_element');
+        let textLen = (input.value || '').length
+        input.focus();
+        input.setSelectionRange(textLen, textLen);
+
         let currentFocus = -1;
 
         input.addEventListener('keyup', function (e) {
