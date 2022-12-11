@@ -21,6 +21,7 @@ from omoide.presentation import constants
 from omoide.presentation import web
 from omoide.storage.repositories import asyncpg
 
+# TODO - use post init for this
 _config = app_config.init()
 db = Database(_config.db_url.get_secret_value())
 

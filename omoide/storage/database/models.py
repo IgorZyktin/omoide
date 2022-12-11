@@ -499,10 +499,13 @@ class KnownTags(Base):
                                               ondelete='CASCADE'),
                                 index=True,
                                 primary_key=True)
+    tag: str = sa.Column(sa.String(length=MEDIUM),
+                         nullable=False,
+                         index=True,
+                         primary_key=True)
 
     # fields ------------------------------------------------------------------
 
-    tag: str = sa.Column(sa.String(length=MEDIUM), unique=True, nullable=False)
     counter: int = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
