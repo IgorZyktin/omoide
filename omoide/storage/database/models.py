@@ -509,8 +509,7 @@ class KnownTags(Base):
         sa.Index(
             'ix_known_tags',
             tag,
-            postgresql_using='gin',
-            postgresql_ops={'description': 'gin_trgm_ops'},
+            postgresql_ops={'tag': 'text_pattern_ops'},
         ),
     )
 
@@ -535,7 +534,6 @@ class KnownTagsAnon(Base):
         sa.Index(
             'ix_known_tags_anon',
             tag,
-            postgresql_using='gin',
-            postgresql_ops={'description': 'gin_trgm_ops'},
+            postgresql_ops={'tag': 'text_pattern_ops'},
         ),
     )
