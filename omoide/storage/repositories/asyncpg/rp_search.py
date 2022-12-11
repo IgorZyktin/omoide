@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """Search repository.
 """
-from typing import Optional
-from typing import Type
-
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
@@ -96,7 +93,7 @@ class SearchRepository(
             self,
             user: domain.User,
             aim: domain.Aim,
-            limit: int,
+            obligation: domain.Obligation,
     ) -> list[domain.Item]:
         """Find items for dynamic load."""
         stmt = sa.select(
@@ -109,51 +106,56 @@ class SearchRepository(
         if aim.paged:
             stmt = stmt.offset(aim.offset)
 
-        stmt = stmt.limit(min(aim.items_per_page, limit))
+        stmt = stmt.limit(
+            min(aim.items_per_page, obligation.max_results),
+        )
+
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**row) for row in response]
-
-    async def guess_tag_anon(
-            self,
-            text: str,
-            limit: int,
-    ) -> list[str]:
-        """Guess tag for anon user."""
-        return await self._guess_generic(
-            models.KnownTagsAnon, None, text, limit)
 
     async def guess_tag_known(
             self,
             user: domain.User,
-            text: str,
-            limit: int,
-    ) -> list[str]:
+            guess: domain.GuessTag,
+            obligation: domain.Obligation,
+    ) -> list[domain.GuessResult]:
         """Guess tag for known user."""
-        return await self._guess_generic(
-            models.KnownTags, user, text, limit)
+        assert user.is_registered
 
-    async def _guess_generic(
-            self,
-            model: Type[models.KnownTagsAnon] | Type[models.KnownTags],
-            user: Optional[domain.User],
-            text: str,
-            limit: int,
-    ) -> list[str]:
-        """Generic tags getter."""
         stmt = sa.select(
-            model.tag
+            models.KnownTags.tag,
+            models.KnownTags.counter,
         ).where(
-            model.tag.ilike(text + '%')  # type: ignore
+            models.KnownTags.tag.ilike(guess.text + '%'),  # type: ignore
+            models.KnownTags.user_uuid == user.uuid,
+        ).order_by(
+            sa.desc(models.KnownTags.counter),
+        ).limit(
+            obligation.max_results,
         )
 
-        if user is None:
-            assert issubclass(model, models.KnownTagsAnon)
-        else:
-            assert issubclass(model, models.KnownTags)
-            stmt = stmt.where(
-                models.KnownTags.user_uuid == user.uuid,
-            )
-
-        stmt = stmt.order_by(sa.desc(model.counter)).limit(limit)
         response = await self.db.fetch_all(stmt)
-        return [x['tag'] for x in response]
+        return [domain.GuessResult(**x) for x in response]
+
+    async def guess_tag_anon(
+            self,
+            user: domain.User,
+            guess: domain.GuessTag,
+            obligation: domain.Obligation,
+    ) -> list[domain.GuessResult]:
+        """Guess tag for anon user."""
+        assert user.is_not_registered
+
+        stmt = sa.select(
+            models.KnownTagsAnon.tag,
+            models.KnownTagsAnon.counter,
+        ).where(
+            models.KnownTagsAnon.tag.ilike(guess.text + '%'),  # type: ignore
+        ).order_by(
+            sa.desc(models.KnownTagsAnon.counter),
+        ).limit(
+            obligation.max_results,
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return [domain.GuessResult(**x) for x in response]

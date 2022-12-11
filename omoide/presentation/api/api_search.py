@@ -41,15 +41,13 @@ async def api_suggest_tag(
             dep.api_suggest_tag_use_case),
 ):
     """Help user by suggesting possible tags."""
-    if len(text) <= 1:
-        variants: list[str] = []
+    variants: list[str] = []
 
-    else:
-        result = await use_case.execute(user, text)
+    if len(text) > 1:
+        result = await use_case.execute(user, domain.GuessTag(text=text))
 
-        variants = []
         if isinstance(result, Success):
-            variants = result.value
+            variants = [x.tag for x in result.value]
 
     return {
         'variants': variants,

@@ -19,6 +19,16 @@ class User(BaseModel):
     name: str
     root_item: Optional[UUID]
 
+    @property
+    def is_registered(self) -> bool:
+        """Return True if user is registered."""
+        return self.uuid is not None
+
+    @property
+    def is_not_registered(self) -> bool:
+        """Return True if user is anon."""
+        return self.uuid is None
+
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
         return self.uuid is None
