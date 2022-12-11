@@ -239,11 +239,8 @@
 <script>
     $(document).ready(function () {
         let input = document.getElementById('query_element');
-        let textLen = (input.value || '').length
-        input.focus();
-        input.setSelectionRange(textLen, textLen);
-
         let currentFocus = -1;
+        setFocusAtTheEnd(input)
 
         input.addEventListener('keyup', function (e) {
             if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
@@ -266,6 +263,7 @@
                 if (currentFocus > -1 && items && currentFocus < items.length) {
                     items[currentFocus].click();
                     currentFocus = -1
+                    setFocusAtTheEnd(input)
                 } else {
                     goSearch()
                 }
