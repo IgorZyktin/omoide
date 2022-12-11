@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Search repository.
 """
+from typing import Optional
+from typing import Type
+
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
@@ -8,8 +11,6 @@ from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
-
-MAX_ITEMS_TO_RETURN = 1000
 
 
 class SearchRepository(
@@ -34,9 +35,7 @@ class SearchRepository(
                 models.User,
                 models.User.uuid == models.Item.owner_uuid,
             ).where(
-                models.User.uuid.in_(
-                    queries.public_user_uuids()
-                )
+                models.User.uuid.in_(queries.public_user_uuids())  # noqa
             )
         else:
             stmt = stmt.join(
@@ -97,6 +96,7 @@ class SearchRepository(
             self,
             user: domain.User,
             aim: domain.Aim,
+            limit: int,
     ) -> list[domain.Item]:
         """Find items for dynamic load."""
         stmt = sa.select(
@@ -109,6 +109,48 @@ class SearchRepository(
         if aim.paged:
             stmt = stmt.offset(aim.offset)
 
-        stmt = stmt.limit(min(aim.items_per_page, MAX_ITEMS_TO_RETURN))
+        stmt = stmt.limit(min(aim.items_per_page, limit))
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**row) for row in response]
+
+    async def guess_tag_anon(
+            self,
+            text: str,
+            limit: int,
+    ) -> list[str]:
+        """Guess tag for anon user."""
+        return await self._guess_generic(
+            models.KnownTagsAnon, None, text, limit)
+
+    async def guess_tag_known(
+            self,
+            user: domain.User,
+            text: str,
+            limit: int,
+    ) -> list[str]:
+        """Guess tag for known user."""
+        return await self._guess_generic(
+            models.KnownTagsAnon, user, text, limit)
+
+    async def _guess_generic(
+            self,
+            model: Type[models.KnownTagsAnon] | Type[models.KnownTags],
+            user: Optional[domain.User],
+            text: str,
+            limit: int,
+    ) -> list[str]:
+        """Generic tags getter."""
+        stmt = sa.select(
+            model.tag
+        ).where(
+            model.tag.ilike(text + '%')  # noqa
+        )
+
+        if user is not None:
+            stmt = stmt.where(
+                models.KnownTags.user_uuid == user.uuid,
+            )
+
+        stmt = stmt.order_by(sa.desc(model.counter)).limit(limit)
+        response = await self.db.fetch_all(stmt)
+        return [x['tag'] for x in response]

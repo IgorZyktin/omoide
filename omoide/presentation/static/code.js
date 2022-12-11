@@ -195,7 +195,7 @@ function splitLastTag(text) {
     }
 
     if (index === -1) {
-        return [text, separator, '']
+        return ['', '', text]
     }
 
     let body = text.substring(0, index)

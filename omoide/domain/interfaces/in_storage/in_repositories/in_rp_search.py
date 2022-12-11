@@ -27,5 +27,23 @@ class AbsSearchRepository(
             self,
             user: auth.User,
             aim: common.Aim,
+            limit: int,
     ) -> list[common.Item]:
         """Return matching items for search query."""
+
+    @abc.abstractmethod
+    async def guess_tag_anon(
+            self,
+            text: str,
+            limit: int,
+    ) -> list[str]:
+        """Guess tag for anon user."""
+
+    @abc.abstractmethod
+    async def guess_tag_known(
+            self,
+            user: auth.User,
+            text: str,
+            limit: int,
+    ) -> list[str]:
+        """Guess tag for known user."""

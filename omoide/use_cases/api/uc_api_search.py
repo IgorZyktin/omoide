@@ -36,7 +36,8 @@ class ApiSearchUseCase:
         assert not aim.paged
 
         async with self.search_repo.transaction():
-            items = await self.search_repo.get_matching_items(user, aim)
+            limit = 1000
+            items = await self.search_repo.get_matching_items(user, aim, limit)
 
         return Success(items)
 
@@ -57,14 +58,13 @@ class ApiSuggestTagUseCase:
             text: str,
     ) -> Result[errors.Error, list[domain.Item]]:
         """Return possible tags."""
-        # async with self.search_repo.transaction():
-        #     pass
-
-        variants = [
-            text,
-            f'{text}-alpha',
-            f'{text}-beta',
-            f'{text}-gamma',
-        ]
+        async with self.search_repo.transaction():
+            limit = 10
+            if user.is_anon():
+                variants = await self.search_repo \
+                    .guess_tag_anon(text, limit)
+            else:
+                variants = await self.search_repo \
+                    .guess_tag_known(user, text, limit)
 
         return Success(variants)
