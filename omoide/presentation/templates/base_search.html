@@ -43,7 +43,6 @@
                    value="{{ aim_wrapper.query.raw_query or '' }}"
                    class="query_input"
                    autocomplete="off"
-                   onKeyUp="guessTag(this, '{{ request.url_for('api_suggest_tag') }}')"
                    placeholder="Enter one or more tags here" autofocus/>
         </div>
 
@@ -240,16 +239,37 @@
 <script>
     $(document).ready(function () {
         let input = document.getElementById('query_element');
+        let currentFocus = -1;
 
-        input.addEventListener('keyup', function (event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                document.getElementById('search_button').click();
+        input.addEventListener('keyup', function (e) {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+                guessTag(this, '{{ request.url_for('api_suggest_tag') }}')
+            }
+        })
+
+        input.addEventListener('keydown', function (e) {
+            let cont = document.getElementById(this.id + 'autocomplete-list');
+            let items = []
+            if (cont) items = cont.getElementsByTagName('div');
+            if (e.key === 'ArrowDown') {
+                currentFocus++;
+                currentFocus = addActiveGuess(items, currentFocus);
+            } else if (e.key === 'ArrowUp') {
+                currentFocus--;
+                currentFocus = addActiveGuess(items, currentFocus);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentFocus > -1 && items && currentFocus < items.length) {
+                    items[currentFocus].click();
+                    currentFocus = -1
+                } else {
+                    goSearch()
+                }
             }
         });
 
-        document.addEventListener('click', function () {
-            clearGuesses();
+        document.addEventListener('click', function (e) {
+            clearGuesses(e.target);
         })
     })
 </script>

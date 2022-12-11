@@ -155,9 +155,36 @@ function jumpToTop(targetId) {
     }
 }
 
-function clearGuesses() {
+function clearGuesses(element) {
     // Hide all guess variants for tag
-    $('div.autocomplete-items').remove();
+    let items = document.getElementsByClassName('autocomplete-items')
+    let inp = document.getElementById('query_element')
+
+    for (let i = 0; i < items.length; i++) {
+        if (element !== items[i] && element !== inp) {
+            items[i].parentNode.removeChild(items[i]);
+        }
+    }
+}
+
+function addActiveGuess(items, currentFocus) {
+    // Mark guess item as active
+    if (!items)
+        return -1
+
+    removeActive(items);
+
+    if (currentFocus >= items.length) currentFocus = 0
+    if (currentFocus < 0) currentFocus = (items.length - 1)
+    items[currentFocus].classList.add('autocomplete-active')
+    return currentFocus
+}
+
+function removeActive(element) {
+    // Mark all guesses as inactive
+    for (let i = 0; i < element.length; i++) {
+        element[i].classList.remove('autocomplete-active');
+    }
 }
 
 async function getGuessVariants(tag, endpoint) {
@@ -222,6 +249,7 @@ async function guessTag(element, endpoint) {
     }
 
     let dropdown = document.createElement('div');
+    dropdown.setAttribute('id', element.id + 'autocomplete-list');
     dropdown.setAttribute('class', 'autocomplete-items');
     element.parentNode.appendChild(dropdown);
 
