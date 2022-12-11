@@ -143,7 +143,7 @@ class SearchRepository(
         stmt = sa.select(
             model.tag
         ).where(
-            model.tag.ilike(text + '%')  # noqa
+            model.tag.ilike(text + '%')  # type: ignore
         )
 
         if user is None:

@@ -86,7 +86,7 @@ def count_presence_for_known_user(
 
     counter = conn.execute(stmt).scalar()
 
-    return counter
+    return int(counter or 0)
 
 
 def refresh_tag_counter_for_known_user(
@@ -197,7 +197,7 @@ def count_presence_for_anon_user(
 
     counter = conn.execute(stmt).scalar()
 
-    return counter
+    return int(counter or 0)
 
 
 def refresh_tag_counter_for_anon_user(

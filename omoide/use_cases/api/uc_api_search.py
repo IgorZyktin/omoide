@@ -56,7 +56,7 @@ class ApiSuggestTagUseCase:
             self,
             user: domain.User,
             text: str,
-    ) -> Result[errors.Error, list[domain.Item]]:
+    ) -> Result[errors.Error, list[str]]:
         """Return possible tags."""
         async with self.search_repo.transaction():
             limit = 10

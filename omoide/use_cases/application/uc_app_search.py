@@ -50,7 +50,9 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
     ) -> Result[errors.Error, list[domain.Item]]:
         """Return items that correspond to query."""
         async with self.search_repo.transaction():
+            limit = 1000
             items = []
             if aim.query:
-                items = await self.search_repo.get_matching_items(user, aim)
+                items = await self.search_repo \
+                    .get_matching_items(user, aim, limit)
         return Success(items)

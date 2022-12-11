@@ -42,7 +42,7 @@ async def api_suggest_tag(
 ):
     """Help user by suggesting possible tags."""
     if len(text) <= 1:
-        variants = []
+        variants: list[str] = []
 
     else:
         result = await use_case.execute(user, text)
