@@ -263,9 +263,17 @@ async function guessTag(element, endpoint) {
         item.innerHTML += "<input type='hidden' value='" + variant + "'>";
         item.addEventListener('click', function (e) {
             let ending = this.getElementsByTagName('input')[0].value;
-            element.value = body + separator + ending
+            element.value = body + separator + ending + ' '
             clearGuesses();
+            setFocusAtTheEnd(element)
         });
         dropdown.appendChild(item);
     }
+}
+
+function setFocusAtTheEnd(input) {
+    // Set cursor to the end of the input element
+    let textLen = (input.value || '').length
+    input.focus();
+    input.setSelectionRange(textLen, textLen);
 }

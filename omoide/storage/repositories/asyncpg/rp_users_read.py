@@ -53,10 +53,9 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
         response = await self.db.fetch_all(stmt)
         return [domain.User(**record) for record in response]
 
-    async def calc_total_space_used(
+    async def calc_total_space_used_by(
             self,
             user: domain.User,
-            item: domain.Item,
     ) -> domain.SpaceUsage:
         """Return total amount of used space for user."""
         stmt = sa.select(

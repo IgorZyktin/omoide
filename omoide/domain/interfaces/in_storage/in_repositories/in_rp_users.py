@@ -21,7 +21,7 @@ class AbsUsersWriteRepository(in_rp_users_read.AbsUsersReadRepository):
     async def create_user(
             self,
             payload: api_models.CreateUserIn,
-            password: bytes,
+            password: str,
     ) -> UUID:
         """Create user and return UUID."""
 

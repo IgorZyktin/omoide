@@ -178,6 +178,7 @@ def api_search_use_case() -> use_cases.ApiSearchUseCase:
     )
 
 
+@cache
 def api_suggest_tag_use_case() -> use_cases.ApiSuggestTagUseCase:
     """Get use case instance."""
     return use_cases.ApiSuggestTagUseCase(

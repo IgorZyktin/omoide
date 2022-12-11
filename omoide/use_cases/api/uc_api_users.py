@@ -34,9 +34,7 @@ class CreateUserUseCase:
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
         raw_user.name = raw_user.name or raw_user.login
-        password = authenticator.encode_password(
-            raw_user.password.encode('utf-8')
-        )
+        password = authenticator.encode_password(raw_user.password)
 
         async with self.users_repo.transaction():
             raw_user.uuid = await self.users_repo.generate_user_uuid()

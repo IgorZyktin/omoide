@@ -49,11 +49,11 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
             is_owner=bool(response['is_owner']),
         )
 
-    async def count_all_children(
+    async def count_all_children_of(
             self,
-            uuid: UUID,
+            item: domain.Item,
     ) -> int:
-        """Count dependant items (including the parent itself)."""
+        """Count dependant items."""
         stmt = """
         WITH RECURSIVE nested_items AS (
             SELECT parent_uuid,
@@ -70,7 +70,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         FROM nested_items;
         """
 
-        response = await self.db.fetch_one(stmt, {'uuid': uuid})
+        response = await self.db.fetch_one(stmt, {'uuid': item.uuid})
 
         if response is None:
             return 0
@@ -92,40 +92,17 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
         return domain.Item(**response) if response else None
 
-    async def read_children(
-            self,
-            uuid: UUID,
-    ) -> list[domain.Item]:
-        """Return all direct descendants of the given item."""
-        stmt = """
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext
-        FROM items
-        WHERE parent_uuid = :uuid;
-        """
-
-        response = await self.db.fetch_all(stmt, {'uuid': str(uuid)})
-        return [domain.Item(**each) for each in response]
-
-    async def read_children_safe(
+    async def read_children_of(
             self,
             user: domain.User,
-            uuid: UUID,
-            ignore_collections: bool = False,
+            item: domain.Item,
+            ignore_collections: bool,
     ) -> list[domain.Item]:
         """Return all direct descendants of the given item."""
-        # TODO: this method is supposed to be universal
         stmt = sa.select(
             models.Item
         ).where(
-            models.Item.parent_uuid == uuid
+            models.Item.parent_uuid == item.uuid,
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
@@ -149,14 +126,16 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
             item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
-        ancestors = await self.get_simple_ancestors(item)
+        ancestors = await self.get_simple_ancestors(user, item)
         return domain.SimpleLocation(items=ancestors + [item])
 
     async def get_simple_ancestors(
             self,
+            user: domain.User,
             item: domain.Item,
     ) -> list[domain.Item]:
         """Return list of ancestors for given item."""
+        assert user
         # TODO(i.zyktin): what if user has no access
         #  to the item in the middle of dependence chain?
 
@@ -180,15 +159,16 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def count_items_by_owner(
             self,
-            uuid: UUID,
+            user: domain.User,
     ) -> int:
         """Return total amount of items for given user uuid."""
+        assert user.is_registered
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
             models.Item
         ).where(
-            models.Item.owner_uuid == uuid
+            models.Item.owner_uuid == user.uuid
         )
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])

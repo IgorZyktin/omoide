@@ -91,7 +91,7 @@ class AppItemUpdateUseCase:
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            total = await self.items_repo.count_all_children(uuid)
+            total = await self.items_repo.count_all_children_of(item)
             can_see = await self.users_repo.read_all_users(item.permissions)
 
         return Success((item, total, can_see))
@@ -125,7 +125,7 @@ class AppItemDeleteUseCase:
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            total = await self.items_repo.count_all_children(uuid)
+            total = await self.items_repo.count_all_children_of(item)
 
         return Success((item, total))
 
@@ -142,18 +142,27 @@ class AppItemsDownloadUseCase:
 
     async def execute(
             self,
+            policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
     ) -> Result[errors.Error, list[tuple[str, domain.Item]]]:
         """Business logic."""
-        numerated_items: list[tuple[str, domain.Item]] = []
-
         async with self.items_repo.transaction():
-            # TODO: read_children_safe -> read_children
-            items = await self.items_repo.read_children_safe(
-                user, uuid, ignore_collections=True)
+            error = await policy.is_restricted(user, uuid, actions.Item.READ)
+
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            items = await self.items_repo.read_children_of(
+                user, item, ignore_collections=True)
             total = len(items)
 
+            numerated_items: list[tuple[str, domain.Item]] = []
             if total:
                 digits = len(str(total))
                 number = 1

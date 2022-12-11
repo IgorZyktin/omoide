@@ -351,7 +351,9 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
             metainfo.updated_at = utils.now()
             await self.metainfo_repo.update_metainfo(user, metainfo)
 
-        asyncio.create_task(self.items_repo.update_tags_in_children(parent))
+        asyncio.create_task(
+            self.items_repo.update_tags_in_children_of(user, parent),
+        )
         # TODO - consider updating known tags
 
         return Success(new_parent_uuid)
@@ -390,7 +392,9 @@ class ApiItemAlterTagsUseCase(BaseItemUseCase):
             metainfo.updated_at = utils.now()
             await self.metainfo_repo.update_metainfo(user, metainfo)
 
-        asyncio.create_task(self.items_repo.update_tags_in_children(item))
+        asyncio.create_task(
+            self.items_repo.update_tags_in_children_of(user, item),
+        )
         # TODO - consider updating known tags
 
         return Success(uuid)
@@ -419,12 +423,12 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
             apply_to_parents=raw_new_permissions.apply_to_parents,
             apply_to_children=raw_new_permissions.apply_to_children,
             override=raw_new_permissions.override,
-            permissions_before=frozenset(
+            permissions_before={
                 UUID(x) for x in raw_new_permissions.permissions_before
-            ),
-            permissions_after=frozenset(
+            },
+            permissions_after={
                 UUID(x) for x in raw_new_permissions.permissions_after
-            ),
+            },
         )
 
         async with self.items_repo.transaction():
@@ -451,14 +455,14 @@ class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
 
         if new_permissions.apply_to_parents:
             asyncio.create_task(
-                self.items_repo.update_permissions_in_parents(item,
-                                                              new_permissions)
+                self.items_repo.update_permissions_in_parents(
+                    user, item, new_permissions)
             )
 
         if new_permissions.apply_to_children:
             asyncio.create_task(
-                self.items_repo.update_permissions_in_children(item,
-                                                               new_permissions)
+                self.items_repo.update_permissions_in_children(
+                    user, item, new_permissions)
             )
             # TODO - consider updating known tags
 

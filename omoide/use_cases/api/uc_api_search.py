@@ -35,9 +35,10 @@ class ApiSearchUseCase:
 
         assert not aim.paged
 
+        obligation = domain.Obligation(max_results=1000)
         async with self.search_repo.transaction():
-            limit = 1000
-            items = await self.search_repo.get_matching_items(user, aim, limit)
+            items = await self.search_repo \
+                .get_matching_items(user, aim, obligation)
 
         return Success(items)
 
@@ -55,16 +56,17 @@ class ApiSuggestTagUseCase:
     async def execute(
             self,
             user: domain.User,
-            text: str,
-    ) -> Result[errors.Error, list[str]]:
+            guess: domain.GuessTag,
+    ) -> Result[errors.Error, list[domain.GuessResult]]:
         """Return possible tags."""
+        obligation = domain.Obligation(max_results=10)
+
         async with self.search_repo.transaction():
-            limit = 10
-            if user.is_anon():
+            if user.is_registered:
                 variants = await self.search_repo \
-                    .guess_tag_anon(text, limit)
+                    .guess_tag_known(user, guess, obligation)
             else:
                 variants = await self.search_repo \
-                    .guess_tag_known(user, text, limit)
+                    .guess_tag_anon(user, guess, obligation)
 
         return Success(variants)
