@@ -12,10 +12,10 @@ from omoide.commands.common.base_db import BaseDatabase
 from omoide.storage.database import models
 
 
-def get_users(database: BaseDatabase) -> Iterator[models.User]:
+def get_users(database: BaseDatabase) -> list[models.User]:
     """Get all registered users."""
     with database.start_session() as session:
-        return session.query(models.User).order_by(models.User.name)
+        return session.query(models.User).order_by(models.User.name).all()
 
 
 # Functions for known users ---------------------------------------------------
