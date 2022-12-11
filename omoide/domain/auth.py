@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """User related interfaces and objects.
 """
-from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -19,13 +18,6 @@ class User(BaseModel):
     password: str
     name: str
     root_item: Optional[UUID]
-    visibility: Optional[str]
-    language: Optional[str]
-    last_seen: Optional[datetime]
-
-    def cannot_create_items(self) -> bool:
-        """Return True if user is not allowed to create items."""
-        return self.is_anon()
 
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
@@ -44,7 +36,4 @@ class User(BaseModel):
             password='',
             name='anon',
             root_item=None,
-            visibility=None,
-            language=None,
-            last_seen=None,
         )
