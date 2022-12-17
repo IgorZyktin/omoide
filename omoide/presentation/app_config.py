@@ -13,6 +13,7 @@ class Config(BaseSettings):
     injection: str = ''
     env: str = 'dev'
     host: str = '0.0.0.0'
+    prefix_size: int = 2
 
     class Config:
         env_prefix = 'omoide_'

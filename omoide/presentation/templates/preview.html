@@ -6,7 +6,7 @@
     <meta property="og:url"
           content="{{ request.url_for('app_preview', uuid=item.uuid) }}"/>
     <meta property="og:image"
-          content="/content/thumbnail/{{ item.owner_uuid }}/{{ item.thumbnail_path }}"/>
+          content="{{ locate(item).thumbnail }}"/>
     <meta property="og:description"
           content="{{ item.name }}"/>
 {% endblock %}
@@ -42,18 +42,18 @@
                             <img src="{{ url_for('static', path='empty.png') }}"
                                  alt="{{ item.name }}"/>
                         {%- else -%}
-                            <img src="/content/thumbnail/{{ item.owner_uuid }}/{{ item.thumbnail_path }}"
+                            <img src="{{ locate(item).thumbnail }}"
                                  alt="{{ item.name }}"/>
                         {%- endif -%}
                     </a>
                 </div>
             {% else %}
-                <a href="/content/content/{{ item.owner_uuid }}/{{ item.content_path }}">
+                <a href="{{ locate(item).content }}">
                     {%- if item.preview_ext is none -%}
                         <img src="{{ url_for('static', path='empty.png') }}"
                              alt="{{ item.name }}"/>
                     {%- else -%}
-                        <img src="/content/preview/{{ item.owner_uuid }}/{{ item.preview_path }}"
+                        <img src="{{ locate(item).preview }}"
                              alt="{{ item.name }}"/>
                     {%- endif -%}
                 </a>

@@ -9,7 +9,7 @@
 
     <div class="envelope-container">
         {% for item in items %}
-            {{ render_thumbnail_for_item(request, item, aim_wrapper) }}
+            {{ render_thumbnail_for_item(request, locate, item, aim_wrapper) }}
         {% endfor %}
     </div>
 

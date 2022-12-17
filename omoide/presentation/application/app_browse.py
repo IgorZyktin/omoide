@@ -60,6 +60,7 @@ async def app_browse(
         'api_url': request.url_for('api_browse', uuid=uuid),
         'result': result,
         'current_item': result.item,
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     if result.paginated:

@@ -5,6 +5,7 @@ import copy
 import functools
 import http
 import re
+import urllib.parse
 from typing import Any
 from typing import Callable
 from typing import NoReturn
@@ -268,3 +269,77 @@ def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
             tags_exclude.append(tag)
 
     return tags_include, tags_exclude
+
+
+def url_join(*args: str) -> str:
+    """Join url components."""
+    segments = [x.strip().strip('/') for x in args]
+    return '/'.join(segments)
+
+
+class Locator:
+    """Helper object that generates links for items."""
+
+    def __init__(
+            self,
+            request: Request,
+            prefix_size: int,
+            item: domain.Item,
+    ) -> None:
+        """Initialize instance."""
+        self.request = request
+        self.prefix_size = prefix_size
+        self.item = item
+
+    @functools.cached_property
+    def base(self) -> list[str]:
+        """Return root link components."""
+        return [
+            self.request.url_for('app_home'),
+            'content',
+        ]
+
+    @functools.cached_property
+    def content(self) -> str:
+        """Return URL to content."""
+        return url_join(
+            *self.base,
+            'content',
+            str(self.item.owner_uuid),
+            str(self.item.uuid)[:self.prefix_size],
+            str(self.item.uuid) + '.' + self.item.content_ext or '',
+        )
+
+    @functools.cached_property
+    def preview(self) -> str:
+        """Return URL to preview."""
+        return url_join(
+            *self.base,
+            'preview',
+            str(self.item.owner_uuid),
+            str(self.item.uuid)[:self.prefix_size],
+            str(self.item.uuid) + '.' + self.item.preview_ext or '',
+        )
+
+    @functools.cached_property
+    def thumbnail(self) -> str:
+        """Return URL to thumbnail."""
+        return url_join(
+            *self.base,
+            'thumbnail',
+            str(self.item.owner_uuid),
+            str(self.item.uuid)[:self.prefix_size],
+            str(self.item.uuid) + '.' + self.item.thumbnail_ext or '',
+        )
+
+
+def get_locator(
+        request: Request,
+        prefix_size: int,
+) -> Callable[[domain.Item], Locator]:
+    """Make new locator."""
+    return lambda item: Locator(
+        request=request,
+        prefix_size=prefix_size,
+        item=item,
+    )
