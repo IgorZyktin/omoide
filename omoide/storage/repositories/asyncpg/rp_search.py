@@ -159,3 +159,28 @@ class SearchRepository(
 
         response = await self.db.fetch_all(stmt)
         return [domain.GuessResult(**x) for x in response]
+
+    async def count_all_tags(
+            self,
+            user: domain.User,
+    ) -> list[tuple[str, int]]:
+        """Return statistics for known tags."""
+        if user.is_registered:
+            stmt = sa.select(
+                models.KnownTags.tag,
+                models.KnownTags.counter,
+            ).where(
+                models.KnownTags.user_uuid == user.uuid,
+            ).order_by(
+                sa.desc(models.KnownTags.counter),
+            )
+        else:
+            stmt = sa.select(
+                models.KnownTagsAnon.tag,
+                models.KnownTagsAnon.counter,
+            ).order_by(
+                sa.desc(models.KnownTagsAnon.counter),
+            )
+
+        response = await self.db.fetch_all(stmt)
+        return [(x['tag'], x['counter']) for x in response]

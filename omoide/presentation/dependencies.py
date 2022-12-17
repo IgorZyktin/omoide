@@ -353,3 +353,11 @@ def profile_new_use_case() -> use_cases.APIProfileNewUseCase:
     return use_cases.APIProfileNewUseCase(
         browse_repo=browse_repository,
     )
+
+
+@cache
+def profile_tags_use_case() -> use_cases.AppProfileTagsUseCase:
+    """Get use case instance."""
+    return use_cases.AppProfileTagsUseCase(
+        search_repo=search_repository,
+    )

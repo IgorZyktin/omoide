@@ -93,3 +93,34 @@ async def app_profile_new(
     }
 
     return dep.templates.TemplateResponse('profile_new.html', context)
+
+
+@router.get('/profile/tags')
+@web.login_required
+async def app_profile_tags(
+        request: Request,
+        user: domain.User = Depends(dep.get_current_user),
+        config: Config = Depends(dep.config),
+        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        use_case: use_cases.AppProfileTagsUseCase = Depends(
+            dep.profile_tags_use_case),
+        response_class: Type[Response] = HTMLResponse,
+):
+    """Show know tags."""
+    result = await use_case.execute(user)
+
+    if isinstance(result, Failure):
+        return web.redirect_from_error(request, result.error)
+
+    known_tags = result.value
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'known_tags': known_tags,
+        'sep_digits': utils.sep_digits,
+        'aim_wrapper': aim_wrapper,
+    }
+
+    return dep.templates.TemplateResponse('profile_tags.html', context)
