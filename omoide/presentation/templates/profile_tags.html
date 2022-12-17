@@ -4,7 +4,7 @@
     <div class="narrow-block">
         <table>
             <tr>
-                <th colspan="2">Known tags</th>
+                <th colspan="2">All tags</th>
             </tr>
             <tr>
                 <th>Tag</th>
@@ -13,7 +13,7 @@
             {% for tag, counter in known_tags %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('app_search') + '?' + aim_wrapper.to_url(q=tag) }}">{{ tag }}</a>
+                        <a href="{{ url_for('app_search') + '?' + aim_wrapper.to_url(q=tag) }}" class="to-top-link">{{ tag }}</a>
                     </td>
                     <td>{{ sep_digits(counter) }}</td>
                 </tr>
