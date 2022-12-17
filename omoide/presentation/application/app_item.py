@@ -54,6 +54,7 @@ async def app_item_create(
         'url': request.url_for('app_search'),
         'parent': parent,
         'permissions': permissions,
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return dep.templates.TemplateResponse('item_create.html', context)
@@ -177,6 +178,7 @@ async def app_items_download(
         'user': user,
         'uuid': uuid,
         'numerated_items': numerated_items,
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return dep.templates.TemplateResponse('items_download.html', context)

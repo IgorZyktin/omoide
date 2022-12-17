@@ -56,6 +56,7 @@ async def app_upload(
         'url': request.url_for('app_search'),
         'item': item,
         'permissions': permissions,
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return dep.templates.TemplateResponse('upload.html', context)

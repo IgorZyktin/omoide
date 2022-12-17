@@ -17,8 +17,19 @@
             src="{{ url_for('static', path='thirdparty/jquery-3.6.0.min.js') }}"></script>
     <script type="text/javascript"
             src="{{ url_for('static', path='thirdparty/bootstrap/js/bootstrap.min.js') }}"></script>
-    {% block head %}{% endblock %}
-    <title>Omoide</title>
+
+    {%- block head %}{% endblock -%}
+
+    {%- if current_item and current_item.name %}
+        <title>Omoide: {{ current_item.name }}</title>
+        <meta property="og:description"
+              content="Omoide: {{ current_item.name }}"/>
+    {% else %}
+        <title>Omoide</title>
+        <meta property="og:description"
+              content="Omoide"/>
+    {% endif -%}
+
     {%- if config.injection %}
         {{ config.injection|safe }}
     {% endif -%}

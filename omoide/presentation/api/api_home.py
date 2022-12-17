@@ -10,6 +10,7 @@ from omoide import use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import utils
 from omoide.presentation import web
+from omoide.presentation.app_config import Config
 
 router = fastapi.APIRouter()
 
@@ -19,8 +20,9 @@ async def api_home(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.AppHomeUseCase = Depends(dep.app_home_use_case),
+        config: Config = Depends(dep.config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
 ):
     """Return portion of items for home directory."""
     result = await use_case.execute(user, aim_wrapper.aim)
-    return utils.to_simple_items(request, result.value)
+    return utils.to_simple_items(request, config.prefix_size, result.value)

@@ -1,4 +1,4 @@
-{% extends "base_search.html" %}
+{% extends "browse_base.html" %}
 {% from "macros.html" import render_paginator_by_item, render_location, render_thumbnail_for_item %}
 
 {% block body %}
@@ -8,7 +8,7 @@
 
     <div class="envelope-container">
         {% for item in result.items %}
-            {{ render_thumbnail_for_item(request, item, aim_wrapper) }}
+            {{ render_thumbnail_for_item(request, locate, item, aim_wrapper) }}
         {% endfor %}
     </div>
 

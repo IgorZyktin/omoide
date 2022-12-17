@@ -44,21 +44,6 @@ class Item(BaseModel):
     tags: list[str] = []
     permissions: list[UUID] = []
 
-    @property
-    def content_path(self) -> str:
-        """Return file system path segment that will allow to find file."""
-        return f'{str(self.uuid)[:2]}/{self.uuid}.{self.content_ext}'
-
-    @property
-    def preview_path(self) -> str:
-        """Return file system path segment that will allow to find file."""
-        return f'{str(self.uuid)[:2]}/{self.uuid}.{self.preview_ext}'
-
-    @property
-    def thumbnail_path(self) -> str:
-        """Return file system path segment that will allow to find file."""
-        return f'{str(self.uuid)[:2]}/{self.uuid}.{self.thumbnail_ext}'
-
 
 class PositionedItem(BaseModel):
     """Primitive version of an item with position information."""

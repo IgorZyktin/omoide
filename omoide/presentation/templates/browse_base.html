@@ -1,0 +1,11 @@
+{% extends "basic.html" %}
+
+{% block head %}
+    {{ super() }}
+    <meta property="og:url"
+          content="{{ request.url_for('app_browse', uuid=current_item.uuid) }}"/>
+    <meta property="og:image"
+          content="{{ locate(current_item).thumbnail }}"/>
+    <meta property="og:description"
+          content="{{ current_item.name }}"/>
+{% endblock %}

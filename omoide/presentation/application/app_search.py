@@ -77,6 +77,7 @@ async def app_search(
         'matching_items': utils.sep_digits(matching_items),
         'delta': f'{delta:0.3f}',
         'endpoint': request.url_for('api_search'),
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return dep.templates.TemplateResponse(template, context)
