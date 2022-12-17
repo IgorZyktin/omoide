@@ -295,7 +295,7 @@ class Locator:
     def base(self) -> list[str]:
         """Return root link components."""
         return [
-            self.request.url_for('app_home'),
+            self.request.url_for('app_home') or '',
             'content',
         ]
 
