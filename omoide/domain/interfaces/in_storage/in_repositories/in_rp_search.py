@@ -46,3 +46,10 @@ class AbsSearchRepository(
             obligation: domain.Obligation,
     ) -> list[domain.GuessResult]:
         """Guess tag for anon user."""
+
+    @abc.abstractmethod
+    async def count_all_tags(
+            self,
+            user: domain.User,
+    ) -> list[tuple[str, int]]:
+        """Return statistics for known tags."""

@@ -1,0 +1,23 @@
+{% extends "base_search.html" %}
+
+{% block body %}
+    <div class="narrow-block">
+        <table>
+            <tr>
+                <th colspan="2">Known tags</th>
+            </tr>
+            <tr>
+                <th>Tag</th>
+                <th>Times used</th>
+            </tr>
+            {% for tag, counter in known_tags %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('app_search') + '?' + aim_wrapper.to_url(q=tag) }}">{{ tag }}</a>
+                    </td>
+                    <td>{{ sep_digits(counter) }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}
