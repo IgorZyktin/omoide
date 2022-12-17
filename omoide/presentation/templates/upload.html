@@ -162,6 +162,7 @@
                 $('#all-features-exif').hide()
                 EXPECTED_STEPS.delete('uploadEXIFProxy')
             }
+            UPLOAD_STATE.features['extractFeatures'] = $(this).is(':checked')
             UPLOAD_STATE.features['extractYear'] = $('#feature-exif-year').is(':checked')
             UPLOAD_STATE.features['extractMonthEN'] = $('#feature-exif-month-en').is(':checked')
             UPLOAD_STATE.features['extractMonthRU'] = $('#feature-exif-month-ru').is(':checked')

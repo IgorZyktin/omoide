@@ -616,10 +616,13 @@ async function generateMetainfoForProxy(proxy, uploadState) {
 
 async function generateFeaturesForProxy(proxy, uploadState) {
     // handle additional feature extraction
+    if (proxy.featuresGenerated)
+        return
+
     proxy.ready = false
     let useBackoff = $('#feature-exif-backoff').is(':checked')
 
-    if ($('#feature-exif').is(':checked')) {
+    if (uploadState.features['extractFeatures']) {
         if (uploadState.features['extractYear'])
             await _extractYearFeature(proxy, useBackoff)
 
@@ -1149,6 +1152,7 @@ function createUploadState(divId) {
             last: null,
         },
         features: {
+            extractFeatures: false,
             extractYear: true,
             extractMonthEN: false,
             extractMonthRU: true,
