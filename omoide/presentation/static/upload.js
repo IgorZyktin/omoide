@@ -211,6 +211,7 @@ function createFileProxy(file, number) {
             media_type: null,
             original_file_name: null,
             original_file_modified_at: null,
+            features: [],
         },
 
         // exif
@@ -616,10 +617,13 @@ async function generateMetainfoForProxy(proxy, uploadState) {
 
 async function generateFeaturesForProxy(proxy, uploadState) {
     // handle additional feature extraction
+    if (proxy.featuresGenerated)
+        return
+
     proxy.ready = false
     let useBackoff = $('#feature-exif-backoff').is(':checked')
 
-    if ($('#feature-exif').is(':checked')) {
+    if (uploadState.features['extractFeatures']) {
         if (uploadState.features['extractYear'])
             await _extractYearFeature(proxy, useBackoff)
 
@@ -658,9 +662,10 @@ async function _extractYearFeature(proxy, useBackoff) {
     if (!dt && useBackoff)
         dt = new Date(proxy.file.lastModified).toISOString()
 
-    if (dt)
+    if (dt) {
         proxy.tagsAdded.push(extractYearNumberStr(dt))
-    else
+        proxy.metainfo.features.push('extractYear')
+    } else
         console.log(`No year found for ${proxy.filename}`)
 }
 
@@ -694,6 +699,7 @@ async function _extractMonthENFeature(proxy, useBackoff) {
         let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
         let text = `${monthName} ${dayNumber}`
         proxy.tagsAdded.push(text)
+        proxy.metainfo.features.push('extractMonthEN')
     } else {
         console.log(`No EN month found for ${proxy.filename}`)
     }
@@ -729,6 +735,7 @@ async function _extractMonthRUFeature(proxy, useBackoff) {
         let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
         let text = `${dayNumber} ${monthName}`
         proxy.tagsAdded.push(text)
+        proxy.metainfo.features.push('extractMonthRU')
     } else {
         console.log(`No RU month found for ${proxy.filename}`)
     }
@@ -1149,6 +1156,7 @@ function createUploadState(divId) {
             last: null,
         },
         features: {
+            extractFeatures: false,
             extractYear: true,
             extractMonthEN: false,
             extractMonthRU: true,
