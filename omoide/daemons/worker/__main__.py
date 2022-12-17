@@ -96,7 +96,7 @@ from omoide.infra import custom_logging
 @click.option(
     '--warm-up-coefficient',
     type=float,
-    default=3.0,
+    default=1.3,
     help='Multiply waiting interval by this coefficient after download',
     show_default=True,
 )
