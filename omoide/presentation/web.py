@@ -5,7 +5,6 @@ import copy
 import functools
 import http
 import re
-import urllib.parse
 from typing import Any
 from typing import Callable
 from typing import NoReturn
@@ -277,6 +276,13 @@ def url_join(*args: str) -> str:
     return '/'.join(segments)
 
 
+def maybe_str(string: Optional[str]) -> str:
+    """Type safe string operation."""
+    if string is None:
+        return ''
+    return string
+
+
 class Locator:
     """Helper object that generates links for items."""
 
@@ -295,7 +301,7 @@ class Locator:
     def base(self) -> list[str]:
         """Return root link components."""
         return [
-            self.request.url_for('app_home') or '',
+            maybe_str(self.request.url_for('app_home')),
             'content',
         ]
 
@@ -307,7 +313,7 @@ class Locator:
             'content',
             str(self.item.owner_uuid),
             str(self.item.uuid)[:self.prefix_size],
-            str(self.item.uuid) + '.' + self.item.content_ext or '',
+            str(self.item.uuid) + '.' + maybe_str(self.item.content_ext),
         )
 
     @functools.cached_property
@@ -318,7 +324,7 @@ class Locator:
             'preview',
             str(self.item.owner_uuid),
             str(self.item.uuid)[:self.prefix_size],
-            str(self.item.uuid) + '.' + self.item.preview_ext or '',
+            str(self.item.uuid) + '.' + maybe_str(self.item.preview_ext),
         )
 
     @functools.cached_property
@@ -329,7 +335,7 @@ class Locator:
             'thumbnail',
             str(self.item.owner_uuid),
             str(self.item.uuid)[:self.prefix_size],
-            str(self.item.uuid) + '.' + self.item.thumbnail_ext or '',
+            str(self.item.uuid) + '.' + maybe_str(self.item.thumbnail_ext),
         )
 
 
