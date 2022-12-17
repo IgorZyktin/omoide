@@ -1,6 +1,16 @@
 {% extends "base_search.html" %}
 {% from "macros.html" import render_album, render_location %}
 
+{% block head %}
+    {{ super() }}
+    <meta property="og:url"
+          content="{{ request.url_for('app_preview', uuid=item.uuid) }}"/>
+    <meta property="og:image"
+          content="/content/thumbnail/{{ item.owner_uuid }}/{{ item.thumbnail_path }}"/>
+    <meta property="og:description"
+          content="{{ item.name }}"/>
+{% endblock %}
+
 {% block body %}
 
     {{ render_location(request, result.location, aim_wrapper) }}
