@@ -190,9 +190,9 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
                    i.uuid,
                    i.name
             FROM items i
-                     INNER JOIN parents ON i.uuid = parents.parent_uuid 
+                     INNER JOIN parents ON i.uuid = parents.parent_uuid
         )
-        SELECT uuid FROM parents;
+        SELECT parent_uuid FROM parents WHERE parent_uuid IS NOT NULL;
         """
 
         values = {
