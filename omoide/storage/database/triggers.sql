@@ -35,17 +35,6 @@ BEGIN
 END
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION insert_computed_permissions() RETURNS TRIGGER AS
-$$
-BEGIN
-    INSERT INTO computed_permissions
-    SELECT NEW.uuid, NEW.permissions
-    ON CONFLICT (item_uuid) DO UPDATE SET permissions = excluded.permissions;
-
-    RETURN NULL;
-END
-$$ LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION mark_files_as_orphans() RETURNS TRIGGER AS
 $$
 BEGIN
@@ -76,12 +65,6 @@ CREATE TRIGGER item_altering
     ON items
     FOR EACH ROW
 EXECUTE FUNCTION insert_computed_tags();
-
-CREATE TRIGGER item_altering2
-    AFTER INSERT OR UPDATE
-    ON items
-    FOR EACH ROW
-EXECUTE FUNCTION insert_computed_permissions();
 
 CREATE TRIGGER item_deletion
     AFTER DELETE
