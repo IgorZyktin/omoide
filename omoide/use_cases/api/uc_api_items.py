@@ -17,7 +17,8 @@ from omoide.presentation import api_models
 __all__ = [
     'ApiItemCreateUseCase',
     'ApiItemReadUseCase',
-    'UpdateItemUseCase',
+    'ApiUpdateItemUseCase',
+    'UpdateItemUseCase',  # FIXME
     'ApiItemDeleteUseCase',
     'ApiCopyThumbnailUseCase',
     'ApiItemAlterParentUseCase',
@@ -127,6 +128,76 @@ class ApiItemReadUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
         return Success(item)
+
+
+class ApiUpdateItemUseCase:
+    """Use case for updating an item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.users_repo = users_repo
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            item_in: api_models.ItemIn,
+    ) -> Result[errors.Error, bool]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
+
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            tags_before = list(item.tags)
+            # TODO - calculate tags difference
+
+            item.name = utils.maybe_take(item_in.name,
+                                         item.name)
+            item.parent_uuid = utils.maybe_take(item_in.parent_uuid,
+                                                item.parent_uuid)
+            item.is_collection = utils.maybe_take(item_in.is_collection,
+                                                  item.is_collection)
+
+            if not item_in.content_ext:
+                item.content_ext = None
+            else:
+                item.content_ext = item_in.content_ext
+
+            if not item_in.preview_ext:
+                item.preview_ext = None
+            else:
+                item.preview_ext = item_in.preview_ext
+
+            if not item_in.thumbnail_ext:
+                item.thumbnail_ext = None
+            else:
+                item.thumbnail_ext = item_in.thumbnail_ext
+
+            item.tags = utils.maybe_take(item.tags, item.tags)
+            item.permissions = utils.maybe_take(item_in.permissions,
+                                                item.permissions)
+
+            await self.items_repo.update_item(item)
+            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
+            await self.metainfo_repo.update_computed_tags(user, item)
+            await self.metainfo_repo.update_computed_permissions(user, item)
+
+        return Success(True)
 
 
 class UpdateItemUseCase(BaseItemUseCase):

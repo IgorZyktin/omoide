@@ -245,6 +245,15 @@ def update_item_use_case() -> use_cases.UpdateItemUseCase:
     )
 
 
+def api_update_item_use_case() -> use_cases.ApiUpdateItemUseCase:
+    """Get use case instance."""
+    return use_cases.ApiUpdateItemUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
+    )
+
+
 def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyThumbnailUseCase(

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on metainfo.
 """
+import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -268,6 +269,22 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             models.KnownTagsAnon
         ).where(
             models.KnownTagsAnon.counter <= 0,
+        )
+
+        await self.db.execute(stmt)
+
+    async def mark_metainfo_updated(
+            self,
+            item: domain.Item,
+            now: datetime.datetime,
+    ) -> None:
+        """Set last updated at given tine for the item."""
+        stmt = sa.update(
+            models.Metainfo
+        ).values(
+            updated_at=now
+        ).where(
+            models.Metainfo.item_uuid == item.uuid
         )
 
         await self.db.execute(stmt)

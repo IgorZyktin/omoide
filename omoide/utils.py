@@ -8,6 +8,7 @@ from typing import Any
 from typing import Iterable
 from typing import Iterator
 from typing import Optional
+from typing import TypeVar
 from uuid import UUID
 
 
@@ -219,3 +220,13 @@ def maybe_str(string: Optional[str]) -> str:
     if string is None:
         return ''
     return string
+
+
+T = TypeVar('T')
+
+
+def maybe_take(value_in: Optional[T], default: T) -> T:
+    """Safely exchange values."""
+    if value_in is None:
+        return default
+    return value_in

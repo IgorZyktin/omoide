@@ -2,6 +2,7 @@
 """Repository that perform CRUD operations on metainfo records.
 """
 import abc
+import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -94,3 +95,11 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             user_uuid: UUID,
     ) -> None:
         """Drop tags with counter less of equal to 0."""
+
+    @abc.abstractmethod
+    async def mark_metainfo_updated(
+            self,
+            item: domain.Item,
+            now: datetime.datetime,
+    ) -> None:
+        """Set last updated at given tine for the item."""

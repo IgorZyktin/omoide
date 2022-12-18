@@ -23,6 +23,18 @@ class PatchOperation(BaseModel):
     value: str | None
 
 
+class ItemIn(BaseModel):
+    """Input info for item creation."""
+    parent_uuid: Optional[UUID]
+    name: Optional[str]
+    is_collection: Optional[bool]
+    content_ext: Optional[str]
+    preview_ext: Optional[str]
+    thumbnail_ext: Optional[str]
+    tags: Optional[list[str]]
+    permissions: Optional[list[UUID]]
+
+
 class CreateItemIn(BaseModel):
     """Input info for item creation."""
     uuid: Optional[UUID]
@@ -100,7 +112,7 @@ class CreateUserIn(BaseModel):
     name: Optional[str]
 
 
-class UpdateItemIn(CreateItemIn):
+class UpdateItemIn(ItemIn):
     """Input info for item update."""
     uuid: UUID
     content_ext: Optional[str]

@@ -47,7 +47,7 @@ class CreateUserUseCase:
                 return Failure(errors.UserDoesNotExist(uuid=uuid))
 
             item_uuid = await self.items_repo.generate_item_uuid()
-            raw_item = api_models.CreateItemIn(
+            raw_item = api_models.ItemIn(
                 uuid=item_uuid,
                 parent_uuid=None,
                 name=user.name,
