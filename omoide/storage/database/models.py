@@ -156,8 +156,8 @@ class Item(Base):
     # other -------------------------------------------------------------------
 
     __table_args__ = (
-        sa.Index('ix_image_tags', tags, postgresql_using='gin'),
-        sa.Index('ix_image_permissions', permissions, postgresql_using='gin'),
+        sa.Index('ix_items_tags', tags, postgresql_using='gin'),
+        sa.Index('ix_items_permissions', permissions, postgresql_using='gin'),
     )
 
 
