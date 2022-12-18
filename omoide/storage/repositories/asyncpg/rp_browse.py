@@ -171,11 +171,10 @@ class BrowseRepository(
             query = """
             WITH children AS (
                 SELECT uuid
-                FROM items it
-                RIGHT JOIN computed_permissions cp ON cp.item_uuid = it.uuid
+                FROM items
                 WHERE parent_uuid = :item_uuid
-                AND (:user_uuid = ANY(cp.permissions)
-                 OR it.owner_uuid::text = :user_uuid)
+                AND (:user_uuid = ANY(permissions)
+                 OR owner_uuid::text = :user_uuid)
                 ORDER BY number
             )
             SELECT uuid,
@@ -311,7 +310,8 @@ WITH RECURSIVE nested_items AS
                items.is_collection AS is_collection,
                items.content_ext   AS content_ext,
                items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext
+               items.thumbnail_ext AS thumbnail_ext,
+               items.permissions   AS permissions
         FROM items
         WHERE items.parent_uuid = CAST(:uuid AS uuid)
         UNION
@@ -323,7 +323,8 @@ WITH RECURSIVE nested_items AS
                items.is_collection AS is_collection,
                items.content_ext   AS content_ext,
                items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext
+               items.thumbnail_ext AS thumbnail_ext,
+               items.permissions   AS permissions
         FROM items
                  INNER JOIN nested_items
                             ON items.parent_uuid = nested_items.uuid)
@@ -335,11 +336,11 @@ SELECT uuid,
        is_collection,
        content_ext,
        preview_ext,
-       thumbnail_ext
+       thumbnail_ext,
+       permissions
 FROM nested_items
-LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
 WHERE (owner_uuid = CAST(:user_uuid AS uuid)
-    OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions))
+    OR CAST(:user_uuid AS TEXT) = ANY(permissions))
             """
             values['user_uuid'] = str(user.uuid)
 
@@ -376,13 +377,12 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
                    preview_ext,
                    thumbnail_ext,
                    tags,
-                   it.permissions,
+                   permissions,
                    me.created_at
-            FROM items it
-            LEFT JOIN metainfo me on it.uuid = me.item_uuid
-            LEFT JOIN computed_permissions cp ON cp.item_uuid = uuid
+            FROM items
+            LEFT JOIN metainfo me on uuid = me.item_uuid
             WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
-                OR CAST(:user_uuid AS TEXT) = ANY(cp.permissions)))
+                OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
         )
         SELECT uuid,
                parent_uuid,
