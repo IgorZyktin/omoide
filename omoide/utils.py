@@ -212,3 +212,10 @@ def group_to_size(iterable: Iterable, group_size: int = 2,
     [(1, 2, 3), (4, 5, 6), (7, '?', '?')]
     """
     return zip_longest(*[iter(iterable)] * group_size, fillvalue=default)
+
+
+def maybe_str(string: Optional[str]) -> str:
+    """Type safe string operation."""
+    if string is None:
+        return ''
+    return string
