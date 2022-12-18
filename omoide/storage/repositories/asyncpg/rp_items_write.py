@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Repository that performs write operations on items.
 """
+import datetime
 import time
 from typing import Awaitable
 from typing import Callable
+from typing import Collection
 from uuid import UUID
 from uuid import uuid4
 
@@ -100,15 +102,57 @@ class ItemsWriteRepository(
 
         return await self.db.execute(stmt)
 
+    async def mark_files_as_orphans(
+            self,
+            item: domain.Item,
+            moment: datetime.datetime,
+    ) -> None:
+        """Mark corresponding files as useless."""
+        if item.content_ext is not None:
+            stmt = sa.insert(
+                models.OrphanFiles
+            ).values(
+                media_type='content',
+                owner_uuid=item.owner_uuid,
+                item_uuid=item.uuid,
+                ext=item.content_ext,
+                moment=moment,
+            )
+            await self.db.execute(stmt)
+
+        if item.preview_ext is not None:
+            stmt = sa.insert(
+                models.OrphanFiles
+            ).values(
+                media_type='preview',
+                owner_uuid=item.owner_uuid,
+                item_uuid=item.uuid,
+                ext=item.preview_ext,
+                moment=moment,
+            )
+            await self.db.execute(stmt)
+
+        if item.thumbnail_ext is not None:
+            stmt = sa.insert(
+                models.OrphanFiles
+            ).values(
+                media_type='thumbnail',
+                owner_uuid=item.owner_uuid,
+                item_uuid=item.uuid,
+                ext=item.thumbnail_ext,
+                moment=moment,
+            )
+            await self.db.execute(stmt)
+
     async def delete_item(
             self,
-            uuid: UUID,
+            item: domain.Item,
     ) -> bool:
         """Delete item with given UUID."""
         stmt = sa.delete(
             models.Item
         ).where(
-            models.Item.uuid == uuid
+            models.Item.uuid == item.uuid,
         ).returning(1)
 
         response = await self.db.fetch_one(stmt)
@@ -276,69 +320,6 @@ class ItemsWriteRepository(
 
         return response['total'] >= 1
 
-    async def update_permissions_in_parents(
-            self,
-            user: domain.User,
-            item: domain.Item,
-            added: set[UUID],
-            deleted: set[UUID],
-    ) -> None:
-        """Apply new permissions to every parent."""
-        total = 0
-        start = time.monotonic()
-
-        LOG.info(
-            'Started updating permissions in parents of: {}',
-            item.uuid,
-        )
-
-        async def _update_permissions(
-                _self: ItemsWriteRepository,
-                _item: domain.Item,
-        ) -> None:
-            """Alter permissions."""
-            nonlocal total
-
-            _permissions = set(_item.permissions) - deleted
-            _permissions = _permissions | added
-
-            LOG.info(
-                'Setting permissions in parents: {:04d}. {}: {} -> {}',
-                total,
-                _item.uuid,
-                sorted(map(str, _item.permissions)),
-                sorted(map(str, _permissions)),
-            )
-
-            stmt = sa.update(
-                models.Item
-            ).where(
-                models.Item.uuid == _item.uuid
-            ).values(
-                permissions=sorted(str(x) for x in _permissions)
-            )
-
-            async with self.transaction():
-                await _self.db.execute(stmt)
-
-            total += 1
-
-        await self.apply_upwards(
-            user=user,
-            item=item,
-            top_first=True,
-            function=_update_permissions,
-        )
-
-        delta = time.monotonic() - start
-        LOG.info(
-            'Ended updating permissions in '
-            'parents of {}: {} operations, {:0.3f} sec',
-            item.uuid,
-            total,
-            delta,
-        )
-
     async def update_permissions_in_children(
             self,
             user: domain.User,
@@ -411,3 +392,40 @@ class ItemsWriteRepository(
             total,
             delta,
         )
+
+    async def update_permissions(
+            self,
+            uuid: UUID,
+            override: bool,
+            added: Collection[UUID],
+            deleted: Collection[UUID],
+            all_permissions: Collection[UUID],
+    ) -> None:
+        """Apply new permissions for given item UUID."""
+        if deleted:
+            for user in deleted:
+                stmt = sa.update(
+                    models.Item
+                ).where(
+                    models.Item.uuid == uuid
+                ).values(
+                    permissions=sa.func.array_remove(
+                        models.Item.permissions,
+                        str(user),
+                    )
+                )
+                await self.db.execute(stmt)
+
+        if added:
+            for user in added:
+                stmt = sa.update(
+                    models.Item
+                ).where(
+                    models.Item.uuid == uuid
+                ).values(
+                    permissions=sa.func.array_append(
+                        models.Item.permissions,
+                        str(user),
+                    )
+                )
+                await self.db.execute(stmt)

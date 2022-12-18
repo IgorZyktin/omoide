@@ -2,6 +2,7 @@
 """Use case for items.
 """
 import asyncio
+import time
 from uuid import UUID
 
 from omoide import domain
@@ -9,6 +10,7 @@ from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
@@ -24,6 +26,8 @@ __all__ = [
     'ApiItemUpdateTagsUseCase',
     'ApiItemUpdatePermissionsUseCase',
 ]
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class BaseItemUseCase:
@@ -100,6 +104,25 @@ class BaseItemModifyUseCase:
 
                 await self.metainfo_repo.drop_unused_tags_for_anon_user()
 
+    async def recalculate_known_tags_indirect(
+            self,
+            user_uuid: UUID,
+            tags_added: list[str],
+            tags_deleted: list[str],
+    ) -> None:
+        """Update counters for known tags via permission update."""
+        if tags_added:
+            await self.metainfo_repo \
+                .increase_known_tags_for_known_user(user_uuid, tags_added)
+
+        if tags_deleted:
+            await self.metainfo_repo \
+                .decrease_known_tags_for_known_user(user_uuid,
+                                                    tags_deleted)
+
+            await self.metainfo_repo \
+                .drop_unused_tags_for_known_user(user_uuid)
+
 
 class ApiItemCreateUseCase(BaseItemModifyUseCase):
     """Use case for creating an item."""
@@ -137,7 +160,6 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
             await self.items_repo.create_item(user, item)
             await self.metainfo_repo.create_empty_metainfo(user, item)
             await self.metainfo_repo.update_computed_tags(user, item)
-            await self.metainfo_repo.update_computed_permissions(user, item)
             await self.recalculate_known_tags(item, item.tags, [])
 
         return Success(uuid)
@@ -211,7 +233,8 @@ class ApiItemUpdateUseCase(BaseItemUseCase):
                         str(operation.value) if operation.value else None)
 
             await self.items_repo.update_item(item)
-            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
+            await self.metainfo_repo.mark_metainfo_updated(item.uuid,
+                                                           utils.now())
 
         return Success(True)
 
@@ -245,7 +268,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             item.tags = new_tags
 
             await self.items_repo.update_item(item)
-            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
+            await self.metainfo_repo.mark_metainfo_updated(item.uuid,
+                                                           utils.now())
             await self.metainfo_repo.update_computed_tags(user, item)
             await self.recalculate_known_tags(item, tags_added, tags_deleted)
 
@@ -284,19 +308,17 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
             item.permissions = list(new_permissions.permissions_after)
             await self.items_repo.update_item(item)
-            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
-            await self.metainfo_repo.update_computed_permissions(user, item)
+            await self.metainfo_repo.mark_metainfo_updated(item.uuid,
+                                                           utils.now())
 
         added, deleted = utils.get_delta(
             new_permissions.permissions_before,
             new_permissions.permissions_after,
         )
 
-        # TODO - do it manually + consider updating known tags
         if new_permissions.apply_to_parents:
             asyncio.create_task(
-                self.items_repo.update_permissions_in_parents(
-                    user, item, added, deleted)
+                self.update_permissions_in_parents(user, item, added, deleted)
             )
 
         # TODO - do it manually + consider updating known tags
@@ -307,6 +329,54 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
             )
 
         return Success(uuid)
+
+    async def update_permissions_in_parents(
+            self,
+            user: domain.User,
+            item: domain.Item,
+            added: set[UUID],
+            deleted: set[UUID],
+    ) -> None:
+        """Apply permissions change to all parents."""
+        async with self.items_repo.transaction():
+            parents = await self.items_repo.get_all_parent_uuids(user, item)
+            now = utils.now()
+
+            if parents:
+                start = time.perf_counter()
+
+                LOG.info(
+                    'Started updating permissions in '
+                    'parents of: {} (added {}, deleted {})',
+                    item.uuid,
+                    sorted(str(x) for x in added),
+                    sorted(str(x) for x in deleted),
+                )
+
+                for i, parent_uuid in enumerate(parents, start=1):
+                    await self.items_repo \
+                        .update_permissions(parent_uuid, False, added,
+                                            deleted, item.permissions)
+
+                    for user_uuid in added:
+                        await self.recalculate_known_tags_indirect(
+                            user_uuid, item.tags, [])
+
+                    for user_uuid in deleted:
+                        await self.recalculate_known_tags_indirect(
+                            user_uuid, [], item.tags)
+
+                    await self.metainfo_repo \
+                        .mark_metainfo_updated(parent_uuid, now)
+
+                delta = time.perf_counter() - start
+                LOG.info(
+                    'Ended updating permissions in '
+                    'parents of {}: {} operations, {:0.4f} sec',
+                    item.uuid,
+                    len(parents),
+                    delta,
+                )
 
 
 class ApiItemDeleteUseCase(BaseItemModifyUseCase):
@@ -337,7 +407,8 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
 
             await self.recalculate_known_tags(item, [], item.tags)
 
-            deleted = await self.items_repo.delete_item(uuid)
+            await self.items_repo.mark_files_as_orphans(item, utils.now())
+            deleted = await self.items_repo.delete_item(item)
 
             if not deleted:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))

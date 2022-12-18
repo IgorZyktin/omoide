@@ -135,28 +135,6 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
-    async def update_computed_permissions(
-            self,
-            user: domain.User,
-            item: domain.Item,
-    ) -> None:
-        """Update computed permissions for this item."""
-        insert = pg_insert(
-            models.ComputedPermissions
-        ).values(
-            item_uuid=item.uuid,
-            permissions=[str(x) for x in item.permissions],
-        )
-
-        stmt = insert.on_conflict_do_update(
-            index_elements=[models.ComputedPermissions.item_uuid],
-            set_={
-                'permissions': insert.excluded.permissions,
-            }
-        )
-
-        await self.db.execute(stmt)
-
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
@@ -274,7 +252,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def mark_metainfo_updated(
             self,
-            item: domain.Item,
+            uuid: UUID,
             now: datetime.datetime,
     ) -> None:
         """Set last updated at given tine for the item."""
@@ -283,7 +261,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         ).values(
             updated_at=now
         ).where(
-            models.Metainfo.item_uuid == item.uuid
+            models.Metainfo.item_uuid == uuid
         )
 
         await self.db.execute(stmt)

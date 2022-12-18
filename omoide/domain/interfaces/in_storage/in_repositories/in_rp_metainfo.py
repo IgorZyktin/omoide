@@ -45,14 +45,6 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
         """Update computed tags for this item."""
 
     @abc.abstractmethod
-    async def update_computed_permissions(
-            self,
-            user: domain.User,
-            item: domain.Item,
-    ) -> None:
-        """Update computed permissions for this item."""
-
-    @abc.abstractmethod
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
@@ -98,7 +90,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def mark_metainfo_updated(
             self,
-            item: domain.Item,
+            uuid: UUID,
             now: datetime.datetime,
     ) -> None:
         """Set last updated at given tine for the item."""

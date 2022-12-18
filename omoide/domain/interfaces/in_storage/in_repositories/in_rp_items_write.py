@@ -2,6 +2,8 @@
 """Repository that performs write operations on items.
 """
 import abc
+import datetime
+from typing import Collection
 from uuid import UUID
 
 from omoide import domain
@@ -32,9 +34,17 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Update existing item."""
 
     @abc.abstractmethod
+    async def mark_files_as_orphans(
+            self,
+            item: domain.Item,
+            moment: datetime.datetime,
+    ) -> bool:
+        """Mark corresponding files as useless."""
+
+    @abc.abstractmethod
     async def delete_item(
             self,
-            uuid: UUID,
+            item: domain.Item,
     ) -> bool:
         """Delete item with given UUID."""
 
@@ -55,16 +65,6 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Return True if given item is actually a child."""
 
     @abc.abstractmethod
-    async def update_permissions_in_parents(
-            self,
-            user: domain.User,
-            item: domain.Item,
-            added: set[UUID],
-            deleted: set[UUID],
-    ) -> None:
-        """Apply new permissions to every parent."""
-
-    @abc.abstractmethod
     async def update_permissions_in_children(
             self,
             user: domain.User,
@@ -74,3 +74,14 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every child."""
+
+    @abc.abstractmethod
+    async def update_permissions(
+            self,
+            uuid: UUID,
+            override: bool,
+            added: Collection[UUID],
+            deleted: Collection[UUID],
+            all_permissions: Collection[UUID],
+    ) -> None:
+        """Apply new permissions for given item UUID."""
