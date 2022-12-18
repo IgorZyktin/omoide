@@ -279,9 +279,10 @@ def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     )
 
 
-def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
+@cache
+def api_item_update_parent_use_case() -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterParentUseCase(
+    return use_cases.ApiItemUpdateParentUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,

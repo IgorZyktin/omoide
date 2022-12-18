@@ -20,7 +20,7 @@ __all__ = [
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
     'ApiCopyThumbnailUseCase',
-    'ApiItemAlterParentUseCase',
+    'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
     'ApiItemUpdatePermissionsUseCase',
 ]
@@ -401,7 +401,7 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
         return Success(source_uuid)
 
 
-class ApiItemAlterParentUseCase(BaseItemMediaUseCase):
+class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     """Use case for changing parent item."""
 
     async def execute(

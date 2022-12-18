@@ -165,13 +165,13 @@ async def api_copy_thumbnail_from_given_item(
 
 
 @router.put('/{uuid}/parent/{new_parent_uuid}')
-async def api_item_alter_parent(
+async def api_item_update_parent(
         uuid: UUID,
         new_parent_uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemAlterParentUseCase = Depends(
-            dep.api_item_alter_parent_use_case),
+        use_case: use_cases.ApiItemUpdateParentUseCase = Depends(
+            dep.api_item_update_parent_use_case),
 ):
     """Set new parent for the item."""
     result = await use_case.execute(policy, user, uuid, new_parent_uuid)
