@@ -199,44 +199,6 @@ class ComputedTags(Base):
     )
 
 
-class ComputedPermissions(Base):
-    """Combined permissions of whole hierarchy of items.
-
-    No inheritance involved, permissions are separate for each record.
-
-    Records:
-        item1 with permissions {'family', 'friends'}
-        item2 with permissions {'colleagues'}
-
-    Computed permissions example:
-        item1 with permissions {'user_uuid1', 'user_uuid2', 'user_uuid3'}
-        item2 with permissions {'user_uuid3', 'user_uuid4'}
-    """
-    __tablename__ = 'computed_permissions'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid: UUID = sa.Column(pg.UUID(),
-                                sa.ForeignKey('items.uuid',
-                                              ondelete='CASCADE'),
-                                primary_key=True,
-                                nullable=False,
-                                index=True,
-                                unique=True)
-
-    # array fields ------------------------------------------------------------
-
-    permissions = sa.Column(pg.ARRAY(sa.Text), nullable=False)
-
-    # other -------------------------------------------------------------------
-
-    __table_args__ = (
-        sa.Index('ix_computed_permissions',
-                 permissions,
-                 postgresql_using='gin'),
-    )
-
-
 class Metainfo(Base):
     """Meta information for items."""
     __tablename__ = 'metainfo'
