@@ -25,7 +25,7 @@ def run(
             if user:
                 users.append(user)
         else:
-            users = [db.get_users(database)]
+            users = db.get_users(database)
 
         for user in users:
             start = time.perf_counter()
