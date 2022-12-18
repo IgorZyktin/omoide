@@ -237,9 +237,9 @@ def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
 
 
 @cache
-def api_item_update_use_case() -> use_cases.ApiUpdateItemUseCase:
+def api_item_update_use_case() -> use_cases.ApiItemUpdateUseCase:
     """Get use case instance."""
-    return use_cases.ApiUpdateItemUseCase(
+    return use_cases.ApiItemUpdateUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
     )

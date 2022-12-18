@@ -17,7 +17,7 @@ from omoide.presentation import api_models
 __all__ = [
     'ApiItemCreateUseCase',
     'ApiItemReadUseCase',
-    'ApiUpdateItemUseCase',
+    'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
     'ApiCopyThumbnailUseCase',
     'ApiItemAlterParentUseCase',
@@ -129,7 +129,7 @@ class ApiItemReadUseCase:
         return Success(item)
 
 
-class ApiUpdateItemUseCase(BaseItemUseCase):
+class ApiItemUpdateUseCase(BaseItemUseCase):
     """Use case for updating an item."""
 
     async def execute(

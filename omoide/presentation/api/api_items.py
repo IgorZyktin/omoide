@@ -69,7 +69,7 @@ async def api_partial_update_item(
         operations: list[api_models.PatchOperation],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiUpdateItemUseCase = Depends(
+        use_case: use_cases.ApiItemUpdateUseCase = Depends(
             dep.update_item_use_case),
 ):
     """Update item."""
