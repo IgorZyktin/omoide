@@ -159,10 +159,10 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Update known tags using this item."""
-        for tag in item.tags:
+        for tag in tags:
             tag = tag.lower()
             insert = pg_insert(
                 models.KnownTags
@@ -187,10 +187,10 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def decrease_known_tags_for_known_user(
             self,
             user_uuid: UUID,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
-        for tag in item.tags:
+        for tag in tags:
             tag = tag.lower()
             stmt = sa.update(
                 models.KnownTags
@@ -219,10 +219,10 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def increase_known_tags_for_anon_user(
             self,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Update known tags using this item."""
-        for tag in item.tags:
+        for tag in tags:
             tag = tag.lower()
             insert = pg_insert(
                 models.KnownTagsAnon
@@ -244,10 +244,10 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def decrease_known_tags_for_anon_user(
             self,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
-        for tag in item.tags:
+        for tag in tags:
             tag = tag.lower()
             stmt = sa.update(
                 models.KnownTagsAnon

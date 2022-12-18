@@ -90,11 +90,11 @@ class ApiItemCreateUseCase:
 
             for user_uuid in item.permissions:
                 await self.metainfo_repo \
-                    .increase_known_tags_for_known_user(user_uuid, item)
+                    .increase_known_tags_for_known_user(user_uuid, item.tags)
 
             if await self.users_repo.user_is_public(item.owner_uuid):
-                await self.metainfo_repo.increase_known_tags_for_anon_user(
-                    item)
+                await self.metainfo_repo \
+                    .increase_known_tags_for_anon_user(item.tags)
 
         return Success(uuid)
 
@@ -263,14 +263,15 @@ class ApiItemDeleteUseCase:
             if item.permissions:
                 for user_uuid in item.permissions:
                     await self.metainfo_repo \
-                        .decrease_known_tags_for_known_user(user_uuid, item)
+                        .decrease_known_tags_for_known_user(user_uuid,
+                                                            item.tags)
 
                 await self.metainfo_repo \
                     .drop_unused_tags_for_known_user(user_uuid)
 
             if await self.users_repo.user_is_public(item.owner_uuid):
                 await self.metainfo_repo \
-                    .decrease_known_tags_for_anon_user(item)
+                    .decrease_known_tags_for_anon_user(item.tags)
 
             await self.metainfo_repo.drop_unused_tags_for_anon_user(user_uuid)
 

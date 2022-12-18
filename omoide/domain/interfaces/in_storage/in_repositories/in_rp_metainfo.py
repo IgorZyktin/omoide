@@ -55,7 +55,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Increase counters for known tags using this item."""
 
@@ -63,7 +63,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     async def decrease_known_tags_for_known_user(
             self,
             user_uuid: UUID,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
 
@@ -77,14 +77,14 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def increase_known_tags_for_anon_user(
             self,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Increase counters for known tags using this item."""
 
     @abc.abstractmethod
     async def decrease_known_tags_for_anon_user(
             self,
-            item: domain.Item,
+            tags: list[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
 
