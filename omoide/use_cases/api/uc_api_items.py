@@ -172,6 +172,91 @@ class ApiItemUpdateUseCase(BaseItemUseCase):
         return Success(True)
 
 
+class ApiItemUpdateTagsUseCase:
+    """Set new tags for the item + all children."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.users_repo = users_repo
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            new_tags: list[str],
+    ) -> Result[errors.Error, UUID]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
+
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            tags_added, tags_deleted = self.get_delta(item.tags, new_tags)
+
+            item.tags = new_tags
+
+            await self.items_repo.update_item(item)
+            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
+
+            for user_uuid in item.permissions:
+                if tags_added:
+                    await self.metainfo_repo \
+                        .increase_known_tags_for_known_user(user_uuid,
+                                                            tags_added)
+
+                if tags_deleted:
+                    await self.metainfo_repo \
+                        .decrease_known_tags_for_known_user(user_uuid,
+                                                            tags_deleted)
+                    await self.metainfo_repo \
+                        .drop_unused_tags_for_known_user(user_uuid)
+
+            if await self.users_repo.user_is_public(item.owner_uuid):
+                if tags_added:
+                    await self.metainfo_repo \
+                        .increase_known_tags_for_anon_user(tags_added)
+
+                if tags_deleted:
+                    await self.metainfo_repo \
+                        .decrease_known_tags_for_anon_user(tags_deleted)
+
+                    await self.metainfo_repo.drop_unused_tags_for_anon_user(
+                        user_uuid)
+
+        # TODO - do it manually + consider updating known tags
+        asyncio.create_task(
+            self.items_repo.update_tags_in_children_of(user, item),
+        )
+
+        return Success(uuid)
+
+    @staticmethod
+    def get_delta(
+            tags_before: list[str],
+            tags_after: list[str],
+    ) -> tuple[list[str], list[str]]:
+        """Return which tags were changed."""
+        _tags_before = set(tags_before)
+        _tags_after = set(tags_after)
+        tags_added = list(_tags_after - _tags_before)
+        tags_deleted = list(_tags_before - _tags_after)
+        return tags_added, tags_deleted
+
+
 class ApiItemDeleteUseCase:
     """Use case for deleting an item."""
 
@@ -377,58 +462,6 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
         # TODO - consider updating known tags
 
         return Success(new_parent_uuid)
-
-
-class ApiItemUpdateTagsUseCase:
-    """Set new tags for the item + all children."""
-
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-        self.metainfo_repo = metainfo_repo
-        self.users_repo = users_repo
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-            new_tags: list[str],
-    ) -> Result[errors.Error, UUID]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
-
-            if error:
-                return Failure(error)
-
-            item = await self.items_repo.read_item(uuid)
-
-            if item is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-            item.tags = new_tags
-            await self.items_repo.update_item(item)
-
-            metainfo = await self.metainfo_repo.read_metainfo(uuid)
-
-            if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
-
-            metainfo.updated_at = utils.now()
-            await self.metainfo_repo.update_metainfo(user, metainfo)
-
-        asyncio.create_task(
-            self.items_repo.update_tags_in_children_of(user, item),
-        )
-        # TODO - consider updating known tags
-
-        return Success(uuid)
 
 
 class ApiItemAlterPermissionsUseCase(BaseItemUseCase):

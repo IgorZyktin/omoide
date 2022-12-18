@@ -137,6 +137,7 @@ class ItemsWriteRepository(
             Actually we're expecting the database trigger to do all the work.
             Trigger fires after update and computes new tags.
             """
+            # TODO - stop using trigger and do it manually
             nonlocal total
             stmt = sa.update(
                 models.Item
