@@ -68,6 +68,38 @@ class BaseItemModifyUseCase:
         self.metainfo_repo = metainfo_repo
         self.users_repo = users_repo
 
+    async def recalculate_known_tags(
+            self,
+            item: domain.Item,
+            tags_added: list[str],
+            tags_deleted: list[str],
+    ) -> None:
+        """Update counters for known tags."""
+        is_public = await self.users_repo.user_is_public(item.owner_uuid)
+
+        for user_uuid in item.permissions:
+            if tags_added:
+                await self.metainfo_repo \
+                    .increase_known_tags_for_known_user(user_uuid, tags_added)
+
+            if tags_deleted:
+                await self.metainfo_repo \
+                    .decrease_known_tags_for_known_user(user_uuid,
+                                                        tags_deleted)
+                await self.metainfo_repo \
+                    .drop_unused_tags_for_known_user(user_uuid)
+
+        if is_public:
+            if tags_added:
+                await self.metainfo_repo \
+                    .increase_known_tags_for_anon_user(tags_added)
+
+            if tags_deleted:
+                await self.metainfo_repo \
+                    .decrease_known_tags_for_anon_user(tags_deleted)
+
+                await self.metainfo_repo.drop_unused_tags_for_anon_user()
+
 
 class ApiItemCreateUseCase(BaseItemModifyUseCase):
     """Use case for creating an item."""
@@ -106,14 +138,7 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
             await self.metainfo_repo.create_empty_metainfo(user, item)
             await self.metainfo_repo.update_computed_tags(user, item)
             await self.metainfo_repo.update_computed_permissions(user, item)
-
-            for user_uuid in item.permissions:
-                await self.metainfo_repo \
-                    .increase_known_tags_for_known_user(user_uuid, item.tags)
-
-            if await self.users_repo.user_is_public(item.owner_uuid):
-                await self.metainfo_repo \
-                    .increase_known_tags_for_anon_user(item.tags)
+            await self.recalculate_known_tags(item, item.tags, [])
 
         return Success(uuid)
 
@@ -222,31 +247,7 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
             await self.metainfo_repo.update_computed_tags(user, item)
-
-            for user_uuid in item.permissions:
-                if tags_added:
-                    await self.metainfo_repo \
-                        .increase_known_tags_for_known_user(user_uuid,
-                                                            tags_added)
-
-                if tags_deleted:
-                    await self.metainfo_repo \
-                        .decrease_known_tags_for_known_user(user_uuid,
-                                                            tags_deleted)
-                    await self.metainfo_repo \
-                        .drop_unused_tags_for_known_user(user_uuid)
-
-            if await self.users_repo.user_is_public(item.owner_uuid):
-                if tags_added:
-                    await self.metainfo_repo \
-                        .increase_known_tags_for_anon_user(tags_added)
-
-                if tags_deleted:
-                    await self.metainfo_repo \
-                        .decrease_known_tags_for_anon_user(tags_deleted)
-
-                    await self.metainfo_repo.drop_unused_tags_for_anon_user(
-                        user_uuid)
+            await self.recalculate_known_tags(item, tags_added, tags_deleted)
 
         # TODO - do it manually + consider updating known tags
         asyncio.create_task(
@@ -334,25 +335,12 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
             if parent_uuid is None:
                 return Failure(errors.ItemNoDeleteForRoot(uuid=uuid))
 
+            await self.recalculate_known_tags(item, [], item.tags)
+
             deleted = await self.items_repo.delete_item(uuid)
 
             if not deleted:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-            if item.permissions:
-                for user_uuid in item.permissions:
-                    await self.metainfo_repo \
-                        .decrease_known_tags_for_known_user(user_uuid,
-                                                            item.tags)
-
-                await self.metainfo_repo \
-                    .drop_unused_tags_for_known_user(user_uuid)
-
-            if await self.users_repo.user_is_public(item.owner_uuid):
-                await self.metainfo_repo \
-                    .decrease_known_tags_for_anon_user(item.tags)
-
-            await self.metainfo_repo.drop_unused_tags_for_anon_user(user_uuid)
 
         return Success(parent_uuid)
 

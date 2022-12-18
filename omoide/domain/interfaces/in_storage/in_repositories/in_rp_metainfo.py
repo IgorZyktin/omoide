@@ -92,7 +92,6 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def drop_unused_tags_for_anon_user(
             self,
-            user_uuid: UUID,
     ) -> None:
         """Drop tags with counter less of equal to 0."""
 
