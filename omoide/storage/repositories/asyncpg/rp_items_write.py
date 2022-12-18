@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that performs write operations on items.
 """
+import datetime
 import time
 from typing import Awaitable
 from typing import Callable
@@ -100,15 +101,57 @@ class ItemsWriteRepository(
 
         return await self.db.execute(stmt)
 
+    async def mark_files_as_orphans(
+            self,
+            item: domain.Item,
+            moment: datetime.datetime,
+    ) -> None:
+        """Mark corresponding files as useless."""
+        if item.content_ext is not None:
+            stmt = sa.insert(
+                models.OrphanFiles
+            ).values(
+                media_type='content',
+                owner_uuid=item.owner_uuid,
+                item_uuid=item.uuid,
+                ext=item.content_ext,
+                moment=moment,
+            )
+            await self.db.execute(stmt)
+
+        if item.preview_ext is not None:
+            stmt = sa.insert(
+                models.OrphanFiles
+            ).values(
+                media_type='preview',
+                owner_uuid=item.owner_uuid,
+                item_uuid=item.uuid,
+                ext=item.preview_ext,
+                moment=moment,
+            )
+            await self.db.execute(stmt)
+
+        if item.thumbnail_ext is not None:
+            stmt = sa.insert(
+                models.OrphanFiles
+            ).values(
+                media_type='thumbnail',
+                owner_uuid=item.owner_uuid,
+                item_uuid=item.uuid,
+                ext=item.thumbnail_ext,
+                moment=moment,
+            )
+            await self.db.execute(stmt)
+
     async def delete_item(
             self,
-            uuid: UUID,
+            item: domain.Item,
     ) -> bool:
         """Delete item with given UUID."""
         stmt = sa.delete(
             models.Item
         ).where(
-            models.Item.uuid == uuid
+            models.Item.uuid == item.uuid,
         ).returning(1)
 
         response = await self.db.fetch_one(stmt)

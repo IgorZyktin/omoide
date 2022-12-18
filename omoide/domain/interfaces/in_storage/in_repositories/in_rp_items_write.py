@@ -2,6 +2,7 @@
 """Repository that performs write operations on items.
 """
 import abc
+import datetime
 from uuid import UUID
 
 from omoide import domain
@@ -32,9 +33,17 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Update existing item."""
 
     @abc.abstractmethod
+    async def mark_files_as_orphans(
+            self,
+            item: domain.Item,
+            moment: datetime.datetime,
+    ) -> bool:
+        """Mark corresponding files as useless."""
+
+    @abc.abstractmethod
     async def delete_item(
             self,
-            uuid: UUID,
+            item: domain.Item,
     ) -> bool:
         """Delete item with given UUID."""
 

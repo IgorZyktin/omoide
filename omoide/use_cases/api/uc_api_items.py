@@ -335,7 +335,8 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
 
             await self.recalculate_known_tags(item, [], item.tags)
 
-            deleted = await self.items_repo.delete_item(uuid)
+            await self.items_repo.mark_files_as_orphans(item, utils.now())
+            deleted = await self.items_repo.delete_item(item)
 
             if not deleted:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
