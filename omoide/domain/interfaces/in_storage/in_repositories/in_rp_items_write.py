@@ -7,7 +7,6 @@ from uuid import UUID
 from omoide import domain
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_read import AbsItemsReadRepository
-from omoide.presentation import api_models
 
 
 class AbsItemsWriteRepository(AbsItemsReadRepository):
@@ -21,7 +20,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     async def create_item(
             self,
             user: domain.User,
-            payload: api_models.CreateItemIn,
+            item: domain.Item,
     ) -> UUID:
         """Return UUID for created item."""
 
@@ -60,7 +59,8 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every parent."""
 
@@ -69,6 +69,8 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            override: bool,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every child."""

@@ -5,9 +5,11 @@ import datetime
 import re
 from itertools import zip_longest
 from typing import Any
+from typing import Collection
 from typing import Iterable
 from typing import Iterator
 from typing import Optional
+from typing import TypeVar
 from uuid import UUID
 
 
@@ -212,3 +214,32 @@ def group_to_size(iterable: Iterable, group_size: int = 2,
     [(1, 2, 3), (4, 5, 6), (7, '?', '?')]
     """
     return zip_longest(*[iter(iterable)] * group_size, fillvalue=default)
+
+
+def maybe_str(string: Optional[str]) -> str:
+    """Type safe string operation."""
+    if string is None:
+        return ''
+    return string
+
+
+T = TypeVar('T')
+
+
+def maybe_take(value_in: Optional[T], default: T) -> T:
+    """Safely exchange values."""
+    if value_in is None:
+        return default
+    return value_in
+
+
+def get_delta(
+        before: Collection[T],
+        after: Collection[T],
+) -> tuple[set[T], set[T]]:
+    """Return which elements were added and deleted."""
+    before_set = set(before)
+    after_set = set(after)
+    added = after_set - before_set
+    deleted = before_set - after_set
+    return added, deleted

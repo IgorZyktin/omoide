@@ -39,3 +39,10 @@ class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
             user: domain.User,
     ) -> domain.SpaceUsage:
         """Return total amount of used space for user."""
+
+    @abc.abstractmethod
+    async def user_is_public(
+            self,
+            uuid: UUID,
+    ) -> bool:
+        """Return True if given user is public."""

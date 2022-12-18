@@ -186,6 +186,7 @@ def api_suggest_tag_use_case() -> use_cases.ApiSuggestTagUseCase:
     )
 
 
+@cache
 def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
     """Get use case instance."""
     return use_cases.AppItemCreateUseCase(
@@ -194,6 +195,7 @@ def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
     )
 
 
+@cache
 def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.AppItemUpdateUseCase(
@@ -202,6 +204,7 @@ def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     )
 
 
+@cache
 def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.AppItemDeleteUseCase(
@@ -215,31 +218,55 @@ def app_items_download_use_case() -> use_cases.AppItemsDownloadUseCase:
         items_repo=items_read_repository,
     )
 
+
 # api item related use cases --------------------------------------------------
 
 
+@cache
 def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
     return use_cases.ApiItemCreateUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
     )
 
 
+@cache
 def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
     """Get use case instance."""
     return use_cases.ApiItemReadUseCase(
         items_repo=items_write_repository,
+    )
+
+
+@cache
+def api_item_update_use_case() -> use_cases.ApiItemUpdateUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemUpdateUseCase(
+        items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
     )
 
 
-# TODO: remove this
-def update_item_use_case() -> use_cases.UpdateItemUseCase:
+@cache
+def api_item_update_tags_use_case() -> use_cases.ApiItemUpdateTagsUseCase:
     """Get use case instance."""
-    return use_cases.UpdateItemUseCase(
+    return use_cases.ApiItemUpdateTagsUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
+    )
+
+
+@cache
+def api_item_update_permissions_use_case() \
+        -> use_cases.ApiItemUpdatePermissionsUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemUpdatePermissionsUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
     )
 
 
@@ -252,48 +279,30 @@ def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     )
 
 
-def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
+@cache
+def api_item_update_parent_use_case() -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
-    return use_cases.ApiItemAlterParentUseCase(
+    return use_cases.ApiItemUpdateParentUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,
     )
 
 
-def api_item_alter_tags_use_case() -> use_cases.ApiItemAlterTagsUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemAlterTagsUseCase(
-        items_repo=items_write_repository,
-        metainfo_repo=metainfo_repository,
-    )
-
-
-def api_item_alter_permissions_use_case() \
-        -> use_cases.ApiItemAlterPermissionsUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemAlterPermissionsUseCase(
-        items_repo=items_write_repository,
-        metainfo_repo=metainfo_repository,
-    )
-
-
-# api related use cases -------------------------------------------------------
-
-def api_browse_use_case() -> use_cases.APIBrowseUseCase:
-    """Get use case instance."""
-    return use_cases.APIBrowseUseCase(
-        browse_repo=browse_repository,
-    )
-
-
-# api item related use cases --------------------------------------------------
-
+@cache
 def api_item_delete_use_case() -> use_cases.ApiItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.ApiItemDeleteUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
+    )
+
+
+def api_browse_use_case() -> use_cases.APIBrowseUseCase:
+    """Get use case instance."""
+    return use_cases.APIBrowseUseCase(
+        browse_repo=browse_repository,
     )
 
 

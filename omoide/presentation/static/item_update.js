@@ -23,10 +23,11 @@ function alterModelBoolField(element, fieldName) {
     newModel[fieldName] = $(element).is(':checked')
 }
 
-function alterModelParentField(element, fieldName) {
+function alterModelParentField(element) {
     // change item model field
     let value = $(element).val().trim()
-    newModel[fieldName] = value || null
+    newModel['parent_uuid'] = value || null
+    tryLoadingThumbnail(newModel['parent_uuid'], $('#thumbnail_parent'))
 }
 
 function alterModelTagsField(element) {

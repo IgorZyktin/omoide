@@ -12,7 +12,6 @@ import sqlalchemy as sa
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.infra import custom_logging
-from omoide.presentation import api_models
 from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg.rp_items_read import \
     ItemsReadRepository
@@ -43,21 +42,31 @@ class ItemsWriteRepository(
     async def create_item(
             self,
             user: domain.User,
-            payload: api_models.CreateItemIn,
+            item: domain.Item,
     ) -> UUID:
         """Create item and return UUID."""
+        if item.parent_uuid is None:
+            parent_uuid = None
+        else:
+            parent_uuid = str(item.parent_uuid)
+
+        def get_number():
+            if item.number == -1:
+                return sa.func.max(models.Item.number) + 1
+            return item.number
+
         select_stmt = sa.select(
-            sa.literal(str(payload.uuid)).label('uuid'),
-            sa.literal(payload.safe_parent_uuid).label('parent_uuid'),
+            sa.literal(str(item.uuid)).label('uuid'),
+            sa.literal(parent_uuid).label('parent_uuid'),
             sa.literal(str(user.uuid)).label('owner_uuid'),
-            (sa.func.max(models.Item.number) + 1).label('number'),
-            sa.literal(payload.name).label('name'),
-            sa.literal(payload.is_collection).label('is_collection'),
-            sa.literal(None).label('content_ext'),
-            sa.literal(None).label('preview_ext'),
-            sa.literal(None).label('thumbnail_ext'),
-            sa.literal(payload.safe_tags).label('tags'),
-            sa.literal(payload.safe_permissions).label('permissions'),
+            (get_number()).label('number'),
+            sa.literal(item.name).label('name'),
+            sa.literal(item.is_collection).label('is_collection'),
+            sa.literal(item.content_ext).label('content_ext'),
+            sa.literal(item.preview_ext).label('preview_ext'),
+            sa.literal(item.thumbnail_ext).label('thumbnail_ext'),
+            sa.literal(item.tags).label('tags'),
+            sa.literal([str(x) for x in item.permissions]).label('permissions')
         )
 
         stmt = sa.insert(
@@ -128,6 +137,7 @@ class ItemsWriteRepository(
             Actually we're expecting the database trigger to do all the work.
             Trigger fires after update and computes new tags.
             """
+            # TODO - stop using trigger and do it manually
             nonlocal total
             stmt = sa.update(
                 models.Item
@@ -270,7 +280,8 @@ class ItemsWriteRepository(
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every parent."""
         total = 0
@@ -288,7 +299,8 @@ class ItemsWriteRepository(
             """Alter permissions."""
             nonlocal total
 
-            _permissions = new_permissions.apply_delta(set(_item.permissions))
+            _permissions = set(_item.permissions) - deleted
+            _permissions = _permissions | added
 
             LOG.info(
                 'Setting permissions in parents: {:04d}. {}: {} -> {}',
@@ -331,7 +343,9 @@ class ItemsWriteRepository(
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            override: bool,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every child."""
         total = 0
@@ -349,12 +363,15 @@ class ItemsWriteRepository(
             """Alter permissions."""
             nonlocal total
 
-            if new_permissions.override:
-                _permissions = new_permissions.permissions_after
+            _permissions = set(item.permissions) - deleted
+            _permissions = _permissions | added
+
+            if override:
+                _permissions = set(item.permissions) - deleted
+                _permissions = _permissions | added
             else:
-                _permissions = new_permissions.apply_delta(
-                    set(_item.permissions)
-                )
+                _permissions = set(_item.permissions) - deleted
+                _permissions = _permissions | added
 
             LOG.info(
                 'Setting permissions in children: {:04d}. {}: {} -> {}',

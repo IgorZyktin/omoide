@@ -23,7 +23,6 @@ __all__ = [
     'ComplexLocation',
     'Media',
     'EXIF',
-    'NewPermissions',
     'Metainfo',
     'Aim',
     'SpaceUsage',
@@ -187,37 +186,6 @@ class EXIF(BaseModel):
     """Exif media information."""
     item_uuid: UUID
     exif: dict[str, str | float | int | bool | None | list | dict]
-
-
-class NewPermissions(BaseModel):
-    """Input info for new permissions."""
-    apply_to_parents: bool
-    apply_to_children: bool
-    override: bool
-    permissions_before: set[UUID]
-    permissions_after: set[UUID]
-
-    @property
-    def added(self) -> set[UUID]:
-        """Return list of added permissions."""
-        return set(self.permissions_after - self.permissions_before)
-
-    @property
-    def removed(self) -> set[UUID]:
-        """Return list of removed permissions."""
-        return set(self.permissions_before - self.permissions_after)
-
-    @property
-    def combined(self) -> set[UUID]:
-        """Return all permissions."""
-        return set(self.permissions_before | self.permissions_after)
-
-    def apply_delta(self, item_permissions: set[UUID]) -> set[UUID]:
-        """Apply addition and subtraction of items."""
-        _result = set(item_permissions)
-        _result = _result - self.removed
-        _result = _result | self.added
-        return _result
 
 
 class Metainfo(BaseModel):

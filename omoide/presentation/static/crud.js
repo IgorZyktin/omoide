@@ -184,20 +184,16 @@ function getThumbnailContentUrl(item) {
     return getContentUrl(item, 'thumbnail')
 }
 
-function tryLoadingThumbnail(uuid_or_name, thumbnailElement, callback) {
+function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
     // try to load thumbnail for the item
+    if (!isUUID(uuid))
+        return
+
     thumbnailElement.empty()
-
-    if (!uuid_or_name)
-        return
-
-    if (!isUUID(uuid_or_name))
-        // TODO - also perform search on names
-        return
 
     $.ajax({
         type: 'GET',
-        url: `/api/items/${uuid_or_name}`,
+        url: `/api/items/${uuid}`,
         contentType: 'application/json',
         success: function (response) {
             renderThumbnailDynamic(thumbnailElement, response)

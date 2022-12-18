@@ -75,3 +75,16 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             preview_size=response['preview_size'] or 0,
             thumbnail_size=response['thumbnail_size'] or 0,
         )
+
+    async def user_is_public(
+            self,
+            uuid: UUID,
+    ) -> bool:
+        """Return True if given user is public."""
+        stmt = sa.select(
+            models.PublicUsers.user_uuid
+        ).where(
+            models.PublicUsers.user_uuid == uuid
+        )
+        response = await self.db.fetch_one(stmt)
+        return response is not None

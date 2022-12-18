@@ -21,6 +21,7 @@ from omoide import domain
 from omoide import utils
 from omoide.domain import errors
 from omoide.presentation import constants
+from omoide.utils import maybe_str
 
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     # not supposed to be used, but just in case
@@ -274,13 +275,6 @@ def url_join(*args: str) -> str:
     """Join url components."""
     segments = [x.strip().strip('/') for x in args]
     return '/'.join(segments)
-
-
-def maybe_str(string: Optional[str]) -> str:
-    """Type safe string operation."""
-    if string is None:
-        return ''
-    return string
 
 
 class Locator:

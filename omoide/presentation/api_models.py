@@ -23,6 +23,18 @@ class PatchOperation(BaseModel):
     value: str | None
 
 
+class ItemIn(BaseModel):
+    """Input info for item creation."""
+    parent_uuid: Optional[UUID]
+    name: Optional[str]
+    is_collection: Optional[bool]
+    content_ext: Optional[str]
+    preview_ext: Optional[str]
+    thumbnail_ext: Optional[str]
+    tags: Optional[list[str]]
+    permissions: Optional[list[UUID]]
+
+
 class CreateItemIn(BaseModel):
     """Input info for item creation."""
     uuid: Optional[UUID]
@@ -31,21 +43,6 @@ class CreateItemIn(BaseModel):
     is_collection: bool
     tags: list[str]
     permissions: list[UUID]
-
-    @property
-    def safe_parent_uuid(self) -> Optional[str]:
-        """Render parent_uuid into string."""
-        return str(self.parent_uuid) if self.parent_uuid else None
-
-    @property
-    def safe_tags(self) -> tuple[str, ...]:
-        """Render tags into tuple."""
-        return tuple(self.tags)
-
-    @property
-    def safe_permissions(self) -> tuple[str, ...]:
-        """Render permissions into tuple."""
-        return tuple(str(x) for x in self.permissions)
 
     @validator('name')
     def name_must_have_adequate_length(cls, v):
@@ -115,7 +112,7 @@ class CreateUserIn(BaseModel):
     name: Optional[str]
 
 
-class UpdateItemIn(CreateItemIn):
+class UpdateItemIn(ItemIn):
     """Input info for item update."""
     uuid: UUID
     content_ext: Optional[str]
@@ -146,8 +143,8 @@ class NewPermissionsIn(BaseModel):
     apply_to_parents: bool
     apply_to_children: bool
     override: bool
-    permissions_before: list[str]
-    permissions_after: list[str]
+    permissions_before: list[UUID]
+    permissions_after: list[UUID]
 
 
 class MetainfoIn(BaseModel):
