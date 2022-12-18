@@ -346,8 +346,11 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                 start = time.perf_counter()
 
                 LOG.info(
-                    'Started updating permissions in parents of: {}',
+                    'Started updating permissions in '
+                    'parents of: {} (added {}, deleted {})',
                     item.uuid,
+                    sorted(str(x) for x in added),
+                    sorted(str(x) for x in deleted),
                 )
 
                 for i, parent_uuid in enumerate(parents, start=1):
@@ -369,7 +372,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                 delta = time.perf_counter() - start
                 LOG.info(
                     'Ended updating permissions in '
-                    'parents of {}: {} operations, {:0.3f} sec',
+                    'parents of {}: {} operations, {:0.4f} sec',
                     item.uuid,
                     len(parents),
                     delta,
