@@ -5,6 +5,7 @@ import datetime
 import re
 from itertools import zip_longest
 from typing import Any
+from typing import Collection
 from typing import Iterable
 from typing import Iterator
 from typing import Optional
@@ -230,3 +231,15 @@ def maybe_take(value_in: Optional[T], default: T) -> T:
     if value_in is None:
         return default
     return value_in
+
+
+def get_delta(
+        before: Collection[T],
+        after: Collection[T],
+) -> tuple[set[T], set[T]]:
+    """Return which elements were added and deleted."""
+    before_set = set(before)
+    after_set = set(after)
+    added = after_set - before_set
+    deleted = before_set - after_set
+    return added, deleted

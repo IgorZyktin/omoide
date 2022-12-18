@@ -205,7 +205,9 @@ class ApiItemUpdateTagsUseCase:
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            tags_added, tags_deleted = self.get_delta(item.tags, new_tags)
+            _tags_added, _tags_deleted = utils.get_delta(item.tags, new_tags)
+            tags_added = list(_tags_added)
+            tags_deleted = list(_tags_deleted)
 
             item.tags = new_tags
 
@@ -243,18 +245,6 @@ class ApiItemUpdateTagsUseCase:
         )
 
         return Success(uuid)
-
-    @staticmethod
-    def get_delta(
-            tags_before: list[str],
-            tags_after: list[str],
-    ) -> tuple[list[str], list[str]]:
-        """Return which tags were changed."""
-        _tags_before = set(tags_before)
-        _tags_after = set(tags_after)
-        tags_added = list(_tags_after - _tags_before)
-        tags_deleted = list(_tags_before - _tags_after)
-        return tags_added, tags_deleted
 
 
 class ApiItemDeleteUseCase:
