@@ -66,7 +66,7 @@ class ItemsWriteRepository(
             sa.literal(item.preview_ext).label('preview_ext'),
             sa.literal(item.thumbnail_ext).label('thumbnail_ext'),
             sa.literal(item.tags).label('tags'),
-            sa.literal(item.permissions).label('permissions'),
+            sa.literal([str(x) for x in item.permissions]).label('permissions')
         )
 
         stmt = sa.insert(

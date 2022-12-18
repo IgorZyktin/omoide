@@ -223,6 +223,7 @@ def api_item_create_use_case() -> use_cases.ApiItemCreateUseCase:
     return use_cases.ApiItemCreateUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
     )
 
 
@@ -230,7 +231,6 @@ def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
     """Get use case instance."""
     return use_cases.ApiItemReadUseCase(
         items_repo=items_write_repository,
-        metainfo_repo=metainfo_repository,
     )
 
 

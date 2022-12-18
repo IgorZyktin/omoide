@@ -39,8 +39,19 @@ class BaseItemUseCase:
         self.metainfo_repo = metainfo_repo
 
 
-class ApiItemCreateUseCase(BaseItemUseCase):
+class ApiItemCreateUseCase:
     """Use case for creating an item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.users_repo = users_repo
 
     async def execute(
             self,
@@ -73,14 +84,29 @@ class ApiItemCreateUseCase(BaseItemUseCase):
             )
 
             await self.items_repo.create_item(user, item)
-            await self.metainfo_repo.create_empty_metainfo(user, uuid)
-            # TODO - consider updating known tags
+            await self.metainfo_repo.create_empty_metainfo(user, item)
+            await self.metainfo_repo.update_computed_tags(user, item)
+            await self.metainfo_repo.update_computed_permissions(user, item)
+
+            for user_uuid in item.permissions:
+                await self.metainfo_repo \
+                    .update_known_tags_for_known_user(user_uuid, item)
+
+            if await self.users_repo.user_is_public(item.owner_uuid):
+                await self.metainfo_repo.update_known_tags_for_anon_user(item)
 
         return Success(uuid)
 
 
-class ApiItemReadUseCase(BaseItemUseCase):
+class ApiItemReadUseCase:
     """Use case for getting an item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
 
     async def execute(
             self,
