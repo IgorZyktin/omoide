@@ -82,9 +82,9 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
     ) -> bool:
         """Return True if given user is public."""
         stmt = sa.select(
-            models.PublicUsers
+            models.PublicUsers.user_uuid
         ).where(
             models.PublicUsers.user_uuid == uuid
-        ).exists()
+        )
         response = await self.db.fetch_one(stmt)
         return response is not None

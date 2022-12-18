@@ -52,12 +52,20 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
         """Update computed permissions for this item."""
 
     @abc.abstractmethod
-    async def update_known_tags_for_known_user(
+    async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
             item: domain.Item,
     ) -> None:
-        """Update known tags using this item."""
+        """Increase counters for known tags using this item."""
+
+    @abc.abstractmethod
+    async def decrease_known_tags_for_known_user(
+            self,
+            user_uuid: UUID,
+            item: domain.Item,
+    ) -> None:
+        """Decrease counters for known tags using this item."""
 
     @abc.abstractmethod
     async def drop_unused_tags_for_known_user(
@@ -67,11 +75,18 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
         """Drop tags with counter less of equal to 0."""
 
     @abc.abstractmethod
-    async def update_known_tags_for_anon_user(
+    async def increase_known_tags_for_anon_user(
             self,
             item: domain.Item,
     ) -> None:
-        """Update known tags using this item."""
+        """Increase counters for known tags using this item."""
+
+    @abc.abstractmethod
+    async def decrease_known_tags_for_anon_user(
+            self,
+            item: domain.Item,
+    ) -> None:
+        """Decrease counters for known tags using this item."""
 
     @abc.abstractmethod
     async def drop_unused_tags_for_anon_user(

@@ -156,7 +156,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
-    async def update_known_tags_for_known_user(
+    async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
             item: domain.Item,
@@ -184,6 +184,25 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
             await self.db.execute(stmt)
 
+    async def decrease_known_tags_for_known_user(
+            self,
+            user_uuid: UUID,
+            item: domain.Item,
+    ) -> None:
+        """Decrease counters for known tags using this item."""
+        for tag in item.tags:
+            tag = tag.lower()
+            stmt = sa.update(
+                models.KnownTags
+            ).where(
+                models.KnownTags.user_uuid == user_uuid,
+                models.KnownTags.tag == tag,
+            ).values(
+                counter=models.KnownTags.counter - 1,
+            )
+
+            await self.db.execute(stmt)
+
     async def drop_unused_tags_for_known_user(
             self,
             user_uuid: UUID,
@@ -198,7 +217,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
-    async def update_known_tags_for_anon_user(
+    async def increase_known_tags_for_anon_user(
             self,
             item: domain.Item,
     ) -> None:
@@ -219,6 +238,23 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
                 set_={
                     'counter': models.KnownTagsAnon.counter + 1,
                 }
+            )
+
+            await self.db.execute(stmt)
+
+    async def decrease_known_tags_for_anon_user(
+            self,
+            item: domain.Item,
+    ) -> None:
+        """Decrease counters for known tags using this item."""
+        for tag in item.tags:
+            tag = tag.lower()
+            stmt = sa.update(
+                models.KnownTagsAnon
+            ).where(
+                models.KnownTagsAnon.tag == tag,
+            ).values(
+                counter=models.KnownTagsAnon.counter - 1,
             )
 
             await self.db.execute(stmt)

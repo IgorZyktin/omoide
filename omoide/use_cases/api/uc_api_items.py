@@ -90,10 +90,11 @@ class ApiItemCreateUseCase:
 
             for user_uuid in item.permissions:
                 await self.metainfo_repo \
-                    .update_known_tags_for_known_user(user_uuid, item)
+                    .increase_known_tags_for_known_user(user_uuid, item)
 
             if await self.users_repo.user_is_public(item.owner_uuid):
-                await self.metainfo_repo.update_known_tags_for_anon_user(item)
+                await self.metainfo_repo.increase_known_tags_for_anon_user(
+                    item)
 
         return Success(uuid)
 
@@ -217,8 +218,19 @@ class UpdateItemUseCase(BaseItemUseCase):
         item.thumbnail_ext = str(operation.value) if operation.value else None
 
 
-class ApiItemDeleteUseCase(BaseItemUseCase):
+class ApiItemDeleteUseCase:
     """Use case for deleting an item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.users_repo = users_repo
 
     async def execute(
             self,
@@ -248,7 +260,19 @@ class ApiItemDeleteUseCase(BaseItemUseCase):
             if not deleted:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            # TODO - consider updating known tags
+            if item.permissions:
+                for user_uuid in item.permissions:
+                    await self.metainfo_repo \
+                        .decrease_known_tags_for_known_user(user_uuid, item)
+
+                await self.metainfo_repo \
+                    .drop_unused_tags_for_known_user(user_uuid)
+
+            if await self.users_repo.user_is_public(item.owner_uuid):
+                await self.metainfo_repo \
+                    .decrease_known_tags_for_anon_user(item)
+
+            await self.metainfo_repo.drop_unused_tags_for_anon_user(user_uuid)
 
         return Success(parent_uuid)
 
