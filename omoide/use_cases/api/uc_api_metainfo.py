@@ -72,9 +72,9 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
             metainfo.preview_size = metainfo_in.preview_size
             metainfo.thumbnail_size = metainfo_in.thumbnail_size
 
-            updated = await self.meta_repo.update_metainfo(user, metainfo)
+            await self.meta_repo.update_metainfo(user, metainfo)
 
-        return Success(updated)
+        return Success(True)
 
 
 class ReadMetainfoUseCase(BaseMetainfoUseCase):
