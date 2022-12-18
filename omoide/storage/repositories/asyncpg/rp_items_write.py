@@ -320,69 +320,6 @@ class ItemsWriteRepository(
 
         return response['total'] >= 1
 
-    async def update_permissions_in_parents(
-            self,
-            user: domain.User,
-            item: domain.Item,
-            added: set[UUID],
-            deleted: set[UUID],
-    ) -> None:
-        """Apply new permissions to every parent."""
-        total = 0
-        start = time.monotonic()
-
-        LOG.info(
-            'Started updating permissions in parents of: {}',
-            item.uuid,
-        )
-
-        async def _update_permissions(
-                _self: ItemsWriteRepository,
-                _item: domain.Item,
-        ) -> None:
-            """Alter permissions."""
-            nonlocal total
-
-            _permissions = set(_item.permissions) - deleted
-            _permissions = _permissions | added
-
-            LOG.info(
-                'Setting permissions in parents: {:04d}. {}: {} -> {}',
-                total,
-                _item.uuid,
-                sorted(map(str, _item.permissions)),
-                sorted(map(str, _permissions)),
-            )
-
-            stmt = sa.update(
-                models.Item
-            ).where(
-                models.Item.uuid == _item.uuid
-            ).values(
-                permissions=sorted(str(x) for x in _permissions)
-            )
-
-            async with self.transaction():
-                await _self.db.execute(stmt)
-
-            total += 1
-
-        await self.apply_upwards(
-            user=user,
-            item=item,
-            top_first=True,
-            function=_update_permissions,
-        )
-
-        delta = time.monotonic() - start
-        LOG.info(
-            'Ended updating permissions in '
-            'parents of {}: {} operations, {:0.3f} sec',
-            item.uuid,
-            total,
-            delta,
-        )
-
     async def update_permissions_in_children(
             self,
             user: domain.User,
