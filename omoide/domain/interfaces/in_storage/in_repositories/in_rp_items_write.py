@@ -3,6 +3,7 @@
 """
 import abc
 import datetime
+from typing import Collection
 from uuid import UUID
 
 from omoide import domain
@@ -83,3 +84,14 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every child."""
+
+    @abc.abstractmethod
+    async def update_permissions(
+            self,
+            uuid: UUID,
+            override: bool,
+            added: Collection[UUID],
+            deleted: Collection[UUID],
+            all_permissions: Collection[UUID],
+    ) -> None:
+        """Apply new permissions for given item UUID."""

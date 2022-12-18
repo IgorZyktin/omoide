@@ -252,7 +252,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def mark_metainfo_updated(
             self,
-            item: domain.Item,
+            uuid: UUID,
             now: datetime.datetime,
     ) -> None:
         """Set last updated at given tine for the item."""
@@ -261,7 +261,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         ).values(
             updated_at=now
         ).where(
-            models.Metainfo.item_uuid == item.uuid
+            models.Metainfo.item_uuid == uuid
         )
 
         await self.db.execute(stmt)

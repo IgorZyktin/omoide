@@ -58,3 +58,11 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             item: domain.Item,
     ) -> int:
         """Count dependant items."""
+
+    @abc.abstractmethod
+    async def get_all_parent_uuids(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> list[UUID]:
+        """Return all parents of given item."""

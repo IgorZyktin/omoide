@@ -90,7 +90,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def mark_metainfo_updated(
             self,
-            item: domain.Item,
+            uuid: UUID,
             now: datetime.datetime,
     ) -> None:
         """Set last updated at given tine for the item."""

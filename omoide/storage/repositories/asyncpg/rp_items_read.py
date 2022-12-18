@@ -171,3 +171,33 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         )
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
+
+    async def get_all_parent_uuids(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> list[UUID]:
+        """Return all parents of given item."""
+        stmt = """
+        WITH RECURSIVE parents AS (
+            SELECT parent_uuid,
+                   uuid,
+                   name
+            FROM items
+            WHERE uuid = :uuid
+            UNION
+            SELECT i.parent_uuid,
+                   i.uuid,
+                   i.name
+            FROM items i
+                     INNER JOIN parents ON i.uuid = parents.parent_uuid 
+        )
+        SELECT uuid FROM parents;
+        """
+
+        values = {
+            'uuid': str(item.parent_uuid),
+        }
+
+        response = await self.db.fetch_all(stmt, values)
+        return [x['uuid'] for x in response]

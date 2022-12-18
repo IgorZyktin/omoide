@@ -5,6 +5,7 @@ import datetime
 import time
 from typing import Awaitable
 from typing import Callable
+from typing import Collection
 from uuid import UUID
 from uuid import uuid4
 
@@ -454,3 +455,40 @@ class ItemsWriteRepository(
             total,
             delta,
         )
+
+    async def update_permissions(
+            self,
+            uuid: UUID,
+            override: bool,
+            added: Collection[UUID],
+            deleted: Collection[UUID],
+            all_permissions: Collection[UUID],
+    ) -> None:
+        """Apply new permissions for given item UUID."""
+        if deleted:
+            for user in deleted:
+                stmt = sa.update(
+                    models.Item
+                ).where(
+                    models.Item.uuid == uuid
+                ).values(
+                    permissions=sa.func.array_remove(
+                        models.Item.permissions,
+                        str(user),
+                    )
+                )
+                await self.db.execute(stmt)
+
+        if added:
+            for user in added:
+                stmt = sa.update(
+                    models.Item
+                ).where(
+                    models.Item.uuid == uuid
+                ).values(
+                    permissions=sa.func.array_append(
+                        models.Item.permissions,
+                        str(user),
+                    )
+                )
+                await self.db.execute(stmt)
