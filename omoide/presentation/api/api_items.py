@@ -152,8 +152,8 @@ async def api_item_alter_tags(
         new_tags: api_models.NewTagsIn,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemAlterTagsUseCase = Depends(
-            dep.api_item_alter_tags_use_case),
+        use_case: use_cases.ApiItemUpdateTagsUseCase = Depends(
+            dep.api_item_update_tags_use_case),
 ):
     """Set new tags for the item + all children."""
     result = await use_case.execute(policy, user, uuid, new_tags.tags)

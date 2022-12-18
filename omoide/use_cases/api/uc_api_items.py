@@ -21,7 +21,7 @@ __all__ = [
     'ApiItemDeleteUseCase',
     'ApiCopyThumbnailUseCase',
     'ApiItemAlterParentUseCase',
-    'ApiItemAlterTagsUseCase',
+    'ApiItemUpdateTagsUseCase',
     'ApiItemAlterPermissionsUseCase',
 ]
 
@@ -379,8 +379,19 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
         return Success(new_parent_uuid)
 
 
-class ApiItemAlterTagsUseCase(BaseItemUseCase):
+class ApiItemUpdateTagsUseCase:
     """Set new tags for the item + all children."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.users_repo = users_repo
 
     async def execute(
             self,

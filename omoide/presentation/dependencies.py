@@ -245,6 +245,16 @@ def api_item_update_use_case() -> use_cases.ApiItemUpdateUseCase:
     )
 
 
+@cache
+def api_item_update_tags_use_case() -> use_cases.ApiItemUpdateTagsUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemUpdateTagsUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
+    )
+
+
 def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyThumbnailUseCase(
@@ -260,14 +270,6 @@ def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,
-    )
-
-
-def api_item_alter_tags_use_case() -> use_cases.ApiItemAlterTagsUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemAlterTagsUseCase(
-        items_repo=items_write_repository,
-        metainfo_repo=metainfo_repository,
     )
 
 
