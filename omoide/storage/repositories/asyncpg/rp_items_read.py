@@ -196,7 +196,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         """
 
         values = {
-            'uuid': str(item.parent_uuid),
+            'uuid': str(item.uuid),
         }
 
         response = await self.db.fetch_all(stmt, values)
