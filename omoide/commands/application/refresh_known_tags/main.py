@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Refresh cache for known tags.
 """
+import time
+
 from omoide import utils
 from omoide.commands.application.refresh_known_tags import db
 from omoide.commands.application.refresh_known_tags.cfg import Config
@@ -18,28 +20,35 @@ def run(
     if config.known:
         LOG.info('Refreshing tags for known users...')
         for user in db.get_users(database):
+            start = time.perf_counter()
             total, count, to_drop = db \
                 .refresh_known_tags_for_known_user(database, user)
+            spent = time.perf_counter() - start
             LOG.info(
-                'Refreshed tags for user '
-                '{} (got {} tags with {} occurrences)',
+                'Refreshed tags for '
+                '{} (got {} tags with {} occurrences) in {:0.3f} sec.',
                 user.name,
                 utils.sep_digits(total),
                 utils.sep_digits(count),
+                spent,
             )
 
             if to_drop:
                 dropped = db.drop_known_tags_for_known_user(database,
                                                             user, to_drop)
-                LOG.info('Dropped {} tags for user {}', dropped, user.name)
+                LOG.info('Dropped {} tags for {}', dropped, user.name)
 
     if config.anon:
         LOG.info('Refreshing tags for anon user...')
+        start = time.perf_counter()
         total, count, to_drop = db.refresh_known_tags_for_anon_user(database)
+        spent = time.perf_counter() - start
         LOG.info(
-            'Refreshed tags for anon user (got {} tags with {} occurrences)',
+            'Refreshed tags for anon user '
+            '(got {} tags with {} occurrences) in {:0.3f} sec.',
             utils.sep_digits(total),
             utils.sep_digits(count),
+            spent
         )
 
         if to_drop:

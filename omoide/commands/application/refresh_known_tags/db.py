@@ -70,6 +70,12 @@ def get_all_tags_for_known_user(
         models.Item.uuid
     ).where(
         models.Item.owner_uuid == user.uuid
+    ).union(
+        sa.select(
+            models.ComputedPermissions.item_uuid
+        ).where(
+            models.ComputedPermissions.permissions.any(str(user.uuid))
+        )
     )
 
     stmt = sa.select(
@@ -93,6 +99,12 @@ def count_presence_for_known_user(
         models.Item.uuid
     ).where(
         models.Item.owner_uuid == user.uuid
+    ).union(
+        sa.select(
+            models.ComputedPermissions.item_uuid
+        ).where(
+            models.ComputedPermissions.permissions.any(str(user.uuid))
+        )
     )
 
     stmt = sa.select(
