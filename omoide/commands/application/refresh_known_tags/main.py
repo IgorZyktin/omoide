@@ -17,9 +17,14 @@ def run(
         database: BaseDatabase,
 ) -> None:
     """Execute command."""
-    if config.known:
+    if config.known or config.only_user:
         LOG.info('Refreshing tags for known users...')
-        for user in db.get_users(database):
+        if config.only_user:
+            users = [db.get_user(database, config.only_user)]
+        else:
+            users = [db.get_users(database)]
+
+        for user in users:
             start = time.perf_counter()
             total, count, to_drop = db \
                 .refresh_known_tags_for_known_user(database, user)

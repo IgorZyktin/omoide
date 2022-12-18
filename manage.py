@@ -100,6 +100,10 @@ def cmd_change_password(uuid: str, password: str):
     default=True,
     help='Refresh known tags for known users',
 )
+@click.option(
+    '--only-user',
+    help='Refresh known tags specifically for this user',
+)
 def cmd_refresh_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
     from omoide.commands.application.refresh_known_tags import main, cfg

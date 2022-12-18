@@ -2,6 +2,7 @@
 """Database helpers.
 """
 from typing import Iterator
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -16,6 +17,12 @@ def get_users(database: BaseDatabase) -> list[models.User]:
     """Get all registered users."""
     with database.start_session() as session:
         return session.query(models.User).order_by(models.User.name).all()
+
+
+def get_user(database: BaseDatabase, uuid: UUID) -> models.User:
+    """Get specific registered users."""
+    with database.start_session() as session:
+        return session.query(models.User).get(str(uuid))
 
 
 # Functions for known users ---------------------------------------------------
