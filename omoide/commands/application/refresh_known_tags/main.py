@@ -20,7 +20,10 @@ def run(
     if config.known or config.only_user:
         LOG.info('Refreshing tags for known users...')
         if config.only_user:
-            users = [db.get_user(database, config.only_user)]
+            users = []
+            user = db.get_user(database, config.only_user)
+            if user:
+                users.append(user)
         else:
             users = [db.get_users(database)]
 

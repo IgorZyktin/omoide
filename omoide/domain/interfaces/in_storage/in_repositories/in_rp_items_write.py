@@ -38,7 +38,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             self,
             item: domain.Item,
             moment: datetime.datetime,
-    ) -> bool:
+    ) -> None:
         """Mark corresponding files as useless."""
 
     @abc.abstractmethod
