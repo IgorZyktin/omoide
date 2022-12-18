@@ -137,7 +137,6 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
             await self.items_repo.create_item(user, item)
             await self.metainfo_repo.create_empty_metainfo(user, item)
             await self.metainfo_repo.update_computed_tags(user, item)
-            await self.metainfo_repo.update_computed_permissions(user, item)
             await self.recalculate_known_tags(item, item.tags, [])
 
         return Success(uuid)
@@ -285,7 +284,6 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
             item.permissions = list(new_permissions.permissions_after)
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
-            await self.metainfo_repo.update_computed_permissions(user, item)
 
         added, deleted = utils.get_delta(
             new_permissions.permissions_before,
