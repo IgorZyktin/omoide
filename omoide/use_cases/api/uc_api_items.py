@@ -22,7 +22,7 @@ __all__ = [
     'ApiCopyThumbnailUseCase',
     'ApiItemAlterParentUseCase',
     'ApiItemUpdateTagsUseCase',
-    'ApiItemAlterPermissionsUseCase',
+    'ApiItemUpdatePermissionsUseCase',
 ]
 
 
@@ -39,8 +39,23 @@ class BaseItemUseCase:
         self.metainfo_repo = metainfo_repo
 
 
-class ApiItemCreateUseCase:
-    """Use case for creating an item."""
+class BaseItemMediaUseCase:
+    """Base use case."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            media_repo: interfaces.AbsMediaRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.media_repo = media_repo
+
+
+class BaseItemModifyUseCase:
+    """Base use case."""
 
     def __init__(
             self,
@@ -52,6 +67,10 @@ class ApiItemCreateUseCase:
         self.items_repo = items_repo
         self.metainfo_repo = metainfo_repo
         self.users_repo = users_repo
+
+
+class ApiItemCreateUseCase(BaseItemModifyUseCase):
+    """Use case for creating an item."""
 
     async def execute(
             self,
@@ -172,19 +191,8 @@ class ApiItemUpdateUseCase(BaseItemUseCase):
         return Success(True)
 
 
-class ApiItemUpdateTagsUseCase:
+class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
     """Set new tags for the item + all children."""
-
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-        self.metainfo_repo = metainfo_repo
-        self.users_repo = users_repo
 
     async def execute(
             self,
@@ -247,19 +255,59 @@ class ApiItemUpdateTagsUseCase:
         return Success(uuid)
 
 
-class ApiItemDeleteUseCase:
-    """Use case for deleting an item."""
+class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
+    """Set new permissions for the item.
 
-    def __init__(
+    Optionally for children and parents.
+    """
+
+    async def execute(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-        self.metainfo_repo = metainfo_repo
-        self.users_repo = users_repo
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+            new_permissions: api_models.NewPermissionsIn,
+    ) -> Result[errors.Error, UUID]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid,
+                                               actions.Item.UPDATE)
+            if error:
+                return Failure(error)
+
+            item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            item.permissions = list(new_permissions.permissions_after)
+            await self.items_repo.update_item(item)
+            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
+
+        added, deleted = utils.get_delta(
+            new_permissions.permissions_before,
+            new_permissions.permissions_after,
+        )
+
+        # TODO - do it manually + consider updating known tags
+        if new_permissions.apply_to_parents:
+            asyncio.create_task(
+                self.items_repo.update_permissions_in_parents(
+                    user, item, added, deleted)
+            )
+
+        # TODO - do it manually + consider updating known tags
+        if new_permissions.apply_to_children:
+            asyncio.create_task(
+                self.items_repo.update_permissions_in_children(
+                    user, item, new_permissions.override, added, deleted)
+            )
+
+        return Success(uuid)
+
+
+class ApiItemDeleteUseCase(BaseItemModifyUseCase):
+    """Use case for deleting an item."""
 
     async def execute(
             self,
@@ -307,18 +355,8 @@ class ApiItemDeleteUseCase:
         return Success(parent_uuid)
 
 
-class ApiCopyThumbnailUseCase(BaseItemUseCase):
+class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
     """Use case for changing parent thumbnail."""
-
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            media_repo: interfaces.AbsMediaRepository,
-    ) -> None:
-        """Initialize instance."""
-        super().__init__(items_repo, metainfo_repo)
-        self.media_repo = media_repo
 
     async def execute(
             self,
@@ -373,18 +411,8 @@ class ApiCopyThumbnailUseCase(BaseItemUseCase):
         return Success(source_uuid)
 
 
-class ApiItemAlterParentUseCase(BaseItemUseCase):
+class ApiItemAlterParentUseCase(BaseItemMediaUseCase):
     """Use case for changing parent item."""
-
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            media_repo: interfaces.AbsMediaRepository,
-    ) -> None:
-        """Initialize instance."""
-        super().__init__(items_repo, metainfo_repo)
-        self.media_repo = media_repo
 
     async def execute(
             self,
@@ -446,78 +474,9 @@ class ApiItemAlterParentUseCase(BaseItemUseCase):
             metainfo.updated_at = utils.now()
             await self.metainfo_repo.update_metainfo(user, metainfo)
 
+        # TODO - do it manually + consider updating known tags
         asyncio.create_task(
             self.items_repo.update_tags_in_children_of(user, parent),
         )
-        # TODO - consider updating known tags
 
         return Success(new_parent_uuid)
-
-
-class ApiItemAlterPermissionsUseCase(BaseItemUseCase):
-    """Set new permissions for the item.
-
-    Optionally for children and parents.
-    """
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-            raw_new_permissions: api_models.NewPermissionsIn,
-    ) -> Result[errors.Error, UUID]:
-        """Business logic."""
-        for string in [*raw_new_permissions.permissions_before,
-                       *raw_new_permissions.permissions_after]:
-            if not utils.is_valid_uuid(string):
-                return Failure(errors.InvalidUUID(uuid=string))
-
-        new_permissions = domain.NewPermissions(
-            apply_to_parents=raw_new_permissions.apply_to_parents,
-            apply_to_children=raw_new_permissions.apply_to_children,
-            override=raw_new_permissions.override,
-            permissions_before={
-                UUID(x) for x in raw_new_permissions.permissions_before
-            },
-            permissions_after={
-                UUID(x) for x in raw_new_permissions.permissions_after
-            },
-        )
-
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.UPDATE)
-            if error:
-                return Failure(error)
-
-            item = await self.items_repo.read_item(uuid)
-
-            if item is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-            item.permissions = list(new_permissions.permissions_after)
-            await self.items_repo.update_item(item)
-
-            metainfo = await self.metainfo_repo.read_metainfo(uuid)
-
-            if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
-
-            metainfo.updated_at = utils.now()
-            await self.metainfo_repo.update_metainfo(user, metainfo)
-
-        if new_permissions.apply_to_parents:
-            asyncio.create_task(
-                self.items_repo.update_permissions_in_parents(
-                    user, item, new_permissions)
-            )
-
-        if new_permissions.apply_to_children:
-            asyncio.create_task(
-                self.items_repo.update_permissions_in_children(
-                    user, item, new_permissions)
-            )
-            # TODO - consider updating known tags
-
-        return Success(uuid)

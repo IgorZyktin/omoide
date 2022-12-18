@@ -59,7 +59,8 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every parent."""
 
@@ -68,6 +69,8 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            override: bool,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every child."""

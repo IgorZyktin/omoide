@@ -280,7 +280,8 @@ class ItemsWriteRepository(
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every parent."""
         total = 0
@@ -298,7 +299,8 @@ class ItemsWriteRepository(
             """Alter permissions."""
             nonlocal total
 
-            _permissions = new_permissions.apply_delta(set(_item.permissions))
+            _permissions = set(_item.permissions) - deleted
+            _permissions = _permissions | added
 
             LOG.info(
                 'Setting permissions in parents: {:04d}. {}: {} -> {}',
@@ -341,7 +343,9 @@ class ItemsWriteRepository(
             self,
             user: domain.User,
             item: domain.Item,
-            new_permissions: domain.NewPermissions,
+            override: bool,
+            added: set[UUID],
+            deleted: set[UUID],
     ) -> None:
         """Apply new permissions to every child."""
         total = 0
@@ -359,12 +363,15 @@ class ItemsWriteRepository(
             """Alter permissions."""
             nonlocal total
 
-            if new_permissions.override:
-                _permissions = new_permissions.permissions_after
+            _permissions = set(item.permissions) - deleted
+            _permissions = _permissions | added
+
+            if override:
+                _permissions = set(item.permissions) - deleted
+                _permissions = _permissions | added
             else:
-                _permissions = new_permissions.apply_delta(
-                    set(_item.permissions)
-                )
+                _permissions = set(_item.permissions) - deleted
+                _permissions = _permissions | added
 
             LOG.info(
                 'Setting permissions in children: {:04d}. {}: {} -> {}',

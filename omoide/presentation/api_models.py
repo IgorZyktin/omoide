@@ -143,8 +143,8 @@ class NewPermissionsIn(BaseModel):
     apply_to_parents: bool
     apply_to_children: bool
     override: bool
-    permissions_before: list[str]
-    permissions_after: list[str]
+    permissions_before: list[UUID]
+    permissions_after: list[UUID]
 
 
 class MetainfoIn(BaseModel):

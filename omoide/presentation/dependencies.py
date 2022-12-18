@@ -186,6 +186,7 @@ def api_suggest_tag_use_case() -> use_cases.ApiSuggestTagUseCase:
     )
 
 
+@cache
 def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
     """Get use case instance."""
     return use_cases.AppItemCreateUseCase(
@@ -194,6 +195,7 @@ def app_item_create_use_case() -> use_cases.AppItemCreateUseCase:
     )
 
 
+@cache
 def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.AppItemUpdateUseCase(
@@ -202,6 +204,7 @@ def app_item_update_use_case() -> use_cases.AppItemUpdateUseCase:
     )
 
 
+@cache
 def app_item_delete_use_case() -> use_cases.AppItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.AppItemDeleteUseCase(
@@ -214,6 +217,7 @@ def app_items_download_use_case() -> use_cases.AppItemsDownloadUseCase:
     return use_cases.AppItemsDownloadUseCase(
         items_repo=items_read_repository,
     )
+
 
 # api item related use cases --------------------------------------------------
 
@@ -255,6 +259,17 @@ def api_item_update_tags_use_case() -> use_cases.ApiItemUpdateTagsUseCase:
     )
 
 
+@cache
+def api_item_update_permissions_use_case() \
+        -> use_cases.ApiItemUpdatePermissionsUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemUpdatePermissionsUseCase(
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+        users_repo=users_read_repository,
+    )
+
+
 def api_item_copy_thumbnail_use_case() -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyThumbnailUseCase(
@@ -270,15 +285,6 @@ def api_item_alter_parent_use_case() -> use_cases.ApiItemAlterParentUseCase:
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,
-    )
-
-
-def api_item_alter_permissions_use_case() \
-        -> use_cases.ApiItemAlterPermissionsUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemAlterPermissionsUseCase(
-        items_repo=items_write_repository,
-        metainfo_repo=metainfo_repository,
     )
 
 
