@@ -165,7 +165,7 @@ def anon_user():
 @pytest.fixture
 def raw_item_in():
     """Raw item from user."""
-    return api_models.ItemIn(
+    return api_models.CreateItemIn(
         name='Test item',
         is_collection=False,
         tags=['tag-1', 'tag-2', 'tag-3'],

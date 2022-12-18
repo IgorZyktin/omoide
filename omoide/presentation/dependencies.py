@@ -236,21 +236,12 @@ def api_item_read_use_case() -> use_cases.ApiItemReadUseCase:
     )
 
 
-# TODO: remove this
-def update_item_use_case() -> use_cases.UpdateItemUseCase:
-    """Get use case instance."""
-    return use_cases.UpdateItemUseCase(
-        items_repo=items_write_repository,
-        metainfo_repo=metainfo_repository,
-    )
-
-
-def api_update_item_use_case() -> use_cases.ApiUpdateItemUseCase:
+@cache
+def api_item_update_use_case() -> use_cases.ApiUpdateItemUseCase:
     """Get use case instance."""
     return use_cases.ApiUpdateItemUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
-        users_repo=users_read_repository,
     )
 
 

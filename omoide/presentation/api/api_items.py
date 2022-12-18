@@ -28,7 +28,7 @@ router = APIRouter(prefix='/api/items')
 async def api_create_item(
         request: Request,
         response: Response,
-        payload: api_models.ItemIn,
+        payload: api_models.CreateItemIn,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemCreateUseCase = Depends(
@@ -64,30 +64,12 @@ async def api_read_item(
 
 
 @router.patch('/{uuid}')
-async def api_update_item(
-        uuid: UUID,
-        item_in: api_models.ItemIn,
-        user: domain.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiUpdateItemUseCase = Depends(
-            dep.api_update_item_use_case),
-):
-    """Update item."""
-    result = await use_case.execute(policy, user, uuid, item_in)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return {'result': 'ok'}
-
-
-@router.patch('/{uuid}')
 async def api_partial_update_item(
         uuid: UUID,
         operations: list[api_models.PatchOperation],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.UpdateItemUseCase = Depends(
+        use_case: use_cases.ApiUpdateItemUseCase = Depends(
             dep.update_item_use_case),
 ):
     """Update item."""

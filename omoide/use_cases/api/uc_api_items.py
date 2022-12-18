@@ -18,7 +18,6 @@ __all__ = [
     'ApiItemCreateUseCase',
     'ApiItemReadUseCase',
     'ApiUpdateItemUseCase',
-    'UpdateItemUseCase',  # FIXME
     'ApiItemDeleteUseCase',
     'ApiCopyThumbnailUseCase',
     'ApiItemAlterParentUseCase',
@@ -130,77 +129,7 @@ class ApiItemReadUseCase:
         return Success(item)
 
 
-class ApiUpdateItemUseCase:
-    """Use case for updating an item."""
-
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-        self.metainfo_repo = metainfo_repo
-        self.users_repo = users_repo
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-            item_in: api_models.ItemIn,
-    ) -> Result[errors.Error, bool]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
-
-            if error:
-                return Failure(error)
-
-            item = await self.items_repo.read_item(uuid)
-
-            if item is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-            tags_before = list(item.tags)
-            # TODO - calculate tags difference
-
-            item.name = utils.maybe_take(item_in.name,
-                                         item.name)
-            item.parent_uuid = utils.maybe_take(item_in.parent_uuid,
-                                                item.parent_uuid)
-            item.is_collection = utils.maybe_take(item_in.is_collection,
-                                                  item.is_collection)
-
-            if not item_in.content_ext:
-                item.content_ext = None
-            else:
-                item.content_ext = item_in.content_ext
-
-            if not item_in.preview_ext:
-                item.preview_ext = None
-            else:
-                item.preview_ext = item_in.preview_ext
-
-            if not item_in.thumbnail_ext:
-                item.thumbnail_ext = None
-            else:
-                item.thumbnail_ext = item_in.thumbnail_ext
-
-            item.tags = utils.maybe_take(item.tags, item.tags)
-            item.permissions = utils.maybe_take(item_in.permissions,
-                                                item.permissions)
-
-            await self.items_repo.update_item(item)
-            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
-            await self.metainfo_repo.update_computed_tags(user, item)
-            await self.metainfo_repo.update_computed_permissions(user, item)
-
-        return Success(True)
-
-
-class UpdateItemUseCase(BaseItemUseCase):
+class ApiUpdateItemUseCase(BaseItemUseCase):
     """Use case for updating an item."""
 
     async def execute(
@@ -224,69 +153,23 @@ class UpdateItemUseCase(BaseItemUseCase):
 
             for operation in operations:
                 if operation.path == '/name':
-                    await self.alter_name(item, operation)
+                    item.name = str(operation.value)
                 elif operation.path == '/is_collection':
-                    await self.alter_is_collection(item, operation)
+                    item.is_collection = str(operation.value).lower() == 'true'
                 elif operation.path == '/content_ext':
-                    await self.alter_content_ext(item, operation)
+                    item.content_ext = (
+                        str(operation.value) if operation.value else None)
                 elif operation.path == '/preview_ext':
-                    await self.alter_preview_ext(item, operation)
+                    item.preview_ext = (
+                        str(operation.value) if operation.value else None)
                 elif operation.path == '/thumbnail_ext':
-                    await self.alter_thumbnail_ext(item, operation)
-
-                # TODO - add validation
-                # TODO - consider updating known tags
+                    item.thumbnail_ext = (
+                        str(operation.value) if operation.value else None)
 
             await self.items_repo.update_item(item)
-            metainfo = await self.metainfo_repo.read_metainfo(uuid)
-
-            if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
-
-            metainfo.updated_at = utils.now()
-            await self.metainfo_repo.update_metainfo(user, metainfo)
+            await self.metainfo_repo.mark_metainfo_updated(item, utils.now())
 
         return Success(True)
-
-    @staticmethod
-    async def alter_is_collection(
-            item: domain.Item,
-            operation: api_models.PatchOperation,
-    ) -> None:
-        """Alter collection field."""
-        item.is_collection = str(operation.value).lower() == 'true'
-
-    @staticmethod
-    async def alter_name(
-            item: domain.Item,
-            operation: api_models.PatchOperation,
-    ) -> None:
-        """Alter name field."""
-        item.name = str(operation.value)
-
-    @staticmethod
-    async def alter_content_ext(
-            item: domain.Item,
-            operation: api_models.PatchOperation,
-    ) -> None:
-        """Alter content_ext field."""
-        item.content_ext = str(operation.value) if operation.value else None
-
-    @staticmethod
-    async def alter_preview_ext(
-            item: domain.Item,
-            operation: api_models.PatchOperation,
-    ) -> None:
-        """Alter preview_ext field."""
-        item.preview_ext = str(operation.value) if operation.value else None
-
-    @staticmethod
-    async def alter_thumbnail_ext(
-            item: domain.Item,
-            operation: api_models.PatchOperation,
-    ) -> None:
-        """Alter thumbnail_ext field."""
-        item.thumbnail_ext = str(operation.value) if operation.value else None
 
 
 class ApiItemDeleteUseCase:

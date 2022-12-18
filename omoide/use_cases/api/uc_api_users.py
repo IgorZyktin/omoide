@@ -3,6 +3,7 @@
 """
 from uuid import UUID
 
+from omoide import domain
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
@@ -47,15 +48,22 @@ class CreateUserUseCase:
                 return Failure(errors.UserDoesNotExist(uuid=uuid))
 
             item_uuid = await self.items_repo.generate_item_uuid()
-            raw_item = api_models.ItemIn(
+
+            root_item = domain.Item(
                 uuid=item_uuid,
                 parent_uuid=None,
+                owner_uuid=user.uuid,
                 name=user.name,
                 is_collection=True,
+                number=-1,
+                content_ext=None,
+                preview_ext=None,
+                thumbnail_ext=None,
                 tags=[],
                 permissions=[],
             )
-            await self.items_repo.create_item(user, raw_item)
+
+            await self.items_repo.create_item(user, root_item)
             user.root_item = item_uuid
             await self.users_repo.update_user(user)
 
