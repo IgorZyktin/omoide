@@ -56,8 +56,23 @@ class ApiItemCreateUseCase(BaseItemUseCase):
             if error:
                 return Failure(error)
 
-            payload.uuid = await self.items_repo.generate_item_uuid()
-            uuid = await self.items_repo.create_item(user, payload)
+            uuid = await self.items_repo.generate_item_uuid()
+
+            item = domain.Item(
+                uuid=uuid,
+                parent_uuid=parent_uuid,
+                owner_uuid=user.uuid,
+                number=-1,
+                name=payload.name,
+                is_collection=payload.is_collection,
+                content_ext=None,
+                preview_ext=None,
+                thumbnail_ext=None,
+                tags=payload.tags,
+                permissions=payload.permissions,
+            )
+
+            await self.items_repo.create_item(user, item)
             await self.metainfo_repo.create_empty_metainfo(user, uuid)
             # TODO - consider updating known tags
 
