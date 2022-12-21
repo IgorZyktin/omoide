@@ -502,3 +502,46 @@ class KnownTagsAnon(Base):
             postgresql_ops={'tag': 'text_pattern_ops'},
         ),
     )
+
+
+class LongJob(Base):
+    """Long mutation operations."""
+    __tablename__ = 'long_jobs'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: int = sa.Column(sa.BigInteger,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    name: str = sa.Column(sa.String(length=SMALL), nullable=False)
+
+    user_uuid: UUID = sa.Column(pg.UUID(),
+                                sa.ForeignKey('users.uuid',
+                                              ondelete='CASCADE'),
+                                index=True,
+                                primary_key=True)
+
+    target_uuid: Optional[UUID] = sa.Column(pg.UUID(),
+                                            sa.ForeignKey('items.uuid',
+                                                          ondelete='CASCADE'),
+                                            nullable=True,
+                                            index=True)
+
+    added = sa.Column(pg.ARRAY(sa.Text), nullable=False)
+    deleted = sa.Column(pg.ARRAY(sa.Text), nullable=False)
+    status: str = sa.Column(sa.String(length=SMALL),
+                            index=True,
+                            nullable=False)
+    started: datetime = sa.Column(sa.DateTime(timezone=True),
+                                  nullable=False,
+                                  index=True,
+                                  server_default=sa.text(
+                                      "timezone('utc', now())"))
+    duration: float = sa.Column(sa.Float, nullable=True)
+
+    operations: int = sa.Column(sa.Integer, nullable=True)

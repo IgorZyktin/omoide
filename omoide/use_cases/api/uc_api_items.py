@@ -34,37 +34,54 @@ LOG = custom_logging.get_logger(__name__)
 
 @asynccontextmanager
 async def track_update_permissions_in_parents(
-        uuid: UUID,
+        metainfo_repo: interfaces.AbsMetainfoRepository,
+        user: domain.User,
+        item: domain.Item,
         added: Collection[UUID],
         deleted: Collection[UUID],
         parents: Collection[UUID],
 ):
     """Helper that tracks updates in parents."""
+    assert user.is_registered
+
+    _added = sorted(str(x) for x in added)
+    _deleted = sorted(str(x) for x in deleted)
+
     start = time.perf_counter()
     LOG.info(
         'Started updating permissions in '
         'parents of: {} (added {}, deleted {})',
-        uuid,
-        sorted(str(x) for x in added),
-        sorted(str(x) for x in deleted),
+        item.uuid,
+        _added,
+        _deleted,
     )
 
-    try:
-        # TODO
-        # await create_long_job_record()
-        yield
-    finally:
-        delta = time.perf_counter() - start
-        # TODO
-        # await complete_long_job_record()
+    job_id = await metainfo_repo.start_long_job(
+        name='permissions-in-parents',
+        user_uuid=user.uuid,
+        target_uuid=item.uuid,
+        added=_added,
+        deleted=_deleted,
+        status='init',
+        started=utils.now(),
+    )
 
-        LOG.info(
-            'Ended updating permissions in '
-            'parents of {}: {} operations, {:0.4f} sec',
-            uuid,
-            len(parents),
-            delta,
-        )
+    yield
+
+    delta = time.perf_counter() - start
+    await metainfo_repo.finish_long_job(
+        id=job_id,
+        status='done',
+        operations=len(parents),
+    )
+
+    LOG.info(
+        'Ended updating permissions in '
+        'parents of {}: {} operations, {:0.4f} sec',
+        item.uuid,
+        len(parents),
+        delta,
+    )
 
 
 class BaseItemMediaUseCase:
@@ -386,7 +403,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                 return
 
             async with track_update_permissions_in_parents(
-                    item.uuid, added, deleted, parents):
+                    self.metainfo_repo, user, item, added, deleted, parents):
                 for i, parent_uuid in enumerate(parents, start=1):
                     await self.items_repo \
                         .update_permissions(parent_uuid, False, added,

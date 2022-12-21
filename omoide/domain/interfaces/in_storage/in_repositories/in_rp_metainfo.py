@@ -3,6 +3,7 @@
 """
 import abc
 import datetime
+from typing import Collection
 from typing import Optional
 from uuid import UUID
 
@@ -94,3 +95,25 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             now: datetime.datetime,
     ) -> None:
         """Set last updated at given tine for the item."""
+
+    @abc.abstractmethod
+    async def start_long_job(
+            self,
+            name: str,
+            user_uuid: UUID,
+            target_uuid: UUID,
+            added: Collection[str],
+            deleted: Collection[str],
+            status: str,
+            started: datetime.datetime,
+    ) -> int:
+        """Start long job."""
+
+    @abc.abstractmethod
+    async def finish_long_job(
+            self,
+            id: int,
+            status: str,
+            operations: int,
+    ) -> None:
+        """Finish long job."""

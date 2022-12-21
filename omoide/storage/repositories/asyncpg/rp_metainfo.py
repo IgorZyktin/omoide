@@ -2,6 +2,7 @@
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
+from typing import Collection
 from typing import Optional
 from uuid import UUID
 
@@ -262,6 +263,36 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             updated_at=now
         ).where(
             models.Metainfo.item_uuid == uuid
+        )
+
+        await self.db.execute(stmt)
+
+    async def start_long_job(
+            self,
+            name: str,
+            user_uuid: UUID,
+            target_uuid: UUID,
+            added: Collection[str],
+            deleted: Collection[str],
+            status: str,
+            started: datetime.datetime,
+    ) -> int:
+        """Start long job."""
+
+    async def finish_long_job(
+            self,
+            id: int,
+            status: str,
+            operations: int,
+    ) -> None:
+        """Finish long job."""
+        stmt = sa.update(
+            models.LongJob
+        ).values(
+            status=status,
+            operations=operations,
+        ).where(
+            models.LongJob.id == id
         )
 
         await self.db.execute(stmt)
