@@ -545,3 +545,4 @@ class LongJob(Base):
     duration: float = sa.Column(sa.Float, nullable=True)
 
     operations: int = sa.Column(sa.Integer, nullable=True)
+    extras: dict = sa.Column(pg.JSONB, nullable=False)

@@ -276,8 +276,27 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             deleted: Collection[str],
             status: str,
             started: datetime.datetime,
+            extras: dict[str, int | float | bool | str | None],
     ) -> int:
         """Start long job."""
+        stmt = sa.insert(
+            models.LongJob
+        ).values(
+            name=name,
+            user_uuid=user_uuid,
+            target_uuid=target_uuid,
+            added=list(added),
+            deleted=list(deleted),
+            status=status,
+            started=started,
+            duration=None,
+            operations=None,
+            extras=extras,
+        ).returning(
+            models.LongJob.id
+        )
+
+        return int(await self.db.execute(stmt))
 
     async def finish_long_job(
             self,

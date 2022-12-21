@@ -106,6 +106,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             deleted: Collection[str],
             status: str,
             started: datetime.datetime,
+            extras: dict[str, int | float | bool | str | None],
     ) -> int:
         """Start long job."""
 
