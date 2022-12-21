@@ -115,6 +115,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             self,
             id: int,
             status: str,
+            duration: float,
             operations: int,
     ) -> None:
         """Finish long job."""

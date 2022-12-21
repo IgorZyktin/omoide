@@ -4,6 +4,8 @@
 import asyncio
 import time
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
+from typing import Callable
 from typing import Collection
 from uuid import UUID
 
@@ -39,8 +41,7 @@ async def track_update_permissions_in_parents(
         item: domain.Item,
         added: Collection[UUID],
         deleted: Collection[UUID],
-        operations: int,
-):
+) -> AsyncIterator[object]:
     """Helper that tracks updates in parents."""
     assert user.is_registered
 
@@ -67,20 +68,24 @@ async def track_update_permissions_in_parents(
         extras={},
     )
 
-    yield
+    writeback = object()
+    writeback.operations = 0
+
+    yield writeback
 
     delta = time.perf_counter() - start
     await metainfo_repo.finish_long_job(
         id=job_id,
         status='done',
-        operations=operations,
+        duration=delta,
+        operations=writeback.operations,
     )
 
     LOG.info(
         'Ended updating permissions in '
         'parents of {}: {} operations, {:0.4f} sec',
         item.uuid,
-        operations,
+        writeback.operations,
         delta,
     )
 
@@ -93,8 +98,7 @@ async def track_update_permissions_in_children(
         override: bool,
         added: Collection[UUID],
         deleted: Collection[UUID],
-        operations: int,
-):
+) -> AsyncIterator[Callable[[int], None]]:
     """Helper that tracks updates in children."""
     assert user.is_registered
 
@@ -126,20 +130,24 @@ async def track_update_permissions_in_children(
         extras=extras,
     )
 
-    yield
+    writeback = object()
+    writeback.operations = 0
+
+    yield writeback
 
     delta = time.perf_counter() - start
     await metainfo_repo.finish_long_job(
         id=job_id,
         status='done',
-        operations=operations,
+        duration=delta,
+        operations=writeback.operations,
     )
 
     LOG.info(
         'Ended updating permissions in '
         'children of {}: {} operations, {:0.4f} sec',
         item.uuid,
-        operations,
+        writeback.operations,
         delta,
     )
 
@@ -151,8 +159,7 @@ async def track_update_tags_in_children(
         item: domain.Item,
         added: Collection[str],
         deleted: Collection[str],
-        operations: int,
-):
+) -> AsyncIterator[Callable[[int], None]]:
     """Helper that tracks updates in children."""
     assert user.is_registered
 
@@ -179,20 +186,24 @@ async def track_update_tags_in_children(
         extras={},
     )
 
-    yield
+    writeback = object()
+    writeback.operations = 0
+
+    yield writeback
 
     delta = time.perf_counter() - start
     await metainfo_repo.finish_long_job(
         id=job_id,
         status='done',
-        operations=operations,
+        duration=delta,
+        operations=writeback.operations,
     )
 
     LOG.info(
         'Ended updating tags in '
         'children of {}: {} operations, {:0.4f} sec',
         item.uuid,
-        operations,
+        writeback.operations,
         delta,
     )
 
@@ -522,7 +533,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
             async with track_update_permissions_in_parents(
                     self.metainfo_repo, user,
-                    item, added, deleted, len(parents)):
+                    item, added, deleted, len(parents)) as setter:
+                setter(len(parents))
                 for i, parent_uuid in enumerate(parents, start=1):
                     await self.items_repo \
                         .update_permissions(parent_uuid, False, added,

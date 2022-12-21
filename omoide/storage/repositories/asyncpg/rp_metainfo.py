@@ -302,6 +302,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             self,
             id: int,
             status: str,
+            duration: float,
             operations: int,
     ) -> None:
         """Finish long job."""
@@ -309,6 +310,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             models.LongJob
         ).values(
             status=status,
+            duration=duration,
             operations=operations,
         ).where(
             models.LongJob.id == id
