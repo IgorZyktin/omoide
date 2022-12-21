@@ -340,7 +340,6 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
         """Apply permissions change to all parents."""
         async with self.items_repo.transaction():
             parents = await self.items_repo.get_all_parent_uuids(user, item)
-            now = utils.now()
 
             if parents:
                 start = time.perf_counter()
@@ -367,7 +366,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                             user_uuid, [], item.tags)
 
                     await self.metainfo_repo \
-                        .mark_metainfo_updated(parent_uuid, now)
+                        .mark_metainfo_updated(parent_uuid, utils.now())
 
                 delta = time.perf_counter() - start
                 LOG.info(
@@ -453,14 +452,10 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
             if source.thumbnail_ext is None:
                 return Failure(errors.ItemHasNoThumbnail(uuid=source_uuid))
 
-            metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
+            await self.metainfo_repo.mark_metainfo_updated(
+                target_uuid, utils.now())
 
-            if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=target_uuid))
-
-            metainfo.updated_at = utils.now()
-            await self.metainfo_repo.update_metainfo(user, metainfo)
-
+            # TODO - consider also copying preview
             await self.media_repo.copy_media(
                 owner_uuid=user.uuid,
                 source_uuid=source_uuid,
@@ -519,6 +514,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not parent.thumbnail_ext and item.thumbnail_ext:
+                # TODO - consider also copying preview
                 await self.media_repo.copy_media(
                     owner_uuid=parent.owner_uuid,
                     source_uuid=item.uuid,
