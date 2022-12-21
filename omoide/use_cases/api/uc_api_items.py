@@ -195,8 +195,17 @@ class ApiItemReadUseCase:
         return Success(item)
 
 
-class ApiItemUpdateUseCase(BaseItemUseCase):
+class ApiItemUpdateUseCase:
     """Use case for updating an item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
 
     async def execute(
             self,
@@ -449,13 +458,20 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
             if source is None:
                 return Failure(errors.ItemDoesNotExist(uuid=source_uuid))
 
+            if source.preview_ext is None:
+                return Failure(errors.ItemHasNoPreview(uuid=source_uuid))
+
             if source.thumbnail_ext is None:
                 return Failure(errors.ItemHasNoThumbnail(uuid=source_uuid))
 
-            await self.metainfo_repo.mark_metainfo_updated(
-                target_uuid, utils.now())
+            await self.media_repo.copy_media(
+                owner_uuid=user.uuid,
+                source_uuid=source_uuid,
+                target_uuid=target_uuid,
+                ext=source.preview_ext,
+                target_folder='preview',
+            )
 
-            # TODO - consider also copying preview
             await self.media_repo.copy_media(
                 owner_uuid=user.uuid,
                 source_uuid=source_uuid,
@@ -463,6 +479,9 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
                 ext=source.thumbnail_ext,
                 target_folder='thumbnail',
             )
+
+            await self.metainfo_repo.mark_metainfo_updated(
+                target_uuid, utils.now())
 
         return Success(source_uuid)
 

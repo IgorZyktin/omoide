@@ -54,6 +54,11 @@ class ItemHasNoThumbnail(Error):
     template = 'Item {uuid} has no thumbnail'
 
 
+class ItemHasNoPreview(Error):
+    """Item has no preview."""
+    template = 'Item {uuid} has no preview'
+
+
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
     template = 'You are not allowed to interact with item {uuid}'
