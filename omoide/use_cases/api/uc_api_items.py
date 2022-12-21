@@ -85,6 +85,118 @@ async def track_update_permissions_in_parents(
     )
 
 
+@asynccontextmanager
+async def track_update_permissions_in_children(
+        metainfo_repo: interfaces.AbsMetainfoRepository,
+        user: domain.User,
+        item: domain.Item,
+        override: bool,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
+        operations: int,
+):
+    """Helper that tracks updates in children."""
+    assert user.is_registered
+
+    _added = sorted(str(x) for x in added)
+    _deleted = sorted(str(x) for x in deleted)
+
+    start = time.perf_counter()
+    LOG.info(
+        'Started updating permissions in '
+        'children of: {} (added {}, deleted {})',
+        item.uuid,
+        _added,
+        _deleted,
+    )
+
+    if override:
+        extras = {'override': True}
+    else:
+        extras = {}
+
+    job_id = await metainfo_repo.start_long_job(
+        name='permissions-in-children',
+        user_uuid=user.uuid,
+        target_uuid=item.uuid,
+        added=_added,
+        deleted=_deleted,
+        status='init',
+        started=utils.now(),
+        extras=extras,
+    )
+
+    yield
+
+    delta = time.perf_counter() - start
+    await metainfo_repo.finish_long_job(
+        id=job_id,
+        status='done',
+        operations=operations,
+    )
+
+    LOG.info(
+        'Ended updating permissions in '
+        'children of {}: {} operations, {:0.4f} sec',
+        item.uuid,
+        operations,
+        delta,
+    )
+
+
+@asynccontextmanager
+async def track_update_tags_in_children(
+        metainfo_repo: interfaces.AbsMetainfoRepository,
+        user: domain.User,
+        item: domain.Item,
+        added: Collection[str],
+        deleted: Collection[str],
+        operations: int,
+):
+    """Helper that tracks updates in children."""
+    assert user.is_registered
+
+    _added = sorted(str(x) for x in added)
+    _deleted = sorted(str(x) for x in deleted)
+
+    start = time.perf_counter()
+    LOG.info(
+        'Started updating tags in '
+        'children of: {} (added {}, deleted {})',
+        item.uuid,
+        _added,
+        _deleted,
+    )
+
+    job_id = await metainfo_repo.start_long_job(
+        name='tags-in-children',
+        user_uuid=user.uuid,
+        target_uuid=item.uuid,
+        added=_added,
+        deleted=_deleted,
+        status='init',
+        started=utils.now(),
+        extras={},
+    )
+
+    yield
+
+    delta = time.perf_counter() - start
+    await metainfo_repo.finish_long_job(
+        id=job_id,
+        status='done',
+        operations=operations,
+    )
+
+    LOG.info(
+        'Ended updating tags in '
+        'children of {}: {} operations, {:0.4f} sec',
+        item.uuid,
+        operations,
+        delta,
+    )
+
+
 class BaseItemMediaUseCase:
     """Base use case."""
 
@@ -313,8 +425,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             _tags_added, _tags_deleted = utils.get_delta(item.tags, new_tags)
-            tags_added = list(_tags_added)
-            tags_deleted = list(_tags_deleted)
+            added = list(_tags_added)
+            deleted = list(_tags_deleted)
 
             item.tags = new_tags
 
@@ -322,11 +434,12 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())
             await self.metainfo_repo.update_computed_tags(user, item)
-            await self.recalculate_known_tags(item, tags_added, tags_deleted)
+            await self.recalculate_known_tags(item, added, deleted)
 
-        asyncio.create_task(
-            self.update_tags_in_children_of(user, item),
-        )
+        if added or deleted:
+            asyncio.create_task(
+                self.update_tags_in_children_of(user, item, added, deleted),
+            )
 
         return Success(uuid)
 
@@ -334,11 +447,15 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             self,
             user: domain.User,
             item: domain.Item,
+            added: Collection[str],
+            deleted: Collection[str],
     ) -> None:
         """Apply tags change to all children."""
         async with self.items_repo.transaction():
-            # TODO - do it manually + consider updating known tags
-            await self.items_repo.update_tags_in_children_of(user, item)
+            async with track_update_tags_in_children(
+                    self.metainfo_repo, user, item, added, deleted):
+                # TODO - do it manually + consider updating known tags
+                await self.items_repo.update_tags_in_children_of(user, item)
 
 
 class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
@@ -432,9 +549,11 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
     ) -> None:
         """Apply permissions change to all children."""
         async with self.items_repo.transaction():
-            # TODO - do it manually + consider updating known tags
-            await self.items_repo.update_permissions_in_children(
-                user, item, override, added, deleted)
+            async with track_update_permissions_in_children(
+                    self.metainfo_repo, user, item, override, added, deleted):
+                # TODO - do it manually + consider updating known tags
+                await self.items_repo.update_permissions_in_children(
+                    user, item, override, added, deleted)
 
 
 class ApiItemDeleteUseCase(BaseItemModifyUseCase):
@@ -571,18 +690,25 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(bad_parent_error)
 
             item = await self.items_repo.read_item(uuid)
-
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
+            old_parent = None
+            if item.parent_uuid is not None:
+                old_parent = await self.items_repo.read_item(item.parent_uuid)
+                if old_parent is None:
+                    return Failure(errors.ItemDoesNotExist(
+                        uuid=item.parent_uuid
+                    ))
+
             item.parent_uuid = new_parent_uuid
             await self.items_repo.update_item(item)
-            parent = await self.items_repo.read_item(new_parent_uuid)
 
-            if parent is None:
+            new_parent = await self.items_repo.read_item(new_parent_uuid)
+            if new_parent is None:
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
-            if not parent.thumbnail_ext and item.thumbnail_ext:
+            if not new_parent.thumbnail_ext and item.thumbnail_ext:
                 nested_use_case = ApiCopyThumbnailUseCase(
                     self.items_repo,
                     self.metainfo_repo,
@@ -592,16 +718,24 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     policy=policy,
                     user=user,
                     source_uuid=item.uuid,
-                    target_uuid=parent.uuid,
+                    target_uuid=new_parent.uuid,
                 )
 
                 if isinstance(nested_result, Failure):
                     return nested_result
 
-            await self.metainfo_repo.mark_metainfo_updated(parent.uuid,
+            await self.metainfo_repo.mark_metainfo_updated(new_parent.uuid,
                                                            utils.now())
+
+            if old_parent:
+                added, deleted = utils.get_delta(old_parent.tags,
+                                                 new_parent.tags)
+            else:
+                added = new_parent.tags
+                deleted = []
+
         asyncio.create_task(
-            self.update_tags_in_children_of(user, parent)
+            self.update_tags_in_children_of(user, new_parent, added, deleted)
         )
 
         return Success(new_parent_uuid)
@@ -610,8 +744,12 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             self,
             user: domain.User,
             item: domain.Item,
+            added: Collection[str],
+            deleted: Collection[str],
     ) -> None:
         """Apply tags change to all children."""
         async with self.items_repo.transaction():
-            # TODO - do it manually + consider updating known tags
-            await self.items_repo.update_tags_in_children_of(user, item)
+            async with track_update_tags_in_children(
+                    self.metainfo_repo, user, item, added, deleted):
+                # TODO - do it manually + consider updating known tags
+                await self.items_repo.update_tags_in_children_of(user, item)
