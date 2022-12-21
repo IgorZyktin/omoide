@@ -3,6 +3,8 @@
 """
 import asyncio
 import time
+from contextlib import asynccontextmanager
+from typing import Collection
 from uuid import UUID
 
 from omoide import domain
@@ -30,17 +32,39 @@ __all__ = [
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseItemUseCase:
-    """Base use case."""
+@asynccontextmanager
+async def track_update_permissions_in_parents(
+        uuid: UUID,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
+        parents: Collection[UUID],
+):
+    """Helper that tracks updates in parents."""
+    start = time.perf_counter()
+    LOG.info(
+        'Started updating permissions in '
+        'parents of: {} (added {}, deleted {})',
+        uuid,
+        sorted(str(x) for x in added),
+        sorted(str(x) for x in deleted),
+    )
 
-    def __init__(
-            self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-        self.metainfo_repo = metainfo_repo
+    try:
+        # TODO
+        # await create_long_job_record()
+        yield
+    finally:
+        delta = time.perf_counter() - start
+        # TODO
+        # await complete_long_job_record()
+
+        LOG.info(
+            'Ended updating permissions in '
+            'parents of {}: {} operations, {:0.4f} sec',
+            uuid,
+            len(parents),
+            delta,
+        )
 
 
 class BaseItemMediaUseCase:
@@ -282,12 +306,21 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.metainfo_repo.update_computed_tags(user, item)
             await self.recalculate_known_tags(item, tags_added, tags_deleted)
 
-        # TODO - do it manually + consider updating known tags
         asyncio.create_task(
-            self.items_repo.update_tags_in_children_of(user, item),
+            self.update_tags_in_children_of(user, item),
         )
 
         return Success(uuid)
+
+    async def update_tags_in_children_of(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> None:
+        """Apply tags change to all children."""
+        async with self.items_repo.transaction():
+            # TODO - do it manually + consider updating known tags
+            await self.items_repo.update_tags_in_children_of(user, item)
 
 
 class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
@@ -330,10 +363,9 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                 self.update_permissions_in_parents(user, item, added, deleted)
             )
 
-        # TODO - do it manually + consider updating known tags
         if new_permissions.apply_to_children:
             asyncio.create_task(
-                self.items_repo.update_permissions_in_children(
+                self.update_permissions_in_children(
                     user, item, new_permissions.override, added, deleted)
             )
 
@@ -350,17 +382,11 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
         async with self.items_repo.transaction():
             parents = await self.items_repo.get_all_parent_uuids(user, item)
 
-            if parents:
-                start = time.perf_counter()
+            if not parents:
+                return
 
-                LOG.info(
-                    'Started updating permissions in '
-                    'parents of: {} (added {}, deleted {})',
-                    item.uuid,
-                    sorted(str(x) for x in added),
-                    sorted(str(x) for x in deleted),
-                )
-
+            async with track_update_permissions_in_parents(
+                    item.uuid, added, deleted, parents):
                 for i, parent_uuid in enumerate(parents, start=1):
                     await self.items_repo \
                         .update_permissions(parent_uuid, False, added,
@@ -377,14 +403,19 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                     await self.metainfo_repo \
                         .mark_metainfo_updated(parent_uuid, utils.now())
 
-                delta = time.perf_counter() - start
-                LOG.info(
-                    'Ended updating permissions in '
-                    'parents of {}: {} operations, {:0.4f} sec',
-                    item.uuid,
-                    len(parents),
-                    delta,
-                )
+    async def update_permissions_in_children(
+            self,
+            user: domain.User,
+            item: domain.Item,
+            override: bool,
+            added: set[UUID],
+            deleted: set[UUID],
+    ) -> None:
+        """Apply permissions change to all children."""
+        async with self.items_repo.transaction():
+            # TODO - do it manually + consider updating known tags
+            await self.items_repo.update_permissions_in_children(
+                user, item, override, added, deleted)
 
 
 class ApiItemDeleteUseCase(BaseItemModifyUseCase):
@@ -533,26 +564,35 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not parent.thumbnail_ext and item.thumbnail_ext:
-                # TODO - consider also copying preview
-                await self.media_repo.copy_media(
-                    owner_uuid=parent.owner_uuid,
+                nested_use_case = ApiCopyThumbnailUseCase(
+                    self.items_repo,
+                    self.metainfo_repo,
+                    self.media_repo,
+                )
+                nested_result = await nested_use_case.execute(
+                    policy=policy,
+                    user=user,
                     source_uuid=item.uuid,
                     target_uuid=parent.uuid,
-                    ext=item.thumbnail_ext,
-                    target_folder='thumbnail',
                 )
 
-            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+                if isinstance(nested_result, Failure):
+                    return nested_result
 
-            if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=uuid))
-
-            metainfo.updated_at = utils.now()
-            await self.metainfo_repo.update_metainfo(user, metainfo)
-
-        # TODO - do it manually + consider updating known tags
+            await self.metainfo_repo.mark_metainfo_updated(parent.uuid,
+                                                           utils.now())
         asyncio.create_task(
-            self.items_repo.update_tags_in_children_of(user, parent),
+            self.update_tags_in_children_of(user, parent)
         )
 
         return Success(new_parent_uuid)
+
+    async def update_tags_in_children_of(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> None:
+        """Apply tags change to all children."""
+        async with self.items_repo.transaction():
+            # TODO - do it manually + consider updating known tags
+            await self.items_repo.update_tags_in_children_of(user, item)
