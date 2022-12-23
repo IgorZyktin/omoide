@@ -590,6 +590,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                         await self.recalculate_known_tags_indirect(
                             user_uuid, [], item.tags)
 
+                    await self.metainfo_repo\
+                        .update_computed_permissions(user, parent_uuid)
                     await self.metainfo_repo \
                         .mark_metainfo_updated(parent_uuid, utils.now())
 

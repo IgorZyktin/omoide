@@ -57,17 +57,6 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Return True if given item is actually a child."""
 
     @abc.abstractmethod
-    async def update_permissions_in_children(
-            self,
-            user: domain.User,
-            item: domain.Item,
-            override: bool,
-            added: set[UUID],
-            deleted: set[UUID],
-    ) -> None:
-        """Apply new permissions to every child."""
-
-    @abc.abstractmethod
     async def update_permissions(
             self,
             uuid: UUID,
