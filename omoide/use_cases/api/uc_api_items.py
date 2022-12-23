@@ -115,10 +115,11 @@ async def track_update_permissions_in_children(
     start = time.perf_counter()
     LOG.info(
         'Started updating permissions in '
-        'children of: {} (added {}, deleted {})',
+        'children of: {} (added {}, deleted {}, override {})',
         item.uuid,
         _added,
         _deleted,
+        override,
     )
 
     if override:
@@ -543,16 +544,18 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
             new_permissions.permissions_after,
         )
 
-        if new_permissions.apply_to_parents:
-            asyncio.create_task(
-                self.update_permissions_in_parents(user, item, added, deleted)
-            )
+        if added or deleted:
+            if new_permissions.apply_to_parents:
+                asyncio.create_task(
+                    self.update_permissions_in_parents(
+                        user, item, added, deleted)
+                )
 
-        if new_permissions.apply_to_children:
-            asyncio.create_task(
-                self.update_permissions_in_children(
-                    user, item, new_permissions.override, added, deleted)
-            )
+            if new_permissions.apply_to_children:
+                asyncio.create_task(
+                    self.update_permissions_in_children(
+                        user, item, new_permissions.override, added, deleted)
+                )
 
         return Success(uuid)
 
@@ -601,10 +604,34 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
         """Apply permissions change to all children."""
         async with self.items_repo.transaction():
             async with track_update_permissions_in_children(
-                    self.metainfo_repo, user, item, override, added, deleted):
-                # TODO - do it manually + consider updating known tags
-                await self.items_repo.update_permissions_in_children(
-                    user, item, override, added, deleted)
+                    self.metainfo_repo, user, item, override, added, deleted
+            ) as writeback:
+
+                async def recursive(item_uuid: UUID) -> None:
+                    children = await self.items_repo \
+                        .get_direct_children_uuids_of(user, item_uuid)
+
+                    for child_uuid in children:
+                        if added:
+                            await self.items_repo.add_permissions(
+                                child_uuid, added)
+                            writeback.operations += 1
+
+                        if deleted:
+                            await self.items_repo.delete_permissions(
+                                child_uuid, deleted)
+                            writeback.operations += 1
+
+                        if added or deleted:
+                            await self.metainfo_repo \
+                                .update_computed_permissions(user, child_uuid)
+                            await self.metainfo_repo \
+                                .mark_metainfo_updated(child_uuid, utils.now())
+                            writeback.operations += 2
+
+                        await recursive(child_uuid)
+
+                await recursive(item.uuid)
 
 
 class ApiItemDeleteUseCase(BaseItemModifyUseCase):

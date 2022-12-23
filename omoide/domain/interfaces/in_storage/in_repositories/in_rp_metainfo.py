@@ -46,6 +46,14 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
         """Update computed tags for this item."""
 
     @abc.abstractmethod
+    async def update_computed_permissions(
+            self,
+            user: domain.User,
+            uuid: UUID,
+    ) -> None:
+        """Update computed permission for this item."""
+
+    @abc.abstractmethod
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
