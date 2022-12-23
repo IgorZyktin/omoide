@@ -69,7 +69,7 @@ async def _generic_call(
         target_uuid=item_uuid,
         added=added,
         deleted=deleted,
-        status='init',
+        status='started',
         started=utils.now(),
         extras=extras,
     )
@@ -174,7 +174,7 @@ async def track_update_tags_in_children(
     if user.uuid is not None:
         call = _generic_call(
             metainfo_repo=metainfo_repo,
-            job_name='permissions-in-children',
+            job_name='tags-in-children',
             job_description='updating tags in children',
             user_uuid=user.uuid,
             item_uuid=item.uuid,
@@ -444,7 +444,6 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             deleted: Collection[str],
     ) -> int:
         """Apply tags change to all children."""
-        await self.recalculate_known_tags(item, added, deleted)
         operations = 0
 
         if added:
@@ -454,6 +453,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
         if deleted:
             await self.items_repo.delete_tags(item.uuid, deleted)
             operations += 1
+
+        await self.recalculate_known_tags(item, added, deleted)
 
         async def recursive(item_uuid: UUID) -> None:
             nonlocal operations
