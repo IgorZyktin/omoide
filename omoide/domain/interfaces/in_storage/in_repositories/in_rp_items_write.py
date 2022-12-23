@@ -87,7 +87,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     async def add_permissions(
             self,
             uuid: UUID,
-            tags: Collection[UUID],
+            permissions: Collection[UUID],
     ) -> None:
         """Add new users to computed permissions of the item."""
 
@@ -95,6 +95,6 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     async def delete_permissions(
             self,
             uuid: UUID,
-            tags: Collection[UUID],
+            permissions: Collection[UUID],
     ) -> None:
         """Remove users from computed permissions of the item."""

@@ -2,7 +2,6 @@
 """Repository that performs write operations on items.
 """
 import datetime
-import time
 from typing import Awaitable
 from typing import Callable
 from typing import Collection
@@ -349,6 +348,44 @@ class ItemsWriteRepository(
                 tags=sa.func.array_remove(
                     models.ComputedTags.tags,
                     tag,
+                )
+            )
+            await self.db.execute(stmt)
+
+    async def add_permissions(
+            self,
+            uuid: UUID,
+            permissions: Collection[UUID],
+    ) -> None:
+        """Add new users to computed permissions of the item."""
+        for user_uuid in permissions:
+            stmt = sa.update(
+                models.Item
+            ).where(
+                models.Item.uuid == uuid
+            ).values(
+                permissions=sa.func.array_append(
+                    models.Item.permissions,
+                    str(user_uuid),
+                )
+            )
+            await self.db.execute(stmt)
+
+    async def delete_permissions(
+            self,
+            uuid: UUID,
+            permissions: Collection[UUID],
+    ) -> None:
+        """Remove users from computed permissions of the item."""
+        for user_uuid in permissions:
+            stmt = sa.update(
+                models.Item
+            ).where(
+                models.Item.uuid == uuid
+            ).values(
+                permissions=sa.func.array_remove(
+                    models.Item.permissions,
+                    str(user_uuid),
                 )
             )
             await self.db.execute(stmt)
