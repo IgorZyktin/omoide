@@ -28,7 +28,23 @@ class PreviewRepository(
             models.Item.uuid
         )
 
-        stmt = queries.ensure_user_has_permissions(user, stmt)
+        if user.is_anon():
+            stmt = stmt.join(
+                models.User,
+                models.Item.owner_uuid == models.User.uuid
+            ).where(
+                models.User.uuid.in_(queries.public_user_uuids())
+            )
+        else:
+            stmt = stmt.join(
+                models.ComputedPermissions,
+                models.ComputedPermissions.item_uuid == models.Item.uuid,
+            ).where(
+                sa.or_(
+                    models.Item.owner_uuid == str(user.uuid),
+                    models.ComputedPermissions.permissions.any(str(user.uuid)),
+                )
+            )
 
         stmt = stmt.where(
             models.Item.parent_uuid == sa.select(
