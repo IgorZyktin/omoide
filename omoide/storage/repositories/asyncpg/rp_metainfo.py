@@ -2,6 +2,7 @@
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
+from itertools import chain
 from typing import Collection
 from typing import Optional
 from uuid import UUID

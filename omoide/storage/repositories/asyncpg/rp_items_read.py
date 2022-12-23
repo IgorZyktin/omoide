@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Repository that performs basic read operations on items.
 """
-from itertools import chain
 from typing import Optional
 from uuid import UUID
 
@@ -235,8 +234,8 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         ).where(
             models.ComputedTags.item_uuid == uuid,
         )
-        response = await self.db.fetch_all(stmt)
+        response = await self.db.execute(stmt)
 
         if response:
-            return list(chain.from_iterable(x['tags'] for x in response))
+            return list(response)
         return []

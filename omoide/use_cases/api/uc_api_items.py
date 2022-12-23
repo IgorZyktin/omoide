@@ -43,103 +43,32 @@ class Writeback:
 
 
 @asynccontextmanager
-async def track_update_permissions_in_parents(
+async def _generic_call(
         metainfo_repo: interfaces.AbsMetainfoRepository,
-        user: domain.User,
-        item: domain.Item,
-        added: Collection[UUID],
-        deleted: Collection[UUID],
-) -> AsyncIterator[object]:
-    """Helper that tracks updates in parents."""
-    assert user.is_registered
-
-    _added = sorted(str(x) for x in added)
-    _deleted = sorted(str(x) for x in deleted)
-
+        job_name: str,
+        job_description: str,
+        user_uuid: UUID,
+        item_uuid: UUID,
+        added: Collection[str],
+        deleted: Collection[str],
+        extras: dict[str, int | float | bool | str | None],
+) -> AsyncIterator[Writeback]:
+    """Generic call used in context managers."""
     start = time.perf_counter()
     LOG.info(
-        'Started updating permissions in '
-        'parents of: {} (added {}, deleted {})',
-        item.uuid,
-        _added,
-        _deleted,
+        'Started {} of: {} (added {}, deleted {})',
+        job_description,
+        item_uuid,
+        added,
+        deleted,
     )
 
     job_id = await metainfo_repo.start_long_job(
-        name='permissions-in-parents',
-        user_uuid=user.uuid,
-        target_uuid=item.uuid,
-        added=_added,
-        deleted=_deleted,
-        status='init',
-        started=utils.now(),
-        extras={},
-    )
-
-    writeback = Writeback(operations=0)
-
-    # noinspection PyBroadException
-    try:
-        yield writeback
-    except Exception:
-        status = 'fail'
-    else:
-        status = 'done'
-
-    delta = time.perf_counter() - start
-    await metainfo_repo.finish_long_job(
-        id=job_id,
-        status='done',
-        duration=delta,
-        operations=writeback.operations,
-    )
-
-    LOG.info(
-        'Ended updating permissions in '
-        'parents of {}: {} operations, {:0.4f} sec, {}',
-        item.uuid,
-        writeback.operations,
-        delta,
-        status,
-    )
-
-
-@asynccontextmanager
-async def track_update_permissions_in_children(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
-        user: domain.User,
-        item: domain.Item,
-        override: bool,
-        added: Collection[UUID],
-        deleted: Collection[UUID],
-) -> AsyncIterator[Callable[[int], None]]:
-    """Helper that tracks updates in children."""
-    assert user.is_registered
-
-    _added = sorted(str(x) for x in added)
-    _deleted = sorted(str(x) for x in deleted)
-
-    start = time.perf_counter()
-    LOG.info(
-        'Started updating permissions in '
-        'children of: {} (added {}, deleted {}, override {})',
-        item.uuid,
-        _added,
-        _deleted,
-        override,
-    )
-
-    if override:
-        extras = {'override': True}
-    else:
-        extras = {}
-
-    job_id = await metainfo_repo.start_long_job(
-        name='permissions-in-children',
-        user_uuid=user.uuid,
-        target_uuid=item.uuid,
-        added=_added,
-        deleted=_deleted,
+        name=job_name,
+        user_uuid=user_uuid,
+        target_uuid=item_uuid,
+        added=added,
+        deleted=deleted,
         status='init',
         started=utils.now(),
         extras=extras,
@@ -156,6 +85,7 @@ async def track_update_permissions_in_children(
         status = 'done'
 
     delta = time.perf_counter() - start
+
     await metainfo_repo.finish_long_job(
         id=job_id,
         status=status,
@@ -164,13 +94,71 @@ async def track_update_permissions_in_children(
     )
 
     LOG.info(
-        'Ended updating permissions in '
-        'children of {}: {} operations, {:0.4f} sec, {}',
-        item.uuid,
+        'Ended {} of {}: {} operations, {:0.4f} sec, {}',
+        job_description,
+        item_uuid,
         writeback.operations,
         delta,
         status,
     )
+
+
+@asynccontextmanager
+async def track_update_permissions_in_parents(
+        metainfo_repo: interfaces.AbsMetainfoRepository,
+        user: domain.User,
+        item: domain.Item,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
+) -> AsyncIterator[Writeback]:
+    """Helper that tracks updates in parents."""
+    assert user.is_registered
+
+    call = _generic_call(
+        metainfo_repo=metainfo_repo,
+        job_name='permissions-in-parents',
+        job_description='updating permissions in parents',
+        user_uuid=user.uuid,
+        item_uuid=item.uuid,
+        added=sorted(str(x) for x in added),
+        deleted=sorted(str(x) for x in deleted),
+        extras={},
+    )
+
+    async with call as writeback:
+        yield writeback
+
+
+@asynccontextmanager
+async def track_update_permissions_in_children(
+        metainfo_repo: interfaces.AbsMetainfoRepository,
+        user: domain.User,
+        item: domain.Item,
+        override: bool,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
+) -> AsyncIterator[Writeback]:
+    """Helper that tracks updates in children."""
+    assert user.is_registered
+
+    if override:
+        extras = {'override': True}
+    else:
+        extras = {}
+
+    call = _generic_call(
+        metainfo_repo=metainfo_repo,
+        job_name='permissions-in-children',
+        job_description='updating permissions in children',
+        user_uuid=user.uuid,
+        item_uuid=item.uuid,
+        added=sorted(str(x) for x in added),
+        deleted=sorted(str(x) for x in deleted),
+        extras=extras,
+    )
+
+    async with call as writeback:
+        yield writeback
 
 
 @asynccontextmanager
@@ -184,55 +172,19 @@ async def track_update_tags_in_children(
     """Helper that tracks updates in children."""
     assert user.is_registered
 
-    _added = sorted(str(x) for x in added)
-    _deleted = sorted(str(x) for x in deleted)
-
-    start = time.perf_counter()
-    LOG.info(
-        'Started updating tags in '
-        'children of: {} (added {}, deleted {})',
-        item.uuid,
-        _added,
-        _deleted,
-    )
-
-    job_id = await metainfo_repo.start_long_job(
-        name='tags-in-children',
+    call = _generic_call(
+        metainfo_repo=metainfo_repo,
+        job_name='permissions-in-children',
+        job_description='updating tags in children',
         user_uuid=user.uuid,
-        target_uuid=item.uuid,
-        added=_added,
-        deleted=_deleted,
-        status='init',
-        started=utils.now(),
+        item_uuid=item.uuid,
+        added=sorted(str(x) for x in added),
+        deleted=sorted(str(x) for x in deleted),
         extras={},
     )
 
-    writeback = Writeback(operations=0)
-
-    # noinspection PyBroadException
-    try:
+    async with call as writeback:
         yield writeback
-    except Exception:
-        status = 'fail'
-    else:
-        status = 'done'
-
-    delta = time.perf_counter() - start
-    await metainfo_repo.finish_long_job(
-        id=job_id,
-        status=status,
-        duration=delta,
-        operations=writeback.operations,
-    )
-
-    LOG.info(
-        'Ended updating tags in '
-        'children of {}: {} operations, {:0.4f} sec, {}',
-        item.uuid,
-        writeback.operations,
-        delta,
-        status,
-    )
 
 
 class BaseItemMediaUseCase:
@@ -271,9 +223,23 @@ class BaseItemModifyUseCase:
             tags_deleted: Collection[str],
     ) -> None:
         """Update counters for known tags."""
-        is_public = await self.users_repo.user_is_public(item.owner_uuid)
+        for user_uuid in [*item.permissions, item.owner_uuid]:
+            await self.recalculate_known_tags_indirect(
+                user_uuid=user_uuid,
+                tags_added=tags_added,
+                tags_deleted=tags_deleted
+            )
 
-        for user_uuid in item.permissions:
+    async def recalculate_known_tags_indirect(
+            self,
+            user_uuid: UUID,
+            tags_added: Collection[str],
+            tags_deleted: Collection[str],
+    ) -> None:
+        """Update counters for known tags via permission update."""
+        is_public = await self.users_repo.user_is_public(user_uuid)
+
+        if not is_public:
             if tags_added:
                 await self.metainfo_repo \
                     .increase_known_tags_for_known_user(user_uuid, tags_added)
@@ -282,10 +248,11 @@ class BaseItemModifyUseCase:
                 await self.metainfo_repo \
                     .decrease_known_tags_for_known_user(user_uuid,
                                                         tags_deleted)
+
                 await self.metainfo_repo \
                     .drop_unused_tags_for_known_user(user_uuid)
 
-        if is_public:
+        else:
             if tags_added:
                 await self.metainfo_repo \
                     .increase_known_tags_for_anon_user(tags_added)
@@ -295,25 +262,6 @@ class BaseItemModifyUseCase:
                     .decrease_known_tags_for_anon_user(tags_deleted)
 
                 await self.metainfo_repo.drop_unused_tags_for_anon_user()
-
-    async def recalculate_known_tags_indirect(
-            self,
-            user_uuid: UUID,
-            tags_added: list[str],
-            tags_deleted: list[str],
-    ) -> None:
-        """Update counters for known tags via permission update."""
-        if tags_added:
-            await self.metainfo_repo \
-                .increase_known_tags_for_known_user(user_uuid, tags_added)
-
-        if tags_deleted:
-            await self.metainfo_repo \
-                .decrease_known_tags_for_known_user(user_uuid,
-                                                    tags_deleted)
-
-            await self.metainfo_repo \
-                .drop_unused_tags_for_known_user(user_uuid)
 
 
 class ApiItemCreateUseCase(BaseItemModifyUseCase):
@@ -611,7 +559,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                         await self.recalculate_known_tags_indirect(
                             user_uuid, [], item.tags)
 
-                    await self.metainfo_repo\
+                    await self.metainfo_repo \
                         .update_computed_permissions(user, parent_uuid)
                     await self.metainfo_repo \
                         .mark_metainfo_updated(parent_uuid, utils.now())
