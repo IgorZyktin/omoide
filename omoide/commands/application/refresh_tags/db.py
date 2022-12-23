@@ -89,13 +89,16 @@ def refresh_computed_tags(
         child_tags = session.query(models.ComputedTags).get(str(child.uuid))
 
         if child_tags is None:
-            child_tags = models.ComputedTags(item_uuid=child.uuid, tags=tags)
+            child_tags = models.ComputedTags(
+                item_uuid=child.uuid,
+                tags=list(tags),
+            )
         else:
             child_tags.tags = list(str(x) for x in tags)
 
         session.add(child_tags)
         session.commit()
-        _tags.extend(list(str(x) for x in child_tags.tags))
+        _tags.extend(list(str(x) for x in child_tags.tags or []))
 
     return _tags
 
