@@ -74,3 +74,10 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             item_uuid: UUID,
     ) -> list[UUID]:
         """Return all direct items of th given item."""
+
+    @abc.abstractmethod
+    async def read_computed_tags(
+            self,
+            uuid: UUID,
+    ) -> list[str]:
+        """Return all computed tags for the item."""

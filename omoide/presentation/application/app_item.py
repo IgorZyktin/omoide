@@ -96,7 +96,12 @@ async def app_item_update(
     if isinstance(result, Failure):
         return web.redirect_from_error(request, result.error, uuid)
 
-    item, total, permissions = result.value
+    item, total, permissions, computed_tags = result.value
+
+    external_tags = [
+        x for x in computed_tags
+        if x not in item.tags and not utils.is_valid_uuid(x)
+    ]
 
     context = {
         'request': request,
@@ -107,6 +112,7 @@ async def app_item_update(
         'item': item,
         'total': utils.sep_digits(total),
         'permissions': permissions,
+        'external_tags': external_tags,
         'url': request.url_for('app_search'),
         'model': ujson.dumps(serialize_item(item), ensure_ascii=False),
         'initial_permissions': ujson.dumps([

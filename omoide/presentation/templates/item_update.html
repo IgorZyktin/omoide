@@ -120,6 +120,13 @@
                 {%- for tag in item.tags -%}{{ tag + '\n' }}{% endfor -%}
             </textarea>
 
+            <label for="external_tags">Tags from the parent: </label>
+            <textarea id="external_tags"
+                      disabled
+                      rows="10">
+                {%- for tag in external_tags -%}{{ tag + '\n' }}{% endfor -%}
+            </textarea>
+
             <div id="alerts_tags"></div>
             <input id="save_tags"
                    type="button"

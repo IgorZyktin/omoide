@@ -78,7 +78,8 @@ class AppItemUpdateUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-    ) -> Result[errors.Error, tuple[domain.Item, int, list[domain.User]]]:
+    ) -> Result[errors.Error,
+                tuple[domain.Item, int, list[domain.User], list[str]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -93,8 +94,9 @@ class AppItemUpdateUseCase:
 
             total = await self.items_repo.count_all_children_of(item)
             can_see = await self.users_repo.read_all_users(item.permissions)
+            computed_tags = await self.items_repo.read_computed_tags(uuid)
 
-        return Success((item, total, can_see))
+        return Success((item, total, can_see, computed_tags))
 
 
 class AppItemDeleteUseCase:

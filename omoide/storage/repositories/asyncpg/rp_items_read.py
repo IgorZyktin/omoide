@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Repository that performs basic read operations on items.
 """
+from itertools import chain
 from typing import Optional
 from uuid import UUID
 
@@ -223,3 +224,19 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         )
         response = await self.db.fetch_all(stmt)
         return list(x['uuid'] for x in response)
+
+    async def read_computed_tags(
+            self,
+            uuid: UUID,
+    ) -> list[str]:
+        """Return all computed tags for the item."""
+        stmt = sa.select(
+            models.ComputedTags.tags
+        ).where(
+            models.ComputedTags.item_uuid == uuid,
+        )
+        response = await self.db.fetch_all(stmt)
+
+        if response:
+            return list(chain.from_iterable(x['tags'] for x in response))
+        return []
