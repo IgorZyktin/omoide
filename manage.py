@@ -133,6 +133,11 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
     '--only-user',
     help='Refresh tags specifically for this user',
 )
+@click.option(
+    '--output-items/--no-output-items',
+    default=True,
+    help='Output every refreshed item',
+)
 def cmd_refresh_tags(**kwargs: str | bool):
     """Refresh all tags."""
     from omoide.commands.application.refresh_tags import main, cfg

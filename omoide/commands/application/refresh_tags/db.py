@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from omoide.commands.application.refresh_tags.cfg import Config
 from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
 from omoide.storage.database import models
@@ -33,6 +34,8 @@ def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
         models.Item
     ).filter(
         models.Item.parent_uuid == uuid
+    ).order_by(
+        models.Item.number
     ).all()
 
 
@@ -78,9 +81,9 @@ def refresh_computed_tags(
 
         tags = gather_tags(
             parent_uuid=parent_uuid,
-            parent_tags=parent_tags.tags,
+            parent_tags=list(str(x) for x in parent_tags.tags or []),
             item_uuid=child.uuid,
-            item_tags=child.tags,
+            item_tags=list(str(x) for x in child.tags or []),
         )
 
         child_tags = session.query(models.ComputedTags).get(str(child.uuid))
@@ -88,16 +91,17 @@ def refresh_computed_tags(
         if child_tags is None:
             child_tags = models.ComputedTags(item_uuid=child.uuid, tags=tags)
         else:
-            child_tags.tags = tags
+            child_tags.tags = list(str(x) for x in tags)
 
         session.add(child_tags)
         session.commit()
-        _tags.extend(child_tags.tags)
+        _tags.extend(list(str(x) for x in child_tags.tags))
 
     return _tags
 
 
 def refresh_tags(
+        config: Config,
         session: Session,
         user: models.User,
 ) -> int:
@@ -107,20 +111,26 @@ def refresh_tags(
     if user.root_item is None:
         return total_children
 
+    root_item = session.query(models.Item).get(str(user.root_item))
+
+    if isinstance(root_item, models.Item):
+        refresh_computed_tags(session, None, root_item)
+    else:
+        return total_children
+
     def recursive(_session: Session, parent_uuid: UUID) -> None:
         nonlocal total_children
-
-        root_item = _session.query(models.Item).get(str(user.root_item))
-        refresh_computed_tags(_session, None, root_item)
-
         child_items = get_direct_children(_session, parent_uuid)
         for child in child_items:
             total_children += 1
             tags = refresh_computed_tags(_session, parent_uuid, child)
-            LOG.info('Refreshed tags for {} {} {}',
-                     child.uuid,
-                     child.name or '???',
-                     sorted(tags))
+
+            if config.output_items:
+                LOG.info('Refreshed tags for {} {} {}',
+                         child.uuid,
+                         child.name or '???',
+                         sorted(tags))
+
             recursive(_session, child.uuid)
 
     recursive(session, user.root_item)

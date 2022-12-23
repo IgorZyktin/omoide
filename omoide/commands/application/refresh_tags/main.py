@@ -32,7 +32,7 @@ def run(
             start = time.perf_counter()
 
             with database.start_session() as session:
-                children = db.refresh_tags(session, user)
+                children = db.refresh_tags(config, session, user)
                 spent = time.perf_counter() - start
                 LOG.info(
                     'Refreshed tags for '
