@@ -286,6 +286,7 @@ def api_item_update_parent_use_case() -> use_cases.ApiItemUpdateParentUseCase:
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,
+        users_repo=users_read_repository,
     )
 
 

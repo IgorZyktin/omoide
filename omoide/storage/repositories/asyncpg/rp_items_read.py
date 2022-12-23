@@ -213,11 +213,12 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         ).where(
             models.Item.parent_uuid == item_uuid,
             sa.or_(
+                models.Item.permissions.any(str(user.uuid)),
                 models.Item.owner_uuid == user.uuid,
                 models.Item.owner_uuid.in_(  # noqa
                     sa.select(models.PublicUsers.user_uuid)
                 )
             )
         )
-        response = await self.db.fetch_one(stmt)
-        return response
+        response = await self.db.fetch_all(stmt)
+        return list(x['uuid'] for x in response)

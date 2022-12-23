@@ -34,6 +34,14 @@ __all__ = [
 LOG = custom_logging.get_logger(__name__)
 
 
+class Writeback:
+    """Helper class that stores results for context manager."""
+
+    def __init__(self, operations: int) -> None:
+        """Initialize instance."""
+        self.operations = operations
+
+
 @asynccontextmanager
 async def track_update_permissions_in_parents(
         metainfo_repo: interfaces.AbsMetainfoRepository,
@@ -68,8 +76,7 @@ async def track_update_permissions_in_parents(
         extras={},
     )
 
-    writeback = object()
-    writeback.operations = 0
+    writeback = Writeback(operations=0)
 
     yield writeback
 
@@ -130,8 +137,7 @@ async def track_update_permissions_in_children(
         extras=extras,
     )
 
-    writeback = object()
-    writeback.operations = 0
+    writeback = Writeback(operations=0)
 
     yield writeback
 
@@ -186,8 +192,7 @@ async def track_update_tags_in_children(
         extras={},
     )
 
-    writeback = object()
-    writeback.operations = 0
+    writeback = Writeback(operations=0)
 
     yield writeback
 
@@ -447,10 +452,17 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.metainfo_repo.update_computed_tags(user, item)
             await self.recalculate_known_tags(item, added, deleted)
 
+        async def update():
+            async with self.items_repo.transaction():
+                async with track_update_tags_in_children(
+                        self.metainfo_repo, user, item, added, deleted
+                ) as writeback:
+                    operations = await self.update_tags_in_children_of(
+                        user, item, added, deleted)
+                    writeback.operations = operations
+
         if added or deleted:
-            asyncio.create_task(
-                self.update_tags_in_children_of(user, item, added, deleted),
-            )
+            asyncio.create_task(update())
 
         return Success(uuid)
 
@@ -460,37 +472,39 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             item: domain.Item,
             added: Collection[str],
             deleted: Collection[str],
-    ) -> None:
+    ) -> int:
         """Apply tags change to all children."""
-        async with self.items_repo.transaction():
-            async with track_update_tags_in_children(
-                    self.metainfo_repo, user, item, added, deleted
-            ) as writeback:
-                await self.metainfo_repo.update_computed_tags(user, item)
-                await self.recalculate_known_tags(item, added, deleted)
+        await self.metainfo_repo.update_computed_tags(user, item)
+        await self.recalculate_known_tags(item, added, deleted)
+        operations = 0
 
+        if added:
+            await self.items_repo.add_tags(item.uuid, added)
+
+        if deleted:
+            await self.items_repo.delete_tags(item.uuid, deleted)
+
+        async def recursive(item_uuid: UUID) -> None:
+            nonlocal operations
+            children = await self.items_repo \
+                .get_direct_children_uuids_of(user, item_uuid)
+
+            for child_uuid in children:
                 if added:
-                    await self.items_repo.add_tags(item.uuid, added)
+                    await self.items_repo.add_tags(child_uuid,
+                                                   added)
+                    operations += 1
 
                 if deleted:
-                    await self.items_repo.delete_tags(item.uuid, deleted)
+                    await self.items_repo.delete_tags(child_uuid,
+                                                      deleted)
+                    operations += 1
 
-                def recursive(item_uuid: UUID) -> None:
-                    children = await self.items_repo \
-                        .get_direct_children_uuids_of(user, item_uuid)
+                await recursive(child_uuid)
 
-                    for child_uuid in children:
-                        if added:
-                            await self.items_repo.add_tags(child_uuid,
-                                                           added)
-                            writeback.operations += 1
+        await recursive(item.uuid)
 
-                        if deleted:
-                            await self.items_repo.delete_tags(child_uuid,
-                                                              deleted)
-                            writeback.operations += 1
-
-                        recursive(child_uuid)
+        return operations
 
 
 class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
@@ -694,6 +708,17 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
 class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     """Use case for changing parent item."""
 
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: interfaces.AbsUsersReadRepository,
+            media_repo: interfaces.AbsMediaRepository,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__(items_repo, metainfo_repo, media_repo)
+        self.users_repo = users_repo
+
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
@@ -786,6 +811,14 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
         """Apply tags change to all children."""
         async with self.items_repo.transaction():
             async with track_update_tags_in_children(
-                    self.metainfo_repo, user, item, added, deleted):
-                # TODO - do it manually + consider updating known tags
-                await self.items_repo.update_tags_in_children_of(user, item)
+                    self.metainfo_repo, user, item, added, deleted
+            ) as writeback:
+                nested_use_case = ApiItemUpdateTagsUseCase(
+                    items_repo=self.items_repo,
+                    metainfo_repo=self.metainfo_repo,
+                    users_repo=self.users_repo,
+                )
+                total = await nested_use_case.update_tags_in_children_of(
+                    user, item, added, deleted)
+
+                writeback.operations = total
