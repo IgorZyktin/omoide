@@ -349,33 +349,44 @@ class ItemsWriteRepository(
             all_permissions: Collection[UUID],
     ) -> None:
         """Apply new permissions for given item UUID."""
-        if deleted:
-            for user in deleted:
-                stmt = sa.update(
-                    models.Item
-                ).where(
-                    models.Item.uuid == uuid
-                ).values(
-                    permissions=sa.func.array_remove(
-                        models.Item.permissions,
-                        str(user),
-                    )
-                )
-                await self.db.execute(stmt)
+        if override:
+            stmt = sa.update(
+                models.Item
+            ).where(
+                models.Item.uuid == uuid
+            ).values(
+                permissions=tuple(str(x) for x in all_permissions),
+            )
+            await self.db.execute(stmt)
 
-        if added:
-            for user in added:
-                stmt = sa.update(
-                    models.Item
-                ).where(
-                    models.Item.uuid == uuid
-                ).values(
-                    permissions=sa.func.array_append(
-                        models.Item.permissions,
-                        str(user),
+        else:
+            if deleted:
+                for user in deleted:
+                    stmt = sa.update(
+                        models.Item
+                    ).where(
+                        models.Item.uuid == uuid
+                    ).values(
+                        permissions=sa.func.array_remove(
+                            models.Item.permissions,
+                            str(user),
+                        )
                     )
-                )
-                await self.db.execute(stmt)
+                    await self.db.execute(stmt)
+
+            if added:
+                for user in added:
+                    stmt = sa.update(
+                        models.Item
+                    ).where(
+                        models.Item.uuid == uuid
+                    ).values(
+                        permissions=sa.func.array_append(
+                            models.Item.permissions,
+                            str(user),
+                        )
+                    )
+                    await self.db.execute(stmt)
 
     async def add_tags(
             self,

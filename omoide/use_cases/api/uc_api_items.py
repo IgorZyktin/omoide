@@ -474,15 +474,16 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             deleted: Collection[str],
     ) -> int:
         """Apply tags change to all children."""
-        await self.metainfo_repo.update_computed_tags(user, item)
         await self.recalculate_known_tags(item, added, deleted)
         operations = 0
 
         if added:
             await self.items_repo.add_tags(item.uuid, added)
+            operations += 1
 
         if deleted:
             await self.items_repo.delete_tags(item.uuid, deleted)
+            operations += 1
 
         async def recursive(item_uuid: UUID) -> None:
             nonlocal operations
@@ -571,8 +572,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
             async with track_update_permissions_in_parents(
                     self.metainfo_repo, user,
-                    item, added, deleted, len(parents)) as setter:
-                setter(len(parents))
+                    item, added, deleted, len(parents)) as writeback:
+                writeback.operations = len(parents)
                 for i, parent_uuid in enumerate(parents, start=1):
                     await self.items_repo \
                         .update_permissions(parent_uuid, False, added,
