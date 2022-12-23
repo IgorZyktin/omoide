@@ -556,8 +556,6 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                             user_uuid, [], item.tags)
 
                     await self.metainfo_repo \
-                        .update_computed_permissions(user, parent_uuid)
-                    await self.metainfo_repo \
                         .mark_metainfo_updated(parent_uuid, utils.now())
 
     async def update_permissions_in_children(
@@ -590,8 +588,6 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                             writeback.operations += 1
 
                         if added or deleted:
-                            await self.metainfo_repo \
-                                .update_computed_permissions(user, child_uuid)
                             await self.metainfo_repo \
                                 .mark_metainfo_updated(child_uuid, utils.now())
                             writeback.operations += 2

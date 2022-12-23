@@ -162,32 +162,6 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
-    async def update_computed_permissions(
-            self,
-            user: domain.User,
-            uuid: UUID,
-    ) -> None:
-        """Update computed permission for this item."""
-        insert = pg_insert(
-            models.ComputedPermissions
-        ).values(
-            item_uuid=uuid,
-            permissions=sa.select(
-                models.Item.permissions
-            ).where(
-                models.Item.uuid == uuid
-            ).scalar_subquery(),
-        )
-
-        stmt = insert.on_conflict_do_update(
-            index_elements=[models.ComputedPermissions.item_uuid],
-            set_={
-                'permissions': insert.excluded.permissions,
-            }
-        )
-
-        await self.db.execute(stmt)
-
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
