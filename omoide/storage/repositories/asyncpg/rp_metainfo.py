@@ -175,7 +175,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
                 models.Item.permissions
             ).where(
                 models.Item.uuid == uuid
-            ).subquery(),
+            ).scalar_subquery(),
         )
 
         stmt = insert.on_conflict_do_update(

@@ -78,7 +78,13 @@ async def track_update_permissions_in_parents(
 
     writeback = Writeback(operations=0)
 
-    yield writeback
+    # noinspection PyBroadException
+    try:
+        yield writeback
+    except Exception:
+        status = 'fail'
+    else:
+        status = 'done'
 
     delta = time.perf_counter() - start
     await metainfo_repo.finish_long_job(
@@ -90,10 +96,11 @@ async def track_update_permissions_in_parents(
 
     LOG.info(
         'Ended updating permissions in '
-        'parents of {}: {} operations, {:0.4f} sec',
+        'parents of {}: {} operations, {:0.4f} sec, {}',
         item.uuid,
         writeback.operations,
         delta,
+        status,
     )
 
 
@@ -140,22 +147,29 @@ async def track_update_permissions_in_children(
 
     writeback = Writeback(operations=0)
 
-    yield writeback
+    # noinspection PyBroadException
+    try:
+        yield writeback
+    except Exception:
+        status = 'fail'
+    else:
+        status = 'done'
 
     delta = time.perf_counter() - start
     await metainfo_repo.finish_long_job(
         id=job_id,
-        status='done',
+        status=status,
         duration=delta,
         operations=writeback.operations,
     )
 
     LOG.info(
         'Ended updating permissions in '
-        'children of {}: {} operations, {:0.4f} sec',
+        'children of {}: {} operations, {:0.4f} sec, {}',
         item.uuid,
         writeback.operations,
         delta,
+        status,
     )
 
 
@@ -195,22 +209,29 @@ async def track_update_tags_in_children(
 
     writeback = Writeback(operations=0)
 
-    yield writeback
+    # noinspection PyBroadException
+    try:
+        yield writeback
+    except Exception:
+        status = 'fail'
+    else:
+        status = 'done'
 
     delta = time.perf_counter() - start
     await metainfo_repo.finish_long_job(
         id=job_id,
-        status='done',
+        status=status,
         duration=delta,
         operations=writeback.operations,
     )
 
     LOG.info(
         'Ended updating tags in '
-        'children of {}: {} operations, {:0.4f} sec',
+        'children of {}: {} operations, {:0.4f} sec, {}',
         item.uuid,
         writeback.operations,
         delta,
+        status,
     )
 
 
