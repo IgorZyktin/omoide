@@ -240,8 +240,8 @@ class BaseItemModifyUseCase:
     async def recalculate_known_tags(
             self,
             item: domain.Item,
-            tags_added: list[str],
-            tags_deleted: list[str],
+            tags_added: Collection[str],
+            tags_deleted: Collection[str],
     ) -> None:
         """Update counters for known tags."""
         is_public = await self.users_repo.user_is_public(item.owner_uuid)
@@ -464,9 +464,33 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
         """Apply tags change to all children."""
         async with self.items_repo.transaction():
             async with track_update_tags_in_children(
-                    self.metainfo_repo, user, item, added, deleted):
-                # TODO - do it manually + consider updating known tags
-                await self.items_repo.update_tags_in_children_of(user, item)
+                    self.metainfo_repo, user, item, added, deleted
+            ) as writeback:
+                await self.metainfo_repo.update_computed_tags(user, item)
+                await self.recalculate_known_tags(item, added, deleted)
+
+                if added:
+                    await self.items_repo.add_tags(item.uuid, added)
+
+                if deleted:
+                    await self.items_repo.delete_tags(item.uuid, deleted)
+
+                def recursive(item_uuid: UUID) -> None:
+                    children = await self.items_repo \
+                        .get_direct_children_uuids_of(user, item_uuid)
+
+                    for child_uuid in children:
+                        if added:
+                            await self.items_repo.add_tags(child_uuid,
+                                                           added)
+                            writeback.operations += 1
+
+                        if deleted:
+                            await self.items_repo.delete_tags(child_uuid,
+                                                              deleted)
+                            writeback.operations += 1
+
+                        recursive(child_uuid)
 
 
 class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):

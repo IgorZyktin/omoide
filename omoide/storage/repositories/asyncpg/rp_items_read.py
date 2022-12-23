@@ -201,3 +201,23 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
         response = await self.db.fetch_all(stmt, values)
         return [x['uuid'] for x in response]
+
+    async def get_direct_children_uuids_of(
+            self,
+            user: domain.User,
+            item_uuid: UUID,
+    ) -> list[UUID]:
+        """Return all direct items of th given item."""
+        stmt = sa.select(
+            models.Item.uuid
+        ).where(
+            models.Item.parent_uuid == item_uuid,
+            sa.or_(
+                models.Item.owner_uuid == user.uuid,
+                models.Item.owner_uuid.in_(  # noqa
+                    sa.select(models.PublicUsers.user_uuid)
+                )
+            )
+        )
+        response = await self.db.fetch_one(stmt)
+        return response

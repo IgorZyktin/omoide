@@ -429,3 +429,41 @@ class ItemsWriteRepository(
                     )
                 )
                 await self.db.execute(stmt)
+
+    async def add_tags(
+            self,
+            uuid: UUID,
+            tags: Collection[str],
+    ) -> None:
+        """Add new tags to computed tags of the item."""
+        for tag in tags:
+            stmt = sa.update(
+                models.ComputedTags
+            ).where(
+                models.ComputedTags.item_uuid == uuid
+            ).values(
+                tags=sa.func.array_append(
+                    models.ComputedTags.tags,
+                    tag,
+                )
+            )
+            await self.db.execute(stmt)
+
+    async def delete_tags(
+            self,
+            uuid: UUID,
+            tags: Collection[str],
+    ) -> None:
+        """Remove tags from computed tags of the item."""
+        for tag in tags:
+            stmt = sa.update(
+                models.ComputedTags
+            ).where(
+                models.ComputedTags.item_uuid == uuid
+            ).values(
+                tags=sa.func.array_remove(
+                    models.ComputedTags.tags,
+                    tag,
+                )
+            )
+            await self.db.execute(stmt)

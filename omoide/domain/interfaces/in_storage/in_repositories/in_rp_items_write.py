@@ -85,3 +85,19 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
             all_permissions: Collection[UUID],
     ) -> None:
         """Apply new permissions for given item UUID."""
+
+    @abc.abstractmethod
+    async def add_tags(
+            self,
+            uuid: UUID,
+            tags: Collection[str],
+    ) -> None:
+        """Add new tags to computed tags of the item."""
+
+    @abc.abstractmethod
+    async def delete_tags(
+            self,
+            uuid: UUID,
+            tags: Collection[str],
+    ) -> None:
+        """Remove tags from computed tags of the item."""

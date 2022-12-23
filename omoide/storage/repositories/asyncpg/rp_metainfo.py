@@ -95,6 +95,30 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
+    @staticmethod
+    def gather_tags(
+            parent_uuid: Optional[UUID],
+            parent_tags: list[str],
+            item_uuid: UUID,
+            item_tags: list[str],
+    ) -> tuple[str, ...]:
+        """Combine parent tags with item tags."""
+        all_tags = {
+            *(x.lower() for x in item_tags),
+            str(item_uuid),
+        }
+
+        if parent_uuid is not None:
+            clean_parent_uuid = str(parent_uuid).lower()
+            clean_tags = (
+                lower
+                for x in parent_tags
+                if (lower := x.lower()) != clean_parent_uuid
+            )
+            all_tags.update(clean_tags)
+
+        return tuple(all_tags)
+
     async def update_computed_tags(
             self,
             user: domain.User,
@@ -114,11 +138,12 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             if parent_tags_response:
                 parent_tags = parent_tags_response
 
-        all_tags = {
-            *item.tags,
-            *parent_tags,
-            str(item.uuid),
-        }
+        all_tags = self.gather_tags(
+            parent_uuid=item.parent_uuid,
+            parent_tags=parent_tags,
+            item_uuid=item.uuid,
+            item_tags=item.tags,
+        )
 
         insert = pg_insert(
             models.ComputedTags
@@ -139,7 +164,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def increase_known_tags_for_known_user(
             self,
             user_uuid: UUID,
-            tags: list[str],
+            tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
         for tag in tags:
@@ -167,7 +192,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def decrease_known_tags_for_known_user(
             self,
             user_uuid: UUID,
-            tags: list[str],
+            tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
         for tag in tags:
@@ -199,7 +224,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def increase_known_tags_for_anon_user(
             self,
-            tags: list[str],
+            tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
         for tag in tags:
@@ -224,7 +249,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def decrease_known_tags_for_anon_user(
             self,
-            tags: list[str],
+            tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
         for tag in tags:

@@ -65,4 +65,12 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             user: domain.User,
             item: domain.Item,
     ) -> list[UUID]:
-        """Return all parents of given item."""
+        """Return all parents of the given item."""
+
+    @abc.abstractmethod
+    async def get_direct_children_uuids_of(
+            self,
+            user: domain.User,
+            item_uuid: UUID,
+    ) -> list[UUID]:
+        """Return all direct items of th given item."""
