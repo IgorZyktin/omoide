@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from omoide import utils
 from omoide.commands.application.refresh_tags.cfg import Config
 from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
@@ -129,7 +130,8 @@ def refresh_tags(
             tags = refresh_computed_tags(_session, parent_uuid, child)
 
             if config.output_items:
-                LOG.info('Refreshed tags for {} {} {}',
+                LOG.info('Refreshed tags for {}. {} {} {}',
+                         utils.sep_digits(total_children),
                          child.uuid,
                          child.name or '???',
                          sorted(tags))
