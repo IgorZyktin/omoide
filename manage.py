@@ -120,6 +120,35 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
             main.run(config=config, database=database)
 
 
+@cli.command(
+    name='refresh_tags',
+)
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--only-user',
+    help='Refresh tags specifically for this user',
+)
+def cmd_refresh_tags(**kwargs: str | bool):
+    """Refresh all tags."""
+    from omoide.commands.application.refresh_tags import main, cfg
+
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle():
+        with helpers.timing(
+                callback=LOG.info,
+                start_template='Refreshing tags...',
+        ):
+            main.run(config=config, database=database)
+
+
 # Filesystem related commands -------------------------------------------------
 
 
