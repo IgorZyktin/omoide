@@ -8,36 +8,11 @@ from sqlalchemy.orm import Session
 
 from omoide import utils
 from omoide.commands.application.refresh_tags.cfg import Config
-from omoide.commands.common.base_db import BaseDatabase
+from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 from omoide.storage.database import models
 
 LOG = custom_logging.get_logger(__name__)
-
-
-def get_users(database: BaseDatabase) -> list[models.User]:
-    """Get all registered users."""
-    with database.start_session() as session:
-        return session.query(models.User).order_by(models.User.name).all()
-
-
-def get_user(database: BaseDatabase, uuid: UUID) -> Optional[models.User]:
-    """Get specific registered users."""
-    with database.start_session() as session:
-        return session.query(models.User).get(str(uuid))
-
-
-# Functions for known users ---------------------------------------------------
-
-def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
-    """Return all direct children."""
-    return session.query(
-        models.Item
-    ).filter(
-        models.Item.parent_uuid == uuid
-    ).order_by(
-        models.Item.number
-    ).all()
 
 
 def gather_tags(
@@ -124,7 +99,7 @@ def refresh_tags(
 
     def recursive(_session: Session, parent_uuid: UUID) -> None:
         nonlocal total_children
-        child_items = get_direct_children(_session, parent_uuid)
+        child_items = helpers.get_direct_children(_session, parent_uuid)
         for child in child_items:
             total_children += 1
             tags = refresh_computed_tags(_session, parent_uuid, child)

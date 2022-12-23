@@ -7,6 +7,7 @@ from omoide import utils
 from omoide.commands.application.refresh_tags import db
 from omoide.commands.application.refresh_tags.cfg import Config
 from omoide.commands.common.base_db import BaseDatabase
+from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 
 LOG = custom_logging.get_logger(__name__)
@@ -19,13 +20,12 @@ def run(
     """Execute command."""
     if config.only_user:
         users = []
-        user = db.get_user(database, config.only_user)
+        user = helpers.get_user(database, config.only_user)
         if user:
             users.append(user)
-            LOG.info('Refreshing tags for {} {}...', user.uuid, user.name)
     else:
         LOG.info('Refreshing tags for all users...')
-        users = db.get_users(database)
+        users = helpers.get_users(database)
 
         for user in users:
             LOG.info('Refreshing tags for {} {}', user.uuid, user.name)

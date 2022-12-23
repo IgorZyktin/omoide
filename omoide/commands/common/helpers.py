@@ -5,7 +5,13 @@ import contextlib
 import time
 from typing import Callable
 from typing import Iterator
+from typing import Optional
+from uuid import UUID
 
+from sqlalchemy.orm import Session
+
+from omoide.commands.common.base_db import BaseDatabase
+from omoide.storage.database import models
 
 TPL = str | None | Callable[[], str | None]
 
@@ -42,3 +48,26 @@ def timing(
         ended_at = time.perf_counter()
         delta = ended_at - started_at
         _maybe_print(full_end_template, delta=delta)
+
+
+def get_users(database: BaseDatabase) -> list[models.User]:
+    """Get all registered users."""
+    with database.start_session() as session:
+        return session.query(models.User).order_by(models.User.name).all()
+
+
+def get_user(database: BaseDatabase, uuid: UUID) -> Optional[models.User]:
+    """Get specific registered users."""
+    with database.start_session() as session:
+        return session.query(models.User).get(str(uuid))
+
+
+def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
+    """Return all direct children."""
+    return session.query(
+        models.Item
+    ).filter(
+        models.Item.parent_uuid == uuid
+    ).order_by(
+        models.Item.number
+    ).all()

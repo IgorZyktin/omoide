@@ -154,6 +154,39 @@ def cmd_refresh_tags(**kwargs: str | bool):
             main.run(config=config, database=database)
 
 
+@cli.command(
+    name='compact_tags',
+)
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--only-user',
+    help='Refresh tags specifically for this user',
+)
+@click.option(
+    '--output-items/--no-output-items',
+    default=True,
+    help='Output every refreshed item',
+)
+def cmd_refresh_tags(**kwargs: str | bool):
+    """If item and its parent share some tags, try to remove duplicates."""
+    from omoide.commands.application.compact_tags import main, cfg
+
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle():
+        with helpers.timing(
+                callback=LOG.info,
+                start_template='Compacting tags...',
+        ):
+            main.run(config=config, database=database)
+
 # Filesystem related commands -------------------------------------------------
 
 
