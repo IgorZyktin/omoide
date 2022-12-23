@@ -112,21 +112,20 @@ async def track_update_permissions_in_parents(
         deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
     """Helper that tracks updates in parents."""
-    assert user.is_registered
+    if user.uuid is not None:
+        call = _generic_call(
+            metainfo_repo=metainfo_repo,
+            job_name='permissions-in-parents',
+            job_description='updating permissions in parents',
+            user_uuid=user.uuid,
+            item_uuid=item.uuid,
+            added=sorted(str(x) for x in added),
+            deleted=sorted(str(x) for x in deleted),
+            extras={},
+        )
 
-    call = _generic_call(
-        metainfo_repo=metainfo_repo,
-        job_name='permissions-in-parents',
-        job_description='updating permissions in parents',
-        user_uuid=user.uuid,
-        item_uuid=item.uuid,
-        added=sorted(str(x) for x in added),
-        deleted=sorted(str(x) for x in deleted),
-        extras={},
-    )
-
-    async with call as writeback:
-        yield writeback
+        async with call as writeback:
+            yield writeback
 
 
 @asynccontextmanager
@@ -139,26 +138,25 @@ async def track_update_permissions_in_children(
         deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
     """Helper that tracks updates in children."""
-    assert user.is_registered
+    if user.uuid is not None:
+        extras: dict[str, int | float | bool | str | None] = {}
 
-    if override:
-        extras = {'override': True}
-    else:
-        extras = {}
+        if override:
+            extras.update({'override': True})
 
-    call = _generic_call(
-        metainfo_repo=metainfo_repo,
-        job_name='permissions-in-children',
-        job_description='updating permissions in children',
-        user_uuid=user.uuid,
-        item_uuid=item.uuid,
-        added=sorted(str(x) for x in added),
-        deleted=sorted(str(x) for x in deleted),
-        extras=extras,
-    )
+        call = _generic_call(
+            metainfo_repo=metainfo_repo,
+            job_name='permissions-in-children',
+            job_description='updating permissions in children',
+            user_uuid=user.uuid,
+            item_uuid=item.uuid,
+            added=sorted(str(x) for x in added),
+            deleted=sorted(str(x) for x in deleted),
+            extras=extras,
+        )
 
-    async with call as writeback:
-        yield writeback
+        async with call as writeback:
+            yield writeback
 
 
 @asynccontextmanager
@@ -168,23 +166,22 @@ async def track_update_tags_in_children(
         item: domain.Item,
         added: Collection[str],
         deleted: Collection[str],
-) -> AsyncIterator[Callable[[int], None]]:
+) -> AsyncIterator[Writeback]:
     """Helper that tracks updates in children."""
-    assert user.is_registered
+    if user.uuid is not None:
+        call = _generic_call(
+            metainfo_repo=metainfo_repo,
+            job_name='permissions-in-children',
+            job_description='updating tags in children',
+            user_uuid=user.uuid,
+            item_uuid=item.uuid,
+            added=sorted(str(x) for x in added),
+            deleted=sorted(str(x) for x in deleted),
+            extras={},
+        )
 
-    call = _generic_call(
-        metainfo_repo=metainfo_repo,
-        job_name='permissions-in-children',
-        job_description='updating tags in children',
-        user_uuid=user.uuid,
-        item_uuid=item.uuid,
-        added=sorted(str(x) for x in added),
-        deleted=sorted(str(x) for x in deleted),
-        extras={},
-    )
-
-    async with call as writeback:
-        yield writeback
+        async with call as writeback:
+            yield writeback
 
 
 class BaseItemMediaUseCase:
@@ -791,8 +788,8 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 added, deleted = utils.get_delta(old_parent.tags,
                                                  new_parent.tags)
             else:
-                added = new_parent.tags
-                deleted = []
+                added: Collection[str] = new_parent.tags
+                deleted: Collection[str] = []
 
         asyncio.create_task(
             self.update_tags_in_children_of(user, new_parent, added, deleted)
