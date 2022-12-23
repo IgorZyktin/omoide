@@ -27,23 +27,7 @@ class SearchRepository(
             models.ComputedTags.item_uuid == models.Item.uuid,
         )
 
-        if user.is_anon():
-            stmt = stmt.join(
-                models.User,
-                models.User.uuid == models.Item.owner_uuid,
-            ).where(
-                models.User.uuid.in_(queries.public_user_uuids())  # noqa
-            )
-        else:
-            stmt = stmt.join(
-                models.ComputedPermissions,
-                models.ComputedPermissions.item_uuid == models.Item.uuid,
-            ).where(
-                sa.or_(
-                    models.Item.owner_uuid == user.uuid,
-                    models.ComputedPermissions.permissions.any(str(user.uuid))
-                ),
-            )
+        stmt = queries.ensure_user_has_permissions(user, stmt)
 
         stmt = stmt.where(
             models.ComputedTags.tags.contains(aim.query.tags_include),

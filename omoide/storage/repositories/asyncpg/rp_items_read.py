@@ -25,11 +25,10 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         SELECT owner_uuid,
                exists(SELECT 1
                       FROM public_users pu
-                      WHERE pu.user_uuid = i.owner_uuid)  AS is_public,
-               (SELECT :user_uuid = ANY (cp.permissions)) AS is_permitted,
+                      WHERE pu.user_uuid = owner_uuid) AS is_public,
+               (SELECT :user_uuid = ANY (permissions)) AS is_permitted,
                owner_uuid::text = :user_uuid AS is_owner
-        FROM items i
-                 LEFT JOIN computed_permissions cp ON cp.item_uuid = i.uuid
+        FROM items
         WHERE uuid = :uuid;
         """
 
