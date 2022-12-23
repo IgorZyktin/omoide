@@ -98,9 +98,10 @@ async def app_item_update(
 
     item, total, permissions, computed_tags = result.value
 
+    lower_tags = [tag.lower() for tag in item.tags]
     external_tags = [
-        x for x in computed_tags
-        if x not in item.tags and not utils.is_valid_uuid(x)
+        tag for tag in computed_tags
+        if tag not in lower_tags and not utils.is_valid_uuid(tag)
     ]
 
     context = {
