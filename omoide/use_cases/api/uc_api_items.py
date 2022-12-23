@@ -5,7 +5,6 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
-from typing import Callable
 from typing import Collection
 from uuid import UUID
 
@@ -541,7 +540,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
             async with track_update_permissions_in_parents(
                     self.metainfo_repo, user,
-                    item, added, deleted, len(parents)) as writeback:
+                    item, added, deleted) as writeback:
                 writeback.operations = len(parents)
                 for i, parent_uuid in enumerate(parents, start=1):
                     await self.items_repo \
@@ -783,13 +782,16 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
             await self.metainfo_repo.mark_metainfo_updated(new_parent.uuid,
                                                            utils.now())
+            added: list[str] = []
+            deleted: list[str] = []
 
             if old_parent:
-                added, deleted = utils.get_delta(old_parent.tags,
-                                                 new_parent.tags)
+                _added, _deleted = utils.get_delta(old_parent.tags,
+                                                   new_parent.tags)
+                added.extend(_added)
+                deleted.extend(_deleted)
             else:
-                added: Collection[str] = new_parent.tags
-                deleted: Collection[str] = []
+                added.extend(new_parent.tags)
 
         asyncio.create_task(
             self.update_tags_in_children_of(user, new_parent, added, deleted)
