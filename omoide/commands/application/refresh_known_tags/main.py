@@ -18,34 +18,34 @@ def run(
         database: BaseDatabase,
 ) -> None:
     """Execute command."""
+    users = []
     if config.known or config.only_user:
         LOG.info('Refreshing tags for known users...')
         if config.only_user:
-            users = []
             user = helpers.get_user(database, config.only_user)
             if user:
                 users.append(user)
         else:
             users = helpers.get_users(database)
 
-        for user in users:
-            start = time.perf_counter()
-            total, count, to_drop = db \
-                .refresh_known_tags_for_known_user(database, user)
-            spent = time.perf_counter() - start
-            LOG.info(
-                'Refreshed tags for '
-                '{} (got {} tags with {} occurrences) in {:0.3f} sec.',
-                user.name,
-                utils.sep_digits(total),
-                utils.sep_digits(count),
-                spent,
-            )
+    for user in users:
+        start = time.perf_counter()
+        total, count, to_drop = db \
+            .refresh_known_tags_for_known_user(database, user)
+        spent = time.perf_counter() - start
+        LOG.info(
+            'Refreshed tags for '
+            '{} (got {} tags with {} occurrences) in {:0.3f} sec.',
+            user.name,
+            utils.sep_digits(total),
+            utils.sep_digits(count),
+            spent,
+        )
 
-            if to_drop:
-                dropped = db.drop_known_tags_for_known_user(database,
-                                                            user, to_drop)
-                LOG.info('Dropped {} tags for {}', dropped, user.name)
+        if to_drop:
+            dropped = db.drop_known_tags_for_known_user(database,
+                                                        user, to_drop)
+            LOG.info('Dropped {} tags for {}', dropped, user.name)
 
     if config.anon:
         LOG.info('Refreshing tags for anon user...')

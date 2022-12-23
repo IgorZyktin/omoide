@@ -27,17 +27,17 @@ def run(
         LOG.info('Refreshing tags for all users...')
         users = helpers.get_users(database)
 
-        for user in users:
-            LOG.info('Refreshing tags for {} {}', user.uuid, user.name)
-            start = time.perf_counter()
+    for user in users:
+        LOG.info('Refreshing tags for {} {}', user.uuid, user.name)
+        start = time.perf_counter()
 
-            with database.start_session() as session:
-                children = db.refresh_tags(config, session, user)
-                spent = time.perf_counter() - start
-                LOG.info(
-                    'Refreshed tags for '
-                    '{} (with {} children) in {:0.3f} sec.',
-                    user.name,
-                    utils.sep_digits(children),
-                    spent,
-                )
+        with database.start_session() as session:
+            children = db.refresh_tags(config, session, user)
+            spent = time.perf_counter() - start
+            LOG.info(
+                'Refreshed tags for '
+                '{} (with {} children) in {:0.3f} sec.',
+                user.name,
+                utils.sep_digits(children),
+                spent,
+            )
