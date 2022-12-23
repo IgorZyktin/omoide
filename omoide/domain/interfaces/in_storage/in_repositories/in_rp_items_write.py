@@ -49,14 +49,6 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
         """Delete item with given UUID."""
 
     @abc.abstractmethod
-    async def update_tags_in_children_of(
-            self,
-            user: domain.User,
-            item: domain.Item,
-    ) -> None:
-        """Apply parent tags to every item (and their children too)."""
-
-    @abc.abstractmethod
     async def check_child(
             self,
             possible_parent_uuid: UUID,

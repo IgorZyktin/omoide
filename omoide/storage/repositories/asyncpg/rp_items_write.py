@@ -158,59 +158,6 @@ class ItemsWriteRepository(
         response = await self.db.fetch_one(stmt)
         return response is not None
 
-    async def update_tags_in_children_of(
-            self,
-            user: domain.User,
-            item: domain.Item,
-    ) -> None:
-        """Apply parent tags to every item (and their children too)."""
-        total = 0
-        start = time.monotonic()
-
-        LOG.info(
-            'Started updating tags in children of: {}',
-            item.uuid,
-        )
-
-        async def _update_tags(
-                _self: ItemsWriteRepository,
-                _item: domain.Item,
-        ) -> None:
-            """Alter tags with themselves.
-
-            Actually we're expecting the database trigger to do all the work.
-            Trigger fires after update and computes new tags.
-            """
-            # TODO - stop using trigger and do it manually
-            nonlocal total
-            stmt = sa.update(
-                models.Item
-            ).where(
-                models.Item.uuid == _item.uuid
-            ).values(
-                tags=models.Item.tags
-            )
-            await _self.db.execute(stmt, {'uuid': str(_item.uuid)})
-            total += 1
-
-        await self.apply_downwards(
-            user=user,
-            item=item,
-            seen_items=set(),
-            skip_items=set(),
-            parent_first=True,
-            function=_update_tags,
-        )
-
-        delta = time.monotonic() - start
-        LOG.info(
-            'Ended updating tags in children of {}: '
-            '{} operations, {:0.3f} sec',
-            item.uuid,
-            total,
-            delta,
-        )
-
     async def apply_downwards(
             self,
             user: domain.User,
