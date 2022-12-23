@@ -318,6 +318,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             duration=None,
             operations=None,
             extras=extras,
+            error='',
         ).returning(
             models.LongJob.id
         )
@@ -330,6 +331,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             status: str,
             duration: float,
             operations: int,
+            error: str,
     ) -> None:
         """Finish long job."""
         stmt = sa.update(
@@ -338,6 +340,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             status=status,
             duration=duration,
             operations=operations,
+            error=error,
         ).where(
             models.LongJob.id == id
         )

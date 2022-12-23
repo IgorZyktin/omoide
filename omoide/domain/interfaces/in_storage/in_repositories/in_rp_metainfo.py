@@ -117,5 +117,6 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             status: str,
             duration: float,
             operations: int,
+            error: str,
     ) -> None:
         """Finish long job."""

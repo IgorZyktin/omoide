@@ -3,6 +3,7 @@
 """
 import asyncio
 import time
+import traceback
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 from typing import Collection
@@ -80,8 +81,10 @@ async def _generic_call(
         yield writeback
     except Exception:
         status = 'fail'
+        error = str(traceback.format_exc())
     else:
         status = 'done'
+        error = ''
 
     delta = time.perf_counter() - start
 
@@ -90,6 +93,7 @@ async def _generic_call(
         status=status,
         duration=delta,
         operations=writeback.operations,
+        error=error,
     )
 
     LOG.info(

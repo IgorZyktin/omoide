@@ -546,3 +546,4 @@ class LongJob(Base):
 
     operations: int = sa.Column(sa.Integer, nullable=True)
     extras: dict = sa.Column(pg.JSONB, nullable=False)
+    error: str = sa.Column(sa.Text, nullable=False)
