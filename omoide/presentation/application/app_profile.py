@@ -12,6 +12,7 @@ from fastapi.responses import Response
 from omoide import domain
 from omoide import use_cases
 from omoide import utils
+from omoide.domain import errors
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
@@ -21,28 +22,30 @@ router = fastapi.APIRouter()
 
 
 @router.get('/profile')
-@web.login_required
 async def app_profile(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show user home page."""
+    if user.is_not_registered or user.uuid is None:
+        error = errors.AuthenticationRequired()
+        return web.redirect_from_error(templates, request, error)
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': request.url_for('app_search'),
+        'url': templates.url_for(request, 'app_search'),
     }
-
-    return dep.get_templates().TemplateResponse('profile.html', context)
+    return templates.TemplateResponse('profile.html', context)
 
 
 @router.get('/profile/quotas')
-@web.login_required
 async def app_profile_quotas(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
@@ -50,13 +53,14 @@ async def app_profile_quotas(
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileQuotasUseCase = Depends(
             dep.profile_quotas_use_case),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show space usage stats."""
     result = await use_case.execute(user)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error)
+        return web.redirect_from_error(templates, request, result.error)
 
     items_size, total_items = result.value
 
@@ -71,32 +75,34 @@ async def app_profile_quotas(
         'aim_wrapper': aim_wrapper,
     }
 
-    return dep.get_templates().TemplateResponse('profile_quotas.html', context)
+    return templates.TemplateResponse('profile_quotas.html', context)
 
 
 @router.get('/profile/new')
-@web.login_required
 async def app_profile_new(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show recent updates."""
+    if user.is_not_registered or user.uuid is None:
+        error = errors.AuthenticationRequired()
+        return web.redirect_from_error(templates, request, error)
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'endpoint': request.url_for('api_profile_new'),
+        'endpoint': templates.url_for(request, 'api_profile_new'),
     }
-
-    return dep.get_templates().TemplateResponse('profile_new.html', context)
+    return templates.TemplateResponse('profile_new.html', context)
 
 
 @router.get('/profile/tags')
-@web.login_required
 async def app_profile_tags(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
@@ -104,13 +110,18 @@ async def app_profile_tags(
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileTagsUseCase = Depends(
             dep.profile_tags_use_case),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show know tags."""
+    if user.is_not_registered or user.uuid is None:
+        error = errors.AuthenticationRequired()
+        return web.redirect_from_error(templates, request, error)
+
     result = await use_case.execute(user)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error)
+        return web.redirect_from_error(templates, request, result.error)
 
     known_tags = result.value
 
@@ -123,4 +134,4 @@ async def app_profile_tags(
         'aim_wrapper': aim_wrapper,
     }
 
-    return dep.get_templates().TemplateResponse('profile_tags.html', context)
+    return templates.TemplateResponse('profile_tags.html', context)

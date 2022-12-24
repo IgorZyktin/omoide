@@ -3,14 +3,12 @@
 """
 import binascii
 from base64 import b64decode
-from typing import Any
 from typing import Optional
 
 from databases import Database
 from fastapi import Depends
 from fastapi.security import HTTPBasicCredentials
 from starlette.requests import Request
-from starlette.templating import Jinja2Templates
 
 from omoide import infra
 from omoide import use_cases
@@ -29,18 +27,21 @@ def get_config() -> app_config.Config:
     return app_config.Config()
 
 
-_URL_CACHE: dict[tuple[str, Optional[str]], str] = {}
+_URL_CACHE: dict[tuple[str, tuple[str, ...]], str] = {}
 
 
 @utils.memorize
-def get_templates() -> Jinja2Templates:
+def get_templates() -> web.TemplateEngine:
     """Get templates instance."""
     config = get_config()
-    templates = Jinja2Templates(directory='omoide/presentation/templates')
 
-    def _https_url_for(request: Request, name: str, **path_params: Any) -> str:
-        """Rewrite static files to HTTPS if on prod."""
-        key = (name, path_params.get('path'))
+    def _https_url_for(
+            request: Request,
+            name: str,
+            **path_params: web.P.kwargs,
+    ) -> str:
+        """Rewrite static files to HTTPS if on prod and cache result."""
+        key = (name, tuple(path_params.items()))
         url = _URL_CACHE.get(key)
         if url is None:
             url = request.url_for(name, **path_params)
@@ -48,9 +49,13 @@ def get_templates() -> Jinja2Templates:
             _URL_CACHE[key] = url
         return url
 
-    def _url_for(request: Request, name: str, **path_params: Any) -> str:
+    def _url_for(
+            request: Request,
+            name: str,
+            **path_params: web.P.kwargs,
+    ) -> str:
         """Basic url_for."""
-        key = (name, path_params.get('path'))
+        key = (name, tuple(path_params.items()))
         url = _URL_CACHE.get(key)
         if url is None:
             url = request.url_for(name, **path_params)
@@ -58,9 +63,18 @@ def get_templates() -> Jinja2Templates:
         return url
 
     if config.env != 'prod':
-        templates.env.globals['https_url_for'] = _url_for
+        templates = web.TemplateEngine(
+            directory='omoide/presentation/templates',
+            url_for=_url_for,
+        )
+        templates.env.globals['url_for'] = _url_for
+
     else:
-        templates.env.globals['https_url_for'] = _https_url_for
+        templates = web.TemplateEngine(
+            directory='omoide/presentation/templates',
+            url_for=_https_url_for,
+        )
+        templates.env.globals['url_for'] = _https_url_for
 
     return templates
 

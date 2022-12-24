@@ -3,13 +3,13 @@
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_search') + query.at_page(paginator.previous_page).as_str() }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                   href="{{ url_for(request, 'app_search') + query.at_page(paginator.previous_page).as_str() }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% endif %}
@@ -30,10 +30,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ https_url_for(request, 'app_search') + query.at_page(page.number).as_str() }}"
+                    <a href="{{ url_for(request, 'app_search') + query.at_page(page.number).as_str() }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ https_url_for(request, 'app_search') + query.at_page(page.number).as_str() }}"
+                    <a href="{{ url_for(request, 'app_search') + query.at_page(page.number).as_str() }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -41,13 +41,13 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_search') + query.at_page(paginator.next_page).as_str() }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                   href="{{ url_for(request, 'app_search') + query.at_page(paginator.next_page).as_str() }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% endif %}
@@ -60,13 +60,13 @@
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_search') + '?' + aim.to_url(page=paginator.previous_page) }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                   href="{{ url_for(request, 'app_search') + '?' + aim.to_url(page=paginator.previous_page) }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% endif %}
@@ -88,10 +88,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ https_url_for(request, 'app_search') + '?' + aim.to_url(page=page.number) }}"
+                    <a href="{{ url_for(request, 'app_search') + '?' + aim.to_url(page=page.number) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ https_url_for(request, 'app_search') + '?' + aim.to_url(page=page.number) }}"
+                    <a href="{{ url_for(request, 'app_search') + '?' + aim.to_url(page=page.number) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -99,13 +99,13 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_search') + '?' + aim.to_url(page=paginator.next_page) }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                   href="{{ url_for(request, 'app_search') + '?' + aim.to_url(page=paginator.next_page) }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% endif %}
@@ -118,13 +118,13 @@
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=paginator.previous_page) }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                   href="{{ url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=paginator.previous_page) }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% endif %}
@@ -145,10 +145,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ https_url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=page.number) }}"
+                    <a href="{{ url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=page.number) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ https_url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=page.number) }}"
+                    <a href="{{ url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=page.number) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -156,13 +156,13 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=paginator.next_page) }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                   href="{{ url_for(request, 'app_browse', uuid=uuid) + '?' + aim_wrapper.to_url(page=paginator.next_page) }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% endif %}
@@ -175,13 +175,13 @@
         <div class="pages">
             {% if album.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_preview', uuid=album.previous_item) + '?' + aim_wrapper.to_url_no_q() }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                   href="{{ url_for(request, 'app_preview', uuid=album.previous_item) + '?' + aim_wrapper.to_url_no_q() }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% endif %}
@@ -201,10 +201,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ https_url_for(request, 'app_preview', uuid=page.value) + '?' + aim_wrapper.to_url_no_q() }}"
+                    <a href="{{ url_for(request, 'app_preview', uuid=page.value) + '?' + aim_wrapper.to_url_no_q() }}"
                        class="active-page{{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ https_url_for(request, 'app_preview', uuid=page.value)+ '?' + aim_wrapper.to_url_no_q() }}"
+                    <a href="{{ url_for(request, 'app_preview', uuid=page.value)+ '?' + aim_wrapper.to_url_no_q() }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -212,13 +212,13 @@
             <span>&nbsp;</span>
             {% if album.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ https_url_for(request, 'app_preview', uuid=album.next_item) + '?' + aim_wrapper.to_url_no_q() }}">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                   href="{{ url_for(request, 'app_preview', uuid=album.next_item) + '?' + aim_wrapper.to_url_no_q() }}">
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% else %}
                 <a class="inactive-page page-separate">
-                    <img src="{{ https_url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
+                    <img src="{{ url_for(request, 'static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
             {% endif %}
@@ -236,11 +236,11 @@
                     {% endif %}
 
                     {% if pos.item.is_collection %}
-                        <a href="{{ https_url_for(request, 'app_browse', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url_no_q(page=pos.page) }}">
+                        <a href="{{ url_for(request, 'app_browse', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url_no_q(page=pos.page) }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% else %}
-                        <a href="{{ https_url_for(request, 'app_preview', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
+                        <a href="{{ url_for(request, 'app_preview', uuid=pos.item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
                             {{ pos.item.name or '???' }}
                         </a>
                     {% endif %}
@@ -251,9 +251,9 @@
                         <span>&nbsp;/&nbsp;</span>
                     {% endif %}
                     {{ location.current_item.name }}
-                    <a href="{{ https_url_for(request, 'app_items_download', uuid=location.current_item.uuid) }}">
+                    <a href="{{ url_for(request, 'app_items_download', uuid=location.current_item.uuid) }}">
                         <img class="download"
-                             src="{{ https_url_for(request, 'static', path='download_48.svg') }}"
+                             src="{{ url_for(request, 'static', path='download_48.svg') }}"
                              alt="Download inner items"/></a>
                 {% endif %}
             </h3>
@@ -272,17 +272,17 @@
 
                     {% if loop.last %}
                         {{ item.name }}
-                        <a href="{{ https_url_for(request, 'app_items_download', uuid=item.uuid) }}">
+                        <a href="{{ url_for(request, 'app_items_download', uuid=item.uuid) }}">
                             <img class="download"
-                                 src="{{ https_url_for(request, 'static', path='download_48.svg') }}"
+                                 src="{{ url_for(request, 'static', path='download_48.svg') }}"
                                  alt="Download inner items"/></a>
                     {% else %}
                         {% if item.is_collection %}
-                            <a href="{{ https_url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
+                            <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
                                 {{ item.name or '???' }}
                             </a>
                         {% else %}
-                            <a href="{{ https_url_for(request, 'app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
+                            <a href="{{ url_for(request, 'app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
                                 {{ item.name or '???' }}
                             </a>
                         {% endif %}
@@ -303,9 +303,9 @@
     <div class="envelope {{ additional_style }}">
 
         {%- if item.is_collection %}
-            <a href="{{ https_url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
+            <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
         {% else %}
-            <a href="{{ https_url_for(request, 'app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
+            <a href="{{ url_for(request, 'app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
         {% endif -%}
 
         {%- if item.is_collection and item.name -%}
@@ -313,7 +313,7 @@
         {%- endif -%}
 
         {%- if item.thumbnail_ext is none -%}
-            <img src="{{ https_url_for(request, 'static', path='empty.png') }}"
+            <img src="{{ url_for(request, 'static', path='empty.png') }}"
                  alt="{{ item.name }}"/>
         {%- else -%}
             <img src="{{ locate(item).thumbnail }}"

@@ -3,7 +3,7 @@
 {% block head %}
     {{ super() }}
     <meta property="og:url"
-          content="{{ https_url_for(request, 'app_browse', uuid=current_item.uuid) }}"/>
+          content="{{ url_for(request, 'app_browse', uuid=current_item.uuid) }}"/>
     <meta property="og:image"
           content="{{ locate(current_item).thumbnail }}"/>
     <meta property="og:description"

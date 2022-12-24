@@ -23,6 +23,7 @@ async def app_home(
         user: domain.User = fastapi.Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Home endpoint for user."""
@@ -32,6 +33,6 @@ async def app_home(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_paginated': True,
-        'api_url': request.url_for('api_home'),
+        'api_url': templates.url_for(request, 'api_home'),
     }
-    return dep.get_templates().TemplateResponse('basic.html', context)
+    return templates.TemplateResponse('basic.html', context)

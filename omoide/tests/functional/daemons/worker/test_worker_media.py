@@ -109,7 +109,7 @@ def _drop_resources(
         session.query(
             models.Media
         ).filter(
-            models.Media.id.in_(tuple(ids))
+            models.Media.id.in_(tuple(ids))  # noqa
         ).delete()
         session.commit()
 

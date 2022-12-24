@@ -104,7 +104,7 @@ def _drop_resources(
         session.query(
             models.ManualCopy
         ).filter(
-            models.ManualCopy.id.in_(tuple(ids))
+            models.ManualCopy.id.in_(tuple(ids))  # noqa
         ).delete()
         session.commit()
 
@@ -124,12 +124,14 @@ def _do_testing(
 
     with database.start_session() as session:
         copy_1 = database.select_copy_operation(session, selected_1)
-        media_1 = database.create_media_from_copy(copy_1, b'test')
-        copy_1.status = 'done'
-        session.add(media_1)
-        session.flush()
-        session.commit()
-        assert media_1.id is not None
+
+        if copy_1 is not None:
+            media_1 = database.create_media_from_copy(copy_1, b'test')
+            copy_1.status = 'done'
+            session.add(media_1)
+            session.flush()
+            session.commit()
+            assert media_1.id is not None
 
     dropped = database.drop_manual_copies()
     assert dropped == 1

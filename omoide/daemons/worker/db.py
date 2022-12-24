@@ -24,7 +24,7 @@ class Database(BaseDatabase):
         stmt = sa.select(
             models.Media.id
         ).where(
-            ~models.Media.replication.contains(formula),
+            ~models.Media.replication.contains(formula),  # noqa
             models.Media.attempts < max_attempts,
             models.Media.error == '',
         ).order_by(
@@ -60,7 +60,7 @@ class Database(BaseDatabase):
         stmt = sa.delete(
             models.Media
         ).where(
-            models.Media.replication.contains(formula),
+            models.Media.replication.contains(formula),  # noqa
         )
 
         with self.engine.begin() as conn:

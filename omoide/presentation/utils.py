@@ -5,25 +5,24 @@ import fastapi
 
 from omoide import domain
 from omoide.presentation import web
-from omoide.presentation.dependencies import get_templates
 
 
 def to_simple_items(
+        templates: web.TemplateEngine,
         request: fastapi.Request,
         prefix_size: int,
         items: list[domain.Item],
 ) -> list[dict]:
     """Convert Item objects into simple renderable form."""
-    templates = get_templates()
-    https_url_for = templates.env.globals['https_url_for']
-    empty_href = https_url_for(request, 'static', path='empty.png')
+    empty_href = templates.url_for(request, 'static', path='empty.png')
     return [
-        to_simple_item(request, prefix_size, item, empty_href)
+        to_simple_item(templates, request, prefix_size, item, empty_href)
         for item in items
     ]
 
 
 def to_simple_item(
+        templates: web.TemplateEngine,
         request: fastapi.Request,
         prefix_size: int,
         item: domain.Item,
@@ -31,14 +30,15 @@ def to_simple_item(
 ) -> dict:
     """Convert Item object into simple renderable form."""
     if item.is_collection:
-        href = request.url_for('app_browse', uuid=item.uuid)
+        href = templates.url_for(request, 'app_browse', uuid=item.uuid)
     else:
-        href = request.url_for('app_preview', uuid=item.uuid)
+        href = templates.url_for(request, 'app_preview', uuid=item.uuid)
 
     if item.thumbnail_ext is None:
         thumbnail = empty_href
     else:
         locator = web.Locator(
+            templates=templates,
             request=request,
             prefix_size=prefix_size,
             item=item,

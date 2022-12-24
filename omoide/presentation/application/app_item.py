@@ -24,7 +24,6 @@ router = fastapi.APIRouter(prefix='/items')
 
 
 @router.get('/create/{uuid}')
-@web.login_required
 async def app_item_create(
         request: Request,
         uuid: str,
@@ -34,6 +33,7 @@ async def app_item_create(
             dep.app_item_create_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Create item page."""
@@ -42,7 +42,8 @@ async def app_item_create(
     result = await use_case.execute(policy, user, valid_uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, valid_uuid)
+        return web.redirect_from_error(
+            templates, request, result.error, valid_uuid)
 
     parent, permissions = result.value
 
@@ -51,13 +52,13 @@ async def app_item_create(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': request.url_for('app_search'),
+        'url': templates.url_for(request, 'app_search'),
         'parent': parent,
         'permissions': permissions,
-        'locate': web.get_locator(request, config.prefix_size),
+        'locate': web.get_locator(templates, request, config.prefix_size),
     }
 
-    return dep.get_templates().TemplateResponse('item_create.html', context)
+    return templates.TemplateResponse('item_create.html', context)
 
 
 def serialize_item(
@@ -78,7 +79,6 @@ def serialize_item(
 
 
 @router.get('/update/{uuid}')
-@web.login_required
 async def app_item_update(
         request: Request,
         uuid: UUID,
@@ -88,13 +88,15 @@ async def app_item_update(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Edit item page."""
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, uuid)
+        return web.redirect_from_error(
+            templates, request, result.error, uuid)
 
     item, total, permissions, computed_tags = result.value
 
@@ -114,18 +116,17 @@ async def app_item_update(
         'total': utils.sep_digits(total),
         'permissions': permissions,
         'external_tags': external_tags,
-        'url': request.url_for('app_search'),
+        'url': templates.url_for(request, 'app_search'),
         'model': ujson.dumps(serialize_item(item), ensure_ascii=False),
         'initial_permissions': ujson.dumps([
             f'{x.uuid} {x.name}' for x in permissions
         ], ensure_ascii=False),
     }
 
-    return dep.get_templates().TemplateResponse('item_update.html', context)
+    return templates.TemplateResponse('item_update.html', context)
 
 
 @router.get('/delete/{uuid}')
-@web.login_required
 async def app_item_delete(
         request: Request,
         uuid: UUID,
@@ -135,13 +136,14 @@ async def app_item_delete(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Delete item page."""
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, uuid)
+        return web.redirect_from_error(templates, request, result.error, uuid)
 
     item, total = result.value
 
@@ -152,12 +154,12 @@ async def app_item_delete(
         'aim_wrapper': aim_wrapper,
         'current_item': item,
         'item': item,
-        'url': request.url_for('app_search'),
+        'url': templates.url_for(request, 'app_search'),
         'uuid': uuid,
         'total': utils.sep_digits(total),
     }
 
-    return dep.get_templates().TemplateResponse('item_delete.html', context)
+    return templates.TemplateResponse('item_delete.html', context)
 
 
 @router.get('/download/{uuid}')
@@ -169,13 +171,14 @@ async def app_items_download(
         use_case: use_cases.AppItemsDownloadUseCase = Depends(
             dep.app_items_download_use_case),
         config: Config = Depends(dep.get_config),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Return links of children to download them."""
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, uuid)
+        return web.redirect_from_error(templates, request, result.error, uuid)
 
     numerated_items = result.value
 
@@ -185,7 +188,7 @@ async def app_items_download(
         'user': user,
         'uuid': uuid,
         'numerated_items': numerated_items,
-        'locate': web.get_locator(request, config.prefix_size),
+        'locate': web.get_locator(templates, request, config.prefix_size),
     }
 
-    return dep.get_templates().TemplateResponse('items_download.html', context)
+    return templates.TemplateResponse('items_download.html', context)

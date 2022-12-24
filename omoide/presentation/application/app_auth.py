@@ -32,10 +32,11 @@ async def app_login(
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Ask user for login and password."""
-    url = request.url_for('app_home')
+    url = templates.url_for(request, 'app_home')
 
     if not user.is_anon():
         # already logged in
@@ -58,6 +59,7 @@ async def app_logout(
         request: Request,
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Clear authorization."""
@@ -66,9 +68,9 @@ async def app_logout(
         'config': config,
         'user': domain.User.new_anon(),
         'aim_wrapper': aim_wrapper,
-        'url': request.url_for('app_search'),
+        'url': templates.url_for(request, 'app_search'),
     }
-    return dep.get_templates().TemplateResponse(
+    return templates.TemplateResponse(
         name='logout.html',
         context=context,
         status_code=401,

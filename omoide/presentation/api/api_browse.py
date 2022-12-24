@@ -28,6 +28,7 @@ async def api_browse(
             dep.api_browse_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Return portion of items for browse template."""
     valid_uuid = global_utils.cast_uuid(uuid)
@@ -40,4 +41,5 @@ async def api_browse(
     if isinstance(result, Failure):
         return []
 
-    return utils.to_simple_items(request, config.prefix_size, result.value)
+    return utils.to_simple_items(
+        templates, request, config.prefix_size, result.value)

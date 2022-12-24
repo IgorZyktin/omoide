@@ -48,7 +48,7 @@ def get_metainfo(
 
     if config.marker is not None:
         stmt = stmt.where(
-            models.Metainfo.item_uuid > str(config.marker)
+            models.Metainfo.item_uuid > str(config.marker)  # noqa
         )
 
     stmt = stmt.order_by(models.Metainfo.item_uuid)

@@ -33,6 +33,7 @@ async def api_create_item(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemCreateUseCase = Depends(
             dep.api_item_create_use_case),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Create item."""
     result = await use_case.execute(policy, user, payload)
@@ -40,8 +41,8 @@ async def api_create_item(
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
 
-    response.headers['Location'] = request.url_for('api_read_item',
-                                                   uuid=result.value)
+    response.headers['Location'] = templates.url_for(
+        request, 'api_read_item', uuid=result.value)
 
     return api_models.OnlyUUID(uuid=result.value)
 

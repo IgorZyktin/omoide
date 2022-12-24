@@ -5,23 +5,48 @@ import copy
 import functools
 import http
 import re
+from os import PathLike
 from typing import Any
 from typing import Callable
 from typing import NoReturn
 from typing import Optional
+from typing import ParamSpec
 from typing import Type
+from typing import TypeAlias
 from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
+from starlette.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import utils
 from omoide.domain import errors
+from omoide.infra import custom_logging
 from omoide.presentation import constants
 from omoide.utils import maybe_str
+
+LOG = custom_logging.get_logger(__name__)
+P = ParamSpec('P')
+
+
+class CustomJinja2Templates(Jinja2Templates):
+    """Custom class that knows its url_for."""
+
+    def __init__(
+            self,
+            directory: str | PathLike,
+            url_for: Callable[P, str],
+            **env_options: Any,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__(directory, **env_options)
+        self.url_for = url_for
+
+
+TemplateEngine: TypeAlias = CustomJinja2Templates
 
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     # not supposed to be used, but just in case
@@ -43,6 +68,7 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     ],
 
     http.HTTPStatus.FORBIDDEN: [
+        errors.AuthenticationRequired,
         errors.ItemRequiresAccess,
         errors.ItemNoDeleteForRoot,
         errors.ItemModificationByAnon,
@@ -64,15 +90,12 @@ def get_corresponding_error_code(error: errors.Error) -> int:
     )
 
 
-def safe_template(template, **kwargs) -> str:
+def safe_template(template: str, **kwargs) -> str:
     """Try converting error as correct as possible."""
     message = template
 
     for kev, value in kwargs.items():
-        try:
-            message = message.replace('{' + str(kev) + '}', str(value))
-        except KeyError:
-            pass
+        message = message.replace('{' + str(kev) + '}', str(value))
 
     return message
 
@@ -89,14 +112,15 @@ def raise_from_error(
 
     try:
         message = error.template.format(**error.kwargs)
-    except KeyError as exc:
-        print(exc)  # TODO: replace with logger call
+    except KeyError:
+        LOG.exception('Failed to raise from error')
         message = safe_template(error.template, **error.kwargs)
 
     raise HTTPException(status_code=code, detail=message)
 
 
 def redirect_from_error(
+        templates: TemplateEngine,
         request: Request,
         error: errors.Error,
         uuid: Optional[UUID] = None,
@@ -106,42 +130,25 @@ def redirect_from_error(
     response = None
 
     if code == http.HTTPStatus.BAD_REQUEST:
-        response = RedirectResponse(request.url_for('bad_request'))
+        response = RedirectResponse(templates.url_for(request, 'bad_request'))
 
     elif code == http.HTTPStatus.NOT_FOUND and uuid is not None:
         response = RedirectResponse(
-            request.url_for('not_found') + f'?q={uuid}'
+            templates.url_for(request, 'not_found') + f'?q={uuid}'
         )
 
     if code in (http.HTTPStatus.FORBIDDEN, http.HTTPStatus.UNAUTHORIZED) \
             and uuid is not None:
         response = RedirectResponse(
-            request.url_for('unauthorized') + f'?q={uuid}'
+            templates.url_for(request, 'unauthorized') + f'?q={uuid}'
         )
 
     if response is None:
-        response = RedirectResponse(request.url_for('bad_request'))
+        response = RedirectResponse(
+            templates.url_for(request, 'bad_request')
+        )
 
     return response
-
-
-def login_required(func: Callable) -> Callable:
-    """Redirect anon users to login."""
-
-    @functools.wraps(func)
-    async def wrapper(
-            request: Request,
-            *args,
-            user: domain.User,
-            **kwargs,
-    ):
-        """Wrapper."""
-        if user.is_anon():
-            # TODO: try keeping original link
-            return RedirectResponse(request.url_for('app_login'))
-        return await func(request, *args, user=user, **kwargs)
-
-    return wrapper
 
 
 class AimWrapper:
@@ -282,6 +289,7 @@ class Locator:
 
     def __init__(
             self,
+            templates: TemplateEngine,
             request: Request,
             prefix_size: int,
             item: domain.Item,
@@ -290,12 +298,13 @@ class Locator:
         self.request = request
         self.prefix_size = prefix_size
         self.item = item
+        self.url_for = templates.url_for
 
     @functools.cached_property
     def base(self) -> list[str]:
         """Return root link components."""
         return [
-            maybe_str(self.request.url_for('app_home')),
+            maybe_str(self.url_for(self.request, 'app_home')),
             'content',
         ]
 
@@ -334,11 +343,13 @@ class Locator:
 
 
 def get_locator(
+        templates: TemplateEngine,
         request: Request,
         prefix_size: int,
 ) -> Callable[[domain.Item], Locator]:
     """Make new locator."""
     return lambda item: Locator(
+        templates=templates,
         request=request,
         prefix_size=prefix_size,
         item=item,

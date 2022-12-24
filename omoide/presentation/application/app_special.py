@@ -24,6 +24,7 @@ async def not_found(
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <not found> page."""
@@ -33,7 +34,7 @@ async def not_found(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.get_templates().TemplateResponse(
+    return templates.TemplateResponse(
         name='exc_not_found.html',
         context=context,
         status_code=http.HTTPStatus.NOT_FOUND,
@@ -46,6 +47,7 @@ async def unauthorized(
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <unauthorized> page."""
@@ -55,7 +57,7 @@ async def unauthorized(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.get_templates().TemplateResponse(
+    return templates.TemplateResponse(
         name='exc_unauthorized.html',
         context=context,
         status_code=http.HTTPStatus.UNAUTHORIZED,
@@ -68,6 +70,7 @@ async def forbidden(
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <forbidden> page."""
@@ -77,7 +80,7 @@ async def forbidden(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.get_templates().TemplateResponse(
+    return templates.TemplateResponse(
         name='exc_forbidden.html',
         context=context,
         status_code=http.HTTPStatus.FORBIDDEN,
@@ -90,6 +93,7 @@ async def bad_request(
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <bad request> page."""
@@ -99,7 +103,7 @@ async def bad_request(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.get_templates().TemplateResponse(
+    return templates.TemplateResponse(
         name='exc_bad_request.html',
         context=context,
         status_code=http.HTTPStatus.BAD_REQUEST,

@@ -33,6 +33,7 @@ async def app_search(
             dep.app_paged_search_use_case),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         config: Config = Depends(dep.get_config),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Main page of the application."""
@@ -41,7 +42,7 @@ async def app_search(
 
     result = await use_case_dynamic.execute(user, aim_wrapper.aim)
     if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error)
+        return web.redirect_from_error(templates, request, result.error)
 
     matching_items = result.value
 
@@ -50,7 +51,8 @@ async def app_search(
         paged_result = await use_case_paged.execute(user, aim)
 
         if isinstance(paged_result, Failure):
-            return web.redirect_from_error(request, paged_result.error)
+            return web.redirect_from_error(
+                templates, request, paged_result.error)
 
         items = paged_result.value
         paginator = infra.Paginator(
@@ -76,8 +78,8 @@ async def app_search(
         'items': items,
         'matching_items': utils.sep_digits(matching_items),
         'delta': f'{delta:0.3f}',
-        'endpoint': request.url_for('api_search'),
-        'locate': web.get_locator(request, config.prefix_size),
+        'endpoint': templates.url_for(request, 'api_search'),
+        'locate': web.get_locator(templates, request, config.prefix_size),
     }
 
-    return dep.get_templates().TemplateResponse(template, context)
+    return templates.TemplateResponse(template, context)

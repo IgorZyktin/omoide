@@ -34,6 +34,7 @@ async def app_browse(
             dep.app_browse_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item as collection."""
@@ -41,12 +42,14 @@ async def app_browse(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
+        return web.redirect_from_error(
+            templates, request, errors.InvalidUUID(uuid=uuid))
 
     _result = await use_case.execute(policy, user, valid_uuid, aim)
 
     if isinstance(_result, Failure):
-        return web.redirect_from_error(request, _result.error, valid_uuid)
+        return web.redirect_from_error(
+            templates, request, _result.error, valid_uuid)
 
     result = _result.value
 
@@ -57,10 +60,10 @@ async def app_browse(
         'uuid': uuid,
         'aim_wrapper': aim_wrapper,
         'location': result.location,
-        'api_url': request.url_for('api_browse', uuid=uuid),
+        'api_url': templates.url_for(request, 'api_browse', uuid=uuid),
         'result': result,
         'current_item': result.item,
-        'locate': web.get_locator(request, config.prefix_size),
+        'locate': web.get_locator(templates, request, config.prefix_size),
     }
 
     if result.paginated:
@@ -75,4 +78,4 @@ async def app_browse(
     else:
         template = 'browse_dynamic.html'
 
-    return dep.get_templates().TemplateResponse(template, context)
+    return templates.TemplateResponse(template, context)

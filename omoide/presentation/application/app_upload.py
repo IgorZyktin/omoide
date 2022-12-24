@@ -23,7 +23,6 @@ router = fastapi.APIRouter()
 
 
 @router.get('/upload/{uuid}')
-@web.login_required
 async def app_upload(
         request: Request,
         uuid: str,
@@ -33,18 +32,21 @@ async def app_upload(
             dep.app_upload_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Upload media page."""
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
+        return web.redirect_from_error(
+            templates, request, errors.InvalidUUID(uuid=uuid))
 
     _result = await use_case.execute(policy, user, valid_uuid)
 
     if isinstance(_result, Failure):
-        return web.redirect_from_error(request, _result.error, valid_uuid)
+        return web.redirect_from_error(
+            templates, request, _result.error, valid_uuid)
 
     item, permissions = _result.value
 
@@ -53,10 +55,10 @@ async def app_upload(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': request.url_for('app_search'),
+        'url': templates.url_for(request, 'app_search'),
         'item': item,
         'permissions': permissions,
-        'locate': web.get_locator(request, config.prefix_size),
+        'locate': web.get_locator(templates, request, config.prefix_size),
     }
 
-    return dep.get_templates().TemplateResponse('upload.html', context)
+    return templates.TemplateResponse('upload.html', context)
