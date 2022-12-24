@@ -34,4 +34,4 @@ async def app_home(
         'block_paginated': True,
         'api_url': request.url_for('api_home'),
     }
-    return dep.templates.TemplateResponse('basic.html', context)
+    return dep.get_templates().TemplateResponse('basic.html', context)

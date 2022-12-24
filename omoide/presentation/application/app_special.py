@@ -33,7 +33,7 @@ async def not_found(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.templates.TemplateResponse(
+    return dep.get_templates().TemplateResponse(
         name='exc_not_found.html',
         context=context,
         status_code=http.HTTPStatus.NOT_FOUND,
@@ -55,7 +55,7 @@ async def unauthorized(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.templates.TemplateResponse(
+    return dep.get_templates().TemplateResponse(
         name='exc_unauthorized.html',
         context=context,
         status_code=http.HTTPStatus.UNAUTHORIZED,
@@ -77,7 +77,7 @@ async def forbidden(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.templates.TemplateResponse(
+    return dep.get_templates().TemplateResponse(
         name='exc_forbidden.html',
         context=context,
         status_code=http.HTTPStatus.FORBIDDEN,
@@ -99,7 +99,7 @@ async def bad_request(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return dep.templates.TemplateResponse(
+    return dep.get_templates().TemplateResponse(
         name='exc_bad_request.html',
         context=context,
         status_code=http.HTTPStatus.BAD_REQUEST,

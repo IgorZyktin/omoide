@@ -57,7 +57,7 @@ async def app_item_create(
         'locate': web.get_locator(request, config.prefix_size),
     }
 
-    return dep.templates.TemplateResponse('item_create.html', context)
+    return dep.get_templates().TemplateResponse('item_create.html', context)
 
 
 def serialize_item(
@@ -121,7 +121,7 @@ async def app_item_update(
         ], ensure_ascii=False),
     }
 
-    return dep.templates.TemplateResponse('item_update.html', context)
+    return dep.get_templates().TemplateResponse('item_update.html', context)
 
 
 @router.get('/delete/{uuid}')
@@ -157,7 +157,7 @@ async def app_item_delete(
         'total': utils.sep_digits(total),
     }
 
-    return dep.templates.TemplateResponse('item_delete.html', context)
+    return dep.get_templates().TemplateResponse('item_delete.html', context)
 
 
 @router.get('/download/{uuid}')
@@ -188,4 +188,4 @@ async def app_items_download(
         'locate': web.get_locator(request, config.prefix_size),
     }
 
-    return dep.templates.TemplateResponse('items_download.html', context)
+    return dep.get_templates().TemplateResponse('items_download.html', context)

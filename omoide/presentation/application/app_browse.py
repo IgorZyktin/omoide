@@ -75,4 +75,4 @@ async def app_browse(
     else:
         template = 'browse_dynamic.html'
 
-    return dep.templates.TemplateResponse(template, context)
+    return dep.get_templates().TemplateResponse(template, context)

@@ -3,6 +3,7 @@
 """
 import binascii
 from base64 import b64decode
+from typing import Any
 from typing import Optional
 
 from databases import Database
@@ -21,13 +22,47 @@ from omoide.presentation import constants
 from omoide.presentation import web
 from omoide.storage.repositories import asyncpg
 
-templates = Jinja2Templates(directory='omoide/presentation/templates')
-
 
 @utils.memorize
 def get_config() -> app_config.Config:
     """Get config instance."""
     return app_config.Config()
+
+
+_URL_CACHE: dict[tuple[str, Optional[str]], str] = {}
+
+
+@utils.memorize
+def get_templates() -> Jinja2Templates:
+    """Get templates instance."""
+    config = get_config()
+    templates = Jinja2Templates(directory='omoide/presentation/templates')
+
+    def _https_url_for(request: Request, name: str, **path_params: Any) -> str:
+        """Rewrite static files to HTTPS if on prod."""
+        key = (name, path_params.get('path'))
+        url = _URL_CACHE.get(key)
+        if url is None:
+            url = request.url_for(name, **path_params)
+            url = url.replace('http', 'https', 1)
+            _URL_CACHE[key] = url
+        return url
+
+    def _url_for(request: Request, name: str, **path_params: Any) -> str:
+        """Basic url_for."""
+        key = (name, path_params.get('path'))
+        url = _URL_CACHE.get(key)
+        if url is None:
+            url = request.url_for(name, **path_params)
+            _URL_CACHE[key] = url
+        return url
+
+    if config.env != 'prod':
+        templates.env.globals['https_url_for'] = _url_for
+    else:
+        templates.env.globals['https_url_for'] = _https_url_for
+
+    return templates
 
 
 @utils.memorize

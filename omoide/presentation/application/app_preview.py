@@ -76,4 +76,4 @@ async def app_preview(
         'block_paginated': True,
         'locate': web.get_locator(request, config.prefix_size),
     }
-    return dep.templates.TemplateResponse('preview.html', context)
+    return dep.get_templates().TemplateResponse('preview.html', context)

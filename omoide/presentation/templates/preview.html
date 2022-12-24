@@ -4,7 +4,7 @@
 {% block head %}
     {{ super() }}
     <meta property="og:url"
-          content="{{ request.url_for('app_preview', uuid=item.uuid) }}"/>
+          content="{{ https_url_for(request, 'app_preview', uuid=item.uuid) }}"/>
     <meta property="og:image"
           content="{{ locate(item).thumbnail }}"/>
     <meta property="og:description"
@@ -23,8 +23,8 @@
 
             {% if album.has_previous %}
                 <a class="preview-swipe"
-                   href="{{ url_for('app_preview', uuid=album.previous_item) + '?' + aim_wrapper.to_url_no_q() }}">
-                    <img src="{{ request.url_for('static', path='ic_arrow_back_24px.svg') }}"
+                   href="{{ https_url_for(request, 'app_preview', uuid=album.previous_item) + '?' + aim_wrapper.to_url_no_q() }}">
+                    <img src="{{ https_url_for(request, 'static', path='ic_arrow_back_24px.svg') }}"
                          alt="Previous"/>
                 </a>
             {% else %}
@@ -37,9 +37,9 @@
                         <p>{{ item.name }}</p>
                     {%- endif -%}
 
-                    <a href="{{ request.url_for('app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q(page=1) }}">
+                    <a href="{{ https_url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q(page=1) }}">
                         {%- if item.thumbnail_ext is none -%}
-                            <img src="{{ url_for('static', path='empty.png') }}"
+                            <img src="{{ https_url_for(request, 'static', path='empty.png') }}"
                                  alt="{{ item.name }}"/>
                         {%- else -%}
                             <img src="{{ locate(item).thumbnail }}"
@@ -50,7 +50,7 @@
             {% else %}
                 <a href="{{ locate(item).content }}">
                     {%- if item.preview_ext is none -%}
-                        <img src="{{ url_for('static', path='empty.png') }}"
+                        <img src="{{ https_url_for(request, 'static', path='empty.png') }}"
                              alt="{{ item.name }}"/>
                     {%- else -%}
                         <img src="{{ locate(item).preview }}"
@@ -61,8 +61,8 @@
 
             {% if album.has_next %}
                 <a class="preview-swipe"
-                   href="{{ url_for('app_preview', uuid=album.next_item) + '?' + aim_wrapper.to_url_no_q() }}">
-                    <img src="{{ request.url_for('static', path='ic_arrow_forward_24px.svg') }}"
+                   href="{{ https_url_for(request, 'app_preview', uuid=album.next_item) + '?' + aim_wrapper.to_url_no_q() }}">
+                    <img src="{{ https_url_for(request, 'static', path='ic_arrow_forward_24px.svg') }}"
                          alt="Next"/>
                 </a>
             {% else %}
@@ -75,10 +75,10 @@
             {% for wrapper in result.location.items %}
                 {% if wrapper.item.name %}
                     {% if wrapper.item.is_collection %}
-                        <a href="{{ url_for('app_browse', uuid=wrapper.item.uuid) + '?' + aim_wrapper.to_url_no_q() }}"
+                        <a href="{{ https_url_for(request, 'app_browse', uuid=wrapper.item.uuid) + '?' + aim_wrapper.to_url_no_q() }}"
                            class="tag-box tag-box-item">{{ wrapper.item.name }}</a>
                     {% else %}
-                        <a href="{{ url_for('app_search') + '?' + aim_wrapper.to_url(q=wrapper.item.uuid) }}"
+                        <a href="{{ https_url_for(request, 'app_search') + '?' + aim_wrapper.to_url(q=wrapper.item.uuid) }}"
                            class="tag-box tag-box-item">{{ wrapper.item.name }}</a>
                     {% endif %}
                 {% endif %}
@@ -88,7 +88,7 @@
         <div class="preview-tags">
             {% for tag in tags %}
                 {% if tag %}
-                    <a href="{{ url_for('app_search') }}?q={{ tag | urlencode }}"
+                    <a href="{{ https_url_for(request, 'app_search') }}?q={{ tag | urlencode }}"
                        class="tag-box">{{ tag }}</a>
                 {% endif %}
             {% endfor %}

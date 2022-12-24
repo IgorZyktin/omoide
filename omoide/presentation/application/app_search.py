@@ -80,4 +80,4 @@ async def app_search(
         'locate': web.get_locator(request, config.prefix_size),
     }
 
-    return dep.templates.TemplateResponse(template, context)
+    return dep.get_templates().TemplateResponse(template, context)

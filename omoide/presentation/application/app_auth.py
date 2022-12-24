@@ -68,7 +68,7 @@ async def app_logout(
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
     }
-    return dep.templates.TemplateResponse(
+    return dep.get_templates().TemplateResponse(
         name='logout.html',
         context=context,
         status_code=401,

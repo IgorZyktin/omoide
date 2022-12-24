@@ -59,4 +59,4 @@ async def app_upload(
         'locate': web.get_locator(request, config.prefix_size),
     }
 
-    return dep.templates.TemplateResponse('upload.html', context)
+    return dep.get_templates().TemplateResponse('upload.html', context)

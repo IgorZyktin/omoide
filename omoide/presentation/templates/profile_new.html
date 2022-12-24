@@ -2,7 +2,7 @@
 
 {% block head %}
     <script type="text/javascript"
-            src="{{ url_for('static', path='scroller.js') }}"></script>
+            src="{{ https_url_for(request, 'static', path='scroller.js') }}"></script>
 {% endblock %}
 
 {% block body %}

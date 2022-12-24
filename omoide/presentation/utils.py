@@ -5,6 +5,7 @@ import fastapi
 
 from omoide import domain
 from omoide.presentation import web
+from omoide.presentation.dependencies import get_templates
 
 
 def to_simple_items(
@@ -13,7 +14,9 @@ def to_simple_items(
         items: list[domain.Item],
 ) -> list[dict]:
     """Convert Item objects into simple renderable form."""
-    empty_href = request.url_for('static', path='empty.png')
+    templates = get_templates()
+    https_url_for = templates.env.globals['https_url_for']
+    empty_href = https_url_for(request, 'static', path='empty.png')
     return [
         to_simple_item(request, prefix_size, item, empty_href)
         for item in items

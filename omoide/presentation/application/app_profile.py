@@ -38,7 +38,7 @@ async def app_profile(
         'url': request.url_for('app_search'),
     }
 
-    return dep.templates.TemplateResponse('profile.html', context)
+    return dep.get_templates().TemplateResponse('profile.html', context)
 
 
 @router.get('/profile/quotas')
@@ -71,7 +71,7 @@ async def app_profile_quotas(
         'aim_wrapper': aim_wrapper,
     }
 
-    return dep.templates.TemplateResponse('profile_quotas.html', context)
+    return dep.get_templates().TemplateResponse('profile_quotas.html', context)
 
 
 @router.get('/profile/new')
@@ -92,7 +92,7 @@ async def app_profile_new(
         'endpoint': request.url_for('api_profile_new'),
     }
 
-    return dep.templates.TemplateResponse('profile_new.html', context)
+    return dep.get_templates().TemplateResponse('profile_new.html', context)
 
 
 @router.get('/profile/tags')
@@ -123,4 +123,4 @@ async def app_profile_tags(
         'aim_wrapper': aim_wrapper,
     }
 
-    return dep.templates.TemplateResponse('profile_tags.html', context)
+    return dep.get_templates().TemplateResponse('profile_tags.html', context)
