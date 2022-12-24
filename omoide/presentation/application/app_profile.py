@@ -25,7 +25,7 @@ router = fastapi.APIRouter()
 async def app_profile(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -46,7 +46,7 @@ async def app_profile(
 async def app_profile_quotas(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileQuotasUseCase = Depends(
             dep.profile_quotas_use_case),
@@ -79,7 +79,7 @@ async def app_profile_quotas(
 async def app_profile_new(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -100,7 +100,7 @@ async def app_profile_new(
 async def app_profile_tags(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileTagsUseCase = Depends(
             dep.profile_tags_use_case),

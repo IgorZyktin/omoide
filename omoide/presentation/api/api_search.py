@@ -22,7 +22,7 @@ async def api_search(
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.ApiSearchUseCase = Depends(
             dep.api_search_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
 ):
     """Return portion of random items."""

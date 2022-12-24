@@ -32,7 +32,7 @@ async def app_search(
         use_case_paged: use_cases.AppPagedSearchUseCase = Depends(
             dep.app_paged_search_use_case),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Main page of the application."""

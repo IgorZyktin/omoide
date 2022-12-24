@@ -56,7 +56,7 @@ async def app_login(
 @router.get('/logout')
 async def app_logout(
         request: Request,
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):

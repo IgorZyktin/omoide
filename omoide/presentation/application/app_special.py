@@ -22,7 +22,7 @@ router = fastapi.APIRouter()
 async def not_found(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -44,7 +44,7 @@ async def not_found(
 async def unauthorized(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -66,7 +66,7 @@ async def unauthorized(
 async def forbidden(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -88,7 +88,7 @@ async def forbidden(
 async def bad_request(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):

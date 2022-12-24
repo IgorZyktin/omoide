@@ -23,13 +23,13 @@ app = fastapi.FastAPI(
 @app.on_event('startup')
 async def startup():
     """Connect to the database."""
-    await dep.db.connect()
+    await dep.get_db().connect()
 
 
 @app.on_event('shutdown')
 async def shutdown():
     """Disconnect from the database."""
-    await dep.db.disconnect()
+    await dep.get_db().disconnect()
 
 
 # Special application routes
@@ -61,7 +61,7 @@ app.mount(
     name='static',
 )
 
-if app_config.get_config().env != 'prod':
+if app_config.Config().env != 'prod':
     app.mount(
         '/content',
         StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),

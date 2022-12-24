@@ -26,7 +26,7 @@ async def api_browse(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.APIBrowseUseCase = Depends(
             dep.api_browse_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
 ):
     """Return portion of items for browse template."""

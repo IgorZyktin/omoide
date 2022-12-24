@@ -20,7 +20,7 @@ async def api_home(
         request: Request,
         user: domain.User = Depends(dep.get_current_user),
         use_case: use_cases.AppHomeUseCase = Depends(dep.app_home_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
 ):
     """Return portion of items for home directory."""

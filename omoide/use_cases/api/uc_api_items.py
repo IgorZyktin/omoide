@@ -207,14 +207,14 @@ class BaseItemModifyUseCase:
 
     def __init__(
             self,
+            users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
     ) -> None:
         """Initialize instance."""
+        self.users_repo = users_repo
         self.items_repo = items_repo
         self.metainfo_repo = metainfo_repo
-        self.users_repo = users_repo
 
     async def recalculate_known_tags(
             self,
@@ -721,9 +721,9 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
     def __init__(
             self,
+            users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
             media_repo: interfaces.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""

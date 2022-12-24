@@ -23,7 +23,7 @@ async def api_profile_new(
         use_case: use_cases.APIProfileNewUseCase = Depends(
             dep.profile_new_use_case,
         ),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
 ):
     """Return portion of recently loaded items."""

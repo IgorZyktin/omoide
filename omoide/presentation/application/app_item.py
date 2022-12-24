@@ -32,7 +32,7 @@ async def app_item_create(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -86,7 +86,7 @@ async def app_item_update(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -133,7 +133,7 @@ async def app_item_delete(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
@@ -168,7 +168,7 @@ async def app_items_download(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemsDownloadUseCase = Depends(
             dep.app_items_download_use_case),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Return links of children to download them."""

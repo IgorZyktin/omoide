@@ -21,7 +21,7 @@ router = fastapi.APIRouter()
 async def app_home(
         request: Request,
         user: domain.User = fastapi.Depends(dep.get_current_user),
-        config: Config = Depends(dep.config),
+        config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
 ):
