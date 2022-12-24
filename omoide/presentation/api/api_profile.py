@@ -25,6 +25,7 @@ async def api_profile_new(
         ),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Return portion of recently loaded items."""
     result = await use_case.execute(user, aim_wrapper.aim)
@@ -32,4 +33,5 @@ async def api_profile_new(
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
 
-    return utils.to_simple_items(request, config.prefix_size, result.value)
+    return utils.to_simple_items(
+        templates, request, config.prefix_size, result.value)

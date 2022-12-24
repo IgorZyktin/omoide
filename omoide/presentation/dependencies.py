@@ -3,6 +3,7 @@
 """
 import binascii
 from base64 import b64decode
+from typing import Any
 from typing import Optional
 
 from databases import Database
@@ -27,7 +28,7 @@ def get_config() -> app_config.Config:
     return app_config.Config()
 
 
-_URL_CACHE: dict[tuple[str, tuple[str, ...]], str] = {}
+_URL_CACHE: dict[tuple[str, Any], str] = {}
 
 
 @utils.memorize
@@ -38,7 +39,7 @@ def get_templates() -> web.TemplateEngine:
     def _https_url_for(
             request: Request,
             name: str,
-            **path_params: web.P.kwargs,
+            **path_params: Any,
     ) -> str:
         """Rewrite static files to HTTPS if on prod and cache result."""
         key = (name, tuple(path_params.items()))
@@ -52,7 +53,7 @@ def get_templates() -> web.TemplateEngine:
     def _url_for(
             request: Request,
             name: str,
-            **path_params: web.P.kwargs,
+            **path_params: Any,
     ) -> str:
         """Basic url_for."""
         key = (name, tuple(path_params.items()))

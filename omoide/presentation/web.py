@@ -29,7 +29,6 @@ from omoide.presentation import constants
 from omoide.utils import maybe_str
 
 LOG = custom_logging.get_logger(__name__)
-P = ParamSpec('P')
 
 
 class CustomJinja2Templates(Jinja2Templates):
@@ -38,7 +37,7 @@ class CustomJinja2Templates(Jinja2Templates):
     def __init__(
             self,
             directory: str | PathLike,
-            url_for: Callable[P, str],
+            url_for: Callable[..., str],
             **env_options: Any,
     ) -> None:
         """Initialize instance."""

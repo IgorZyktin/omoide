@@ -24,6 +24,7 @@ async def api_search(
             dep.api_search_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Return portion of random items."""
     result = await use_case.execute(user, aim_wrapper.aim)
@@ -31,7 +32,7 @@ async def api_search(
     items = []
     if isinstance(result, Success):
         items = utils.to_simple_items(
-            request, config.prefix_size, result.value)
+            templates, request, config.prefix_size, result.value)
 
     return items
 
