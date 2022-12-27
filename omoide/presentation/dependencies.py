@@ -46,7 +46,7 @@ def get_templates() -> web.TemplateEngine:
         url = _URL_CACHE.get(key)
         if url is None:
             url = request.url_for(name, **path_params)
-            url = url.replace('http', 'https', 1)
+            url = url.replace('http:', 'https:', 1)
             _URL_CACHE[key] = url
         return url
 
