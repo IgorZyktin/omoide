@@ -49,6 +49,7 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
     async def count_items_by_owner(
             self,
             user: domain.User,
+            only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
 

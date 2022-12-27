@@ -159,6 +159,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
     async def count_items_by_owner(
             self,
             user: domain.User,
+            only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
         assert user.is_registered
@@ -169,6 +170,12 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         ).where(
             models.Item.owner_uuid == user.uuid
         )
+
+        if only_collections:
+            stmt = stmt.where(
+                models.Item.is_collection
+            )
+
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
 

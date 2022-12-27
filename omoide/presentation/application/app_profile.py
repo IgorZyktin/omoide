@@ -62,7 +62,7 @@ async def app_profile_quotas(
     if isinstance(result, Failure):
         return web.redirect_from_error(templates, request, result.error)
 
-    items_size, total_items = result.value
+    items_size, total_items, total_collections = result.value
 
     context = {
         'request': request,
@@ -70,6 +70,7 @@ async def app_profile_quotas(
         'user': user,
         'items_size': items_size,
         'total_items': total_items,
+        'total_collections': total_collections,
         'byte_count_to_text': utils.byte_count_to_text,
         'sep_digits': utils.sep_digits,
         'aim_wrapper': aim_wrapper,

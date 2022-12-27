@@ -28,7 +28,7 @@ class AppProfileQuotasUseCase:
     async def execute(
             self,
             user: domain.User,
-    ) -> Result[errors.Error, tuple[domain.SpaceUsage, int]]:
+    ) -> Result[errors.Error, tuple[domain.SpaceUsage, int, int]]:
         """Return amount of items that correspond to query (not items)."""
         if user.is_anon() or user.uuid is None:
             return Failure(errors.AuthenticationRequired())
@@ -42,6 +42,9 @@ class AppProfileQuotasUseCase:
                 return Success((domain.SpaceUsage.empty(user.uuid), 0))
 
             size = await self.users_repo.calc_total_space_used_by(user)
-            total = await self.items_repo.count_items_by_owner(user)
+            total_items = await self.items_repo \
+                .count_items_by_owner(user)
+            total_collections = await self.items_repo \
+                .count_items_by_owner(user, only_collections=True)
 
-        return Success((size, total))
+        return Success((size, total_items, total_collections))
