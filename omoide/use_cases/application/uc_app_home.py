@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Use case for home page.
 """
+from typing import Optional
+
 from omoide import domain
 from omoide.domain import interfaces
-
 from omoide.infra.special_types import Success
 
 __all__ = [
@@ -22,7 +23,7 @@ class AppHomeUseCase:
             self,
             user: domain.User,
             aim: domain.Aim,
-    ) -> Success[list[domain.Item]]:
+    ) -> Success[tuple[list[domain.Item], list[Optional[str]]]]:
         """Perform request for home directory."""
         async with self.browse_repo.transaction():
             items = await self.browse_repo.simple_find_items_to_browse(
@@ -30,4 +31,6 @@ class AppHomeUseCase:
                 uuid=None,
                 aim=aim,
             )
-        return Success(items)
+            names = await self.browse_repo.get_parents_names(items)
+
+        return Success((items, names))

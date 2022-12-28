@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for browse.
 """
+from typing import Optional
 from uuid import UUID
 
 from omoide import domain
@@ -32,7 +33,7 @@ class APIBrowseUseCase:
             user: domain.User,
             uuid: UUID,
             aim: domain.Aim,
-    ) -> Result[errors.Error, list[domain.Item]]:
+    ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         async with self.browse_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.READ)
 
@@ -53,4 +54,6 @@ class APIBrowseUseCase:
                     aim=aim,
                 )
 
-        return Success(items)
+            names = await self.browse_repo.get_parents_names(items)
+
+        return Success((items, names))

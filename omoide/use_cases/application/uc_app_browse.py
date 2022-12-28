@@ -24,7 +24,8 @@ class BrowseResult(NamedTuple):
     location: domain.SimpleLocation | domain.Location | None
     total_items: int
     total_pages: int
-    items: list
+    items: list[domain.Item]
+    names: list[str]
     aim: domain.Aim
     paginated: bool = True
 
@@ -95,6 +96,8 @@ class AppBrowseUseCase:
             aim=aim,
         )
 
+        names = await self.browse_repo.get_parents_names(items)
+
         total_items = await self.browse_repo.count_children(
             user=user,
             uuid=item.uuid,
@@ -105,6 +108,7 @@ class AppBrowseUseCase:
             total_items=total_items,
             total_pages=aim.calc_total_pages(total_items),
             items=items,
+            names=names,
             aim=aim,
             location=location,
             paginated=True,
@@ -129,6 +133,7 @@ class AppBrowseUseCase:
             total_items=-1,
             total_pages=-1,
             items=[],
+            names=[],
             aim=aim,
             location=location,
             paginated=False,

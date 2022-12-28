@@ -53,17 +53,21 @@ async def app_browse(
 
     result = _result.value
 
+    names = result.names
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'uuid': uuid,
+        'names': names,
         'aim_wrapper': aim_wrapper,
         'location': result.location,
         'api_url': templates.url_for(request, 'api_browse', uuid=uuid),
         'result': result,
         'current_item': result.item,
         'locate': web.get_locator(templates, request, config.prefix_size),
+        'zip': zip,
     }
 
     if result.paginated:

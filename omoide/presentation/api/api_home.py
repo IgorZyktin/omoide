@@ -8,7 +8,6 @@ from starlette.requests import Request
 from omoide import domain
 from omoide import use_cases
 from omoide.presentation import dependencies as dep
-from omoide.presentation import utils
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
@@ -26,5 +25,6 @@ async def api_home(
 ):
     """Return portion of items for home directory."""
     result = await use_case.execute(user, aim_wrapper.aim)
-    return utils.to_simple_items(
-        templates, request, config.prefix_size, result.value)
+    items, names = result.value
+    return web.items_to_dict(
+        request, templates, items, names, config.prefix_size)
