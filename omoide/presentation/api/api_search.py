@@ -7,9 +7,9 @@ from starlette.requests import Request
 
 from omoide import domain
 from omoide import use_cases
+from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Success
 from omoide.presentation import dependencies as dep
-from omoide.presentation import utils
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
@@ -29,12 +29,15 @@ async def api_search(
     """Return portion of random items."""
     result = await use_case.execute(user, aim_wrapper.aim)
 
-    items = []
-    if isinstance(result, Success):
-        items = utils.to_simple_items(
-            templates, request, config.prefix_size, result.value)
+    simple_items = []
+    if isinstance(result, Failure):
+        return simple_items
 
-    return items
+    items, names = result.value
+    simple_items = web.items_to_dict(
+        request, templates, items, names, config.prefix_size)
+
+    return simple_items
 
 
 @router.get('/suggest')

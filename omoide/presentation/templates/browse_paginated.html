@@ -7,8 +7,8 @@
     {{ render_paginator_by_item(request, paginator, uuid, aim_wrapper) }}
 
     <div class="envelope-container">
-        {% for item in result.items %}
-            {{ render_thumbnail_for_item(request, locate, item, aim_wrapper) }}
+        {% for item, name in zip(result.items, names) %}
+            {{ render_thumbnail_for_item(request, locate, item, name, aim_wrapper) }}
         {% endfor %}
     </div>
 

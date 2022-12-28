@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
+import time
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
+from sqlalchemy import cast
+from sqlalchemy.dialects import postgresql as pg
 
 from omoide import domain
 from omoide.domain import interfaces
@@ -413,3 +416,29 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         }
         response = await self.db.fetch_all(stmt, values)
         return [domain.Item(**x) for x in response]
+
+    async def get_parents_names(
+            self,
+            items: list[domain.Item],
+    ) -> list[Optional[str]]:
+        """Get names of parents of the given items."""
+        uuids = [
+            str(x.parent_uuid)
+            if x.parent_uuid else None
+            for x in items
+        ]
+
+        subquery = sa.select(
+            sa.func.unnest(cast(uuids, pg.ARRAY(sa.Text))).label('uuid')
+        ).subquery('given_uuid')
+
+        stmt = sa.select(
+            subquery.c.uuid, models.Item.name
+        ).join(
+            models.Item,
+            models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
+            isouter=True,
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return [record['name'] for record in response]

@@ -53,11 +53,14 @@ async def app_browse(
 
     result = _result.value
 
+    names = result.names
+
     context = {
         'request': request,
         'config': config,
         'user': user,
         'uuid': uuid,
+        'names': names,
         'aim_wrapper': aim_wrapper,
         'location': result.location,
         'api_url': templates.url_for(request, 'api_browse', uuid=uuid),

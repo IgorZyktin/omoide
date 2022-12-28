@@ -77,6 +77,8 @@ def get_templates() -> web.TemplateEngine:
         )
         templates.env.globals['url_for'] = _https_url_for
 
+    templates.env.globals['zip'] = zip
+
     return templates
 
 
@@ -238,10 +240,13 @@ def get_policy(
 def app_dynamic_search_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
+        browse_repository:
+        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppDynamicSearchUseCase:
     """Get use case instance."""
     return use_cases.AppDynamicSearchUseCase(
         search_repo=search_repository,
+        browse_repo=browse_repository,
     )
 
 
@@ -249,10 +254,13 @@ def app_dynamic_search_use_case(
 def app_paged_search_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
+        browse_repository:
+        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppPagedSearchUseCase:
     """Get use case instance."""
     return use_cases.AppPagedSearchUseCase(
         search_repo=search_repository,
+        browse_repo=browse_repository,
     )
 
 
@@ -322,10 +330,13 @@ def app_upload_use_case(
 def api_search_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
+        browse_repository:
+        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.ApiSearchUseCase:
     """Get use case instance."""
     return use_cases.ApiSearchUseCase(
         search_repo=search_repository,
+        browse_repo=browse_repository,
     )
 
 

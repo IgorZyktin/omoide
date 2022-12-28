@@ -87,6 +87,7 @@ class Scroller {
             let link = document.createElement('a')
             searchParams.set('page', '1')
             link.href = item['href'] + '?' + searchParams.toString()
+            link.title = item.parent_name ? item.parent_name : ''
 
             if (item.is_collection && item.name) {
                 let name = document.createElement('p')
@@ -96,6 +97,7 @@ class Scroller {
 
             let img = document.createElement('img')
             img.src = item.thumbnail
+            img.title = item.parent_name ? item.parent_name : ''
             link.appendChild(img)
 
             envelope.appendChild(link)

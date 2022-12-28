@@ -10,7 +10,6 @@ from typing import Any
 from typing import Callable
 from typing import NoReturn
 from typing import Optional
-from typing import ParamSpec
 from typing import Type
 from typing import TypeAlias
 from urllib.parse import urlencode
@@ -353,3 +352,47 @@ def get_locator(
         prefix_size=prefix_size,
         item=item,
     )
+
+
+def items_to_dict(
+        request: Request,
+        templates: TemplateEngine,
+        items: list[domain.Item],
+        names: list[Optional[str]],
+        prefix_size: int,
+) -> list[domain.SimpleItem]:
+    """Convert items to JSON compatible dicts."""
+    assert len(items) == len(names)
+    empty_thumbnail = templates.url_for(request, 'static', path='empty.png')
+
+    simple_items: list[domain.SimpleItem] = []
+
+    for name, item in zip(names, items):
+        if item.is_collection:
+            href = templates.url_for(request, 'app_browse', uuid=item.uuid)
+        else:
+            href = templates.url_for(request, 'app_preview', uuid=item.uuid)
+
+        if item.thumbnail_ext is None:
+            thumbnail = empty_thumbnail
+        else:
+            locator = Locator(
+                templates=templates,
+                request=request,
+                prefix_size=prefix_size,
+                item=item,
+            )
+            thumbnail = locator.thumbnail
+
+        simple_item = domain.SimpleItem(
+            uuid=str(item.uuid),
+            parent_name=name,
+            name=item.name,
+            is_collection=item.is_collection,
+            href=href,
+            number=item.number,
+            thumbnail=thumbnail,
+        )
+        simple_items.append(simple_item)
+
+    return simple_items

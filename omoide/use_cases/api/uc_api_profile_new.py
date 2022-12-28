@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Use case for checking up updates.
 """
+from typing import Optional
+
 from omoide import domain
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -26,7 +28,9 @@ class APIProfileNewUseCase:
             self,
             user: domain.User,
             aim: domain.Aim,
-    ) -> Result[errors.Error, list[domain.Item]]:
+    ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         async with self.browse_repo.transaction():
             items = await self.browse_repo.get_recent_items(user, aim)
-        return Success(items)
+            names = await self.browse_repo.get_parents_names(items)
+
+        return Success((items, names))

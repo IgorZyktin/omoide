@@ -80,3 +80,10 @@ class AbsBrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Return portion of recently loaded items."""
+
+    @abc.abstractmethod
+    async def get_parents_names(
+            self,
+            items: list[domain.Item],
+    ) -> list[Optional[str]]:
+        """Get names of parents of the given items."""
