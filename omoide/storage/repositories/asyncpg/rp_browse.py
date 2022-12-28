@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Browse repository.
 """
-import time
 from typing import Optional
 from uuid import UUID
 
@@ -428,15 +427,17 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             for x in items
         ]
 
-        subquery = sa.select(
-            sa.func.unnest(cast(uuids, pg.ARRAY(sa.Text))).label('uuid') # noqa
-        ).subquery('given_uuid')
+        subquery = sa.select(  # noqa
+            sa.func.unnest(
+                cast(uuids, pg.ARRAY(sa.Text))  # noqa
+            ).label('uuid')  # noqa
+        ).subquery('given_uuid')  # noqa
 
         stmt = sa.select(
             subquery.c.uuid, models.Item.name
         ).join(
             models.Item,
-            models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
+            models.Item.uuid == cast(subquery.c.uuid, pg.UUID),  # noqa
             isouter=True,
         )
 
