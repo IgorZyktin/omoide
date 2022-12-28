@@ -240,10 +240,13 @@ def get_policy(
 def app_dynamic_search_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
+        browse_repository:
+        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppDynamicSearchUseCase:
     """Get use case instance."""
     return use_cases.AppDynamicSearchUseCase(
         search_repo=search_repository,
+        browse_repo=browse_repository,
     )
 
 
@@ -251,10 +254,13 @@ def app_dynamic_search_use_case(
 def app_paged_search_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
+        browse_repository:
+        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppPagedSearchUseCase:
     """Get use case instance."""
     return use_cases.AppPagedSearchUseCase(
         search_repo=search_repository,
+        browse_repo=browse_repository,
     )
 
 
