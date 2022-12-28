@@ -254,7 +254,8 @@
                     <a href="{{ url_for(request, 'app_items_download', uuid=location.current_item.uuid) }}">
                         <img class="download"
                              src="{{ url_for(request, 'static', path='download_48.svg') }}"
-                             alt="Download inner items"/></a>
+                             alt="Download button"
+                             title="Download inner items"/></a>
                 {% endif %}
             </h3>
         </div>
@@ -275,7 +276,8 @@
                         <a href="{{ url_for(request, 'app_items_download', uuid=item.uuid) }}">
                             <img class="download"
                                  src="{{ url_for(request, 'static', path='download_48.svg') }}"
-                                 alt="Download inner items"/></a>
+                                 alt="Download button"
+                                 title="Download inner items"/></a>
                     {% else %}
                         {% if item.is_collection %}
                             <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
@@ -293,7 +295,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_thumbnail_for_item(request, locate, item, aim_wrapper) %}
+{% macro render_thumbnail_for_item(request, locate, item, name, aim_wrapper) %}
     {% if item.is_collection %}
         {% set additional_style = ' env-collection' %}
     {% else %}
@@ -303,9 +305,11 @@
     <div class="envelope {{ additional_style }}">
 
         {%- if item.is_collection %}
-            <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
+            <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}"
+               title="{{ name }}">
         {% else %}
-            <a href="{{ url_for(request, 'app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}">
+            <a href="{{ url_for(request, 'app_preview', uuid=item.uuid) + '?' + aim_wrapper.to_url(page=1) }}"
+               title="{{ name }}">
         {% endif -%}
 
         {%- if item.is_collection and item.name -%}
@@ -314,10 +318,12 @@
 
         {%- if item.thumbnail_ext is none -%}
             <img src="{{ url_for(request, 'static', path='empty.png') }}"
-                 alt="{{ item.name }}"/>
+                 alt="thumbnail for the item"
+                 title="{{ name }}"/>
         {%- else -%}
             <img src="{{ locate(item).thumbnail }}"
-                 alt="{{ item.name }}"/>
+                 alt="thumbnail for the item"
+                 title="{{ name }}"/>
         {%- endif -%}
         </a>
     </div>

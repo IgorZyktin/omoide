@@ -322,10 +322,13 @@ def app_upload_use_case(
 def api_search_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
+        browse_repository:
+        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.ApiSearchUseCase:
     """Get use case instance."""
     return use_cases.ApiSearchUseCase(
         search_repo=search_repository,
+        browse_repo=browse_repository,
     )
 
 
