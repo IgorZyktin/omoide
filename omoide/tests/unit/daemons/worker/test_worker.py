@@ -112,10 +112,13 @@ def test_worker_manual_copy(valid_worker_config):
     database.assert_has_calls([
         mock.call.get_manual_copy_targets(mock.ANY),
         mock.call.session.add(mock.ANY),
+        mock.call.mark_origin(mock.ANY),
         mock.call.session.commit(),
         mock.call.session.add(mock.ANY),
+        mock.call.mark_origin(mock.ANY),
         mock.call.session.commit(),
         mock.call.session.add(mock.ANY),
+        mock.call.mark_origin(mock.ANY),
         mock.call.session.commit(),
     ])
 
