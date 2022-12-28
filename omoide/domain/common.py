@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Iterator
 from typing import Literal
 from typing import Optional
+from typing import TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -13,6 +14,7 @@ from omoide import domain
 
 __all__ = [
     'Item',
+    'SimpleItem',
     'PositionedItem',
     'PositionedByUserItem',
     'Location',
@@ -42,6 +44,17 @@ class Item(BaseModel):
     thumbnail_ext: Optional[str]
     tags: list[str] = []
     permissions: list[UUID] = []
+
+
+class SimpleItem(TypedDict):
+    """JSON compatible item."""
+    uuid: str
+    parent_name: Optional[str]
+    number: int
+    name: str
+    href: str
+    is_collection: bool
+    thumbnail: str
 
 
 class PositionedItem(BaseModel):
