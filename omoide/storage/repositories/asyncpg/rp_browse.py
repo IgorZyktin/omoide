@@ -413,3 +413,12 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         }
         response = await self.db.fetch_all(stmt, values)
         return [domain.Item(**x) for x in response]
+
+    async def get_parents_names(
+            self,
+            items: list[domain.Item],
+    ) -> list[Optional[str]]:
+        """Get names of parents of the given items."""
+        uuids = [str(x.uuid) for x in items]
+        # FIXME
+        return ['???' for _ in range(len(items))]
