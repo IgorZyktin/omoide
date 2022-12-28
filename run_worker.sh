@@ -9,6 +9,8 @@ python -m omoide.daemons.worker \
   --save-cold \
   --download-media \
   --manual-copy \
+  --log-level "debug" \
+  --debug \
   --drop-done-media \
   --drop-done-copies \
   --replication-formula "$OMOIDE_REPLICATION_FORMULA"

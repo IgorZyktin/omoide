@@ -122,6 +122,23 @@ class Database(BaseDatabase):
             attempts=0,
         )
 
+    def mark_origin(
+            self,
+            copy: models.ManualCopy,
+    ) -> None:
+        """Convert copy operation into media."""
+        stmt = sa.update(
+            models.Metainfo
+        ).where(
+            models.Metainfo.item_uuid == copy.target_uuid
+        ).values(
+            extras=sa.func.array_append(
+                models.Metainfo.extras,
+                str(copy.source_uuid),
+            )
+        )
+        self.engine.execute(stmt)
+
     def drop_manual_copies(self) -> int:
         """Delete complete copy operations, return total amount."""
         stmt = sa.delete(
