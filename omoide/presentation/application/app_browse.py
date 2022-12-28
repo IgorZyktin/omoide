@@ -67,7 +67,6 @@ async def app_browse(
         'result': result,
         'current_item': result.item,
         'locate': web.get_locator(templates, request, config.prefix_size),
-        'zip': zip,
     }
 
     if result.paginated:

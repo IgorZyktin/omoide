@@ -77,6 +77,8 @@ def get_templates() -> web.TemplateEngine:
         )
         templates.env.globals['url_for'] = _https_url_for
 
+    templates.env.globals['zip'] = zip
+
     return templates
 
 
