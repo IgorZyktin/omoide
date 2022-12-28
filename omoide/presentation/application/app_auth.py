@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Auth related routes.
 """
+import asyncio
 from typing import Type
 
 import fastapi
@@ -31,6 +32,7 @@ async def app_login(
         credentials: HTTPBasicCredentials = Depends(security),
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
+        config: Config = Depends(dep.get_config),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
         templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
@@ -38,13 +40,13 @@ async def app_login(
     """Ask user for login and password."""
     url = templates.url_for(request, 'app_home')
 
-    if not user.is_anon():
-        # already logged in
+    if user.is_registered:
         return RedirectResponse(url)
 
     new_user = await use_case.execute(credentials, authenticator)
 
     if new_user.is_anon():
+        await asyncio.sleep(config.penalty_wrong_password)
         raise fastapi.HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect login or password',
