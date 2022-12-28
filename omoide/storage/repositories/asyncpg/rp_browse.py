@@ -427,17 +427,17 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             for x in items
         ]
 
-        subquery = sa.select(  # noqa
+        subquery = sa.select(
             sa.func.unnest(
-                cast(uuids, pg.ARRAY(sa.Text))  # noqa
-            ).label('uuid')  # noqa
-        ).subquery('given_uuid')  # noqa
+                cast(uuids, pg.ARRAY(sa.Text))  # type: ignore
+            ).label('uuid')
+        ).subquery('given_uuid')
 
         stmt = sa.select(
             subquery.c.uuid, models.Item.name
         ).join(
             models.Item,
-            models.Item.uuid == cast(subquery.c.uuid, pg.UUID),  # noqa
+            models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
             isouter=True,
         )
 
