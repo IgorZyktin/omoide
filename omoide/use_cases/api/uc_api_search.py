@@ -34,7 +34,7 @@ class ApiSearchUseCase:
     ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         """Perform search request."""
         if not aim.query:
-            return Success([])
+            return Success(([], []))
 
         assert not aim.paged
 

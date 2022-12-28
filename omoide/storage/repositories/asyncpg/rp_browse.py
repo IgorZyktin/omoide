@@ -429,7 +429,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ]
 
         subquery = sa.select(
-            sa.func.unnest(cast(uuids, pg.ARRAY(sa.Text))).label('uuid')
+            sa.func.unnest(cast(uuids, pg.ARRAY(sa.Text))).label('uuid') # noqa
         ).subquery('given_uuid')
 
         stmt = sa.select(

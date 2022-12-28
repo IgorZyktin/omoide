@@ -2,6 +2,7 @@
 """Use case for browse.
 """
 from typing import NamedTuple
+from typing import Optional
 from uuid import UUID
 
 from omoide import domain
@@ -25,7 +26,7 @@ class BrowseResult(NamedTuple):
     total_items: int
     total_pages: int
     items: list[domain.Item]
-    names: list[str]
+    names: list[Optional[str]]
     aim: domain.Aim
     paginated: bool = True
 

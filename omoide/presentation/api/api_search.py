@@ -29,7 +29,7 @@ async def api_search(
     """Return portion of random items."""
     result = await use_case.execute(user, aim_wrapper.aim)
 
-    simple_items = []
+    simple_items: list[domain.SimpleItem] = []
     if isinstance(result, Failure):
         return simple_items
 
