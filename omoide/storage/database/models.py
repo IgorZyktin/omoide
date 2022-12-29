@@ -115,10 +115,10 @@ class Item(Base):
                                  nullable=False,
                                  index=True)
 
-    number = sa.Column(sa.BigInteger, nullable=False)
 
     # fields ------------------------------------------------------------------
 
+    number = sa.Column(sa.BigInteger, nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
     is_collection = sa.Column(sa.Boolean, nullable=False)
     content_ext = sa.Column(sa.String(length=SMALL), nullable=True)
@@ -311,12 +311,25 @@ class Media(Base):
                               uselist=False)
 
 
-# Feature: Add table for signatures. This will allow us to distinguish same
-# bad payloads and search for duplicates. Someday we could put ImageMatch here.
-# Possible structure:
-# class Signature(Base):
-#   item_uuid: ...
-#   md5: ...
+# This will allow us to distinguish same bad payloads and search for duplicates
+# Someday we could put ImageMatch here.
+class Signature(Base):
+    """EXIF information for items."""
+    __tablename__ = 'signatures'
+
+    # primary and foreign keys ------------------------------------------------
+
+    item_uuid: UUID = sa.Column(pg.UUID(),
+                                sa.ForeignKey('items.uuid',
+                                              ondelete='CASCADE'),
+                                nullable=False,
+                                index=True,
+                                primary_key=True)
+    type: str = sa.Column(sa.String(length=SMALL), nullable=False, index=True)
+
+    # fields ------------------------------------------------------------------
+
+    signature: str = sa.Column(sa.Text, nullable=False)
 
 
 class EXIF(Base):
