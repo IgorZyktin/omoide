@@ -223,10 +223,6 @@ class Metainfo(Base):
     user_time: Optional[datetime] = sa.Column(sa.DateTime(timezone=False),
                                               nullable=True)
 
-    width = sa.Column(sa.Integer, nullable=True)
-    height = sa.Column(sa.Integer, nullable=True)
-    duration = sa.Column(sa.Float, nullable=True)
-    resolution = sa.Column(sa.Float, nullable=True)
     media_type = sa.Column(sa.String(length=SMALL), nullable=True)
 
     author = sa.Column(sa.String(length=MEDIUM), nullable=True)
@@ -239,6 +235,13 @@ class Metainfo(Base):
     content_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
     preview_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
     thumbnail_size: Optional[int] = sa.Column(sa.Integer, nullable=True)
+
+    content_width: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    content_height: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    preview_width: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    preview_height: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    thumbnail_width: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    thumbnail_height: Optional[int] = sa.Column(sa.Integer, nullable=True)
 
     # relations ---------------------------------------------------------------
 
