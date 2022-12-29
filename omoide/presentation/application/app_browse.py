@@ -66,6 +66,7 @@ async def app_browse(
         'api_url': templates.url_for(request, 'api_browse', uuid=uuid),
         'result': result,
         'current_item': result.item,
+        'metainfo': result.metainfo,
         'locate': web.get_locator(templates, request, config.prefix_size),
     }
 

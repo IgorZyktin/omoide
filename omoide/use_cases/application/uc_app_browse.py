@@ -22,6 +22,7 @@ __all__ = [
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
     item: domain.Item
+    metainfo: domain.Metainfo
     location: domain.SimpleLocation | domain.Location | None
     total_items: int
     total_pages: int
@@ -39,11 +40,13 @@ class AppBrowseUseCase:
             browse_repo: interfaces.AbsBrowseRepository,
             users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsReadRepository,
+            meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
         self.items_repo = items_repo
         self.users_repo = users_repo
+        self.meta_repo = meta_repo
 
     async def execute(
             self,
@@ -104,8 +107,14 @@ class AppBrowseUseCase:
             uuid=item.uuid,
         )
 
+        metainfo = await self.meta_repo.read_metainfo(item.uuid)
+
+        if metainfo is None:
+            return Failure(errors.ItemDoesNotExist(uuid=item.uuid))
+
         return BrowseResult(
             item=item,
+            metainfo=metainfo,
             total_items=total_items,
             total_pages=aim.calc_total_pages(total_items),
             items=items,
@@ -129,8 +138,14 @@ class AppBrowseUseCase:
             item=item,
         )
 
+        metainfo = await self.meta_repo.read_metainfo(item.uuid)
+
+        if metainfo is None:
+            return Failure(errors.ItemDoesNotExist(uuid=item.uuid))
+
         return BrowseResult(
             item=item,
+            metainfo=metainfo,
             total_items=-1,
             total_pages=-1,
             items=[],

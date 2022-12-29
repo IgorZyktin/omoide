@@ -24,11 +24,13 @@ class AppPreviewUseCase:
             preview_repo: interfaces.AbsPreviewRepository,
             users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsReadRepository,
+            meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.preview_repo = preview_repo
         self.users_repo = users_repo
         self.items_repo = items_repo
+        self.meta_repo = meta_repo
 
     async def execute(
             self,
@@ -52,6 +54,15 @@ class AppPreviewUseCase:
             )
 
             item = await self.items_repo.read_item(uuid)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            metainfo = await self.meta_repo.read_metainfo(uuid)
+
+            if metainfo is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
             neighbours = await self.preview_repo.get_neighbours(
                 user=user,
                 uuid=uuid,
@@ -59,6 +70,7 @@ class AppPreviewUseCase:
 
             result = domain.SingleResult(
                 item=item,
+                metainfo=metainfo,
                 aim=aim,
                 location=location,
                 neighbours=neighbours,
