@@ -210,10 +210,6 @@ class Metainfo(BaseModel):
     deleted_at: Optional[datetime]
     user_time: Optional[datetime]
 
-    width: Optional[int]
-    height: Optional[int]
-    duration: Optional[float]
-    resolution: Optional[float]
     media_type: Optional[str]
 
     author: Optional[str]
@@ -226,6 +222,13 @@ class Metainfo(BaseModel):
     content_size: Optional[int]
     preview_size: Optional[int]
     thumbnail_size: Optional[int]
+
+    content_width: Optional[int]
+    content_height: Optional[int]
+    preview_width: Optional[int]
+    preview_height: Optional[int]
+    thumbnail_width: Optional[int]
+    thumbnail_height: Optional[int]
 
 
 class Aim(BaseModel):
@@ -267,6 +270,7 @@ class Aim(BaseModel):
 class SingleResult(BaseModel):
     """Result of a request for a single item."""
     item: Item
+    metainfo: Metainfo
     aim: Aim
     location: Location
     neighbours: list[UUID]
