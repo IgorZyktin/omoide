@@ -52,10 +52,14 @@ class Scroller {
         this.isActive = false
         clearInterval(this.intervalId)
         let jump = document.createElement('a')
+        jump.id = 'jump-to-top'
         jump.classList.add('to-top-link')
         jump.appendChild(document.createTextNode('Jump to top'));
         jump.title = 'Scroll back to top';
-        jump.onclick = jumpToTop
+        jump.href = '#'
+        jump.onclick = function () {
+            jumpToTop(jump.id)
+        }
         document.body.appendChild(jump);
     }
 

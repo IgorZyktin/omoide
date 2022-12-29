@@ -148,7 +148,7 @@ function jumpToBottom() {
 function jumpToTop(targetId) {
     // scroll to the top
     const scrollingElement = (document.scrollingElement || document.body);
-    if (targetId === undefined) {
+    if (!targetId) {
         scrollingElement.scrollTop = 0;
     } else {
         document.getElementById(targetId).scrollIntoView()
