@@ -3,8 +3,7 @@
 
 {% block head %}
     {{ super() }}
-    <meta property="og:title"
-          content="{{ item.name }}"/>
+    {% set current_item = item %}
     <meta property="og:url"
           content="{{ url_for(request, 'app_preview', uuid=item.uuid) }}"/>
     <meta property="og:image"

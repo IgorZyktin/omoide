@@ -2,8 +2,6 @@
 
 {% block head %}
     {{ super() }}
-    <meta property="og:title"
-          content="{{ current_item.name }}"/>
     <meta property="og:url"
           content="{{ url_for(request, 'app_browse', uuid=current_item.uuid) }}"/>
     <meta property="og:image"
