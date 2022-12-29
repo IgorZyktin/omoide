@@ -115,7 +115,6 @@ class Item(Base):
                                  nullable=False,
                                  index=True)
 
-
     # fields ------------------------------------------------------------------
 
     number = sa.Column(sa.BigInteger, nullable=False)
