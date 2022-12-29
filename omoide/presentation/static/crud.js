@@ -62,7 +62,6 @@ function describeFail(response, alertsElementId) {
 
 async function createItem(button, parameters) {
     // send command for item creation
-    console.log(parameters)
     $.ajax({
         type: 'POST',
         url: '/api/items',
@@ -135,7 +134,7 @@ async function request(endpoint, payload, callback) {
             callback(response.headers, result)
         } else {
             for (const problem of result['detail']) {
-                console.log(problem)
+                console.log(`Problem: ${problem}`)
                 makeAlert(problem.msg)
             }
         }

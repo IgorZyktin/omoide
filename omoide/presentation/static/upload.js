@@ -341,7 +341,6 @@ async function doIf(targets, handler, uploadState, condition) {
         if (target.status !== 'fail' && condition(target)) {
             let action = getHandlerDescription(handler, target.filename)
             uploadState.setAction(action)
-            console.log(action)
             await handler(target, uploadState)
             progressStorage.add(target.getProgress())
         }
