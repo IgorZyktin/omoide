@@ -91,6 +91,11 @@ class CreateItemIn(BaseModel):
         return values
 
 
+class CreateItemsIn(CreateItemIn):
+    """Input info for bulk item creation."""
+    total: int
+
+
 class CreateUserIn(BaseModel):
     """Input info for user creation."""
     uuid: Optional[UUID]
@@ -131,10 +136,6 @@ class MetainfoIn(BaseModel):
     """Input info for metainfo creation."""
     user_time: Optional[datetime]
 
-    width: Optional[int]
-    height: Optional[int]
-    duration: Optional[float]
-    resolution: Optional[float]
     media_type: str
 
     author: Optional[str]
@@ -147,3 +148,10 @@ class MetainfoIn(BaseModel):
     content_size: Optional[int] = None
     preview_size: Optional[int] = None
     thumbnail_size: Optional[int] = None
+
+    content_width: Optional[int] = None
+    content_height: Optional[int] = None
+    preview_width: Optional[int] = None
+    preview_height: Optional[int] = None
+    thumbnail_width: Optional[int] = None
+    thumbnail_height: Optional[int] = None

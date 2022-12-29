@@ -12,7 +12,7 @@ const EXPECTED_STEPS = new Set([
     'generateEXIForProxy',
     'generateFeaturesForProxy',
     'generateMetainfoForProxy',
-    'createItemForProxy',
+    'createItemsForProxy',
     'uploadMetainfoForProxy',
     'saveContentForProxy',
     'savePreviewForProxy',
@@ -205,10 +205,13 @@ function createFileProxy(file, number) {
             generated: false,
             uploaded: false,
             user_time: null,
-            width: null,
-            height: null,
-            resolution: null,
             media_type: null,
+            content_width: null,
+            content_height: null,
+            preview_width: null,
+            preview_height: null,
+            thumbnail_width: null,
+            thumbnail_height: null,
             original_file_name: null,
             original_file_modified_at: null,
             features: [],
@@ -311,8 +314,6 @@ function getHandlerDescription(handler, label) {
         text = `Getting info from EXIF ${label}`
     else if (handler.name === 'generateMetainfoForProxy')
         text = `Getting metainfo for ${label}`
-    else if (handler.name === 'createItemForProxy')
-        text = `Creating item ${label}`
     else if (handler.name === 'uploadMetainfoForProxy')
         text = `Uploading metainfo ${label}`
     else if (handler.name === 'uploadPermissionsForProxy')
@@ -385,38 +386,77 @@ async function validateProxy(proxy) {
     proxy.render()
 }
 
-async function createItemForProxy(proxy) {
-    // send raw data to server and get uuid back
+async function createItemsForProxy(targets, uploadState) {
+    // send raw data to server and get uuids back
+    let progressStorage = new Set([])
+    for (let target of targets) {
+        if (target.status !== 'fail' && target.uuid) {
+            uploadState.setAction(`Creating items`)
+            progressStorage.add(target.getProgress())
+        }
+    }
+
+    let totalProgress = 0;
+    progressStorage.forEach(num => {
+        totalProgress += num;
+    });
+
+    if (!isNaN(totalProgress) && totalProgress && progressStorage.size) {
+        uploadState.setProgress(totalProgress / progressStorage.size)
+    }
+
+    if (!targets.length)
+        return
+
+    let parent_uuid = targets[0].parent_uuid
+    let tags = targets[0].getTags()
+    let permissions = targets[0].getPermissions()
+
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 10000, // 10 seconds
             type: 'POST',
-            url: '/api/items',
+            url: '/api/items/bulk',
             contentType: 'application/json',
             data: JSON.stringify({
-                parent_uuid: proxy.parent_uuid,
+                parent_uuid: parent_uuid,
                 name: '',
                 is_collection: false,
                 tags: [
                     ...splitLines($('#item_tags').val()),
-                    ...proxy.getTags()
+                    ...tags,
                 ],
                 permissions: extractAllUUIDs([
                     ...splitLines($('#item_permissions').val()),
-                    ...proxy.getPermissions()
+                    ...permissions,
                 ]),
+                total: targets.length,
             }),
             success: function (response) {
-                proxy.uuid = response['uuid']
-                proxy.actualSteps.add('createItemForProxy')
+                if (response.length !== targets.length) {
+                    targets.forEach((value, index) => {
+                        targets[index].status = 'fail'
+                    });
+                    reject('fail')
+                    return
+                }
+
+                for (let i = 0; i < targets.length; i++) {
+                    targets[i].uuid = response[i].uuid
+                    targets[i].actualSteps.add('createItemsForProxy')
+                }
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)
-                proxy.status = 'fail'
+                for (let i = 0; i < targets.length; i++) {
+                    targets[i].status = 'fail'
+                }
                 reject('fail')
             },
             complete: function () {
-                proxy.render()
+                for (let i = 0; i < targets.length; i++) {
+                    targets[i].render()
+                }
                 resolve('ok')
             },
         })
@@ -530,7 +570,7 @@ function tryGettingUserTime(proxy) {
     return null
 }
 
-async function getImageDimensions(proxy) {
+async function getImageDimensions(image) {
     // return width, height, resolution
     return new Promise((resolve, reject) => {
         const img = new Image()
@@ -541,15 +581,14 @@ async function getImageDimensions(proxy) {
                 naturalWidth: width,
                 naturalHeight: height,
             } = img
-            let resolution = width * height / 1000000
-            resolve([width, height, resolution])
+            resolve([width, height])
         }
 
         img.onerror = () => {
             reject('There was some problem with the image.')
         }
 
-        img.src = URL.createObjectURL(proxy.file)
+        img.src = image
     })
 }
 
@@ -564,10 +603,12 @@ async function uploadMetainfoForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 user_time: proxy.metainfo.user_time,
-                width: proxy.metainfo.width,
-                height: proxy.metainfo.height,
-                duration: null,  // TODO: after we could handle gifs/video
-                resolution: proxy.metainfo.resolution,
+                content_width: proxy.metainfo.content_width,
+                content_height: proxy.metainfo.content_height,
+                preview_width: proxy.metainfo.preview_width,
+                preview_height: proxy.metainfo.preview_height,
+                thumbnail_width: proxy.metainfo.thumbnail_width,
+                thumbnail_height: proxy.metainfo.thumbnail_height,
                 media_type: proxy.metainfo.media_type,
                 // TODO: add author metainfo to the form
                 author: null,
@@ -596,19 +637,38 @@ async function generateMetainfoForProxy(proxy, uploadState) {
     // extract file size, dimensions and other metainfo
     let date = new Date(proxy.file.lastModified)
     let lastModified = convertDatetimeToIsoString(date)
-    let width, height, resolution;
+
+    let content_width, content_height;
     try {
-        [width, height, resolution] = await getImageDimensions(proxy)
+        [content_width, content_height] = await getImageDimensions(proxy.content)
     } catch (error) {
-        [width, height, resolution] = [null, null, null]
+        [content_width, content_height] = [null, null]
     }
+    proxy.metainfo.content_width = content_width
+    proxy.metainfo.content_height = content_height
+
+
+    let preview_width, preview_height;
+    try {
+        [preview_width, preview_height] = await getImageDimensions(proxy.preview)
+    } catch (error) {
+        [preview_width, preview_height] = [null, null]
+    }
+    proxy.metainfo.preview_width = preview_width
+    proxy.metainfo.preview_height = preview_height
+
+    let thumbnail_width, thumbnail_height;
+    try {
+        [thumbnail_width, thumbnail_height] = await getImageDimensions(proxy.thumbnail)
+    } catch (error) {
+        [thumbnail_width, thumbnail_height] = [null, null]
+    }
+    proxy.metainfo.thumbnail_width = thumbnail_width
+    proxy.metainfo.thumbnail_height = thumbnail_height
 
     proxy.metainfo.generated = true
     proxy.actualSteps.add('generateMetainfoForProxy')
     proxy.metainfo.user_time = tryGettingUserTime(proxy)
-    proxy.metainfo.width = width
-    proxy.metainfo.height = height
-    proxy.metainfo.resolution = resolution
     proxy.metainfo.media_type = proxy.file.type
     proxy.metainfo.original_file_name = proxy.file.name
     proxy.metainfo.original_file_modified_at = lastModified
@@ -1022,8 +1082,7 @@ async function uploadMedia(button, uploadState) {
     let handleEXIF = $('#feature-exif').is(':checked')
 
     $(button).addClass('button-disabled')
-    await doIf(targets, createItemForProxy, uploadState,
-        p => !p.uuid && p.isValid)
+    await createItemsForProxy(targets, uploadState)
     await doIf(targets, uploadMetainfoForProxy, uploadState,
         p => !p.metainfo.uploaded && p.uuid && p.isValid)
     await doIf(targets, uploadEXIFProxy, uploadState,

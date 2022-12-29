@@ -22,6 +22,7 @@ from omoide.presentation import api_models
 
 __all__ = [
     'ApiItemCreateUseCase',
+    'ApiItemCreateBulkUseCase',
     'ApiItemReadUseCase',
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
@@ -263,6 +264,33 @@ class BaseItemModifyUseCase:
 
                 await self.metainfo_repo.drop_unused_tags_for_anon_user()
 
+    async def _create_one_item(
+            self,
+            user: domain.User,
+            payload: api_models.CreateItemIn | api_models.CreateItemsIn,
+    ) -> UUID:
+        """Helper functions that handles creation of an item."""
+        uuid = await self.items_repo.generate_item_uuid()
+
+        item = domain.Item(
+            uuid=uuid,
+            parent_uuid=payload.parent_uuid or user.root_item,
+            owner_uuid=user.uuid,
+            number=-1,
+            name=payload.name,
+            is_collection=payload.is_collection,
+            content_ext=None,
+            preview_ext=None,
+            thumbnail_ext=None,
+            tags=payload.tags,
+            permissions=payload.permissions,
+        )
+        await self.items_repo.create_item(user, item)
+        await self.metainfo_repo.create_empty_metainfo(user, item)
+        await self.metainfo_repo.update_computed_tags(user, item)
+        await self.recalculate_known_tags(item, item.tags, [])
+        return uuid
+
 
 class ApiItemCreateUseCase(BaseItemModifyUseCase):
     """Use case for creating an item."""
@@ -281,28 +309,34 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
             if error:
                 return Failure(error)
 
-            uuid = await self.items_repo.generate_item_uuid()
-
-            item = domain.Item(
-                uuid=uuid,
-                parent_uuid=parent_uuid,
-                owner_uuid=user.uuid,
-                number=-1,
-                name=payload.name,
-                is_collection=payload.is_collection,
-                content_ext=None,
-                preview_ext=None,
-                thumbnail_ext=None,
-                tags=payload.tags,
-                permissions=payload.permissions,
-            )
-
-            await self.items_repo.create_item(user, item)
-            await self.metainfo_repo.create_empty_metainfo(user, item)
-            await self.metainfo_repo.update_computed_tags(user, item)
-            await self.recalculate_known_tags(item, item.tags, [])
+            uuid = await self._create_one_item(user, payload)
 
         return Success(uuid)
+
+
+class ApiItemCreateBulkUseCase(BaseItemModifyUseCase):
+    """Use case for creating many items at once."""
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            payload: api_models.CreateItemsIn,
+    ) -> Result[errors.Error, list[UUID]]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            parent_uuid = payload.parent_uuid or user.root_item
+            error = await policy.is_restricted(user, parent_uuid,
+                                               actions.Item.CREATE)
+            if error:
+                return Failure(error)
+
+            uuids: list[UUID] = []
+            for _ in range(payload.total):
+                uuid = await self._create_one_item(user, payload)
+                uuids.append(uuid)
+
+        return Success(uuids)
 
 
 class ApiItemReadUseCase:

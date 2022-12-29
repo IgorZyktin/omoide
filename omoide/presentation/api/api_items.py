@@ -47,6 +47,30 @@ async def api_create_item(
     return api_models.OnlyUUID(uuid=result.value)
 
 
+@router.post(
+    '/bulk',
+    status_code=http.HTTPStatus.OK,
+    response_model=list[api_models.OnlyUUID],
+)
+async def api_create_item_bulk(
+        payload: api_models.CreateItemsIn,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.ApiItemCreateBulkUseCase = Depends(
+            dep.api_item_create_bulk_use_case),
+):
+    """Create many items at once."""
+    result = await use_case.execute(policy, user, payload)
+
+    if isinstance(result, Failure):
+        web.raise_from_error(result.error)
+
+    return [
+        api_models.OnlyUUID(uuid=uuid)
+        for uuid in result.value
+    ]
+
+
 @router.get('/{uuid}')
 async def api_read_item(
         uuid: UUID,
