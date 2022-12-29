@@ -5,8 +5,13 @@
     <meta property="og:url"
           content="{{ url_for(request, 'app_browse', uuid=current_item.uuid) }}"/>
     <meta property="og:image"
-          content="{{ locate(current_item).thumbnail }}"/>
-    {%- if metainfo.thumbnail_width and metainfo.thumbnail_height %}
+          content="{{ locate(current_item).preview }}"/>
+    {%- if metainfo.preview_width and metainfo.preview_height %}
+            <meta property="og:image:width"
+              content="{{ metainfo.preview_width }}">
+        <meta property="og:image:height"
+              content="{{ metainfo.preview_height }}">
+    {%- elif metainfo.thumbnail_width and metainfo.thumbnail_height %}
         <meta property="og:image:width"
               content="{{ metainfo.thumbnail_width }}">
         <meta property="og:image:height"
