@@ -107,6 +107,9 @@ function addFiles(source) {
     }
 
     button.removeClass('upload-in-progress')
+    if ($('#auto-continue').is(':checked')) {
+        $('#media_button').click()
+    }
 }
 
 
@@ -1219,6 +1222,7 @@ function createUploadState(divId) {
             extractMonthEN: false,
             extractMonthRU: true,
         },
+        autoContinue: false,
     }
 }
 

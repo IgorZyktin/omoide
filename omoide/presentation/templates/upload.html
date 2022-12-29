@@ -47,8 +47,14 @@
         <label for="item_permissions">Permissions (one user per line):<br>
             <textarea id="item_permissions" rows="10">
                 {%- for user in permissions -%}
-                    {{ user.uuid|string }} {{ user.name + '\n' }}{% endfor -%}</textarea>
+                    {{ user.uuid|string + ' ' + user.name + '\n' }}{% endfor -%}</textarea>
         </label>
+
+        <div>
+            <input type="checkbox" id="auto-continue">
+            <label for="auto-continue">Automatically confirm each next step
+            </label>
+        </div>
 
         <div>
             <input type="checkbox" id="feature-exif">
@@ -139,6 +145,9 @@
 
             if (UPLOAD_STATE.status === 'init') {
                 preprocessMedia(this, UPLOAD_STATE)
+                if ($(this).is(':checked')) {
+                    $(this).click()
+                }
             } else if (UPLOAD_STATE.status === 'processed') {
                 uploadMedia(this, UPLOAD_STATE)
             }
@@ -151,6 +160,17 @@
                 $("label[for='item_tags']").hide()
             } else {
                 $("label[for='item_tags']").show()
+            }
+        });
+
+        $('#auto-continue').on('change', function () {
+            if ($(this).is(':checked')) {
+                let dropdown = $('#after_upload')
+                dropdown.val('again')
+                dropdown.change();
+                UPLOAD_STATE.features['autoContinue'] = true
+            } else {
+                UPLOAD_STATE.features['autoContinue'] = false
             }
         });
 
