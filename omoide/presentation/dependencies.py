@@ -428,6 +428,23 @@ def api_item_create_use_case(
 
 
 @utils.memorize
+def api_item_create_bulk_use_case(
+        users_read_repository:
+        interfaces.AbsUsersReadRepository = Depends(get_users_read_repo),
+        items_write_repository:
+        interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
+        metainfo_repository:
+        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
+) -> use_cases.ApiItemCreateBulkUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemCreateBulkUseCase(
+        users_repo=users_read_repository,
+        items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
+    )
+
+
+@utils.memorize
 def api_item_read_use_case(
         items_write_repository:
         interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
