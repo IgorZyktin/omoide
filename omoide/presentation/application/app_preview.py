@@ -66,6 +66,7 @@ async def app_preview(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'item': result.item,
+        'metainfo': result.metainfo,
         'result': result,
         'album': infra.Album(
             sequence=result.neighbours,

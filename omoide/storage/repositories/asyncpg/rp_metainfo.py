@@ -2,7 +2,6 @@
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
-from itertools import chain
 from typing import Collection
 from typing import Optional
 from uuid import UUID
@@ -62,10 +61,6 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             deleted_at=response['deleted_at'],
             user_time=response['user_time'],
 
-            width=response['width'],
-            height=response['height'],
-            duration=response['duration'],
-            resolution=response['resolution'],
             media_type=response['media_type'],
 
             author=response['author'],
@@ -78,6 +73,13 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             content_size=response['content_size'],
             preview_size=response['preview_size'],
             thumbnail_size=response['thumbnail_size'],
+
+            content_width=response['content_width'],
+            content_height=response['content_height'],
+            preview_width=response['preview_width'],
+            preview_height=response['preview_height'],
+            thumbnail_width=response['thumbnail_width'],
+            thumbnail_height=response['thumbnail_height'],
         )
 
     async def update_metainfo(

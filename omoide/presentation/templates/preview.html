@@ -3,12 +3,18 @@
 
 {% block head %}
     {{ super() }}
+    <meta property="og:title"
+          content="{{ item.name }}"/>
     <meta property="og:url"
           content="{{ url_for(request, 'app_preview', uuid=item.uuid) }}"/>
     <meta property="og:image"
           content="{{ locate(item).thumbnail }}"/>
-    <meta property="og:description"
-          content="{{ item.name }}"/>
+    {%- if metainfo.thumbnail_width and metainfo.thumbnail_height %}
+        <meta property="og:image:width"
+              content="{{ metainfo.thumbnail_width }}">
+        <meta property="og:image:height"
+              content="{{ metainfo.thumbnail_height }}">
+    {% endif -%}
 {% endblock %}
 
 {% block body %}

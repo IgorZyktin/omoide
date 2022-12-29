@@ -272,12 +272,15 @@ def app_preview_use_case(
         interfaces.AbsUsersReadRepository = Depends(get_users_read_repo),
         items_read_repository:
         interfaces.AbsItemsReadRepository = Depends(get_items_read_repo),
+        metainfo_repo:
+        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
 ) -> use_cases.AppPreviewUseCase:
     """Get use case instance."""
     return use_cases.AppPreviewUseCase(
         preview_repo=preview_repository,
         users_repo=users_read_repository,
         items_repo=items_read_repository,
+        meta_repo=metainfo_repo,
     )
 
 
@@ -289,12 +292,15 @@ def app_browse_use_case(
         interfaces.AbsUsersReadRepository = Depends(get_users_read_repo),
         items_read_repository:
         interfaces.AbsItemsReadRepository = Depends(get_items_read_repo),
+        metainfo_repo:
+        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
 ) -> use_cases.AppBrowseUseCase:
     """Get use case instance."""
     return use_cases.AppBrowseUseCase(
         browse_repo=browse_repository,
         users_repo=users_read_repository,
         items_repo=items_read_repository,
+        meta_repo=metainfo_repo
     )
 
 
