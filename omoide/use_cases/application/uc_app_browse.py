@@ -78,6 +78,9 @@ class AppBrowseUseCase:
                 result = await self.go_browse_dynamic(
                     user, owner, item, aim)
 
+            if isinstance(result, Failure):
+                return result
+
             return Success(result)
 
     async def go_browse_paginated(
@@ -85,7 +88,7 @@ class AppBrowseUseCase:
             user: domain.User,
             item: domain.Item,
             aim: domain.Aim,
-    ) -> BrowseResult:
+    ) -> BrowseResult | Failure:
         """Browse with pagination."""
         location = await self.browse_repo.get_location(
             user=user,
@@ -130,7 +133,7 @@ class AppBrowseUseCase:
             owner: domain.User,
             item: domain.Item,
             aim: domain.Aim,
-    ) -> BrowseResult:
+    ) -> BrowseResult | Failure:
         """Browse without pagination."""
         location = await self.items_repo.get_simple_location(
             user=user,
