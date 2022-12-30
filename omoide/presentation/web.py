@@ -249,7 +249,7 @@ class AimWrapper:
         return self.to_url(**kwargs)
 
 
-PATTERN = re.compile(r'(\s\+\s|\s-\s)')
+PATTERN = re.compile(r'(\s*\+\s*|\s*-\s*)')
 
 
 def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
