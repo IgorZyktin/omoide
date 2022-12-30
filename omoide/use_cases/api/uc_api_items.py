@@ -527,9 +527,11 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
             new_permissions: api_models.NewPermissionsIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
+        added: set[UUID] = set()
+        deleted: set[UUID] = set()
+
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.UPDATE)
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
             if error:
                 return Failure(error)
 

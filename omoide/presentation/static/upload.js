@@ -1003,8 +1003,8 @@ async function ensureParentHasThumbnail(parent, firstChild) {
                     target_folder: 'thumbnail',
                     ext: firstChild.thumbnailExt,
                 }),
-                success: function (response) {
-                    ensureParentHasThumbnail(parent.parent_uuid, firstChild)
+                success: async function (response) {
+                    await ensureParentHasThumbnail(parent.parent_uuid, firstChild)
                     resolve(response)
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -1041,8 +1041,8 @@ async function ensureParentIsCollection(parent) {
                         'value': true,
                     }
                 ]),
-                success: function (response) {
-                    ensureParentIsCollection(parent.parent_uuid)
+                success: async function (response) {
+                    await ensureParentIsCollection(parent.parent_uuid)
                     resolve(response)
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -1095,7 +1095,7 @@ async function uploadTagsForProxy(proxy) {
             type: 'PUT',
             url: `/api/items/${proxy.uuid}/tags`,
             contentType: 'application/json',
-            data: JSON.stringify([{'tags': tags}]),
+            data: JSON.stringify({'tags': tags}),
             success: function (response) {
                 resolve(response)
             },
@@ -1123,13 +1123,13 @@ async function uploadPermissionsProxy(proxy) {
             type: 'PUT',
             url: `/api/items/${proxy.uuid}/permissions`,
             contentType: 'application/json',
-            data: JSON.stringify([{
+            data: JSON.stringify({
                 'apply_to_parents': false,
                 'apply_to_children': false,
                 'override': true,
                 'permissions_before': [],
                 'permissions_after': permissions,
-            }]),
+            }),
             success: function (response) {
                 resolve(response)
             },
@@ -1145,6 +1145,9 @@ async function uploadMedia(button, uploadState) {
     // upload given media to the backend
     let targets = getTargets()
     let handleEXIF = $('#feature-exif').is(':checked')
+
+    if (!targets)
+        return
 
     $(button).addClass('button-disabled')
     await createItemsForProxy(targets, uploadState)
@@ -1169,7 +1172,7 @@ async function uploadMedia(button, uploadState) {
     if (!parentProcessed && parentUUID) {
         let parent = await getItem(parentUUID)
 
-        if (parent !== undefined) {
+        if (parent) {
             await ensureParentHasThumbnail(parent, targets[0])
 
             if ($('#upload_as').val() === 'children') {
@@ -1257,11 +1260,11 @@ function createUploadState(divId) {
             // Save the fact that we uploaded one batch
             let filenames = Object.keys(FILES)
             if (filenames.length !== 0) {
-                let first = filenames[0]
+                let first = filenames[filenames.length - 1]
                 let last = first
 
                 if (filenames.length > 1) {
-                    last = filenames[filenames.length - 1]
+                    last = filenames[0]
                 }
 
                 let target = $('#media-log')
