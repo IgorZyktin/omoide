@@ -103,6 +103,7 @@
         <input id="media_button"
                type="button"
                class="button"
+               onclick="goUpload(this, UPLOAD_STATE)"
                value="Preprocess media">
 
         <div id="global-status"></div>
@@ -137,21 +138,6 @@
 
     <script>
         const UPLOAD_STATE = createUploadState('global-status')
-
-        $('#media_button').click(function () {
-            if ($(this).hasClass('button-disabled')) {
-                return
-            }
-
-            if (UPLOAD_STATE.status === 'init') {
-                preprocessMedia(this, UPLOAD_STATE)
-                if ($(this).is(':checked')) {
-                    $(this).click()
-                }
-            } else if (UPLOAD_STATE.status === 'processed') {
-                uploadMedia(this, UPLOAD_STATE)
-            }
-        });
 
         $('#upload_as').on('change', function () {
             clearProxies()

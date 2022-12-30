@@ -136,7 +136,7 @@ class MetainfoIn(BaseModel):
     """Input info for metainfo creation."""
     user_time: Optional[datetime]
 
-    media_type: str
+    media_type: Optional[str]
 
     author: Optional[str]
     author_url: Optional[str]
