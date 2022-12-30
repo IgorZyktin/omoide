@@ -132,9 +132,10 @@ class Database(BaseDatabase):
         ).where(
             models.Metainfo.item_uuid == copy.target_uuid
         ).values(
-            extras=sa.func.array_append(
+            extras=sa.func.jsonb_set(
                 models.Metainfo.extras,
-                str(copy.source_uuid),
+                '{copied_cover_from}',
+                f'"{copy.source_uuid}"',
             )
         )
         self.engine.execute(stmt)
