@@ -63,7 +63,7 @@ function clearProxies() {
 function addFiles(source) {
     // react on file upload
     showNavButtons()
-    let button = $('#upload_media_button')
+    let button = $('#media_button')
     button.addClass('upload-in-progress')
 
     let parent_uuid = $('#parent_uuid').val() || null
@@ -106,9 +106,15 @@ function addFiles(source) {
         proxy.render()
     }
 
+    if (local_files) {
+        button.removeClass('button-disabled')
+    } else {
+        button.addClass('button-disabled')
+    }
+
     button.removeClass('upload-in-progress')
     if ($('#auto-continue').is(':checked')) {
-        $('#media_button').click()
+        button.click()
     }
 }
 
@@ -1128,6 +1134,7 @@ async function uploadMedia(button, uploadState) {
             uploadState.reset()
             uploadState.setStatus('init')
             uploadState.setAction('Ready for new batch')
+            $(button).addClass('button-disabled')
         }
     }
 }
@@ -1183,12 +1190,12 @@ function createUploadState(divId) {
 
             if (this.status === 'processed') {
                 $('#media_button').val('Upload media')
-            }
+            } else if (this.status === 'uploaded')
+                $('#media_button').val('Preprocess media')
         },
         markDone: function () {
             // Save the fact that we uploaded one batch
             let filenames = Object.keys(FILES)
-            filenames.sort((a, b) => a > b ? 1 : -1)
             if (filenames.length !== 0) {
                 let first = filenames[0]
                 let last = first
@@ -1238,4 +1245,22 @@ function hideNavButtons() {
     $('#clear-button').hide()
     $('#scroll-bottom').hide()
     $('#scroll-top').hide()
+}
+
+async function goUpload(button, uploadState) {
+    // Main upload pipeline
+    if ($('#auto-continue').is(':checked')) {
+        if (uploadState.status === 'init') {
+            await preprocessMedia(this, uploadState)
+            await uploadMedia(this, UPLOAD_STATE)
+        } else if (uploadState.status === 'processed') {
+            await uploadMedia(this, UPLOAD_STATE)
+        }
+    } else {
+        if (uploadState.status === 'init') {
+            await preprocessMedia(this, uploadState)
+        } else if (uploadState.status === 'processed') {
+            await uploadMedia(this, UPLOAD_STATE)
+        }
+    }
 }
