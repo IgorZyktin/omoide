@@ -406,14 +406,14 @@ class ApiItemUpdateUseCase:
                 elif operation.path == '/is_collection':
                     item.is_collection = str(operation.value).lower() == 'true'
                 elif operation.path == '/content_ext':
-                    item.content_ext = (
-                        str(operation.value) if operation.value else None)
+                    item.content_ext \
+                        = (str(operation.value) if operation.value else None)
                 elif operation.path == '/preview_ext':
-                    item.preview_ext = (
-                        str(operation.value) if operation.value else None)
+                    item.preview_ext \
+                        = (str(operation.value) if operation.value else None)
                 elif operation.path == '/thumbnail_ext':
-                    item.thumbnail_ext = (
-                        str(operation.value) if operation.value else None)
+                    item.thumbnail_ext = \
+                        (str(operation.value) if operation.value else None)
 
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
@@ -538,15 +538,23 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            item.permissions = list(new_permissions.permissions_after)
-            await self.items_repo.update_item(item)
+            if new_permissions.override:
+                item.permissions = list(new_permissions.permissions_after)
+                await self.items_repo.update_item(item)
+
+            else:
+                added, deleted = utils.get_delta(
+                    new_permissions.permissions_before,
+                    new_permissions.permissions_after,
+                )
+                if added:
+                    await self.items_repo.add_permissions(uuid, added)
+
+                if deleted:
+                    await self.items_repo.delete_permissions(uuid, deleted)
+
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())
-
-        added, deleted = utils.get_delta(
-            new_permissions.permissions_before,
-            new_permissions.permissions_after,
-        )
 
         if added or deleted:
             if new_permissions.apply_to_parents:

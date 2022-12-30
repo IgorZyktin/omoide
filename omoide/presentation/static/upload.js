@@ -13,6 +13,8 @@ const EXPECTED_STEPS = new Set([
     'generateFeaturesForProxy',
     'generateMetainfoForProxy',
     'createItemsForProxy',
+    'uploadTagsForProxy',
+    'uploadPermissionsForProxy',
     'uploadMetainfoForProxy',
     'saveContentForProxy',
     'savePreviewForProxy',
@@ -260,7 +262,7 @@ function createFileProxy(file, number) {
             return this.tagsAdded
         },
         getPermissions: function () {
-            return this.permissionsAdded
+            return extractAllUUIDs(this.permissionsAdded)
         },
         redrawTags: function () {
             this.element.tagsElement.empty()
@@ -418,8 +420,6 @@ async function createItemsForProxy(targets, uploadState) {
         return
 
     let parent_uuid = targets[0].parent_uuid
-    let tags = targets[0].getTags()
-    let permissions = targets[0].getPermissions()
 
     return new Promise(function (resolve, reject) {
         $.ajax({
@@ -431,14 +431,8 @@ async function createItemsForProxy(targets, uploadState) {
                 parent_uuid: parent_uuid,
                 name: '',
                 is_collection: false,
-                tags: [
-                    ...splitLines($('#item_tags').val()),
-                    ...tags,
-                ],
-                permissions: extractAllUUIDs([
-                    ...splitLines($('#item_permissions').val()),
-                    ...permissions,
-                ]),
+                tags: [],
+                permissions: [],
                 total: targets.length,
             }),
             success: function (response) {
@@ -1085,6 +1079,68 @@ async function preprocessMedia(button, uploadState) {
     uploadState.setStatus('processed')
 }
 
+async function uploadTagsForProxy(proxy) {
+    // Update item tags as initial + per item
+    let tags = [
+        ...splitLines($('#item_tags').val()),
+        ...proxy.getTags(),
+    ]
+
+    if (!tags)
+        return
+
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            timeout: 5000, // 5 seconds
+            type: 'PUT',
+            url: `/api/items/${proxy.uuid}/tags`,
+            contentType: 'application/json',
+            data: JSON.stringify([{'tags': tags}]),
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
+}
+
+async function uploadPermissionsProxy(proxy) {
+    // Update item permissions as initial + per item
+    let permissions = [
+        ...extractAllUUIDs(splitLines($('#item_permissions').val())),
+        ...proxy.getPermissions(),
+    ]
+
+    if (!permissions)
+        return
+
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            timeout: 5000, // 5 seconds
+            type: 'PUT',
+            url: `/api/items/${proxy.uuid}/permissions`,
+            contentType: 'application/json',
+            data: JSON.stringify([{
+                'apply_to_parents': false,
+                'apply_to_children': false,
+                'override': true,
+                'permissions_before': [],
+                'permissions_after': permissions,
+            }]),
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
+}
+
 async function uploadMedia(button, uploadState) {
     // upload given media to the backend
     let targets = getTargets()
@@ -1092,6 +1148,10 @@ async function uploadMedia(button, uploadState) {
 
     $(button).addClass('button-disabled')
     await createItemsForProxy(targets, uploadState)
+    await doIf(targets, uploadTagsForProxy, uploadState,
+        p => p.uuid && p.isValid)
+    await doIf(targets, uploadPermissionsProxy, uploadState,
+        p => p.uuid && p.isValid)
     await doIf(targets, uploadMetainfoForProxy, uploadState,
         p => !p.metainfo.uploaded && p.uuid && p.isValid)
     await doIf(targets, uploadEXIFProxy, uploadState,
