@@ -174,10 +174,10 @@ class Database(BaseDatabase):
             models.Metainfo.item_uuid == copy.target_uuid
         ).first()
 
-        if not all((source_item,
-                    target_item,
-                    source_metainfo,
-                    target_metainfo)):
+        if source_item is None \
+                or target_item is None \
+                or source_metainfo is None \
+                or target_metainfo is None:
             return
 
         folder = config.hot_folder or config.cold_folder
