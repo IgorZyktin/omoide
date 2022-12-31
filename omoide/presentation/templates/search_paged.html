@@ -2,7 +2,6 @@
 {% from "macros.html" import render_paginator_search, render_thumbnail_for_item %}
 
 {% block body %}
-
     <h3>Got {{ matching_items }} results in {{ delta }} sec.</h3>
 
     {{ render_paginator_search(request, paginator, aim_wrapper) }}
@@ -14,5 +13,10 @@
     </div>
 
     {{ render_paginator_search(request, paginator, aim_wrapper) }}
-
+    <script>
+        $(document).ready(function () {
+            activateFloatingHeader()
+            updateHeaderPadding()
+        });
+    </script>
 {% endblock %}
