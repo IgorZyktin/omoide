@@ -1,9 +1,12 @@
 {% extends "browse_base.html" %}
 {% from "macros.html" import render_paginator_by_item, render_location, render_thumbnail_for_item %}
 
-{% block body %}
-
+{% block header_top %}
+    {{ super() }}
     {{ render_location(request, result.location, aim_wrapper) }}
+{% endblock %}
+
+{% block body %}
     {{ render_paginator_by_item(request, paginator, uuid, aim_wrapper) }}
 
     <div class="envelope-container">
@@ -13,5 +16,10 @@
     </div>
 
     {{ render_paginator_by_item(request, paginator, uuid, aim_wrapper) }}
-
+    <script>
+        $(document).ready(function () {
+            activateFloatingHeader()
+            updateHeaderPadding()
+        });
+    </script>
 {% endblock %}

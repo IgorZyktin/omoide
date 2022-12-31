@@ -1,13 +1,6 @@
-{% extends "browse_base.html" %}
-{% from "macros.html" import render_simple_location %}
-
-{% block header_top %}
-    {{ super() }}
-    {{ render_simple_location(request, location, aim_wrapper) }}
-{% endblock %}
+{% extends "base_search.html" %}
 
 {% block head %}
-    {{ super() }}
     <script type="text/javascript"
             src="{{ url_for(request, 'static', path='scroller.js') }}"></script>
 {% endblock %}
