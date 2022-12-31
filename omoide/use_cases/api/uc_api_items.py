@@ -732,11 +732,22 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
             if source is None:
                 return Failure(errors.ItemDoesNotExist(uuid=source_uuid))
 
+            if source.content_ext is None:
+                return Failure(errors.ItemHasNoContent(uuid=source_uuid))
+
             if source.preview_ext is None:
                 return Failure(errors.ItemHasNoPreview(uuid=source_uuid))
 
             if source.thumbnail_ext is None:
                 return Failure(errors.ItemHasNoThumbnail(uuid=source_uuid))
+
+            await self.media_repo.copy_media(
+                owner_uuid=user.uuid,
+                source_uuid=source_uuid,
+                target_uuid=target_uuid,
+                ext=source.preview_ext,
+                target_folder='content',
+            )
 
             await self.media_repo.copy_media(
                 owner_uuid=user.uuid,

@@ -51,12 +51,17 @@ class ItemDoesNotExist(Error):
 
 class ItemHasNoThumbnail(Error):
     """Item has no thumbnail."""
-    template = 'Item {uuid} has no thumbnail'
+    template = 'Item {uuid} has no thumbnail to copy'
 
 
 class ItemHasNoPreview(Error):
     """Item has no preview."""
-    template = 'Item {uuid} has no preview'
+    template = 'Item {uuid} has no preview to copy'
+
+
+class ItemHasNoContent(Error):
+    """Item has no preview."""
+    template = 'Item {uuid} has no content to copy'
 
 
 class ItemRequiresAccess(Error):
