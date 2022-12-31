@@ -29,6 +29,7 @@ def test_filesystem_ensure_folder_exists():
         assert path.exists()
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_filesystem_safely_save(worker_dt):
     """Must save without destroying existing files."""
     filesystem = Filesystem()
