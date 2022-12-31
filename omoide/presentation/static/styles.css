@@ -18,14 +18,14 @@
     }
 
     .query-container {
-        margin: 1px;
+        margin: 1px 0;
         grid-column-gap: 0.1em;
         grid-template: "order nested paged login"
         "home input input search";
     }
 
     .menu-container {
-        margin: 1px;
+        margin: 0;
         grid-column-gap: 0.1em;
         grid-row-gap: 0.1em;
     }
@@ -42,14 +42,14 @@
     }
 
     .query-container {
-        margin: 5px;
+        margin: 5px 0;
         grid-column-gap: 0.5em;
         grid-row-gap: 0.5em;
         grid-template: "home input input search order nested paged login";
     }
 
     .menu-container {
-        margin: 5px;
+        margin: 0;
         grid-column-gap: 0.5em;
     }
 
@@ -119,9 +119,28 @@ textarea:focus, input:focus {
     outline: none;
 }
 
-#header {
+.header-static, .header-floating {
+    background-color: var(--background-color) !important;
+    padding: 0;
+    z-index: 13;
+    width: 100%;
+}
+
+.header-floating {
+    position: fixed;
+}
+
+.header-static {
+}
+
+.sub_header {
     max-width: 1800px;
-    margin: auto;
+    padding: 0 0 5px;
+    margin: 0 auto;
+}
+
+.content {
+    padding: 0;
 }
 
 .button, .button-disabled, .button-nav {

@@ -105,7 +105,7 @@ class Scroller {
             link.appendChild(img)
 
             envelope.appendChild(link)
-            container.appendChild(envelope);
+            this.container.appendChild(envelope);
         }
 
         if (actuallyInjected === 0) {
