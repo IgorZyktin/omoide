@@ -37,217 +37,227 @@
 </head>
 
 <body>
-<div id="header">
-    <div class="query-container">
-        <a href="{{ url_for(request, 'app_home') + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-           title="Go to starting page"
-           class="button qc-home">
-            <img src="{{ url_for(request, 'static', path='ic_home_24px.svg') }}"
-                 class="invert"
-                 alt="Home icon"/>
-            <span>Home</span>
-        </a>
+<div id="header" class="header-static">
+    <div id="sub_header" class="sub_header">
+        <div class="query-container">
+            <a href="{{ url_for(request, 'app_home') + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+               title="Go to starting page"
+               class="button qc-home">
+                <img src="{{ url_for(request, 'static', path='ic_home_24px.svg') }}"
+                     class="invert"
+                     alt="Home icon"/>
+                <span>Home</span>
+            </a>
 
-        <div id="guess" class="guess qc-input">
-            <input id="query_element"
-                   name="query"
-                   type="search"
-                   value="{{ aim_wrapper.query.raw_query or '' }}"
-                   class="query_input"
-                   autocomplete="off"
-                   placeholder="Search (for example it + movie)"
-                   autofocus/>
-        </div>
+            <div id="guess" class="guess qc-input">
+                <input id="query_element"
+                       name="query"
+                       type="search"
+                       value="{{ aim_wrapper.query.raw_query or '' }}"
+                       class="query_input"
+                       autocomplete="off"
+                       placeholder="Search (for example it + movie)"
+                       autofocus/>
+            </div>
 
-        <a id="search_button"
-           href="javascript:void(0)"
-           title="Press to perform search"
-           onclick="goSearch()"
-           class="button qc-search">
-            <img src="{{ url_for(request, 'static', path='ic_search_24px.svg') }}"
-                 alt="Looking glass icon"/>
-            <span>Search</span>
-        </a>
+            <a id="search_button"
+               href="javascript:void(0)"
+               title="Press to perform search"
+               onclick="goSearch()"
+               class="button qc-search">
+                <img src="{{ url_for(request, 'static', path='ic_search_24px.svg') }}"
+                     alt="Looking glass icon"/>
+                <span>Search</span>
+            </a>
 
-        {% if block_ordered %}
-            <span class="button-disabled qc-order">
+            {% if block_ordered %}
+                <span class="button-disabled qc-order">
                 {% if aim_wrapper.ordered %}
                     <img src="{{ url_for(request, 'static', path='ic_sort_24px.svg') }}"
                          alt="Ordering is not supported in this section"/>
-                    <span>Ordered</span>
+                    <span title="Change view mode to see items in random order">Now ordered</span>
                 {% else %}
                     <img src="{{ url_for(request, 'static', path='ic_random_24px.svg') }}"
                          alt="Ordering is not supported in this section"/>
-                    <span>Random</span>
+                    <span title="Change view mode to see items ordered">Now random</span>
                 {% endif %}
             </span>
-        {% else %}
-            {% if aim_wrapper.ordered %}
-                <a href="javascript:void(0)"
-                   title="Show items ordered"
-                   onclick="toggleOrdered()"
-                   class="button qc-order">
-                    <img src="{{ url_for(request, 'static', path='ic_sort_24px.svg') }}"
-                         alt="Show items ordered"/>
-                    <span>Ordered</span>
-                </a>
             {% else %}
-                <a href="javascript:void(0)"
-                   title="Show items in random order"
-                   onclick="toggleOrdered()"
-                   class="button qc-order">
-                    <img src="{{ url_for(request, 'static', path='ic_random_24px.svg') }}"
-                         alt="Show items in random order"/>
-                    <span>Random</span>
-                </a>
+                {% if aim_wrapper.ordered %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items in random order"
+                       onclick="toggleOrdered()"
+                       class="button qc-order">
+                        <img src="{{ url_for(request, 'static', path='ic_sort_24px.svg') }}"
+                             alt="Change view mode to see items ordered"/>
+                        <span>Now ordered</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items ordered"
+                       onclick="toggleOrdered()"
+                       class="button qc-order">
+                        <img src="{{ url_for(request, 'static', path='ic_random_24px.svg') }}"
+                             alt="Change view mode to see items ordered"/>
+                        <span title="Change view mode to see items ordered">Now random</span>
+                    </a>
+                {% endif %}
             {% endif %}
-        {% endif %}
 
-        {% if block_nested %}
-            <span class="button-disabled qc-nested">
+            {% if block_nested %}
+                <span class="button-disabled qc-nested">
                 {% if aim_wrapper.nested %}
                     <img src="{{ url_for(request, 'static', path='ic_nested_on.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span>Nested</span>
+                    <span title="Change view mode to see items on any depth">Now nested</span>
                 {% else %}
                     <img src="{{ url_for(request, 'static', path='ic_nested_off.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span>Flat</span>
+                    <span title="Change view mode to see items only from top level">Now flat</span>
                 {% endif %}
             </span>
-        {% else %}
-            {% if aim_wrapper.nested %}
-                <a href="javascript:void(0)"
-                   title="Show only top level items"
-                   onclick="toggleNested()"
-                   class="button qc-nested">
-                    <img src="{{ url_for(request, 'static', path='ic_nested_on.svg') }}"
-                         alt="Show only top level items"/>
-                    <span>Nested</span>
-                </a>
             {% else %}
-                <a href="javascript:void(0)"
-                   title="Show albums same way as separate pages"
-                   onclick="toggleNested()"
-                   class="button qc-nested">
-                    <img src="{{ url_for(request, 'static', path='ic_nested_off.svg') }}"
-                         alt="Show albums same way as separate pages"/>
-                    <span>Flat</span>
-                </a>
+                {% if aim_wrapper.nested %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items on any depth"
+                       onclick="toggleNested()"
+                       class="button qc-nested">
+                        <img src="{{ url_for(request, 'static', path='ic_nested_on.svg') }}"
+                             alt="Change view mode to see items on any depth"/>
+                        <span title="Change view mode to see items on any depth">Now nested</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items only from top level"
+                       onclick="toggleNested()"
+                       class="button qc-nested">
+                        <img src="{{ url_for(request, 'static', path='ic_nested_off.svg') }}"
+                             alt="Change view mode to see items only from top level"/>
+                        <span>Now flat</span>
+                    </a>
+                {% endif %}
             {% endif %}
-        {% endif %}
 
-        {% if block_paginated or False %}
-            <span class="button-disabled qc-paged">
+            {% if block_paginated or False %}
+                <span class="button-disabled qc-paged">
                 <img src="{{ url_for(request, 'static', path='ic_paginated_on.svg') }}"
                      alt="Pagination is not supported in this section"/>
-                {% if aim_wrapper.paged %}
-                    <span>Paginated</span>
-                {% else %}
-                    <span>Dynamic</span>
-                {% endif %}
+                    {% if aim_wrapper.paged %}
+                        <span title="Change view mode to see items with dynamic load">Now paginated</span>
+                    {% else %}
+                        <span title="Change view mode to see items on static pages">Now dynamic</span>
+                    {% endif %}
             </span>
-        {% else %}
-            {% if aim_wrapper.paged %}
-                <a href="javascript:void(0)"
-                   title="Show items in statically rendered pages"
-                   onclick="togglePaged()"
-                   class="button qc-paged">
-                    <img src="{{ url_for(request, 'static', path='ic_paginated_on.svg') }}"
-                         alt="Show items in statically rendered pages"/>
-                    <span>Paginated</span>
-                </a>
             {% else %}
-                <a href="javascript:void(0)"
-                   title="Load items dynamically"
-                   onclick="togglePaged()"
-                   class="button qc-paged">
-                    <img src="{{ url_for(request, 'static', path='ic_paginated_off.svg') }}"
-                         alt="Load items dynamically"/>
-                    <span>Dynamic</span>
-                </a>
-            {% endif %}
-        {% endif %}
-
-        {% if user.is_anon() %}
-            <a href="{{ url_for(request, 'app_login') }}"
-               title="Log in"
-               class="button qc-login">
-                <img src="{{ url_for(request, 'static', path='ic_perm_identity_24px.svg') }}"
-                     alt="Login"/>
-                <span>Login</span>
-            </a>
-        {% else %}
-            <a href="{{ url_for(request, 'app_profile') }}"
-               class="button qc-login">
-                <img src="{{ url_for(request, 'static', path='ic_perm_identity_24px.svg') }}"
-                     alt="Profile"/>
-                <span>{{ user.name }}</span>
-            </a>
-        {% endif %}
-    </div>
-
-    {% if user.is_not_anon() %}
-        <div class="menu-container">
-            {% if current_item %}
-                {% set parent_hint = current_item.uuid | string %}
-            {% else %}
-                {% set parent_hint = user.root_item | string %}
+                {% if aim_wrapper.paged %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items with dynamic load"
+                       onclick="togglePaged()"
+                       class="button qc-paged">
+                        <img src="{{ url_for(request, 'static', path='ic_paginated_on.svg') }}"
+                             alt="Change view mode to see items with dynamic load"/>
+                        <span>Now paginated</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items on static pages"
+                       onclick="togglePaged()"
+                       class="button qc-paged">
+                        <img src="{{ url_for(request, 'static', path='ic_paginated_off.svg') }}"
+                             alt="Change view mode to see items on static pages"/>
+                        <span>Now dynamic</span>
+                    </a>
+                {% endif %}
             {% endif %}
 
-            <a href="{{ url_for(request, 'app_item_create', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-               title="Create new item"
-               class="button">
-                <img src="{{ url_for(request, 'static', path='ic_create_new_folder_24px.svg') }}"
-                     alt="Create"/>
-                <span>Create</span>
-            </a>
-
-            <a href="{{ url_for(request, 'app_upload', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-               title="Upload media"
-               class="button">
-                <img src="{{ url_for(request, 'static', path='ic_perm_media_24px.svg') }}"
-                     alt="Upload"/>
-                <span>Upload</span>
-            </a>
-
-            {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
-                <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   class="button">
-                    <img src="{{ url_for(request, 'static', path='ic_format_list_bulleted_24px.svg') }}"
-                         alt="Edit"/>
-                    <span>Edit</span>
-                </a>
-
-                <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   class="button">
-                    <img src="{{ url_for(request, 'static', path='ic_delete_24px.svg') }}"
-                         alt="Delete"/>
-                    <span>Delete</span>
+            {% if user.is_anon() %}
+                <a href="{{ url_for(request, 'app_login') }}"
+                   title="Enter credentials to log in"
+                   class="button qc-login">
+                    <img src="{{ url_for(request, 'static', path='ic_perm_identity_24px.svg') }}"
+                         alt="Enter credentials to log in"/>
+                    <span>Login</span>
                 </a>
             {% else %}
-                <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   class="button-disabled">
-                    <img src="{{ url_for(request, 'static', path='ic_format_list_bulleted_24px.svg') }}"
-                         alt="Edit"/>
-                    <span>Edit</span>
-                </a>
-
-                <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   class="button-disabled">
-                    <img src="{{ url_for(request, 'static', path='ic_delete_24px.svg') }}"
-                         alt="Delete"/>
-                    <span>Delete</span>
+                <a href="{{ url_for(request, 'app_profile') }}"
+                   title="Currently logged in as"
+                   class="button qc-login">
+                    <img src="{{ url_for(request, 'static', path='ic_perm_identity_24px.svg') }}"
+                         alt="Currently logged in as"/>
+                    <span>{{ user.name }}</span>
                 </a>
             {% endif %}
         </div>
-    {% endif %}
 
-    {% block upper_body %}{% endblock %}
+        {% if user.is_not_anon() %}
+            <div class="menu-container">
+                {% if current_item %}
+                    {% set parent_hint = current_item.uuid | string %}
+                {% else %}
+                    {% set parent_hint = user.root_item | string %}
+                {% endif %}
 
+                <a href="{{ url_for(request, 'app_item_create', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                   title="Create new item"
+                   class="button">
+                    <img src="{{ url_for(request, 'static', path='ic_create_new_folder_24px.svg') }}"
+                         alt="Create"/>
+                    <span>Create</span>
+                </a>
+
+                <a href="{{ url_for(request, 'app_upload', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                   title="Upload media"
+                   class="button">
+                    <img src="{{ url_for(request, 'static', path='ic_perm_media_24px.svg') }}"
+                         alt="Upload media"/>
+                    <span>Upload</span>
+                </a>
+
+                {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
+                    <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                       title="Edit current item"
+                       class="button">
+                        <img src="{{ url_for(request, 'static', path='ic_format_list_bulleted_24px.svg') }}"
+                             alt="Edit current item"/>
+                        <span>Edit</span>
+                    </a>
+
+                    <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                       title="Delete current item"
+                       class="button">
+                        <img src="{{ url_for(request, 'static', path='ic_delete_24px.svg') }}"
+                             alt="Delete current item"/>
+                        <span>Delete</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                       title="Edit current item"
+                       class="button-disabled">
+                        <img src="{{ url_for(request, 'static', path='ic_format_list_bulleted_24px.svg') }}"
+                             alt="Edit current item"/>
+                        <span>Edit</span>
+                    </a>
+
+                    <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                       title="Delete current item"
+                       class="button-disabled">
+                        <img src="{{ url_for(request, 'static', path='ic_delete_24px.svg') }}"
+                             alt="Delete current item"/>
+                        <span>Delete</span>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% block upper_body %}{% endblock %}
+
+    </div>
+    {% block header_top %}{% endblock %}
 </div>
 
-{% block body %}{% endblock %}
+<div id="content" class="content-static">
+    {% block body %}{% endblock %}
+</div>
 
 <script>
     $(document).ready(function () {

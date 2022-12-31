@@ -1,7 +1,34 @@
 {% extends "browse_base.html" %}
 {% from "macros.html" import render_simple_location %}
 
-{% block body %}
-    {{ render_simple_location(request, location, aim_wrapper) }}
+{% block header_top %}
     {{ super() }}
+    {{ render_simple_location(request, location, aim_wrapper) }}
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript"
+            src="{{ url_for(request, 'static', path='scroller.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="envelope-container"></div>
+    <script>
+        $(document).ready(function () {
+            let container = document.querySelector('.envelope-container')
+            let endpoint = '{{ api_url }}'
+            let scroller = new Scroller(container, endpoint)
+            let callback = function () {
+                scroller.trigger()
+            }
+
+            window.addEventListener('scroll', callback)
+            scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
+            callback()
+
+            activateFloatingHeader()
+            updateHeaderPadding()
+        });
+    </script>
 {% endblock %}
