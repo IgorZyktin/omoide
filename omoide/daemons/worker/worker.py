@@ -212,6 +212,8 @@ class Worker:
                         copy.status = 'fail'
                         copy.error += traceback.format_exc()
                     else:
+                        database.copy_content_parameters(
+                            self.config, self.filesystem, session, copy)
                         database.mark_origin(copy)
                     finally:
                         copy.processed_at = utils.now()

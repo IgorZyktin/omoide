@@ -3,6 +3,7 @@
 """
 import os.path
 from pathlib import Path
+from typing import Optional
 
 from omoide import utils
 from omoide.infra import custom_logging
@@ -67,3 +68,13 @@ class Filesystem:
         filename = Path().joinpath(*args)
         content = filename.read_bytes()
         return content
+
+    @staticmethod
+    def get_size(*args: str | Path) -> Optional[int]:
+        """Get sze of the file in bytes."""
+        try:
+            filename = Path().joinpath(*args)
+            size = os.stat(filename).st_size
+        except OSError:
+            size = None
+        return size
