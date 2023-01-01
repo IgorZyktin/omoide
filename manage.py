@@ -48,8 +48,8 @@ def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
     asyncio.run(main.run(
         logger=custom_logging.get_logger(__name__),
         authenticator=dep.get_authenticator(),
-        items_repo=dep.items_write_repository,
-        users_repo=dep.users_write_repository,
+        items_repo=dep.get_items_write_repo(),
+        users_repo=dep.get_users_write_repo(),
         login=login,
         password=password,
         name=name,
@@ -75,7 +75,7 @@ def cmd_change_password(uuid: str, password: str):
     asyncio.run(main.run(
         logger=custom_logging.get_logger(__name__),
         authenticator=dep.get_authenticator(),
-        users_repo=dep.users_write_repository,
+        users_repo=dep.get_users_write_repo(),
         raw_uuid=uuid,
         new_password=password,
     ))
