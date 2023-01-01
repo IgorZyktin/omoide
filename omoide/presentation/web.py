@@ -23,6 +23,7 @@ from starlette.templating import Jinja2Templates
 from omoide import domain
 from omoide import utils
 from omoide.domain import errors
+from omoide.domain import interfaces
 from omoide.infra import custom_logging
 from omoide.presentation import constants
 from omoide.utils import maybe_str
@@ -278,65 +279,76 @@ def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
 
 def url_join(*args: str) -> str:
     """Join url components."""
-    segments = [x.strip().strip('/') for x in args]
+    segments = [
+        x.strip().strip('/')
+        for x in args
+        if x.strip().strip('/')
+    ]
+
+    if not segments:
+        return '/'
     return '/'.join(segments)
 
 
-class Locator:
+class Locator(interfaces.AbsLocator):
     """Helper object that generates links for items."""
 
     def __init__(
             self,
             templates: TemplateEngine,
             request: Request,
-            prefix_size: int,
             item: domain.Item,
+            prefix_size: int,
     ) -> None:
         """Initialize instance."""
+        super().__init__(item, prefix_size)
         self.request = request
-        self.prefix_size = prefix_size
-        self.item = item
         self.url_for = templates.url_for
 
     @functools.cached_property
-    def base(self) -> list[str]:
-        """Return root link components."""
-        return [
+    def head(self) -> str:
+        """Return starting common part of the path."""
+        return url_join(
             maybe_str(self.url_for(self.request, 'app_home')),
             'content',
-        ]
+        )
+
+    @functools.cached_property
+    def body(self) -> str:
+        """Return middle common part of the path."""
+        return url_join(
+            str(self.item.owner_uuid),
+            str(self.item.uuid)[:self.prefix_size],
+        )
 
     @functools.cached_property
     def content(self) -> str:
-        """Return URL to content."""
+        """Return URL to the content."""
         return url_join(
-            *self.base,
+            self.head,
             'content',
-            str(self.item.owner_uuid),
-            str(self.item.uuid)[:self.prefix_size],
-            str(self.item.uuid) + '.' + maybe_str(self.item.content_ext),
+            self.body,
+            self.content_filename
         )
 
     @functools.cached_property
     def preview(self) -> str:
-        """Return URL to preview."""
+        """Return URL to the preview."""
         return url_join(
-            *self.base,
+            self.head,
             'preview',
-            str(self.item.owner_uuid),
-            str(self.item.uuid)[:self.prefix_size],
-            str(self.item.uuid) + '.' + maybe_str(self.item.preview_ext),
+            self.body,
+            self.preview_filename
         )
 
     @functools.cached_property
     def thumbnail(self) -> str:
-        """Return URL to thumbnail."""
+        """Return URL to the thumbnail."""
         return url_join(
-            *self.base,
+            self.head,
             'thumbnail',
-            str(self.item.owner_uuid),
-            str(self.item.uuid)[:self.prefix_size],
-            str(self.item.uuid) + '.' + maybe_str(self.item.thumbnail_ext),
+            self.body,
+            self.thumbnail_filename
         )
 
 

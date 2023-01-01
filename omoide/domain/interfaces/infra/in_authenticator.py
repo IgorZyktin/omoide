@@ -3,6 +3,10 @@
 """
 import abc
 
+__all__ = [
+    'AbsAuthenticator',
+]
+
 
 class AbsAuthenticator(abc.ABC):
     """Abstract authenticator."""

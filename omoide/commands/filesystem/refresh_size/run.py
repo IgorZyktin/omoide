@@ -38,7 +38,7 @@ def main(
             metainfo = session.query(models.Metainfo).get(target.uuid)
 
             if metainfo is None:
-                print(f'Cannot find metainfo {target.uuid}')
+                print(f'Cannot find metainfo for {target.uuid}')
                 continue
 
             changed += update_size(config, metainfo, target, path)

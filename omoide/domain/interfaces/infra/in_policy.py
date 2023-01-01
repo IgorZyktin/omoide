@@ -11,6 +11,10 @@ from omoide.domain.errors import Error
 from omoide.domain.interfaces.in_storage \
     .in_repositories import in_rp_items_read
 
+__all__ = [
+    'AbsPolicy',
+]
+
 
 class AbsPolicy(abc.ABC):
     """Abstract policy checker."""
