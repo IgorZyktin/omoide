@@ -309,8 +309,8 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             ).values(
                 extras=sa.func.jsonb_set(
                     models.Metainfo.extras,
-                    f'{{{key}}}',
-                    f"'{value}'",
+                    [key],
+                    f'"{value}"' if isinstance(value, str) else value,
                 )
             )
             await self.db.execute(stmt)

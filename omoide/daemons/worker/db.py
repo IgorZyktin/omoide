@@ -203,7 +203,7 @@ class Database(BaseDatabase):
         ).values(
             extras=sa.func.jsonb_set(
                 models.Metainfo.extras,
-                '{copied_cover_from}',
+                ['copied_cover_from'],
                 f'"{copy.source_uuid}"',
             )
         )
