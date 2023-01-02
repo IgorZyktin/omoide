@@ -56,6 +56,7 @@ class FilesystemLocator(interfaces.AbsLocator):
         return os.path.join(
             self.head,
             'preview',
+            self.body,
             self.preview_filename,
         )
 
@@ -65,5 +66,6 @@ class FilesystemLocator(interfaces.AbsLocator):
         return os.path.join(
             self.head,
             'thumbnail',
+            self.body,
             self.thumbnail_filename,
         )

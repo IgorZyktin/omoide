@@ -22,10 +22,10 @@ def run(
         config: Config,
 ) -> None:
     """Refresh disk usage for every item."""
-    if Path(config.hot_folder).exists():
+    if config.hot_folder and Path(config.hot_folder).exists():
         path = config.hot_folder
 
-    elif Path(config.cold_folder).exists():
+    elif config.cold_folder and Path(config.cold_folder).exists():
         path = config.cold_folder
 
     else:
