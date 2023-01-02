@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Refresh size command.
 """
-
 from pathlib import Path
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from omoide import infra
+from omoide import utils
 from omoide.commands.common import helpers
 from omoide.commands.common.base_db import BaseDatabase
 from omoide.commands.filesystem.refresh_file_sizes_in_db.cfg import Config
@@ -61,25 +61,21 @@ def run(
                 operations = update_size(config, metainfo, item, path)
                 session.commit()
                 local_changed += operations
+                total_changed += operations
                 last_meta = metainfo.item_uuid
 
                 if config.log_every_item:
                     if operations:
                         LOG.info('\t\tChanged item {} {} ({} operations)',
                                  item.uuid, item.name, operations)
-                    else:
-                        LOG.info('\t\tNothing changed for item {} {}',
-                                 item.uuid, item.name)
 
             if local_changed:
                 LOG.info('\tChanged {} items for user {} ({} operations)',
                          i, user.name, local_changed)
-            else:
-                LOG.info('\tNothing changed for user {} {}',
-                         user.uuid, user.name)
 
             local_changed = 0
 
+        LOG.info('Total changes: {}', utils.sep_digits(total_changed))
         LOG.warning('Last record: {}', last_meta)
 
 
@@ -99,6 +95,7 @@ def update_size(
     changed = 0
     for each in ['content', 'preview', 'thumbnail']:
         ext = getattr(item, f'{each}_ext')
+
         if ext:
             path = getattr(locator, each)
             size = helpers.get_file_size(path)
