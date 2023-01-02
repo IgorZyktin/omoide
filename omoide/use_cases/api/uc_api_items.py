@@ -9,8 +9,6 @@ from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
 
-from sqlalchemy.orm.attributes import flag_modified
-
 from omoide import domain
 from omoide import utils
 from omoide.domain import actions
@@ -772,9 +770,8 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
                 target_folder='thumbnail',
             )
 
-            metainfo.extras.update({'copied_cover_from': str(source_uuid)})
-            flag_modified(metainfo, 'extras')
-
+            await self.metainfo_repo.update_metainfo_extras(
+                target_uuid, {'copied_cover_from': str(source_uuid)})
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())
 

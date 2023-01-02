@@ -295,6 +295,26 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
+    async def update_metainfo_extras(
+            self,
+            uuid: UUID,
+            new_extras: dict[str, None | int | float | str | bool],
+    ) -> None:
+        """Add new data to extras."""
+        for key, value in new_extras.items():
+            stmt = sa.update(
+                models.Metainfo
+            ).where(
+                models.Metainfo.item_uuid == uuid
+            ).values(
+                extras=sa.func.jsonb_set(
+                    models.Metainfo.extras,
+                    f'{{{key}}}',
+                    f"'{value}'",
+                )
+            )
+            await self.db.execute(stmt)
+
     async def start_long_job(
             self,
             name: str,

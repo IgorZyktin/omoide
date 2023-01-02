@@ -211,7 +211,6 @@ class Database(BaseDatabase):
 
     @staticmethod
     def copy_content_parameters(
-            self,
             config: cfg.Config,
             filesystem: Filesystem,
             session: Session,

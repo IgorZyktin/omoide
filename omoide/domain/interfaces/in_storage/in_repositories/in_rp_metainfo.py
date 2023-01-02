@@ -97,6 +97,14 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
         """Set last updated at given tine for the item."""
 
     @abc.abstractmethod
+    async def update_metainfo_extras(
+            self,
+            uuid: UUID,
+            new_extras: dict[str, None | int | float | str | bool],
+    ) -> None:
+        """Add new data to extras."""
+
+    @abc.abstractmethod
     async def start_long_job(
             self,
             name: str,
