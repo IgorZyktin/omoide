@@ -3,7 +3,6 @@
 """
 import asyncio
 from typing import Optional
-from uuid import UUID
 
 import click
 from pydantic import SecretStr
@@ -187,6 +186,7 @@ def cmd_refresh_tags(**kwargs: str | bool):
         ):
             main.run(config=config, database=database)
 
+
 # Filesystem related commands -------------------------------------------------
 
 
@@ -208,7 +208,36 @@ def cmd_du():
 
 
 @cli.command(
-    name='refresh_size',
+    name='refresh_file_sizes_in_db',
+)
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--hot-folder',
+    type=str,
+    default='',
+    help='Location of the hot folder (optional)',
+    show_default=True,
+)
+@click.option(
+    '--cold-folder',
+    type=str,
+    default='',
+    help='Location of the cold folder (optional)',
+    show_default=True,
+)
+@click.option(
+    '--only-user',
+    help='Refresh tags specifically for this user',
+)
+@click.option(
+    '--log-every-item/--no-log-every-item',
+    default=False,
+    help='Output every refreshed item',
 )
 @click.option(
     '--limit',
@@ -218,24 +247,22 @@ def cmd_du():
 )
 @click.option(
     '--marker',
-    type=UUID,
-    default=None,
+    default='',
     help='Item from which we should start',
 )
-def cmd_refresh_size(limit: int, marker: Optional[UUID]):
-    """Recalculate storage size for every item."""
-    from omoide.commands.filesystem.refresh_size import cfg, run
+def cmd_refresh_file_sizes_in_db(**kwargs) -> None:
+    """Recalculate all file sizes for every item."""
+    from omoide.commands.filesystem.refresh_file_sizes_in_db import cfg, run
 
-    config = cfg.get_config()
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
-    with database.life_cycle() as engine:
+    with database.life_cycle():
         with helpers.timing(
-                start_template='Refreshing actual disk usage...',
+                start_template='Refreshing file sizes for every item...',
         ):
-            config.limit = limit
-            config.marker = marker
-            run.main(engine, config)
+            run.run(database, config)
 
 
 if __name__ == '__main__':

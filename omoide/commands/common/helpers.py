@@ -3,14 +3,15 @@
 """
 import contextlib
 import time
+from pathlib import Path
 from typing import Callable
 from typing import Iterator
 from typing import Optional
+from typing import TypeVar
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.storage.database import models
 
 TPL = str | None | Callable[[], str | None]
@@ -50,16 +51,27 @@ def timing(
         _maybe_print(full_end_template, delta=delta)
 
 
-def get_users(database: BaseDatabase) -> list[models.User]:
-    """Get all registered users."""
-    with database.start_session() as session:
-        return session.query(models.User).order_by(models.User.name).all()
+def get_all_corresponding_users(
+        session: Session,
+        only_user: Optional[UUID],
+) -> list[models.User]:
+    """Get all users according to config."""
+    users: list[models.User] = []
+    if only_user:
+        user = session.query(models.User).get(str(only_user))
 
+        if user:
+            users.append(user)
+    else:
+        users.extend(
+            session.query(
+                models.User
+            ).order_by(
+                models.User.name
+            ).all()
+        )
 
-def get_user(database: BaseDatabase, uuid: UUID) -> Optional[models.User]:
-    """Get specific registered users."""
-    with database.start_session() as session:
-        return session.query(models.User).get(str(uuid))
+    return users
 
 
 def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
@@ -71,3 +83,19 @@ def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
     ).order_by(
         models.Item.number
     ).all()
+
+
+RT = TypeVar('RT', int, None)  # return type
+
+
+def get_file_size(path: str | Path, default: RT = None) -> Optional[RT]:
+    """Get size of the file in bytes."""
+    if isinstance(path, str):
+        _path = Path(path)
+    else:
+        _path = path
+
+    try:
+        return _path.stat().st_size
+    except FileNotFoundError:
+        return default
