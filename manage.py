@@ -168,13 +168,19 @@ def cmd_refresh_tags(**kwargs: str | bool):
     help='Refresh tags specifically for this user',
 )
 @click.option(
+    '--log-every-item/--no-log-every-item',
+    default=False,
+    help='Output every refreshed item',
+)
+@click.option(
     '--output-items/--no-output-items',
     default=True,
     help='Output every refreshed item',
 )
 def cmd_compact_tags(**kwargs: str | bool):
     """If item and its parent share some tags, try to remove duplicates."""
-    from omoide.commands.application.compact_tags import main, cfg
+    from omoide.commands.application.compact_tags import cfg
+    from omoide.commands.application.compact_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     config = cfg.Config(db_url=db_url, **kwargs)
@@ -185,7 +191,7 @@ def cmd_compact_tags(**kwargs: str | bool):
                 callback=LOG.info,
                 start_template='Compacting tags...',
         ):
-            main.run(config=config, database=database)
+            run.run(database, config)
 
 
 @cli.command(

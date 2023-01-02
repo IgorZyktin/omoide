@@ -53,7 +53,8 @@ def run(
 
     with Session(database.engine) as session:
         for user in users:
-            LOG.info('Refreshing file sizes for user {}', user.name)
+            LOG.info('Refreshing file sizes for user {} {}',
+                     user.uuid, user.name)
             models_for_user = get_models(session, config, user)
 
             for i, (metainfo, item) in enumerate(models_for_user, start=1):

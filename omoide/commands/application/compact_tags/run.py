@@ -1,20 +1,60 @@
 # -*- coding: utf-8 -*-
-"""Database helpers.
+"""Compact tags.
 """
+import time
+
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import aliased
 
+from omoide import utils
 from omoide.commands.application.compact_tags import cfg
+from omoide.commands.application.compact_tags.cfg import Config
+from omoide.commands.common import helpers
+from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
 from omoide.storage.database import models
 
 LOG = custom_logging.get_logger(__name__)
 
 
+def run(
+        database: BaseDatabase,
+        config: Config,
+) -> None:
+    """Execute command."""
+    verbose_config = [
+        f'\t{key}={value},\n'
+        for key, value in config.dict().items()
+    ]
+    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+
+    with Session(database.engine) as session:
+        users = helpers.get_all_corresponding_users(
+            session=session,
+            only_user=config.only_user,
+        )
+
+    for user in users:
+        LOG.info('Compacting tags for {} {}', user.uuid, user.name)
+
+        with database.start_session() as session:
+            start = time.perf_counter()
+            children = compact_tags(session, config, user)
+            spent = time.perf_counter() - start
+
+            LOG.info(
+                'Compacted tags for '
+                '{} (with {} children) in {:0.3f} sec.',
+                user.name,
+                utils.sep_digits(children),
+                spent,
+            )
+
+
 def compact_tags(
-        config: cfg.Config,
         session: Session,
+        config: cfg.Config,
         user: models.User,
 ) -> int:
     """Compact tags for given user."""
@@ -49,10 +89,14 @@ def compact_tags(
         lower = {tag.lower() for tag in computed_tags.tags}
         can_drop = {tag for tag in item.tags if tag.lower() in lower}
 
-        if config.output_items:
-            LOG.info('Compacting {}, dropping {}',
-                     item.uuid,
-                     sorted(can_drop))
+        if config.log_every_item:
+            LOG.info(
+                'Compacting {}, dropping {} for item {} {}',
+                item.uuid,
+                sorted(can_drop),
+                item.uuid,
+                item.name,
+            )
 
         item.tags = [tag for tag in item.tags if tag not in can_drop]
 
@@ -66,7 +110,7 @@ def compact_tags(
 
             if known_tag:
                 known_tag.counter -= 1
-            else:
+            elif config.log_every_item:
                 LOG.warning('Tag {} does not exist', tag)
 
         total_items += 1

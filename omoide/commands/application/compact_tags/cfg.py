@@ -12,4 +12,4 @@ class Config(BaseModel):
     """Command configuration."""
     db_url: SecretStr
     only_user: Optional[UUID]
-    output_items: bool
+    log_every_item: bool
