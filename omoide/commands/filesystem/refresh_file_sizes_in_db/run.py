@@ -61,7 +61,6 @@ def run(
                 operations = update_size(config, metainfo, item, path)
                 session.commit()
                 local_changed += operations
-                total_changed += operations
                 last_meta = metainfo.item_uuid
 
                 if config.log_every_item:
