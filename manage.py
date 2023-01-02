@@ -105,7 +105,8 @@ def cmd_change_password(uuid: str, password: str):
 )
 def cmd_refresh_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
-    from omoide.commands.application.refresh_known_tags import main, cfg
+    from omoide.commands.application.refresh_known_tags import cfg
+    from omoide.commands.application.refresh_known_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     config = cfg.Config(db_url=db_url, **kwargs)
@@ -116,7 +117,7 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
                 callback=LOG.info,
                 start_template='Refreshing known tags...',
         ):
-            main.run(config=config, database=database)
+            run.run(config=config, database=database)
 
 
 @cli.command(
@@ -264,7 +265,8 @@ def cmd_du(**kwargs) -> None:
 )
 def cmd_refresh_file_sizes_in_db(**kwargs) -> None:
     """Recalculate all file sizes for every item."""
-    from omoide.commands.filesystem.refresh_file_sizes_in_db import cfg, run
+    from omoide.commands.filesystem.refresh_file_sizes_in_db import cfg
+    from omoide.commands.filesystem.refresh_file_sizes_in_db import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     config = cfg.Config(db_url=db_url, **kwargs)
