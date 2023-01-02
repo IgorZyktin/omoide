@@ -60,6 +60,12 @@ class User(Base):
                                   back_populates='owner',
                                   uselist=True)
 
+    # methods -----------------------------------------------------------------
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f'<User, {self.uuid}, {self.name}>'
+
     # Feature: Add email field so users could change passwords by themselves
 
     # Feature: Add registered_at field to be able
@@ -128,6 +134,12 @@ class Item(Base):
 
     tags = sa.Column(pg.ARRAY(sa.Text), nullable=False)
     permissions = sa.Column(pg.ARRAY(sa.Text), nullable=False)
+
+    # methods -----------------------------------------------------------------
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f'<Item, {self.uuid}, {self.name!r}>'
 
     # relations ---------------------------------------------------------------
 

@@ -4,24 +4,17 @@
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseSettings
+from pydantic import BaseModel
 from pydantic import SecretStr
 
 
-class Config(BaseSettings):
+class Config(BaseModel):
     """Command configuration."""
     db_url: SecretStr
     hot_folder: str
     cold_folder: str
+    only_user: Optional[UUID]
+    log_every_item: bool
     limit: int = -1
     prefix_size: int = 2
-    marker: Optional[UUID] = None
-
-    class Config:
-        env_prefix = 'omoide_'
-        env_nested_delimiter = '__'
-
-
-def get_config() -> Config:
-    """Get instance of the config."""
-    return Config()
+    marker: str

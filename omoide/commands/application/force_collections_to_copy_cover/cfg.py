@@ -13,3 +13,4 @@ class Config(BaseModel):
     db_url: SecretStr
     only_user: Optional[UUID]
     log_every_item: bool
+    api_endpoint: str

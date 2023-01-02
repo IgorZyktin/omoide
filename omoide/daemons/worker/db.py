@@ -13,6 +13,73 @@ from omoide.daemons.worker.filesystem import Filesystem
 from omoide.storage.database import models
 
 
+def copy_content_parameters(
+        config: cfg.Config,
+        filesystem: Filesystem,
+        session: Session,
+        copy: models.ManualCopy,
+) -> None:
+    """Copy width and height from origin."""
+    source_item = session.query(
+        models.Item
+    ).filter(
+        models.Item.uuid == copy.source_uuid
+    ).first()
+
+    target_item = session.query(
+        models.Item
+    ).filter(
+        models.Item.uuid == copy.target_uuid
+    ).first()
+
+    source_metainfo = session.query(
+        models.Metainfo
+    ).filter(
+        models.Metainfo.item_uuid == copy.source_uuid
+    ).first()
+
+    target_metainfo = session.query(
+        models.Metainfo
+    ).filter(
+        models.Metainfo.item_uuid == copy.target_uuid
+    ).first()
+
+    if source_item is None \
+            or target_item is None \
+            or source_metainfo is None \
+            or target_metainfo is None:
+        return
+
+    folder = config.hot_folder or config.cold_folder
+    bucket = utils.get_bucket(copy.source_uuid, config.prefix_size)
+
+    size = filesystem.get_size(
+        folder,
+        str(copy.target_folder),
+        str(copy.owner_uuid),
+        bucket,
+        f'{copy.source_uuid}.{(copy.ext or "").lower()}'
+    )
+
+    if copy.target_folder == 'content':
+        target_metainfo.content_size = size
+        target_metainfo.content_width = source_metainfo.content_width
+        target_metainfo.content_height = source_metainfo.content_height
+        target_item.content_ext = source_item.content_ext
+
+    elif copy.target_folder == 'preview':
+        target_metainfo.preview_size = size
+        target_metainfo.preview_width = source_metainfo.preview_width
+        target_metainfo.preview_height = source_metainfo.preview_height
+        target_item.preview_ext = source_item.preview_ext
+
+    elif copy.target_folder == 'thumbnail':
+        target_metainfo.thumbnail_size = size
+        target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
+        target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
+        target_item.thumbnail_ext = source_item.thumbnail_ext
+
+
 class Database(BaseDatabase):
     """Wrapper on SQL commands for worker."""
 
@@ -142,6 +209,7 @@ class Database(BaseDatabase):
         )
         self.engine.execute(stmt)
 
+    @staticmethod
     def copy_content_parameters(
             self,
             config: cfg.Config,
@@ -205,9 +273,11 @@ class Database(BaseDatabase):
 
         elif copy.target_folder == 'thumbnail':
             target_metainfo.thumbnail_size = size
-            target_metainfo.thumbnail_width = source_metainfo.thumbnail__width
+            target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
             target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
             target_item.thumbnail_ext = source_item.thumbnail_ext
+
+        target_metainfo.media_type = source_metainfo.media_type
 
     def drop_manual_copies(self) -> int:
         """Delete complete copy operations, return total amount."""
