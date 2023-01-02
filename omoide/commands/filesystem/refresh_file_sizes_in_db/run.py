@@ -46,16 +46,16 @@ def run(
             only_user=config.only_user,
         )
 
+    i = 0
     local_changed = 0
     total_changed = 0
     last_meta = None
 
     with Session(database.engine) as session:
         for user in users:
-            i = 0
             LOG.info('Refreshing file sizes for user {}', user.name)
             models_for_user = get_models(session, config, user)
-            print(models_for_user)
+
             for i, (metainfo, item) in enumerate(models_for_user, start=1):
                 operations = update_size(config, metainfo, item, path)
                 session.commit()
@@ -65,15 +65,20 @@ def run(
 
                 if config.log_every_item:
                     if operations:
-                        LOG.info('Changed item N{} {} {} ({} operations)',
-                                 i, item.uuid, item.name, operations)
+                        LOG.info('\t\tChanged item {} {} ({} operations)',
+                                 item.uuid, item.name, operations)
                     else:
-                        LOG.info('Nothing changed for item N{} {} {}',
-                                 i, item.uuid, item.name)
+                        LOG.info('\t\tNothing changed for item {} {}',
+                                 item.uuid, item.name)
+
+            if local_changed:
+                LOG.info('\tChanged {} items for user {} ({} operations)',
+                         i, user.name, local_changed)
+            else:
+                LOG.info('\tNothing changed for user {} {}',
+                         user.uuid, user.name)
 
             local_changed = 0
-            LOG.info('Changed {} items for user {} ({} operations)',
-                     i, user.name, local_changed)
 
         LOG.warning('Last record: {}', last_meta)
 
