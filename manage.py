@@ -172,7 +172,7 @@ def cmd_refresh_tags(**kwargs: str | bool):
     default=True,
     help='Output every refreshed item',
 )
-def cmd_refresh_tags(**kwargs: str | bool):
+def cmd_compact_tags(**kwargs: str | bool):
     """If item and its parent share some tags, try to remove duplicates."""
     from omoide.commands.application.compact_tags import main, cfg
 
