@@ -139,7 +139,7 @@ class Item(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<Item, {self.uuid}, {self.name}>'
+        return f'<Item, {self.uuid}, {self.name!r}>'
 
     # relations ---------------------------------------------------------------
 

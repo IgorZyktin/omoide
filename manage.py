@@ -218,7 +218,51 @@ def cmd_du(**kwargs) -> None:
 
     with database.life_cycle():
         with helpers.timing(
+                callback=LOG.info,
                 start_template='Calculating total disk usage...',
+        ):
+            run.run(database, config)
+
+
+@cli.command(
+    name='force_collections_to_copy_cover',
+)
+@click.option(
+    '--db-url',
+    required=True,
+    help='Database URL',
+)
+@click.option(
+    '--api-endpoint',
+    default=None,
+    help='Where to send command with mutation operations',
+    show_default=True,
+)
+@click.option(
+    '--only-user',
+    help='Refresh tags specifically for this user',
+)
+@click.option(
+    '--log-every-item/--no-log-every-item',
+    default=False,
+    help='Output every refreshed item',
+)
+def cmd_force_collections_to_copy_cover(**kwargs) -> None:
+    """Force collections to explicitly write origins of their covers."""
+    from omoide.commands.application.force_collections_to_copy_cover import cfg
+    from omoide.commands.application.force_collections_to_copy_cover import run
+
+    if not kwargs.get('api_endpoint'):
+        raise RuntimeError('You have to specify URL for active API')
+
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle():
+        with helpers.timing(
+                callback=LOG.info,
+                start_template='Forcing items to copy covers...',
         ):
             run.run(database, config)
 

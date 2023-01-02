@@ -9,6 +9,8 @@ from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
 
+from sqlalchemy.orm.attributes import flag_modified
+
 from omoide import domain
 from omoide import utils
 from omoide.domain import actions
@@ -741,6 +743,11 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
             if source.thumbnail_ext is None:
                 return Failure(errors.ItemHasNoThumbnail(uuid=source_uuid))
 
+            metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
+
+            if metainfo is None:
+                return Failure(errors.MetainfoDoesNotExist(uuid=target_uuid))
+
             await self.media_repo.copy_media(
                 owner_uuid=user.uuid,
                 source_uuid=source_uuid,
@@ -764,6 +771,9 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
                 ext=source.thumbnail_ext,
                 target_folder='thumbnail',
             )
+
+            metainfo.extras.update({'copied_cover_from': str(source_uuid)})
+            flag_modified(metainfo, 'extras')
 
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())

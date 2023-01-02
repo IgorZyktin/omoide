@@ -75,7 +75,7 @@ def copy_content_parameters(
 
     elif copy.target_folder == 'thumbnail':
         target_metainfo.thumbnail_size = size
-        target_metainfo.thumbnail_width = source_metainfo.thumbnail__width
+        target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
         target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
         target_item.thumbnail_ext = source_item.thumbnail_ext
 
@@ -273,7 +273,7 @@ class Database(BaseDatabase):
 
         elif copy.target_folder == 'thumbnail':
             target_metainfo.thumbnail_size = size
-            target_metainfo.thumbnail_width = source_metainfo.thumbnail__width
+            target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
             target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
             target_item.thumbnail_ext = source_item.thumbnail_ext
 
