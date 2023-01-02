@@ -10,7 +10,10 @@ from omoide import utils
 from omoide.commands.common.base_db import BaseDatabase
 from omoide.daemons.worker import cfg
 from omoide.daemons.worker.filesystem import Filesystem
+from omoide.infra import custom_logging
 from omoide.storage.database import models
+
+LOG = custom_logging.get_logger(__name__)
 
 
 def copy_content_parameters(
@@ -245,6 +248,17 @@ class Database(BaseDatabase):
                 or target_item is None \
                 or source_metainfo is None \
                 or target_metainfo is None:
+            LOG.warning(
+                'Got discrepancy in sources, '
+                'source_item = {}',
+                'target_item = {}',
+                'source_metainfo = {}',
+                'target_metainfo = {}',
+                source_item,
+                target_item,
+                source_metainfo,
+                target_metainfo
+            )
             return
 
         folder = config.hot_folder or config.cold_folder
