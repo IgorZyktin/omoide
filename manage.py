@@ -187,24 +187,36 @@ def cmd_refresh_tags(**kwargs: str | bool):
             main.run(config=config, database=database)
 
 
-# Filesystem related commands -------------------------------------------------
-
-
 @cli.command(
     name='du',
 )
-def cmd_du():
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--only-user',
+    help='Show disk usage for a single user',
+)
+def cmd_du(**kwargs) -> None:
     """Show disk usage for every user."""
-    from omoide.commands.filesystem.du import cfg, run
+    from omoide.commands.application.du import cfg
+    from omoide.commands.application.du import run
 
-    config = cfg.get_config()
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
-    with database.life_cycle() as engine:
+    with database.life_cycle():
         with helpers.timing(
                 start_template='Calculating total disk usage...',
         ):
-            run.main(engine, config)
+            run.run(database, config)
+
+
+# Filesystem related commands -------------------------------------------------
 
 
 @cli.command(
