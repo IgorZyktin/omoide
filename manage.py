@@ -248,7 +248,10 @@ def cmd_du(**kwargs) -> None:
     help='Output every refreshed item',
 )
 def cmd_force_collections_to_copy_cover(**kwargs) -> None:
-    """Force collections to explicitly write origins of their covers."""
+    """Force collections to explicitly write origins of their covers.
+
+    May require you to run it more than one time.
+    """
     from omoide.commands.application.force_collections_to_copy_cover import cfg
     from omoide.commands.application.force_collections_to_copy_cover import run
 

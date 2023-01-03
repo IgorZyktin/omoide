@@ -51,15 +51,18 @@ def run(
     total_changed = 0
     last_meta = None
 
-    with Session(database.engine) as session:
-        for user in users:
+    for user in users:
+        with Session(database.engine) as session:
             LOG.info('Refreshing file sizes for user {} {}',
                      user.uuid, user.name)
+
             models_for_user = get_models(session, config, user)
+
+            LOG.info('Checking {} models',
+                     utils.sep_digits(len(models_for_user)))
 
             for i, (metainfo, item) in enumerate(models_for_user, start=1):
                 operations = update_size(config, metainfo, item, path)
-                session.commit()
                 local_changed += operations
                 total_changed += operations
                 last_meta = metainfo.item_uuid
@@ -69,14 +72,17 @@ def run(
                         LOG.info('\t\tChanged item {} {} ({} operations)',
                                  item.uuid, item.name, operations)
 
+                if operations:
+                    session.commit()
+
             if local_changed:
                 LOG.info('\tChanged {} items for user {} ({} operations)',
                          i, user.name, local_changed)
 
             local_changed = 0
 
-        LOG.info('Total changes: {}', utils.sep_digits(total_changed))
-        LOG.warning('Last record: {}', last_meta)
+    LOG.info('Total changes: {}', utils.sep_digits(total_changed))
+    LOG.warning('Last record: {}', last_meta)
 
 
 def update_size(
@@ -94,15 +100,25 @@ def update_size(
 
     changed = 0
     for each in ['content', 'preview', 'thumbnail']:
-        ext = getattr(item, f'{each}_ext')
+        ext = getattr(item, f'{each}_ext', None)
 
-        if ext:
-            path = getattr(locator, each)
-            size = helpers.get_file_size(path)
+        if not ext:
+            LOG.error('No {} extension for {}, skipping', each, item)
+            continue
 
-            if size is not None:
-                setattr(metainfo, f'{each}_size', size)
-                changed += 1
+        path = getattr(locator, each)
+        size = helpers.get_file_size(path)
+
+        if size is None:
+            LOG.error('File does not exist for {}: {}', item.uuid, path)
+            continue
+
+        if size == getattr(metainfo, f'{each}_size', None):
+            continue
+
+        setattr(metainfo, f'{each}_size', size)
+        metainfo.updated_at = utils.now()
+        changed += 1
 
     return changed
 
@@ -122,18 +138,9 @@ def get_models(
     ).filter(
         models.Item.owner_uuid == user.uuid,
         sa.or_(
-            sa.and_(
-                models.Item.content_ext != None,  # noqa
-                models.Metainfo.content_size == None,  # noqa
-            ),
-            sa.and_(
-                models.Item.preview_ext != None,  # noqa
-                models.Metainfo.preview_size == None,  # noqa
-            ),
-            sa.and_(
-                models.Item.thumbnail_ext != None,  # noqa
-                models.Metainfo.thumbnail_size == None,  # noqa
-            ),
+            models.Metainfo.content_size == None,  # noqa
+            models.Metainfo.preview_size == None,  # noqa
+            models.Metainfo.thumbnail_size == None,  # noqa
         ),
     )
 

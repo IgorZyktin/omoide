@@ -45,61 +45,119 @@ def run(
         with Session(database.engine) as session:
             LOG.info('Forcing to copy covers for user {} {}',
                      user.uuid, user.name)
-            changes = force_whole_tree_to_copy(session, config, user)
-            total_operations += changes
-            session.commit()
+            top_item = get_item(session, user.root_item)
+
+            local_operations = 0
+            if top_item is not None:
+                local_operations += copy_labeled_items(session, top_item)
+                local_operations += copy_from_deep(session, top_item)
+                total_operations += local_operations
+
+                if local_operations:
+                    session.commit()
 
     LOG.info('Total operations: {}', total_operations)
 
 
-def force_whole_tree_to_copy(
+def copy_labeled_items(
         session: Session,
-        config: Config,
-        user: models.User,
+        item: models.Item,
 ) -> int:
-    """Recursively dig into items and copy covers."""
-    top_item = get_item(session, user.root_item)
+    """Copy data for items with explicit origin."""
+    metainfo = get_metainfo(session, item)
+    copied_from = metainfo.extras.get('copied_cover_from')
 
-    if top_item is None:
-        return 0
+    local_total = 0
+    if copied_from:
+        origin = get_item(session, copied_from)
 
-    children = get_children(session, user, top_item, only_collections=True)
-
-    if not children:
-        return 0
-
-    total_operations = 0
-
-    for child in children:
-        if has_all_the_data(child):
-            continue
-
-        first_appropriate_child = find_closest_cover(
-            session=session,
-            user=user,
-            item=child,
-            top_level_item=child,
-        )
-
-        if config.log_every_item:
-            LOG.info(
-                '\tCopying cover from item {} to {}',
-                repr(first_appropriate_child),
-                repr(child),
-            )
-
-            total_operations += copy_cover(
+        if origin:
+            changes = copy_cover(
                 session=session,
-                source_item=first_appropriate_child,
-                target_item=child,
+                source_item=origin,
+                target_item=item,
             )
+            local_total += changes
 
-    return total_operations
+    return local_total
+
+
+def copy_from_deep(
+        session: Session,
+        item: models.Item,
+) -> int:
+    """Copy data for items without explicit origins."""
+
+
+# def force_to_copy(
+#         session: Session,
+#         config: Config,
+#         user: models.User,
+#         item: models.Item,
+# ) -> int:
+#     """Recursively dig into items and copy covers."""
+#     metainfo = get_metainfo(session, item)
+#     total_operations = 0
+#
+#     if has_all_the_data(item, metainfo):
+#         changed = copy_cover(session, item, top_item)
+#         total_operations += changed
+#
+#     s_depth = '\n' * depth
+#     children = get_children(session, user, item)
+#
+#     if not children:
+#         return 0
+#
+#     for child in children:
+#         metainfo = get_metainfo(session, child)
+#
+#         if has_all_the_data(child, metainfo):
+#             changed = copy_cover(session, item, child)
+#             total_operations += changed
+#
+#             first_appropriate_child = find_closest_cover(
+#                 session=session,
+#                 user=user,
+#                 item=child,
+#                 top_level_item=child,
+#             )
+#
+#             if first_appropriate_child is None:
+#                 LOG.warning('{}Item {} has nothing to copy from',
+#                             s_depth, child)
+#                 continue
+#
+#             if config.log_every_item:
+#                 LOG.info(
+#                     '{}Copying cover from item {} to {}',
+#                     s_depth,
+#                     repr(first_appropriate_child),
+#                     repr(child),
+#                 )
+#
+#                 changed = copy_cover(
+#                     session=session,
+#                     source_item=first_appropriate_child,
+#                     target_item=child,
+#                 )
+#                 total_operations += changed
+#
+#         changed = force_to_copy(
+#             session=session,
+#             config=config,
+#             user=user,
+#             item=child,
+#             depth=depth + 1,
+#         )
+#         total_operations += changed
+#
+#     return total_operations
 
 
 def get_item(
         session: Session,
-        item_uuid: Optional[UUID],
+        item_uuid: str | UUID,
 ) -> Optional[models.Item]:
     """Get item but only if it is collection."""
     if item_uuid is None:
@@ -109,7 +167,6 @@ def get_item(
         models.Item
     ).where(
         models.Item.uuid == str(item_uuid),
-        models.Item.is_collection == True,  # noqa
     )
 
     return query.first()
@@ -119,20 +176,14 @@ def get_children(
         session: Session,
         user: models.User,
         item: models.Item,
-        only_collections: bool,
 ) -> list[models.Item]:
-    """Get child items but only if they are collection."""
+    """Get child items."""
     query = session.query(
         models.Item
     ).where(
         models.Item.parent_uuid == item.uuid,
         models.Item.owner_uuid == user.uuid,
     )
-
-    if only_collections:
-        query = query.filter(
-            models.Item.is_collection == True,  # noqa
-        )
 
     query = query.order_by(
         models.Item.number
@@ -162,54 +213,60 @@ def get_metainfo(
     return metainfo
 
 
-def find_closest_cover(
+def get_lowest_good_item(
         session: Session,
         user: models.User,
         item: models.Item,
-        top_level_item: models.Item,
 ) -> Optional[models.Item]:
-    """Get first child with acceptable cover."""
-    # if item itself is good
-    if has_all_the_data(item):
-        return item
-
+    """Find deepest item with all data present."""
     metainfo = get_metainfo(session, item)
 
     if metainfo is None:
+        LOG.error('Item {} has not metainfo', item)
         return None
 
-    source_uuid = metainfo.extras.get('copied_cover_from')
 
-    if source_uuid:
-        source_item = get_item(session, UUID(source_uuid))
-        if has_all_the_data(source_item):
-            return source_item
-
-    children = get_children(session, user, item, only_collections=False)
-
-    for child in children:
-        if has_all_the_data(child):
-            return child
-
-        else:
-            sub_child = find_closest_cover(
-                session=session,
-                user=user,
-                item=child,
-                top_level_item=top_level_item,
-            )
-
-            if has_all_the_data(sub_child):
-                return sub_child
-
-    return None
+#     copied_from = metainfo.extras.get('copied_cover_from')
+#
+#     # what if we already have good candidate?
+#     if copied_from:
+#         source_item = get_item(session, UUID(copied_from))
+#         source_metainfo = get_metainfo(session, item)
+#         if has_all_the_data(source_item, source_metainfo):
+#             return source_item
+#
+#     children = get_children(session, user, item)
+#
+#     for child in children:
+#         child_metainfo = get_metainfo(session, child)
+#         if has_all_the_data(child, child_metainfo):
+#             return child
+#
+#         else:
+#             sub_child = find_closest_cover(
+#                 session=session,
+#                 user=user,
+#                 item=child,
+#                 top_level_item=top_level_item,
+#             )
+#
+#             if sub_child is None:
+#                 continue
+#
+#             sub_child_metainfo = get_metainfo(session, sub_child)
+#
+#             if has_all_the_data(sub_child, sub_child_metainfo):
+#                 return sub_child
+#
+#     return None
 
 
 def has_all_the_data(
         item: Optional[models.Item],
+        metainfo: Optional[models.Metainfo],
 ) -> bool:
     """Get child items but only if they are collection."""
-    if item is None:
+    if item is None or metainfo is None:
         return False
 
     if all((
@@ -271,7 +328,10 @@ def copy_cover(
         target_folder='thumbnail',
     )
 
-    session.add_all([content_copy, preview_copy, thumbnail_copy])
+    session.add(content_copy)
+    session.add(preview_copy)
+    session.add(thumbnail_copy)
+    session.flush([content_copy, preview_copy, thumbnail_copy])
 
     metainfo.extras.update({'copied_cover_from': str(source_item.uuid)})
     metainfo.updated_at = now
