@@ -201,7 +201,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
            FROM items
            WHERE uuid = :uuid
            UNION
-           SELECT i.uuid, 
+           SELECT i.uuid,
                   i.parent_uuid,
                   i.owner_uuid,
                   i.number,
