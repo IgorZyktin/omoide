@@ -25,6 +25,12 @@ def run(
         database: BaseDatabase,
 ) -> None:
     """Execute command."""
+    verbose_config = [
+        f'\t{key}={value},\n'
+        for key, value in config.dict().items()
+    ]
+    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+
     with database.start_session() as session:
         users = helpers.get_all_corresponding_users(session, config.only_users)
 

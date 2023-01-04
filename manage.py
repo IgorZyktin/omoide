@@ -221,7 +221,7 @@ def command_du(**kwargs) -> None:
     from omoide.commands.application.du import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user'))
+    only_users = list(kwargs.pop('limit_to_user', []))
     config = cfg.Config(db_url=db_url, only_users=only_users)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
@@ -234,7 +234,7 @@ def command_du(**kwargs) -> None:
 
 
 @cli.command(
-    name='force_collections_to_copy_cover',
+    name='force_cover_copying',
 )
 @click.option(
     '--db-url',
@@ -242,35 +242,21 @@ def command_du(**kwargs) -> None:
     help='Database URL',
 )
 @click.option(
-    '--api-endpoint',
-    default=None,
-    help='Where to send command with mutation operations',
-    show_default=True,
-)
-@click.option(
     '--limit-to-user',
     multiple=True,
     help='Apply to one or more specially listed users',
 )
-@click.option(
-    '--log-every-item/--no-log-every-item',
-    default=False,
-    help='Output every refreshed item',
-)
-def cmd_force_collections_to_copy_cover(**kwargs) -> None:
+def command_force_cover_copying(**kwargs) -> None:
     """Force collections to explicitly write origins of their covers.
 
     May require you to run it more than one time.
     """
-    from omoide.commands.application.force_collections_to_copy_cover import cfg
-    from omoide.commands.application.force_collections_to_copy_cover import run
-
-    if not kwargs.get('api_endpoint'):
-        raise RuntimeError('You have to specify URL for active API')
+    from omoide.commands.application.force_cover_copying import cfg
+    from omoide.commands.application.force_cover_copying import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user'))
-    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user', []))
+    config = cfg.Config(db_url=db_url, only_users=only_users)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
@@ -334,7 +320,7 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     from omoide.commands.filesystem.refresh_file_sizes_in_db import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user'))
+    only_users = list(kwargs.pop('limit_to_user', []))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 

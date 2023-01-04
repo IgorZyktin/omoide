@@ -22,6 +22,12 @@ def run(
         config: Config,
 ) -> None:
     """Refresh disk usage for every item."""
+    verbose_config = [
+        f'\t{key}={value},\n'
+        for key, value in config.dict().items()
+    ]
+    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+
     if config.hot_folder and Path(config.hot_folder).exists():
         path = config.hot_folder
 
@@ -41,10 +47,7 @@ def run(
     LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
 
     with Session(database.engine) as session:
-        users = helpers.get_all_corresponding_users(
-            session=session,
-            only_user=config.only_user,
-        )
+        users = helpers.get_all_corresponding_users(session, config.only_users)
 
     i = 0
     local_changed = 0

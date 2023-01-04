@@ -27,6 +27,12 @@ def run(
         database: BaseDatabase,
 ) -> None:
     """Execute command."""
+    verbose_config = [
+        f'\t{key}={value},\n'
+        for key, value in config.dict().items()
+    ]
+    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+
     if config.anon and not config.only_users:
         with database.start_session() as session:
             set_all_tag_counters_to_zero(session, None)
