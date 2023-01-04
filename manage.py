@@ -100,8 +100,9 @@ def cmd_change_password(uuid: str, password: str):
     help='Refresh known tags for known users',
 )
 @click.option(
-    '--only-user',
-    help='Refresh known tags specifically for this user',
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
 )
 def cmd_refresh_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
@@ -109,7 +110,8 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
     from omoide.commands.application.refresh_known_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user'))
+    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
@@ -121,7 +123,7 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
 
 
 @cli.command(
-    name='refresh_tags',
+    name='rebuild_computed_tags',
 )
 @click.option(
     '--db-url',
@@ -130,20 +132,23 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
     help='Database URL',
 )
 @click.option(
-    '--only-user',
-    help='Refresh tags specifically for this user',
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
 )
 @click.option(
-    '--output-items/--no-output-items',
-    default=True,
+    '--log-every-item/--no-log-every-item',
+    default=False,
     help='Output every refreshed item',
 )
-def cmd_refresh_tags(**kwargs: str | bool):
-    """Refresh all tags."""
-    from omoide.commands.application.refresh_tags import main, cfg
+def command_rebuild_computed_tags(**kwargs: str | bool):
+    """Rebuild all computed tags from the scratch."""
+    from omoide.commands.application.rebuild_computed_tags import cfg
+    from omoide.commands.application.rebuild_computed_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user'))
+    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
@@ -151,7 +156,7 @@ def cmd_refresh_tags(**kwargs: str | bool):
                 callback=LOG.info,
                 start_template='Refreshing tags...',
         ):
-            main.run(config=config, database=database)
+            run.run(config=config, database=database)
 
 
 @cli.command(
@@ -164,8 +169,9 @@ def cmd_refresh_tags(**kwargs: str | bool):
     help='Database URL',
 )
 @click.option(
-    '--only-user',
-    help='Refresh tags specifically for this user',
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
 )
 @click.option(
     '--log-every-item/--no-log-every-item',
@@ -183,7 +189,8 @@ def cmd_compact_tags(**kwargs: str | bool):
     from omoide.commands.application.compact_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user'))
+    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
@@ -204,8 +211,9 @@ def cmd_compact_tags(**kwargs: str | bool):
     help='Database URL',
 )
 @click.option(
-    '--only-user',
-    help='Show disk usage for a single user',
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
 )
 def cmd_du(**kwargs) -> None:
     """Show disk usage for every user."""
@@ -213,7 +221,8 @@ def cmd_du(**kwargs) -> None:
     from omoide.commands.application.du import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user'))
+    config = cfg.Config(db_url=db_url, only_users=only_users)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
@@ -239,8 +248,9 @@ def cmd_du(**kwargs) -> None:
     show_default=True,
 )
 @click.option(
-    '--only-user',
-    help='Refresh tags specifically for this user',
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
 )
 @click.option(
     '--log-every-item/--no-log-every-item',
@@ -259,7 +269,8 @@ def cmd_force_collections_to_copy_cover(**kwargs) -> None:
         raise RuntimeError('You have to specify URL for active API')
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user'))
+    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
@@ -297,8 +308,9 @@ def cmd_force_collections_to_copy_cover(**kwargs) -> None:
     show_default=True,
 )
 @click.option(
-    '--only-user',
-    help='Refresh tags specifically for this user',
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
 )
 @click.option(
     '--log-every-item/--no-log-every-item',
@@ -322,7 +334,8 @@ def cmd_refresh_file_sizes_in_db(**kwargs) -> None:
     from omoide.commands.filesystem.refresh_file_sizes_in_db import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    config = cfg.Config(db_url=db_url, **kwargs)
+    only_users = list(kwargs.pop('limit_to_user'))
+    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = base_db.BaseDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():

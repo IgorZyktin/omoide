@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from omoide import utils
-from omoide.commands.application.refresh_tags.cfg import Config
+from omoide.commands.application.rebuild_computed_tags.cfg import Config
 from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 from omoide.storage.database import models
