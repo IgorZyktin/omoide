@@ -32,7 +32,7 @@ def run(
     with Session(database.engine) as session:
         users = helpers.get_all_corresponding_users(
             session=session,
-            only_user=config.only_user,
+            only_users=config.only_users,
         )
 
     stats: list[Stats] = []

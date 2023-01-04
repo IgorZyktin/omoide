@@ -104,7 +104,7 @@ def cmd_change_password(uuid: str, password: str):
     multiple=True,
     help='Apply to one or more specially listed users',
 )
-def cmd_refresh_known_tags(**kwargs: str | bool):
+def command_rebuild_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
     from omoide.commands.application.rebuild_known_tags import cfg
     from omoide.commands.application.rebuild_known_tags import run
@@ -215,7 +215,7 @@ def cmd_compact_tags(**kwargs: str | bool):
     multiple=True,
     help='Apply to one or more specially listed users',
 )
-def cmd_du(**kwargs) -> None:
+def command_du(**kwargs) -> None:
     """Show disk usage for every user."""
     from omoide.commands.application.du import cfg
     from omoide.commands.application.du import run
@@ -328,7 +328,7 @@ def cmd_force_collections_to_copy_cover(**kwargs) -> None:
     default='',
     help='Item from which we should start',
 )
-def cmd_refresh_file_sizes_in_db(**kwargs) -> None:
+def command_refresh_file_sizes_in_db(**kwargs) -> None:
     """Recalculate all file sizes for every item."""
     from omoide.commands.filesystem.refresh_file_sizes_in_db import cfg
     from omoide.commands.filesystem.refresh_file_sizes_in_db import run
