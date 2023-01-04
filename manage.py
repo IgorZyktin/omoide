@@ -154,7 +154,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     with database.life_cycle():
         with helpers.timing(
                 callback=LOG.info,
-                start_template='Refreshing tags...',
+                start_template='Rebuilding computed tags...',
         ):
             run.run(config=config, database=database)
 

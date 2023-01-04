@@ -63,9 +63,7 @@ def get_all_corresponding_users(
             models.User.uuid.in_(tuple(str(x) for x in only_users))  # noqa
         )
 
-    query = query.order_by(models.User.name)
-    users: list[models.User] = [x.uuid for x in query.all()]
-    return users
+    return query.order_by(models.User.name).all()
 
 
 def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
