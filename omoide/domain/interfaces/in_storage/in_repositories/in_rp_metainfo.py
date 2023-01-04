@@ -46,45 +46,19 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
         """Update computed tags for this item."""
 
     @abc.abstractmethod
-    async def increase_known_tags_for_known_user(
+    async def apply_new_known_tags(
             self,
-            user_uuid: UUID,
-            tags: Collection[str],
+            users: Collection[domain.User],
+            tags_added: Collection[str],
+            tags_deleted: Collection[str],
     ) -> None:
-        """Increase counters for known tags using this item."""
+        """Update counters for known tags."""
 
     @abc.abstractmethod
-    async def decrease_known_tags_for_known_user(
+    async def drop_unused_tags(
             self,
-            user_uuid: UUID,
-            tags: Collection[str],
-    ) -> None:
-        """Decrease counters for known tags using this item."""
-
-    @abc.abstractmethod
-    async def drop_unused_tags_for_known_user(
-            self,
-            user_uuid: UUID,
-    ) -> None:
-        """Drop tags with counter less of equal to 0."""
-
-    @abc.abstractmethod
-    async def increase_known_tags_for_anon_user(
-            self,
-            tags: Collection[str],
-    ) -> None:
-        """Increase counters for known tags using this item."""
-
-    @abc.abstractmethod
-    async def decrease_known_tags_for_anon_user(
-            self,
-            tags: Collection[str],
-    ) -> None:
-        """Decrease counters for known tags using this item."""
-
-    @abc.abstractmethod
-    async def drop_unused_tags_for_anon_user(
-            self,
+            users: Collection[domain.User],
+            public_users: set[UUID],
     ) -> None:
         """Drop tags with counter less of equal to 0."""
 

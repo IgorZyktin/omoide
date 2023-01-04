@@ -68,6 +68,7 @@ class AppBrowseUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             owner = await self.users_repo.read_user(item.owner_uuid)
+
             if owner is None:
                 return Failure(errors.UserDoesNotExist(uuid=item.owner_uuid))
 

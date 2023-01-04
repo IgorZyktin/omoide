@@ -42,7 +42,7 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
 
     async def read_all_users(
             self,
-            uuids: list[UUID],
+            *uuids: UUID,
     ) -> list[domain.User]:
         """Return list of users with given uuids."""
         stmt = sa.select(
@@ -50,6 +50,7 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
         ).where(
             models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
         )
+
         response = await self.db.fetch_all(stmt)
         return [domain.User(**record) for record in response]
 
@@ -88,3 +89,16 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
         )
         response = await self.db.fetch_one(stmt)
         return response is not None
+
+    async def get_public_users_uuids(
+            self,
+    ) -> set[UUID]:
+        """Return set of UUIDs of public users."""
+        stmt = sa.select(
+            models.PublicUsers.user_uuid
+        )
+
+        response = await self.db.fetch_all(stmt)
+        if response is None:
+            return set()
+        return set(x['user_uuid'] for x in response)

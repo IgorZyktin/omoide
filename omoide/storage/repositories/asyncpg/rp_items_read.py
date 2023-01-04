@@ -179,27 +179,43 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
 
-    async def get_all_parent_uuids(
+    async def get_all_parents(
             self,
             user: domain.User,
             item: domain.Item,
-    ) -> list[UUID]:
-        """Return all parents of given item."""
+    ) -> list[domain.Item]:
+        """Return all parents of the given item."""
         stmt = """
         WITH RECURSIVE parents AS (
-            SELECT parent_uuid,
-                   uuid,
-                   name
-            FROM items
-            WHERE uuid = :uuid
-            UNION
-            SELECT i.parent_uuid,
-                   i.uuid,
-                   i.name
+           SELECT uuid,
+                  parent_uuid,
+                  owner_uuid,
+                  number,
+                  name,
+                  is_collection,
+                  content_ext,
+                  preview_ext,
+                  thumbnail_ext,
+                  tags,
+                  permissions
+           FROM items
+           WHERE uuid = :uuid
+           UNION
+           SELECT i.uuid, 
+                  i.parent_uuid,
+                  i.owner_uuid,
+                  i.number,
+                  i.name,
+                  i.is_collection,
+                  i.content_ext,
+                  i.preview_ext,
+                  i.thumbnail_ext,
+                  i.tags,
+                  i.permissions
             FROM items i
                      INNER JOIN parents ON i.uuid = parents.parent_uuid
         )
-        SELECT parent_uuid FROM parents WHERE parent_uuid IS NOT NULL;
+        SELECT * FROM parents WHERE parent_uuid IS NOT NULL;
         """
 
         values = {
@@ -207,7 +223,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         }
 
         response = await self.db.fetch_all(stmt, values)
-        return [x['uuid'] for x in response]
+        return [domain.Item(**x) for x in response]
 
     async def get_direct_children_uuids_of(
             self,

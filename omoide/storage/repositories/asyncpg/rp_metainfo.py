@@ -164,18 +164,20 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         await self.db.execute(stmt)
 
-    async def increase_known_tags_for_known_user(
+    async def _increase_known_tags_for_known_user(
             self,
-            user_uuid: UUID,
+            user: domain.User,
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
+        assert user.is_registered
+
         for tag in tags:
             tag = tag.lower()
             insert = pg_insert(
                 models.KnownTags
             ).values(
-                user_uuid=user_uuid,
+                user_uuid=user.uuid,
                 tag=tag,
                 counter=1,
             )
@@ -192,18 +194,20 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
             await self.db.execute(stmt)
 
-    async def decrease_known_tags_for_known_user(
+    async def _decrease_known_tags_for_known_user(
             self,
-            user_uuid: UUID,
+            user: domain.User,
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
+        assert user.is_registered
+
         for tag in tags:
             tag = tag.lower()
             stmt = sa.update(
                 models.KnownTags
             ).where(
-                models.KnownTags.user_uuid == user_uuid,
+                models.KnownTags.user_uuid == user.uuid,
                 models.KnownTags.tag == tag,
             ).values(
                 counter=models.KnownTags.counter - 1,
@@ -211,25 +215,62 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
             await self.db.execute(stmt)
 
-    async def drop_unused_tags_for_known_user(
+    async def apply_new_known_tags(
             self,
-            user_uuid: UUID,
+            users: Collection[domain.User],
+            tags_added: Collection[str],
+            tags_deleted: Collection[str],
+    ) -> None:
+        """Update counters for known tags."""
+        for user in users:
+            if tags_added:
+                if user.is_not_registered:
+                    await self._increase_known_tags_for_anon_user(
+                        user, tags_added)
+                else:
+                    await self._increase_known_tags_for_known_user(
+                        user, tags_added)
+
+            if tags_deleted:
+                if user.is_not_registered:
+                    await self._decrease_known_tags_for_anon_user(
+                        user, tags_deleted)
+                else:
+                    await self._decrease_known_tags_for_known_user(
+                        user, tags_deleted)
+
+    async def drop_unused_tags(
+            self,
+            users: Collection[domain.User],
+            public_users: set[UUID],
     ) -> None:
         """Drop tags with counter less of equal to 0."""
-        stmt = sa.delete(
-            models.KnownTags
-        ).where(
-            models.KnownTags.user_uuid == user_uuid,
-            models.KnownTags.counter <= 0,
-        )
+        for user in users:
+            if user.is_registered:
+                stmt = sa.delete(
+                    models.KnownTags
+                ).where(
+                    models.KnownTags.user_uuid == user.uuid,
+                    models.KnownTags.counter <= 0,
+                )
+                await self.db.execute(stmt)
 
-        await self.db.execute(stmt)
+            elif user.is_not_registered or user.uuid in public_users:
+                stmt = sa.delete(
+                    models.KnownTagsAnon
+                ).where(
+                    models.KnownTagsAnon.counter <= 0,
+                )
+                await self.db.execute(stmt)
 
-    async def increase_known_tags_for_anon_user(
+    async def _increase_known_tags_for_anon_user(
             self,
+            user: domain.User,
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
+        assert user.is_not_registered
+
         for tag in tags:
             tag = tag.lower()
             insert = pg_insert(
@@ -250,11 +291,14 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
             await self.db.execute(stmt)
 
-    async def decrease_known_tags_for_anon_user(
+    async def _decrease_known_tags_for_anon_user(
             self,
+            user: domain.User,
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
+        assert user.is_not_registered
+
         for tag in tags:
             tag = tag.lower()
             stmt = sa.update(
@@ -266,18 +310,6 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             )
 
             await self.db.execute(stmt)
-
-    async def drop_unused_tags_for_anon_user(
-            self,
-    ) -> None:
-        """Drop tags with counter less of equal to 0."""
-        stmt = sa.delete(
-            models.KnownTagsAnon
-        ).where(
-            models.KnownTagsAnon.counter <= 0,
-        )
-
-        await self.db.execute(stmt)
 
     async def mark_metainfo_updated(
             self,

@@ -29,7 +29,7 @@ class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_all_users(
             self,
-            uuids: list[UUID],
+            *uuids: UUID,
     ) -> list[domain.User]:
         """Return list of users with given uuids."""
 
@@ -46,3 +46,9 @@ class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
             uuid: UUID,
     ) -> bool:
         """Return True if given user is public."""
+
+    @abc.abstractmethod
+    async def get_public_users_uuids(
+            self,
+    ) -> set[UUID]:
+        """Return set of UUIDs of public users."""

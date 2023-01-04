@@ -217,53 +217,6 @@ class BaseItemModifyUseCase:
         self.items_repo = items_repo
         self.metainfo_repo = metainfo_repo
 
-    async def recalculate_known_tags(
-            self,
-            item: domain.Item,
-            tags_added: Collection[str],
-            tags_deleted: Collection[str],
-    ) -> None:
-        """Update counters for known tags."""
-        for user_uuid in [*item.permissions, item.owner_uuid]:
-            await self.recalculate_known_tags_indirect(
-                user_uuid=user_uuid,
-                tags_added=tags_added,
-                tags_deleted=tags_deleted
-            )
-
-    async def recalculate_known_tags_indirect(
-            self,
-            user_uuid: UUID,
-            tags_added: Collection[str],
-            tags_deleted: Collection[str],
-    ) -> None:
-        """Update counters for known tags via permission update."""
-        is_public = await self.users_repo.user_is_public(user_uuid)
-
-        if not is_public:
-            if tags_added:
-                await self.metainfo_repo \
-                    .increase_known_tags_for_known_user(user_uuid, tags_added)
-
-            if tags_deleted:
-                await self.metainfo_repo \
-                    .decrease_known_tags_for_known_user(user_uuid,
-                                                        tags_deleted)
-
-                await self.metainfo_repo \
-                    .drop_unused_tags_for_known_user(user_uuid)
-
-        else:
-            if tags_added:
-                await self.metainfo_repo \
-                    .increase_known_tags_for_anon_user(tags_added)
-
-            if tags_deleted:
-                await self.metainfo_repo \
-                    .decrease_known_tags_for_anon_user(tags_deleted)
-
-                await self.metainfo_repo.drop_unused_tags_for_anon_user()
-
     async def _create_one_item(
             self,
             user: domain.User,
@@ -288,7 +241,11 @@ class BaseItemModifyUseCase:
         await self.items_repo.create_item(user, item)
         await self.metainfo_repo.create_empty_metainfo(user, item)
         await self.metainfo_repo.update_computed_tags(user, item)
-        await self.recalculate_known_tags(item, item.tags, [])
+        # FIXME
+        print(2, '*payload.permissions', *payload.permissions)
+        users = await self.users_repo.read_all_users(*payload.permissions)
+        await self.metainfo_repo.apply_new_known_tags(users, item.tags, [])
+
         return uuid
 
 
@@ -418,7 +375,6 @@ class ApiItemUpdateUseCase:
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())
-
         return Success(True)
 
 
@@ -451,10 +407,17 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             item.tags = new_tags
 
             await self.items_repo.update_item(item)
+
+            await self.metainfo_repo.update_computed_tags(user, item)
+            # FIXME
+            print(3, '*item.permissions', *item.permissions)
+            users = await self.users_repo.read_all_users(*item.permissions)
+            users += [user]
+            await self.metainfo_repo.apply_new_known_tags(
+                users, added, deleted)
+
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())
-            await self.metainfo_repo.update_computed_tags(user, item)
-            await self.recalculate_known_tags(item, added, deleted)
 
         async def update():
             async with self.items_repo.transaction():
@@ -488,7 +451,13 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.items_repo.delete_tags(item.uuid, deleted)
             operations += 1
 
-        await self.recalculate_known_tags(item, added, deleted)
+        # FIXME
+        print(4, '*item.permissions', *item.permissions)
+
+        users = await self.users_repo.read_all_users(*item.permissions)
+        users += [user]
+        await self.metainfo_repo.apply_new_known_tags(
+            users, added, deleted)
 
         async def recursive(item_uuid: UUID) -> None:
             nonlocal operations
@@ -583,7 +552,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
     ) -> None:
         """Apply permissions change to all parents."""
         async with self.items_repo.transaction():
-            parents = await self.items_repo.get_all_parent_uuids(user, item)
+            parents = await self.items_repo.get_all_parents(user, item)
 
             if not parents:
                 return
@@ -682,20 +651,27 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            parent_uuid = item.parent_uuid
-
-            if parent_uuid is None:
+            if item.parent_uuid is None:
                 return Failure(errors.ItemNoDeleteForRoot(uuid=uuid))
 
-            await self.recalculate_known_tags(item, [], item.tags)
+            users = await self.users_repo.read_all_users(*item.permissions)
+            users += [user]
 
+            await self.metainfo_repo.apply_new_known_tags(
+                users=users,
+                tags_added=[],
+                tags_deleted=item.tags,
+            )
+
+            public_users = await self.users_repo.get_public_users_uuids()
+            await self.metainfo_repo.drop_unused_tags(users, public_users)
             await self.items_repo.mark_files_as_orphans(item, utils.now())
             deleted = await self.items_repo.delete_item(item)
 
             if not deleted:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-        return Success(parent_uuid)
+        return Success(item.parent_uuid)
 
 
 class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
@@ -746,32 +722,18 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
             if metainfo is None:
                 return Failure(errors.MetainfoDoesNotExist(uuid=target_uuid))
 
-            await self.media_repo.copy_media(
-                owner_uuid=user.uuid,
-                source_uuid=source_uuid,
-                target_uuid=target_uuid,
-                ext=source.preview_ext,
-                target_folder='content',
-            )
-
-            await self.media_repo.copy_media(
-                owner_uuid=user.uuid,
-                source_uuid=source_uuid,
-                target_uuid=target_uuid,
-                ext=source.preview_ext,
-                target_folder='preview',
-            )
-
-            await self.media_repo.copy_media(
-                owner_uuid=user.uuid,
-                source_uuid=source_uuid,
-                target_uuid=target_uuid,
-                ext=source.thumbnail_ext,
-                target_folder='thumbnail',
-            )
+            for each in [domain.CONTENT, domain.PREVIEW, domain.THUMBNAIL]:
+                generic = source.get_generic()[each]
+                await self.media_repo.copy_media(
+                    owner_uuid=user.uuid,
+                    source_uuid=source_uuid,
+                    target_uuid=target_uuid,
+                    ext=generic.ext,
+                    target_folder=each,
+                )
 
             await self.metainfo_repo.update_metainfo_extras(
-                target_uuid, {'copied_cover_from': str(source_uuid)})
+                target_uuid, {domain.COPIED_COVER_FROM: str(source_uuid)})
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())
 
@@ -860,16 +822,12 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
             await self.metainfo_repo.mark_metainfo_updated(new_parent.uuid,
                                                            utils.now())
-            added: list[str] = []
-            deleted: list[str] = []
-
             if old_parent:
-                _added, _deleted = utils.get_delta(old_parent.tags,
-                                                   new_parent.tags)
-                added.extend(_added)
-                deleted.extend(_deleted)
+                added, deleted = utils.get_delta(old_parent.tags,
+                                                 new_parent.tags)
             else:
-                added.extend(new_parent.tags)
+                added = set(new_parent.tags)
+                deleted = set()
 
         asyncio.create_task(
             self.update_tags_in_children_of(user, new_parent, added, deleted)

@@ -53,7 +53,7 @@ class CreateUserUseCase:
                 uuid=item_uuid,
                 parent_uuid=None,
                 owner_uuid=user.uuid,
-                name=user.name,
+                name=user.name or user.login,
                 is_collection=True,
                 number=-1,
                 content_ext=None,
