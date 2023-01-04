@@ -53,25 +53,17 @@ def timing(
 
 def get_all_corresponding_users(
         session: Session,
-        only_user: Optional[UUID],
+        only_users: list[UUID],
 ) -> list[models.User]:
     """Get all users according to config."""
-    users: list[models.User] = []
-    if only_user:
-        user = session.query(models.User).get(str(only_user))
+    query = session.query(models.User)
 
-        if user:
-            users.append(user)
-    else:
-        users.extend(
-            session.query(
-                models.User
-            ).order_by(
-                models.User.name
-            ).all()
+    if only_users:
+        query = query.filter(
+            models.User.uuid.in_(tuple(str(x) for x in only_users))  # noqa
         )
 
-    return users
+    return query.order_by(models.User.name).all()
 
 
 def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
