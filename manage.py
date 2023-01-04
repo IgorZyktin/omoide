@@ -81,7 +81,7 @@ def cmd_change_password(uuid: str, password: str):
 
 
 @cli.command(
-    name='refresh_known_tags',
+    name='rebuild_known_tags',
 )
 @click.option(
     '--db-url',
@@ -106,8 +106,8 @@ def cmd_change_password(uuid: str, password: str):
 )
 def cmd_refresh_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
-    from omoide.commands.application.refresh_known_tags import cfg
-    from omoide.commands.application.refresh_known_tags import run
+    from omoide.commands.application.rebuild_known_tags import cfg
+    from omoide.commands.application.rebuild_known_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = list(kwargs.pop('limit_to_user'))
@@ -117,7 +117,7 @@ def cmd_refresh_known_tags(**kwargs: str | bool):
     with database.life_cycle():
         with helpers.timing(
                 callback=LOG.info,
-                start_template='Refreshing known tags...',
+                start_template='Rebuilding known tags...',
         ):
             run.run(config=config, database=database)
 
