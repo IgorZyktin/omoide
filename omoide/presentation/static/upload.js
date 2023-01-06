@@ -843,11 +843,13 @@ async function saveContentForProxy(proxy) {
             type: 'POST',
             url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
-            data: JSON.stringify({
-                content: proxy.content,
-                target_folder: 'content',
-                ext: proxy.contentExt,
-            }),
+            data: JSON.stringify([
+                {
+                    content: proxy.content,
+                    target_folder: 'content',
+                    ext: proxy.contentExt,
+                }
+            ]),
             success: function (response) {
                 proxy.contentUploaded = true
                 proxy.actualSteps.add('saveContentForProxy')
@@ -875,11 +877,13 @@ async function savePreviewForProxy(proxy) {
             type: 'POST',
             url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
-            data: JSON.stringify({
-                content: proxy.preview,
-                target_folder: 'preview',
-                ext: proxy.previewExt,
-            }),
+            data: JSON.stringify([
+                {
+                    content: proxy.preview,
+                    target_folder: 'preview',
+                    ext: proxy.previewExt,
+                }
+            ]),
             success: function (response) {
                 proxy.previewUploaded = true
                 proxy.actualSteps.add('savePreviewForProxy')
@@ -907,11 +911,13 @@ async function saveThumbnailForProxy(proxy) {
             type: 'POST',
             url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
-            data: JSON.stringify({
-                content: proxy.thumbnail,
-                target_folder: 'thumbnail',
-                ext: proxy.thumbnailExt,
-            }),
+            data: JSON.stringify([
+                {
+                    content: proxy.thumbnail,
+                    target_folder: 'thumbnail',
+                    ext: proxy.thumbnailExt,
+                }
+            ]),
             success: function (response) {
                 proxy.thumbnailUploaded = true
                 proxy.actualSteps.add('saveThumbnailForProxy')
@@ -998,11 +1004,23 @@ async function ensureParentHasThumbnail(parent, firstChild) {
                 type: 'POST',
                 url: `/api/media/${parent.uuid}`,
                 contentType: 'application/json',
-                data: JSON.stringify({
-                    content: firstChild.thumbnail,
-                    target_folder: 'thumbnail',
-                    ext: firstChild.thumbnailExt,
-                }),
+                data: JSON.stringify([
+                    {
+                        content: firstChild.content,
+                        target_folder: 'content',
+                        ext: firstChild.contentExt,
+                    },
+                    {
+                        content: firstChild.preview,
+                        target_folder: 'preview',
+                        ext: firstChild.previewExt,
+                    },
+                    {
+                        content: firstChild.thumbnail,
+                        target_folder: 'thumbnail',
+                        ext: firstChild.thumbnailExt,
+                    }
+                ]),
                 success: async function (response) {
                     await ensureParentHasThumbnail(parent.parent_uuid, firstChild)
                     resolve(response)

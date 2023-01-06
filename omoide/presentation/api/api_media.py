@@ -20,7 +20,7 @@ router = APIRouter(prefix='/api/media')
 @router.post('/{uuid}')
 async def api_create_media(
         uuid: UUID,
-        media_in: api_models.CreateMediaIn,
+        media_in: list[api_models.CreateMediaIn],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateMediaUseCase = Depends(

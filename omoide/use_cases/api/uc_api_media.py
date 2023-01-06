@@ -41,7 +41,7 @@ class CreateMediaUseCase:
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
-            media_in: api_models.CreateMediaIn,
+            media_in: list[api_models.CreateMediaIn],
     ) -> Result[errors.Error, int]:
         """Business logic."""
         async with self.media_repo.transaction():
@@ -50,20 +50,22 @@ class CreateMediaUseCase:
             if error:
                 return Failure(error)
 
-            media = domain.Media(
-                id=-1,
-                owner_uuid=user.uuid,
-                item_uuid=uuid,
-                created_at=utils.now(),
-                processed_at=None,
-                content=self.extract_binary_content(media_in.content),
-                ext=media_in.ext,
-                target_folder=media_in.target_folder,
-                replication={},
-                error='',
-                attempts=0,
-            )
+            now = utils.now()
+            for each in media_in:
+                media = domain.Media(
+                    id=-1,
+                    owner_uuid=user.uuid,
+                    item_uuid=uuid,
+                    created_at=now,
+                    processed_at=None,
+                    content=self.extract_binary_content(each.content),
+                    ext=each.ext,
+                    target_folder=each.target_folder,
+                    replication={},
+                    error='',
+                    attempts=0,
+                )
 
-            media_id = await self.media_repo.create_media(user, media)
+                media_id = await self.media_repo.create_media(user, media)
 
         return Success(media_id)
