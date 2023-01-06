@@ -98,13 +98,17 @@ async def app_item_update(
         return web.redirect_from_error(
             templates, request, result.error, uuid)
 
-    item, total, permissions, computed_tags = result.value
+    item, total, permissions, computed_tags, metainfo = result.value
 
     lower_tags = [tag.lower() for tag in item.tags]
     external_tags = [
         tag for tag in computed_tags
         if tag not in lower_tags and not utils.is_valid_uuid(tag)
     ]
+
+    model = serialize_item(item)
+    thumbnail_origin = metainfo.extras.get('copied_cover_from')
+    model['copied_cover_from'] = thumbnail_origin or str(item.uuid)
 
     context = {
         'request': request,
@@ -113,11 +117,12 @@ async def app_item_update(
         'aim_wrapper': aim_wrapper,
         'current_item': item,
         'item': item,
+        'metainfo': metainfo,
         'total': utils.sep_digits(total),
         'permissions': permissions,
         'external_tags': external_tags,
         'url': templates.url_for(request, 'app_search'),
-        'model': ujson.dumps(serialize_item(item), ensure_ascii=False),
+        'model': ujson.dumps(model, ensure_ascii=False),
         'initial_permissions': ujson.dumps([
             f'{x.uuid} {x.name}' for x in permissions
         ], ensure_ascii=False),

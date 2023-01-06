@@ -377,11 +377,14 @@ def app_item_update_use_case(
         interfaces.AbsUsersReadRepository = Depends(get_users_read_repo),
         items_write_repository:
         interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
+        metainfo_repository:
+        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
 ) -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.AppItemUpdateUseCase(
         users_repo=users_read_repository,
         items_repo=items_write_repository,
+        metainfo_repo=metainfo_repository,
     )
 
 

@@ -371,7 +371,13 @@ class ApiItemUpdateUseCase:
                 elif operation.path == '/thumbnail_ext':
                     item.thumbnail_ext = \
                         (str(operation.value) if operation.value else None)
-
+                elif operation.path == '/copied_cover_from':
+                    if utils.is_valid_uuid(operation.value):
+                        uuid = UUID(operation.value)
+                        metainfo = await self.metainfo_repo.read_metainfo(uuid)
+                        metainfo.extras['copied_cover_from'] = operation.value
+                        await self.metainfo_repo.update_metainfo(user,
+                                                                 metainfo)
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())

@@ -47,6 +47,7 @@ function resetBasic() {
     }
 
     $('#item_name').val(oldModel['name'] || '')
+    $('#thumbnail_origin').val(oldModel['copied_cover_from'] || '').trigger('input')
     $('#item_is_collection').prop('checked', oldModel['is_collection']);
     $('#item_content_ext').val(oldModel['content_ext'] || '')
     $('#item_preview_ext').val(oldModel['preview_ext'] || '')
@@ -78,6 +79,20 @@ function fillTextarea(elementId, values) {
     $('#' + elementId).val(lines)
 }
 
+function saveBasic(alertsElementId) {
+    // save changes + copy thumbnail if need to
+    let childUUID = newModel['copied_cover_from']
+    let parentUUID = newModel['uuid']
+
+    saveBasicStuff(alertsElementId)
+
+    if (isUUID(childUUID) && isUUID(parentUUID)) {
+        copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId)
+    } else {
+        console.log(`Failed to copy thumbnail form ${childUUID} to ${parentUUID}`)
+    }
+}
+
 function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
     // make parent use thumbnail from given item
     $.ajax({
@@ -95,7 +110,7 @@ function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
     })
 }
 
-function saveBasic(alertsElementId) {
+function saveBasicStuff(alertsElementId) {
     // save changes
     $.ajax({
         timeout: 5000, // 5 seconds
@@ -127,6 +142,11 @@ function saveBasic(alertsElementId) {
                 'op': 'replace',
                 'path': '/is_collection',
                 'value': newModel['is_collection'],
+            },
+            {
+                'op': 'replace',
+                'path': '/copied_cover_from',
+                'value': newModel['copied_cover_from'],
             },
         ]),
         success: function (response) {

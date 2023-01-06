@@ -68,10 +68,12 @@ class AppItemUpdateUseCase:
             self,
             users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
         self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
 
     async def execute(
             self,
@@ -79,7 +81,11 @@ class AppItemUpdateUseCase:
             user: domain.User,
             uuid: UUID,
     ) -> Result[errors.Error,
-                tuple[domain.Item, int, list[domain.User], list[str]]]:
+                tuple[domain.Item,
+                      int,
+                      list[domain.User],
+                      list[str],
+                      Optional[domain.Metainfo]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -95,8 +101,9 @@ class AppItemUpdateUseCase:
             total = await self.items_repo.count_all_children_of(item)
             can_see = await self.users_repo.read_all_users(*item.permissions)
             computed_tags = await self.items_repo.read_computed_tags(uuid)
+            metainfo = await self.metainfo_repo.read_metainfo(uuid)
 
-        return Success((item, total, can_see, computed_tags))
+        return Success((item, total, can_see, computed_tags, metainfo))
 
 
 class AppItemDeleteUseCase:

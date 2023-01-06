@@ -185,8 +185,11 @@ function getThumbnailContentUrl(item) {
 
 function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
     // try to load thumbnail for the item
-    if (!isUUID(uuid))
+    if (!isUUID(uuid)) {
+        thumbnailElement.empty()
+        renderThumbnailStatic(thumbnailElement, '/static/empty.png')
         return
+    }
 
     thumbnailElement.empty()
 

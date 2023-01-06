@@ -87,6 +87,17 @@ function renderThumbnailDynamic(container, item) {
     }).appendTo(link)
 }
 
+function renderThumbnailStatic(container, path) {
+    // render single thumbnail during page edit (collection or singular)
+    let envelope = $('<div>', {class: 'envelope'})
+    envelope.appendTo(container)
+
+    $('<img>', {
+        src: path,
+        alt: 'Thumbnail'
+    }).css('maxWidth', '384px').appendTo(envelope)
+}
+
 function convertDatetimeToIsoString(datetime) {
     let tzo = -datetime.getTimezoneOffset(),
         dif = tzo >= 0 ? '+' : '-',

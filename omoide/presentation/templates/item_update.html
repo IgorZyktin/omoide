@@ -60,18 +60,26 @@
                    onchange="alterModelTextField(this, 'name')"
                    class="height-auto">
 
+            <label for="thumbnail_origin">Origin of thumbnail:</label>
+            {% if metainfo and metainfo.extras.get('copied_cover_from') %}
+                <input id="thumbnail_origin"
+                       type="text"
+                       value="{{ metainfo.extras.get('copied_cover_from') }}"
+                       class="height-auto">
+            {% else %}
+                <input id="thumbnail_origin"
+                       type="text"
+                       value="{{ item.uuid }}"
+                       class="height-auto">
+            {% endif %}
+
             <div id="thumbnail" class="thumbnail"></div>
-            <input id="new_thumbnail_parent"
-                   type="button"
-                   class="button control-button"
-                   onclick="copyThumbnailFromGivenItem('{{ (item.parent_uuid or '')|string }}', '{{ item.uuid|string }}', 'alerts_basic')"
-                   value="Use this thumbnail for parent item">
             <div>
+                <label for="item_is_collection">Item is a collection</label>
                 <input type="checkbox"
                         {{ 'checked' if item.is_collection else '' }}
                        onchange="alterModelBoolField(this, 'is_collection')"
                        id="item_is_collection">
-                <label for="item_is_collection">Item is a collection</label>
             </div>
 
             <label for="item_content_ext">Content extension:</label>
@@ -145,8 +153,8 @@
 
         <div>
             <h3>Users who can see this item</h3>
-            <label for="item_permissions">One user per line, only
-                UUID4: </label>
+            <label for="item_permissions">
+                One user per line, only UUID4: </label>
             <textarea id="item_permissions"
                       onchange="alterModelPermissionsField(this)"
                       rows="10">
@@ -158,18 +166,18 @@
                 <input type="checkbox"
                        checked
                        id="item_perm_apply_to_parents">
-                <label for="item_perm_apply_to_parents">Also apply to all
-                    parent items</label>
+                <label for="item_perm_apply_to_parents">
+                    Also apply to all parent items</label>
             </div>
 
             <div>
                 <input type="checkbox"
                        id="item_perm_apply_to_children">
-                <label for="item_perm_apply_to_children">Also apply to all
-                    child items</label>
+                <label for="item_perm_apply_to_children">
+                    Also apply to all child items</label>
             </div>
 
-            <label for="propagate_permissions">Apply to children:</label><br>
+            <label for="propagate_permissions">Apply to children:</label>
             <select id="propagate_permissions">
                 <option value="delta">Only changes (added and deleted)
                 </option>
@@ -204,7 +212,14 @@
                 $('#thumbnail_parent')
             )
 
-            tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
+            let origin = $('#thumbnail_origin')
+
+            origin.on('input', function () {
+                alterModelTextField(this, 'copied_cover_from')
+                tryLoadingThumbnail($(this).val(), $('#thumbnail'))
+            });
+
+            tryLoadingThumbnail(origin.val(), $('#thumbnail'))
         });
     </script>
     <br>
