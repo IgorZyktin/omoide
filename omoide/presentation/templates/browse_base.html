@@ -2,27 +2,23 @@
 
 {% block head %}
     {{ super() }}
+
     <meta property="og:url"
           content="{{ url_for(request, 'app_browse', uuid=current_item.uuid) }}"/>
 
     {% if current_item.preview_ext %}
         <meta property="og:image"
               content="{{ locate(current_item).preview }}"/>
-    {% else %}
-        <meta property="og:image"
-              content="{{ locate(current_item).thumbnail }}"/>
     {% endif %}
 
-    {%- if metainfo.preview_width and metainfo.preview_height %}
+    {%- if metainfo.preview_width %}
         <meta property="og:image:width"
               content="{{ metainfo.preview_width }}">
+    {% endif %}
+
+    {%- if metainfo.preview_height %}
         <meta property="og:image:height"
               content="{{ metainfo.preview_height }}">
-    {%- elif metainfo.thumbnail_width and metainfo.thumbnail_height %}
-        <meta property="og:image:width"
-              content="{{ metainfo.thumbnail_width }}">
-        <meta property="og:image:height"
-              content="{{ metainfo.thumbnail_height }}">
-    {% endif -%}
+    {% endif %}
 
 {% endblock %}
