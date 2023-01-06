@@ -241,8 +241,6 @@ class BaseItemModifyUseCase:
         await self.items_repo.create_item(user, item)
         await self.metainfo_repo.create_empty_metainfo(user, item)
         await self.metainfo_repo.update_computed_tags(user, item)
-        # FIXME
-        print(2, '*payload.permissions', *payload.permissions)
         users = await self.users_repo.read_all_users(*payload.permissions)
         await self.metainfo_repo.apply_new_known_tags(users, item.tags, [])
 
@@ -415,8 +413,6 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.items_repo.update_item(item)
 
             await self.metainfo_repo.update_computed_tags(user, item)
-            # FIXME
-            print(3, '*item.permissions', *item.permissions)
             users = await self.users_repo.read_all_users(*item.permissions)
             users += [user]
             await self.metainfo_repo.apply_new_known_tags(
@@ -456,9 +452,6 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
         if deleted:
             await self.items_repo.delete_tags(item.uuid, deleted)
             operations += 1
-
-        # FIXME
-        print(4, '*item.permissions', *item.permissions)
 
         users = await self.users_repo.read_all_users(*item.permissions)
         users += [user]
