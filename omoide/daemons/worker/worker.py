@@ -198,6 +198,8 @@ class Worker:
             # noinspection PyBroadException
             try:
                 copy = database.select_copy_operation(session, copy_id)
+                fail = False
+                trace = ''
 
                 if copy is not None:
                     # noinspection PyBroadException
@@ -209,14 +211,17 @@ class Worker:
                     except Exception:
                         logger.exception('Failed to copy {}', copy_id)
                         result = 0
-                        copy.status = 'fail'
-                        copy.error += traceback.format_exc()
+                        fail = True
+                        trace = traceback.format_exc()
                     else:
                         database.copy_content_parameters(
                             self.config, self.filesystem, session, copy)
                         database.mark_origin(copy)
-                    finally:
-                        copy.processed_at = utils.now()
+
+                    if fail:
+                        copy.status = 'fail'
+                        copy.error += trace
+                    copy.processed_at = utils.now()
 
             except Exception:
                 logger.exception('Failed to save changes in copy {}', copy_id)
