@@ -1167,8 +1167,12 @@ async function uploadMedia(button, uploadState) {
     if (!targets)
         return
 
+    let upload_as = $('#upload_as')
+
     $(button).addClass('button-disabled')
-    await createItemsForProxy(targets, uploadState)
+    if (upload_as.val() !== 'target') {
+        await createItemsForProxy(targets, uploadState)
+    }
     await doIf(targets, uploadTagsForProxy, uploadState,
         p => p.uuid && p.isValid)
     await doIf(targets, uploadPermissionsProxy, uploadState,
@@ -1193,7 +1197,7 @@ async function uploadMedia(button, uploadState) {
         if (parent) {
             await ensureParentHasThumbnail(parent, targets[0])
 
-            if ($('#upload_as').val() === 'children') {
+            if (upload_as.val() === 'children') {
                 await ensureParentIsCollection(parent)
             }
             parentProcessed = true
@@ -1207,9 +1211,19 @@ async function uploadMedia(button, uploadState) {
 
         let uploadSelector = $('#after_upload')
 
-        if (uploadSelector.val() === 'parent'
-            && parentUUID !== null) {
-            relocateWithAim(`/browse/${parentUUID}`)
+        if (uploadSelector.val() === 'parent'){
+            if (upload_as.val() === 'target') {
+                let itemItself = await getItem(targets[0].uuid)
+                let parentItself = await getItem(itemItself.parent_uuid)
+
+                if (!parentItself)
+                    return
+
+                relocateWithAim(`/browse/${parentItself.uuid}`)
+            } else if (uploadSelector.val() === 'children'
+                && parentUUID !== null) {
+                relocateWithAim(`/browse/${parentUUID}`)
+            }
         } else if (uploadSelector.val() === 'again') {
             clearProxies()
             uploadState.reset()

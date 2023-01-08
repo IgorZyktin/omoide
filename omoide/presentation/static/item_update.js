@@ -95,6 +95,12 @@ function saveBasic(alertsElementId) {
 
 function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
     // make parent use thumbnail from given item
+    if (parentUUID === childUUID) {
+        console.log(`Skipping copy thumbnail for ${childUUID} ` +
+            `because it points on itself`)
+        return
+    }
+
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
