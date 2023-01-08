@@ -68,6 +68,9 @@ def get_leaf_items(
     FROM items AS leaf
     LEFT OUTER JOIN items AS child on child.parent_uuid = leaf.uuid
     WHERE child.uuid IS NULL and leaf.owner_uuid = :user_uuid
+    AND leaf.content_ext IS NOT NULL
+    AND leaf.preview_ext IS NOT NULL
+    AND leaf.thumbnail_ext IS NOT NULL
     ORDER BY leaf.number
     """
 
@@ -141,6 +144,8 @@ def copy_properties(
                 getattr(child, parameter))
 
     parameters_metainfo = [
+        'media_type',
+
         'content_size',
         'preview_size',
         'thumbnail_size',
@@ -178,6 +183,7 @@ def invoke_worker_to_copy(
 
     for each in [domain.CONTENT, domain.PREVIEW, domain.THUMBNAIL]:
         ext = getattr(child, f'{each}_ext')
+        assert ext is not None
 
         copy = models.ManualCopy(
             created_at=now,
