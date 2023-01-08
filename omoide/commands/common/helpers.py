@@ -83,7 +83,7 @@ def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
 RT = TypeVar('RT', int, None)  # return type
 
 
-def get_file_size(path: str | Path, default: RT = None) -> Optional[RT]:
+def get_file_size(path: str | Path, default: RT = None) -> RT:
     """Get size of the file in bytes."""
     if isinstance(path, str):
         _path = Path(path)

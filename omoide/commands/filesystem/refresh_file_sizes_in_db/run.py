@@ -108,7 +108,7 @@ def update_size(
         preview_ext=item.preview_ext,
         thumbnail_ext=item.thumbnail_ext,
         tags=item.tags,
-        permissions=[UUID(x) for x in item.permissions],
+        permissions=[UUID(x) for x in item.permissions],  # type: ignore
     )
 
     locator = infra.FilesystemLocator(
@@ -118,24 +118,24 @@ def update_size(
     )
 
     changed = 0
-    for each in ['content', 'preview', 'thumbnail']:
-        ext = getattr(item, f'{each}_ext', None)
+    for media_type in domain.MEDIA_TYPES:
+        ext = getattr(item, f'{media_type}_ext', None)
 
         if not ext:
-            LOG.error('No {} extension for {}, skipping', each, item)
+            LOG.error('No {} extension for {}, skipping', media_type, item)
             continue
 
-        path = getattr(locator, each)
+        path = getattr(locator, media_type)
         size = helpers.get_file_size(path)
 
         if size is None:
             LOG.error('File does not exist for {}: {}', item.uuid, path)
             continue
 
-        if size == getattr(metainfo, f'{each}_size', None):
+        if size == getattr(metainfo, f'{media_type}_size', None):
             continue
 
-        setattr(metainfo, f'{each}_size', size)
+        setattr(metainfo, f'{media_type}_size', size)
         metainfo.updated_at = utils.now()
         changed += 1
 
@@ -165,7 +165,7 @@ def get_models(
 
     if config.marker:
         query = query.filter(
-            models.Metainfo.uuid >= config.marker  # noqa
+            models.Metainfo.item_uuid >= config.marker  # noqa
         )
 
     query = query.order_by(

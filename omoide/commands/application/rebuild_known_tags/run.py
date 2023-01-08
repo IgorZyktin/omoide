@@ -89,21 +89,22 @@ def drop_unused_tags(session: Session) -> None:
     ).filter(
         models.KnownTags.counter <= 0
     )
-    response = session.execute(stmt)
+    rowcount = session.execute(stmt).scalar()
 
-    if response.rowcount:
-        LOG.info('Dropped {} tags for known users', response.rowcount)
+    if rowcount:
+        LOG.info('Dropped {} tags for known users', rowcount)
 
     stmt = sa.delete(
         models.KnownTagsAnon
     ).filter(
         models.KnownTagsAnon.counter <= 0
     )
-    response = session.execute(stmt)
-    session.commit()
+    rowcount = session.execute(stmt).scalar()
 
-    if response.rowcount:
-        LOG.info('Dropped {} tags for anon user', response.rowcount)
+    if rowcount:
+        LOG.info('Dropped {} tags for anon user', rowcount)
+
+    session.commit()
 
 
 def set_all_tag_counters_to_zero(

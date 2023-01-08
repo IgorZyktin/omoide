@@ -250,9 +250,9 @@ class Database(BaseDatabase):
                 or target_metainfo is None:
             LOG.warning(
                 'Got discrepancy in sources, '
-                'source_item = {}',
-                'target_item = {}',
-                'source_metainfo = {}',
+                'source_item = {}'
+                'target_item = {}'
+                'source_metainfo = {}'
                 'target_metainfo = {}',
                 source_item,
                 target_item,
