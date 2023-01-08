@@ -370,12 +370,16 @@ class ApiItemUpdateUseCase:
                     item.thumbnail_ext = \
                         (str(operation.value) if operation.value else None)
                 elif operation.path == '/copied_cover_from':
-                    if utils.is_valid_uuid(operation.value):
+                    if operation.value \
+                            and utils.is_valid_uuid(operation.value):
                         uuid = UUID(operation.value)
                         metainfo = await self.metainfo_repo.read_metainfo(uuid)
-                        metainfo.extras['copied_cover_from'] = operation.value
-                        await self.metainfo_repo.update_metainfo(user,
-                                                                 metainfo)
+
+                        if metainfo is not None:
+                            metainfo.extras['copied_cover_from'] \
+                                = operation.value
+                            await self.metainfo_repo.update_metainfo(user,
+                                                                     metainfo)
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())
@@ -560,21 +564,14 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                     self.metainfo_repo, user,
                     item, added, deleted) as writeback:
                 writeback.operations = len(parents)
-                for i, parent_uuid in enumerate(parents, start=1):
+                for i, parent in enumerate(parents, start=1):
                     await self.items_repo \
-                        .update_permissions(parent_uuid, False, added,
+                        .update_permissions(parent.uuid, False, added,
                                             deleted, item.permissions)
-
-                    for user_uuid in added:
-                        await self.recalculate_known_tags_indirect(
-                            user_uuid, item.tags, [])
-
-                    for user_uuid in deleted:
-                        await self.recalculate_known_tags_indirect(
-                            user_uuid, [], item.tags)
-
                     await self.metainfo_repo \
-                        .mark_metainfo_updated(parent_uuid, utils.now())
+                        .mark_metainfo_updated(parent.uuid, utils.now())
+
+                await self.metainfo_repo.update_computed_tags(user, item)
 
     async def update_permissions_in_children(
             self,
@@ -596,29 +593,14 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                         .get_direct_children_uuids_of(user, item_uuid)
 
                     for child_uuid in children:
-                        if override:
-                            await self.items_repo.update_permissions(
-                                uuid=child_uuid,
-                                override=override,
-                                added=added,
-                                deleted=deleted,
-                                all_permissions=all_permissions,
-                            )
-                            writeback.operations += 1
-                        else:
-                            if added:
-                                await self.items_repo.add_permissions(
-                                    uuid=child_uuid,
-                                    permissions=added,
-                                )
-                                writeback.operations += 1
-
-                            if deleted:
-                                await self.items_repo.delete_permissions(
-                                    uuid=child_uuid,
-                                    permissions=deleted,
-                                )
-                                writeback.operations += 1
+                        await self.items_repo.update_permissions(
+                            target=child_uuid,
+                            override=override,
+                            added=added,
+                            deleted=deleted,
+                            all_permissions=all_permissions,
+                        )
+                        writeback.operations += 1
 
                         if added or deleted or override:
                             await self.metainfo_repo \
