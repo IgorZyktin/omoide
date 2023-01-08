@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Rebuild all computed tags from the scratch.
+"""Rebuild all content/preview/thumbnail sizes.
 """
 import time
 from typing import Optional
