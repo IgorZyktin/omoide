@@ -594,7 +594,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
                     for child_uuid in children:
                         await self.items_repo.update_permissions(
-                            target=child_uuid,
+                            uuid=child_uuid,
                             override=override,
                             added=added,
                             deleted=deleted,
@@ -703,13 +703,22 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
             if metainfo is None:
                 return Failure(errors.MetainfoDoesNotExist(uuid=target_uuid))
 
-            for each in [domain.CONTENT, domain.PREVIEW, domain.THUMBNAIL]:
+            for each in domain.MEDIA_TYPES:
                 generic = source.get_generic()[each]
+                if generic.ext is None or not generic.ext:
+                    return Failure(errors.ItemIsInconsistent(
+                        uuid=target_uuid,
+                        message=f'no ext for {each}',
+                    ))
+
+            for each in domain.MEDIA_TYPES:
+                generic = source.get_generic()[each]
+
                 await self.media_repo.copy_media(
                     owner_uuid=user.uuid,
                     source_uuid=source_uuid,
                     target_uuid=target_uuid,
-                    ext=generic.ext,
+                    ext=str(generic.ext),
                     target_folder=each,
                 )
 

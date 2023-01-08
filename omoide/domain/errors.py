@@ -89,6 +89,11 @@ class ItemItself(Error):
     template = 'Item {uuid} cannot be a target to itself'
 
 
+class ItemIsInconsistent(Error):
+    """Item has discrepancy, like having content ext but no preview ext."""
+    template = 'Item {uuid} is not consistent {message}'
+
+
 class EXIFDoesNotExist(Error):
     """EXIF for item does not exist."""
     template = 'EXIF for item {uuid} does not exist'

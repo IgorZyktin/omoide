@@ -42,7 +42,7 @@ CONTENT: Literal['content'] = 'content'
 PREVIEW: Literal['preview'] = 'preview'
 THUMBNAIL: Literal['thumbnail'] = 'thumbnail'
 MEDIA_TYPE = Literal['content', 'preview', 'thumbnail']
-MEDIA_TYPES = [CONTENT, PREVIEW, THUMBNAIL]
+MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 
 
 class Item(BaseModel):
@@ -84,7 +84,7 @@ class ItemGeneric(BaseModel):
     """Wrapper that helps with different item fields."""
     media_type: MEDIA_TYPE
     original_ext: Optional[str]
-    set_callback: Callable[[str], None]
+    set_callback: Callable[[Optional[str]], None]
 
     @property
     def ext(self) -> Optional[str]:

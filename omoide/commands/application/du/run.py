@@ -9,9 +9,9 @@ from prettytable import PrettyTable
 from sqlalchemy.orm import Session
 
 from omoide import utils
+from omoide.commands.application.du.cfg import Config
 from omoide.commands.common import helpers
 from omoide.commands.common.base_db import BaseDatabase
-from omoide.commands.application.du.cfg import Config
 from omoide.infra import custom_logging
 from omoide.storage.database import models
 
@@ -113,6 +113,18 @@ def scan_for_user(
     )
 
     response = session.execute(stmt).fetchone()
+
+    if response is None:
+        return Stats(
+            user=user,
+            content_size=-1,
+            preview_size=-1,
+            thumbnail_size=-1,
+            content_total=-1,
+            preview_total=-1,
+            thumbnail_total=-1,
+            total_items=-1,
+        )
 
     return Stats(
         user=user,
