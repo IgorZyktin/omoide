@@ -140,7 +140,7 @@ class Scroller {
             self.inject(response, searchParams)
         }).fail(function (response) {
             let text = JSON.stringify(response)
-            console.log(`Request to ${endpoint} returned response: ${text}`)
+            console.log(`Request to ${this.endpoint} returned response: ${text}`)
             self.stop()
         });
     }

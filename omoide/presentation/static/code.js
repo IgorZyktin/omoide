@@ -304,9 +304,6 @@ function updateHeaderPadding() {
     let content = document.getElementById('content')
 
     if (header && content) {
-        console.log(`parentHeight ${header.parentElement.clientHeight}, header height ${header.clientHeight}`)
-        let height = (header.clientHeight).toString() + 'px';
-        console.log(`content.style.paddingTop ${content.style.paddingTop} -> ${height}`)
-        content.style.paddingTop = height
+        content.style.paddingTop = (header.clientHeight).toString() + 'px'
     }
 }
