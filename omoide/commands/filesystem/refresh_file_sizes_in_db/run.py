@@ -2,10 +2,12 @@
 """Refresh size command.
 """
 from pathlib import Path
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from omoide import domain
 from omoide import infra
 from omoide import utils
 from omoide.commands.common import helpers
@@ -95,9 +97,23 @@ def update_size(
         base_folder: str,
 ) -> int:
     """Get actual file size."""
+    dom_item = domain.Item(
+        uuid=item.uuid,
+        parent_uuid=item.parent_uuid,
+        owner_uuid=item.owner_uuid,
+        number=item.number,
+        name=item.name,
+        is_collection=item.is_collection,
+        content_ext=item.content_ext,
+        preview_ext=item.preview_ext,
+        thumbnail_ext=item.thumbnail_ext,
+        tags=item.tags,
+        permissions=[UUID(x) for x in item.permissions],
+    )
+
     locator = infra.FilesystemLocator(
         base_folder=base_folder,
-        item=item,
+        item=dom_item,
         prefix_size=config.prefix_size,
     )
 

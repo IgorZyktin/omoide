@@ -181,8 +181,8 @@ def invoke_worker_to_copy(
     """Write info in the db so worker could complete the job."""
     now = utils.now()
 
-    for each in [domain.CONTENT, domain.PREVIEW, domain.THUMBNAIL]:
-        ext = getattr(child, f'{each}_ext')
+    for media_type in domain.MEDIA_TYPES:
+        ext = getattr(child, f'{media_type}_ext')
         assert ext is not None
 
         copy = models.ManualCopy(
@@ -190,11 +190,11 @@ def invoke_worker_to_copy(
             processed_at=None,
             status='init',
             error='',
-            owner_uuid=str(parent.owner_uuid),
-            source_uuid=str(child.uuid),
-            target_uuid=str(parent.uuid),
+            owner_uuid=parent.owner_uuid,
+            source_uuid=child.uuid,
+            target_uuid=parent.uuid,
             ext=ext,
-            target_folder=each,
+            target_folder=media_type,
         )
         session.add(copy)
         session.flush([copy])

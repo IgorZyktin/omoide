@@ -63,9 +63,6 @@ def rebuild_computed_tags(
     if user.root_item is None:
         return 0
 
-    if user.root_item is None:
-        return 0
-
     i = 0
     total_children = 0
 
@@ -97,7 +94,7 @@ def rebuild_computed_tags(
 
 def get_new_computed_tags(
         session: Session,
-        parent_uuid: Optional[UUID],
+        parent_uuid: UUID,
         child: models.Item,
 ) -> tuple[str, ...]:
     """Refresh computed tags for given child."""
