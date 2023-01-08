@@ -360,6 +360,11 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     help='Apply to one or more specially listed users',
 )
 @click.option(
+    '--only-corrupted',
+    default=True,
+    help='Do not override metainfo that is already fine',
+)
+@click.option(
     '--log-every-item/--no-log-every-item',
     default=False,
     help='Output every refreshed item',
@@ -382,7 +387,7 @@ def command_rebuild_image_sizes(**kwargs) -> None:
 
     with database.life_cycle():
         with helpers.timing(
-                start_template='Refreshing file sizes for every item...',
+                start_template='Rebuilding all image sizes...',
         ):
             run.run(database, config)
 

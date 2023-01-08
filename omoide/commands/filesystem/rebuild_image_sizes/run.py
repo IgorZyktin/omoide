@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """Rebuild all content/preview/thumbnail sizes.
 """
+import sys
 import time
-from typing import Optional
-from uuid import UUID
 
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+import sqlalchemy as sa
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from omoide import domain
+from omoide import infra
 from omoide import utils
-from omoide.commands.application.rebuild_computed_tags.cfg import Config
 from omoide.commands.common import helpers
 from omoide.commands.common.base_db import BaseDatabase
+from omoide.commands.filesystem.rebuild_image_sizes.cfg import Config
 from omoide.infra import custom_logging
 from omoide.storage.database import models
 
@@ -31,22 +33,34 @@ def run(
     ]
     LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
 
+    if not (config.hot_folder or config.cold_folder):
+        LOG.error('No base folder specified, '
+                  'you have to provide at least hot-folder or cold-folder')
+        sys.exit(1)
+
     with database.start_session() as session:
         users = helpers.get_all_corresponding_users(session, config.only_users)
 
     for user in users:
-        LOG.info('Refreshing tags for user {} {}', user.uuid, user.name)
-
         with database.start_session() as session:
             start = time.perf_counter()
-            children = rebuild_computed_tags(session, config, user)
+            all_metainfo = get_all_metainfo_records(session, config, user)
+
+            if not all_metainfo:
+                continue
+
+            LOG.info('Refreshing image sizes for user {} {}',
+                     user.uuid, user.name)
+
+            rebuild_sizes(config, user, all_metainfo)
             spent = time.perf_counter() - start
+
             LOG.info(
-                'Rebuilt computed tags for '
-                '{} {} ({} children) in {:0.3f} sec.',
+                'Rebuilt image sizes for '
+                '{} {} ({} records) in {:0.3f} sec.',
                 user.uuid,
                 user.name,
-                utils.sep_digits(children),
+                utils.sep_digits(len(all_metainfo)),
                 spent,
             )
             session.commit()
@@ -54,108 +68,148 @@ def run(
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-def rebuild_computed_tags(
+def get_all_metainfo_records(
         session: Session,
         config: Config,
         user: models.User,
-) -> int:
+) -> list[tuple[models.Metainfo, models.Item]]:
     """Rebuild computed tags for specific user."""
-    if user.root_item is None:
-        return 0
-
-    i = 0
-    total_children = 0
-
-    def recursive(parent_uuid: UUID) -> None:
-        nonlocal i, total_children
-        child_items = helpers.get_direct_children(session, parent_uuid)
-        for child in child_items:
-            i += 1
-            total_children += 1
-            tags = get_new_computed_tags(session, parent_uuid, child)
-            insert_new_computed_tags(session, child, tags)
-
-            if config.log_every_item:
-                LOG.info(
-                    '\t\tRefreshed tags for {}. {} {} {} {}',
-                    utils.sep_digits(i),
-                    child.uuid,
-                    child.name or '???',
-                    utils.sep_digits(total_children),
-                    sorted(tags),
-                )
-
-            recursive(child.uuid)
-
-    recursive(user.root_item)
-
-    return total_children
-
-
-def get_new_computed_tags(
-        session: Session,
-        parent_uuid: UUID,
-        child: models.Item,
-) -> tuple[str, ...]:
-    """Refresh computed tags for given child."""
-    parent_tags = session.query(
-        models.ComputedTags.tags
+    query = session.query(
+        models.Metainfo,
+        models.Item,
+    ).join(
+        models.Item,
+        models.Item.uuid == models.Metainfo.item_uuid,
     ).filter(
-        models.ComputedTags.item_uuid == parent_uuid,
-    ).scalar()
-
-    child_tags = session.query(
-        models.ComputedTags.tags
-    ).filter(
-        models.ComputedTags.item_uuid == child.uuid
-    ).scalar()
-
-    tags: tuple[str, ...] = gather_tags(
-        parent_uuid=parent_uuid,
-        parent_tags=parent_tags if parent_tags else [],
-        item_uuid=child.uuid,
-        item_tags=child_tags if child_tags else [],
+        models.Item.owner_uuid == user.uuid,
+        ~sa.and_(
+            models.Item.content_ext == None,  # noqa
+            models.Item.preview_ext == None,  # noqa
+            models.Item.thumbnail_ext == None,  # noqa
+        ),
     )
 
-    return tags
+    if config.only_corrupted:
+        query = query.filter(
+            sa.or_(
+                models.Metainfo.content_width == None,  # noqa
+                models.Metainfo.content_height == None,  # noqa
+                models.Metainfo.preview_width == None,  # noqa
+                models.Metainfo.preview_height == None,  # noqa
+                models.Metainfo.thumbnail_width == None,  # noqa
+                models.Metainfo.thumbnail_height == None,  # noqa
+            )
+        )
+
+    query = query.order_by(
+        models.Item.number
+    )
+
+    if config.limit > 0:
+        query = query.limit(config.limit)
+
+    result = query.all()
+
+    return result
 
 
-def gather_tags(
-        parent_uuid: UUID,
-        parent_tags: list[str],
-        item_uuid: UUID,
-        item_tags: list[str],
-) -> tuple[str, ...]:
-    """Combine parent tags with item tags."""
-    clean_parent_uuid = str(parent_uuid).lower()
-
-    all_tags = {
-        *(x.lower() for x in parent_tags if x != clean_parent_uuid),
-        *(x.lower() for x in item_tags),
-        str(item_uuid),
-    }
-
-    return tuple(all_tags)
+class Sizes(BaseModel):
+    """DTO for image sizes."""
+    content_width: int = -1
+    content_height: int = -1
+    preview_width: int = -1
+    preview_height: int = -1
+    thumbnail_width: int = -1
+    thumbnail_height: int = -1
 
 
-def insert_new_computed_tags(
-        session: Session,
-        item: models.Item,
-        tags: tuple[str, ...],
+def rebuild_sizes(
+        config: Config,
+        user: models.User,
+        all_metainfo: list[tuple[models.Metainfo, models.Item]],
 ) -> None:
-    """Forcefully insert new tags."""
-    insert = pg_insert(
-        models.ComputedTags
-    ).values(
-        item_uuid=item.uuid,
-        tags=tuple(tags),
+    """Refresh computed tags for given child."""
+    try:
+        from PIL import Image
+    except ImportError:
+        Image = exit  # noqa
+        LOG.error('You have to install "pillow" package to run this command')
+        exit(1)
+
+    for metainfo, item in all_metainfo:
+        if metainfo is None or item is None:
+            LOG.error('Failed to get data, metainfo={}, item={}',
+                      metainfo, item)
+            continue
+
+        locator = make_locator(config, user, item)
+        sizes = Sizes()
+
+        for media_type in domain.MEDIA_TYPES:
+            x_width = f'{media_type}_width'
+            x_height = f'{media_type}_height'
+
+            if all((
+                    config.only_corrupted,
+                    getattr(metainfo, x_width),
+                    getattr(metainfo, x_height),
+            )):
+                continue
+
+            ext = getattr(item, f'{media_type}_ext', None)
+
+            if not ext:
+                LOG.error('No {} extension for {}, skipping',
+                          media_type, item)
+                continue
+
+            path = getattr(locator, media_type)
+            try:
+                size = Image.open(path).size
+            except FileNotFoundError:
+                size = None
+
+            if not size:
+                LOG.error('File does not exist for {}: {}',
+                          item.uuid, path)
+                continue
+
+            width, height = size
+
+            setattr(sizes, f'{media_type}_width', width)
+            setattr(sizes, f'{media_type}_height', height)
+
+            setattr(metainfo, f'{media_type}_width', width)
+            setattr(metainfo, f'{media_type}_height', height)
+
+        if config.log_every_item:
+            LOG.info('Refreshed {}    {}', item.uuid, sizes)
+
+
+def make_locator(
+        config: Config,
+        user: models.User,
+        item: models.Item,
+) -> infra.FilesystemLocator:
+    """Make locator from pieces of item data."""
+    dom_item = domain.Item(
+        uuid=item.uuid,
+        parent_uuid=item.parent_uuid,
+        owner_uuid=user.uuid,
+        number=item.number,
+        name=item.name,
+        is_collection=item.is_collection,
+        content_ext=item.content_ext,
+        preview_ext=item.preview_ext,
+        thumbnail_ext=item.thumbnail_ext,
+        tags=[],
+        permissions=[],
     )
 
-    stmt = insert.on_conflict_do_update(
-        index_elements=[models.ComputedTags.item_uuid],
-        set_={
-            'tags': insert.excluded.tags,
-        }
+    locator = infra.FilesystemLocator(
+        base_folder=config.hot_folder or config.cold_folder,
+        item=dom_item,
+        prefix_size=config.prefix_size,
     )
 
-    session.execute(stmt)
+    return locator
