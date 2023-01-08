@@ -119,7 +119,7 @@ def command_rebuild_known_tags(**kwargs: str | bool):
                 callback=LOG.info,
                 start_template='Rebuilding known tags...',
         ):
-            run.run(config=config, database=database)
+            run.run(database, config)
 
 
 @cli.command(
@@ -156,7 +156,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
                 callback=LOG.info,
                 start_template='Rebuilding computed tags...',
         ):
-            run.run(config=config, database=database)
+            run.run(database, config)
 
 
 @cli.command(
@@ -327,6 +327,67 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     with database.life_cycle():
         with helpers.timing(
                 start_template='Refreshing file sizes for every item...',
+        ):
+            run.run(database, config)
+
+
+@cli.command(
+    name='rebuild_image_sizes',
+)
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--hot-folder',
+    type=str,
+    default='',
+    help='Location of the hot folder (optional)',
+    show_default=True,
+)
+@click.option(
+    '--cold-folder',
+    type=str,
+    default='',
+    help='Location of the cold folder (optional)',
+    show_default=True,
+)
+@click.option(
+    '--limit-to-user',
+    multiple=True,
+    help='Apply to one or more specially listed users',
+)
+@click.option(
+    '--only-corrupted',
+    default=True,
+    help='Do not override metainfo that is already fine',
+)
+@click.option(
+    '--log-every-item/--no-log-every-item',
+    default=False,
+    help='Output every refreshed item',
+)
+@click.option(
+    '--limit',
+    type=int,
+    default=-1,
+    help='Maximum amount of items to process (-1 for infinity)',
+)
+def command_rebuild_image_sizes(**kwargs) -> None:
+    """Rebuild all content/preview/thumbnail sizes."""
+    from omoide.commands.filesystem.rebuild_image_sizes import cfg
+    from omoide.commands.filesystem.rebuild_image_sizes import run
+
+    db_url = SecretStr(kwargs.pop('db_url'))
+    only_users = list(kwargs.pop('limit_to_user', []))
+    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
+    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle():
+        with helpers.timing(
+                start_template='Rebuilding all image sizes...',
         ):
             run.run(database, config)
 

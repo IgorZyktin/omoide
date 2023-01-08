@@ -21,8 +21,8 @@ LOG = custom_logging.get_logger(__name__)
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 def run(
-        config: Config,
         database: BaseDatabase,
+        config: Config,
 ) -> None:
     """Execute command."""
     verbose_config = [

@@ -139,7 +139,7 @@ class Item(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<Item, {self.uuid}, {self.name!r}>'
+        return f'<DB Item, {self.uuid}, {self.name!r}>'
 
     # relations ---------------------------------------------------------------
 
@@ -253,6 +253,12 @@ class Metainfo(Base):
     preview_height: Optional[int] = sa.Column(sa.Integer, nullable=True)
     thumbnail_width: Optional[int] = sa.Column(sa.Integer, nullable=True)
     thumbnail_height: Optional[int] = sa.Column(sa.Integer, nullable=True)
+
+    # methods -----------------------------------------------------------------
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f'<DB Metainfo, {self.item_uuid}, {self.media_type!r}>'
 
     # relations ---------------------------------------------------------------
 
