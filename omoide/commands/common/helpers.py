@@ -8,7 +8,6 @@ from typing import Any
 from typing import Callable
 from typing import Iterator
 from typing import Optional
-from typing import TypeVar
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -80,10 +79,10 @@ def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
     ).all()
 
 
-RT = TypeVar('RT', int, None)  # return type
-
-
-def get_file_size(path: str | Path, default: RT = None) -> RT:
+def get_file_size(
+        path: str | Path,
+        default: Optional[int] = None,
+) -> Optional[int]:
     """Get size of the file in bytes."""
     if isinstance(path, str):
         _path = Path(path)

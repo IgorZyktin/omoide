@@ -78,7 +78,7 @@ def get_leaf_items(
         'user_uuid': str(user.uuid),
     }
 
-    response = session.execute(stmt, values).fetchall()
+    response = session.execute(stmt, values).fetchall()  # type: ignore
 
     return [
         models.Item(
