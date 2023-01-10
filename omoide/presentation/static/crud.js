@@ -1,28 +1,3 @@
-function makeAlert(text, alertsElementId) {
-    // create alert popup message
-    makeNotification(text, alertsElementId, 'om-alert')
-}
-
-function makeAnnounce(text, alertsElementId) {
-    // create announce popup message
-    makeNotification(text, alertsElementId, 'om-announce')
-}
-
-function makeNotification(text, alertsElementId, css_class) {
-    // create user defined notification
-    let target = document.getElementById(alertsElementId || 'alerts')
-    let alert = document.createElement('div')
-
-    alert.innerHTML = `
-        <div class="notification ${css_class}">
-            <span class="closebtn"
-                  onclick="this.parentElement.style.display='none';">&times;</span>
-            ${text}
-        </div>`
-
-    target.appendChild(alert)
-}
-
 function gatherItemParameters() {
     // gather information for item creation
     let raw_uuid = $('#parent_uuid').val()

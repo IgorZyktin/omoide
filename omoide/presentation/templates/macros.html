@@ -256,16 +256,28 @@
                              src="{{ url_for(request, 'static', path='download_48.svg') }}"
                              alt="Download button"
                              title="Download all"/></a>
-                    <a href="#" disabled="">
+                    <a href="javascript:void(0)"
+                       onclick="copyText('{{ location.current_item.uuid }}', 'ID')">
                         <img class="icon"
                              src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
                              alt="Copy ID"
                              title="Copy ID"/></a>
-                    <a href="#" disabled="">
-                        <img class="icon"
-                             src="{{ url_for(request, 'static', path='ic_link.svg') }}"
-                             alt="Copy link"
-                             title="Copy link"/></a>
+                    {% if location.current_item.is_collection %}
+                        <a href="javascript:void(0)"
+                           onclick="copyText('{{ url_for(request, 'app_browse', uuid=location.current_item.uuid) }}', 'Link')">
+                            <img class="icon"
+                                 src="{{ url_for(request, 'static', path='ic_link.svg') }}"
+                                 alt="Copy link"
+                                 title="Copy link"/></a>
+                    {% else %}
+                        <a href="javascript:void(0)"
+                           onclick="copyText('{{ url_for(request, 'app_preview', uuid=location.current_item.uuid) }}', 'Link')">
+                            <img class="icon"
+                                 src="{{ url_for(request, 'static', path='ic_link.svg') }}"
+                                 alt="Copy link"
+                                 title="Copy link"/></a>
+                    {% endif %}
+                    <div id="copy-alerts"></div>
                 {% endif %}
             </h3>
         </div>
@@ -288,16 +300,28 @@
                                  src="{{ url_for(request, 'static', path='download_48.svg') }}"
                                  alt="Download button"
                                  title="Download all"/></a>
-                        <a href="#" disabled="">
+                        <a href="javascript:void(0)"
+                           onclick="copyText('{{ item.uuid }}', 'ID')">
                             <img class="icon"
                                  src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
                                  alt="Copy ID"
                                  title="Copy ID"/></a>
-                        <a href="#" disabled="">
-                            <img class="icon"
-                                 src="{{ url_for(request, 'static', path='ic_link.svg') }}"
-                                 alt="Copy link"
-                                 title="Copy link"/></a>
+                        {% if item.is_collection %}
+                            <a href="javascript:void(0)"
+                               onclick="copyText('{{ url_for(request, 'app_browse', uuid=item.uuid) }}', 'Link')">
+                                <img class="icon"
+                                     src="{{ url_for(request, 'static', path='ic_link.svg') }}"
+                                     alt="Copy link"
+                                     title="Copy link"/></a>
+                        {% else %}
+                            <a href="javascript:void(0)"
+                               onclick="copyText('{{ url_for(request, 'app_preview', uuid=item.uuid) }}', 'Link')">
+                                <img class="icon"
+                                     src="{{ url_for(request, 'static', path='ic_link.svg') }}"
+                                     alt="Copy link"
+                                     title="Copy link"/></a>
+                        {% endif %}
+                        <div id="copy-alerts"></div>
                     {% else %}
                         {% if item.is_collection %}
                             <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">

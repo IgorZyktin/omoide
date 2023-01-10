@@ -481,6 +481,15 @@ select {
     border-radius: 10px;
 }
 
+.small-notification {
+    padding: 3px;
+    font-size: medium;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    border-radius: 5px;
+    vertical-align: center;
+}
+
 .om-alert {
     background-color: #f44336;
     color: white;
@@ -500,6 +509,8 @@ select {
     line-height: 20px;
     cursor: pointer;
     transition: 0.3s;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .closebtn:hover {
@@ -562,4 +573,9 @@ table td {
 .autocomplete-active {
     background-color: DodgerBlue !important;
     color: #ffffff;
+}
+
+.copy-alerts {
+    display: inline-block;
+    position: absolute;
 }

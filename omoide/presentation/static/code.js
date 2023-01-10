@@ -1,6 +1,76 @@
 const UUID_PREFIX_LENGTH = 2
 const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
+
+function makeAlert(text, alertsElementId) {
+    // create alert popup message
+    makeNotification(text, alertsElementId, 'om-alert')
+}
+
+function makeAnnounce(text, alertsElementId) {
+    // create announce popup message
+    makeNotification(text, alertsElementId, 'om-announce')
+}
+
+function makeNotification(text, alertsElementId, css_class) {
+    // create user defined notification
+    let target = document.getElementById(alertsElementId || 'alerts')
+    let alert = document.createElement('div')
+
+    alert.innerHTML = `
+        <div class="notification ${css_class}">
+            <span class="closebtn"
+                  onclick="this.parentElement.style.display='none';">&times;</span>
+            ${text}
+        </div>`
+
+    target.appendChild(alert)
+}
+
+function makeSmallAlert(text, element) {
+    // Make smaller than normal alert
+    makeSmallNotification(text, element, 'om-alert')
+}
+
+function makeSmallAnnounce(text, element) {
+    // Make smaller than normal announce
+    makeSmallNotification(text, element, 'om-announce')
+}
+
+function makeSmallNotification(text, element, css_class) {
+    // create user defined notification
+    let alert = document.createElement('div')
+
+    alert.innerHTML = `
+        <div class="small-notification ${css_class}">
+            <span class="closebtn"
+                  onclick="$(this.parentElement).remove()">&times;</span>
+            ${text}
+        </div>`
+
+    setInterval(() => {
+            $(alert).remove()
+        }, 4000)
+
+    element.appendChild(alert)
+}
+
+async function copyText(text, title) {
+    // Copy given text and announce it
+    let element = document.getElementById('copy-alerts')
+    if (!element) {
+        console.error('Nowhere to put copy alert!')
+        return
+    }
+
+    try {
+        await navigator.clipboard.writeText(text);
+        makeSmallAnnounce(`Copied ${title}!`, element)
+    } catch (err) {
+        makeSmallAlert(`Failed to copy ${title}: ${err}`, element)
+    }
+}
+
 function goSearch() {
     // escape special symbols in query and relocate
     let element = document.getElementById("query_element")
