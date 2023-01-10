@@ -49,17 +49,26 @@ function makeSmallNotification(text, element, css_class) {
         </div>`
 
     setInterval(() => {
-            $(alert).remove()
-        }, 4000)
+        $(alert).remove()
+    }, 4000)
 
     element.appendChild(alert)
 }
 
-async function copyText(text, title) {
+async function copyText(text, title, alertId) {
     // Copy given text and announce it
-    let element = document.getElementById('copy-alerts')
+    if (alertId === undefined) {
+        alertId = 'copy-alerts'
+    }
+
+    let element = document.getElementById(alertId)
     if (!element) {
         console.error('Nowhere to put copy alert!')
+        return
+    }
+
+    if (!text) {
+        makeSmallAnnounce(`Nothing to copy!`, element)
         return
     }
 

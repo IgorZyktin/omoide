@@ -17,11 +17,21 @@
         <div>
             <h3>Parent</h3>
             <label for="item_parent">Parent UUID: </label>
-            <input id="item_parent"
-                   type="text"
-                   value="{{ (item.parent_uuid or '')|string }}"
-                   onchange="alterModelParentField(this)"
-                   class="height-auto">
+            <div style="display: flex; flex-direction: row; align-items: center">
+                <input id="item_parent"
+                       type="text"
+                       value="{{ (item.parent_uuid or '')|string }}"
+                       onchange="alterModelParentField(this)"
+                       class="height-auto">
+                <a href="javascript:void(0)"
+                   onclick="copyText('{{ item.parent_uuid or '' }}', 'ID', 'copy-alerts-parent')"
+                   style="height: 100%">
+                    <img class="icon-big"
+                         src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                         alt="Copy ID"
+                         title="Copy ID"/></a>
+            </div>
+            <div id="copy-alerts-parent"></div>
 
             <div id="thumbnail_parent" class="thumbnail"></div>
 
@@ -43,17 +53,24 @@
 
         <div>
             <h3>Basic parameters</h3>
+            <label for="item_uuid">Item UUID:</label>
+            <div style="display: flex; flex-direction: row; align-items: center">
+                <input id="item_uuid"
+                       type="text"
+                       value="{{ item.uuid }}"
+                       disabled
+                       class="height-auto">
+                <a href="javascript:void(0)"
+                   onclick="copyText('{{ item.uuid }}', 'ID', 'copy-alerts-item')"
+                   style="height: 100%">
+                    <img class="icon-big"
+                         src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                         alt="Copy ID"
+                         title="Copy ID"/></a>
+            </div>
+            <div id="copy-alerts-item"></div>
 
-            <label for="item_uuid">Item UUID:
-            </label>
-            <input id="item_uuid"
-                   type="text"
-                   value="{{ item.uuid }}"
-                   disabled
-                   class="height-auto">
-
-            <label for="item_name">Name:
-            </label>
+            <label for="item_name">Name:</label>
             <input id="item_name"
                    type="text"
                    value="{{ item.name }}"

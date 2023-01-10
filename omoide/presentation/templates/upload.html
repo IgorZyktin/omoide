@@ -15,13 +15,22 @@
 {% block body %}
     <div class="narrow-block">
         <h1>Upload media</h1>
-        <label for="parent_uuid">Parent item:
+        <label for="parent_uuid">Parent item:</label>
+        <div style="display: flex; flex-direction: row; align-items: center">
             <input id="parent_uuid"
                    type="text"
                    value="{{ item.uuid }}"
                    disabled
                    class="height-auto"/>
-        </label>
+            <a href="javascript:void(0)"
+               onclick="copyText('{{ item.uuid }}', 'ID')"
+               style="height: 100%">
+                <img class="icon-big"
+                     src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                     alt="Copy ID"
+                     title="Copy ID"/></a>
+        </div>
+        <div id="copy-alerts"></div>
 
         <div id="parent_thumbnail" class="parent_thumbnail">
             {{ render_thumbnail_for_item(request, locate, item, "", aim_wrapper) }}

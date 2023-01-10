@@ -537,10 +537,19 @@ table td {
     padding: 0.5em;
 }
 
+.icon, .icon-big {
+    filter: invert(1);
+}
+
 .icon {
     height: 1em;
-    vertical-align: center;
-    filter: invert(1);
+    width: 1em;
+}
+
+.icon-big {
+    height: 2em;
+    width: 2em;
+    margin: 2px;
 }
 
 .guess {
