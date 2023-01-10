@@ -2,11 +2,12 @@
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
-from typing import Collection
+from typing import Collection, Sequence
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
+import ujson
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
@@ -53,34 +54,57 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         if response is None:
             return None
 
-        return domain.Metainfo(
-            item_uuid=response['item_uuid'],
+        return domain.Metainfo(**response)
 
-            created_at=response['created_at'],
-            updated_at=response['updated_at'],
-            deleted_at=response['deleted_at'],
-            user_time=response['user_time'],
-
-            media_type=response['media_type'],
-
-            author=response['author'],
-            author_url=response['author_url'],
-            saved_from_url=response['saved_from_url'],
-            description=response['description'],
-
-            extras=response['extras'],
-
-            content_size=response['content_size'],
-            preview_size=response['preview_size'],
-            thumbnail_size=response['thumbnail_size'],
-
-            content_width=response['content_width'],
-            content_height=response['content_height'],
-            preview_width=response['preview_width'],
-            preview_height=response['preview_height'],
-            thumbnail_width=response['thumbnail_width'],
-            thumbnail_height=response['thumbnail_height'],
+    async def read_children_with_metainfo(
+            self,
+            user: domain.User,
+            item: domain.Item,
+            ignore_collections: bool,
+    ) -> Sequence[tuple[domain.Item, domain.Metainfo]]:
+        """Return all direct descendants of the given item with metainfo."""
+        stmt = sa.select(
+            models.Item,
+            models.Metainfo,
+        ).join(
+            models.Metainfo,
+            models.Metainfo.item_uuid == models.Item.uuid,
+            isouter=True,
+        ).where(
+            models.Item.parent_uuid == item.uuid,
         )
+
+        if ignore_collections:
+            stmt = stmt.order_by(models.Item.number)
+
+        response = await self.db.fetch_all(stmt)
+
+        result: list[tuple[domain.Item, Optional[domain.Metainfo]]] = []
+        for row in response:
+            item_components = {
+                arg.name: getattr(row, arg.name)
+                for arg in models.Item.__table__.columns
+            }
+
+            metainfo_components = {
+                arg.name: getattr(row, arg.name)
+                for arg in models.Metainfo.__table__.columns
+            }
+
+            item_uuid = metainfo_components.get('item_uuid')
+
+            if item_uuid is None:
+                continue
+
+            extras = metainfo_components.pop('extras', None)
+            dict_extras = ujson.loads(extras or '{}')
+            result.append((
+                domain.Item(**item_components),
+                domain.Metainfo(**metainfo_components, extras=dict_extras),
+            ))
+            assert result[-1][0].uuid == result[-1][1].item_uuid
+
+        return result
 
     async def update_metainfo(
             self,

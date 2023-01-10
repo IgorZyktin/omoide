@@ -403,10 +403,13 @@ def app_item_delete_use_case(
 def app_items_download_use_case(
         items_read_repository:
         interfaces.AbsItemsReadRepository = Depends(get_items_read_repo),
+        metainfo_repository:
+        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
 ) -> use_cases.AppItemsDownloadUseCase:
     """Get use case instance."""
     return use_cases.AppItemsDownloadUseCase(
         items_repo=items_read_repository,
+        metainfo_repo=metainfo_repository,
     )
 
 

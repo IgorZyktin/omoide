@@ -8,7 +8,7 @@ import fastapi
 import ujson
 from fastapi import Depends
 from fastapi import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.responses import Response
 
 from omoide import domain
@@ -175,6 +175,7 @@ async def app_item_delete(
 @router.get('/download/{uuid}')
 async def app_items_download(
         request: Request,
+        response: Response,
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
@@ -182,7 +183,7 @@ async def app_items_download(
             dep.app_items_download_use_case),
         config: Config = Depends(dep.get_config),
         templates: web.TemplateEngine = Depends(dep.get_templates),
-        response_class: Type[Response] = HTMLResponse,
+        response_class: Type[Response] = PlainTextResponse,
 ):
     """Return links of children to download them."""
     result = await use_case.execute(policy, user, uuid)
@@ -190,15 +191,23 @@ async def app_items_download(
     if isinstance(result, Failure):
         return web.redirect_from_error(templates, request, result.error, uuid)
 
-    numerated_items = result.value
+    parent, numerated_items = result.value
 
     context = {
         'request': request,
         'config': config,
         'user': user,
         'uuid': uuid,
+        'parent': parent,
         'numerated_items': numerated_items,
         'locate': web.get_locator(templates, request, config.prefix_size),
     }
 
-    return templates.TemplateResponse('items_download.html', context)
+    return templates.TemplateResponse(
+        name='items_download.html',
+        context=context,
+        headers={
+            'Content-Disposition': f'attachment; filename="{parent.name}.zip"',
+            'Content-Type': 'text/plain; charset=utf-8'
+        }
+    )

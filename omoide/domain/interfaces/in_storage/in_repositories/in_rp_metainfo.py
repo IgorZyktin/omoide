@@ -3,7 +3,7 @@
 """
 import abc
 import datetime
-from typing import Collection
+from typing import Collection, Sequence
 from typing import Optional
 from uuid import UUID
 
@@ -28,6 +28,15 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             uuid: UUID,
     ) -> Optional[domain.Metainfo]:
         """Return Metainfo or None."""
+
+    @abc.abstractmethod
+    async def read_children_with_metainfo(
+            self,
+            user: domain.User,
+            item: domain.Item,
+            ignore_collections: bool,
+    ) -> Sequence[tuple[domain.Item, domain.Metainfo]]:
+        """Return all direct descendants of the given item with metainfo."""
 
     @abc.abstractmethod
     async def update_metainfo(
