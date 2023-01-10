@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Use case for items.
 """
-from typing import Optional
+from typing import Optional, Any
 from uuid import UUID
 
-from omoide import domain
+from omoide import domain, infra
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -153,12 +153,16 @@ class AppItemsDownloadUseCase:
 
     async def execute(
             self,
+            config: Any,
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
     ) -> Result[
         errors.Error,
-        tuple[domain.Item, list[tuple[str, domain.Item, domain.Metainfo]]],
+        tuple[domain.Item, list[tuple[str,
+                                      domain.Item,
+                                      domain.Metainfo,
+                                      infra.FilesystemLocator]]],
     ]:
         """Business logic."""
         async with self.items_repo.transaction():
@@ -182,6 +186,7 @@ class AppItemsDownloadUseCase:
                     str,
                     domain.Item,
                     domain.Metainfo,
+                    infra.FilesystemLocator,
                 ]
             ] = []  # type: ignore
 
@@ -190,10 +195,17 @@ class AppItemsDownloadUseCase:
                 number = 1
                 template = f'{{:0{digits}d}}'
                 for item, metainfo in result:
+                    locator = infra.FilesystemLocator(
+                        base_folder=config.hot_folder or config.cold_folder,
+                        item=item,
+                        prefix_size=config.prefix_size,
+                    )
+
                     numerated_items.append((
                         template.format(number),
                         item,
                         metainfo,
+                        locator,
                     ))
                     number += 1
 

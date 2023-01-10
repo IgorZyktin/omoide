@@ -2,6 +2,7 @@
 """Routes related to item operations.
 """
 from typing import Type
+import urllib.parse
 from uuid import UUID
 
 import fastapi
@@ -175,7 +176,6 @@ async def app_item_delete(
 @router.get('/download/{uuid}')
 async def app_items_download(
         request: Request,
-        response: Response,
         uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
@@ -186,28 +186,37 @@ async def app_items_download(
         response_class: Type[Response] = PlainTextResponse,
 ):
     """Return links of children to download them."""
-    result = await use_case.execute(policy, user, uuid)
+    # TODO - make this an api endpoint, not app
+    # result = await use_case.execute(config, policy, user, uuid)
+    #
+    # if isinstance(result, Failure):
+    #     return web.redirect_from_error(templates, request, result.error, uuid)
+    #
+    # parent, numerated_items = result.value
+    #
+    # context = {
+    #     'request': request,
+    #     'config': config,
+    #     'user': user,
+    #     'uuid': uuid,
+    #     'parent': parent,
+    #     'numerated_items': numerated_items,
+    #     'locate': web.get_locator(templates, request, config.prefix_size),
+    # }
 
-    if isinstance(result, Failure):
-        return web.redirect_from_error(templates, request, result.error, uuid)
+    # filename = urllib.parse.quote(parent.name or '??')
+    filename = 'test'
+    content = (
+        '- '
+        '15406 '
+        '/home/omoide-user/omoide/omoide/presentation/static/favicon.ico '
+        'favicon.ico'
+    )
 
-    parent, numerated_items = result.value
-
-    context = {
-        'request': request,
-        'config': config,
-        'user': user,
-        'uuid': uuid,
-        'parent': parent,
-        'numerated_items': numerated_items,
-        'locate': web.get_locator(templates, request, config.prefix_size),
-    }
-
-    return templates.TemplateResponse(
-        name='items_download.html',
-        context=context,
+    return PlainTextResponse(
+        content=content,
         headers={
-            'Content-Disposition': f'attachment; filename="{parent.name}.zip"',
-            'Content-Type': 'text/plain; charset=utf-8'
+            'X-Archive-Files': 'zip',
+            'Content-Disposition': f'attachment; filename="{filename}.zip"',
         }
     )

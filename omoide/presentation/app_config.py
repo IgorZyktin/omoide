@@ -9,6 +9,8 @@ class Config(BaseSettings):
     """Application settings."""
     db_url_app: SecretStr
     injection: str = ''
+    hot_folder: str
+    cold_folder: str
     env: str = 'dev'
     host: str = '0.0.0.0'
     prefix_size: int = 2
