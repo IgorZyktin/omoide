@@ -252,10 +252,20 @@
                     {% endif %}
                     {{ location.current_item.name }}
                     <a href="{{ url_for(request, 'app_items_download', uuid=location.current_item.uuid) }}">
-                        <img class="download"
+                        <img class="icon"
                              src="{{ url_for(request, 'static', path='download_48.svg') }}"
                              alt="Download button"
-                             title="Download inner items"/></a>
+                             title="Download all"/></a>
+                    <a href="#" disabled="">
+                        <img class="icon"
+                             src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                             alt="Copy ID"
+                             title="Copy ID"/></a>
+                    <a href="#" disabled="">
+                        <img class="icon"
+                             src="{{ url_for(request, 'static', path='ic_link.svg') }}"
+                             alt="Copy link"
+                             title="Copy link"/></a>
                 {% endif %}
             </h3>
         </div>
@@ -274,10 +284,20 @@
                     {% if loop.last %}
                         {{ item.name }}
                         <a href="{{ url_for(request, 'app_items_download', uuid=item.uuid) }}">
-                            <img class="download"
+                            <img class="icon"
                                  src="{{ url_for(request, 'static', path='download_48.svg') }}"
                                  alt="Download button"
-                                 title="Download inner items"/></a>
+                                 title="Download all"/></a>
+                        <a href="#" disabled="">
+                            <img class="icon"
+                                 src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                                 alt="Copy ID"
+                                 title="Copy ID"/></a>
+                        <a href="#" disabled="">
+                            <img class="icon"
+                                 src="{{ url_for(request, 'static', path='ic_link.svg') }}"
+                                 alt="Copy link"
+                                 title="Copy link"/></a>
                     {% else %}
                         {% if item.is_collection %}
                             <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) + '?' + aim_wrapper.to_url_no_q() }}">
