@@ -2,6 +2,7 @@
 """Item related API operations.
 """
 import http
+import urllib.parse
 from typing import Type
 from uuid import UUID
 
@@ -9,8 +10,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Request
 from fastapi import Response
-import urllib.parse
-
 from starlette.responses import PlainTextResponse
 
 from omoide import domain
@@ -225,37 +224,39 @@ async def api_items_download(
         response_class: Type[Response] = PlainTextResponse,
 ):
     """Return all children as zip archive."""
-    # TODO - make this an api endpoint, not app
-    # result = await use_case.execute(config, policy, user, uuid)
-    #
-    # if isinstance(result, Failure):
-    #     return web.redirect_from_error(templates, request, result.error, uuid)
-    #
-    # parent, numerated_items = result.value
-    #
-    # context = {
-    #     'request': request,
-    #     'config': config,
-    #     'user': user,
-    #     'uuid': uuid,
-    #     'parent': parent,
-    #     'numerated_items': numerated_items,
-    #     'locate': web.get_locator(templates, request, config.prefix_size),
-    # }
+    result = await use_case.execute(policy, user, uuid)
 
+    if isinstance(result, Failure):
+        return web.redirect_from_error(templates, request, result.error, uuid)
+
+    parent, rows = result.value
+
+    # Making appropriate file name --------------------------------------------
     filename = urllib.parse.quote(parent.name or '??')
-    filename = 'test'
+    filename = f'Omoide - {filename}.zip'
+
+    # Build payload -----------------------------------------------------------
+    assert config
+    # locator = infra.FilesystemLocator(
+    #     base_folder=config.hot_folder or config.cold_folder,
+    #     item=item,
+    #     prefix_size=config.prefix_size,
+    # )
+
+    # FIXME
     content = (
-        '- '
-        '15406 '
-        '/home/omoide-user/omoide/omoide/presentation/static/favicon.ico '
-        'favicon.ico'
+        '465f066e '
+        '267384 '
+        '/content/content'
+        '/559a52e2-2d97-4e81-a699-af47c0ce79e2'
+        '/38/382fb1e1-6b4a-4c41-b821-b405259b9f9d.jpg '
+        'blah1.jpg'
     )
 
     return PlainTextResponse(
         content=content,
         headers={
             'X-Archive-Files': 'zip',
-            'Content-Disposition': f'attachment; filename="{filename}.zip"',
+            'Content-Disposition': f'attachment; filename="{filename}"',
         }
     )

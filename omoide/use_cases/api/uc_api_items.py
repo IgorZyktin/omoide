@@ -5,6 +5,7 @@ import asyncio
 import time
 import traceback
 from contextlib import asynccontextmanager
+from typing import Any
 from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
@@ -863,16 +864,12 @@ class ApiItemsDownloadUseCase:
 
     async def execute(
             self,
-            config: Any,
             policy: interfaces.AbsPolicy,
             user: domain.User,
             uuid: UUID,
     ) -> Result[
         errors.Error,
-        tuple[domain.Item, list[tuple[str,
-                                      domain.Item,
-                                      domain.Metainfo,
-                                      infra.FilesystemLocator]]],
+        tuple[domain.Item, list[dict[str, Any]]],
     ]:
         """Business logic."""
         async with self.items_repo.transaction():
@@ -886,37 +883,17 @@ class ApiItemsDownloadUseCase:
             if parent is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            result = await self.metainfo_repo.read_children_with_metainfo(
-                user, parent, ignore_collections=True)
+            result = await self.metainfo_repo \
+                .read_children_to_download(user, parent)
+
+            if not result:
+                return Success((parent, []))
 
             total = len(result)
+            digits = len(str(total))
+            template = f'{{:0{digits}d}}'
 
-            numerated_items: list[
-                tuple[
-                    str,
-                    domain.Item,
-                    domain.Metainfo,
-                    infra.FilesystemLocator,
-                ]
-            ] = []  # type: ignore
+            for i, each_dict in enumerate(result, start=1):
+                each_dict['number'] = template.format(i)
 
-            if total:
-                digits = len(str(total))
-                number = 1
-                template = f'{{:0{digits}d}}'
-                for item, metainfo in result:
-                    locator = infra.FilesystemLocator(
-                        base_folder=config.hot_folder or config.cold_folder,
-                        item=item,
-                        prefix_size=config.prefix_size,
-                    )
-
-                    numerated_items.append((
-                        template.format(number),
-                        item,
-                        metainfo,
-                        locator,
-                    ))
-                    number += 1
-
-        return Success((parent, numerated_items))
+        return Success((parent, result))

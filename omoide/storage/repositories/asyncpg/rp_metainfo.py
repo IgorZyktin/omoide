@@ -2,8 +2,10 @@
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
-from typing import Collection, Sequence
+from typing import Any
+from typing import Collection
 from typing import Optional
+from typing import Sequence
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -56,55 +58,29 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
         return domain.Metainfo(**response)
 
-    async def read_children_with_metainfo(
+    async def read_children_to_download(
             self,
             user: domain.User,
             item: domain.Item,
-            ignore_collections: bool,
-    ) -> Sequence[tuple[domain.Item, domain.Metainfo]]:
-        """Return all direct descendants of the given item with metainfo."""
+    ) -> Sequence[dict[str, Any]]:
+        """Return some components of the given item children with metainfo."""
         stmt = sa.select(
-            models.Item,
-            models.Metainfo,
+            models.Item.uuid,
+            models.Metainfo.content_size,
+            models.Item.content_ext,
         ).join(
             models.Metainfo,
             models.Metainfo.item_uuid == models.Item.uuid,
             isouter=True,
         ).where(
+            models.Item.is_collection == False,  # noqa
             models.Item.parent_uuid == item.uuid,
+        ).order_by(
+            models.Item.number,
         )
 
-        if ignore_collections:
-            stmt = stmt.order_by(models.Item.number)
-
         response = await self.db.fetch_all(stmt)
-
-        result: list[tuple[domain.Item, Optional[domain.Metainfo]]] = []
-        for row in response:
-            item_components = {
-                arg.name: getattr(row, arg.name)
-                for arg in models.Item.__table__.columns
-            }
-
-            metainfo_components = {
-                arg.name: getattr(row, arg.name)
-                for arg in models.Metainfo.__table__.columns
-            }
-
-            item_uuid = metainfo_components.get('item_uuid')
-
-            if item_uuid is None:
-                continue
-
-            extras = metainfo_components.pop('extras', None)
-            dict_extras = ujson.loads(extras or '{}')
-            result.append((
-                domain.Item(**item_components),
-                domain.Metainfo(**metainfo_components, extras=dict_extras),
-            ))
-            assert result[-1][0].uuid == result[-1][1].item_uuid
-
-        return result
+        return [dict(x) for x in response]
 
     async def update_metainfo(
             self,
