@@ -62,7 +62,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             self,
             user: domain.User,
             item: domain.Item,
-    ) -> Sequence[list[dict[str, UUID | str | int]]]:
+    ) -> list[dict[str, UUID | str | int]]:
         """Return some components of the given item children with metainfo."""
         stmt = sa.select(
             models.Item.uuid,
