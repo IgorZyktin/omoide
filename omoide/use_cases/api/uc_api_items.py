@@ -5,6 +5,7 @@ import asyncio
 import time
 import traceback
 from contextlib import asynccontextmanager
+from typing import Any
 from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
@@ -26,6 +27,7 @@ __all__ = [
     'ApiItemReadUseCase',
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
+    'ApiItemsDownloadUseCase',
     'ApiCopyThumbnailUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
@@ -846,3 +848,45 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     user, item, added, deleted)
 
                 writeback.operations = total
+
+
+class ApiItemsDownloadUseCase:
+    """Use case for downloading whole group of items as zip archive."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsReadRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+    ) -> Result[
+        errors.Error,
+        tuple[domain.Item, list[dict[str, UUID | str | int]]],
+    ]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.READ)
+
+            if error:
+                return Failure(error)
+
+            parent = await self.items_repo.read_item(uuid)
+
+            if parent is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            result = await self.metainfo_repo \
+                .read_children_to_download(user, parent)
+
+            if not result:
+                return Success((parent, []))
+
+        return Success((parent, result))

@@ -251,7 +251,7 @@
                         <span>&nbsp;/&nbsp;</span>
                     {% endif %}
                     {{ location.current_item.name }}
-                    <a href="{{ url_for(request, 'app_items_download', uuid=location.current_item.uuid) }}">
+                    <a href="{{ url_for(request, 'api_items_download', uuid=location.current_item.uuid) }}">
                         <img class="icon"
                              src="{{ url_for(request, 'static', path='download_48.svg') }}"
                              alt="Download button"
@@ -295,7 +295,7 @@
 
                     {% if loop.last %}
                         {{ item.name }}
-                        <a href="{{ url_for(request, 'app_items_download', uuid=item.uuid) }}">
+                        <a href="{{ url_for(request, 'api_items_download', uuid=item.uuid) }}">
                             <img class="icon"
                                  src="{{ url_for(request, 'static', path='download_48.svg') }}"
                                  alt="Download button"

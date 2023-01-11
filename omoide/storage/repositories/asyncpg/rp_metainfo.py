@@ -2,8 +2,10 @@
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
+from typing import Any
 from typing import Collection
 from typing import Optional
+from typing import Sequence
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -13,6 +15,7 @@ from omoide import domain
 from omoide import utils
 from omoide.domain import interfaces
 from omoide.storage.database import models
+from omoide.storage.repositories.asyncpg import queries
 
 
 class MetainfoRepository(interfaces.AbsMetainfoRepository):
@@ -53,34 +56,37 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         if response is None:
             return None
 
-        return domain.Metainfo(
-            item_uuid=response['item_uuid'],
+        return domain.Metainfo(**response)
 
-            created_at=response['created_at'],
-            updated_at=response['updated_at'],
-            deleted_at=response['deleted_at'],
-            user_time=response['user_time'],
-
-            media_type=response['media_type'],
-
-            author=response['author'],
-            author_url=response['author_url'],
-            saved_from_url=response['saved_from_url'],
-            description=response['description'],
-
-            extras=response['extras'],
-
-            content_size=response['content_size'],
-            preview_size=response['preview_size'],
-            thumbnail_size=response['thumbnail_size'],
-
-            content_width=response['content_width'],
-            content_height=response['content_height'],
-            preview_width=response['preview_width'],
-            preview_height=response['preview_height'],
-            thumbnail_width=response['thumbnail_width'],
-            thumbnail_height=response['thumbnail_height'],
+    async def read_children_to_download(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> list[dict[str, UUID | str | int]]:
+        """Return some components of the given item children with metainfo."""
+        stmt = sa.select(
+            models.Item.uuid,
+            models.Metainfo.content_size,
+            models.Item.content_ext,
+        ).join(
+            models.Metainfo,
+            models.Metainfo.item_uuid == models.Item.uuid,
+            isouter=True,
         )
+
+        stmt = queries.ensure_user_has_permissions(user, stmt)
+
+        stmt = stmt.where(
+            models.Item.parent_uuid == item.uuid,
+            models.Item.is_collection == False,  # noqa
+            models.Item.content_ext != None,  # noqa
+            models.Metainfo.content_size != None,  # noqa
+        ).order_by(
+            models.Item.number,
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return [dict(x) for x in response]  # type: ignore
 
     async def update_metainfo(
             self,

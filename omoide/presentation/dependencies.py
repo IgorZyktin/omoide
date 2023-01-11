@@ -400,13 +400,16 @@ def app_item_delete_use_case(
 
 
 @utils.memorize
-def app_items_download_use_case(
+def api_items_download_use_case(
         items_read_repository:
         interfaces.AbsItemsReadRepository = Depends(get_items_read_repo),
-) -> use_cases.AppItemsDownloadUseCase:
+        metainfo_repository:
+        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
+) -> use_cases.ApiItemsDownloadUseCase:
     """Get use case instance."""
-    return use_cases.AppItemsDownloadUseCase(
+    return use_cases.ApiItemsDownloadUseCase(
         items_repo=items_read_repository,
+        metainfo_repo=metainfo_repository,
     )
 
 

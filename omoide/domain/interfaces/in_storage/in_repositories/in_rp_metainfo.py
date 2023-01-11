@@ -3,7 +3,8 @@
 """
 import abc
 import datetime
-from typing import Collection
+from typing import Any
+from typing import Collection, Sequence
 from typing import Optional
 from uuid import UUID
 
@@ -28,6 +29,14 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             uuid: UUID,
     ) -> Optional[domain.Metainfo]:
         """Return Metainfo or None."""
+
+    @abc.abstractmethod
+    async def read_children_to_download(
+            self,
+            user: domain.User,
+            item: domain.Item,
+    ) -> list[dict[str, UUID | str | int]]:
+        """Return some components of the given item children with metainfo."""
 
     @abc.abstractmethod
     async def update_metainfo(
