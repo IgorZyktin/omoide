@@ -229,29 +229,21 @@ def _convert_rows_to_strings_for_mod_zip(
         content_ext = str(row['content_ext'])
 
         fs_path = (
-                basic_prefix
-                + f'/{owner_uuid}'
-                + f'/{prefix}'
-                + f'/{item_uuid}.{content_ext}'
+            f'{basic_prefix}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
         )
 
         user_visible_filename = (
-                template.format(i)
-                + '___'
-                + str(row['uuid'])
-                + '.'
-                + content_ext
+            f'{template.format(i)}___{item_uuid}.{content_ext}'
         )
 
-        lines.append((
-                row.get('crc32') or '-'  # checksum
-                + ' '
-                + str(row['content_size'] or 0)  # size in bytes
-                + ' '
-                + fs_path  # path to the file on local FS
-                + ' '
-                + user_visible_filename  # resulting filename inside archive
-        ))
+        checksum = row.get('crc32') or '-'
+        size = row['content_size'] or 0
+
+        mod_zip_line = (
+            f'{checksum} {size} {fs_path} {user_visible_filename}'
+        )
+
+        lines.append(mod_zip_line)
 
     return lines
 
