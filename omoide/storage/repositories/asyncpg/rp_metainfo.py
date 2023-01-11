@@ -15,6 +15,7 @@ from omoide import domain
 from omoide import utils
 from omoide.domain import interfaces
 from omoide.storage.database import models
+from omoide.storage.repositories.asyncpg import queries
 
 
 class MetainfoRepository(interfaces.AbsMetainfoRepository):
@@ -61,7 +62,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             self,
             user: domain.User,
             item: domain.Item,
-    ) -> Sequence[dict[str, Any]]:
+    ) -> Sequence[list[dict[str, UUID | str | int]]]:
         """Return some components of the given item children with metainfo."""
         stmt = sa.select(
             models.Item.uuid,
@@ -71,7 +72,11 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             models.Metainfo,
             models.Metainfo.item_uuid == models.Item.uuid,
             isouter=True,
-        ).where(
+        )
+
+        stmt = queries.ensure_user_has_permissions(user, stmt)
+
+        stmt = stmt.where(
             models.Item.parent_uuid == item.uuid,
             models.Item.is_collection == False,  # noqa
             models.Item.content_ext != None,  # noqa
@@ -81,7 +86,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         )
 
         response = await self.db.fetch_all(stmt)
-        return [dict(x) for x in response]
+        return [dict(x) for x in response]  # type: ignore
 
     async def update_metainfo(
             self,

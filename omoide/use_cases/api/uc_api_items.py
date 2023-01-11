@@ -869,7 +869,7 @@ class ApiItemsDownloadUseCase:
             uuid: UUID,
     ) -> Result[
         errors.Error,
-        tuple[domain.Item, list[dict[str, Any]]],
+        tuple[domain.Item, list[dict[str, UUID | str | int]]],
     ]:
         """Business logic."""
         async with self.items_repo.transaction():

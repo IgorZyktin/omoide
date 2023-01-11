@@ -211,6 +211,51 @@ async def api_item_update_parent(
     return {'result': 'ok'}
 
 
+def _convert_rows_to_strings_for_mod_zip(
+        rows: list[dict[str, UUID | str | int]],
+        prefix_size: int,
+        owner_uuid: UUID,
+) -> list[str]:
+    """Convert data into format of mod_zip."""
+    lines: list[str] = []
+    total = len(rows)
+    digits = len(str(total))
+    template = f'{{:0{digits}d}}'
+    basic_prefix = '/content/content'
+
+    for i, row in enumerate(rows, start=1):
+        item_uuid = str(row['uuid'])
+        prefix = item_uuid[:prefix_size]
+        content_ext = str(row['content_ext'])
+
+        fs_path = (
+                basic_prefix
+                + f'/{owner_uuid}'
+                + f'/{prefix}'
+                + f'/{item_uuid}.{content_ext}'
+        )
+
+        user_visible_filename = (
+                template.format(i)
+                + '___'
+                + str(row['uuid'])
+                + '.'
+                + content_ext
+        )
+
+        lines.append((
+                row.get('crc32') or '-'  # checksum
+                + ' '
+                + str(row['content_size'] or 0)  # size in bytes
+                + ' '
+                + fs_path  # path to the file on local FS
+                + ' '
+                + user_visible_filename  # resulting filename inside archive
+        ))
+
+    return lines
+
+
 @router.get('/download/{uuid}')
 async def api_items_download(
         request: Request,
@@ -234,51 +279,19 @@ async def api_items_download(
 
     parent, rows = result.value
 
-    # Making appropriate file name --------------------------------------------
-    zip_filename = urllib.parse.quote(parent.name or '??')
-    zip_filename = f'Omoide - {zip_filename}.zip'
+    filename = urllib.parse.quote(parent.name or '??')
+    filename = f'Omoide - {filename}'
 
-    # Build payload -----------------------------------------------------------
-    lines: list[str] = []
-    total = len(rows)
-    digits = len(str(total))
-    template = f'{{:0{digits}d}}'
-    basic_prefix = '/content/content'
-
-    for i, row in enumerate(rows, start=1):
-        item_uuid = row['uuid']
-        prefix = str(item_uuid)[:config.prefix_size]
-        content_ext = row['content_ext']
-
-        fs_path = (
-            basic_prefix
-            + f'/{parent.owner_uuid}'
-            + f'/{prefix}'
-            + f'/{item_uuid}.{content_ext}'
-        )
-
-        user_visible_filename = (
-                template.format(i)
-                + '___'
-                + str(row['uuid'])
-                + '.'
-                + row['content_ext']
-        )
-
-        lines.append((
-                row.get('crc32') or '-'  # checksum
-                + ' '
-                + str(row['content_size'] or 0)  # size in bytes
-                + ' '
-                + fs_path  # path to the file on local FS
-                + ' '
-                + user_visible_filename  # resulting filename inside archive
-        ))
+    lines = _convert_rows_to_strings_for_mod_zip(
+        rows=rows,
+        prefix_size=config.prefix_size,
+        owner_uuid=parent.owner_uuid,
+    )
 
     return PlainTextResponse(
         content='\n'.join(lines),
         headers={
             'X-Archive-Files': 'zip',
-            'Content-Disposition': f'attachment; filename="{zip_filename}"',
+            'Content-Disposition': f'attachment; filename="{filename}.zip"',
         }
     )

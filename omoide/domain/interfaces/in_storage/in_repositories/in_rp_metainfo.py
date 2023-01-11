@@ -35,7 +35,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
             self,
             user: domain.User,
             item: domain.Item,
-    ) -> Sequence[dict[str, Any]]:
+    ) -> Sequence[list[dict[str, UUID | str | int]]]:
         """Return some components of the given item children with metainfo."""
 
     @abc.abstractmethod
