@@ -26,6 +26,7 @@ __all__ = [
     'ApiItemReadUseCase',
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
+    'ApiItemsDownloadUseCase',
     'ApiCopyThumbnailUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
@@ -846,3 +847,76 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     user, item, added, deleted)
 
                 writeback.operations = total
+
+
+class ApiItemsDownloadUseCase:
+    """Use case for downloading whole group of items as zip archive."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsReadRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+
+    async def execute(
+            self,
+            config: Any,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            uuid: UUID,
+    ) -> Result[
+        errors.Error,
+        tuple[domain.Item, list[tuple[str,
+                                      domain.Item,
+                                      domain.Metainfo,
+                                      infra.FilesystemLocator]]],
+    ]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            error = await policy.is_restricted(user, uuid, actions.Item.READ)
+
+            if error:
+                return Failure(error)
+
+            parent = await self.items_repo.read_item(uuid)
+
+            if parent is None:
+                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+            result = await self.metainfo_repo.read_children_with_metainfo(
+                user, parent, ignore_collections=True)
+
+            total = len(result)
+
+            numerated_items: list[
+                tuple[
+                    str,
+                    domain.Item,
+                    domain.Metainfo,
+                    infra.FilesystemLocator,
+                ]
+            ] = []  # type: ignore
+
+            if total:
+                digits = len(str(total))
+                number = 1
+                template = f'{{:0{digits}d}}'
+                for item, metainfo in result:
+                    locator = infra.FilesystemLocator(
+                        base_folder=config.hot_folder or config.cold_folder,
+                        item=item,
+                        prefix_size=config.prefix_size,
+                    )
+
+                    numerated_items.append((
+                        template.format(number),
+                        item,
+                        metainfo,
+                        locator,
+                    ))
+                    number += 1
+
+        return Success((parent, numerated_items))

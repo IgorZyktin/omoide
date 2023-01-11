@@ -2,14 +2,13 @@
 """Routes related to item operations.
 """
 from typing import Type
-import urllib.parse
 from uuid import UUID
 
 import fastapi
 import ujson
 from fastapi import Depends
 from fastapi import Request
-from starlette.responses import HTMLResponse, PlainTextResponse
+from starlette.responses import HTMLResponse
 from starlette.responses import Response
 
 from omoide import domain
@@ -171,52 +170,3 @@ async def app_item_delete(
     }
 
     return templates.TemplateResponse('item_delete.html', context)
-
-
-@router.get('/download/{uuid}')
-async def app_items_download(
-        request: Request,
-        uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.AppItemsDownloadUseCase = Depends(
-            dep.app_items_download_use_case),
-        config: Config = Depends(dep.get_config),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
-        response_class: Type[Response] = PlainTextResponse,
-):
-    """Return links of children to download them."""
-    # TODO - make this an api endpoint, not app
-    # result = await use_case.execute(config, policy, user, uuid)
-    #
-    # if isinstance(result, Failure):
-    #     return web.redirect_from_error(templates, request, result.error, uuid)
-    #
-    # parent, numerated_items = result.value
-    #
-    # context = {
-    #     'request': request,
-    #     'config': config,
-    #     'user': user,
-    #     'uuid': uuid,
-    #     'parent': parent,
-    #     'numerated_items': numerated_items,
-    #     'locate': web.get_locator(templates, request, config.prefix_size),
-    # }
-
-    # filename = urllib.parse.quote(parent.name or '??')
-    filename = 'test'
-    content = (
-        '- '
-        '15406 '
-        '/home/omoide-user/omoide/omoide/presentation/static/favicon.ico '
-        'favicon.ico'
-    )
-
-    return PlainTextResponse(
-        content=content,
-        headers={
-            'X-Archive-Files': 'zip',
-            'Content-Disposition': f'attachment; filename="{filename}.zip"',
-        }
-    )

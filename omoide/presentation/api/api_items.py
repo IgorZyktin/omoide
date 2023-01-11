@@ -2,12 +2,16 @@
 """Item related API operations.
 """
 import http
+from typing import Type
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Request
 from fastapi import Response
+import urllib.parse
+
+from starlette.responses import PlainTextResponse
 
 from omoide import domain
 from omoide import use_cases
@@ -16,6 +20,7 @@ from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
+from omoide.presentation.app_config import Config
 
 router = APIRouter(prefix='/api/items')
 
@@ -205,3 +210,52 @@ async def api_item_update_parent(
         web.raise_from_error(result.error)
 
     return {'result': 'ok'}
+
+
+@router.get('/download/{uuid}')
+async def api_items_download(
+        request: Request,
+        uuid: UUID,
+        user: domain.User = Depends(dep.get_current_user),
+        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        use_case: use_cases.ApiItemsDownloadUseCase = Depends(
+            dep.api_items_download_use_case),
+        config: Config = Depends(dep.get_config),
+        templates: web.TemplateEngine = Depends(dep.get_templates),
+        response_class: Type[Response] = PlainTextResponse,
+):
+    """Return all children as zip archive."""
+    # TODO - make this an api endpoint, not app
+    # result = await use_case.execute(config, policy, user, uuid)
+    #
+    # if isinstance(result, Failure):
+    #     return web.redirect_from_error(templates, request, result.error, uuid)
+    #
+    # parent, numerated_items = result.value
+    #
+    # context = {
+    #     'request': request,
+    #     'config': config,
+    #     'user': user,
+    #     'uuid': uuid,
+    #     'parent': parent,
+    #     'numerated_items': numerated_items,
+    #     'locate': web.get_locator(templates, request, config.prefix_size),
+    # }
+
+    filename = urllib.parse.quote(parent.name or '??')
+    filename = 'test'
+    content = (
+        '- '
+        '15406 '
+        '/home/omoide-user/omoide/omoide/presentation/static/favicon.ico '
+        'favicon.ico'
+    )
+
+    return PlainTextResponse(
+        content=content,
+        headers={
+            'X-Archive-Files': 'zip',
+            'Content-Disposition': f'attachment; filename="{filename}.zip"',
+        }
+    )
