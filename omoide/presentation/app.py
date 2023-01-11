@@ -7,6 +7,7 @@ import os
 
 import fastapi
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from omoide.presentation import api
 from omoide.presentation import app_config
@@ -17,6 +18,21 @@ app = fastapi.FastAPI(
     # openapi_url=None,
     # docs_url=None,
     # redoc_url=None,
+)
+
+origins = [
+    'https://omoide.ru',
+    'https://www.omoide.ru',
+    'http://localhost',
+    'http://localhost:8080',
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 
