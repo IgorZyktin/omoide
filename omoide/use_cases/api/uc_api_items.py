@@ -889,11 +889,4 @@ class ApiItemsDownloadUseCase:
             if not result:
                 return Success((parent, []))
 
-            total = len(result)
-            digits = len(str(total))
-            template = f'{{:0{digits}d}}'
-
-            for i, each_dict in enumerate(result, start=1):
-                each_dict['number'] = template.format(i)
-
         return Success((parent, result))

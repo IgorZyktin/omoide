@@ -223,7 +223,10 @@ async def api_items_download(
         templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = PlainTextResponse,
 ):
-    """Return all children as zip archive."""
+    """Return all children as zip archive.
+
+    WARNING - this endpoint works only behind NGINX with mod_zip installed.
+    """
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
@@ -232,31 +235,50 @@ async def api_items_download(
     parent, rows = result.value
 
     # Making appropriate file name --------------------------------------------
-    filename = urllib.parse.quote(parent.name or '??')
-    filename = f'Omoide - {filename}.zip'
+    zip_filename = urllib.parse.quote(parent.name or '??')
+    zip_filename = f'Omoide - {zip_filename}.zip'
 
     # Build payload -----------------------------------------------------------
-    assert config
-    # locator = infra.FilesystemLocator(
-    #     base_folder=config.hot_folder or config.cold_folder,
-    #     item=item,
-    #     prefix_size=config.prefix_size,
-    # )
+    lines: list[str] = []
+    total = len(rows)
+    digits = len(str(total))
+    template = f'{{:0{digits}d}}'
+    basic_prefix = '/content/content'
 
-    # FIXME
-    content = (
-        '465f066e '
-        '267384 '
-        '/content/content'
-        '/559a52e2-2d97-4e81-a699-af47c0ce79e2'
-        '/38/382fb1e1-6b4a-4c41-b821-b405259b9f9d.jpg '
-        'blah1.jpg'
-    )
+    for i, row in enumerate(rows, start=1):
+        item_uuid = row['uuid']
+        prefix = str(item_uuid)[:config.prefix_size]
+        content_ext = row['content_ext']
+
+        fs_path = (
+            basic_prefix
+            + f'/{parent.owner_uuid}'
+            + f'/{prefix}'
+            + f'/{item_uuid}.{content_ext}'
+        )
+
+        user_visible_filename = (
+                template.format(i)
+                + '___'
+                + str(row['uuid'])
+                + '.'
+                + row['content_ext']
+        )
+
+        lines.append((
+                row.get('crc32') or '-'  # checksum
+                + ' '
+                + str(row['content_size'] or 0)  # size in bytes
+                + ' '
+                + fs_path  # path to the file on local FS
+                + ' '
+                + user_visible_filename  # resulting filename inside archive
+        ))
 
     return PlainTextResponse(
-        content=content,
+        content='\n'.join(lines),
         headers={
             'X-Archive-Files': 'zip',
-            'Content-Disposition': f'attachment; filename="{filename}"',
+            'Content-Disposition': f'attachment; filename="{zip_filename}"',
         }
     )

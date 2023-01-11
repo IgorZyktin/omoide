@@ -1,1 +1,0 @@
-{% for number, item, metainfo, locator in numerated_items %}- {{ metainfo.content_size }} {{ locator.content }} {{ parent.name | urlencode }}/{{ number }}__{{ item.uuid }}.{{ item.content_ext }}{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}

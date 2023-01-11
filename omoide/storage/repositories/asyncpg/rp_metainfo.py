@@ -9,7 +9,6 @@ from typing import Sequence
 from uuid import UUID
 
 import sqlalchemy as sa
-import ujson
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
@@ -73,8 +72,10 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
             models.Metainfo.item_uuid == models.Item.uuid,
             isouter=True,
         ).where(
-            models.Item.is_collection == False,  # noqa
             models.Item.parent_uuid == item.uuid,
+            models.Item.is_collection == False,  # noqa
+            models.Item.content_ext != None,  # noqa
+            models.Metainfo.content_size != None,  # noqa
         ).order_by(
             models.Item.number,
         )
