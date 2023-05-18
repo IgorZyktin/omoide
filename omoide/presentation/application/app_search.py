@@ -14,7 +14,7 @@ import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide import utils
-from omoide.infra.special_types import Failure
+from omoide.domain.special_types import Failure
 from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra

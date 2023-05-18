@@ -8,8 +8,8 @@ from omoide.infra.custom_logging import Logger
 
 async def run(
         logger: Logger,
-        authenticator: interfaces.AbsAuthenticator,
-        users_repo: interfaces.AbsUsersWriteRepository,
+        authenticator: in_authenticator.AbsAuthenticator,
+        users_repo: in_rp_users.AbsUsersWriteRepository,
         raw_uuid: str,
         new_password: str,
 ) -> None:

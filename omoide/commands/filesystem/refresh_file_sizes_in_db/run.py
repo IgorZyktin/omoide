@@ -97,7 +97,7 @@ def update_size(
         base_folder: str,
 ) -> int:
     """Get actual file size."""
-    dom_item = domain.Item(
+    dom_item = models.Item(
         uuid=item.uuid,
         parent_uuid=item.parent_uuid,
         owner_uuid=item.owner_uuid,

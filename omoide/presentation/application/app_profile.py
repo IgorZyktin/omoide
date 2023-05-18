@@ -14,7 +14,7 @@ from omoide import domain
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import errors
-from omoide.infra.special_types import Failure
+from omoide.domain.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config

@@ -3,14 +3,22 @@
 """
 from uuid import UUID
 
-import omoide.domain.models
 from omoide import domain
+from omoide.application import app_models
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_read
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_metainfo
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_preview
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'AppPreviewUseCase',
@@ -22,10 +30,10 @@ class AppPreviewUseCase:
 
     def __init__(
             self,
-            preview_repo: interfaces.AbsPreviewRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsReadRepository,
-            meta_repo: interfaces.AbsMetainfoRepository,
+            preview_repo: in_rp_preview.AbsPreviewRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_read.AbsItemsReadRepository,
+            meta_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.preview_repo = preview_repo
@@ -35,11 +43,11 @@ class AppPreviewUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
-            aim: domain.Aim,
-    ) -> Result[errors.Error, domain.SingleResult]:
+            aim: app_models.Aim,
+    ) -> Result[errors.Error, app_models.SingleResult]:
         """Return preview model suitable for rendering."""
         async with self.preview_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.READ)

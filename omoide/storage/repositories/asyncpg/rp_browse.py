@@ -29,8 +29,8 @@ class BrowseRepository(
             self,
             user: omoide.domain.models.User,
             uuid: UUID,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
+            aim: app_models.Aim,
+    ) -> list[models.Item]:
         """Load all children of an item with given UUID."""
         stmt = sa.select(
             models.Item
@@ -49,7 +49,7 @@ class BrowseRepository(
         )
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def count_children(
             self,
@@ -74,8 +74,8 @@ class BrowseRepository(
             self,
             user: omoide.domain.models.User,
             uuid: UUID,
-            aim: domain.Aim,
-            users_repo: interfaces.AbsUsersReadRepository,
+            aim: app_models.Aim,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
         current_item = await self.read_item(uuid)
@@ -103,8 +103,8 @@ class BrowseRepository(
     async def get_complex_ancestors(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
-            aim: domain.Aim,
+            item: models.Item,
+            aim: app_models.Aim,
     ) -> list[domain.PositionedItem]:
         """Return list of positioned ancestors of given item."""
         ancestors = []
@@ -138,7 +138,7 @@ class BrowseRepository(
             user: omoide.domain.models.User,
             item_uuid: UUID,
             child_uuid: UUID,
-            aim: domain.Aim,
+            aim: app_models.Aim,
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
         # TODO - rewrite to sqlalchemy
@@ -214,15 +214,15 @@ class BrowseRepository(
             position=mapping.pop('position') or 1,
             total_items=mapping.pop('total_items') or 1,
             items_per_page=aim.items_per_page,
-            item=domain.Item(**response),
+            item=models.Item(**response),
         )
 
     async def simple_find_items_to_browse(
             self,
             user: omoide.domain.models.User,
             uuid: Optional[UUID],
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
+            aim: app_models.Aim,
+    ) -> list[models.Item]:
         """Find items using simple request."""
         stmt = sa.select(
             models.Item
@@ -248,14 +248,14 @@ class BrowseRepository(
         stmt = stmt.limit(aim.items_per_page)
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def complex_find_items_to_browse(
             self,
             user: omoide.domain.models.User,
             uuid: Optional[UUID],
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
+            aim: app_models.Aim,
+    ) -> list[models.Item]:
         """Find items to browse depending on parent (including inheritance)."""
         values = {
             'uuid': str(uuid),
@@ -359,13 +359,13 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         stmt += ' LIMIT :limit;'
 
         response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def get_recent_items(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
+            aim: app_models.Aim,
+    ) -> list[models.Item]:
         """Return portion of recently loaded items."""
         # TODO - rewrite to sqlalchemy
         stmt = """
@@ -415,11 +415,11 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             'offset': aim.offset,
         }
         response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def get_parents_names(
             self,
-            items: list[domain.Item],
+            items: list[models.Item],
     ) -> list[Optional[str]]:
         """Get names of parents of the given items."""
         uuids = [

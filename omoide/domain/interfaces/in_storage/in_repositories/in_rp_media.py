@@ -7,7 +7,8 @@ from uuid import UUID
 
 import omoide.domain.models
 from omoide import domain
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage import in_rp_base
 
 
 class AbsMediaRepository(in_rp_base.AbsBaseRepository):
@@ -17,7 +18,7 @@ class AbsMediaRepository(in_rp_base.AbsBaseRepository):
     async def create_media(
             self,
             user: omoide.domain.models.User,
-            media: domain.Media,
+            media: models.Media,
     ) -> int:
         """Create Media, return media id."""
 
@@ -25,7 +26,7 @@ class AbsMediaRepository(in_rp_base.AbsBaseRepository):
     async def read_media(
             self,
             media_id: int,
-    ) -> Optional[domain.Media]:
+    ) -> Optional[models.Media]:
         """Return Media instance or None."""
 
     @abc.abstractmethod

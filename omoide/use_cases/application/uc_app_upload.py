@@ -8,9 +8,15 @@ from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_read
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'AppUploadUseCase',
@@ -22,8 +28,8 @@ class AppUploadUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsReadRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_read.AbsItemsReadRepository,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -31,10 +37,10 @@ class AppUploadUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
+            policy: in_policy.AbsPolicy,
             user: omoide.domain.models.User,
             uuid: UUID,
-    ) -> Result[errors.Error, tuple[domain.Item, list[
+    ) -> Result[errors.Error, tuple[models.Item, list[
         omoide.domain.models.User]]]:
         """Return preview model suitable for rendering."""
         async with self.items_repo.transaction():

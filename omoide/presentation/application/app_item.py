@@ -16,7 +16,9 @@ from omoide import domain
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
@@ -29,7 +31,7 @@ async def app_item_create(
         request: Request,
         uuid: str,
         user: omoide.domain.models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
         config: Config = Depends(dep.get_config),
@@ -63,7 +65,7 @@ async def app_item_create(
 
 
 def serialize_item(
-        item: domain.Item,
+        item: models.Item,
 ) -> dict[str, int | str | None | list[str]]:
     """Convert item to a simplified JSON form."""
     return {
@@ -84,7 +86,7 @@ async def app_item_update(
         request: Request,
         uuid: UUID,
         user: omoide.domain.models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.get_config),
@@ -142,7 +144,7 @@ async def app_item_delete(
         request: Request,
         uuid: UUID,
         user: omoide.domain.models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.get_config),

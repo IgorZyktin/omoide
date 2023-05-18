@@ -4,9 +4,10 @@
 from typing import Optional
 
 import omoide.domain.models
-from omoide import domain
-from omoide.domain import interfaces
-from omoide.infra.special_types import Success
+from omoide.application import app_models
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_browse
+from omoide.domain.special_types import Success
 
 __all__ = [
     'AppHomeUseCase',
@@ -16,15 +17,15 @@ __all__ = [
 class AppHomeUseCase:
     """Use case for home page."""
 
-    def __init__(self, browse_repo: interfaces.AbsBrowseRepository) -> None:
+    def __init__(self, browse_repo: in_rp_browse.AbsBrowseRepository) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
 
     async def execute(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
-    ) -> Success[tuple[list[domain.Item], list[Optional[str]]]]:
+            aim: app_models.Aim,
+    ) -> Success[tuple[list[models.Item], list[Optional[str]]]]:
         """Perform request for home directory."""
         async with self.browse_repo.transaction():
             items = await self.browse_repo.simple_find_items_to_browse(

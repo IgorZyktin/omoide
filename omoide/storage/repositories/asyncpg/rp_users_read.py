@@ -12,7 +12,7 @@ from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class UsersReadRepository(interfaces.AbsUsersReadRepository):
+class UsersReadRepository(in_rp_users_read.AbsUsersReadRepository):
     """Repository that performs read operations on users."""
 
     async def read_user(
@@ -58,7 +58,7 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
     async def calc_total_space_used_by(
             self,
             user: omoide.domain.models.User,
-    ) -> domain.SpaceUsage:
+    ) -> app_models.SpaceUsage:
         """Return total amount of used space for user."""
         stmt = sa.select(
             sa.func.sum(models.Metainfo.content_size).label('content_size'),
@@ -71,7 +71,7 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             models.Item.owner_uuid == str(user.uuid)
         )
         response = await self.db.fetch_one(stmt)
-        return domain.SpaceUsage(
+        return app_models.SpaceUsage(
             uuid=user.uuid,
             content_size=response['content_size'] or 0,
             preview_size=response['preview_size'] or 0,

@@ -18,6 +18,7 @@ import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide.domain import interfaces
+from omoide.domain.interfaces.in_infra import in_authenticator
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
@@ -31,7 +32,7 @@ async def app_login(
         request: Request,
         user: omoide.domain.models.User = Depends(dep.get_current_user),
         credentials: HTTPBasicCredentials = Depends(security),
-        authenticator: interfaces.AbsAuthenticator = Depends(
+        authenticator: in_authenticator.AbsAuthenticator = Depends(
             dep.get_authenticator),
         config: Config = Depends(dep.get_config),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),

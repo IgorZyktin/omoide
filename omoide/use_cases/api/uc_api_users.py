@@ -3,12 +3,15 @@
 """
 from uuid import UUID
 
-from omoide import domain
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_authenticator
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_write
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_users
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [
@@ -21,8 +24,8 @@ class CreateUserUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            users_repo: interfaces.AbsUsersWriteRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
+            users_repo: in_rp_users.AbsUsersWriteRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -30,7 +33,7 @@ class CreateUserUseCase:
 
     async def execute(
             self,
-            authenticator: interfaces.AbsAuthenticator,
+            authenticator: in_authenticator.AbsAuthenticator,
             raw_user: api_models.CreateUserIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
@@ -49,7 +52,7 @@ class CreateUserUseCase:
 
             item_uuid = await self.items_repo.generate_item_uuid()
 
-            root_item = domain.Item(
+            root_item = models.Item(
                 uuid=item_uuid,
                 parent_uuid=None,
                 owner_uuid=user.uuid,

@@ -8,6 +8,7 @@ from uuid import UUID
 
 import omoide.domain.models
 from omoide import domain
+from omoide.domain import models
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_read import AbsItemsReadRepository
 
@@ -23,21 +24,21 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     async def create_item(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
     ) -> UUID:
         """Return UUID for created item."""
 
     @abc.abstractmethod
     async def update_item(
             self,
-            item: domain.Item,
+            item: models.Item,
     ) -> UUID:
         """Update existing item."""
 
     @abc.abstractmethod
     async def mark_files_as_orphans(
             self,
-            item: domain.Item,
+            item: models.Item,
             moment: datetime.datetime,
     ) -> None:
         """Mark corresponding files as useless."""
@@ -45,7 +46,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     @abc.abstractmethod
     async def delete_item(
             self,
-            item: domain.Item,
+            item: models.Item,
     ) -> bool:
         """Delete item with given UUID."""
 

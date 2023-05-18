@@ -8,8 +8,8 @@ from starlette.requests import Request
 import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Success
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Success
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config

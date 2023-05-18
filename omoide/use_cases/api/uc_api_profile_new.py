@@ -3,12 +3,12 @@
 """
 from typing import Optional
 
-import omoide.domain.models
-from omoide import domain
+from omoide.application import app_models
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_browse
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'APIProfileNewUseCase',
@@ -20,16 +20,16 @@ class APIProfileNewUseCase:
 
     def __init__(
             self,
-            browse_repo: interfaces.AbsBrowseRepository,
+            browse_repo: in_rp_browse.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
 
     async def execute(
             self,
-            user: omoide.domain.models.User,
-            aim: domain.Aim,
-    ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
+            user: models.User,
+            aim: app_models.Aim,
+    ) -> Result[errors.Error, tuple[list[models.Item], list[Optional[str]]]]:
         async with self.browse_repo.transaction():
             items = await self.browse_repo.get_recent_items(user, aim)
             names = await self.browse_repo.get_parents_names(items)

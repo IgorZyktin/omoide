@@ -3,14 +3,12 @@
 """
 import abc
 import datetime
-from typing import Any
-from typing import Collection, Sequence
+from typing import Collection
 from typing import Optional
 from uuid import UUID
 
-import omoide.domain.models
-from omoide import domain
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage import in_rp_base
 
 
 class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
@@ -19,8 +17,8 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def create_empty_metainfo(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
     ) -> bool:
         """Create metainfo with blank fields."""
 
@@ -28,37 +26,37 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     async def read_metainfo(
             self,
             uuid: UUID,
-    ) -> Optional[domain.Metainfo]:
+    ) -> Optional[models.Metainfo]:
         """Return Metainfo or None."""
 
     @abc.abstractmethod
     async def read_children_to_download(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
     ) -> list[dict[str, UUID | str | int]]:
         """Return some components of the given item children with metainfo."""
 
     @abc.abstractmethod
     async def update_metainfo(
             self,
-            user: omoide.domain.models.User,
-            metainfo: domain.Metainfo,
+            user: models.User,
+            metainfo: models.Metainfo,
     ) -> None:
         """Update metainfo and return true on success."""
 
     @abc.abstractmethod
     async def update_computed_tags(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
     ) -> None:
         """Update computed tags for this item."""
 
     @abc.abstractmethod
     async def apply_new_known_tags(
             self,
-            users: Collection[omoide.domain.models.User],
+            users: Collection[models.User],
             tags_added: Collection[str],
             tags_deleted: Collection[str],
     ) -> None:
@@ -67,7 +65,7 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def drop_unused_tags(
             self,
-            users: Collection[omoide.domain.models.User],
+            users: Collection[models.User],
             public_users: set[UUID],
     ) -> None:
         """Drop tags with counter less of equal to 0."""

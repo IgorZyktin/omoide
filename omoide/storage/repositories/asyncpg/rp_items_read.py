@@ -13,7 +13,7 @@ from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
 
 
-class ItemsReadRepository(interfaces.AbsItemsReadRepository):
+class ItemsReadRepository(in_rp_items_read.AbsItemsReadRepository):
     """Repository that performs basic read operations on items."""
 
     async def check_access(
@@ -51,7 +51,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def count_all_children_of(
             self,
-            item: domain.Item,
+            item: models.Item,
     ) -> int:
         """Count dependant items."""
         stmt = """
@@ -80,7 +80,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
     async def read_item(
             self,
             uuid: UUID,
-    ) -> Optional[domain.Item]:
+    ) -> Optional[models.Item]:
         """Return item or None."""
         stmt = sa.select(
             models.Item
@@ -90,14 +90,14 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
         response = await self.db.fetch_one(stmt)
 
-        return domain.Item(**response) if response else None
+        return models.Item(**response) if response else None
 
     async def read_children_of(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
             ignore_collections: bool,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Return all direct descendants of the given item."""
         stmt = sa.select(
             models.Item
@@ -117,13 +117,13 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         )
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**each) for each in response]
+        return [models.Item(**each) for each in response]
 
     async def get_simple_location(
             self,
             user: omoide.domain.models.User,
             owner: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
         ancestors = await self.get_simple_ancestors(user, item)
@@ -132,8 +132,8 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
     async def get_simple_ancestors(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
-    ) -> list[domain.Item]:
+            item: models.Item,
+    ) -> list[models.Item]:
         """Return list of ancestors for given item."""
         assert user
         # TODO(i.zyktin): what if user has no access
@@ -183,8 +183,8 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
     async def get_all_parents(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
-    ) -> list[domain.Item]:
+            item: models.Item,
+    ) -> list[models.Item]:
         """Return all parents of the given item."""
         stmt = """
         WITH RECURSIVE parents AS (
@@ -224,7 +224,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         }
 
         response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def get_direct_children_uuids_of(
             self,

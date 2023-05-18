@@ -16,7 +16,7 @@ from omoide.storage.repositories \
 
 
 class UsersWriteRepository(
-    interfaces.AbsUsersWriteRepository,
+    in_rp_users.AbsUsersWriteRepository,
     UsersReadRepository,
 ):
     """Repository that perform CRUD operations on users and their data."""

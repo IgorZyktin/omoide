@@ -8,7 +8,7 @@ from fastapi import Depends
 
 import omoide.domain.models
 from omoide import use_cases
-from omoide.application import app_models
+from omoide.application import raw_models
 from omoide.domain import models
 from omoide.domain.interfaces.in_infra import in_policy
 from omoide.domain.special_types import Failure
@@ -21,7 +21,7 @@ router = APIRouter(prefix='/api/exif')
 @router.post('/{item_uuid}')
 async def api_create_exif(
         item_uuid: UUID,
-        raw_exif: app_models.RawEXIF,
+        raw_exif: raw_models.RawEXIF,
         user: models.User = Depends(dep.get_current_user),
         policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateEXIFUseCase = Depends(
@@ -57,7 +57,7 @@ async def api_read_exif(
 @router.get('/{item_uuid}')
 async def api_update_exif(
         item_uuid: UUID,
-        raw_exif: app_models.RawEXIF,
+        raw_exif: raw_models.RawEXIF,
         user: models.User = Depends(dep.get_current_user),
         policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.UpdateEXIFUseCase = Depends(

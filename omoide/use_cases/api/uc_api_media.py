@@ -4,15 +4,15 @@
 import base64
 from uuid import UUID
 
-import omoide.domain.models
-from omoide import domain
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_media
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [
@@ -25,7 +25,7 @@ class CreateMediaUseCase:
 
     def __init__(
             self,
-            media_repo: interfaces.AbsMediaRepository,
+            media_repo: in_rp_media.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
         self.media_repo = media_repo
@@ -39,8 +39,8 @@ class CreateMediaUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
             media_in: list[api_models.CreateMediaIn],
     ) -> Result[errors.Error, int]:
@@ -53,7 +53,7 @@ class CreateMediaUseCase:
 
             now = utils.now()
             for each in media_in:
-                media = domain.Media(
+                media = models.Media(
                     id=-1,
                     owner_uuid=user.uuid,
                     item_uuid=uuid,

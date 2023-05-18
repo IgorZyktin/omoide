@@ -19,13 +19,13 @@ from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
 
 
-class MetainfoRepository(interfaces.AbsMetainfoRepository):
+class MetainfoRepository(in_rp_metainfo.AbsMetainfoRepository):
     """Repository that perform CRUD operations on metainfo."""
 
     async def create_empty_metainfo(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
     ) -> bool:
         """Create metainfo with blank fields."""
         stmt = sa.insert(
@@ -44,7 +44,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def read_metainfo(
             self,
             uuid: UUID,
-    ) -> Optional[domain.Metainfo]:
+    ) -> Optional[models.Metainfo]:
         """Return metainfo or None."""
         stmt = sa.select(
             models.Metainfo
@@ -57,12 +57,12 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         if response is None:
             return None
 
-        return domain.Metainfo(**response)
+        return models.Metainfo(**response)
 
     async def read_children_to_download(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
     ) -> list[dict[str, UUID | str | int]]:
         """Return some components of the given item children with metainfo."""
         stmt = sa.select(
@@ -92,7 +92,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def update_metainfo(
             self,
             user: omoide.domain.models.User,
-            metainfo: domain.Metainfo,
+            metainfo: models.Metainfo,
     ) -> None:
         """Update metainfo and return true on success."""
         stmt = sa.update(
@@ -132,7 +132,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
     async def update_computed_tags(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
     ) -> None:
         """Update computed tags for this item."""
         parent_tags = []

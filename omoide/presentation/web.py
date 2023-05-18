@@ -20,10 +20,14 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
 
+from omoide.domain import common
+from omoide.domain.interfaces.in_infra import in_locator
 from omoide import domain
 from omoide import utils
+from omoide.application import app_models
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.domain import models
 from omoide.infra import custom_logging
 from omoide.infra import impl
 from omoide.presentation import constants
@@ -156,7 +160,7 @@ class AimWrapper:
 
     def __init__(
             self,
-            aim: domain.Aim,
+            aim: app_models.Aim,
     ) -> None:
         """Initialize instance."""
         self.aim = aim
@@ -176,7 +180,7 @@ class AimWrapper:
         tags_include, tags_exclude = parse_tags(raw_query)
 
         local_params = copy.deepcopy(params)
-        local_params['query'] = domain.Query(
+        local_params['query'] = app_models.Query(
             raw_query=raw_query,
             tags_include=tags_include,
             tags_exclude=tags_exclude,
@@ -184,7 +188,7 @@ class AimWrapper:
 
         local_params.update(kwargs)
         cls._fill_defaults(local_params)
-        aim = domain.Aim(**local_params)
+        aim = app_models.Aim(**local_params)
         return cls(aim)
 
     @classmethod
@@ -291,14 +295,14 @@ def url_join(*args: str) -> str:
     return '/'.join(segments)
 
 
-class Locator(interfaces.AbsLocator):
+class Locator(in_locator.AbsLocator):
     """Helper object that generates links for items."""
 
     def __init__(
             self,
             templates: TemplateEngine,
             request: Request,
-            item: domain.Item,
+            item: models.Item,
             prefix_size: int,
     ) -> None:
         """Initialize instance."""
@@ -357,7 +361,7 @@ def get_locator(
         templates: TemplateEngine,
         request: Request,
         prefix_size: int,
-) -> Callable[[domain.Item], Locator]:
+) -> Callable[[models.Item], Locator]:
     """Make new locator."""
     return lambda item: Locator(
         templates=templates,
@@ -370,15 +374,15 @@ def get_locator(
 def items_to_dict(
         request: Request,
         templates: TemplateEngine,
-        items: list[domain.Item],
+        items: list[models.Item],
         names: list[Optional[str]],
         prefix_size: int,
-) -> list[domain.SimpleItem]:
+) -> list[common.SimpleItem]:
     """Convert items to JSON compatible dicts."""
     assert len(items) == len(names)
     empty_thumbnail = templates.url_for(request, 'static', path='empty.png')
 
-    simple_items: list[domain.SimpleItem] = []
+    simple_items: list[common.SimpleItem] = []
 
     for name, item in zip(names, items):
         if item.is_collection:
@@ -397,7 +401,7 @@ def items_to_dict(
             )
             thumbnail = locator.thumbnail
 
-        simple_item = domain.SimpleItem(
+        simple_item = common.SimpleItem(
             uuid=str(item.uuid),
             parent_name=name,
             name=item.name,

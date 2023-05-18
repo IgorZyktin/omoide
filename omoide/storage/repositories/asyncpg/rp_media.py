@@ -13,7 +13,7 @@ from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class MediaRepository(interfaces.AbsMediaRepository):
+class MediaRepository(in_rp_media.AbsMediaRepository):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(

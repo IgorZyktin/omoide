@@ -9,9 +9,12 @@ from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_metainfo
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [
@@ -25,7 +28,7 @@ class BaseMetainfoUseCase:
 
     def __init__(
             self,
-            meta_repo: interfaces.AbsMetainfoRepository,
+            meta_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.meta_repo = meta_repo
@@ -36,8 +39,8 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
             metainfo_in: api_models.MetainfoIn,
     ) -> Result[errors.Error, bool]:
@@ -86,10 +89,10 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
-    ) -> Result[errors.Error, domain.Metainfo]:
+    ) -> Result[errors.Error, models.Metainfo]:
         async with self.meta_repo.transaction():
             error = await policy.is_restricted(user, uuid,
                                                actions.Metainfo.READ)

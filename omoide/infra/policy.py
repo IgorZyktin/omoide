@@ -22,7 +22,7 @@ ITEM_RELATED = frozenset((
 ))
 
 
-class Policy(interfaces.AbsPolicy):
+class Policy(in_policy.AbsPolicy):
     """Policy checker."""
 
     async def is_restricted(

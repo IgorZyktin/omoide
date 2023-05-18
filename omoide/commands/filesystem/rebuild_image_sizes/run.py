@@ -192,7 +192,7 @@ def make_locator(
         item: models.Item,
 ) -> infra.FilesystemLocator:
     """Make locator from pieces of item data."""
-    dom_item = domain.Item(
+    dom_item = models.Item(
         uuid=item.uuid,
         parent_uuid=item.parent_uuid,
         owner_uuid=user.uuid,

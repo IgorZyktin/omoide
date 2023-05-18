@@ -2,7 +2,7 @@
 """Tests.
 """
 from omoide import use_cases
-from omoide.infra.special_types import Success
+from omoide.domain.special_types import Success
 
 
 async def test_item_creation(

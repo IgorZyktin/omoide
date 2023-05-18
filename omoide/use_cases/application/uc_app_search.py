@@ -5,10 +5,15 @@ from typing import Optional
 
 import omoide.domain.models
 from omoide import domain
+from omoide.application import app_models
+from omoide.domain import dtos
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_browse
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_search
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'AppDynamicSearchUseCase',
@@ -21,8 +26,8 @@ class BaseSearchUseCase:
 
     def __init__(
             self,
-            search_repo: interfaces.AbsSearchRepository,
-            browse_repo: interfaces.AbsBrowseRepository,
+            search_repo: in_rp_search.AbsSearchRepository,
+            browse_repo: in_rp_browse.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.search_repo = search_repo
@@ -35,7 +40,7 @@ class AppDynamicSearchUseCase(BaseSearchUseCase):
     async def execute(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
+            aim: app_models.Aim,
     ) -> Result[errors.Error, int]:
         """Return amount of items that correspond to query (not items)."""
         async with self.search_repo.transaction():
@@ -51,13 +56,13 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
     async def execute(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
-    ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
+            aim: app_models.Aim,
+    ) -> Result[errors.Error, tuple[list[models.Item], list[Optional[str]]]]:
         """Return items that correspond to query."""
         async with self.search_repo.transaction():
             items = []
             if aim.query:
-                obligation = domain.Obligation(max_results=1000)
+                obligation = dtos.Obligation(max_results=1000)
                 items = await self.search_repo \
                     .get_matching_items(user, aim, obligation)
                 names = await self.browse_repo.get_parents_names(items)

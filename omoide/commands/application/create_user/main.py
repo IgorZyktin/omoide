@@ -6,15 +6,15 @@ from typing import Optional
 from omoide import use_cases
 from omoide.domain import interfaces
 from omoide.infra.custom_logging import Logger
-from omoide.infra.special_types import Failure
+from omoide.domain.special_types import Failure
 from omoide.presentation import api_models
 
 
 async def run(
         logger: Logger,
-        authenticator: interfaces.AbsAuthenticator,
-        items_repo: interfaces.AbsItemsWriteRepository,
-        users_repo: interfaces.AbsUsersWriteRepository,
+        authenticator: in_authenticator.AbsAuthenticator,
+        items_repo: in_rp_items_write.AbsItemsWriteRepository,
+        users_repo: in_rp_users.AbsUsersWriteRepository,
         login: str,
         password: str,
         name: Optional[str],

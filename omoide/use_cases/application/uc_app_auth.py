@@ -11,18 +11,23 @@ __all__ = [
     'AuthUseCase',
 ]
 
+from omoide.domain.interfaces.in_infra import in_authenticator
+
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+
 
 class AuthUseCase:
     """Use case for authentication."""
 
-    def __init__(self, users_repo: interfaces.AbsUsersReadRepository) -> None:
+    def __init__(self, users_repo: in_rp_users_read.AbsUsersReadRepository) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
 
     async def execute(
             self,
             credentials: HTTPBasicCredentials,
-            authenticator: interfaces.AbsAuthenticator,
+            authenticator: in_authenticator.AbsAuthenticator,
     ) -> omoide.domain.models.User:
         """Return user model."""
         user = await self.users_repo.read_user_by_login(credentials.username)

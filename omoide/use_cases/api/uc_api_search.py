@@ -5,10 +5,15 @@ from typing import Optional
 
 import omoide.domain.models
 from omoide import domain
+from omoide.application import app_models
+from omoide.domain import dtos
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_browse
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_search
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'ApiSearchUseCase',
@@ -21,8 +26,8 @@ class ApiSearchUseCase:
 
     def __init__(
             self,
-            search_repo: interfaces.AbsSearchRepository,
-            browse_repo: interfaces.AbsBrowseRepository,
+            search_repo: in_rp_search.AbsSearchRepository,
+            browse_repo: in_rp_browse.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.search_repo = search_repo
@@ -31,8 +36,8 @@ class ApiSearchUseCase:
     async def execute(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
-    ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
+            aim: app_models.Aim,
+    ) -> Result[errors.Error, tuple[list[models.Item], list[Optional[str]]]]:
         """Perform search request."""
         if not aim.query:
             return Success(([], []))
@@ -52,7 +57,7 @@ class ApiSuggestTagUseCase:
 
     def __init__(
             self,
-            search_repo: interfaces.AbsSearchRepository,
+            search_repo: in_rp_search.AbsSearchRepository,
     ) -> None:
         """Initialize instance."""
         self.search_repo = search_repo
@@ -60,10 +65,10 @@ class ApiSuggestTagUseCase:
     async def execute(
             self,
             user: omoide.domain.models.User,
-            guess: domain.GuessTag,
-    ) -> Result[errors.Error, list[domain.GuessResult]]:
+            guess: dtos.GuessTag,
+    ) -> Result[errors.Error, list[dtos.GuessResult]]:
         """Return possible tags."""
-        obligation = domain.Obligation(max_results=10)
+        obligation = dtos.Obligation(max_results=10)
 
         async with self.search_repo.transaction():
             if user.is_registered:

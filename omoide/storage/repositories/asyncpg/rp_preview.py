@@ -14,7 +14,7 @@ from omoide.storage.repositories.asyncpg.rp_browse import BrowseRepository
 
 
 class PreviewRepository(
-    interfaces.AbsPreviewRepository,
+    in_rp_preview.AbsPreviewRepository,
     BrowseRepository,
 ):
     """Repository that performs all preview queries."""

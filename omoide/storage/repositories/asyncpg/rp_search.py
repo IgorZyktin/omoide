@@ -12,14 +12,14 @@ from omoide.storage.repositories.asyncpg import queries
 
 
 class SearchRepository(
-    interfaces.AbsSearchRepository,
+    in_rp_search.AbsSearchRepository,
 ):
     """Repository that performs all search queries."""
 
     @staticmethod
     def _expand_query(
             user: omoide.domain.models.User,
-            aim: domain.Aim,
+            aim: app_models.Aim,
             stmt: Select,
     ) -> Select:
         """Add access control and filtering."""
@@ -43,7 +43,7 @@ class SearchRepository(
     @staticmethod
     def _maybe_trim(
             stmt: Select,
-            aim: domain.Aim,
+            aim: app_models.Aim,
     ) -> Select:
         """Limit query if user demands it."""
         if aim.ordered:
@@ -60,7 +60,7 @@ class SearchRepository(
     async def count_matching_items(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
+            aim: app_models.Aim,
     ) -> int:
         """Count matching items for search query."""
         stmt = sa.select(
@@ -77,9 +77,9 @@ class SearchRepository(
     async def get_matching_items(
             self,
             user: omoide.domain.models.User,
-            aim: domain.Aim,
+            aim: app_models.Aim,
             obligation: domain.Obligation,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Find items for dynamic load."""
         stmt = sa.select(
             models.Item
@@ -96,7 +96,7 @@ class SearchRepository(
         )
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**row) for row in response]
+        return [models.Item(**row) for row in response]
 
     async def guess_tag_known(
             self,

@@ -7,12 +7,21 @@ from uuid import UUID
 
 import omoide.domain.models
 from omoide import domain
+from omoide.application import app_models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_browse
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_read
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_metainfo
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'BrowseResult',
@@ -22,14 +31,14 @@ __all__ = [
 
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
-    item: domain.Item
-    metainfo: domain.Metainfo
-    location: domain.SimpleLocation | domain.Location | None
+    item: models.Item
+    metainfo: models.Metainfo
+    location: app_models.SimpleLocation | app_models.Location | None
     total_items: int
     total_pages: int
-    items: list[domain.Item]
+    items: list[models.Item]
     names: list[Optional[str]]
-    aim: domain.Aim
+    aim: app_models.Aim
     paginated: bool = True
 
 
@@ -38,10 +47,10 @@ class AppBrowseUseCase:
 
     def __init__(
             self,
-            browse_repo: interfaces.AbsBrowseRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsReadRepository,
-            meta_repo: interfaces.AbsMetainfoRepository,
+            browse_repo: in_rp_browse.AbsBrowseRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_read.AbsItemsReadRepository,
+            meta_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
@@ -51,10 +60,10 @@ class AppBrowseUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
-            aim: domain.Aim,
+            aim: app_models.Aim,
     ) -> Result[errors.Error, BrowseResult]:
         """Return browse model suitable for rendering."""
         async with self.browse_repo.transaction():
@@ -88,8 +97,8 @@ class AppBrowseUseCase:
     async def go_browse_paginated(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
-            aim: domain.Aim,
+            item: models.Item,
+            aim: app_models.Aim,
     ) -> BrowseResult | Failure:
         """Browse with pagination."""
         location = await self.browse_repo.get_location(
@@ -133,8 +142,8 @@ class AppBrowseUseCase:
             self,
             user: omoide.domain.models.User,
             owner: omoide.domain.models.User,
-            item: domain.Item,
-            aim: domain.Aim,
+            item: models.Item,
+            aim: app_models.Aim,
     ) -> BrowseResult | Failure:
         """Browse without pagination."""
         location = await self.items_repo.get_simple_location(

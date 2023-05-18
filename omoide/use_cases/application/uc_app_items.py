@@ -9,9 +9,16 @@ from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_write
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_metainfo
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'AppItemCreateUseCase',
@@ -25,8 +32,8 @@ class AppItemCreateUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -34,10 +41,10 @@ class AppItemCreateUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
+            policy: in_policy.AbsPolicy,
             user: omoide.domain.models.User,
             parent_uuid: Optional[UUID],
-    ) -> Result[errors.Error, tuple[domain.Item, list[
+    ) -> Result[errors.Error, tuple[models.Item, list[
         omoide.domain.models.User]]]:
         """Business logic."""
         async with self.items_repo.transaction():
@@ -67,9 +74,9 @@ class AppItemUpdateUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
+            metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -78,15 +85,15 @@ class AppItemUpdateUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
+            policy: in_policy.AbsPolicy,
             user: omoide.domain.models.User,
             uuid: UUID,
     ) -> Result[errors.Error,
-                tuple[domain.Item,
+                tuple[models.Item,
                       int,
                       list[omoide.domain.models.User],
                       list[str],
-                      Optional[domain.Metainfo]]]:
+                      Optional[models.Metainfo]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -112,17 +119,17 @@ class AppItemDeleteUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
+            policy: in_policy.AbsPolicy,
             user: omoide.domain.models.User,
             uuid: UUID,
-    ) -> Result[errors.Error, tuple[domain.Item, int]]:
+    ) -> Result[errors.Error, tuple[models.Item, int]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.DELETE)

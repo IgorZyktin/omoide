@@ -5,9 +5,9 @@ import abc
 from typing import Optional
 from uuid import UUID
 
-import omoide.domain.models
-from omoide import domain
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
+from omoide.application import app_models
+from omoide.domain import models
+from omoide.domain.interfaces.in_storage import in_rp_base
 
 
 class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
@@ -17,28 +17,28 @@ class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
     async def read_user(
             self,
             uuid: UUID,
-    ) -> Optional[omoide.domain.models.User]:
+    ) -> Optional[models.User]:
         """Return User or None."""
 
     @abc.abstractmethod
     async def read_user_by_login(
             self,
             login: str,
-    ) -> Optional[omoide.domain.models.User]:
+    ) -> Optional[models.User]:
         """Return User or None."""
 
     @abc.abstractmethod
     async def read_all_users(
             self,
             *uuids: UUID,
-    ) -> list[omoide.domain.models.User]:
+    ) -> list[models.User]:
         """Return list of users with given uuids."""
 
     @abc.abstractmethod
     async def calc_total_space_used_by(
             self,
-            user: omoide.domain.models.User,
-    ) -> domain.SpaceUsage:
+            user: models.User,
+    ) -> app_models.SpaceUsage:
         """Return total amount of used space for user."""
 
     @abc.abstractmethod

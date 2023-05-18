@@ -5,21 +5,29 @@ import asyncio
 import time
 import traceback
 from contextlib import asynccontextmanager
-from typing import Any
 from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
 
-import omoide.domain.models
 from omoide import domain
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_write
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_read
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_media
+from omoide.domain.interfaces.in_storage.in_repositories import in_rp_metainfo
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 from omoide.infra import custom_logging
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
 from omoide.presentation import api_models
 
 __all__ = [
@@ -48,7 +56,7 @@ class Writeback:
 
 @asynccontextmanager
 async def _generic_call(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
+        metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
         job_name: str,
         job_description: str,
         user_uuid: UUID,
@@ -112,9 +120,9 @@ async def _generic_call(
 
 @asynccontextmanager
 async def track_update_permissions_in_parents(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
-        user: omoide.domain.models.User,
-        item: domain.Item,
+        metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
+        user: models.User,
+        item: models.Item,
         added: Collection[UUID],
         deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
@@ -137,9 +145,9 @@ async def track_update_permissions_in_parents(
 
 @asynccontextmanager
 async def track_update_permissions_in_children(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
-        user: omoide.domain.models.User,
-        item: domain.Item,
+        metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
+        user: models.User,
+        item: models.Item,
         override: bool,
         added: Collection[UUID],
         deleted: Collection[UUID],
@@ -168,9 +176,9 @@ async def track_update_permissions_in_children(
 
 @asynccontextmanager
 async def track_update_tags_in_children(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
-        user: omoide.domain.models.User,
-        item: domain.Item,
+        metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
+        user: models.User,
+        item: models.Item,
         added: Collection[str],
         deleted: Collection[str],
 ) -> AsyncIterator[Writeback]:
@@ -196,9 +204,9 @@ class BaseItemMediaUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            media_repo: interfaces.AbsMediaRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
+            metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
+            media_repo: in_rp_media.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -211,9 +219,9 @@ class BaseItemModifyUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
+            metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -222,13 +230,13 @@ class BaseItemModifyUseCase:
 
     async def _create_one_item(
             self,
-            user: omoide.domain.models.User,
+            user: models.User,
             payload: api_models.CreateItemIn | api_models.CreateItemsIn,
     ) -> UUID:
         """Helper functions that handles creation of an item."""
         uuid = await self.items_repo.generate_item_uuid()
 
-        item = domain.Item(
+        item = models.Item(
             uuid=uuid,
             parent_uuid=payload.parent_uuid or user.root_item,
             owner_uuid=user.uuid,
@@ -255,8 +263,8 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             payload: api_models.CreateItemIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
@@ -277,8 +285,8 @@ class ApiItemCreateBulkUseCase(BaseItemModifyUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             payload: api_models.CreateItemsIn,
     ) -> Result[errors.Error, list[UUID]]:
         """Business logic."""
@@ -302,17 +310,17 @@ class ApiItemReadUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
-    ) -> Result[errors.Error, domain.Item]:
+    ) -> Result[errors.Error, models.Item]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.READ)
@@ -332,8 +340,8 @@ class ApiItemUpdateUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
+            metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -341,8 +349,8 @@ class ApiItemUpdateUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
             operations: list[api_models.PatchOperation],
     ) -> Result[errors.Error, bool]:
@@ -394,8 +402,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
             new_tags: list[str],
     ) -> Result[errors.Error, UUID]:
@@ -444,8 +452,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
 
     async def update_tags_in_children_of(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
             added: Collection[str],
             deleted: Collection[str],
     ) -> int:
@@ -496,8 +504,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
             new_permissions: api_models.NewPermissionsIn,
     ) -> Result[errors.Error, UUID]:
@@ -551,8 +559,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
     async def update_permissions_in_parents(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
             added: Collection[UUID],
             deleted: Collection[UUID],
     ) -> None:
@@ -578,8 +586,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
     async def update_permissions_in_children(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
             override: bool,
             added: Collection[UUID],
             deleted: Collection[UUID],
@@ -619,8 +627,8 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
@@ -663,8 +671,8 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             source_uuid: UUID,
             target_uuid: UUID,
     ) -> Result[errors.Error, UUID]:
@@ -738,10 +746,10 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsWriteRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
-            media_repo: interfaces.AbsMediaRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_write.AbsItemsWriteRepository,
+            metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
+            media_repo: in_rp_media.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
         super().__init__(items_repo, metainfo_repo, media_repo)
@@ -749,8 +757,8 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
             new_parent_uuid: UUID,
     ) -> Result[errors.Error, UUID]:
@@ -830,8 +838,8 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
     async def update_tags_in_children_of(
             self,
-            user: omoide.domain.models.User,
-            item: domain.Item,
+            user: models.User,
+            item: models.Item,
             added: Collection[str],
             deleted: Collection[str],
     ) -> None:
@@ -856,8 +864,8 @@ class ApiItemsDownloadUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsReadRepository,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            items_repo: in_rp_items_read.AbsItemsReadRepository,
+            metainfo_repo: in_rp_metainfo.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -865,12 +873,12 @@ class ApiItemsDownloadUseCase:
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: omoide.domain.models.User,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
             uuid: UUID,
     ) -> Result[
         errors.Error,
-        tuple[domain.Item, list[dict[str, UUID | str | int]]],
+        tuple[models.Item, list[dict[str, UUID | str | int]]],
     ]:
         """Business logic."""
         async with self.items_repo.transaction():

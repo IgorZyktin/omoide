@@ -15,7 +15,8 @@ from omoide import use_cases
 from omoide import utils
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
@@ -28,7 +29,7 @@ async def app_upload(
         request: Request,
         uuid: str,
         user: omoide.domain.models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppUploadUseCase = Depends(
             dep.app_upload_use_case),
         config: Config = Depends(dep.get_config),

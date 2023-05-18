@@ -14,20 +14,7 @@ from pydantic import BaseModel
 import omoide.domain.models
 
 __all__ = [
-    'Item',
     'SimpleItem',
-    'PositionedItem',
-    'PositionedByUserItem',
-    'Location',
-    'AccessStatus',
-    'Query',
-    'SingleResult',
-    'SimpleLocation',
-    'ComplexLocation',
-    'Media',
-    'Metainfo',
-    'Aim',
-    'SpaceUsage',
     'COPIED_COVER_FROM',
     'CONTENT',
     'PREVIEW',
@@ -35,6 +22,8 @@ __all__ = [
     'MEDIA_TYPE',
     'MEDIA_TYPES',
 ]
+
+from omoide.domain import models
 
 COPIED_COVER_FROM: Literal['copied_cover_from'] = 'copied_cover_from'
 CONTENT: Literal['content'] = 'content'
@@ -44,39 +33,39 @@ MEDIA_TYPE = Literal['content', 'preview', 'thumbnail']
 MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 
 
-class Item(BaseModel):
-    """Model of a standard item."""
-    uuid: UUID
-    parent_uuid: Optional[UUID]
-    owner_uuid: UUID
-    number: int
-    name: str
-    is_collection: bool
-    content_ext: Optional[str]
-    preview_ext: Optional[str]
-    thumbnail_ext: Optional[str]
-    tags: list[str] = []
-    permissions: list[UUID] = []
-
-    def get_generic(self) -> dict[MEDIA_TYPE, 'ItemGeneric']:
-        """Proxy that helps with content/preview/thumbnail."""
-        return {
-            CONTENT: ItemGeneric(
-                media_type=CONTENT,
-                original_ext=self.content_ext,
-                set_callback=lambda ext: setattr(self, 'content_ext', ext),
-            ),
-            PREVIEW: ItemGeneric(
-                media_type=PREVIEW,
-                original_ext=self.preview_ext,
-                set_callback=lambda ext: setattr(self, 'preview_ext', ext),
-            ),
-            THUMBNAIL: ItemGeneric(
-                media_type=THUMBNAIL,
-                original_ext=self.thumbnail_ext,
-                set_callback=lambda ext: setattr(self, 'thumbnail_ext', ext),
-            ),
-        }
+# class Item(BaseModel):
+#     """Model of a standard item."""
+#     uuid: UUID
+#     parent_uuid: Optional[UUID]
+#     owner_uuid: UUID
+#     number: int
+#     name: str
+#     is_collection: bool
+#     content_ext: Optional[str]
+#     preview_ext: Optional[str]
+#     thumbnail_ext: Optional[str]
+#     tags: list[str] = []
+#     permissions: list[UUID] = []
+#
+#     def get_generic(self) -> dict[MEDIA_TYPE, 'ItemGeneric']:
+#         """Proxy that helps with content/preview/thumbnail."""
+#         return {
+#             CONTENT: ItemGeneric(
+#                 media_type=CONTENT,
+#                 original_ext=self.content_ext,
+#                 set_callback=lambda ext: setattr(self, 'content_ext', ext),
+#             ),
+#             PREVIEW: ItemGeneric(
+#                 media_type=PREVIEW,
+#                 original_ext=self.preview_ext,
+#                 set_callback=lambda ext: setattr(self, 'preview_ext', ext),
+#             ),
+#             THUMBNAIL: ItemGeneric(
+#                 media_type=THUMBNAIL,
+#                 original_ext=self.thumbnail_ext,
+#                 set_callback=lambda ext: setattr(self, 'thumbnail_ext', ext),
+#             ),
+#         }
 
 
 class ItemGeneric(BaseModel):
@@ -106,234 +95,3 @@ class SimpleItem(TypedDict):
     href: str
     is_collection: bool
     thumbnail: str
-
-
-class PositionedItem(BaseModel):
-    """Primitive version of an item with position information."""
-    position: int
-    total_items: int
-    items_per_page: int
-    item: Item
-
-    @property
-    def page(self) -> int:
-        """Return page number for this item in parent's collection."""
-        return self.position // self.items_per_page + 1
-
-
-class PositionedByUserItem(BaseModel):
-    """Same as PositionedItem but according to user catalogue."""
-    user: omoide.domain.models.User
-    position: int
-    total_items: int
-    items_per_page: int
-    item: Item
-
-    @property
-    def page(self) -> int:
-        """Return page number for this item in parent's collection."""
-        return self.position // self.items_per_page + 1
-
-
-class Location(BaseModel):
-    """Path-like sequence of parents for specific item."""
-    owner: omoide.domain.models.User
-    items: list[PositionedItem]
-    current_item: Optional[Item]
-
-    def __bool__(self) -> bool:
-        """Return True if location is not empty."""
-        return (self.owner is not None) and bool(self.items)
-
-    def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
-        """Iterate over items."""
-        return iter(self.items)
-
-
-class SimpleLocation(BaseModel):
-    """Path-like sequence of parents for specific item."""
-    items: list[Item]
-
-    def __bool__(self) -> bool:
-        """Return True if location is not empty."""
-        return bool(self.items)
-
-    def __iter__(self) -> Iterator[Item]:  # type: ignore
-        """Iterate over items."""
-        return iter(self.items)
-
-
-class ComplexLocation(BaseModel):
-    """Path-like sequence of parents for specific item."""
-    owner: omoide.domain.models.User
-    items: list[PositionedItem]
-    current_item: Optional[Item]
-
-    def __bool__(self) -> bool:
-        """Return True if location is not empty."""
-        return (self.owner is not None) and bool(self.items)
-
-    def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
-        """Iterate over items."""
-        return iter(self.items)
-
-
-class AccessStatus(BaseModel):
-    """Status of an access and existence check."""
-    exists: bool
-    is_public: bool
-    is_permitted: bool
-    is_owner: bool
-
-    @property
-    def does_not_exist(self) -> bool:
-        """Return True if item does not exist."""
-        return not self.exists
-
-    @property
-    def is_given(self) -> bool:
-        """Return True if user can access this item."""
-        return any([
-            self.is_public,
-            self.is_owner,
-            self.is_permitted,
-        ])
-
-    @property
-    def is_not_given(self) -> bool:
-        """Return True if user cannot access this item."""
-        return not self.is_given
-
-    @property
-    def is_not_owner(self) -> bool:
-        """Return True if user is not owner of the item."""
-        return not self.is_owner
-
-    @classmethod
-    def not_found(cls) -> 'AccessStatus':
-        """Item does not exist."""
-        return cls(
-            exists=False,
-            is_public=False,
-            is_permitted=False,
-            is_owner=False,
-        )
-
-
-class Query(BaseModel):
-    """User search query."""
-    raw_query: str
-    tags_include: list[str]
-    tags_exclude: list[str]
-
-    def __bool__(self) -> bool:
-        """Return True if query has tags to search."""
-        return any((self.tags_include, self.tags_exclude))
-
-
-class Media(BaseModel):
-    """Transient content fot the item."""
-    id: int
-    owner_uuid: UUID
-    item_uuid: UUID
-    created_at: datetime
-    processed_at: Optional[datetime]
-    content: bytes
-    ext: str
-    target_folder: Literal['content', 'preview', 'thumbnail']
-    replication: dict[str, dict]
-    error: str
-    attempts: int
-
-
-class Metainfo(BaseModel):
-    """Metainfo for item."""
-    item_uuid: UUID
-
-    created_at: datetime
-    updated_at: datetime
-    deleted_at: Optional[datetime]
-    user_time: Optional[datetime]
-
-    media_type: Optional[str]
-
-    author: Optional[str]
-    author_url: Optional[str]
-    saved_from_url: Optional[str]
-    description: Optional[str]
-
-    extras: dict
-
-    content_size: Optional[int]
-    preview_size: Optional[int]
-    thumbnail_size: Optional[int]
-
-    content_width: Optional[int]
-    content_height: Optional[int]
-    preview_width: Optional[int]
-    preview_height: Optional[int]
-    thumbnail_width: Optional[int]
-    thumbnail_height: Optional[int]
-
-
-class Aim(BaseModel):
-    """Object that describes user's desired output."""
-    query: Query
-    ordered: bool
-    nested: bool
-    paged: bool
-    page: int
-    last_seen: int
-    items_per_page: int
-
-    @property
-    def offset(self) -> int:
-        """Return offset from start of the result block."""
-        return self.items_per_page * (self.page - 1)
-
-    def calc_total_pages(self, total_items: int) -> int:
-        """Calculate how many pages we need considering this query."""
-        return int(total_items / (self.items_per_page or 1))
-
-    def using(
-            self,
-            **kwargs,
-    ) -> 'Aim':
-        """Create new instance with given params."""
-        values = self.dict()
-        values.update(kwargs)
-        return type(self)(**kwargs)
-
-    def url_safe(self) -> dict:
-        """Return dict that can be converted to URL."""
-        params = self.dict()
-        params['q'] = self.query.raw_query
-        params.pop('query', None)
-        return params
-
-
-class SingleResult(BaseModel):
-    """Result of a request for a single item."""
-    item: Item
-    metainfo: Metainfo
-    aim: Aim
-    location: Location
-    neighbours: list[UUID]
-
-
-class SpaceUsage(BaseModel):
-    """Total size of user data."""
-    uuid: UUID
-    content_size: int
-    preview_size: int
-    thumbnail_size: int
-
-    @classmethod
-    def empty(cls, uuid: UUID) -> 'SpaceUsage':
-        """Return empty result."""
-        return cls(
-            uuid=uuid,
-            content_size=0,
-            preview_size=0,
-            thumbnail_size=0,
-        )

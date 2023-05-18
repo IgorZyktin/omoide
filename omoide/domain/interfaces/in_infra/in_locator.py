@@ -10,6 +10,8 @@ __all__ = [
     'AbsLocator',
 ]
 
+from omoide.domain import models
+
 
 class AbsLocator(abc.ABC):
     """Abstract locator.
@@ -19,7 +21,7 @@ class AbsLocator(abc.ABC):
 
     def __init__(
             self,
-            item: domain.Item,
+            item: models.Item,
             prefix_size: int,
     ) -> None:
         """Initialize instance."""

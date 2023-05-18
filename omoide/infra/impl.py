@@ -10,4 +10,6 @@ UUID = _UUID
 
 JSON: TypeAlias = dict[str, str | float | int | bool | None | list | dict]
 
+SIMPLE_DICT: TypeAlias = JSON
+
 json = ujson

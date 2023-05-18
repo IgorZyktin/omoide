@@ -10,7 +10,8 @@ import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
@@ -23,7 +24,7 @@ async def api_create_media(
         uuid: UUID,
         media_in: list[api_models.CreateMediaIn],
         user: omoide.domain.models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
+        policy: in_policy.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateMediaUseCase = Depends(
             dep.create_media_use_case),
 ):

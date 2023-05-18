@@ -21,7 +21,7 @@ LOG = custom_logging.get_logger(__name__)
 
 class ItemsWriteRepository(
     ItemsReadRepository,
-    interfaces.AbsItemsWriteRepository,
+    in_rp_items_write.AbsItemsWriteRepository,
 ):
     """Repository that performs write operations on items."""
 
@@ -42,7 +42,7 @@ class ItemsWriteRepository(
     async def create_item(
             self,
             user: omoide.domain.models.User,
-            item: domain.Item,
+            item: models.Item,
     ) -> UUID:
         """Create item and return UUID."""
         if item.parent_uuid is None:
@@ -80,7 +80,7 @@ class ItemsWriteRepository(
 
     async def update_item(
             self,
-            item: domain.Item,
+            item: models.Item,
     ) -> UUID:
         """Update existing item."""
         stmt = sa.update(
@@ -102,7 +102,7 @@ class ItemsWriteRepository(
 
     async def mark_files_as_orphans(
             self,
-            item: domain.Item,
+            item: models.Item,
             moment: datetime.datetime,
     ) -> None:
         """Mark corresponding files as useless."""
@@ -122,7 +122,7 @@ class ItemsWriteRepository(
 
     async def delete_item(
             self,
-            item: domain.Item,
+            item: models.Item,
     ) -> bool:
         """Delete item with given UUID."""
         stmt = sa.delete(

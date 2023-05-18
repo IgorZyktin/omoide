@@ -2,12 +2,15 @@
 """Use case for user profile quotas.
 """
 import omoide.domain.models
-from omoide import domain
+from omoide.application import app_models
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_items_read
+from omoide.domain.interfaces.in_storage.in_repositories import \
+    in_rp_users_read
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.domain.special_types import Success
 
 __all__ = [
     'AppProfileQuotasUseCase',
@@ -19,8 +22,8 @@ class AppProfileQuotasUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
-            items_repo: interfaces.AbsItemsReadRepository,
+            users_repo: in_rp_users_read.AbsUsersReadRepository,
+            items_repo: in_rp_items_read.AbsItemsReadRepository,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -29,18 +32,18 @@ class AppProfileQuotasUseCase:
     async def execute(
             self,
             user: omoide.domain.models.User,
-    ) -> Result[errors.Error, tuple[domain.SpaceUsage, int, int]]:
+    ) -> Result[errors.Error, tuple[app_models.SpaceUsage, int, int]]:
         """Return amount of items that correspond to query (not items)."""
-        if user.is_anon() or user.uuid is None:
+        if user.is_anon or user.uuid is None:
             return Failure(errors.AuthenticationRequired())
 
         if user.root_item is None:
-            return Success((domain.SpaceUsage.empty(user.uuid), 0, 0))
+            return Success((app_models.SpaceUsage.empty(user.uuid), 0, 0))
 
         async with self.users_repo.transaction():
             root = await self.items_repo.read_item(user.root_item)
             if root is None:
-                return Success((domain.SpaceUsage.empty(user.uuid), 0, 0))
+                return Success((app_models.SpaceUsage.empty(user.uuid), 0, 0))
 
             size = await self.users_repo.calc_total_space_used_by(user)
             total_items = await self.items_repo \
