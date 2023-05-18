@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Custom types used to tie the infrastructure together.
+"""Custom types used to tie components together.
 """
 from typing import Generic
 from typing import TypeVar

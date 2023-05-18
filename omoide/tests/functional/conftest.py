@@ -10,6 +10,7 @@ import pytest_asyncio
 import sqlalchemy
 from databases import Database
 
+import omoide.domain.models
 from omoide import domain
 from omoide import infra
 from omoide.presentation import api_models
@@ -143,7 +144,7 @@ async def user(database):
          );
         """,
     )
-    yield domain.User(
+    yield omoide.domain.models.User(
         uuid=UUID('00000000-0000-0000-0000-000000000000'),
         login='test',
         password='test',
@@ -159,7 +160,7 @@ async def user(database):
 
 @pytest_asyncio.fixture(scope='session')
 def anon_user():
-    return domain.User.new_anon()
+    return omoide.domain.models.User.new_anon()
 
 
 @pytest.fixture

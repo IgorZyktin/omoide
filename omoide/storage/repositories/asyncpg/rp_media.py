@@ -6,6 +6,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
+import omoide.domain.models
 from omoide import domain
 from omoide import utils
 from omoide.domain import interfaces
@@ -17,7 +18,7 @@ class MediaRepository(interfaces.AbsMediaRepository):
 
     async def create_media(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             media: domain.Media,
     ) -> int:
         """Create Media, return media id."""

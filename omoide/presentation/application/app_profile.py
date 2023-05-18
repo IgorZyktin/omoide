@@ -9,6 +9,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide import utils
@@ -24,7 +25,7 @@ router = fastapi.APIRouter()
 @router.get('/profile')
 async def app_profile(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),
@@ -48,7 +49,7 @@ async def app_profile(
 @router.get('/profile/quotas')
 async def app_profile_quotas(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileQuotasUseCase = Depends(
@@ -82,7 +83,7 @@ async def app_profile_quotas(
 @router.get('/profile/new')
 async def app_profile_new(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),
@@ -106,7 +107,7 @@ async def app_profile_new(
 @router.get('/profile/tags')
 async def app_profile_tags(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileTagsUseCase = Depends(

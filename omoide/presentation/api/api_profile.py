@@ -5,6 +5,7 @@ import fastapi
 from fastapi import Depends
 from starlette.requests import Request
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide.infra.special_types import Failure
@@ -18,7 +19,7 @@ router = fastapi.APIRouter()
 @router.get('/api/profile/new')
 async def api_profile_new(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         use_case: use_cases.APIProfileNewUseCase = Depends(
             dep.profile_new_use_case,
         ),

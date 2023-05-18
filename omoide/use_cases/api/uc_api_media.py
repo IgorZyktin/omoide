@@ -4,6 +4,7 @@
 import base64
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide import utils
 from omoide.domain import actions
@@ -39,7 +40,7 @@ class CreateMediaUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
             media_in: list[api_models.CreateMediaIn],
     ) -> Result[errors.Error, int]:

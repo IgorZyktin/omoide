@@ -25,6 +25,7 @@ from omoide import utils
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.infra import custom_logging
+from omoide.infra import impl
 from omoide.presentation import constants
 from omoide.utils import maybe_str
 
@@ -408,3 +409,8 @@ def items_to_dict(
         simple_items.append(simple_item)
 
     return simple_items
+
+
+def serialize(something: Any) -> impl.JSON:
+    # FIXME
+    return {'result': 'ok', 'data': str(something)}

@@ -8,6 +8,7 @@ import sqlalchemy as sa
 from sqlalchemy import cast
 from sqlalchemy.dialects import postgresql as pg
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
@@ -26,7 +27,7 @@ class BrowseRepository(
 
     async def get_children(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> list[domain.Item]:
@@ -52,7 +53,7 @@ class BrowseRepository(
 
     async def count_children(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
     ) -> int:
         """Count all children of an item with given UUID."""
@@ -71,7 +72,7 @@ class BrowseRepository(
 
     async def get_location(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
             aim: domain.Aim,
             users_repo: interfaces.AbsUsersReadRepository,
@@ -101,7 +102,7 @@ class BrowseRepository(
 
     async def get_complex_ancestors(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> list[domain.PositionedItem]:
@@ -134,7 +135,7 @@ class BrowseRepository(
 
     async def get_item_with_position(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item_uuid: UUID,
             child_uuid: UUID,
             aim: domain.Aim,
@@ -218,7 +219,7 @@ class BrowseRepository(
 
     async def simple_find_items_to_browse(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: Optional[UUID],
             aim: domain.Aim,
     ) -> list[domain.Item]:
@@ -251,7 +252,7 @@ class BrowseRepository(
 
     async def complex_find_items_to_browse(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: Optional[UUID],
             aim: domain.Aim,
     ) -> list[domain.Item]:
@@ -362,7 +363,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
     async def get_recent_items(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Return portion of recently loaded items."""

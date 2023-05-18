@@ -11,6 +11,7 @@ from fastapi import Depends
 from fastapi.security import HTTPBasicCredentials
 from starlette.requests import Request
 
+import omoide.domain.models
 from omoide import infra
 from omoide import use_cases
 from omoide import utils
@@ -20,7 +21,7 @@ from omoide.presentation import app_config
 from omoide.presentation import constants
 from omoide.presentation import web
 from omoide.storage.repositories import asyncpg
-
+from omoide.domain.interfaces.in_storage import in_rp_exif
 
 @utils.memorize
 def get_config() -> app_config.Config:
@@ -215,10 +216,10 @@ async def get_current_user(
         credentials: HTTPBasicCredentials = Depends(get_credentials),
         use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
         authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
-) -> auth.User:
+) -> omoide.domain.models.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
-        return auth.User.new_anon()
+        return omoide.domain.models.User.new_anon()
     return await use_case.execute(credentials, authenticator)
 
 
@@ -592,9 +593,18 @@ def create_media_use_case(
 
 
 @utils.memorize
+def create_exif_use_case(
+        exif_repository: in_rp_exif.AbsEXIFRepository = Depends(get_exif_repo),
+) -> use_cases.CreateEXIFUseCase:
+    """Get use case instance."""
+    return use_cases.CreateEXIFUseCase(
+        exif_repo=exif_repository,
+    )
+
+
+@utils.memorize
 def read_exif_use_case(
-        exif_repository:
-        interfaces.AbsEXIFRepository = Depends(get_exif_repo),
+        exif_repository: in_rp_exif.AbsEXIFRepository = Depends(get_exif_repo),
 ) -> use_cases.ReadEXIFUseCase:
     """Get use case instance."""
     return use_cases.ReadEXIFUseCase(
@@ -604,19 +614,17 @@ def read_exif_use_case(
 
 @utils.memorize
 def update_exif_use_case(
-        exif_repository:
-        interfaces.AbsEXIFRepository = Depends(get_exif_repo),
-) -> use_cases.CreateOrUpdateEXIFUseCase:
+        exif_repository: in_rp_exif.AbsEXIFRepository = Depends(get_exif_repo),
+) -> use_cases.UpdateEXIFUseCase:
     """Get use case instance."""
-    return use_cases.CreateOrUpdateEXIFUseCase(
+    return use_cases.UpdateEXIFUseCase(
         exif_repo=exif_repository,
     )
 
 
 @utils.memorize
 def delete_exif_use_case(
-        exif_repository:
-        interfaces.AbsEXIFRepository = Depends(get_exif_repo),
+        exif_repository: in_rp_exif.AbsEXIFRepository = Depends(get_exif_repo),
 ) -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
     return use_cases.DeleteEXIFUseCase(

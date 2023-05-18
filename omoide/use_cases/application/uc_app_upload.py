@@ -3,6 +3,7 @@
 """
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
@@ -31,9 +32,10 @@ class AppUploadUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
-    ) -> Result[errors.Error, tuple[domain.Item, list[domain.User]]]:
+    ) -> Result[errors.Error, tuple[domain.Item, list[
+        omoide.domain.models.User]]]:
         """Return preview model suitable for rendering."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid,

@@ -5,6 +5,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.database import models
@@ -20,7 +21,7 @@ class PreviewRepository(
 
     async def get_neighbours(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
     ) -> list[UUID]:
         """Return uuids of all the neighbours for given item UUID."""

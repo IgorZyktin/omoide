@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
-"""User related interfaces and objects.
+"""Business logic models.
 """
+from dataclasses import dataclass
 from typing import Optional
-from uuid import UUID
 
-from pydantic import BaseModel
-
-__all__ = [
-    'User',
-]
+from omoide.infra import impl
 
 
-class User(BaseModel):
+class DomainModel:
+    """Base class for all domain models."""
+
+
+@dataclass
+class User(DomainModel):
     """User model."""
-    uuid: Optional[UUID]
+    uuid: Optional[impl.UUID]
     login: str
     password: str
     name: str
-    root_item: Optional[UUID]
+    root_item: Optional[impl.UUID]
 
     @property
     def is_registered(self) -> bool:
@@ -27,15 +28,17 @@ class User(BaseModel):
     @property
     def is_not_registered(self) -> bool:
         """Return True if user is anon."""
-        return self.uuid is None
+        return not self.is_registered
 
+    @property
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
         return self.uuid is None
 
+    @property
     def is_not_anon(self) -> bool:
         """Return True if user is registered one."""
-        return not self.is_anon()
+        return not self.is_anon
 
     @classmethod
     def new_anon(cls) -> 'User':
@@ -47,3 +50,10 @@ class User(BaseModel):
             name='anon',
             root_item=None,
         )
+
+
+@dataclass
+class EXIF(DomainModel):
+    """Exif media information."""
+    item_uuid: impl.UUID
+    exif: impl.JSON

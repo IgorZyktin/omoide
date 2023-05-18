@@ -29,6 +29,16 @@ class Error:
         return message
 
 
+class AlreadyExist(Error):
+    """Object already exist."""
+    template = '{object} with corresponding uuid {uuid} already exists'
+
+
+class DoesNotExist(Error):
+    """Object already exist."""
+    template = '{object} with corresponding uuid {uuid} does not exist'
+
+
 class NoUUID(Error):
     """User has to give UUID but opted out it."""
     template = 'No UUID specified for the action {name}'

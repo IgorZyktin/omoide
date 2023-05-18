@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for user profile tags.
 """
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -24,7 +25,7 @@ class AppProfileTagsUseCase:
 
     async def execute(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
     ) -> Result[errors.Error, list[tuple[str, int]]]:
         """Return tags with their counters."""
         async with self.search_repo.transaction():

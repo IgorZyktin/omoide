@@ -6,6 +6,7 @@ import datetime
 from typing import Collection
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_read import AbsItemsReadRepository
@@ -21,7 +22,7 @@ class AbsItemsWriteRepository(AbsItemsReadRepository):
     @abc.abstractmethod
     async def create_item(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> UUID:
         """Return UUID for created item."""

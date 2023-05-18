@@ -5,6 +5,7 @@ from typing import NamedTuple
 from typing import Optional
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
@@ -51,7 +52,7 @@ class AppBrowseUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> Result[errors.Error, BrowseResult]:
@@ -86,7 +87,7 @@ class AppBrowseUseCase:
 
     async def go_browse_paginated(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> BrowseResult | Failure:
@@ -130,8 +131,8 @@ class AppBrowseUseCase:
 
     async def go_browse_dynamic(
             self,
-            user: domain.User,
-            owner: domain.User,
+            user: omoide.domain.models.User,
+            owner: omoide.domain.models.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> BrowseResult | Failure:

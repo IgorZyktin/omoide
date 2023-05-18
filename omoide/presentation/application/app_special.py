@@ -10,6 +10,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 
+import omoide.domain.models
 from omoide import domain
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
@@ -21,7 +22,7 @@ router = fastapi.APIRouter()
 @router.get('/not_found')
 async def not_found(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),
@@ -44,7 +45,7 @@ async def not_found(
 @router.get('/unauthorized')
 async def unauthorized(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),
@@ -67,7 +68,7 @@ async def unauthorized(
 @router.get('/forbidden')
 async def forbidden(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),
@@ -90,7 +91,7 @@ async def forbidden(
 @router.get('/bad_request')
 async def bad_request(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),

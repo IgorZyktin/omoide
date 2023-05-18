@@ -3,17 +3,13 @@
 """
 import abc
 from typing import Optional
-from uuid import UUID
 
-from omoide import domain
 from omoide.domain import actions
+from omoide.domain import models
 from omoide.domain.errors import Error
 from omoide.domain.interfaces.in_storage \
     .in_repositories import in_rp_items_read
-
-__all__ = [
-    'AbsPolicy',
-]
+from omoide.infra import impl
 
 
 class AbsPolicy(abc.ABC):
@@ -29,8 +25,8 @@ class AbsPolicy(abc.ABC):
     @abc.abstractmethod
     async def is_restricted(
             self,
-            user: domain.User,
-            uuid: Optional[UUID],
+            user: models.User,
+            uuid: Optional[impl.UUID],
             action: actions.Action,
     ) -> Optional[Error]:
         """Return Error if action is not permitted."""

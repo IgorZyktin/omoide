@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide.domain import interfaces
@@ -21,7 +22,7 @@ router = APIRouter(prefix='/api/media')
 async def api_create_media(
         uuid: UUID,
         media_in: list[api_models.CreateMediaIn],
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateMediaUseCase = Depends(
             dep.create_media_use_case),

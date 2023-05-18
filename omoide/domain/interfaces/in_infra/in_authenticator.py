@@ -3,10 +3,6 @@
 """
 import abc
 
-__all__ = [
-    'AbsAuthenticator',
-]
-
 
 class AbsAuthenticator(abc.ABC):
     """Abstract authenticator."""
@@ -16,9 +12,5 @@ class AbsAuthenticator(abc.ABC):
         """Encode user password with chosen algorithm."""
 
     @abc.abstractmethod
-    def password_is_correct(
-            self,
-            given_password: str,
-            reference: str,
-    ) -> bool:
+    def password_is_correct(self, given_password: str, reference: str) -> bool:
         """Return True if user password is correct."""

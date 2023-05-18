@@ -4,6 +4,7 @@
 import abc
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain.interfaces.in_storage \
     .in_repositories import in_rp_users_read
@@ -28,6 +29,6 @@ class AbsUsersWriteRepository(in_rp_users_read.AbsUsersReadRepository):
     @abc.abstractmethod
     async def update_user(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
     ) -> UUID:
         """Update existing user."""

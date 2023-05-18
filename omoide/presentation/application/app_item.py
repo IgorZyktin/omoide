@@ -11,6 +11,7 @@ from fastapi import Request
 from starlette.responses import HTMLResponse
 from starlette.responses import Response
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide import utils
@@ -27,7 +28,7 @@ router = fastapi.APIRouter(prefix='/items')
 async def app_item_create(
         request: Request,
         uuid: str,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
@@ -82,7 +83,7 @@ def serialize_item(
 async def app_item_update(
         request: Request,
         uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
@@ -140,7 +141,7 @@ async def app_item_update(
 async def app_item_delete(
         request: Request,
         uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),

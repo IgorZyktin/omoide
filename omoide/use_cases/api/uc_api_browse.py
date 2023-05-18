@@ -4,6 +4,7 @@
 from typing import Optional
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
@@ -30,7 +31,7 @@ class APIBrowseUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:

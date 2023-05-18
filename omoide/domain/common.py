@@ -11,7 +11,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from omoide import domain
+import omoide.domain.models
 
 __all__ = [
     'Item',
@@ -25,7 +25,6 @@ __all__ = [
     'SimpleLocation',
     'ComplexLocation',
     'Media',
-    'EXIF',
     'Metainfo',
     'Aim',
     'SpaceUsage',
@@ -124,7 +123,7 @@ class PositionedItem(BaseModel):
 
 class PositionedByUserItem(BaseModel):
     """Same as PositionedItem but according to user catalogue."""
-    user: domain.User
+    user: omoide.domain.models.User
     position: int
     total_items: int
     items_per_page: int
@@ -138,7 +137,7 @@ class PositionedByUserItem(BaseModel):
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: domain.User
+    owner: omoide.domain.models.User
     items: list[PositionedItem]
     current_item: Optional[Item]
 
@@ -166,7 +165,7 @@ class SimpleLocation(BaseModel):
 
 class ComplexLocation(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: domain.User
+    owner: omoide.domain.models.User
     items: list[PositionedItem]
     current_item: Optional[Item]
 
@@ -245,12 +244,6 @@ class Media(BaseModel):
     replication: dict[str, dict]
     error: str
     attempts: int
-
-
-class EXIF(BaseModel):
-    """Exif media information."""
-    item_uuid: UUID
-    exif: dict[str, str | float | int | bool | None | list | dict]
 
 
 class Metainfo(BaseModel):

@@ -11,6 +11,7 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+import omoide.domain.models
 from omoide import domain
 from omoide import utils
 from omoide.domain import interfaces
@@ -23,7 +24,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def create_empty_metainfo(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> bool:
         """Create metainfo with blank fields."""
@@ -60,7 +61,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def read_children_to_download(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> list[dict[str, UUID | str | int]]:
         """Return some components of the given item children with metainfo."""
@@ -90,7 +91,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def update_metainfo(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             metainfo: domain.Metainfo,
     ) -> None:
         """Update metainfo and return true on success."""
@@ -130,7 +131,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def update_computed_tags(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> None:
         """Update computed tags for this item."""
@@ -172,7 +173,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def _increase_known_tags_for_known_user(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
@@ -202,7 +203,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def _decrease_known_tags_for_known_user(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
@@ -223,7 +224,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def apply_new_known_tags(
             self,
-            users: Collection[domain.User],
+            users: Collection[omoide.domain.models.User],
             tags_added: Collection[str],
             tags_deleted: Collection[str],
     ) -> None:
@@ -247,7 +248,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def drop_unused_tags(
             self,
-            users: Collection[domain.User],
+            users: Collection[omoide.domain.models.User],
             public_users: set[UUID],
     ) -> None:
         """Drop tags with counter less of equal to 0."""
@@ -271,7 +272,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def _increase_known_tags_for_anon_user(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
@@ -299,7 +300,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def _decrease_known_tags_for_anon_user(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""

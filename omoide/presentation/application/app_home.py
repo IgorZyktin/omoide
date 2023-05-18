@@ -9,6 +9,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 
+import omoide.domain.models
 from omoide import domain
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
@@ -20,7 +21,7 @@ router = fastapi.APIRouter()
 @router.get('/')
 async def app_home(
         request: Request,
-        user: domain.User = fastapi.Depends(dep.get_current_user),
+        user: omoide.domain.models.User = fastapi.Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         templates: web.TemplateEngine = Depends(dep.get_templates),

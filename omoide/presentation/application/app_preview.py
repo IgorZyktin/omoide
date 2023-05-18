@@ -9,6 +9,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 
+import omoide.domain.models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import auth
@@ -28,7 +29,7 @@ router = fastapi.APIRouter()
 async def app_preview(
         request: Request,
         uuid: str,
-        user: auth.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppPreviewUseCase = Depends(
             dep.app_preview_use_case),

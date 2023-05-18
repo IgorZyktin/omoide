@@ -4,6 +4,7 @@
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.database import models
@@ -17,7 +18,7 @@ class SearchRepository(
 
     @staticmethod
     def _expand_query(
-            user: domain.User,
+            user: omoide.domain.models.User,
             aim: domain.Aim,
             stmt: Select,
     ) -> Select:
@@ -58,7 +59,7 @@ class SearchRepository(
 
     async def count_matching_items(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             aim: domain.Aim,
     ) -> int:
         """Count matching items for search query."""
@@ -75,7 +76,7 @@ class SearchRepository(
 
     async def get_matching_items(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             aim: domain.Aim,
             obligation: domain.Obligation,
     ) -> list[domain.Item]:
@@ -99,7 +100,7 @@ class SearchRepository(
 
     async def guess_tag_known(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             guess: domain.GuessTag,
             obligation: domain.Obligation,
     ) -> list[domain.GuessResult]:
@@ -123,7 +124,7 @@ class SearchRepository(
 
     async def guess_tag_anon(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             guess: domain.GuessTag,
             obligation: domain.Obligation,
     ) -> list[domain.GuessResult]:
@@ -146,7 +147,7 @@ class SearchRepository(
 
     async def count_all_tags(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
     ) -> list[tuple[str, int]]:
         """Return statistics for known tags."""
         if user.is_registered:

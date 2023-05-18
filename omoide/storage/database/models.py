@@ -349,30 +349,6 @@ class Signature(Base):
     signature: str = sa.Column(sa.Text, nullable=False)
 
 
-class EXIF(Base):
-    """EXIF information for items."""
-    __tablename__ = 'exif'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid: UUID = sa.Column(pg.UUID(),
-                                sa.ForeignKey('items.uuid',
-                                              ondelete='CASCADE'),
-                                nullable=False,
-                                index=True,
-                                primary_key=True)
-
-    # fields ------------------------------------------------------------------
-
-    exif: dict = sa.Column(pg.JSONB, nullable=False)
-
-    # relations ---------------------------------------------------------------
-
-    item: Item = relationship('Item',
-                              passive_deletes=True,
-                              back_populates='exif',
-                              uselist=False)
-
 
 class OrphanFiles(Base):
     """Model that tracks files of already deleted items.

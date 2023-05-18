@@ -3,6 +3,7 @@
 """
 from typing import Optional
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -33,7 +34,7 @@ class AppDynamicSearchUseCase(BaseSearchUseCase):
 
     async def execute(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             aim: domain.Aim,
     ) -> Result[errors.Error, int]:
         """Return amount of items that correspond to query (not items)."""
@@ -49,7 +50,7 @@ class AppPagedSearchUseCase(BaseSearchUseCase):
 
     async def execute(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             aim: domain.Aim,
     ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         """Return items that correspond to query."""

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Use case for user profile quotas.
 """
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -27,7 +28,7 @@ class AppProfileQuotasUseCase:
 
     async def execute(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
     ) -> Result[errors.Error, tuple[domain.SpaceUsage, int, int]]:
         """Return amount of items that correspond to query (not items)."""
         if user.is_anon() or user.uuid is None:

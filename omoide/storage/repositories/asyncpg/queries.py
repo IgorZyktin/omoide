@@ -4,6 +4,7 @@
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
+import omoide.domain.models
 from omoide import domain
 from omoide.storage.database import models
 
@@ -14,7 +15,7 @@ def public_user_uuids() -> Select:
 
 
 def ensure_registered_user_has_permissions(
-        user: domain.User,
+        user: omoide.domain.models.User,
         stmt: Select,
 ) -> Select:
     """Ensure that registered user has permission to access this."""
@@ -36,7 +37,7 @@ def ensure_anon_user_has_permissions(
 
 
 def ensure_user_has_permissions(
-        user: domain.User,
+        user: omoide.domain.models.User,
         stmt: Select,
 ) -> Select:
     """Ensure that any user has permission to access this."""

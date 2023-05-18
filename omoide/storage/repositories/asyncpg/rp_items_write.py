@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import sqlalchemy as sa
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.infra import custom_logging
@@ -40,7 +41,7 @@ class ItemsWriteRepository(
 
     async def create_item(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> UUID:
         """Create item and return UUID."""

@@ -14,6 +14,7 @@ from fastapi.security import HTTPBasic
 from fastapi.security import HTTPBasicCredentials
 from starlette import status
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide.domain import interfaces
@@ -28,7 +29,7 @@ security = HTTPBasic(realm='omoide')
 @router.get('/login')
 async def app_login(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         credentials: HTTPBasicCredentials = Depends(security),
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
@@ -68,7 +69,7 @@ async def app_logout(
     context = {
         'request': request,
         'config': config,
-        'user': domain.User.new_anon(),
+        'user': omoide.domain.models.User.new_anon(),
         'aim_wrapper': aim_wrapper,
         'url': templates.url_for(request, 'app_search'),
     }

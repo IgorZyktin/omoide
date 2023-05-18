@@ -5,6 +5,7 @@ import fastapi
 from fastapi import Depends
 from starlette.requests import Request
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide import utils as global_utils
@@ -21,7 +22,7 @@ router = fastapi.APIRouter()
 async def api_browse(
         request: Request,
         uuid: str,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.APIBrowseUseCase = Depends(
             dep.api_browse_use_case),

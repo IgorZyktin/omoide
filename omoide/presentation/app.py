@@ -6,9 +6,10 @@ This component is facing towards the user and displays search results.
 import os
 
 import fastapi
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
+from omoide.application.controllers import api as api_controllers
 from omoide.presentation import api
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -55,7 +56,7 @@ app.include_router(application.app_profile.router)
 
 # API routes
 app.include_router(api.api_browse.router)
-app.include_router(api.api_exif.router)
+app.include_router(api_controllers.api_exif.router)
 app.include_router(api.api_home.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)

@@ -6,6 +6,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.database import models
@@ -17,7 +18,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def check_access(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
     ) -> domain.AccessStatus:
         """Check access to the Item with given UUID for the given User."""
@@ -93,7 +94,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def read_children_of(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
             ignore_collections: bool,
     ) -> list[domain.Item]:
@@ -120,8 +121,8 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def get_simple_location(
             self,
-            user: domain.User,
-            owner: domain.User,
+            user: omoide.domain.models.User,
+            owner: omoide.domain.models.User,
             item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
@@ -130,7 +131,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def get_simple_ancestors(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> list[domain.Item]:
         """Return list of ancestors for given item."""
@@ -158,7 +159,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def count_items_by_owner(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
@@ -181,7 +182,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def get_all_parents(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item: domain.Item,
     ) -> list[domain.Item]:
         """Return all parents of the given item."""
@@ -227,7 +228,7 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
 
     async def get_direct_children_uuids_of(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             item_uuid: UUID,
     ) -> list[UUID]:
         """Return all direct items of th given item."""

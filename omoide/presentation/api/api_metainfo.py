@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 
+import omoide.domain.models
 from omoide import domain
 from omoide import use_cases
 from omoide.domain import interfaces
@@ -21,7 +22,7 @@ router = APIRouter(prefix='/api/metainfo')
 async def api_update_metainfo(
         uuid: UUID,
         metainfo_in: api_models.MetainfoIn,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.UpdateMetainfoUseCase = Depends(
             dep.update_metainfo_use_case),
@@ -38,7 +39,7 @@ async def api_update_metainfo(
 @router.get('/{uuid}')
 async def api_read_metainfo(
         uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: omoide.domain.models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ReadMetainfoUseCase = Depends(
             dep.read_metainfo_use_case),

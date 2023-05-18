@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """Use case for EXIF.
 """
-from uuid import UUID
-
-from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
-from omoide.presentation import api_models
+from omoide.domain import models
+from omoide.domain.interfaces.in_infra import in_policy
+from omoide.domain.interfaces.in_storage import in_rp_exif
+from omoide.domain.special_types import Failure
+from omoide.domain.special_types import Result
+from omoide.infra import impl
 
 __all__ = [
-    'CreateOrUpdateEXIFUseCase',
+    'CreateEXIFUseCase',
     'ReadEXIFUseCase',
+    'UpdateEXIFUseCase',
     'DeleteEXIFUseCase',
 ]
 
@@ -22,40 +21,30 @@ __all__ = [
 class BaseEXIFUseCase:
     """Base use case."""
 
-    def __init__(
-            self,
-            exif_repo: interfaces.AbsEXIFRepository,
-    ) -> None:
+    def __init__(self, exif_repo: in_rp_exif.AbsEXIFRepository) -> None:
         """Initialize instance."""
         self.exif_repo = exif_repo
 
 
-class CreateOrUpdateEXIFUseCase(BaseEXIFUseCase):
-    """Use case for updating an EXIF."""
+class CreateEXIFUseCase(BaseEXIFUseCase):
+    """Use case for creation an EXIF."""
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-            exif_in: api_models.EXIFIn,
-    ) -> Result[errors.Error, bool]:
+            policy: in_policy.AbsPolicy,
+            user: models.User,
+            exif: models.EXIF,
+    ) -> Result[errors.Error, models.EXIF]:
         """Business logic."""
         async with self.exif_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.EXIF.CREATE_OR_UPDATE)
-
+            error = await policy.is_restricted(user, exif.item_uuid,
+                                               actions.EXIF.CREATE)
             if error:
                 return Failure(error)
 
-            exif = domain.EXIF(
-                item_uuid=uuid,
-                exif=exif_in.exif,
-            )
+            result = await self.exif_repo.create_exif(user, exif)
 
-            created = await self.exif_repo.create_or_update_exif(user, exif)
-
-        return Success(created)
+        return result
 
 
 class ReadEXIFUseCase(BaseEXIFUseCase):
@@ -63,43 +52,58 @@ class ReadEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-    ) -> Result[errors.Error, domain.EXIF]:
+            policy: in_policy.AbsPolicy,
+            user: models.User,
+            item_uuid: impl.UUID,
+    ) -> Result[errors.Error, models.EXIF]:
         async with self.exif_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.EXIF.READ)
-
+            error = await policy.is_restricted(user, item_uuid,
+                                               actions.EXIF.READ)
             if error:
                 return Failure(error)
 
-            exif = await self.exif_repo.read_exif(uuid)
+            result = await self.exif_repo.read_exif(item_uuid)
 
-            if exif is None:
-                return Failure(errors.EXIFDoesNotExist(uuid=uuid))
-
-        return Success(exif)
+        return result
 
 
-class DeleteEXIFUseCase(BaseEXIFUseCase):
-    """Use case for deleting an EXIF."""
+class UpdateEXIFUseCase(BaseEXIFUseCase):
+    """Use case for updating an EXIF."""
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-    ) -> Result[errors.Error, bool]:
+            policy: in_policy.AbsPolicy,
+            user: models.User,
+            exif: models.EXIF,
+    ) -> Result[errors.Error, models.EXIF]:
         """Business logic."""
         async with self.exif_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.EXIF.DELETE)
-
+            error = await policy.is_restricted(user, exif.item_uuid,
+                                               actions.EXIF.UPDATE)
             if error:
                 return Failure(error)
 
-            deleted = await self.exif_repo.delete_exif(uuid)
+            result = await self.exif_repo.update_exif(user, exif)
 
-            if not deleted:
-                return Failure(errors.EXIFDoesNotExist(uuid=uuid))
+        return result
 
-        return Success(True)
+
+class DeleteEXIFUseCase(BaseEXIFUseCase):
+    """Use case for deleting EXIF."""
+
+    async def execute(
+            self,
+            policy: in_policy.AbsPolicy,
+            user: models.User,
+            item_uuid: impl.UUID,
+    ) -> Result[errors.Error, bool]:
+        """Business logic."""
+        async with self.exif_repo.transaction():
+            error = await policy.is_restricted(user, item_uuid,
+                                               actions.EXIF.DELETE)
+            if error:
+                return Failure(error)
+
+            result = await self.exif_repo.delete_exif(item_uuid)
+
+        return result

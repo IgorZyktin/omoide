@@ -3,6 +3,7 @@
 """
 from fastapi.security import HTTPBasicCredentials
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 
@@ -22,12 +23,12 @@ class AuthUseCase:
             self,
             credentials: HTTPBasicCredentials,
             authenticator: interfaces.AbsAuthenticator,
-    ) -> domain.User:
+    ) -> omoide.domain.models.User:
         """Return user model."""
         user = await self.users_repo.read_user_by_login(credentials.username)
 
         if user is None:
-            return domain.User.new_anon()
+            return omoide.domain.models.User.new_anon()
 
         if authenticator.password_is_correct(
                 given_password=credentials.password,
@@ -35,4 +36,4 @@ class AuthUseCase:
         ):
             return user
 
-        return domain.User.new_anon()
+        return omoide.domain.models.User.new_anon()

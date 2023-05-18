@@ -6,6 +6,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import interfaces
 from omoide.storage.database import models
@@ -17,7 +18,7 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
     async def read_user(
             self,
             uuid: UUID,
-    ) -> Optional[domain.User]:
+    ) -> Optional[omoide.domain.models.User]:
         """Return User or None."""
         stmt = sa.select(
             models.User
@@ -25,12 +26,12 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             models.User.uuid == uuid
         )
         response = await self.db.fetch_one(stmt)
-        return domain.User(**response) if response else None
+        return omoide.domain.models.User(**response) if response else None
 
     async def read_user_by_login(
             self,
             login: str,
-    ) -> Optional[domain.User]:
+    ) -> Optional[omoide.domain.models.User]:
         """Return User or None."""
         stmt = sa.select(
             models.User
@@ -38,12 +39,12 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
             models.User.login == login
         )
         response = await self.db.fetch_one(stmt)
-        return domain.User(**response) if response else None
+        return omoide.domain.models.User(**response) if response else None
 
     async def read_all_users(
             self,
             *uuids: UUID,
-    ) -> list[domain.User]:
+    ) -> list[omoide.domain.models.User]:
         """Return list of users with given uuids."""
         stmt = sa.select(
             models.User
@@ -52,11 +53,11 @@ class UsersReadRepository(interfaces.AbsUsersReadRepository):
         )
 
         response = await self.db.fetch_all(stmt)
-        return [domain.User(**record) for record in response]
+        return [omoide.domain.models.User(**record) for record in response]
 
     async def calc_total_space_used_by(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
     ) -> domain.SpaceUsage:
         """Return total amount of used space for user."""
         stmt = sa.select(

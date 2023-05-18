@@ -5,6 +5,7 @@ import abc
 from typing import Optional
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
@@ -15,7 +16,7 @@ class AbsMediaRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def create_media(
             self,
-            user: domain.User,
+            user: omoide.domain.models.User,
             media: domain.Media,
     ) -> int:
         """Create Media, return media id."""

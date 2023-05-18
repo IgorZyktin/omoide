@@ -3,6 +3,7 @@
 """
 from uuid import UUID
 
+import omoide.domain.models
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
@@ -35,7 +36,7 @@ class AppPreviewUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: omoide.domain.models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> Result[errors.Error, domain.SingleResult]:
