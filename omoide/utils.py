@@ -218,11 +218,11 @@ def group_to_size(iterable: Iterable, group_size: int = 2,
     return zip_longest(*[iter(iterable)] * group_size, fillvalue=default)
 
 
-def maybe_str(string: Optional[str]) -> str:
+def maybe_str(string: Any | None) -> str:
     """Type safe string operation."""
     if string is None:
         return ''
-    return string
+    return str(string)
 
 
 T = TypeVar('T')

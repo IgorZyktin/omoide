@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Application settings.
 """
-from pydantic import BaseSettings
-from pydantic import SecretStr
+import pydantic
+import pydantic_settings
 
 
-class Config(BaseSettings):
+class Config(pydantic_settings.BaseSettings):
     """Application settings."""
-    db_url_app: SecretStr
+    db_url_app: pydantic.SecretStr
     injection: str = ''
     env: str = 'dev'
     host: str = '0.0.0.0'

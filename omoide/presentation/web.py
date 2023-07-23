@@ -401,7 +401,7 @@ def items_to_dict(
             parent_name=name,
             name=item.name,
             is_collection=item.is_collection,
-            href=href,
+            href=str(href),
             number=item.number,
             thumbnail=thumbnail,
         )

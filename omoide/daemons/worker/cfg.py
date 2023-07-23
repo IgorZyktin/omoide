@@ -4,18 +4,15 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
-from pydantic import SecretStr
-from pydantic import root_validator
-from pydantic import validator
+import pydantic
 
 _LOG_LEVEL = Literal['DEBUG', 'INFO', 'WARNING', 'CRITICAL', 'ERROR', 'NOTSET']
 
 
-class Config(BaseModel):
+class Config(pydantic.BaseModel):
     """Worker configuration."""
     name: str
-    db_url: SecretStr
+    db_url: pydantic.SecretStr
     hot_folder: str
     cold_folder: str
     save_hot: bool
@@ -36,9 +33,10 @@ class Config(BaseModel):
     replication_formula: dict[str, bool]
 
     class Config:
-        allow_mutation = False
+        frozen = True
 
-    @validator('min_interval')
+    @pydantic.field_validator('min_interval')
+    @classmethod
     def check_min_interval(cls, v):
         if v <= 0.0:
             raise ValueError('Minimum interval is too small')
@@ -48,9 +46,10 @@ class Config(BaseModel):
 
         return v
 
-    @validator('max_interval')
-    def check_max_interval(cls, v, values):
-        min_interval = values.get('min_interval', 0.0)
+    @pydantic.field_validator('min_interval', 'max_interval')
+    @classmethod
+    def check_max_interval(cls, v, info: pydantic.FieldValidationInfo):
+        min_interval = info.data.get('min_interval', 0.0)
 
         if v <= min_interval:
             raise ValueError('Maximum interval is too small')
@@ -60,7 +59,8 @@ class Config(BaseModel):
 
         return v
 
-    @validator('warm_up_coefficient')
+    @pydantic.field_validator('warm_up_coefficient')
+    @classmethod
     def check_warm_up_coefficient(cls, v):
         if v <= 1.0:
             raise ValueError('Warm up coefficient is too small')
@@ -70,7 +70,19 @@ class Config(BaseModel):
 
         return v
 
-    @root_validator
+    @pydantic.field_validator('batch_size')
+    @classmethod
+    def check_batch_size(cls, v):
+        if v <= 0:
+            raise ValueError('Batch size is too small')
+
+        if v >= 100_000:
+            raise ValueError('Batch size is too big')
+
+        return v
+
+    @pydantic.model_validator(mode='before')
+    @classmethod
     def check_at_least_one_folder_given(cls, values):
         hot_folder = values.get('hot_folder')
         cold_folder = values.get('cold_folder')
@@ -82,7 +94,8 @@ class Config(BaseModel):
 
         return values
 
-    @root_validator
+    @pydantic.model_validator(mode='after')
+    @classmethod
     def check_folders_are_adequate(cls, values):
         save_hot = values.get('save_hot')
         save_cold = values.get('save_cold')
@@ -101,7 +114,8 @@ class Config(BaseModel):
 
         return values
 
-    @root_validator
+    @pydantic.model_validator(mode='after')
+    @classmethod
     def check_folders_exist(cls, values):
         save_hot = values.get('save_hot')
         save_cold = values.get('save_cold')
@@ -124,16 +138,6 @@ class Config(BaseModel):
             raise ValueError(f'Cold folder does not exist: {cold_folder!r}')
 
         return values
-
-    @validator('batch_size')
-    def check_batch_size(cls, v):
-        if v <= 0:
-            raise ValueError('Batch size is too small')
-
-        if v >= 100_000:
-            raise ValueError('Batch size is too big')
-
-        return v
 
     def verbose(self) -> str:
         """Convert config to human-readable string."""

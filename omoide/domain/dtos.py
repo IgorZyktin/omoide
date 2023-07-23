@@ -14,7 +14,6 @@ class BaseDTO(BaseModel):
     """Immutable model that does not support arbitrary attributes."""
 
     class Config:
-        allow_mutation: bool = False
         frozen: bool = True
         extra: str = 'forbid'
 

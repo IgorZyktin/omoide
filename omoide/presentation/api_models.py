@@ -6,24 +6,22 @@ from typing import Literal
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
-from pydantic import root_validator
-from pydantic import validator
+import pydantic
 
 
-class OnlyUUID(BaseModel):
+class OnlyUUID(pydantic.BaseModel):
     """Simple model, that describes only UUID of the object."""
     uuid: UUID
 
 
-class PatchOperation(BaseModel):
+class PatchOperation(pydantic.BaseModel):
     """Single operation in PATCH request."""
     op: str
     path: str
     value: str | None
 
 
-class CreateItemIn(BaseModel):
+class CreateItemIn(pydantic.BaseModel):
     """Input info for item creation."""
     uuid: Optional[UUID]
     parent_uuid: Optional[UUID]
@@ -32,7 +30,8 @@ class CreateItemIn(BaseModel):
     tags: list[str]
     permissions: list[UUID]
 
-    @validator('name')
+    @pydantic.field_validator('name')
+    @classmethod
     def name_must_have_adequate_length(cls, v):
         """Check."""
         name_limit = 255
@@ -42,7 +41,8 @@ class CreateItemIn(BaseModel):
             )
         return v
 
-    @validator('tags')
+    @pydantic.field_validator('tags')
+    @classmethod
     def tags_must_be_adequate(cls, v):
         """Check."""
         tags_limit = 255
@@ -60,7 +60,8 @@ class CreateItemIn(BaseModel):
 
         return v
 
-    @validator('permissions')
+    @pydantic.field_validator('permissions')
+    @classmethod
     def permissions_be_adequate(cls, v):
         """Check."""
         permissions_limit = 100
@@ -79,7 +80,8 @@ class CreateItemIn(BaseModel):
 
         return v
 
-    @root_validator
+    @pydantic.model_validator(mode='after')
+    @classmethod
     def ensure_collection_has_name(cls, values: dict):
         """Check."""
         name = values.get('name')
@@ -96,7 +98,7 @@ class CreateItemsIn(CreateItemIn):
     total: int
 
 
-class CreateUserIn(BaseModel):
+class CreateUserIn(pydantic.BaseModel):
     """Input info for user creation."""
     uuid: Optional[UUID]
     root_item: Optional[UUID]
@@ -105,25 +107,25 @@ class CreateUserIn(BaseModel):
     name: Optional[str]
 
 
-class CreateMediaIn(BaseModel):
+class CreateMediaIn(pydantic.BaseModel):
     """Input info for media creation."""
     content: str
     target_folder: Literal['content', 'preview', 'thumbnail']
     ext: str
 
 
-class EXIFIn(BaseModel):
+class EXIFIn(pydantic.BaseModel):
     """Input info for EXIF creation."""
     exif: dict[str, str | float | int | bool | None | list | dict]
 
 
-class NewTagsIn(BaseModel):
+class NewTagsIn(pydantic.BaseModel):
     """Input info for new tags."""
     tags: list[str]
     # TODO - add validation
 
 
-class NewPermissionsIn(BaseModel):
+class NewPermissionsIn(pydantic.BaseModel):
     """Input info for new permissions."""
     apply_to_parents: bool
     apply_to_children: bool
@@ -132,7 +134,7 @@ class NewPermissionsIn(BaseModel):
     permissions_after: list[UUID]
 
 
-class MetainfoIn(BaseModel):
+class MetainfoIn(pydantic.BaseModel):
     """Input info for metainfo creation."""
     user_time: Optional[datetime]
 

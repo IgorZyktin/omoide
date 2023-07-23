@@ -40,7 +40,7 @@
 <div id="header" class="header-static">
     <div id="sub_header" class="sub_header">
         <div class="query-container">
-            <a href="{{ url_for(request, 'app_home') + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+            <a href="{{ url_for(request, 'app_home')|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                title="Go to starting page"
                class="button qc-home">
                 <img src="{{ url_for(request, 'static', path='ic_home_24px.svg') }}"
@@ -197,7 +197,7 @@
                     {% set parent_hint = user.root_item | string %}
                 {% endif %}
 
-                <a href="{{ url_for(request, 'app_item_create', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                <a href="{{ url_for(request, 'app_item_create', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                    title="Create new item"
                    class="button">
                     <img src="{{ url_for(request, 'static', path='ic_create_new_folder_24px.svg') }}"
@@ -205,7 +205,7 @@
                     <span>Create</span>
                 </a>
 
-                <a href="{{ url_for(request, 'app_upload', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                <a href="{{ url_for(request, 'app_upload', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                    title="Upload media"
                    class="button">
                     <img src="{{ url_for(request, 'static', path='ic_perm_media_24px.svg') }}"
@@ -214,7 +214,7 @@
                 </a>
 
                 {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
-                    <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                    <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Edit current item"
                        class="button">
                         <img src="{{ url_for(request, 'static', path='ic_format_list_bulleted_24px.svg') }}"
@@ -222,7 +222,7 @@
                         <span>Edit</span>
                     </a>
 
-                    <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                    <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Delete current item"
                        class="button">
                         <img src="{{ url_for(request, 'static', path='ic_delete_24px.svg') }}"
@@ -230,7 +230,7 @@
                         <span>Delete</span>
                     </a>
                 {% else %}
-                    <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                    <a href="{{ url_for(request, 'app_item_update', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Edit current item"
                        class="button-disabled">
                         <img src="{{ url_for(request, 'static', path='ic_format_list_bulleted_24px.svg') }}"
@@ -238,7 +238,7 @@
                         <span>Edit</span>
                     </a>
 
-                    <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint) + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                    <a href="{{ url_for(request, 'app_item_delete', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Delete current item"
                        class="button-disabled">
                         <img src="{{ url_for(request, 'static', path='ic_delete_24px.svg') }}"
