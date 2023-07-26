@@ -1,8 +1,13 @@
-# -*- coding: utf-8 -*-
 """Custom types used to tie the infrastructure together.
 """
 from typing import Generic
 from typing import TypeVar
+
+__all__ = [
+    'Success',
+    'Failure',
+    'Result',
+]
 
 V = TypeVar('V', covariant=True)
 E = TypeVar('E', covariant=True)

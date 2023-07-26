@@ -114,11 +114,6 @@ class CreateMediaIn(pydantic.BaseModel):
     ext: str
 
 
-class EXIFIn(pydantic.BaseModel):
-    """Input info for EXIF creation."""
-    exif: dict[str, str | float | int | bool | None | list | dict]
-
-
 class NewTagsIn(pydantic.BaseModel):
     """Input info for new tags."""
     tags: list[str]

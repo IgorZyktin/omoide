@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Application server.
 
 This component is facing towards the user and displays search results.
@@ -13,6 +12,7 @@ from omoide.presentation import api
 from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
+from omoide.application.controllers import api as api_new
 
 app = fastapi.FastAPI(
     # openapi_url=None,
@@ -55,7 +55,7 @@ app.include_router(application.app_profile.router)
 
 # API routes
 app.include_router(api.api_browse.router)
-app.include_router(api.api_exif.router)
+app.include_router(api_new.api_exif.router)
 app.include_router(api.api_home.router)
 app.include_router(api.api_items.router)
 app.include_router(api.api_media.router)

@@ -96,7 +96,7 @@ class ItemIsInconsistent(Error):
 
 class EXIFDoesNotExist(Error):
     """EXIF for item does not exist."""
-    template = 'EXIF for item {uuid} does not exist'
+    template = 'EXIF for item {item_uuid} does not exist'
 
 
 class UserDoesNotExist(Error):
@@ -117,3 +117,8 @@ class MetainfoDoesNotExist(Error):
 class AuthenticationRequired(Error):
     """User must log in."""
     template = 'You must be logged in to do this'
+
+
+class DatabaseError(Error):
+    """Failed to perform operation in the DB."""
+    template = 'Failed to perform operation'

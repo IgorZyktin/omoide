@@ -16,6 +16,7 @@ from omoide import use_cases
 from omoide import utils
 from omoide.domain import auth
 from omoide.domain import interfaces
+from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.presentation import app_config
 from omoide.presentation import constants
 from omoide.presentation import web
@@ -139,8 +140,7 @@ def get_media_repo() -> interfaces.AbsMediaRepository:
     return asyncpg.MediaRepository(get_db())
 
 
-@utils.memorize
-def get_exif_repo() -> interfaces.AbsEXIFRepository:
+def exif_repo() -> AbsEXIFRepository:
     """Get repo instance."""
     return asyncpg.EXIFRepository(get_db())
 
@@ -591,37 +591,32 @@ def create_media_use_case(
 # api exif related use cases -------------------------------------------------
 
 
-@utils.memorize
+def create_exif_use_case(
+        exif_repository: AbsEXIFRepository = Depends(exif_repo),
+) -> use_cases.CreateEXIFUseCase:
+    """Get use case instance."""
+    return use_cases.CreateEXIFUseCase(exif_repo=exif_repository)
+
+
 def read_exif_use_case(
-        exif_repository:
-        interfaces.AbsEXIFRepository = Depends(get_exif_repo),
+        exif_repository: AbsEXIFRepository = Depends(exif_repo),
 ) -> use_cases.ReadEXIFUseCase:
     """Get use case instance."""
-    return use_cases.ReadEXIFUseCase(
-        exif_repo=exif_repository,
-    )
+    return use_cases.ReadEXIFUseCase(exif_repo=exif_repository)
 
 
-@utils.memorize
 def update_exif_use_case(
-        exif_repository:
-        interfaces.AbsEXIFRepository = Depends(get_exif_repo),
-) -> use_cases.CreateOrUpdateEXIFUseCase:
+        exif_repository: AbsEXIFRepository = Depends(exif_repo),
+) -> use_cases.UpdateEXIFUseCase:
     """Get use case instance."""
-    return use_cases.CreateOrUpdateEXIFUseCase(
-        exif_repo=exif_repository,
-    )
+    return use_cases.UpdateEXIFUseCase(exif_repo=exif_repository)
 
 
-@utils.memorize
 def delete_exif_use_case(
-        exif_repository:
-        interfaces.AbsEXIFRepository = Depends(get_exif_repo),
+        exif_repository: AbsEXIFRepository = Depends(exif_repo),
 ) -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
-    return use_cases.DeleteEXIFUseCase(
-        exif_repo=exif_repository,
-    )
+    return use_cases.DeleteEXIFUseCase(exif_repo=exif_repository)
 
 
 # api metainfo related use cases ----------------------------------------------
