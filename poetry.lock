@@ -287,7 +287,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "pydantic"
-version = "2.0.3"
+version = "2.1.1"
 description = "Data validation using Python type hints"
 category = "main"
 optional = false
@@ -295,7 +295,7 @@ python-versions = ">=3.7"
 
 [package.dependencies]
 annotated-types = ">=0.4.0"
-pydantic-core = "2.3.0"
+pydantic-core = "2.4.0"
 typing-extensions = ">=4.6.1"
 
 [package.extras]
@@ -303,7 +303,7 @@ email = ["email-validator (>=2.0.0)"]
 
 [[package]]
 name = "pydantic-core"
-version = "2.3.0"
+version = "2.4.0"
 description = ""
 category = "main"
 optional = false
