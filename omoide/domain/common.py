@@ -48,14 +48,14 @@ MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 class Item(BaseModel):
     """Model of a standard item."""
     uuid: UUID
-    parent_uuid: Optional[UUID]
+    parent_uuid: Optional[UUID] = None
     owner_uuid: UUID
     number: int
     name: str
     is_collection: bool
-    content_ext: Optional[str]
-    preview_ext: Optional[str]
-    thumbnail_ext: Optional[str]
+    content_ext: Optional[str] = None
+    preview_ext: Optional[str] = None
+    thumbnail_ext: Optional[str] = None
     tags: list[str] = []
     permissions: list[UUID] = []
 
@@ -83,7 +83,7 @@ class Item(BaseModel):
 class ItemGeneric(BaseModel):
     """Wrapper that helps with different item fields."""
     media_type: MEDIA_TYPE
-    original_ext: Optional[str]
+    original_ext: Optional[str] = None
     set_callback: Callable[[Optional[str]], None]
 
     @property
@@ -140,7 +140,7 @@ class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
     owner: domain.User
     items: list[PositionedItem]
-    current_item: Optional[Item]
+    current_item: Optional[Item] = None
 
     def __bool__(self) -> bool:
         """Return True if location is not empty."""
@@ -168,7 +168,7 @@ class ComplexLocation(BaseModel):
     """Path-like sequence of parents for specific item."""
     owner: domain.User
     items: list[PositionedItem]
-    current_item: Optional[Item]
+    current_item: Optional[Item] = None
 
     def __bool__(self) -> bool:
         """Return True if location is not empty."""
@@ -238,7 +238,7 @@ class Media(BaseModel):
     owner_uuid: UUID
     item_uuid: UUID
     created_at: datetime
-    processed_at: Optional[datetime]
+    processed_at: Optional[datetime] = None
     content: bytes
     ext: str
     target_folder: Literal['content', 'preview', 'thumbnail']
@@ -259,28 +259,28 @@ class Metainfo(BaseModel):
 
     created_at: datetime
     updated_at: datetime
-    deleted_at: Optional[datetime]
-    user_time: Optional[datetime]
+    deleted_at: Optional[datetime] = None
+    user_time: Optional[datetime] = None
 
-    media_type: Optional[str]
+    media_type: Optional[str] = None
 
-    author: Optional[str]
-    author_url: Optional[str]
-    saved_from_url: Optional[str]
-    description: Optional[str]
+    author: Optional[str] = None
+    author_url: Optional[str] = None
+    saved_from_url: Optional[str] = None
+    description: Optional[str] = None
 
     extras: dict
 
-    content_size: Optional[int]
-    preview_size: Optional[int]
-    thumbnail_size: Optional[int]
+    content_size: Optional[int] = None
+    preview_size: Optional[int] = None
+    thumbnail_size: Optional[int] = None
 
-    content_width: Optional[int]
-    content_height: Optional[int]
-    preview_width: Optional[int]
-    preview_height: Optional[int]
-    thumbnail_width: Optional[int]
-    thumbnail_height: Optional[int]
+    content_width: Optional[int] = None
+    content_height: Optional[int] = None
+    preview_width: Optional[int] = None
+    preview_height: Optional[int] = None
+    thumbnail_width: Optional[int] = None
+    thumbnail_height: Optional[int] = None
 
 
 class Aim(BaseModel):
@@ -307,13 +307,13 @@ class Aim(BaseModel):
             **kwargs,
     ) -> 'Aim':
         """Create new instance with given params."""
-        values = self.dict()
+        values = self.model_dump()
         values.update(kwargs)
         return type(self)(**kwargs)
 
     def url_safe(self) -> dict:
         """Return dict that can be converted to URL."""
-        params = self.dict()
+        params = self.model_dump()
         params['q'] = self.query.raw_query
         params.pop('query', None)
         return params

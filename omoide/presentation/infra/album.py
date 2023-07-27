@@ -11,7 +11,7 @@ T = TypeVar('T')
 class PageVal(Generic[T], BaseModel):
     """Single page representation."""
     number: int
-    value: Optional[T]
+    value: Optional[T] = None
     is_dummy: bool
     is_current: bool
 

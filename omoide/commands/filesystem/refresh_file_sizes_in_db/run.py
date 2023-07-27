@@ -26,7 +26,7 @@ def run(
     """Refresh disk usage for every item."""
     verbose_config = [
         f'\t{key}={value},\n'
-        for key, value in config.dict().items()
+        for key, value in config.model_dump().items()
     ]
     LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
 
@@ -44,7 +44,7 @@ def run(
 
     verbose_config = [
         f'\t{key}={value},\n'
-        for key, value in config.dict().items()
+        for key, value in config.model_dump().items()
     ]
     LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
 

@@ -3,6 +3,7 @@
 """
 import pydantic
 import pydantic_settings
+from pydantic import ConfigDict
 
 
 class Config(pydantic_settings.BaseSettings):
@@ -13,6 +14,4 @@ class Config(pydantic_settings.BaseSettings):
     host: str = '0.0.0.0'
     prefix_size: int = 2
     penalty_wrong_password: float = 2.5
-
-    class Config:
-        env_prefix = 'omoide_'
+    model_config = ConfigDict(env_prefix='omoide_')

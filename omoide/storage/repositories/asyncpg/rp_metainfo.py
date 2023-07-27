@@ -99,7 +99,7 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
         ).where(
             models.Metainfo.item_uuid == metainfo.item_uuid
         ).values(
-            **metainfo.dict(exclude={'item_uuid', 'created_at'})
+            **metainfo.model_dump(exclude={'item_uuid', 'created_at'})
         )
 
         await self.db.execute(stmt)

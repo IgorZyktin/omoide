@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import pydantic
+from pydantic import ConfigDict
 
 _LOG_LEVEL = Literal['DEBUG', 'INFO', 'WARNING', 'CRITICAL', 'ERROR', 'NOTSET']
 
@@ -31,13 +32,10 @@ class Config(pydantic.BaseModel):
     single_run: bool
     echo: bool
     replication_formula: dict[str, bool]
-
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
     @pydantic.field_validator('min_interval')
-    @classmethod
-    def check_min_interval(cls, v):
+    def check_min_interval(self, v):
         if v <= 0.0:
             raise ValueError('Minimum interval is too small')
 
@@ -47,8 +45,7 @@ class Config(pydantic.BaseModel):
         return v
 
     @pydantic.field_validator('min_interval', 'max_interval')
-    @classmethod
-    def check_max_interval(cls, v, info: pydantic.FieldValidationInfo):
+    def check_max_interval(self, v, info: pydantic.FieldValidationInfo):
         min_interval = info.data.get('min_interval', 0.0)
 
         if v <= min_interval:
@@ -60,8 +57,7 @@ class Config(pydantic.BaseModel):
         return v
 
     @pydantic.field_validator('warm_up_coefficient')
-    @classmethod
-    def check_warm_up_coefficient(cls, v):
+    def check_warm_up_coefficient(self, v):
         if v <= 1.0:
             raise ValueError('Warm up coefficient is too small')
 
@@ -71,8 +67,7 @@ class Config(pydantic.BaseModel):
         return v
 
     @pydantic.field_validator('batch_size')
-    @classmethod
-    def check_batch_size(cls, v):
+    def check_batch_size(self, v):
         if v <= 0:
             raise ValueError('Batch size is too small')
 
@@ -82,8 +77,7 @@ class Config(pydantic.BaseModel):
         return v
 
     @pydantic.model_validator(mode='before')
-    @classmethod
-    def check_at_least_one_folder_given(cls, values):
+    def check_at_least_one_folder_given(self, values):
         hot_folder = values.get('hot_folder')
         cold_folder = values.get('cold_folder')
 
@@ -94,9 +88,8 @@ class Config(pydantic.BaseModel):
 
         return values
 
-    @pydantic.model_validator(mode='after')
-    @classmethod
-    def check_folders_are_adequate(cls, values):
+    @pydantic.model_validator(mode='before')
+    def check_folders_are_adequate(self, values):
         save_hot = values.get('save_hot')
         save_cold = values.get('save_cold')
         hot_folder = values.get('hot_folder')
@@ -114,9 +107,8 @@ class Config(pydantic.BaseModel):
 
         return values
 
-    @pydantic.model_validator(mode='after')
-    @classmethod
-    def check_folders_exist(cls, values):
+    @pydantic.model_validator(mode='before')
+    def check_folders_exist(self, values):
         save_hot = values.get('save_hot')
         save_cold = values.get('save_cold')
         hot_folder = values.get('hot_folder')
@@ -144,5 +136,5 @@ class Config(pydantic.BaseModel):
         return '\n\t'.join((
             f'{key}={value}'
             for key, value in
-            self.dict().items()
+            self.model_dump().items()
         ))

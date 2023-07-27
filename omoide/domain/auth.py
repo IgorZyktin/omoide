@@ -13,11 +13,11 @@ __all__ = [
 
 class User(BaseModel):
     """User model."""
-    uuid: Optional[UUID]
+    uuid: Optional[UUID] = None
     login: str
     password: str
     name: str
-    root_item: Optional[UUID]
+    root_item: Optional[UUID] = None
 
     @property
     def is_registered(self) -> bool:

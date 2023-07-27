@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Data transfer objects.
 """
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 __all__ = [
     'GuessTag',
@@ -12,10 +12,7 @@ __all__ = [
 
 class BaseDTO(BaseModel):
     """Immutable model that does not support arbitrary attributes."""
-
-    class Config:
-        frozen: bool = True
-        extra: str = 'forbid'
+    model_config = ConfigDict()
 
 
 class GuessTag(BaseDTO):

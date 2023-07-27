@@ -18,13 +18,13 @@ class PatchOperation(pydantic.BaseModel):
     """Single operation in PATCH request."""
     op: str
     path: str
-    value: str | None
+    value: str | None = None
 
 
 class CreateItemIn(pydantic.BaseModel):
     """Input info for item creation."""
-    uuid: Optional[UUID]
-    parent_uuid: Optional[UUID]
+    uuid: Optional[UUID] = None
+    parent_uuid: Optional[UUID] = None
     name: str
     is_collection: bool
     tags: list[str]
@@ -80,7 +80,7 @@ class CreateItemIn(pydantic.BaseModel):
 
         return v
 
-    @pydantic.model_validator(mode='after')
+    @pydantic.model_validator(mode='before')
     @classmethod
     def ensure_collection_has_name(cls, values: dict):
         """Check."""
@@ -100,11 +100,11 @@ class CreateItemsIn(CreateItemIn):
 
 class CreateUserIn(pydantic.BaseModel):
     """Input info for user creation."""
-    uuid: Optional[UUID]
-    root_item: Optional[UUID]
+    uuid: Optional[UUID] = None
+    root_item: Optional[UUID] = None
     login: str
     password: str
-    name: Optional[str]
+    name: Optional[str] = None
 
 
 class CreateMediaIn(pydantic.BaseModel):
@@ -136,14 +136,14 @@ class NewPermissionsIn(pydantic.BaseModel):
 
 class MetainfoIn(pydantic.BaseModel):
     """Input info for metainfo creation."""
-    user_time: Optional[datetime]
+    user_time: Optional[datetime] = None
 
-    media_type: Optional[str]
+    media_type: Optional[str] = None
 
-    author: Optional[str]
-    author_url: Optional[str]
-    saved_from_url: Optional[str]
-    description: Optional[str]
+    author: Optional[str] = None
+    author_url: Optional[str] = None
+    saved_from_url: Optional[str] = None
+    description: Optional[str] = None
 
     extras: dict
 
