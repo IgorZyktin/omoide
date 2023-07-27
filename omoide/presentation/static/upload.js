@@ -428,6 +428,7 @@ async function createItemsForProxy(targets, uploadState) {
             url: '/api/items/bulk',
             contentType: 'application/json',
             data: JSON.stringify({
+                uuid: null,
                 parent_uuid: parent_uuid,
                 name: '',
                 is_collection: false,
