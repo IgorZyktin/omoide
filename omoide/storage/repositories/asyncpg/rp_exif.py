@@ -4,7 +4,6 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
-from omoide import domain
 from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.errors import Error
@@ -84,7 +83,7 @@ class EXIFRepository(AbsEXIFRepository):
 
             if response is not None:
                 result = Success(
-                    domain.EXIF(
+                    core_models.EXIF(
                         item_uuid=response['item_uuid'],
                         exif=impl.json.loads(response['exif']),
                     )

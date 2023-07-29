@@ -1,5 +1,7 @@
 """EXIF related API operations.
 """
+from uuid import UUID
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Request
@@ -11,7 +13,6 @@ from omoide import use_cases
 from omoide.domain import interfaces
 from omoide.domain.application import input_models
 from omoide.domain.core import core_models
-from omoide.infra import impl
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web

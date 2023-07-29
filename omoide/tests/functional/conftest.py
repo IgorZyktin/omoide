@@ -1,42 +1,123 @@
-# -*- coding: utf-8 -*-
 """Tests.
 """
 import asyncio
 import os
+from unittest.mock import patch
+from urllib.parse import urlsplit
 from uuid import UUID
 
 import pytest
 import pytest_asyncio
-import sqlalchemy
 from databases import Database
 
-from omoide import domain
 from omoide import infra
-from omoide.presentation import api_models
+from omoide.domain import auth
+from omoide.domain import common
 from omoide.storage.repositories import asyncpg
-from omoide.storage.database import models
+from omoide.tests import constants
+
+
+def safely_get_test_database(url: str | None = None) -> str:
+    """Get url from env variables."""
+    url = url or os.environ.get(constants.DB_ENV_VARIABLE)
+
+    if url is None:
+        msg = ('To perform functional tests you have '
+               f'to set {constants.DB_ENV_VARIABLE} env variable')
+        raise RuntimeError(msg)
+
+    parts = urlsplit(url, allow_fragments=True)
+    safe_url = f'{parts.scheme}://<username>:<password>{parts.path}'
+    if parts.query:
+        safe_url += f'?{parts.query}'
+
+    if constants.TEST_DB_NAME not in url.lower():
+        msg = ("Are you sure that you're using test database? "
+               f"Expected something with {constants.TEST_DB_NAME!r}, "
+               f"got: {safe_url}")
+        raise RuntimeError(msg)
+
+    return url
+
+
+def test_safely_get_test_database_good():
+    """Must pass."""
+    # arrange
+    url = 'postgresql://user:password@127.0.0.1:5432/omoide_test'
+
+    # act
+    result = safely_get_test_database(url)
+
+    # assert
+    assert result is not None
+
+
+def test_safely_get_test_database_no_env():
+    """Must find out that env is not set."""
+    # act
+    with patch.dict(os.environ, {}, clear=True):
+        with pytest.raises(RuntimeError, match='env variable'):
+            safely_get_test_database()
+
+
+def test_safely_get_test_database_incorrect_db():
+    """Must find out that we're using wrong database name."""
+    # arrange
+    url = 'postgresql://user:password@127.0.0.1:5432/postgres'
+
+    # act
+    with patch.dict(os.environ, {constants.DB_ENV_VARIABLE: url}, clear=True):
+        with pytest.raises(RuntimeError, match='using test database?'):
+            safely_get_test_database()
 
 
 @pytest.fixture(scope='session')
-def db_test_user():
+def functional_tests_db_url():
+    """Return database url."""
+    return safely_get_test_database()
+
+
+@pytest_asyncio.fixture(scope='session')
+async def functional_tests_database(functional_tests_db_url):
+    """Return database."""
+    db = None
+    try:
+        db = Database(functional_tests_db_url)
+        await db.connect()
+        yield db
+    except Exception as exc:
+        print(f'Failed to initiate test database: {exc}')
+    finally:
+        if db is not None:
+            await db.disconnect()
+
+
+@pytest.fixture(scope='session')
+def event_loop():
+    """Overriding event loop fixture."""
+    return asyncio.get_event_loop()
+
+
+@pytest.fixture(scope='session')
+def functional_tests_permanent_user():
     """Return permanent user (always exists in the database)."""
-    return models.User(
-        uuid='00000000-0000-0000-0000-000000000000',
+    return auth.User(
+        uuid=UUID('00000000-0000-0000-0000-000000000000'),
         login='test-user',
         password='$2b$04$XRT/zbfYO8jB.M68OYMi'
                  'DOJRPSrGkK5m1iNiAYutDIBpf/9iHMHXm',
         name='test',
-        root_item='00000000-0000-0000-0000-000000000000',
+        root_item=UUID('00000000-0000-0000-0000-000000000000'),
     )
 
 
 @pytest.fixture(scope='session')
-def db_test_item():
+def functional_tests_permanent_item():
     """Return permanent item (always exists in the database)."""
-    return models.Item(
-        uuid='00000000-0000-0000-0000-000000000000',
+    return common.Item(
+        uuid=UUID('00000000-0000-0000-0000-000000000000'),
         parent_uuid=None,
-        owner_uuid='00000000-0000-0000-0000-000000000000',
+        owner_uuid=UUID('00000000-0000-0000-0000-000000000000'),
         number=0,
         name='test-item',
         is_collection=False,
@@ -48,126 +129,13 @@ def db_test_item():
     )
 
 
-@pytest_asyncio.fixture(scope='session')
-async def database():
-    url = os.environ.get('OMOIDE_TEST_DB_URL')
-
-    if url is None:
-        raise RuntimeError('You must specify test database url to start')
-
-    db = None
-    try:
-        engine = sqlalchemy.create_engine(url)
-        models.metadata.create_all(bind=engine)
-        engine.dispose()
-
-        db = Database(url)
-        await db.connect()
-        yield db
-    except Exception as e:
-        print(f'Failed to initiate test database: {e}')
-    finally:
-        if db is not None:
-            await db.disconnect()
+# noinspection PyShadowingNames
+@pytest.fixture(scope='session')
+def items_write_repository(functional_tests_database):
+    # FIXME - need different repo
+    return asyncpg.ItemsWriteRepository(functional_tests_database)
 
 
 @pytest.fixture(scope='session')
-def items_write_repository(database):
-    return asyncpg.ItemsWriteRepository(database)
-
-
-@pytest.fixture(scope='session')
-def metainfo_repository(database):
-    return asyncpg.MetainfoRepository(database)
-
-
-@pytest.fixture(scope='session')
-def policy(items_write_repository):
+def functional_tests_policy(items_write_repository):
     return infra.Policy(items_repo=items_write_repository)
-
-
-@pytest.fixture(scope='session')
-def event_loop():
-    """Overriding event loop fixture."""
-    return asyncio.get_event_loop()
-
-
-@pytest_asyncio.fixture(scope='session')
-async def user(database):
-    await database.execute(
-        """
-        DELETE FROM users WHERE uuid = '00000000-0000-0000-0000-000000000000'
-        """
-    )
-    await database.execute(
-        """
-        INSERT INTO
-        users (uuid, login, password, name, root_item)
-        VALUES (
-        '00000000-0000-0000-0000-000000000000',
-        'test',
-        'test',
-         'test',
-         null
-         );
-        """,
-    )
-    await database.execute(
-        """
-        INSERT INTO
-        items (
-        uuid,
-        parent_uuid,
-        owner_uuid,
-        number,
-        name,
-        is_collection,
-        content_ext,
-        preview_ext,
-        thumbnail_ext,
-        tags,
-        permissions
-        )
-        VALUES (
-        '00000000-0000-0000-0000-000000000000',
-        null,
-        '00000000-0000-0000-0000-000000000000',
-        1,
-        'test item',
-        false,
-        null,
-        null,
-        null,
-        ARRAY []::text[],
-        ARRAY []::text[]
-         );
-        """,
-    )
-    yield domain.User(
-        uuid=UUID('00000000-0000-0000-0000-000000000000'),
-        login='test',
-        password='test',
-        name='test',
-        root_item=UUID('00000000-0000-0000-0000-000000000000'),
-    )
-    await database.execute(
-        """
-        DELETE FROM users WHERE uuid = '00000000-0000-0000-0000-000000000000'
-        """
-    )
-
-
-@pytest_asyncio.fixture(scope='session')
-def anon_user():
-    return domain.User.new_anon()
-
-
-@pytest.fixture
-def raw_item_in():
-    """Raw item from user."""
-    return api_models.CreateItemIn(
-        name='Test item',
-        is_collection=False,
-        tags=['tag-1', 'tag-2', 'tag-3'],
-        permissions=[],
-    )

@@ -1,12 +1,13 @@
 """Use cases for EXIF.
 """
+from uuid import UUID
+
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
-from omoide.infra import impl
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 

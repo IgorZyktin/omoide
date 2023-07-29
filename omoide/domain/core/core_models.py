@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 
-@dataclass
+@dataclass(eq=True)
 class EXIF:
     """EXIF information embedded in media."""
     item_uuid: UUID
