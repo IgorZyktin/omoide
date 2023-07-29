@@ -23,7 +23,7 @@ router = APIRouter(prefix='/api/exif')
 async def api_create_exif(
         request: Request,
         response: Response,
-        item_uuid: impl.UUID,
+        item_uuid: UUID,
         in_exif: input_models.InEXIF,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
@@ -50,7 +50,7 @@ async def api_create_exif(
 
 @router.get('/{item_uuid}', status_code=status.HTTP_200_OK)
 async def api_read_exif(
-        item_uuid: impl.UUID,
+        item_uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ReadEXIFUseCase = Depends(
@@ -67,7 +67,7 @@ async def api_read_exif(
 
 @router.put('/{item_uuid}', status_code=status.HTTP_202_ACCEPTED)
 async def api_update_exif(
-        item_uuid: impl.UUID,
+        item_uuid: UUID,
         in_exif: input_models.InEXIF,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
@@ -90,7 +90,7 @@ async def api_update_exif(
 
 @router.delete('/{item_uuid}', status_code=status.HTTP_202_ACCEPTED)
 async def api_delete_exif(
-        item_uuid: impl.UUID,
+        item_uuid: UUID,
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.DeleteEXIFUseCase = Depends(

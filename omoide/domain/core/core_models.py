@@ -1,12 +1,11 @@
 """Business-logic models.
 """
 from dataclasses import dataclass
-
-from omoide.infra import impl
+from uuid import UUID
 
 
 @dataclass
 class EXIF:
     """EXIF information embedded in media."""
-    item_uuid: impl.UUID
+    item_uuid: UUID
     exif: dict[str, str | float | int | bool | None | list | dict]

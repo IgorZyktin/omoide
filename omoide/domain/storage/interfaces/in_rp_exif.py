@@ -1,11 +1,11 @@
 """Repository that perform CRUD operations on EXIF records.
 """
 import abc
+from uuid import UUID
 
 from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.storage.interfaces.in_rp_base import AbsBaseRepository
-from omoide.infra import impl
 from omoide.infra.special_types import Result
 
 
@@ -29,13 +29,13 @@ class AbsEXIFRepository(AbsBaseRepository):
     @abc.abstractmethod
     async def get_exif_by_item_uuid(
             self,
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
     ) -> Result[errors.Error, core_models.EXIF]:
         """Return EXIF."""
 
     @abc.abstractmethod
     async def delete_exif(
             self,
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
     ) -> Result[errors.Error, None]:
         """Delete EXIF."""

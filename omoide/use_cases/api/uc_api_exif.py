@@ -36,7 +36,7 @@ class CreateEXIFUseCase(BaseEXIFUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
             exif: core_models.EXIF,
     ) -> Result[errors.Error, core_models.EXIF]:
         """Business logic."""
@@ -59,7 +59,7 @@ class ReadEXIFUseCase(BaseEXIFUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
     ) -> Result[errors.Error, core_models.EXIF]:
         async with self.exif_repo.transaction():
             error = await policy.is_restricted(user, item_uuid,
@@ -80,7 +80,7 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
             exif: core_models.EXIF,
     ) -> Result[errors.Error, core_models.EXIF]:
         """Business logic."""
@@ -103,7 +103,7 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
     ) -> Result[errors.Error, None]:
         """Business logic."""
         async with self.exif_repo.transaction():

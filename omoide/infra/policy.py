@@ -1,12 +1,12 @@
 """Access policy.
 """
 from typing import Optional
+from uuid import UUID
 
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
-from omoide.infra import impl
 
 ITEM_RELATED = frozenset((
     actions.EXIF.CREATE,
@@ -27,7 +27,7 @@ class Policy(interfaces.AbsPolicy):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: Optional[impl.UUID],
+            uuid: Optional[UUID],
             action: actions.Action,
     ) -> Optional[errors.Error]:
         """Return Error if action is not permitted."""
@@ -56,7 +56,7 @@ class Policy(interfaces.AbsPolicy):
     async def _is_restricted_for_item(
             self,
             user: domain.User,
-            uuid: impl.UUID,
+            uuid: UUID,
             action: actions.Item,
     ) -> Optional[errors.Error]:
         """Check specifically for item related actions."""

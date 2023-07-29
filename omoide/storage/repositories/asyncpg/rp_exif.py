@@ -1,5 +1,7 @@
 """Repository that performs CRUD operations on EXIF.
 """
+from uuid import UUID
+
 import sqlalchemy as sa
 
 from omoide import domain
@@ -64,7 +66,7 @@ class EXIFRepository(AbsEXIFRepository):
 
     async def get_exif_by_item_uuid(
             self,
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
     ) -> Result[errors.Error, core_models.EXIF]:
         """Return EXIF."""
         stmt = sa.select(
@@ -94,7 +96,7 @@ class EXIFRepository(AbsEXIFRepository):
 
     async def delete_exif(
             self,
-            item_uuid: impl.UUID,
+            item_uuid: UUID,
     ) -> Result[errors.Error, None]:
         """Delete EXIF."""
         stmt = sa.delete(
