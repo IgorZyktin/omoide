@@ -20,6 +20,12 @@ ITEM_RELATED = frozenset((
     actions.Metainfo.UPDATE,
 ))
 
+READ_ONLY = frozenset((
+    actions.EXIF.READ,
+    actions.Metainfo.READ,
+    actions.Item.READ,
+))
+
 
 class Policy(interfaces.AbsPolicy):
     """Policy checker."""
@@ -32,18 +38,21 @@ class Policy(interfaces.AbsPolicy):
     ) -> Optional[errors.Error]:
         """Return Error if action is not permitted."""
         error: Optional[errors.Error] = None
-        # TODO: must allow reading public exif for anons
 
         if isinstance(action, actions.Item):
             if uuid is None:
                 return errors.NoUUID(action=action.name)
             return await self._is_restricted_for_item(user, uuid, action)
 
-        if action in ITEM_RELATED and uuid is not None:
-            access = await self.items_repo.check_access(user, uuid)
+        access = await self.items_repo.check_access(user, uuid)
 
+        if action in ITEM_RELATED and uuid is not None:
             if access.does_not_exist:
                 error = errors.ItemDoesNotExist(uuid=uuid)
+
+            # TODO: rewrite it more general
+            elif access.is_public and action in READ_ONLY:
+                return None
 
             elif access.is_not_given or access.is_not_owner:
                 error = errors.ItemRequiresAccess(uuid=uuid)

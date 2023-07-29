@@ -8,7 +8,6 @@ from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.errors import Error
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
-from omoide.infra import impl
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
@@ -27,7 +26,7 @@ class EXIFRepository(AbsEXIFRepository):
             db_models.EXIF
         ).values(
             item_uuid=exif.item_uuid,
-            exif=impl.json.dumps(exif.exif, ensure_ascii=False),
+            exif=exif.exif,
         )
 
         try:
@@ -50,7 +49,7 @@ class EXIFRepository(AbsEXIFRepository):
         ).where(
             db_models.EXIF.item_uuid == exif.item_uuid
         ).values(
-            exif=impl.json.dumps(exif.exif, ensure_ascii=False),
+            exif=exif.exif,
         )
 
         try:
@@ -85,7 +84,7 @@ class EXIFRepository(AbsEXIFRepository):
                 result = Success(
                     core_models.EXIF(
                         item_uuid=response['item_uuid'],
-                        exif=impl.json.loads(response['exif']),
+                        exif=response['exif'],
                     )
                 )
             else:
