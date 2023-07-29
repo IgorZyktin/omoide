@@ -8,7 +8,9 @@ from omoide.domain.core import core_models
 from omoide.domain.errors import Error
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.infra import impl
-from omoide.infra.special_types import *
+from omoide.infra.special_types import Failure
+from omoide.infra.special_types import Result
+from omoide.infra.special_types import Success
 from omoide.storage.database import models as db_models  # FIXME
 
 

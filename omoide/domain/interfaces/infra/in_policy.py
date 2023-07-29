@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
 """Interface for access policy.
 """
 import abc
-from typing import Optional
-from uuid import UUID
 
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain.errors import Error
 from omoide.domain.interfaces.in_storage \
     .in_repositories import in_rp_items_read
+from omoide.infra import impl
 
 __all__ = [
     'AbsPolicy',
@@ -30,7 +28,7 @@ class AbsPolicy(abc.ABC):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: Optional[UUID],
+            uuid: impl.UUID | None,
             action: actions.Action,
-    ) -> Optional[Error]:
+    ) -> Error | None:
         """Return Error if action is not permitted."""

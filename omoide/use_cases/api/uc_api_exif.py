@@ -1,7 +1,5 @@
 """Use cases for EXIF.
 """
-from uuid import UUID
-
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
@@ -11,7 +9,6 @@ from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.infra import impl
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
-from omoide.domain.application import input_models
 
 __all__ = [
     'CreateEXIFUseCase',
@@ -40,20 +37,15 @@ class CreateEXIFUseCase(BaseEXIFUseCase):
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
             item_uuid: impl.UUID,
-            in_exif: input_models.InEXIF,
+            exif: core_models.EXIF,
     ) -> Result[errors.Error, core_models.EXIF]:
         """Business logic."""
         async with self.exif_repo.transaction():
             error = await policy.is_restricted(user, item_uuid,
-                                               actions.EXIF.CREATE_OR_UPDATE)
+                                               actions.EXIF.CREATE)
 
             if error:
                 return Failure(error)
-
-            exif = core_models.EXIF(
-                item_uuid=item_uuid,
-                exif=in_exif.exif,
-            )
 
             result = await self.exif_repo.create_exif(exif)
 
@@ -88,21 +80,16 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
-            item_uuid: UUID,
-            in_exif: input_models.InEXIF,
+            item_uuid: impl.UUID,
+            exif: core_models.EXIF,
     ) -> Result[errors.Error, core_models.EXIF]:
         """Business logic."""
         async with self.exif_repo.transaction():
             error = await policy.is_restricted(user, item_uuid,
-                                               actions.EXIF.CREATE_OR_UPDATE)
+                                               actions.EXIF.UPDATE)
 
             if error:
                 return Failure(error)
-
-            exif = domain.EXIF(
-                item_uuid=item_uuid,
-                exif=in_exif.exif,
-            )
 
             result = await self.exif_repo.update_exif(exif)
 
@@ -116,7 +103,7 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
             self,
             policy: interfaces.AbsPolicy,
             user: domain.User,  # FIXME
-            item_uuid: UUID,
+            item_uuid: impl.UUID,
     ) -> Result[errors.Error, None]:
         """Business logic."""
         async with self.exif_repo.transaction():

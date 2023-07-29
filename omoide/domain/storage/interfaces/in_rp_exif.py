@@ -6,7 +6,7 @@ from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.storage.interfaces.in_rp_base import AbsBaseRepository
 from omoide.infra import impl
-from omoide.infra.special_types import *
+from omoide.infra.special_types import Result
 
 
 class AbsEXIFRepository(AbsBaseRepository):

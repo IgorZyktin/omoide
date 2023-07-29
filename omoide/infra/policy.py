@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 """Access policy.
 """
 from typing import Optional
-from uuid import UUID
 
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.infra import impl
 
 ITEM_RELATED = frozenset((
-    actions.EXIF.CREATE_OR_UPDATE,
+    actions.EXIF.CREATE,
     actions.EXIF.READ,
+    actions.EXIF.UPDATE,
     actions.EXIF.DELETE,
 
     actions.Media.CREATE,
@@ -27,11 +27,12 @@ class Policy(interfaces.AbsPolicy):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: Optional[UUID],
+            uuid: Optional[impl.UUID],
             action: actions.Action,
     ) -> Optional[errors.Error]:
         """Return Error if action is not permitted."""
         error: Optional[errors.Error] = None
+        # TODO: must allow reading public exif for anons
 
         if isinstance(action, actions.Item):
             if uuid is None:
@@ -55,7 +56,7 @@ class Policy(interfaces.AbsPolicy):
     async def _is_restricted_for_item(
             self,
             user: domain.User,
-            uuid: UUID,
+            uuid: impl.UUID,
             action: actions.Item,
     ) -> Optional[errors.Error]:
         """Check specifically for item related actions."""
