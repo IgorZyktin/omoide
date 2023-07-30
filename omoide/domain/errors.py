@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
 """Custom errors (an alternative to exceptions).
 """
+from functools import cached_property
 from typing import Any
 from typing import Optional
 
 
+# TODO - find way to make formatting attributes required
+
 class Error:
     """Custom DTO that holds errors."""
-    template: str
+    template: str = ''
 
     def __init__(
             self,
@@ -21,12 +23,22 @@ class Error:
         self.exception = exception
         self.kwargs = kwargs
 
+    @cached_property
+    def message(self) -> str:
+        """Render error message."""
+        return self.template.format(**self.kwargs)
+
     def __str__(self) -> str:
         """Return textual representation."""
-        message = self.template.format(**self.kwargs)
+        message = self.message
         if self.exception:
             message += f' [{type(self.exception)}({self.exception})]'
         return message
+
+    def __repr__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'<{name}({self.message})>'
 
 
 class NoUUID(Error):
@@ -94,11 +106,6 @@ class ItemIsInconsistent(Error):
     template = 'Item {uuid} is not consistent {message}'
 
 
-class EXIFDoesNotExist(Error):
-    """EXIF for item does not exist."""
-    template = 'EXIF for item {uuid} does not exist'
-
-
 class UserDoesNotExist(Error):
     """User with uuid does not exist."""
     template = 'User {uuid} does not exist'
@@ -117,3 +124,30 @@ class MetainfoDoesNotExist(Error):
 class AuthenticationRequired(Error):
     """User must log in."""
     template = 'You must be logged in to do this'
+
+
+class DatabaseError(Error):
+    """Failed to perform operation in the DB."""
+    template = 'Failed to perform operation'
+
+
+# -----------------------------------------------------------------------------
+
+class DoesNotExist(Error):
+    """Base class that shows that object does not exist."""
+
+
+class EXIFDoesNotExist(DoesNotExist):
+    """EXIF for item does not exist."""
+    template = 'EXIF for item {item_uuid} does not exist'
+
+
+# -----------------------------------------------------------------------------
+
+class AlreadyExist(Error):
+    """Base class that shows that object already exist."""
+
+
+class EXIFAlreadyExist(AlreadyExist):
+    """AlreadyExist."""
+    template = 'EXIF for item {item_uuid} is already exist'

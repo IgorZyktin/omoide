@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""All possible actions.
+"""All possible user actions.
 """
 import enum
 
@@ -11,8 +10,9 @@ class Action(enum.Enum):
 # noinspection PyArgumentList
 class EXIF(Action):
     """Operations on EXIF."""
-    CREATE_OR_UPDATE = enum.auto()
+    CREATE = enum.auto()
     READ = enum.auto()
+    UPDATE = enum.auto()
     DELETE = enum.auto()
 
 

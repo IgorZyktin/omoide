@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Custom types used to tie the infrastructure together.
 """
 from typing import Generic
@@ -15,6 +14,11 @@ class Success(Generic[V]):
         """Initialize instance."""
         self.value = value
 
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'{name}(value={self.value!r})'
+
 
 class Failure(Generic[E]):
     """Abstract container that holds description why something failed."""
@@ -22,6 +26,11 @@ class Failure(Generic[E]):
     def __init__(self, error: E):
         """Initialize instance."""
         self.error = error
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'{name}(error={self.error!r})'
 
 
 Result = Failure[E] | Success[V]

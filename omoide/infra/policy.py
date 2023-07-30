@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Access policy.
 """
 from typing import Optional
@@ -10,14 +9,21 @@ from omoide.domain import errors
 from omoide.domain import interfaces
 
 ITEM_RELATED = frozenset((
-    actions.EXIF.CREATE_OR_UPDATE,
+    actions.EXIF.CREATE,
     actions.EXIF.READ,
+    actions.EXIF.UPDATE,
     actions.EXIF.DELETE,
 
     actions.Media.CREATE,
 
     actions.Metainfo.READ,
     actions.Metainfo.UPDATE,
+))
+
+READ_ONLY = frozenset((
+    actions.EXIF.READ,
+    actions.Metainfo.READ,
+    actions.Item.READ,
 ))
 
 
@@ -38,11 +44,15 @@ class Policy(interfaces.AbsPolicy):
                 return errors.NoUUID(action=action.name)
             return await self._is_restricted_for_item(user, uuid, action)
 
-        if action in ITEM_RELATED and uuid is not None:
-            access = await self.items_repo.check_access(user, uuid)
+        access = await self.items_repo.check_access(user, uuid)
 
+        if action in ITEM_RELATED and uuid is not None:
             if access.does_not_exist:
                 error = errors.ItemDoesNotExist(uuid=uuid)
+
+            # TODO: rewrite it more general
+            elif access.is_public and action in READ_ONLY:
+                return None
 
             elif access.is_not_given or access.is_not_owner:
                 error = errors.ItemRequiresAccess(uuid=uuid)

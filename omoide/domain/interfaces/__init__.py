@@ -2,8 +2,6 @@
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_exif import AbsEXIFRepository
-from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_read import AbsItemsReadRepository
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_write import AbsItemsWriteRepository

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """Interface for access policy.
 """
 import abc
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
@@ -30,7 +28,7 @@ class AbsPolicy(abc.ABC):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: Optional[UUID],
+            uuid: UUID | None,
             action: actions.Action,
-    ) -> Optional[Error]:
+    ) -> Error | None:
         """Return Error if action is not permitted."""

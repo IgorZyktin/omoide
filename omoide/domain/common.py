@@ -247,6 +247,7 @@ class Media(BaseModel):
     attempts: int
 
 
+# FIXME - deprecated
 class EXIF(BaseModel):
     """Exif media information."""
     item_uuid: UUID

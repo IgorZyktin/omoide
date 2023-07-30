@@ -814,7 +814,7 @@ async function uploadEXIFProxy(proxy) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 10000, // 10 seconds
-            type: 'PUT',
+            type: 'POST',
             url: `/api/exif/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
