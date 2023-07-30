@@ -42,7 +42,7 @@ asyncio_mode = "auto"
 
 [tool.mypy]
 ignore_missing_imports = true
-plugins = "pydantic.mypy,sqlalchemy.ext.mypy.plugin,loguru_mypy"
+plugins = "pydantic.mypy,sqlalchemy.ext.mypy.plugin"
 
 [[tool.mypy.overrides]]
 module = "omoide.tests.*"
