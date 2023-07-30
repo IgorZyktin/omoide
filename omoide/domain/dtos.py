@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Data transfer objects.
 """
 from pydantic import ConfigDict, BaseModel
@@ -23,7 +22,7 @@ class GuessTag(BaseDTO):
 class GuessResult(BaseDTO):
     """Variants that can possibly match with user guess."""
     tag: str
-    counter: str
+    counter: int
 
 
 class Obligation(BaseDTO):
