@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 """Custom errors (an alternative to exceptions).
 """
 from functools import cached_property
 from typing import Any
 from typing import Optional
 
+
+# TODO - find way to make formatting attributes required
 
 class Error:
     """Custom DTO that holds errors."""
@@ -105,11 +106,6 @@ class ItemIsInconsistent(Error):
     template = 'Item {uuid} is not consistent {message}'
 
 
-class EXIFDoesNotExist(Error):
-    """EXIF for item does not exist."""
-    template = 'EXIF for item {item_uuid} does not exist'
-
-
 class UserDoesNotExist(Error):
     """User with uuid does not exist."""
     template = 'User {uuid} does not exist'
@@ -133,3 +129,25 @@ class AuthenticationRequired(Error):
 class DatabaseError(Error):
     """Failed to perform operation in the DB."""
     template = 'Failed to perform operation'
+
+
+# -----------------------------------------------------------------------------
+
+class DoesNotExist(Error):
+    """Base class that shows that object does not exist."""
+
+
+class EXIFDoesNotExist(DoesNotExist):
+    """EXIF for item does not exist."""
+    template = 'EXIF for item {item_uuid} does not exist'
+
+
+# -----------------------------------------------------------------------------
+
+class AlreadyExist(Error):
+    """Base class that shows that object already exist."""
+
+
+class EXIFAlreadyExist(AlreadyExist):
+    """AlreadyExist."""
+    template = 'EXIF for item {item_uuid} is already exist'

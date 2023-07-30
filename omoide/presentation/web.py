@@ -47,6 +47,7 @@ class CustomJinja2Templates(Jinja2Templates):
 
 TemplateEngine: TypeAlias = CustomJinja2Templates
 
+# TODO - rewrite to base classes
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     # not supposed to be used, but just in case
     http.HTTPStatus.INTERNAL_SERVER_ERROR: [
@@ -56,6 +57,7 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     http.HTTPStatus.BAD_REQUEST: [
         errors.NoUUID,
         errors.InvalidUUID,
+        errors.EXIFAlreadyExist,
     ],
 
     http.HTTPStatus.NOT_FOUND: [

@@ -3,15 +3,19 @@
 from uuid import UUID
 
 import sqlalchemy as sa
+from asyncpg import exceptions
 
 from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.errors import Error
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
+from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
-from omoide.storage.database import models as db_models  # FIXME
+from omoide.storage.database import db_models
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class EXIFRepository(AbsEXIFRepository):
@@ -31,8 +35,10 @@ class EXIFRepository(AbsEXIFRepository):
 
         try:
             await self.db.execute(stmt)
+        except exceptions.UniqueViolationError:
+            result = Failure(errors.EXIFAlreadyExist(item_uuid=exif.item_uuid))
         except Exception as exc:
-            # TODO - which error exactly?
+            LOG.exception('Failed to create exif')  # TODO - refactor
             result = Failure(errors.DatabaseError(exception=exc))
         else:
             result = Success(exif)
@@ -50,15 +56,22 @@ class EXIFRepository(AbsEXIFRepository):
             db_models.EXIF.item_uuid == exif.item_uuid
         ).values(
             exif=exif.exif,
-        )
+        ).returning(1)
 
         try:
-            await self.db.execute(stmt)
+            response = await self.db.fetch_one(stmt)
         except Exception as exc:
-            # TODO - which error exactly?
+            LOG.exception('Failed to update exif')  # TODO - refactor
             result = Failure(errors.DatabaseError(exception=exc))
         else:
-            result = Success(exif)
+            updated = response is not None
+
+            if updated:
+                result = Success(exif)
+            else:
+                result = Failure(
+                    errors.EXIFDoesNotExist(item_uuid=exif.item_uuid),
+                )
 
         return result
 
@@ -76,7 +89,7 @@ class EXIFRepository(AbsEXIFRepository):
         try:
             response = await self.db.fetch_one(stmt)
         except Exception as exc:
-            # TODO - which error exactly?
+            LOG.exception('Failed to get exif')  # TODO - refactor
             result = Failure(errors.DatabaseError(exception=exc))
         else:
 
@@ -106,7 +119,7 @@ class EXIFRepository(AbsEXIFRepository):
         try:
             response = await self.db.fetch_one(stmt)
         except Exception as exc:
-            # TODO - which error exactly?
+            LOG.exception('Failed to delete exif')  # TODO - refactor
             result = Failure(errors.DatabaseError(exception=exc))
         else:
             deleted = response is not None

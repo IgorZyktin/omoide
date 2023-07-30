@@ -90,3 +90,61 @@ async def test_exif_crud(
     # read --------------------------------------------------------------------
     response_7 = await read_uc.execute(policy, user, item.uuid)
     utils.resolve_error(response_7, errors.EXIFDoesNotExist)
+
+
+@pytest.mark.usefixtures('ensure_there_is_no_exif')
+async def test_exif_double_add(
+        functional_tests_permanent_user,
+        functional_tests_permanent_item,
+        functional_tests_policy,
+        functional_tests_exif_repo,
+):
+    """Ensure that we cannot add one exif twice."""
+    # arrange
+    user = functional_tests_permanent_user
+    item = functional_tests_permanent_item
+    policy = functional_tests_policy
+    exif_repo = functional_tests_exif_repo
+
+    create_uc = uc_api_exif.CreateEXIFUseCase(exif_repo)
+
+    exif = core_models.EXIF(
+        item_uuid=item.uuid,
+        exif={'foo': {'bar': 'baz'}},
+    )
+
+    # create ------------------------------------------------------------------
+    response_1 = await create_uc.execute(policy, user, item.uuid, exif)
+    assert utils.resolve_success(response_1) == exif
+
+    # create again ------------------------------------------------------------
+    response_2 = await create_uc.execute(policy, user, item.uuid, exif)
+    assert utils.resolve_error(response_2, errors.EXIFAlreadyExist)
+
+
+@pytest.mark.usefixtures('ensure_there_is_no_exif')
+async def test_exif_update_nonexisting(
+        functional_tests_permanent_user,
+        functional_tests_permanent_item,
+        functional_tests_policy,
+        functional_tests_exif_repo,
+):
+    """Ensure that we cannot update nonexistent EXIF."""
+    # arrange
+    user = functional_tests_permanent_user
+    item = functional_tests_permanent_item
+    policy = functional_tests_policy
+    exif_repo = functional_tests_exif_repo
+
+    update_uc = uc_api_exif.UpdateEXIFUseCase(exif_repo)
+
+    exif = core_models.EXIF(
+        item_uuid=item.uuid,
+        exif={'foo': {'bar': 'baz'}},
+    )
+
+    # act
+    response = await update_uc.execute(policy, user, item.uuid, exif)
+
+    # assert
+    assert utils.resolve_error(response, errors.EXIFDoesNotExist)
