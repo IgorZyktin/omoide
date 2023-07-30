@@ -14,10 +14,17 @@ from typing import Optional
 from typing import TypeVar
 from uuid import UUID
 
+from uuid import uuid4
+
 
 def now() -> datetime.datetime:
     """Return current moment in time with timezone."""
     return datetime.datetime.now(tz=datetime.timezone.utc)
+
+
+def generate_uuid() -> UUID:
+    """Generate new UUID4."""
+    return uuid4()
 
 
 def get_bucket(uuid: UUID | str, length: int = 2) -> str:
