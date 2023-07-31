@@ -10,10 +10,11 @@ from starlette import status
 
 from omoide import domain
 from omoide import use_cases
+from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.application import input_models
+from omoide.domain.application import output_models
 from omoide.domain.core import core_models
-from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
@@ -39,8 +40,8 @@ async def api_create_exif(
 
     result = await use_case.execute(policy, user, item_uuid, exif)
 
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
+    if isinstance(result, errors.Error):
+        web.raise_from_error(result)
 
     response.headers['Location'] = str(
         request.url_for('api_create_exif', item_uuid=item_uuid)
@@ -60,10 +61,13 @@ async def api_read_exif(
     """Read EXIF data for existing item."""
     result = await use_case.execute(policy, user, item_uuid)
 
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
+    if isinstance(result, errors.Error):
+        web.raise_from_error(result)
 
-    return result.value
+    return output_models.OutEXIF(
+        item_uuid=result.item_uuid,
+        exif=result.exif,
+    )
 
 
 @router.put('/{item_uuid}', status_code=status.HTTP_202_ACCEPTED)
@@ -83,8 +87,8 @@ async def api_update_exif(
 
     result = await use_case.execute(policy, user, item_uuid, exif)
 
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
+    if isinstance(result, errors.Error):
+        web.raise_from_error(result)
 
     return {}
 
@@ -100,7 +104,7 @@ async def api_delete_exif(
     """Delete EXIF data from exising item."""
     result = await use_case.execute(policy, user, item_uuid)
 
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
+    if isinstance(result, errors.Error):
+        web.raise_from_error(result)
 
     return {}

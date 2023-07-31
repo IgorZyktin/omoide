@@ -3,9 +3,11 @@
 from functools import cached_property
 from typing import Any
 from typing import Optional
+from uuid import UUID
 
 
-# TODO - find way to make formatting attributes required
+# TODO - find a way to make formatting attributes required
+
 
 class Error:
     """Custom DTO that holds errors."""
@@ -141,6 +143,11 @@ class EXIFDoesNotExist(DoesNotExist):
     """EXIF for item does not exist."""
     template = 'EXIF for item {item_uuid} does not exist'
 
+    def __init__(self, item_uuid: UUID) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.item_uuid = item_uuid
+
 
 # -----------------------------------------------------------------------------
 
@@ -151,3 +158,8 @@ class AlreadyExist(Error):
 class EXIFAlreadyExist(AlreadyExist):
     """AlreadyExist."""
     template = 'EXIF for item {item_uuid} is already exist'
+
+    def __init__(self, item_uuid: UUID) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.item_uuid = item_uuid

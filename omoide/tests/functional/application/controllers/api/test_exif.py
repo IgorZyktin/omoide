@@ -61,35 +61,38 @@ async def test_exif_crud(
 
     # ensure emptiness --------------------------------------------------------
     response_1 = await read_uc.execute(policy, user, item.uuid)
-    utils.resolve_error(response_1, errors.EXIFDoesNotExist)
+    utils.assert_error(response_1, errors.EXIFDoesNotExist)
 
     # create ------------------------------------------------------------------
     response_2 = await create_uc.execute(policy, user, item.uuid, exif_before)
-    assert utils.resolve_success(response_2) == exif_before
+    assert not isinstance(response_2, errors.Error)
+    assert response_2 == exif_before
 
     # read --------------------------------------------------------------------
     response_3 = await read_uc.execute(policy, user, item.uuid)
-    assert utils.resolve_success(response_3) == exif_before
+    assert not isinstance(response_3, errors.Error)
+    assert response_3 == exif_before
 
     # update ------------------------------------------------------------------
     response_4 = await update_uc.execute(policy, user, item.uuid, exif_after)
-    got_exif_1 = utils.resolve_success(response_4)
-    assert got_exif_1 != exif_before
-    assert got_exif_1 == exif_after
+    assert not isinstance(response_4, errors.Error)
+    assert response_4 != exif_before
+    assert response_4 == exif_after
 
     # read --------------------------------------------------------------------
     response_5 = await read_uc.execute(policy, user, item.uuid)
-    got_exif_2 = utils.resolve_success(response_5)
-    assert got_exif_2 != exif_before
-    assert got_exif_2 == exif_after
+    assert not isinstance(response_5, errors.Error)
+    assert response_5 != exif_before
+    assert response_5 == exif_after
 
     # delete ------------------------------------------------------------------
     response_6 = await delete_uc.execute(policy, user, item.uuid)
-    assert utils.resolve_success(response_6) is None
+    assert not isinstance(response_6, errors.Error)
+    assert response_6 is None
 
     # read --------------------------------------------------------------------
     response_7 = await read_uc.execute(policy, user, item.uuid)
-    utils.resolve_error(response_7, errors.EXIFDoesNotExist)
+    utils.assert_error(response_7, errors.EXIFDoesNotExist)
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -115,11 +118,12 @@ async def test_exif_double_add(
 
     # create ------------------------------------------------------------------
     response_1 = await create_uc.execute(policy, user, item.uuid, exif)
-    assert utils.resolve_success(response_1) == exif
+    assert not isinstance(response_1, errors.Error)
+    assert response_1 == exif
 
     # create again ------------------------------------------------------------
     response_2 = await create_uc.execute(policy, user, item.uuid, exif)
-    assert utils.resolve_error(response_2, errors.EXIFAlreadyExist)
+    utils.assert_error(response_2, errors.EXIFAlreadyExist)
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -147,4 +151,4 @@ async def test_exif_update_nonexisting(
     response = await update_uc.execute(policy, user, item.uuid, exif)
 
     # assert
-    assert utils.resolve_error(response, errors.EXIFDoesNotExist)
+    utils.assert_error(response, errors.EXIFDoesNotExist)

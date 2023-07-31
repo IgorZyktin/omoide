@@ -3,10 +3,9 @@
 import abc
 from uuid import UUID
 
-from omoide.domain import errors
 from omoide.domain.core import core_models
+from omoide.domain.errors import Error
 from omoide.domain.storage.interfaces.in_rp_base import AbsBaseRepository
-from omoide.infra.special_types import Result
 
 
 class AbsEXIFRepository(AbsBaseRepository):
@@ -16,26 +15,26 @@ class AbsEXIFRepository(AbsBaseRepository):
     async def create_exif(
             self,
             exif: core_models.EXIF,
-    ) -> Result[errors.Error, core_models.EXIF]:
+    ) -> core_models.EXIF | Error:
         """Create EXIF, return instance or error."""
 
     @abc.abstractmethod
     async def update_exif(
             self,
             exif: core_models.EXIF,
-    ) -> Result[errors.Error, core_models.EXIF]:
+    ) -> core_models.EXIF | Error:
         """Update EXIF, return instance or error."""
 
     @abc.abstractmethod
     async def get_exif_by_item_uuid(
             self,
             item_uuid: UUID,
-    ) -> Result[errors.Error, core_models.EXIF]:
+    ) -> core_models.EXIF | Error:
         """Return EXIF."""
 
     @abc.abstractmethod
     async def delete_exif(
             self,
             item_uuid: UUID,
-    ) -> Result[errors.Error, None]:
+    ) -> None | Error:
         """Delete EXIF."""
