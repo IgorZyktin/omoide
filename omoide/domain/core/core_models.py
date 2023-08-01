@@ -3,6 +3,11 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from omoide.domain import auth
+
+# FIXME - temporary import
+User = auth.User
+
 
 @dataclass(eq=True)
 class EXIF:

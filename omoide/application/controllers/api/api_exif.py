@@ -8,7 +8,6 @@ from fastapi import Request
 from fastapi import Response
 from starlette import status
 
-from omoide import domain
 from omoide import use_cases
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -27,7 +26,7 @@ async def api_create_exif(
         response: Response,
         item_uuid: UUID,
         in_exif: input_models.InEXIF,
-        user: domain.User = Depends(dep.get_current_user),
+        user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateEXIFUseCase = Depends(
             dep.create_exif_use_case),
@@ -53,7 +52,7 @@ async def api_create_exif(
 @router.get('/{item_uuid}', status_code=status.HTTP_200_OK)
 async def api_read_exif(
         item_uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ReadEXIFUseCase = Depends(
             dep.read_exif_use_case),
@@ -74,7 +73,7 @@ async def api_read_exif(
 async def api_update_exif(
         item_uuid: UUID,
         in_exif: input_models.InEXIF,
-        user: domain.User = Depends(dep.get_current_user),
+        user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.UpdateEXIFUseCase = Depends(
             dep.update_exif_use_case),
@@ -96,7 +95,7 @@ async def api_update_exif(
 @router.delete('/{item_uuid}', status_code=status.HTTP_202_ACCEPTED)
 async def api_delete_exif(
         item_uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.DeleteEXIFUseCase = Depends(
             dep.delete_exif_use_case),

@@ -2,7 +2,6 @@
 """
 from uuid import UUID
 
-from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -34,7 +33,7 @@ class CreateEXIFUseCase(BaseEXIFUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,  # FIXME
+            user: core_models.User,
             item_uuid: UUID,
             exif: core_models.EXIF,
     ) -> core_models.EXIF | errors.Error:
@@ -56,7 +55,7 @@ class ReadEXIFUseCase(BaseEXIFUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,  # FIXME
+            user: core_models.User,
             item_uuid: UUID,
     ) -> core_models.EXIF | errors.Error:
         async with self.exif_repo.transaction():
@@ -76,7 +75,7 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,  # FIXME
+            user: core_models.User,
             item_uuid: UUID,
             exif: core_models.EXIF,
     ) -> core_models.EXIF | errors.Error:
@@ -98,7 +97,7 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,  # FIXME
+            user: core_models.User,
             item_uuid: UUID,
     ) -> None | errors.Error:
         """Business logic."""
