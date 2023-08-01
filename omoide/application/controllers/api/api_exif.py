@@ -29,7 +29,7 @@ async def api_create_exif(
         user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateEXIFUseCase = Depends(
-            dep.create_exif_use_case),
+            dep.api_create_exif_use_case),
 ):
     """Add EXIF data to existing item."""
     exif = core_models.EXIF(
@@ -55,7 +55,7 @@ async def api_read_exif(
         user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ReadEXIFUseCase = Depends(
-            dep.read_exif_use_case),
+            dep.api_read_exif_use_case),
 ):
     """Read EXIF data for existing item."""
     result = await use_case.execute(policy, user, item_uuid)
@@ -76,7 +76,7 @@ async def api_update_exif(
         user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.UpdateEXIFUseCase = Depends(
-            dep.update_exif_use_case),
+            dep.api_update_exif_use_case),
 ):
     """Update EXIF data for existing item."""
     exif = core_models.EXIF(
@@ -98,7 +98,7 @@ async def api_delete_exif(
         user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.DeleteEXIFUseCase = Depends(
-            dep.delete_exif_use_case),
+            dep.api_delete_exif_use_case),
 ):
     """Delete EXIF data from exising item."""
     result = await use_case.execute(policy, user, item_uuid)

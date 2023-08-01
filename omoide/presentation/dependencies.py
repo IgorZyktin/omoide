@@ -591,28 +591,28 @@ def create_media_use_case(
 # api exif related use cases -------------------------------------------------
 
 
-def create_exif_use_case(
+def api_create_exif_use_case(
         exif_repository: AbsEXIFRepository = Depends(exif_repo),
 ) -> use_cases.CreateEXIFUseCase:
     """Get use case instance."""
     return use_cases.CreateEXIFUseCase(exif_repo=exif_repository)
 
 
-def read_exif_use_case(
+def api_read_exif_use_case(
         exif_repository: AbsEXIFRepository = Depends(exif_repo),
 ) -> use_cases.ReadEXIFUseCase:
     """Get use case instance."""
     return use_cases.ReadEXIFUseCase(exif_repo=exif_repository)
 
 
-def update_exif_use_case(
+def api_update_exif_use_case(
         exif_repository: AbsEXIFRepository = Depends(exif_repo),
 ) -> use_cases.UpdateEXIFUseCase:
     """Get use case instance."""
     return use_cases.UpdateEXIFUseCase(exif_repo=exif_repository)
 
 
-def delete_exif_use_case(
+def api_delete_exif_use_case(
         exif_repository: AbsEXIFRepository = Depends(exif_repo),
 ) -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
