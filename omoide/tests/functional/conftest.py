@@ -14,6 +14,7 @@ from omoide import infra
 from omoide.domain import auth
 from omoide.domain import common
 from omoide.storage.repositories import asyncpg
+from omoide.storage.repositories.asyncpg.rp_test import RepositoryForTests
 from omoide.tests import constants
 
 
@@ -151,3 +152,10 @@ def items_write_repository(functional_tests_database):
 @pytest.fixture(scope='session')
 def functional_tests_policy(items_write_repository):
     return infra.Policy(items_repo=items_write_repository)
+
+
+# noinspection PyShadowingNames
+@pytest.fixture(scope='session')
+def functional_tests_testing_repo(functional_tests_database):
+    """Return repository for functional tests."""
+    return RepositoryForTests(functional_tests_database)
