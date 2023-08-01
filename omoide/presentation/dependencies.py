@@ -346,15 +346,12 @@ def api_search_use_case(
     )
 
 
-@utils.memorize
 def api_suggest_tag_use_case(
         search_repository:
         interfaces.AbsSearchRepository = Depends(get_search_repo),
 ) -> use_cases.ApiSuggestTagUseCase:
     """Get use case instance."""
-    return use_cases.ApiSuggestTagUseCase(
-        search_repo=search_repository,
-    )
+    return use_cases.ApiSuggestTagUseCase(search_repo=search_repository)
 
 
 @utils.memorize

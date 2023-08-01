@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Use cases for search.
 """
 from typing import Optional
@@ -6,6 +5,7 @@ from typing import Optional
 from omoide import domain
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.domain.core import core_models
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 
@@ -58,18 +58,17 @@ class ApiSuggestTagUseCase:
 
     async def execute(
             self,
-            user: domain.User,
-            guess: domain.GuessTag,
-    ) -> Result[errors.Error, list[domain.GuessResult]]:
+            user: core_models.User,
+            user_input: str,
+            limit: int,
+    ) -> list[core_models.GuessResult] | errors.Error:
         """Return possible tags."""
-        obligation = domain.Obligation(max_results=10)
-
         async with self.search_repo.transaction():
             if user.is_registered:
                 variants = await self.search_repo \
-                    .guess_tag_known(user, guess, obligation)
+                    .guess_tag_known(user, user_input, limit)
             else:
                 variants = await self.search_repo \
-                    .guess_tag_anon(user, guess, obligation)
+                    .guess_tag_anon(user, user_input, limit)
 
-        return Success(variants)
+        return variants

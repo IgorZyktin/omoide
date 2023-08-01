@@ -14,3 +14,10 @@ class EXIF:
     """EXIF information embedded in media."""
     item_uuid: UUID
     exif: dict[str, str | float | int | bool | None | list | dict]
+
+
+@dataclass
+class GuessResult:
+    """Variants that can possibly match with user guess."""
+    tag: str
+    counter: int

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Search related API operations.
 """
 from fastapi import APIRouter
@@ -7,8 +6,11 @@ from starlette.requests import Request
 
 from omoide import domain
 from omoide import use_cases
+from omoide.domain import errors
+from omoide.domain.application import app_constants
+from omoide.domain.application import output_models
+from omoide.domain.core import core_models
 from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Success
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
@@ -42,20 +44,23 @@ async def api_search(
 
 @router.get('/suggest')
 async def api_suggest_tag(
-        user: domain.User = Depends(dep.get_current_user),
+        user: core_models.User = Depends(dep.get_current_user),
         text: str = '',
         use_case: use_cases.ApiSuggestTagUseCase = Depends(
             dep.api_suggest_tag_use_case),
+        response_model=output_models.OutAutocomplete,
 ):
-    """Help user by suggesting possible tags."""
+    """Return tags for autocompletion in search field."""
     variants: list[str] = []
 
     if len(text) > 1:
-        result = await use_case.execute(user, domain.GuessTag(text=text))
+        result = await use_case.execute(
+            user=user,
+            user_input=text,
+            limit=app_constants.AUTOCOMPLETE_VARIANTS,
+        )
 
-        if isinstance(result, Success):
-            variants = [x.tag for x in result.value]
+        if not isinstance(result, errors.Error):
+            variants = [guess_result.tag for guess_result in result]
 
-    return {
-        'variants': variants,
-    }
+    return output_models.OutAutocomplete(variants=variants)
