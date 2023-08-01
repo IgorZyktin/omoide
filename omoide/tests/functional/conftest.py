@@ -112,6 +112,18 @@ def functional_tests_permanent_user():
 
 
 @pytest.fixture(scope='session')
+def functional_tests_anon_user():
+    """Return anon user."""
+    return auth.User(
+        uuid=None,
+        login='test-anon',
+        password='',
+        name='anon',
+        root_item=None,
+    )
+
+
+@pytest.fixture(scope='session')
 def functional_tests_permanent_item():
     """Return permanent item (always exists in the database)."""
     return common.Item(
