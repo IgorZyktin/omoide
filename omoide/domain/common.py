@@ -24,8 +24,6 @@ __all__ = [
     'SingleResult',
     'SimpleLocation',
     'ComplexLocation',
-    'Media',
-    'EXIF',
     'Metainfo',
     'Aim',
     'SpaceUsage',
@@ -230,28 +228,6 @@ class Query(BaseModel):
     def __bool__(self) -> bool:
         """Return True if query has tags to search."""
         return any((self.tags_include, self.tags_exclude))
-
-
-class Media(BaseModel):
-    """Transient content fot the item."""
-    id: int
-    owner_uuid: UUID
-    item_uuid: UUID
-    created_at: datetime
-    processed_at: Optional[datetime] = None
-    content: bytes
-    ext: str
-    target_folder: Literal['content', 'preview', 'thumbnail']
-    replication: dict[str, dict]
-    error: str
-    attempts: int
-
-
-# FIXME - deprecated
-class EXIF(BaseModel):
-    """Exif media information."""
-    item_uuid: UUID
-    exif: dict[str, str | float | int | bool | None | list | dict]
 
 
 class Metainfo(BaseModel):

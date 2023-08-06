@@ -574,15 +574,12 @@ def api_browse_use_case(
 # api media related use cases -------------------------------------------------
 
 
-@utils.memorize
 def create_media_use_case(
         media_repository:
         interfaces.AbsMediaRepository = Depends(get_media_repo),
 ) -> use_cases.CreateMediaUseCase:
     """Get use case instance."""
-    return use_cases.CreateMediaUseCase(
-        media_repo=media_repository,
-    )
+    return use_cases.CreateMediaUseCase(media_repo=media_repository)
 
 
 # api exif related use cases -------------------------------------------------

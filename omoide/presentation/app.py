@@ -55,6 +55,7 @@ def include_api_routes(current_app: fastapi.FastAPI) -> None:
     """Register API routes."""
     current_app.include_router(api.api_exif.router)
     current_app.include_router(api.api_search.router)
+    current_app.include_router(api.api_media.router)
 
 
 # Special application routes
@@ -66,7 +67,6 @@ app.include_router(application.app_profile.router)
 app.include_router(api_old.api_browse.router)
 app.include_router(api_old.api_home.router)
 app.include_router(api_old.api_items.router)
-app.include_router(api_old.api_media.router)
 app.include_router(api_old.api_metainfo.router)
 app.include_router(api_old.api_profile.router)
 app.include_router(api_old.api_search.router)

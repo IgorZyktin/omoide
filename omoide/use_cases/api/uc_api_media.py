@@ -29,13 +29,6 @@ class CreateMediaUseCase:
         """Initialize instance."""
         self.media_repo = media_repo
 
-    @staticmethod
-    def extract_binary_content(raw_content: str) -> bytes:
-        """Convert from base64 into bytes."""
-        sep = raw_content.index(',')
-        body = raw_content[sep + 1:]
-        return base64.decodebytes(body.encode('utf-8'))
-
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
@@ -50,21 +43,6 @@ class CreateMediaUseCase:
             if error:
                 return Failure(error)
 
-            now = utils.now()
-            for each in media_in:
-                media = domain.Media(
-                    id=-1,
-                    owner_uuid=user.uuid,
-                    item_uuid=uuid,
-                    created_at=now,
-                    processed_at=None,
-                    content=self.extract_binary_content(each.content),
-                    ext=each.ext,
-                    target_folder=each.target_folder,
-                    replication={},
-                    error='',
-                    attempts=0,
-                )
 
                 media_id = await self.media_repo.create_media(user, media)
 
