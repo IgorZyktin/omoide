@@ -4,6 +4,8 @@
 import abc
 
 from omoide import domain
+from omoide.domain import errors
+from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
@@ -32,19 +34,19 @@ class AbsSearchRepository(
     @abc.abstractmethod
     async def guess_tag_known(
             self,
-            user: domain.User,
-            guess: domain.GuessTag,
-            obligation: domain.Obligation,
-    ) -> list[domain.GuessResult]:
+            user: core_models.User,
+            user_input: str,
+            limit: int,
+    ) -> list[core_models.GuessResult] | errors.Error:
         """Guess tag for known user."""
 
     @abc.abstractmethod
     async def guess_tag_anon(
             self,
-            user: domain.User,
-            guess: domain.GuessTag,
-            obligation: domain.Obligation,
-    ) -> list[domain.GuessResult]:
+            user: core_models.User,
+            user_input: str,
+            limit: int,
+    ) -> list[core_models.GuessResult] | errors.Error:
         """Guess tag for anon user."""
 
     @abc.abstractmethod

@@ -1,13 +1,17 @@
-# -*- coding: utf-8 -*-
 """Search repository.
 """
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
 from omoide import domain
+from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.domain.core import core_models
+from omoide.infra import custom_logging
 from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class SearchRepository(
@@ -97,53 +101,6 @@ class SearchRepository(
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**row) for row in response]
 
-    async def guess_tag_known(
-            self,
-            user: domain.User,
-            guess: domain.GuessTag,
-            obligation: domain.Obligation,
-    ) -> list[domain.GuessResult]:
-        """Guess tag for known user."""
-        assert user.is_registered
-
-        stmt = sa.select(
-            models.KnownTags.tag,
-            models.KnownTags.counter,
-        ).where(
-            models.KnownTags.tag.ilike(guess.text + '%'),  # type: ignore
-            models.KnownTags.user_uuid == user.uuid,
-        ).order_by(
-            sa.desc(models.KnownTags.counter),
-        ).limit(
-            obligation.max_results,
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [domain.GuessResult(**x) for x in response]
-
-    async def guess_tag_anon(
-            self,
-            user: domain.User,
-            guess: domain.GuessTag,
-            obligation: domain.Obligation,
-    ) -> list[domain.GuessResult]:
-        """Guess tag for anon user."""
-        assert user.is_not_registered
-
-        stmt = sa.select(
-            models.KnownTagsAnon.tag,
-            models.KnownTagsAnon.counter,
-        ).where(
-            models.KnownTagsAnon.tag.ilike(guess.text + '%'),  # type: ignore
-        ).order_by(
-            sa.desc(models.KnownTagsAnon.counter),
-        ).limit(
-            obligation.max_results,
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [domain.GuessResult(**x) for x in response]
-
     async def count_all_tags(
             self,
             user: domain.User,
@@ -168,3 +125,60 @@ class SearchRepository(
 
         response = await self.db.fetch_all(stmt)
         return [(x['tag'], x['counter']) for x in response]
+
+    async def guess_tag_known(
+            self,
+            user: core_models.User,
+            user_input: str,
+            limit: int,
+    ) -> list[core_models.GuessResult] | errors.Error:
+        """Guess tag for known user."""
+        stmt = sa.select(
+            models.KnownTags.tag,
+            models.KnownTags.counter,
+        ).where(
+            models.KnownTags.tag.ilike(user_input + '%'),  # type: ignore
+            models.KnownTags.user_uuid == user.uuid,
+        ).order_by(
+            sa.desc(models.KnownTags.counter),
+        ).limit(limit)
+
+        result: list[core_models.GuessResult] | errors.Error  # ---------------
+
+        try:
+            response = await self.db.fetch_all(stmt)
+        except Exception as exc:
+            LOG.exception('Failed to find known tags for known user')
+            result = errors.DatabaseError(exception=exc)
+        else:
+            result = [core_models.GuessResult(**x) for x in response]
+
+        return result
+
+    async def guess_tag_anon(
+            self,
+            user: core_models.User,
+            user_input: str,
+            limit: int,
+    ) -> list[core_models.GuessResult] | errors.Error:
+        """Guess tag for anon user."""
+        stmt = sa.select(
+            models.KnownTagsAnon.tag,
+            models.KnownTagsAnon.counter,
+        ).where(
+            models.KnownTagsAnon.tag.ilike(user_input + '%'),  # type: ignore
+        ).order_by(
+            sa.desc(models.KnownTagsAnon.counter),
+        ).limit(limit)
+
+        result: list[core_models.GuessResult] | errors.Error  # ---------------
+
+        try:
+            response = await self.db.fetch_all(stmt)
+        except Exception as exc:
+            LOG.exception('Failed to find known tags for anon user')
+            result = errors.DatabaseError(exception=exc)
+        else:
+            result = [core_models.GuessResult(**x) for x in response]
+
+        return result
