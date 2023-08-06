@@ -512,8 +512,7 @@ def api_item_copy_thumbnail_use_case(
         interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
         metainfo_repository:
         interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
-        media_repository:
-        interfaces.AbsMediaRepository = Depends(media_repo),
+        media_repository: AbsMediaRepository = Depends(media_repo),
 ) -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyThumbnailUseCase(
@@ -531,8 +530,7 @@ def api_item_update_parent_use_case(
         interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
         metainfo_repository:
         interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
-        media_repository:
-        interfaces.AbsMediaRepository = Depends(media_repo),
+        media_repository: AbsMediaRepository = Depends(media_repo),
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateParentUseCase(

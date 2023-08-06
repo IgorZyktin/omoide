@@ -29,7 +29,7 @@ class CreateMediaUseCase:
             user: core_models.User,
             uuid: UUID,
             media: core_models.Media,
-    ) -> int | errors.Error:
+    ) -> core_models.Media | errors.Error:
         """Business logic."""
         async with self.media_repo.transaction():
             error = await policy.is_restricted(user, uuid,
@@ -37,6 +37,6 @@ class CreateMediaUseCase:
             if error:
                 return error
 
-            media_id = await self.media_repo.create_media(media)
+            media = await self.media_repo.create_media(media)
 
-        return media_id
+        return media

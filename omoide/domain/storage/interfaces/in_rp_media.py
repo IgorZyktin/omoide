@@ -19,7 +19,7 @@ class AbsMediaRepository(AbsBaseRepository):
         """Create Media, return media id."""
 
     @abc.abstractmethod
-    async def read_media(
+    async def get_media_by_id(
             self,
             media_id: int,
     ) -> core_models.Media | errors.Error:
@@ -40,5 +40,5 @@ class AbsMediaRepository(AbsBaseRepository):
             target_uuid: UUID,
             ext: str,
             target_folder: str,
-    ) -> None | errors.Error:
+    ) -> int | errors.Error:
         """Save intention to copy data between items."""

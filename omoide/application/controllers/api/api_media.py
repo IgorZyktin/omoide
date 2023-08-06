@@ -8,17 +8,17 @@ from fastapi import status
 
 from omoide import use_cases
 from omoide import utils
+from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.application import input_models
 from omoide.domain.core import core_models
-from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
 router = APIRouter(prefix='/api/media')
 
 
-@router.post('/{uuid}', status_code=status.HTTP_202_ACCEPTED)
+@router.post('/{uuid}', status_code=status.HTTP_201_CREATED)
 async def api_create_media(
         uuid: UUID,
         in_media: input_models.InMedia,
@@ -44,7 +44,7 @@ async def api_create_media(
 
     result = await use_case.execute(policy, user, uuid, media)
 
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
+    if isinstance(result, errors.Error):
+        web.raise_from_error(result)
 
     return {}

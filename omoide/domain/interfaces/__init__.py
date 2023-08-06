@@ -6,8 +6,6 @@ from omoide.domain.interfaces.in_storage \
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_write import AbsItemsWriteRepository
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_media import AbsMediaRepository
-from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_metainfo import AbsMetainfoRepository
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_preview import AbsPreviewRepository
