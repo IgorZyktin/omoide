@@ -314,19 +314,6 @@ class Media(Base):
     error: str = sa.Column(sa.Text, nullable=False)
     attempts: int = sa.Column(sa.Integer, nullable=False)
 
-    # relations ---------------------------------------------------------------
-
-    owner: User = relationship('User',
-                               passive_deletes=True,
-                               back_populates='media',
-                               primaryjoin='Media.owner_uuid==User.uuid',
-                               uselist=False)
-
-    item: Item = relationship('Item',
-                              passive_deletes=True,
-                              back_populates='media',
-                              uselist=False)
-
 
 # This will allow us to distinguish same bad payloads and search for duplicates
 # Someday we could put ImageMatch here.

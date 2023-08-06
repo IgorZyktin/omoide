@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import status
 
 from omoide import use_cases
 from omoide import utils
@@ -17,42 +18,30 @@ from omoide.presentation import web
 router = APIRouter(prefix='/api/media')
 
 
-def cast_media(
-        user: core_models.User,
-        uuid: UUID,
-        in_media: list[input_models.InMedia],
-) -> list[core_models.Media]:
-    """Convert media from input to domain models."""
-    now = utils.now()
-    return [
-        core_models.Media(
-            id=-1,
-            owner_uuid=user.uuid,
-            item_uuid=uuid,
-            created_at=now,
-            processed_at=None,
-            content=each.binary_content,
-            ext=each.ext,
-            target_folder=each.target_folder,
-            replication={},
-            error='',
-            attempts=0,
-        )
-        for each in in_media
-    ]
-
-
-@router.post('/{uuid}')
+@router.post('/{uuid}', status_code=status.HTTP_202_ACCEPTED)
 async def api_create_media(
         uuid: UUID,
-        in_media: list[input_models.InMedia],
+        in_media: input_models.InMedia,
         user: core_models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateMediaUseCase = Depends(
             dep.create_media_use_case),
 ):
     """Create or update media entry."""
-    media = cast_media(user, uuid, in_media)
+    media = core_models.Media(
+        id=-1,
+        owner_uuid=user.uuid,
+        item_uuid=uuid,
+        created_at=utils.now(),
+        processed_at=None,
+        content=in_media.binary_content,
+        ext=in_media.ext,
+        media_type=in_media.media_type,
+        replication={},
+        error='',
+        attempts=0,
+    )
+
     result = await use_case.execute(policy, user, uuid, media)
 
     if isinstance(result, Failure):

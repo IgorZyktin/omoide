@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on media.
 """
 from typing import Optional
@@ -8,34 +7,50 @@ import sqlalchemy as sa
 
 from omoide import domain
 from omoide import utils
-from omoide.domain import interfaces
+from omoide.domain import errors
+from omoide.domain.core import core_models
+from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.infra import custom_logging
 from omoide.storage.database import models
 
+LOG = custom_logging.get_logger(__name__)
 
-class MediaRepository(interfaces.AbsMediaRepository):
+
+class MediaRepository(AbsMediaRepository):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(
             self,
-            user: domain.User,
-            media: domain.Media,
-    ) -> int:
+            media: core_models.Media,
+    ) -> core_models.Media | errors.Error:
         """Create Media, return media id."""
         stmt = sa.insert(
             models.Media
         ).values(
-            owner_uuid=user.uuid,
+            owner_uuid=media.owner_uuid,
             item_uuid=media.item_uuid,
             created_at=media.created_at,
             processed_at=media.processed_at,
             content=media.content,
             ext=media.ext,
-            target_folder=media.target_folder,
+            target_folder=media.media_type,  # FIXME
             replication={},
             error='',
             attempts=0,
         ).returning(models.Media.id)
-        return await self.db.execute(stmt)
+
+        result: core_models.Media | errors.Error  # ---------------------------
+
+        try:
+            media_id = await self.db.execute(stmt)
+        except Exception as exc:
+            LOG.exception('Failed to create media')  # TODO - refactor
+            result = errors.DatabaseError(exception=exc)
+        else:
+            media.id = media_id
+            result = media
+
+        return result
 
     async def read_media(
             self,

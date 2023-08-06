@@ -17,6 +17,7 @@ from omoide import utils
 from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
+from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
 from omoide.presentation import app_config
 from omoide.presentation import constants
 from omoide.presentation import web
@@ -134,8 +135,7 @@ def get_items_write_repo() -> interfaces.AbsItemsWriteRepository:
     return asyncpg.ItemsWriteRepository(get_db())
 
 
-@utils.memorize
-def get_media_repo() -> interfaces.AbsMediaRepository:
+def media_repo() -> AbsMediaRepository:
     """Get repo instance."""
     return asyncpg.MediaRepository(get_db())
 
@@ -513,7 +513,7 @@ def api_item_copy_thumbnail_use_case(
         metainfo_repository:
         interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
         media_repository:
-        interfaces.AbsMediaRepository = Depends(get_media_repo),
+        interfaces.AbsMediaRepository = Depends(media_repo),
 ) -> use_cases.ApiCopyThumbnailUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyThumbnailUseCase(
@@ -532,7 +532,7 @@ def api_item_update_parent_use_case(
         metainfo_repository:
         interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
         media_repository:
-        interfaces.AbsMediaRepository = Depends(get_media_repo),
+        interfaces.AbsMediaRepository = Depends(media_repo),
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateParentUseCase(
@@ -575,8 +575,7 @@ def api_browse_use_case(
 
 
 def create_media_use_case(
-        media_repository:
-        interfaces.AbsMediaRepository = Depends(get_media_repo),
+        media_repository: AbsMediaRepository = Depends(media_repo),
 ) -> use_cases.CreateMediaUseCase:
     """Get use case instance."""
     return use_cases.CreateMediaUseCase(media_repo=media_repository)

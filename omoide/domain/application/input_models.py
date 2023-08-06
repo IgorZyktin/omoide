@@ -1,7 +1,6 @@
 """Raw models that come from user.
 """
 import base64
-from typing import Literal
 
 import pydantic
 
@@ -16,20 +15,20 @@ class InEXIF(pydantic.BaseModel):
 class InMedia(pydantic.BaseModel):
     """Input info for media creation."""
     content: str
-    target_folder: Literal['content', 'preview', 'thumbnail']
+    media_type: list[str]
     ext: str
 
-    @pydantic.field_validator('target_folder')
+    @pydantic.field_validator('media_type')
     @classmethod
     def check_media_type(cls, v):
         """Check."""
         if v not in core_constants.MEDIA_TYPES:
-            msg = f'Incorrect media type: {v}'
+            msg = (f'Incorrect media type: {v}, '
+                   f'must be one of {core_constants.MEDIA_TYPES}')
             raise ValueError(msg)
         return v
 
-    @property
-    def binary_content(self) -> bytes:
+    def get_binary_content(self) -> bytes:
         """Convert from base64 into bytes."""
         sep = self.content.index(',')
         body = self.raw_content[sep + 1:]

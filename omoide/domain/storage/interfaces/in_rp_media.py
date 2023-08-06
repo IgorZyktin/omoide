@@ -1,37 +1,35 @@
-# -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on media records.
 """
 import abc
-from typing import Optional
 from uuid import UUID
 
-from omoide import domain
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
+from omoide.domain import errors
+from omoide.domain.core import core_models
+from omoide.domain.storage.interfaces.in_rp_base import AbsBaseRepository
 
 
-class AbsMediaRepository(in_rp_base.AbsBaseRepository):
+class AbsMediaRepository(AbsBaseRepository):
     """Repository that perform CRUD operations on media records."""
 
     @abc.abstractmethod
     async def create_media(
             self,
-            user: domain.User,
-            media: domain.Media,
-    ) -> int:
+            media: core_models.Media,
+    ) -> core_models.Media | errors.Error:
         """Create Media, return media id."""
 
     @abc.abstractmethod
     async def read_media(
             self,
             media_id: int,
-    ) -> Optional[domain.Media]:
+    ) -> core_models.Media | errors.Error:
         """Return Media instance or None."""
 
     @abc.abstractmethod
     async def delete_media(
             self,
             media_id: int,
-    ) -> bool:
+    ) -> None | errors.Error:
         """Delete Media with given id, return True on success."""
 
     @abc.abstractmethod
@@ -42,5 +40,5 @@ class AbsMediaRepository(in_rp_base.AbsBaseRepository):
             target_uuid: UUID,
             ext: str,
             target_folder: str,
-    ) -> bool:
+    ) -> None | errors.Error:
         """Save intention to copy data between items."""

@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Request
 from fastapi import Response
-from starlette import status
+from fastapi import status
 
 from omoide import use_cases
 from omoide.domain import errors

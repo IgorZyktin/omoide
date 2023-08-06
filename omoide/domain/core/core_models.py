@@ -2,7 +2,6 @@
 """
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal
 from uuid import UUID
 
 from omoide.domain import auth
@@ -33,7 +32,7 @@ class Media:
     item_uuid: UUID
     content: bytes
     ext: str
-    target_folder: Literal['content', 'preview', 'thumbnail']
+    media_type: list[str]
     replication: dict[str, dict]
     error: str
     attempts: int

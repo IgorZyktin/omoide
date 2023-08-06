@@ -847,7 +847,7 @@ async function saveContentForProxy(proxy) {
             data: JSON.stringify([
                 {
                     content: proxy.content,
-                    target_folder: 'content',
+                    media_type: 'content',
                     ext: proxy.contentExt,
                 }
             ]),
@@ -881,7 +881,7 @@ async function savePreviewForProxy(proxy) {
             data: JSON.stringify([
                 {
                     content: proxy.preview,
-                    target_folder: 'preview',
+                    media_type: 'preview',
                     ext: proxy.previewExt,
                 }
             ]),
@@ -915,7 +915,7 @@ async function saveThumbnailForProxy(proxy) {
             data: JSON.stringify([
                 {
                     content: proxy.thumbnail,
-                    target_folder: 'thumbnail',
+                    media_type: 'thumbnail',
                     ext: proxy.thumbnailExt,
                 }
             ]),
@@ -998,41 +998,83 @@ async function ensureParentHasThumbnail(parent, firstChild) {
 
     if (parent.thumbnail_ext === null) {
         console.log(`Set parent ${parent.uuid} to use thumbnail from ${firstChild.uuid}`)
-
-        return new Promise(function (resolve, reject) {
-            $.ajax({
-                timeout: 5000, // 5 seconds
-                type: 'POST',
-                url: `/api/media/${parent.uuid}`,
-                contentType: 'application/json',
-                data: JSON.stringify([
-                    {
-                        content: firstChild.content,
-                        target_folder: 'content',
-                        ext: firstChild.contentExt,
-                    },
-                    {
-                        content: firstChild.preview,
-                        target_folder: 'preview',
-                        ext: firstChild.previewExt,
-                    },
-                    {
-                        content: firstChild.thumbnail,
-                        target_folder: 'thumbnail',
-                        ext: firstChild.thumbnailExt,
-                    }
-                ]),
-                success: async function (response) {
-                    await ensureParentHasThumbnail(parent.parent_uuid, firstChild)
-                    resolve(response)
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    describeFail(XMLHttpRequest.responseJSON)
-                    reject('fail')
-                },
-            })
-        })
+        await copyContent(parent, firstChild)
+        await copyPreview(parent, firstChild)
+        await copyThumbnail(parent, firstChild)
+        await ensureParentHasThumbnail(parent.parent_uuid, firstChild)
     }
+}
+
+async function copyContent(parent, firstChild) {
+    // copy content from given child
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            timeout: 5000, // 5 seconds
+            type: 'POST',
+            url: `/api/media/${parent.uuid}`,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                content: firstChild.content,
+                media_type: 'content',
+                ext: firstChild.contentExt,
+            }),
+            success: async function (response) {
+                resolve(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
+}
+
+async function copyPreview(parent, firstChild) {
+    // copy preview from given child
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            timeout: 5000, // 5 seconds
+            type: 'POST',
+            url: `/api/media/${parent.uuid}`,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                content: firstChild.preview,
+                media_type: 'preview',
+                ext: firstChild.previewExt,
+            }),
+            success: async function (response) {
+                resolve(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
+}
+
+async function copyThumbnail(parent, firstChild) {
+    // copy thumbnail from given child
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            timeout: 5000, // 5 seconds
+            type: 'POST',
+            url: `/api/media/${parent.uuid}`,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                content: firstChild.thumbnail,
+                media_type: 'thumbnail',
+                ext: firstChild.thumbnailExt,
+            }),
+            success: async function (response) {
+                resolve(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                describeFail(XMLHttpRequest.responseJSON)
+                reject('fail')
+            },
+        })
+    })
 }
 
 
@@ -1212,7 +1254,7 @@ async function uploadMedia(button, uploadState) {
 
         let uploadSelector = $('#after_upload')
 
-        if (uploadSelector.val() === 'parent'){
+        if (uploadSelector.val() === 'parent') {
             if (upload_as.val() === 'target') {
                 let itemItself = await getItem(targets[0].uuid)
                 let parentItself = await getItem(itemItself.parent_uuid)
