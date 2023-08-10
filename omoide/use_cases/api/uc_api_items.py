@@ -5,7 +5,6 @@ import asyncio
 import time
 import traceback
 from contextlib import asynccontextmanager
-from typing import Any
 from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
@@ -15,6 +14,7 @@ from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
 from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
@@ -197,7 +197,7 @@ class BaseItemMediaUseCase:
             self,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
-            media_repo: interfaces.AbsMediaRepository,
+            media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -740,7 +740,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
-            media_repo: interfaces.AbsMediaRepository,
+            media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
         super().__init__(items_repo, metainfo_repo, media_repo)

@@ -1,6 +1,7 @@
 """Business-logic models.
 """
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from omoide.domain import auth
@@ -21,3 +22,19 @@ class GuessResult:
     """Variants that can possibly match with user guess."""
     tag: str
     counter: int
+
+
+@dataclass
+class Media:
+    """Transient content fot the item."""
+    id: int
+    owner_uuid: UUID
+    item_uuid: UUID
+    content: bytes
+    ext: str
+    media_type: list[str]
+    replication: dict[str, dict]
+    error: str
+    attempts: int
+    created_at: datetime
+    processed_at: datetime | None = None

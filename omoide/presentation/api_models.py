@@ -2,7 +2,6 @@
 """Input and output models for the API.
 """
 from datetime import datetime
-from typing import Literal
 from typing import Optional
 from uuid import UUID
 
@@ -105,13 +104,6 @@ class CreateUserIn(pydantic.BaseModel):
     login: str
     password: str
     name: Optional[str] = None
-
-
-class CreateMediaIn(pydantic.BaseModel):
-    """Input info for media creation."""
-    content: str
-    target_folder: Literal['content', 'preview', 'thumbnail']
-    ext: str
 
 
 class NewTagsIn(pydantic.BaseModel):

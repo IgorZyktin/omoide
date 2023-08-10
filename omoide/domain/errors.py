@@ -113,11 +113,6 @@ class UserDoesNotExist(Error):
     template = 'User {uuid} does not exist'
 
 
-class MediaDoesNotExist(Error):
-    """Media does not exist."""
-    template = 'Media with id {id} for item {uuid} does not exist'
-
-
 class MetainfoDoesNotExist(Error):
     """Metainfo for item does not exist."""
     template = 'Metainfo for item {uuid} does not exist'
@@ -140,13 +135,23 @@ class DoesNotExist(Error):
 
 
 class EXIFDoesNotExist(DoesNotExist):
-    """EXIF for item does not exist."""
+    """Does not exist."""
     template = 'EXIF for item {item_uuid} does not exist'
 
     def __init__(self, item_uuid: UUID) -> None:
         """Initialize instance."""
         super().__init__()
         self.item_uuid = item_uuid
+
+
+class MediaDoesNotExist(DoesNotExist):
+    """Does not exist."""
+    template = 'Media with id {media_id} does not exist'
+
+    def __init__(self, media_id: int) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.media_id = media_id
 
 
 # -----------------------------------------------------------------------------
