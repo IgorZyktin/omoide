@@ -3,7 +3,6 @@
 from functools import cached_property
 from typing import Any
 from typing import Optional
-from uuid import UUID
 
 
 # TODO - find a way to make formatting attributes required
@@ -134,16 +133,6 @@ class DoesNotExist(Error):
     """Base class that shows that object does not exist."""
 
 
-class EXIFDoesNotExist(DoesNotExist):
-    """Does not exist."""
-    template = 'EXIF for item {item_uuid} does not exist'
-
-    def __init__(self, item_uuid: UUID) -> None:
-        """Initialize instance."""
-        super().__init__()
-        self.item_uuid = item_uuid
-
-
 class MediaDoesNotExist(DoesNotExist):
     """Does not exist."""
     template = 'Media with id {media_id} does not exist'
@@ -152,19 +141,3 @@ class MediaDoesNotExist(DoesNotExist):
         """Initialize instance."""
         super().__init__()
         self.media_id = media_id
-
-
-# -----------------------------------------------------------------------------
-
-class AlreadyExist(Error):
-    """Base class that shows that object already exist."""
-
-
-class EXIFAlreadyExist(AlreadyExist):
-    """AlreadyExist."""
-    template = 'EXIF for item {item_uuid} is already exist'
-
-    def __init__(self, item_uuid: UUID) -> None:
-        """Initialize instance."""
-        super().__init__()
-        self.item_uuid = item_uuid

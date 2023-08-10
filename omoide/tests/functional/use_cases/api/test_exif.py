@@ -3,10 +3,9 @@
 import pytest
 import pytest_asyncio
 
-from omoide.domain import errors
+from omoide.domain import exceptions
 from omoide.domain.core import core_models
 from omoide.storage.repositories.asyncpg.rp_exif import EXIFRepository
-from omoide.tests import utils
 from omoide.use_cases.api import uc_api_exif
 
 
@@ -25,9 +24,17 @@ async def ensure_there_is_no_exif(
     item = functional_tests_permanent_item
     exif_repo = functional_tests_exif_repo
 
-    await exif_repo.delete_exif(item.uuid)
+    try:
+        await exif_repo.delete_exif(item.uuid)
+    except exceptions.EXIFDoesNotExistError:
+        pass
+
     yield
-    await exif_repo.delete_exif(item.uuid)
+
+    try:
+        await exif_repo.delete_exif(item.uuid)
+    except exceptions.EXIFDoesNotExistError:
+        pass
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -60,39 +67,34 @@ async def test_exif_crud(
     )
 
     # ensure emptiness --------------------------------------------------------
-    response_1 = await read_uc.execute(policy, user, item.uuid)
-    utils.assert_error(response_1, errors.EXIFDoesNotExist)
+    with pytest.raises(exceptions.EXIFDoesNotExistError):
+        await read_uc.execute(policy, user, item.uuid)
 
     # create ------------------------------------------------------------------
     response_2 = await create_uc.execute(policy, user, item.uuid, exif_before)
-    assert not isinstance(response_2, errors.Error)
     assert response_2 == exif_before
 
     # read --------------------------------------------------------------------
     response_3 = await read_uc.execute(policy, user, item.uuid)
-    assert not isinstance(response_3, errors.Error)
     assert response_3 == exif_before
 
     # update ------------------------------------------------------------------
     response_4 = await update_uc.execute(policy, user, item.uuid, exif_after)
-    assert not isinstance(response_4, errors.Error)
     assert response_4 != exif_before
     assert response_4 == exif_after
 
     # read --------------------------------------------------------------------
     response_5 = await read_uc.execute(policy, user, item.uuid)
-    assert not isinstance(response_5, errors.Error)
     assert response_5 != exif_before
     assert response_5 == exif_after
 
     # delete ------------------------------------------------------------------
     response_6 = await delete_uc.execute(policy, user, item.uuid)
-    assert not isinstance(response_6, errors.Error)
     assert response_6 is None
 
     # read --------------------------------------------------------------------
-    response_7 = await read_uc.execute(policy, user, item.uuid)
-    utils.assert_error(response_7, errors.EXIFDoesNotExist)
+    with pytest.raises(exceptions.EXIFDoesNotExistError):
+        await read_uc.execute(policy, user, item.uuid)
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -118,12 +120,11 @@ async def test_exif_double_add(
 
     # create ------------------------------------------------------------------
     response_1 = await create_uc.execute(policy, user, item.uuid, exif)
-    assert not isinstance(response_1, errors.Error)
     assert response_1 == exif
 
     # create again ------------------------------------------------------------
-    response_2 = await create_uc.execute(policy, user, item.uuid, exif)
-    utils.assert_error(response_2, errors.EXIFAlreadyExist)
+    with pytest.raises(exceptions.AlreadyExistError):
+        await create_uc.execute(policy, user, item.uuid, exif)
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -148,7 +149,5 @@ async def test_exif_update_nonexisting(
     )
 
     # act
-    response = await update_uc.execute(policy, user, item.uuid, exif)
-
-    # assert
-    utils.assert_error(response, errors.EXIFDoesNotExist)
+    with pytest.raises(exceptions.DoesNotExistError):
+        await update_uc.execute(policy, user, item.uuid, exif)

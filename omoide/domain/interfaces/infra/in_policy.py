@@ -32,3 +32,12 @@ class AbsPolicy(abc.ABC):
             action: actions.Action,
     ) -> Error | None:
         """Return Error if action is not permitted."""
+
+    @abc.abstractmethod
+    async def check(
+            self,
+            user: domain.User,  # FIXME
+            uuid: UUID | None,
+            action: actions.Action,
+    ) -> None:
+        """Raise if action is not permitted."""
