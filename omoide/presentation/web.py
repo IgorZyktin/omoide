@@ -57,12 +57,10 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     http.HTTPStatus.BAD_REQUEST: [
         errors.NoUUID,
         errors.InvalidUUID,
-        errors.EXIFAlreadyExist,
     ],
 
     http.HTTPStatus.NOT_FOUND: [
         errors.ItemDoesNotExist,
-        errors.EXIFDoesNotExist,
         errors.UserDoesNotExist,
         errors.MediaDoesNotExist,
         errors.MetainfoDoesNotExist,

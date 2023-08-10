@@ -4,18 +4,18 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
 from omoide import use_cases
-from omoide.domain import errors
+from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.application import input_models
 from omoide.domain.application import output_models
 from omoide.domain.core import core_models
 from omoide.presentation import dependencies as dep
-from omoide.presentation import web
 
 router = APIRouter(prefix='/api/exif')
 
@@ -37,10 +37,17 @@ async def api_create_exif(
         exif=in_exif.exif,
     )
 
-    result = await use_case.execute(policy, user, item_uuid, exif)
-
-    if isinstance(result, errors.Error):
-        web.raise_from_error(result)
+    try:
+        await use_case.execute(policy, user, item_uuid, exif)
+    except exceptions.AlreadyExistError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail=str(exc))
+    except exceptions.DoesNotExistError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=str(exc))
+    except exceptions.ForbiddenError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=str(exc))
 
     response.headers['Location'] = str(
         request.url_for('api_create_exif', item_uuid=item_uuid)
@@ -58,10 +65,14 @@ async def api_read_exif(
             dep.api_read_exif_use_case),
 ):
     """Read EXIF data for existing item."""
-    result = await use_case.execute(policy, user, item_uuid)
-
-    if isinstance(result, errors.Error):
-        web.raise_from_error(result)
+    try:
+        result = await use_case.execute(policy, user, item_uuid)
+    except exceptions.DoesNotExistError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=str(exc))
+    except exceptions.ForbiddenError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=str(exc))
 
     return output_models.OutEXIF(
         item_uuid=result.item_uuid,
@@ -84,10 +95,14 @@ async def api_update_exif(
         exif=in_exif.exif,
     )
 
-    result = await use_case.execute(policy, user, item_uuid, exif)
-
-    if isinstance(result, errors.Error):
-        web.raise_from_error(result)
+    try:
+        await use_case.execute(policy, user, item_uuid, exif)
+    except exceptions.DoesNotExistError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=str(exc))
+    except exceptions.ForbiddenError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=str(exc))
 
     return {}
 
@@ -101,9 +116,13 @@ async def api_delete_exif(
             dep.api_delete_exif_use_case),
 ):
     """Delete EXIF data from exising item."""
-    result = await use_case.execute(policy, user, item_uuid)
-
-    if isinstance(result, errors.Error):
-        web.raise_from_error(result)
+    try:
+        await use_case.execute(policy, user, item_uuid)
+    except exceptions.DoesNotExistError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=str(exc))
+    except exceptions.ForbiddenError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=str(exc))
 
     return {}

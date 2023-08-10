@@ -6,6 +6,7 @@ from uuid import UUID
 from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
+from omoide.domain import exceptions
 from omoide.domain import interfaces
 
 ITEM_RELATED = frozenset((
@@ -24,6 +25,12 @@ READ_ONLY = frozenset((
     actions.EXIF.READ,
     actions.Metainfo.READ,
     actions.Item.READ,
+))
+
+CHANGING_ITEM_RELATED = frozenset((
+    actions.EXIF.CREATE,
+    actions.EXIF.UPDATE,
+    actions.EXIF.DELETE,
 ))
 
 
@@ -90,3 +97,34 @@ class Policy(interfaces.AbsPolicy):
                 error = errors.ItemRequiresAccess(uuid=uuid)
 
         return error or None
+
+    async def check(
+            self,
+            user: domain.User,  # FIXME
+            uuid: UUID | None,
+            action: actions.Action,
+    ) -> None:
+        """Raise if action is not permitted."""
+        access = await self.items_repo.check_access(user, uuid)
+
+        if action in ITEM_RELATED and uuid is not None:
+            self._check_item_related(uuid, action, access)
+        else:
+            raise exceptions.UnexpectedActionError(action=action)
+
+    @staticmethod
+    def _check_item_related(
+            item_uuid: UUID,
+            action: actions.Action,
+            access: domain.AccessStatus,  # FIXME
+    ) -> None:
+        """Raise if action is not permitted."""
+        if access.does_not_exist:
+            raise exceptions.ItemDoesNotExistError(
+                item_uuid=item_uuid,
+            )
+
+        if action in CHANGING_ITEM_RELATED and access.is_not_owner:
+            raise exceptions.CannotModifyItemComponentError(
+                item_uuid=item_uuid,
+            )
