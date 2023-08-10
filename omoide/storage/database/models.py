@@ -10,6 +10,7 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import relationship
 
 metadata = sa.MetaData()
 Base = declarative_base(metadata=metadata)
@@ -41,6 +42,23 @@ class User(Base):
                                                         ondelete='SET NULL'),
                                           nullable=True,
                                           index=True)
+    # relations ---------------------------------------------------------------
+
+    items: list['Item'] = relationship('Item',
+                                       passive_deletes=True,
+                                       primaryjoin=(
+                                           'Item.owner_uuid==User.uuid'
+                                       ),
+                                       back_populates='owner',
+                                       uselist=True)
+
+    media: 'Media' = relationship('Media',
+                                  passive_deletes=True,
+                                  primaryjoin=(
+                                      'Media.owner_uuid==User.uuid'
+                                  ),
+                                  back_populates='owner',
+                                  uselist=True)
 
     # methods -----------------------------------------------------------------
 
@@ -122,6 +140,29 @@ class Item(Base):
     def __repr__(self) -> str:
         """Return string representation."""
         return f'<DB Item, {self.uuid}, {self.name!r}>'
+
+    # relations ---------------------------------------------------------------
+
+    owner: User = relationship('User',
+                               passive_deletes=True,
+                               back_populates='items',
+                               primaryjoin='Item.owner_uuid==User.uuid',
+                               uselist=False)
+
+    metainfo: 'Metainfo' = relationship('Metainfo',
+                                        passive_deletes=True,
+                                        back_populates='item',
+                                        uselist=False)
+
+    media: 'Media' = relationship('Media',
+                                  passive_deletes=True,
+                                  back_populates='item',
+                                  uselist=True)
+
+    exif: 'EXIF' = relationship('EXIF',
+                                passive_deletes=True,
+                                back_populates='item',
+                                uselist=True)
 
     # other -------------------------------------------------------------------
 
@@ -219,6 +260,13 @@ class Metainfo(Base):
         """Return string representation."""
         return f'<DB Metainfo, {self.item_uuid}, {self.media_type!r}>'
 
+    # relations ---------------------------------------------------------------
+
+    item: Item = relationship('Item',
+                              passive_deletes=True,
+                              back_populates='metainfo',
+                              uselist=False)
+
 
 class Media(Base):
     """Converted content from user.
@@ -266,6 +314,19 @@ class Media(Base):
     error: str = sa.Column(sa.Text, nullable=False)
     attempts: int = sa.Column(sa.Integer, nullable=False)
 
+    # relations ---------------------------------------------------------------
+
+    owner: User = relationship('User',
+                               passive_deletes=True,
+                               back_populates='media',
+                               primaryjoin='Media.owner_uuid==User.uuid',
+                               uselist=False)
+
+    item: Item = relationship('Item',
+                              passive_deletes=True,
+                              back_populates='media',
+                              uselist=False)
+
 
 # This will allow us to distinguish same bad payloads and search for duplicates
 # Someday we could put ImageMatch here.
@@ -304,6 +365,13 @@ class EXIF(Base):
     # fields ------------------------------------------------------------------
 
     exif: dict = sa.Column(pg.JSONB, nullable=False)
+
+    # relations ---------------------------------------------------------------
+
+    item: Item = relationship('Item',
+                              passive_deletes=True,
+                              back_populates='exif',
+                              uselist=False)
 
 
 class OrphanFiles(Base):
