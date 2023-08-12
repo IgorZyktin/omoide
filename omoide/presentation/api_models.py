@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Input and output models for the API.
 """
-from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -119,28 +118,3 @@ class NewPermissionsIn(pydantic.BaseModel):
     override: bool
     permissions_before: list[UUID]
     permissions_after: list[UUID]
-
-
-class MetainfoIn(pydantic.BaseModel):
-    """Input info for metainfo creation."""
-    user_time: Optional[datetime] = None
-
-    media_type: Optional[str] = None
-
-    author: Optional[str] = None
-    author_url: Optional[str] = None
-    saved_from_url: Optional[str] = None
-    description: Optional[str] = None
-
-    extras: dict
-
-    content_size: Optional[int] = None
-    preview_size: Optional[int] = None
-    thumbnail_size: Optional[int] = None
-
-    content_width: Optional[int] = None
-    content_height: Optional[int] = None
-    preview_width: Optional[int] = None
-    preview_height: Optional[int] = None
-    thumbnail_width: Optional[int] = None
-    thumbnail_height: Optional[int] = None

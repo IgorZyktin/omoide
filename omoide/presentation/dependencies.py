@@ -623,26 +623,24 @@ def api_delete_exif_use_case(
 # api metainfo related use cases ----------------------------------------------
 
 
-@utils.memorize
 def read_metainfo_use_case(
-        metainfo_repository:
-        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        metainfo_repository: Annotated[interfaces.AbsMetainfoRepository,
+                                       Depends(get_metainfo_repo)],
 ) -> use_cases.ReadMetainfoUseCase:
     """Get use case instance."""
-    return use_cases.ReadMetainfoUseCase(
-        meta_repo=metainfo_repository,
-    )
+    return use_cases.ReadMetainfoUseCase(policy=policy,
+                                         meta_repo=metainfo_repository)
 
 
-@utils.memorize
 def update_metainfo_use_case(
-        metainfo_repository:
-        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        metainfo_repository: Annotated[interfaces.AbsMetainfoRepository,
+                                       Depends(get_metainfo_repo)],
 ) -> use_cases.UpdateMetainfoUseCase:
     """Get use case instance."""
-    return use_cases.UpdateMetainfoUseCase(
-        meta_repo=metainfo_repository,
-    )
+    return use_cases.UpdateMetainfoUseCase(policy=policy,
+                                           meta_repo=metainfo_repository)
 
 
 # app profile related use cases -----------------------------------------------

@@ -236,28 +236,28 @@ class Metainfo(BaseModel):
 
     created_at: datetime
     updated_at: datetime
-    deleted_at: Optional[datetime] = None
-    user_time: Optional[datetime] = None
+    deleted_at: datetime | None = None
+    user_time: datetime | None = None
 
-    media_type: Optional[str] = None
+    media_type: str | None = None
 
-    author: Optional[str] = None
-    author_url: Optional[str] = None
-    saved_from_url: Optional[str] = None
-    description: Optional[str] = None
+    author: str | None = None
+    author_url: str | None = None
+    saved_from_url: str | None = None
+    description: str | None = None
 
     extras: dict
 
-    content_size: Optional[int] = None
-    preview_size: Optional[int] = None
-    thumbnail_size: Optional[int] = None
+    content_size: int | None = None
+    preview_size: int | None = None
+    thumbnail_size: int | None = None
 
-    content_width: Optional[int] = None
-    content_height: Optional[int] = None
-    preview_width: Optional[int] = None
-    preview_height: Optional[int] = None
-    thumbnail_width: Optional[int] = None
-    thumbnail_height: Optional[int] = None
+    content_width: int | None = None
+    content_height: int | None = None
+    preview_width: int | None = None
+    preview_height: int | None = None
+    thumbnail_width: int | None = None
+    thumbnail_height: int | None = None
 
 
 class Aim(BaseModel):
