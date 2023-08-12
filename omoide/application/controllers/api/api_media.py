@@ -28,13 +28,14 @@ async def api_create_media(
             dep.create_media_use_case),
 ):
     """Create or update media entry."""
+    # FIXME - drop early for anon users
     media = core_models.Media(
         id=-1,
-        owner_uuid=user.uuid,
+        owner_uuid=user.uuid,  # type: ignore
         item_uuid=uuid,
         created_at=utils.now(),
         processed_at=None,
-        content=in_media.binary_content,
+        content=in_media.get_binary_content(),
         ext=in_media.ext,
         media_type=in_media.media_type,
         replication={},

@@ -31,5 +31,5 @@ class InMedia(pydantic.BaseModel):
     def get_binary_content(self) -> bytes:
         """Convert from base64 into bytes."""
         sep = self.content.index(',')
-        body = self.raw_content[sep + 1:]
+        body = self.content[sep + 1:]
         return base64.decodebytes(body.encode('utf-8'))

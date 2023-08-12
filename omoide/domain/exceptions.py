@@ -10,7 +10,8 @@ class BaseOmoideException(Exception):
 
     def __str__(self) -> str:
         """Return textual representation."""
-        template = type(self).__doc__.rstrip('.')
+        doc = type(self).__doc__ or ''
+        template = doc.rstrip('.')
         return template.format(**self.__dict__)
 
     def __repr__(self) -> str:

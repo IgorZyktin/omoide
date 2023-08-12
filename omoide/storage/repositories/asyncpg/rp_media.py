@@ -125,7 +125,7 @@ class MediaRepository(AbsMediaRepository):
             target_folder=target_folder,  # FIXME
         ).returning(db_models.ManualCopy.id)
 
-        result: None | errors.Error  # ----------------------------------------
+        result: int | errors.Error  # -----------------------------------------
 
         try:
             copy_id = await self.db.execute(stmt)

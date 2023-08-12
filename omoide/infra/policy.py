@@ -40,13 +40,13 @@ class Policy(interfaces.AbsPolicy):
     async def is_restricted(
             self,
             user: domain.User,
-            uuid: Optional[UUID],
+            uuid: UUID | None,
             action: actions.Action,
-    ) -> Optional[errors.Error]:
+    ) -> errors.Error | None:
         """Return Error if action is not permitted."""
         error: Optional[errors.Error] = None
 
-        if isinstance(action, actions.Item):
+        if isinstance(action, actions.Item) or uuid is None:
             if uuid is None:
                 return errors.NoUUID(action=action.name)
             return await self._is_restricted_for_item(user, uuid, action)
@@ -100,8 +100,8 @@ class Policy(interfaces.AbsPolicy):
 
     async def check(
             self,
-            user: domain.User,  # FIXME
-            uuid: UUID | None,
+            user: domain.User,  # FIXME - change import path
+            uuid: UUID,  # FIXME - add None as a variant
             action: actions.Action,
     ) -> None:
         """Raise if action is not permitted."""
@@ -116,7 +116,7 @@ class Policy(interfaces.AbsPolicy):
     def _check_item_related(
             item_uuid: UUID,
             action: actions.Action,
-            access: domain.AccessStatus,  # FIXME
+            access: domain.AccessStatus,  # FIXME - change import path
     ) -> None:
         """Raise if action is not permitted."""
         if access.does_not_exist:

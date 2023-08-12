@@ -90,6 +90,6 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
         """Business logic."""
         async with self.exif_repo.transaction():
             await policy.check(user, item_uuid, actions.EXIF.DELETE)
-            result = await self.exif_repo.delete_exif(item_uuid)
+            await self.exif_repo.delete_exif(item_uuid)
 
-        return result
+        return None
