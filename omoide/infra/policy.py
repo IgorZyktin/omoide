@@ -3,11 +3,11 @@
 from typing import Optional
 from uuid import UUID
 
-from omoide import domain
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import exceptions
 from omoide.domain import interfaces
+from omoide.domain.core import core_models
 
 ITEM_RELATED = frozenset((
     actions.EXIF.CREATE,
@@ -39,7 +39,7 @@ class Policy(interfaces.AbsPolicy):
 
     async def is_restricted(
             self,
-            user: domain.User,
+            user: core_models.User,
             uuid: UUID | None,
             action: actions.Action,
     ) -> errors.Error | None:
@@ -71,10 +71,10 @@ class Policy(interfaces.AbsPolicy):
 
     async def _is_restricted_for_item(
             self,
-            user: domain.User,
+            user: core_models.User,
             uuid: UUID,
             action: actions.Action,
-    ) -> Optional[errors.Error]:
+    ) -> errors.Error | None:
         """Check specifically for item related actions."""
         error: Optional[errors.Error] = None
 
@@ -102,7 +102,7 @@ class Policy(interfaces.AbsPolicy):
 
     async def check(
             self,
-            user: domain.User,  # FIXME - change import path
+            user: core_models.User,
             uuid: UUID,  # FIXME - add None as a variant
             action: actions.Action,
     ) -> None:
@@ -118,7 +118,7 @@ class Policy(interfaces.AbsPolicy):
     def _check_item_related(
             item_uuid: UUID,
             action: actions.Action,
-            access: domain.AccessStatus,  # FIXME - change import path
+            access: core_models.AccessStatus,  # FIXME - change import path
     ) -> None:
         """Raise if action is not permitted."""
         if access.is_not_given:

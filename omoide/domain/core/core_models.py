@@ -5,9 +5,11 @@ from datetime import datetime
 from uuid import UUID
 
 from omoide.domain import auth
+from omoide.domain import common
 
 # FIXME - temporary import
 User = auth.User
+AccessStatus = common.AccessStatus
 
 
 @dataclass(eq=True)

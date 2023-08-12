@@ -3,11 +3,11 @@
 import abc
 from uuid import UUID
 
-from omoide import domain
 from omoide.domain import actions
 from omoide.domain.errors import Error
 from omoide.domain.interfaces.in_storage \
     .in_repositories import in_rp_items_read
+from omoide.domain.core import core_models
 
 __all__ = [
     'AbsPolicy',
@@ -27,7 +27,7 @@ class AbsPolicy(abc.ABC):
     @abc.abstractmethod
     async def is_restricted(
             self,
-            user: domain.User,  # FIXME - change import path
+            user: core_models.User,
             uuid: UUID | None,
             action: actions.Action,
     ) -> Error | None:
@@ -36,7 +36,7 @@ class AbsPolicy(abc.ABC):
     @abc.abstractmethod
     async def check(
             self,
-            user: domain.User,  # FIXME - change import path
+            user: core_models.User,
             uuid: UUID,  # FIXME - add None as a variant
             action: actions.Action,
     ) -> None:
