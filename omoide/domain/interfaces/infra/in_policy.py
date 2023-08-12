@@ -27,7 +27,7 @@ class AbsPolicy(abc.ABC):
     @abc.abstractmethod
     async def is_restricted(
             self,
-            user: domain.User,
+            user: domain.User,  # FIXME - change import path
             uuid: UUID | None,
             action: actions.Action,
     ) -> Error | None:
@@ -36,8 +36,8 @@ class AbsPolicy(abc.ABC):
     @abc.abstractmethod
     async def check(
             self,
-            user: domain.User,  # FIXME
-            uuid: UUID | None,
+            user: domain.User,  # FIXME - change import path
+            uuid: UUID,  # FIXME - add None as a variant
             action: actions.Action,
     ) -> None:
         """Raise if action is not permitted."""

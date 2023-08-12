@@ -73,7 +73,7 @@ class Policy(interfaces.AbsPolicy):
             self,
             user: domain.User,
             uuid: UUID,
-            action: actions.Item,
+            action: actions.Action,
     ) -> Optional[errors.Error]:
         """Check specifically for item related actions."""
         error: Optional[errors.Error] = None
@@ -83,7 +83,9 @@ class Policy(interfaces.AbsPolicy):
         if access.does_not_exist:
             return errors.ItemDoesNotExist(uuid=uuid)
 
-        if action in (actions.Item.CREATE, actions.Item.UPDATE, action.DELETE):
+        if action in (actions.Item.CREATE,
+                      actions.Item.UPDATE,
+                      actions.Item.DELETE):
             # on create we're using uuid of the parent, not the item itself
             if user.is_not_registered:
                 error = errors.ItemModificationByAnon()

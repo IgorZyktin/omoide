@@ -37,6 +37,6 @@ class CreateMediaUseCase:
             if error:
                 return error
 
-            media = await self.media_repo.create_media(media)
+            created_media = await self.media_repo.create_media(media)
 
-        return media
+        return created_media
