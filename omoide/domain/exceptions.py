@@ -44,6 +44,14 @@ class CannotModifyItemComponentError(ForbiddenError):
         self.item_uuid = item_uuid
 
 
+class ItemRequiresAccessError(ForbiddenError):
+    """You are not allowed to interact with item {item_uuid}."""
+
+    def __init__(self, item_uuid: UUID) -> None:
+        """Initialize instance."""
+        self.item_uuid = item_uuid
+
+
 class UnexpectedActionError(ForbiddenError):
     """No rule for {action}."""
 

@@ -121,6 +121,11 @@ class Policy(interfaces.AbsPolicy):
             access: domain.AccessStatus,  # FIXME - change import path
     ) -> None:
         """Raise if action is not permitted."""
+        if access.is_not_given:
+            raise exceptions.ItemRequiresAccessError(
+                item_uuid=item_uuid,
+            )
+
         if access.does_not_exist:
             raise exceptions.ItemDoesNotExistError(
                 item_uuid=item_uuid,
