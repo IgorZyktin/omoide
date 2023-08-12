@@ -4,7 +4,6 @@ import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
 from omoide import domain
-from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
 from omoide.infra import custom_logging
@@ -131,7 +130,7 @@ class SearchRepository(
             user: core_models.User,
             user_input: str,
             limit: int,
-    ) -> list[core_models.GuessResult] | errors.Error:
+    ) -> list[core_models.GuessResult]:
         """Guess tag for known user."""
         stmt = sa.select(
             models.KnownTags.tag,
@@ -143,24 +142,16 @@ class SearchRepository(
             sa.desc(models.KnownTags.counter),
         ).limit(limit)
 
-        result: list[core_models.GuessResult] | errors.Error  # ---------------
+        response = await self.db.fetch_all(stmt)
 
-        try:
-            response = await self.db.fetch_all(stmt)
-        except Exception as exc:
-            LOG.exception('Failed to find known tags for known user')
-            result = errors.DatabaseError(exception=exc)
-        else:
-            result = [core_models.GuessResult(**x) for x in response]
-
-        return result
+        return [core_models.GuessResult(**x) for x in response]
 
     async def guess_tag_anon(
             self,
             user: core_models.User,
             user_input: str,
             limit: int,
-    ) -> list[core_models.GuessResult] | errors.Error:
+    ) -> list[core_models.GuessResult]:
         """Guess tag for anon user."""
         stmt = sa.select(
             models.KnownTagsAnon.tag,
@@ -171,14 +162,6 @@ class SearchRepository(
             sa.desc(models.KnownTagsAnon.counter),
         ).limit(limit)
 
-        result: list[core_models.GuessResult] | errors.Error  # ---------------
+        response = await self.db.fetch_all(stmt)
 
-        try:
-            response = await self.db.fetch_all(stmt)
-        except Exception as exc:
-            LOG.exception('Failed to find known tags for anon user')
-            result = errors.DatabaseError(exception=exc)
-        else:
-            result = [core_models.GuessResult(**x) for x in response]
-
-        return result
+        return [core_models.GuessResult(**x) for x in response]

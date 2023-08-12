@@ -61,7 +61,7 @@ class ApiSuggestTagUseCase:
             user: core_models.User,
             user_input: str,
             limit: int,
-    ) -> list[core_models.GuessResult] | errors.Error:
+    ) -> list[core_models.GuessResult]:
         """Return possible tags."""
         async with self.search_repo.transaction():
             if user.is_registered:

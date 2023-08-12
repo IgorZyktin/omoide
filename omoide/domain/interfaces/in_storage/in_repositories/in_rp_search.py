@@ -37,7 +37,7 @@ class AbsSearchRepository(
             user: core_models.User,
             user_input: str,
             limit: int,
-    ) -> list[core_models.GuessResult] | errors.Error:
+    ) -> list[core_models.GuessResult]:
         """Guess tag for known user."""
 
     @abc.abstractmethod
@@ -46,7 +46,7 @@ class AbsSearchRepository(
             user: core_models.User,
             user_input: str,
             limit: int,
-    ) -> list[core_models.GuessResult] | errors.Error:
+    ) -> list[core_models.GuessResult]:
         """Guess tag for anon user."""
 
     @abc.abstractmethod
