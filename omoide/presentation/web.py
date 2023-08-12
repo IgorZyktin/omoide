@@ -15,6 +15,7 @@ from typing import TypeAlias
 from urllib.parse import urlencode
 from uuid import UUID
 
+from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
