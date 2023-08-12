@@ -51,10 +51,10 @@ async def test_exif_crud(
     policy = functional_tests_policy
     exif_repo = functional_tests_exif_repo
 
-    read_uc = uc_api_exif.ReadEXIFUseCase(exif_repo)
-    create_uc = uc_api_exif.CreateEXIFUseCase(exif_repo)
-    update_uc = uc_api_exif.UpdateEXIFUseCase(exif_repo)
-    delete_uc = uc_api_exif.DeleteEXIFUseCase(exif_repo)
+    read_uc = uc_api_exif.ReadEXIFUseCase(policy, exif_repo)
+    create_uc = uc_api_exif.CreateEXIFUseCase(policy, exif_repo)
+    update_uc = uc_api_exif.UpdateEXIFUseCase(policy, exif_repo)
+    delete_uc = uc_api_exif.DeleteEXIFUseCase(policy, exif_repo)
 
     exif_before = core_models.EXIF(
         item_uuid=item.uuid,
@@ -68,33 +68,33 @@ async def test_exif_crud(
 
     # ensure emptiness --------------------------------------------------------
     with pytest.raises(exceptions.EXIFDoesNotExistError):
-        await read_uc.execute(policy, user, item.uuid)
+        await read_uc.execute(user, item.uuid)
 
     # create ------------------------------------------------------------------
-    response_2 = await create_uc.execute(policy, user, item.uuid, exif_before)
+    response_2 = await create_uc.execute(user, item.uuid, exif_before)
     assert response_2 == exif_before
 
     # read --------------------------------------------------------------------
-    response_3 = await read_uc.execute(policy, user, item.uuid)
+    response_3 = await read_uc.execute(user, item.uuid)
     assert response_3 == exif_before
 
     # update ------------------------------------------------------------------
-    response_4 = await update_uc.execute(policy, user, item.uuid, exif_after)
+    response_4 = await update_uc.execute(user, item.uuid, exif_after)
     assert response_4 != exif_before
     assert response_4 == exif_after
 
     # read --------------------------------------------------------------------
-    response_5 = await read_uc.execute(policy, user, item.uuid)
+    response_5 = await read_uc.execute(user, item.uuid)
     assert response_5 != exif_before
     assert response_5 == exif_after
 
     # delete ------------------------------------------------------------------
-    response_6 = await delete_uc.execute(policy, user, item.uuid)
+    response_6 = await delete_uc.execute(user, item.uuid)
     assert response_6 is None
 
     # read --------------------------------------------------------------------
     with pytest.raises(exceptions.EXIFDoesNotExistError):
-        await read_uc.execute(policy, user, item.uuid)
+        await read_uc.execute(user, item.uuid)
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -111,7 +111,7 @@ async def test_exif_double_add(
     policy = functional_tests_policy
     exif_repo = functional_tests_exif_repo
 
-    create_uc = uc_api_exif.CreateEXIFUseCase(exif_repo)
+    create_uc = uc_api_exif.CreateEXIFUseCase(policy, exif_repo)
 
     exif = core_models.EXIF(
         item_uuid=item.uuid,
@@ -119,12 +119,12 @@ async def test_exif_double_add(
     )
 
     # create ------------------------------------------------------------------
-    response_1 = await create_uc.execute(policy, user, item.uuid, exif)
+    response_1 = await create_uc.execute(user, item.uuid, exif)
     assert response_1 == exif
 
     # create again ------------------------------------------------------------
     with pytest.raises(exceptions.AlreadyExistError):
-        await create_uc.execute(policy, user, item.uuid, exif)
+        await create_uc.execute(user, item.uuid, exif)
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
@@ -141,7 +141,7 @@ async def test_exif_update_nonexisting(
     policy = functional_tests_policy
     exif_repo = functional_tests_exif_repo
 
-    update_uc = uc_api_exif.UpdateEXIFUseCase(exif_repo)
+    update_uc = uc_api_exif.UpdateEXIFUseCase(policy, exif_repo)
 
     exif = core_models.EXIF(
         item_uuid=item.uuid,
@@ -150,4 +150,4 @@ async def test_exif_update_nonexisting(
 
     # act
     with pytest.raises(exceptions.DoesNotExistError):
-        await update_uc.execute(policy, user, item.uuid, exif)
+        await update_uc.execute(user, item.uuid, exif)

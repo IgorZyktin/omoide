@@ -11,7 +11,6 @@ from fastapi import status
 
 from omoide import use_cases
 from omoide.domain import exceptions
-from omoide.domain import interfaces
 from omoide.domain.application import input_models
 from omoide.domain.application import output_models
 from omoide.domain.core import core_models
@@ -27,7 +26,6 @@ async def api_create_exif(
         item_uuid: UUID,
         in_exif: input_models.InEXIF,
         user: core_models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.CreateEXIFUseCase = Depends(
             dep.api_create_exif_use_case),
 ):
@@ -38,7 +36,7 @@ async def api_create_exif(
     )
 
     try:
-        await use_case.execute(policy, user, item_uuid, exif)
+        await use_case.execute(user, item_uuid, exif)
     except exceptions.AlreadyExistError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=str(exc))
@@ -60,13 +58,12 @@ async def api_create_exif(
 async def api_read_exif(
         item_uuid: UUID,
         user: core_models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ReadEXIFUseCase = Depends(
             dep.api_read_exif_use_case),
 ):
     """Read EXIF data for existing item."""
     try:
-        result = await use_case.execute(policy, user, item_uuid)
+        result = await use_case.execute(user, item_uuid)
     except exceptions.DoesNotExistError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=str(exc))
@@ -85,7 +82,6 @@ async def api_update_exif(
         item_uuid: UUID,
         in_exif: input_models.InEXIF,
         user: core_models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.UpdateEXIFUseCase = Depends(
             dep.api_update_exif_use_case),
 ):
@@ -96,7 +92,7 @@ async def api_update_exif(
     )
 
     try:
-        await use_case.execute(policy, user, item_uuid, exif)
+        await use_case.execute(user, item_uuid, exif)
     except exceptions.DoesNotExistError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=str(exc))
@@ -111,13 +107,12 @@ async def api_update_exif(
 async def api_delete_exif(
         item_uuid: UUID,
         user: core_models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.DeleteEXIFUseCase = Depends(
             dep.api_delete_exif_use_case),
 ):
     """Delete EXIF data from exising item."""
     try:
-        await use_case.execute(policy, user, item_uuid)
+        await use_case.execute(user, item_uuid)
     except exceptions.DoesNotExistError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=str(exc))

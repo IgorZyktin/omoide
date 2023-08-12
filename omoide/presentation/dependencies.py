@@ -3,6 +3,7 @@
 """
 import binascii
 from base64 import b64decode
+from typing import Annotated
 from typing import Any
 from typing import Optional
 
@@ -18,6 +19,7 @@ from omoide.domain import auth
 from omoide.domain import interfaces
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.presentation import app_config
 from omoide.presentation import constants
 from omoide.presentation import web
@@ -583,31 +585,39 @@ def create_media_use_case(
 
 
 def api_create_exif_use_case(
-        exif_repository: AbsEXIFRepository = Depends(exif_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
 ) -> use_cases.CreateEXIFUseCase:
     """Get use case instance."""
-    return use_cases.CreateEXIFUseCase(exif_repo=exif_repository)
+    return use_cases.CreateEXIFUseCase(policy=policy,
+                                       exif_repo=exif_repository)
 
 
 def api_read_exif_use_case(
-        exif_repository: AbsEXIFRepository = Depends(exif_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
 ) -> use_cases.ReadEXIFUseCase:
     """Get use case instance."""
-    return use_cases.ReadEXIFUseCase(exif_repo=exif_repository)
+    return use_cases.ReadEXIFUseCase(policy=policy,
+                                     exif_repo=exif_repository)
 
 
 def api_update_exif_use_case(
-        exif_repository: AbsEXIFRepository = Depends(exif_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
 ) -> use_cases.UpdateEXIFUseCase:
     """Get use case instance."""
-    return use_cases.UpdateEXIFUseCase(exif_repo=exif_repository)
+    return use_cases.UpdateEXIFUseCase(policy=policy,
+                                       exif_repo=exif_repository)
 
 
 def api_delete_exif_use_case(
-        exif_repository: AbsEXIFRepository = Depends(exif_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
 ) -> use_cases.DeleteEXIFUseCase:
     """Get use case instance."""
-    return use_cases.DeleteEXIFUseCase(exif_repo=exif_repository)
+    return use_cases.DeleteEXIFUseCase(policy=policy,
+                                       exif_repo=exif_repository)
 
 
 # api metainfo related use cases ----------------------------------------------
