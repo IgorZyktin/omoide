@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
 """Use case for Metainfo.
 """
 from uuid import UUID
 
-from omoide import domain
 from omoide import utils
 from omoide.domain import actions
-from omoide.domain import errors
+from omoide.domain import exceptions
 from omoide.domain import interfaces
-from omoide.infra.special_types import Failure
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
-from omoide.presentation import api_models
+from omoide.domain.core import core_models
+from omoide.domain.interfaces import AbsPolicy
 
 __all__ = [
     'UpdateMetainfoUseCase',
@@ -24,9 +20,11 @@ class BaseMetainfoUseCase:
 
     def __init__(
             self,
+            policy: AbsPolicy,
             meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
+        self.policy = policy
         self.meta_repo = meta_repo
 
 
@@ -35,49 +33,45 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-            metainfo_in: api_models.MetainfoIn,
-    ) -> Result[errors.Error, bool]:
+            user: core_models.User,
+            item_uuid: UUID,
+            metainfo: core_models.Metainfo,
+    ) -> None:
         """Business logic."""
         async with self.meta_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Metainfo.UPDATE)
+            await self.policy.check(user, item_uuid, actions.Metainfo.UPDATE)
 
-            if error:
-                return Failure(error)
+            current_metainfo = await self.meta_repo.read_metainfo(item_uuid)
 
-            metainfo = await self.meta_repo.read_metainfo(uuid)
+            # FIXME - move it to repo
+            if current_metainfo is None:
+                raise exceptions.ItemDoesNotExistError(item_uuid=item_uuid)
 
-            if metainfo is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+            current_metainfo.updated_at = utils.now()
 
-            metainfo.updated_at = utils.now()
+            current_metainfo.user_time = metainfo.user_time
+            current_metainfo.media_type = metainfo.media_type
 
-            metainfo.user_time = metainfo_in.user_time
-            metainfo.media_type = metainfo_in.media_type
+            current_metainfo.author = metainfo.author
+            current_metainfo.author_url = metainfo.author_url
+            current_metainfo.saved_from_url = metainfo.saved_from_url
+            current_metainfo.description = metainfo.description
+            current_metainfo.extras = metainfo.extras
 
-            metainfo.author = metainfo_in.author
-            metainfo.author_url = metainfo_in.author_url
-            metainfo.saved_from_url = metainfo_in.saved_from_url
-            metainfo.description = metainfo_in.description
-            metainfo.extras = metainfo_in.extras
+            current_metainfo.content_size = metainfo.content_size
+            current_metainfo.preview_size = metainfo.preview_size
+            current_metainfo.thumbnail_size = metainfo.thumbnail_size
 
-            metainfo.content_size = metainfo_in.content_size
-            metainfo.preview_size = metainfo_in.preview_size
-            metainfo.thumbnail_size = metainfo_in.thumbnail_size
+            current_metainfo.content_width = metainfo.content_width
+            current_metainfo.content_height = metainfo.content_height
+            current_metainfo.preview_width = metainfo.preview_width
+            current_metainfo.preview_height = metainfo.preview_height
+            current_metainfo.thumbnail_width = metainfo.thumbnail_width
+            current_metainfo.thumbnail_height = metainfo.thumbnail_height
 
-            metainfo.content_width = metainfo_in.content_width
-            metainfo.content_height = metainfo_in.content_height
-            metainfo.preview_width = metainfo_in.preview_width
-            metainfo.preview_height = metainfo_in.preview_height
-            metainfo.thumbnail_width = metainfo_in.thumbnail_width
-            metainfo.thumbnail_height = metainfo_in.thumbnail_height
+            await self.meta_repo.update_metainfo(user, current_metainfo)
 
-            await self.meta_repo.update_metainfo(user, metainfo)
-
-        return Success(True)
+        return None
 
 
 class ReadMetainfoUseCase(BaseMetainfoUseCase):
@@ -85,19 +79,15 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            uuid: UUID,
-    ) -> Result[errors.Error, domain.Metainfo]:
+            user: core_models.User,
+            item_uuid: UUID,
+    ) -> core_models.Metainfo:
         async with self.meta_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Metainfo.READ)
-            if error:
-                return Failure(error)
+            await self.policy.check(user, item_uuid, actions.Metainfo.READ)
+            metainfo = await self.meta_repo.read_metainfo(item_uuid)
 
-            metainfo = await self.meta_repo.read_metainfo(uuid)
-
+            # FIXME - move it to repo
             if metainfo is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
+                raise exceptions.ItemDoesNotExistError(item_uuid=item_uuid)
 
-        return Success(metainfo)
+        return metainfo

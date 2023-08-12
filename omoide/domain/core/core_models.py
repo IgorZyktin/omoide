@@ -10,6 +10,7 @@ from omoide.domain import common
 # FIXME - temporary import
 User = auth.User
 AccessStatus = common.AccessStatus
+Metainfo = common.Metainfo
 
 
 @dataclass(eq=True)
