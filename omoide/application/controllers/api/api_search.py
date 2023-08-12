@@ -1,5 +1,7 @@
 """Search related API operations.
 """
+from typing import Annotated
+
 from fastapi import APIRouter
 from fastapi import Depends
 
@@ -15,10 +17,10 @@ router = APIRouter(prefix='/api/search')
 
 @router.get('/suggest')
 async def api_suggest_tag(
-        user: core_models.User = Depends(dep.get_current_user),
+        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        use_case: Annotated[use_cases.ApiSuggestTagUseCase,
+                            Depends(dep.api_suggest_tag_use_case)],
         text: str = '',
-        use_case: use_cases.ApiSuggestTagUseCase = Depends(
-            dep.api_suggest_tag_use_case),
         response_model=output_models.OutAutocomplete,
 ):
     """Return tags for autocompletion in search field."""

@@ -1,5 +1,6 @@
 """Media related API operations.
 """
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -22,10 +23,10 @@ router = APIRouter(prefix='/api/media')
 async def api_create_media(
         uuid: UUID,
         in_media: input_models.InMedia,
-        user: core_models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.CreateMediaUseCase = Depends(
-            dep.create_media_use_case),
+        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
+        use_case: Annotated[use_cases.CreateMediaUseCase,
+                            Depends(dep.create_media_use_case)],
 ):
     """Create or update media entry."""
     # FIXME - drop early for anon users
