@@ -5,11 +5,9 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 
 from omoide import use_cases
-from omoide.domain import exceptions
+from omoide.application import web
 from omoide.domain.application import app_constants
 from omoide.domain.application import input_models
 from omoide.domain.core import core_models
@@ -50,18 +48,7 @@ async def api_update_metainfo(
         thumbnail_height=in_metainfo.thumbnail_height,
     )
 
-    try:
-        await use_case.execute(user, item_uuid, metainfo)
-    except exceptions.DoesNotExistError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=str(exc))
-    except exceptions.ForbiddenError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=str(exc))
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail='Failed to perform request')
-
+    await web.run(use_case.execute, user, item_uuid, metainfo)
     return {}
 
 
@@ -73,16 +60,5 @@ async def api_read_metainfo(
                             Depends(dep.read_metainfo_use_case)],
 ):
     """Get metainfo."""
-    try:
-        result = await use_case.execute(user, item_uuid)
-    except exceptions.DoesNotExistError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=str(exc))
-    except exceptions.ForbiddenError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=str(exc))
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail='Failed to perform request')
-
+    result = await web.run(use_case.execute, user, item_uuid)
     return result

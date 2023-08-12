@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 
 from omoide import use_cases
+from omoide.application import web
 from omoide.domain.application import app_constants
 from omoide.domain.application import output_models
 from omoide.domain.core import core_models
@@ -29,17 +30,8 @@ async def api_suggest_tag(
     variants: list[str] = []
 
     if len(text) > 1:
-        # noinspection PyBroadException
-        try:
-            result = await use_case.execute(
-                user=user,
-                user_input=text,
-                limit=app_constants.AUTOCOMPLETE_VARIANTS,
-            )
-        except Exception:
-            LOG.exception('Failed to suggest tags for user %s on input %s',
-                          user, text)
-        else:
-            variants = [guess_result.tag for guess_result in result]
+        result = await web.run(
+            use_case.execute, user, text, app_constants.AUTOCOMPLETE_VARIANTS)
+        variants = [guess_result.tag for guess_result in result]
 
     return output_models.OutAutocomplete(variants=variants)
