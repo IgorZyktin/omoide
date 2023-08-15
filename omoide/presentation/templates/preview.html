@@ -35,7 +35,7 @@
 
             {% if album.has_previous %}
                 <a class="preview-swipe"
-                   href="{{ url_for(request, 'app_preview', uuid=album.previous_item)|string + '?' + aim_wrapper.to_url_no_q() }}">
+                   href="{{ url_for(request, 'app_preview', uuid=album.previous_item) }}?{{ aim_wrapper.to_url_no_q() }}">
                     <img src="{{ url_for(request, 'static', path='ic_arrow_back_24px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -49,7 +49,7 @@
                         <p>{{ item.name }}</p>
                     {%- endif -%}
 
-                    <a href="{{ url_for(request, 'app_browse', uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}">
+                    <a href="{{ url_for(request, 'app_browse', uuid=item.uuid) }}?{{ aim_wrapper.to_url_no_q(page=1) }}">
                         {%- if item.thumbnail_ext is none -%}
                             <img src="{{ url_for(request, 'static', path='empty.png') }}"
                                  alt="{{ item.name }}"/>
@@ -73,7 +73,7 @@
 
             {% if album.has_next %}
                 <a class="preview-swipe"
-                   href="{{ url_for(request, 'app_preview', uuid=album.next_item)|string + '?' + aim_wrapper.to_url_no_q() }}">
+                   href="{{ url_for(request, 'app_preview', uuid=album.next_item)}}?{{ aim_wrapper.to_url_no_q() }}">
                     <img src="{{ url_for(request, 'static', path='ic_arrow_forward_24px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -84,25 +84,9 @@
         </div>
 
         <div class="preview-tags">
-            {% for wrapper in result.location.items %}
-                {% if wrapper.item.name %}
-                    {% if wrapper.item.is_collection %}
-                        <a href="{{ url_for(request, 'app_browse', uuid=wrapper.item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}"
-                           class="tag-box tag-box-item">{{ wrapper.item.name }}</a>
-                    {% else %}
-                        <a href="{{ url_for(request, 'app_search')|string + '?' + aim_wrapper.to_url(q=wrapper.item.uuid) }}"
-                           class="tag-box tag-box-item">{{ wrapper.item.name }}</a>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="preview-tags">
             {% for tag in tags %}
-                {% if tag %}
-                    <a href="{{ url_for(request, 'app_search') }}?q={{ tag | urlencode }}"
-                       class="tag-box">{{ tag }}</a>
-                {% endif %}
+                <a href="{{ url_for(request, 'app_search') }}?q={{ tag | urlencode }}"
+                   class="tag-box">{{ tag }}</a>
             {% endfor %}
         </div>
 
