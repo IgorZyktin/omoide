@@ -23,13 +23,12 @@ router = APIRouter(prefix='/api/media')
 async def api_create_media(
         uuid: UUID,
         in_media: input_models.InMedia,
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[core_models.User, Depends(dep.get_known_user)],
         policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
         use_case: Annotated[use_cases.CreateMediaUseCase,
                             Depends(dep.create_media_use_case)],
 ):
     """Create or update media entry."""
-    # FIXME - drop early for anon users
     media = core_models.Media(
         id=-1,
         owner_uuid=user.uuid,  # type: ignore

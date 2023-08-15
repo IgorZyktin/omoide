@@ -11,6 +11,8 @@ from databases import Database
 from fastapi import Depends
 from fastapi.security import HTTPBasicCredentials
 from starlette.requests import Request
+from fastapi import HTTPException
+from fastapi import status
 
 from omoide import infra
 from omoide import use_cases
@@ -222,6 +224,26 @@ async def get_current_user(
     if not credentials.username or not credentials.password:
         return auth.User.new_anon()
     return await use_case.execute(credentials, authenticator)
+
+
+async def get_known_user(
+        credentials: HTTPBasicCredentials = Depends(get_credentials),
+        use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
+        authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
+) -> auth.User:
+    """Load current user, raise if got anon."""
+    if not credentials.username or not credentials.password:
+        user = auth.User.new_anon()
+    else:
+        user = await use_case.execute(credentials, authenticator)
+
+    if user.is_not_registered:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You are not allowed to perform this operation',
+        )
+
+    return user
 
 
 @utils.memorize
