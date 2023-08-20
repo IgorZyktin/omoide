@@ -1,5 +1,6 @@
 """Worker settings.
 """
+from functools import cache
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -96,7 +97,6 @@ class Config(pydantic_settings.BaseSettings):
     log_debug: bool = False
     batch_size: int = 25
     prefix_size: int = 2
-    run_once: bool = False
     media: Media = Media()
     manual_copy: Copy = Copy()
     timer_strategy: TimerStrategy = TimerStrategy()
@@ -206,3 +206,9 @@ def model_to_list(
         else:
             line = f'{prefix}{key}={value!r}'
             attributes.append(line)
+
+
+@cache
+def get_config() -> Config:
+    """Return instance of the config."""
+    return Config()

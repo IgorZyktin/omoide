@@ -1,86 +1,16 @@
-# -*- coding: utf-8 -*-
 """Database tools for worker.
 """
-from typing import Optional
-
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from omoide import utils
 from omoide.commands.common.base_db import BaseDatabase
-from omoide.daemons.worker import cfg
 from omoide.daemons.worker.filesystem import Filesystem
+from omoide.daemons.worker.worker_config import Config
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 
 LOG = custom_logging.get_logger(__name__)
-
-
-def copy_content_parameters(
-        config: cfg.Config,
-        filesystem: Filesystem,
-        session: Session,
-        copy: models.ManualCopy,
-) -> None:
-    """Copy width and height from origin."""
-    source_item = session.query(
-        models.Item
-    ).filter(
-        models.Item.uuid == copy.source_uuid
-    ).first()
-
-    target_item = session.query(
-        models.Item
-    ).filter(
-        models.Item.uuid == copy.target_uuid
-    ).first()
-
-    source_metainfo = session.query(
-        models.Metainfo
-    ).filter(
-        models.Metainfo.item_uuid == copy.source_uuid
-    ).first()
-
-    target_metainfo = session.query(
-        models.Metainfo
-    ).filter(
-        models.Metainfo.item_uuid == copy.target_uuid
-    ).first()
-
-    if source_item is None \
-            or target_item is None \
-            or source_metainfo is None \
-            or target_metainfo is None:
-        return
-
-    folder = config.hot_folder or config.cold_folder
-    bucket = utils.get_bucket(copy.source_uuid, config.prefix_size)
-
-    size = filesystem.get_size(
-        folder,
-        str(copy.target_folder),
-        str(copy.owner_uuid),
-        bucket,
-        f'{copy.source_uuid}.{(copy.ext or "").lower()}'
-    )
-
-    if copy.target_folder == 'content':
-        target_metainfo.content_size = size
-        target_metainfo.content_width = source_metainfo.content_width
-        target_metainfo.content_height = source_metainfo.content_height
-        target_item.content_ext = source_item.content_ext
-
-    elif copy.target_folder == 'preview':
-        target_metainfo.preview_size = size
-        target_metainfo.preview_width = source_metainfo.preview_width
-        target_metainfo.preview_height = source_metainfo.preview_height
-        target_item.preview_ext = source_item.preview_ext
-
-    elif copy.target_folder == 'thumbnail':
-        target_metainfo.thumbnail_size = size
-        target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
-        target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
-        target_item.thumbnail_ext = source_item.thumbnail_ext
 
 
 class Database(BaseDatabase):
@@ -90,17 +20,17 @@ class Database(BaseDatabase):
             self,
             formula: dict[str, bool],
             limit: int,
-            max_attempts: int = 5,
+            max_attempts: int = 5,  # FIXME - move to config
     ) -> list[int]:
         """Extract media resources to save."""
         stmt = sa.select(
-            models.Media.id
+            db_models.Media.id
         ).where(
             ~models.Media.replication.contains(formula),  # noqa
-            models.Media.attempts < max_attempts,
-            models.Media.error == '',
+            db_models.Media.attempts < max_attempts,
+            db_models.Media.error == '',
         ).order_by(
-            models.Media.id
+            db_models.Media.id
         ).limit(
             limit
         )
@@ -113,10 +43,10 @@ class Database(BaseDatabase):
     def select_media(
             session: Session,
             media_id: int,
-    ) -> Optional[models.Media]:
+    ) -> db_models.Media | None:
         """Select Media for update."""
         result = session.query(
-            models.Media
+            db_models.Media
         ).with_for_update(
             skip_locked=True
         ).filter_by(
@@ -124,15 +54,12 @@ class Database(BaseDatabase):
         ).first()
         return result
 
-    def drop_media(
-            self,
-            formula: dict[str, bool],
-    ) -> int:
+    def drop_media(self, formula: dict[str, bool]) -> int:
         """Delete fully downloaded media rows, return total amount."""
         stmt = sa.delete(
-            models.Media
+            db_models.Media
         ).where(
-            models.Media.replication.contains(formula),  # noqa
+            db_models.Media.replication.contains(formula),  # noqa
         )
 
         with self.engine.begin() as conn:
@@ -140,18 +67,15 @@ class Database(BaseDatabase):
 
         return int(response.rowcount)
 
-    def get_manual_copy_targets(
-            self,
-            limit: int,
-    ) -> list[int]:
+    def get_manual_copy_targets(self, limit: int) -> list[int]:
         """Extract copy operations to process."""
         stmt = sa.select(
-            models.ManualCopy.id
+            db_models.ManualCopy.id
         ).where(
-            models.ManualCopy.processed_at == None,  # noqa
-            models.ManualCopy.status == 'init',
+            db_models.ManualCopy.processed_at == None,  # noqa
+            db_models.ManualCopy.status == 'init',
         ).order_by(
-            models.ManualCopy.id
+            db_models.ManualCopy.id
         ).limit(
             limit
         )
@@ -164,10 +88,10 @@ class Database(BaseDatabase):
     def select_copy_operation(
             session: Session,
             copy_id: int,
-    ) -> Optional[models.ManualCopy]:
+    ) -> db_models.ManualCopy | None:
         """Select manual copy operation for update."""
         result = session.query(
-            models.ManualCopy
+            db_models.ManualCopy
         ).with_for_update(
             skip_locked=True
         ).filter_by(
@@ -177,11 +101,11 @@ class Database(BaseDatabase):
 
     @staticmethod
     def create_media_from_copy(
-            copy: models.ManualCopy,
+            copy: db_models.ManualCopy,
             content: bytes,
-    ) -> models.Media:
+    ) -> db_models.Media:
         """Convert copy operation into media."""
-        return models.Media(
+        return db_models.Media(
             owner_uuid=copy.owner_uuid,
             item_uuid=copy.target_uuid,
             target_folder=copy.target_folder,
@@ -194,18 +118,15 @@ class Database(BaseDatabase):
             attempts=0,
         )
 
-    def mark_origin(
-            self,
-            copy: models.ManualCopy,
-    ) -> None:
+    def mark_origin(self, copy: db_models.ManualCopy) -> None:
         """Convert copy operation into media."""
         stmt = sa.update(
-            models.Metainfo
+            db_models.Metainfo
         ).where(
-            models.Metainfo.item_uuid == copy.target_uuid
+            db_models.Metainfo.item_uuid == copy.target_uuid
         ).values(
             extras=sa.func.jsonb_set(
-                models.Metainfo.extras,
+                db_models.Metainfo.extras,
                 ['copied_cover_from'],
                 f'"{copy.source_uuid}"',
             )
@@ -214,34 +135,34 @@ class Database(BaseDatabase):
 
     @staticmethod
     def copy_content_parameters(
-            config: cfg.Config,
+            config: Config,
             filesystem: Filesystem,
             session: Session,
-            copy: models.ManualCopy,
+            copy: db_models.ManualCopy,
     ) -> None:
         """Copy width and height from origin."""
         source_item = session.query(
-            models.Item
+            db_models.Item
         ).filter(
-            models.Item.uuid == copy.source_uuid
+            db_models.Item.uuid == copy.source_uuid
         ).first()
 
         target_item = session.query(
-            models.Item
+            db_models.Item
         ).filter(
-            models.Item.uuid == copy.target_uuid
+            db_models.Item.uuid == copy.target_uuid
         ).first()
 
         source_metainfo = session.query(
-            models.Metainfo
+            db_models.Metainfo
         ).filter(
-            models.Metainfo.item_uuid == copy.source_uuid
+            db_models.Metainfo.item_uuid == copy.source_uuid
         ).first()
 
         target_metainfo = session.query(
-            models.Metainfo
+            db_models.Metainfo
         ).filter(
-            models.Metainfo.item_uuid == copy.target_uuid
+            db_models.Metainfo.item_uuid == copy.target_uuid
         ).first()
 
         if source_item is None \
@@ -295,9 +216,9 @@ class Database(BaseDatabase):
     def drop_manual_copies(self) -> int:
         """Delete complete copy operations, return total amount."""
         stmt = sa.delete(
-            models.ManualCopy
+            db_models.ManualCopy
         ).where(
-            models.ManualCopy.status == 'done'
+            db_models.ManualCopy.status == 'done'
         )
 
         with self.engine.begin() as conn:

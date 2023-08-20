@@ -33,7 +33,7 @@ def test_worker_get_folders(hot, cold, reference, valid_worker_config_dict):
         valid_worker_config_dict['cold_folder'] = 'nonexistent'
 
     worker = Worker(Config(**valid_worker_config_dict), Filesystem())
-    assert list(worker.get_folders()) == reference
+    assert list(worker._get_folders()) == reference
 
 
 def test_worker_formula(valid_worker_config_dict):
@@ -42,7 +42,7 @@ def test_worker_formula(valid_worker_config_dict):
     valid_worker_config_dict['save_cold'] = False
 
     worker = Worker(Config(**valid_worker_config_dict), Filesystem())
-    assert worker.formula == {
+    assert worker._formula == {
         'test-hot': True,
         'test-cold': False,
     }

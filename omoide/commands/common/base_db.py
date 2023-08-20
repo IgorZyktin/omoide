@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Generic database wrapper."""
 import contextlib
 from typing import Generator
@@ -7,9 +6,6 @@ from typing import Optional
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
-
-from omoide import utils
-from omoide.storage.database import models
 
 
 class BaseDatabase:
@@ -52,16 +48,3 @@ class BaseDatabase:
         """Wrapper around SA session."""
         with Session(self.engine) as session:
             yield session
-
-    def save_statistic(self, key: str, value: int) -> None:
-        """Save arbitrary statistic."""
-        stmt = sa.insert(
-            models.Statistic
-        ).values(
-            moment=utils.now(),
-            key=key,
-            value=value,
-        )
-
-        with self.engine.begin() as conn:
-            conn.execute(stmt)

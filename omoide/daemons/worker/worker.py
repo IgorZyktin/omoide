@@ -1,30 +1,36 @@
-# -*- coding: utf-8 -*-
 """Worker class.
 """
 import traceback
 from typing import Iterator
-from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
-from omoide.daemons.worker import cfg
-from omoide.daemons.worker.db import Database
+from omoide.daemons.worker import interfaces
+from omoide.daemons.worker.database import Database
 from omoide.daemons.worker.filesystem import Filesystem
-from omoide.infra.custom_logging import Logger
+from omoide.daemons.worker.worker_config import Config
+from omoide.infra import custom_logging
 from omoide.storage.database import models
 
+LOG = custom_logging.get_logger(__name__)
 
-class Worker:
+
+class Worker(interfaces.AbsWorker):
     """Worker class."""
 
-    def __init__(self, config: cfg.Config, filesystem: Filesystem) -> None:
+    def __init__(
+            self,
+            config: Config,
+            database: Database,
+            filesystem: Filesystem,
+    ) -> None:
         """Initialize instance."""
         self.config = config
+        self.database = database
         self.filesystem = filesystem
-        self.sleep_interval = float(config.max_interval)
 
-    def get_folders(self) -> Iterator[str]:
+    def _get_folders(self) -> Iterator[str]:
         """Return all folders where we plan to save anything."""
         if self.config.save_hot:
             yield self.config.hot_folder
@@ -32,109 +38,69 @@ class Worker:
             yield self.config.cold_folder
 
     @property
-    def formula(self) -> dict[str, bool]:
+    def _formula(self) -> dict[str, bool]:
         """Return formula of this worker."""
         return {
             f'{self.config.name}-hot': self.config.save_hot,
             f'{self.config.name}-cold': self.config.save_cold,
         }
 
-    def adjust_interval(self, operations: int) -> float:
-        """Change interval based on amount of operations done."""
-        if operations:
-            self.sleep_interval = self.config.min_interval
-        else:
-            self.sleep_interval = min((
-                self.sleep_interval * self.config.warm_up_coefficient,
-                self.config.max_interval,
-            ))
-        return self.sleep_interval
-
-    def download_media(
-            self,
-            logger: Logger,
-            database: Database,
-    ) -> int:
-        """Download media from the database, return True if did something."""
-        media_ids = database.get_media_ids(
-            formula=self.formula,
+    def download_media(self) -> None:
+        """Download media from the database."""
+        media_ids = self.database.get_media_ids(
+            formula=self._formula,
             limit=self.config.batch_size,
         )
 
-        logger.debug('Got {} media records: {}', len(media_ids), media_ids)
+        LOG.debug('Got {} media records: {}', len(media_ids), media_ids)
 
-        operations = 0
         for media_id in media_ids:
-            done = self.process_media(logger, database, media_id)
+            self._download_single_media(media_id)
 
-            if done is None:
-                logger.debug('Skipped downloading media {}', media_id)
-            elif done:
-                operations += done
-                logger.debug('Downloaded media {}', media_id)
+    def _download_single_media(self, media_id: int) -> None:
+        """Save single media record."""
+        with self.database.start_session() as session:
+            media = self.database.select_media(session, media_id)
 
-        return operations
+            if media is None:
+                return None
 
-    def process_media(
-            self,
-            logger: Logger,
-            database: Database,
-            media_id: int,
-    ) -> Optional[int]:
-        """Save single media record, return True on success."""
-        media = None
-        with database.start_session() as session:
             # noinspection PyBroadException
             try:
-                media = database.select_media(session, media_id)
-
-                if media is None:
-                    return None
-
-                result = self._process_media(logger, media)
-                self._process_item(media)
+                self._download_media_content(media)
+                self._alter_item_corresponding_to_media(media)
             except Exception:
-                result = 0
-                if media:
-                    media.error = (media.error or '') + traceback.format_exc()
-                logger.exception('Failed to download media {}', media_id)
+                media.error += '\n' + traceback.format_exc()
+                LOG.exception('Failed to download media {}', media_id)
             else:
-                if result and media:
-                    media.replication.update(self.formula)
-                    flag_modified(media, 'replication')
+                media.replication.update(self._formula)
+                flag_modified(media, 'replication')
 
-            if media:
-                media.attempts = (media.attempts or 0) + 1
-                media.processed_at = utils.now()
+            media.attempts = (media.attempts or 0) + 1
+            media.processed_at = utils.now()
 
             session.commit()
 
-        return result
-
-    def _process_media(
+    def _download_media_content(
             self,
-            logger: Logger,
             media: models.Media,
-    ) -> int:
-        """Save single media record."""
+    ) -> None:
+        """Save content for media as files."""
         if not media.ext or not media.content:
-            return 0
+            return
 
-        for folder in self.get_folders():
+        for folder in self._get_folders():
             path = self.filesystem.ensure_folder_exists(
-                logger,
                 folder,
                 media.target_folder,
                 str(media.owner_uuid),
                 str(media.item_uuid)[:self.config.prefix_size],
             )
             filename = f'{media.item_uuid}.{media.ext or ""}'
-            self.filesystem.safely_save(logger, path, filename, media.content)
-
-        return 1
+            self.filesystem.safely_save(path, filename, media.content)
 
     @staticmethod
-    def _process_item(media: models.Media) -> None:
+    def _alter_item_corresponding_to_media(media: models.Media) -> None:
         """Store changes in item description."""
         if media.target_folder == 'content':
             media.item.content_ext = media.ext
@@ -148,97 +114,64 @@ class Worker:
 
         media.item.metainfo.updated_at = utils.now()
 
-    def drop_media(
-            self,
-            logger: Logger,
-            database: Database,
-    ) -> int:
-        """Delete media from the DB, return amount of rows affected."""
-        logger.debug('Dropping all media that fits into formula: {}',
-                     self.config.replication_formula)
+    def drop_media(self) -> None:
+        """Delete media from the database."""
+        LOG.debug('Dropping all media that fits into formula: {}',
+                  self.config.replication_formula)
 
-        dropped = database.drop_media(self.config.replication_formula)
+        dropped = self.database.drop_media(self.config.replication_formula)
 
         if dropped:
-            logger.debug('Dropped {} rows with media', dropped)
+            LOG.debug('Dropped {} rows with media', dropped)
 
-        return dropped
-
-    def manual_copy(
-            self,
-            logger: Logger,
-            database: Database,
-    ) -> int:
+    def manual_copy(self) -> None:
         """Perform manual copy operations."""
-        targets = database.get_manual_copy_targets(self.config.batch_size)
+        targets = self.database.get_manual_copy_targets(self.config.batch_size)
+        LOG.debug('Got {} items to copy: {}', len(targets), targets)
 
-        logger.debug('Got {} items to copy: {}', len(targets), targets)
-
-        operations = 0
         for copy_id in targets:
-            done = self.process_copying(logger, database, copy_id)
+            self._process_single_copy(copy_id)
 
-            if done is None:
-                logger.debug('Skipped copy for id {}', copy_id)
-            elif done:
-                operations += done
-                logger.debug('Copied id {}', copy_id)
+    def _process_single_copy(self, copy_id: int) -> None:
+        """Perform filesystem operation on copying."""
+        with self.database.start_session() as session:
+            copy = self.database.select_copy_operation(session, copy_id)
 
-        return operations
+            if copy is None:
+                return
 
-    def process_copying(
-            self,
-            logger: Logger,
-            database: Database,
-            copy_id: int,
-    ) -> Optional[int]:
-        """Perform filesystem operation, return True on success."""
-        result = None
-        with database.start_session() as session:
             # noinspection PyBroadException
             try:
-                copy = database.select_copy_operation(session, copy_id)
-                fail = False
-                trace = ''
-
-                if copy is not None:
-                    # noinspection PyBroadException
-                    try:
-                        media = self._process_copy(database, copy)
-                        copy.status = 'done'
-                        session.add(media)
-                        result = 1
-                    except Exception:
-                        logger.exception('Failed to copy {}', copy_id)
-                        result = 0
-                        fail = True
-                        trace = traceback.format_exc()
-                    else:
-                        database.copy_content_parameters(
-                            self.config, self.filesystem, session, copy)
-                        database.mark_origin(copy)
-
-                    if fail:
-                        copy.status = 'fail'
-                        copy.error += trace
-                    copy.processed_at = utils.now()
-
+                content = self._load_content_for_copy(copy)
+                media = self.database.create_media_from_copy(copy,
+                                                             content)
             except Exception:
-                logger.exception('Failed to save changes in copy {}', copy_id)
-                session.rollback()
-                result = 0
+                LOG.exception('Failed to load content for copy {}',
+                              copy_id)
+                copy.status = 'fail'
+                copy.error += '\n' + traceback.format_exc()
+                copy.processed_at = utils.now()
+                session.commit()
+                return
+
+            session.add(media)
+
+            # noinspection PyBroadException
+            try:
+                self.database.copy_content_parameters(
+                    self.config, self.filesystem, session, copy)
+                self.database.mark_origin(copy)
+            except Exception:
+                LOG.exception('Failed to save changes in copy {}', copy_id)
+                copy.status = 'fail'
+                copy.error += '\n' + traceback.format_exc()
+                copy.processed_at = utils.now()
             else:
-                if result:
-                    session.commit()
+                copy.status = 'done'
+                copy.processed_at = utils.now()
 
-        return result
-
-    def _process_copy(
-            self,
-            database: Database,
-            copy: models.ManualCopy,
-    ) -> models.Media:
-        """Perform filesystem operation."""
+    def _load_content_for_copy(self, copy: models.ManualCopy) -> bytes:
+        """Return binary data corresponding to this copy operation."""
         folder = self.config.hot_folder or self.config.cold_folder
         bucket = utils.get_bucket(copy.source_uuid, self.config.prefix_size)
 
@@ -250,17 +183,11 @@ class Worker:
             f'{copy.source_uuid}.{(copy.ext or "").lower()}'
         )
 
-        return database.create_media_from_copy(copy, content)
+        return content
 
-    @staticmethod
-    def drop_manual_copies(
-            logger: Logger,
-            database: Database,
-    ) -> int:
-        """Delete thumbnails from the DB, return amount of rows affected."""
-        dropped = database.drop_manual_copies()
+    def drop_manual_copies(self) -> None:
+        """Delete copy operations from the database."""
+        dropped = self.database.drop_manual_copies()
 
         if dropped:
-            logger.debug('Dropped {} rows with manual copies', dropped)
-
-        return dropped
+            LOG.debug('Dropped {} rows with manual copies', dropped)

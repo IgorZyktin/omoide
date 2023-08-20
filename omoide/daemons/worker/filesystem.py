@@ -1,34 +1,30 @@
-# -*- coding: utf-8 -*-
 """Special class that works with filesystem.
 """
 import os.path
 from pathlib import Path
-from typing import Optional
 
 from omoide import utils
 from omoide.infra import custom_logging
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class Filesystem:
     """Special class that works with filesystem."""
 
     @staticmethod
-    def ensure_folder_exists(
-            logger: custom_logging.Logger,
-            *args: str,
-    ) -> Path:
+    def ensure_folder_exists(*args: str) -> Path:
         """Create folder if needed."""
         path = Path().joinpath(*args)
 
         if not path.exists():
-            logger.debug('Creating path {}', path)
+            LOG.debug('Creating path {}', path)
 
         path.mkdir(parents=True, exist_ok=True)
         return path
 
     def safely_save(
             self,
-            logger: custom_logging.Logger,
             path: str | Path,
             filename: str,
             content: bytes,
@@ -43,14 +39,14 @@ class Filesystem:
             new_path = path / new_filename
 
             if new_path.exists():
-                logger.debug('New name is already taken: {}', new_path)
+                LOG.debug('New name is already taken: {}', new_path)
                 continue
 
-            logger.debug('Renaming {} to {}', old_path, new_filename)
+            LOG.debug('Renaming {} to {}', old_path, new_filename)
             old_path.replace(new_path)
             break
 
-        logger.debug('Saving {}', target_path)
+        LOG.debug('Saving {}', target_path)
         target_path.write_bytes(content)
         return target_path
 
@@ -70,7 +66,7 @@ class Filesystem:
         return content
 
     @staticmethod
-    def get_size(*args: str | Path) -> Optional[int]:
+    def get_size(*args: str | Path) -> int | None:
         """Get sze of the file in bytes."""
         try:
             filename = Path().joinpath(*args)

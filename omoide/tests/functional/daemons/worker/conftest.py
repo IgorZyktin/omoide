@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from omoide.daemons.worker.db import Database
+from omoide.daemons.worker.database import Database
 
 
 @pytest.fixture(scope='package')
