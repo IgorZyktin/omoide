@@ -1,5 +1,7 @@
 """Begin operations by timer."""
-from omoide.daemons.worker import interfaces
+import time
+
+from omoide.worker import interfaces
 
 
 class TimerStrategy(interfaces.AbsStrategy):
@@ -12,17 +14,30 @@ class TimerStrategy(interfaces.AbsStrategy):
             warm_up_coefficient: float,
     ) -> None:
         """Initialize instance."""
-        self.min_interval = min_interval
-        self.max_interval = max_interval
-        self.warm_up_coefficient = warm_up_coefficient
+        self._min_interval = min_interval
+        self._max_interval = max_interval
+        self._warm_up_coefficient = warm_up_coefficient
+        self._sleep_interval = min_interval
+        self._stopping = False
 
-    def adjust_interval(self, operations: int) -> float:
-        """Change interval based on amount of operations done."""
-        # if operations:
-        #     self.sleep_interval = self.config.min_interval
-        # else:
-        #     self.sleep_interval = min((
-        #         self.sleep_interval * self.config.warm_up_coefficient,
-        #         self.config.max_interval,
-        #     ))
-        # return self.sleep_interval
+    def start(self) -> None:
+        """Prepare for work."""
+
+    def stop(self) -> None:
+        """Prepare to exit."""
+        self._stopping = True
+
+    def wait(self) -> bool:
+        """Block until got command, return True for stop."""
+        time.sleep(self._sleep_interval)
+        return self._stopping
+
+    def adjust(self, done_something: bool) -> None:
+        """Adjust behaviour according to result."""
+        if done_something:
+            self._sleep_interval = self._min_interval
+        else:
+            self._sleep_interval = min((
+                self._sleep_interval * self._warm_up_coefficient,
+                self._max_interval,
+            ))

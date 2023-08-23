@@ -130,7 +130,7 @@ def _do_testing(
     assert len(valid_ids) == 2
 
     with database.start_session() as session:
-        media_1 = database.select_media(session, selected_1)
+        media_1 = database.get_media(session, selected_1)
         media_1.replication = {'test-hot': True}
         flag_modified(media_1, 'replication')
         session.commit()

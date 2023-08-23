@@ -6,12 +6,12 @@ from typing import Iterator
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
-from omoide.daemons.worker import interfaces
-from omoide.daemons.worker.database import Database
-from omoide.daemons.worker.filesystem import Filesystem
-from omoide.daemons.worker.worker_config import Config
+from omoide.worker import interfaces
+from omoide.worker.database import Database
+from omoide.worker.filesystem import Filesystem
+from omoide.worker.worker_config import Config
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -26,32 +26,26 @@ class Worker(interfaces.AbsWorker):
             filesystem: Filesystem,
     ) -> None:
         """Initialize instance."""
-        self.config = config
-        self.database = database
-        self.filesystem = filesystem
+        self._config = config
+        self._database = database
+        self._filesystem = filesystem
+        self._counter = 0
+
+    @property
+    def counter(self) -> int:
+        """Return value of the operation counter."""
+        return self._counter
 
     def _get_folders(self) -> Iterator[str]:
         """Return all folders where we plan to save anything."""
-        if self.config.save_hot:
-            yield self.config.hot_folder
-        if self.config.save_cold:
-            yield self.config.cold_folder
-
-    @property
-    def _formula(self) -> dict[str, bool]:
-        """Return formula of this worker."""
-        return {
-            f'{self.config.name}-hot': self.config.save_hot,
-            f'{self.config.name}-cold': self.config.save_cold,
-        }
+        if self._config.save_hot:
+            yield self._config.hot_folder
+        if self._config.save_cold:
+            yield self._config.cold_folder
 
     def download_media(self) -> None:
         """Download media from the database."""
-        media_ids = self.database.get_media_ids(
-            formula=self._formula,
-            limit=self.config.batch_size,
-        )
-
+        media_ids = self._database.get_media_ids(self._config.batch_size)
         LOG.debug('Got {} media records: {}', len(media_ids), media_ids)
 
         for media_id in media_ids:
@@ -59,48 +53,43 @@ class Worker(interfaces.AbsWorker):
 
     def _download_single_media(self, media_id: int) -> None:
         """Save single media record."""
-        with self.database.start_session() as session:
-            media = self.database.select_media(session, media_id)
+        with self._database.start_session() as session:
+            media = self._database.get_media(session, media_id)
 
             if media is None:
                 return None
+
+            if not media.ext or not media.content:
+                return
 
             # noinspection PyBroadException
             try:
                 self._download_media_content(media)
                 self._alter_item_corresponding_to_media(media)
             except Exception:
-                media.error += '\n' + traceback.format_exc()
+                media.error = traceback.format_exc()
                 LOG.exception('Failed to download media {}', media_id)
-            else:
-                media.replication.update(self._formula)
-                flag_modified(media, 'replication')
 
-            media.attempts = (media.attempts or 0) + 1
             media.processed_at = utils.now()
-
             session.commit()
 
     def _download_media_content(
             self,
-            media: models.Media,
+            media: db_models.Media,
     ) -> None:
         """Save content for media as files."""
-        if not media.ext or not media.content:
-            return
-
         for folder in self._get_folders():
-            path = self.filesystem.ensure_folder_exists(
+            path = self._filesystem.ensure_folder_exists(
                 folder,
                 media.target_folder,
                 str(media.owner_uuid),
-                str(media.item_uuid)[:self.config.prefix_size],
+                str(media.item_uuid)[:self._config.prefix_size],
             )
             filename = f'{media.item_uuid}.{media.ext or ""}'
-            self.filesystem.safely_save(path, filename, media.content)
+            self._filesystem.safely_save(path, filename, media.content)
 
     @staticmethod
-    def _alter_item_corresponding_to_media(media: models.Media) -> None:
+    def _alter_item_corresponding_to_media(media: db_models.Media) -> None:
         """Store changes in item description."""
         if media.target_folder == 'content':
             media.item.content_ext = media.ext
@@ -116,10 +105,7 @@ class Worker(interfaces.AbsWorker):
 
     def drop_media(self) -> None:
         """Delete media from the database."""
-        LOG.debug('Dropping all media that fits into formula: {}',
-                  self.config.replication_formula)
-
-        dropped = self.database.drop_media(self.config.replication_formula)
+        dropped = self._database.drop_media()
 
         if dropped:
             LOG.debug('Dropped {} rows with media', dropped)
@@ -187,7 +173,7 @@ class Worker(interfaces.AbsWorker):
 
     def drop_manual_copies(self) -> None:
         """Delete copy operations from the database."""
-        dropped = self.database.drop_manual_copies()
+        dropped = self._database.drop_manual_copies()
 
         if dropped:
             LOG.debug('Dropped {} rows with manual copies', dropped)

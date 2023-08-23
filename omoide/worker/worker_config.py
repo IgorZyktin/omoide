@@ -14,7 +14,6 @@ class Media(pydantic.BaseModel):
     """Desired way of media processing."""
     should_process: bool = True
     drop_after: bool = True
-    replication_formula: dict[str, bool] = pydantic.Field(default_factory=dict)
 
 
 class Copy(pydantic.BaseModel):
@@ -26,6 +25,11 @@ class Copy(pydantic.BaseModel):
 MINIMAL_DELAY = 0.001
 SECONDS_IN_HOUR = 3600.0
 SECONDS_IN_DAY = 8760.0
+
+
+class SignalStrategy(pydantic.BaseModel):
+    """Settings for signal handling (if active)."""
+    delay: float = 1.0
 
 
 class TimerStrategy(pydantic.BaseModel):
@@ -86,7 +90,6 @@ LOG_LEVEL: TypeAlias = Literal[
 
 class Config(pydantic_settings.BaseSettings):
     """Worker settings."""
-    name: str
     db_uri: pydantic.SecretStr
     db_echo: bool = False
     hot_folder: Path | None = None
@@ -100,7 +103,8 @@ class Config(pydantic_settings.BaseSettings):
     media: Media = Media()
     manual_copy: Copy = Copy()
     timer_strategy: TimerStrategy = TimerStrategy()
-    strategy: str = 'SignalStrategy'
+    signal_strategy: SignalStrategy = SignalStrategy()
+    strategy: Literal['TimerStrategy', 'SignalStrategy'] = 'SignalStrategy'
 
     model_config = pydantic_settings.SettingsConfigDict(
         env_prefix='omoide_worker__',

@@ -1,68 +1,84 @@
-"""Database tools for worker.
+"""Database class.
 """
+import contextlib
+from typing import Generator
+
 import sqlalchemy as sa
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from omoide import utils
-from omoide.commands.common.base_db import BaseDatabase
-from omoide.daemons.worker.filesystem import Filesystem
-from omoide.daemons.worker.worker_config import Config
 from omoide.infra import custom_logging
 from omoide.storage.database import models as db_models
+from omoide.worker.filesystem import Filesystem
+from omoide.worker.worker_config import Config
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class Database(BaseDatabase):
-    """Wrapper on SQL commands for worker."""
+class Database:
+    """Database class."""
 
-    def get_media_ids(
-            self,
-            formula: dict[str, bool],
-            limit: int,
-            max_attempts: int = 5,  # FIXME - move to config
-    ) -> list[int]:
+    def __init__(self, db_url: str, echo: bool) -> None:
+        """Initialize instance."""
+        self._db_url = db_url
+        self._engine = sa.create_engine(
+            self._db_url,
+            echo=echo,
+            pool_pre_ping=True,
+        )
+
+    @contextlib.contextmanager
+    def life_cycle(self) -> Generator[Engine, None, None]:
+        """Ensure that connection is closed at the end."""
+        try:
+            yield self._engine
+        finally:
+            self._engine.dispose()
+
+    @contextlib.contextmanager
+    def start_session(self) -> Generator[Session, None, None]:
+        """Wrapper around SA session."""
+        with Session(self._engine) as session:
+            yield session
+
+    def get_media_ids(self, limit: int) -> list[int]:
         """Extract media resources to save."""
         stmt = sa.select(
             db_models.Media.id
         ).where(
-            ~models.Media.replication.contains(formula),  # noqa
-            db_models.Media.attempts < max_attempts,
             db_models.Media.error == '',
         ).order_by(
             db_models.Media.id
         ).limit(
             limit
         )
-        with self.engine.begin() as conn:
+        with self._engine.begin() as conn:
             response = conn.execute(stmt).fetchall()
 
         return [x for x, in response]
 
     @staticmethod
-    def select_media(
+    def get_media(
             session: Session,
             media_id: int,
     ) -> db_models.Media | None:
         """Select Media for update."""
-        result = session.query(
+        return session.query(
             db_models.Media
-        ).with_for_update(
-            skip_locked=True
         ).filter_by(
             id=media_id
         ).first()
-        return result
 
-    def drop_media(self, formula: dict[str, bool]) -> int:
+    def drop_media(self) -> int:
         """Delete fully downloaded media rows, return total amount."""
         stmt = sa.delete(
             db_models.Media
         ).where(
-            db_models.Media.replication.contains(formula),  # noqa
+            db_models.Media.error == '',
         )
 
-        with self.engine.begin() as conn:
+        with self._engine.begin() as conn:
             response = conn.execute(stmt)
 
         return int(response.rowcount)
@@ -221,7 +237,7 @@ class Database(BaseDatabase):
             db_models.ManualCopy.status == 'done'
         )
 
-        with self.engine.begin() as conn:
+        with self._engine.begin() as conn:
             response = conn.execute(stmt)
 
         return int(response.rowcount)
