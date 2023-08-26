@@ -19,11 +19,11 @@ class Filesystem:
         """Initialize instance."""
         self._config = config
 
-    def _get_folders(self) -> Iterator[str]:
+    def _get_folders(self) -> Iterator[Path]:
         """Return all folders where we plan to save/load anything."""
-        if self._config.save_hot:
+        if self._config.save_hot and self._config.hot_folder:
             yield self._config.hot_folder
-        if self._config.save_cold:
+        if self._config.save_cold and self._config.cold_folder:
             yield self._config.cold_folder
 
     def load_binary(

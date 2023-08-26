@@ -134,7 +134,18 @@ class Database:
     ) -> None:
         """Copy width/height from origin."""
         source = self.session.query(db_models.Item).get(command.source_uuid)
+
+        if not source:
+            msg = (f'Source item {command.source_uuid} does not exist, '
+                   f'cannot copy thumbnail for {command.id}')
+            raise RuntimeError(msg)
+
         target = self.session.query(db_models.Item).get(command.target_uuid)
+
+        if not target:
+            msg = (f'Target item {command.source_uuid} does not exist, '
+                   f'cannot copy thumbnail for {command.id}')
+            raise RuntimeError(msg)
 
         target.metainfo.thumbnail_size = size
         target.metainfo.thumbnail_width = source.metainfo.thumbnail_width

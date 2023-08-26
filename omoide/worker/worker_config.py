@@ -209,4 +209,4 @@ def model_to_list(
 @cache
 def get_config() -> Config:
     """Return instance of the config."""
-    return Config()
+    return Config()  # type: ignore[call-arg]

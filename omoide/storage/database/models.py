@@ -126,9 +126,12 @@ class Item(Base):
     number = sa.Column(sa.BigInteger, nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
     is_collection = sa.Column(sa.Boolean, nullable=False)
-    content_ext = sa.Column(sa.String(length=SMALL), nullable=True)
-    preview_ext = sa.Column(sa.String(length=SMALL), nullable=True)
-    thumbnail_ext = sa.Column(sa.String(length=SMALL), nullable=True)
+    content_ext: str | None = sa.Column(sa.String(length=SMALL),
+                                        nullable=True)
+    preview_ext: str | None = sa.Column(sa.String(length=SMALL),
+                                        nullable=True)
+    thumbnail_ext: str | None = sa.Column(sa.String(length=SMALL),
+                                          nullable=True)
 
     # array fields ------------------------------------------------------------
 
