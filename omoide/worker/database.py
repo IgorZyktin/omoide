@@ -58,7 +58,12 @@ class Database:
             last_seen: int | None,
     ) -> list[db_models.CommandCopy]:
         """Return list of images to copy."""
-        query = self.session.query(db_models.CommandCopy)
+        query = self.session.query(
+            db_models.CommandCopy
+        ).filter(
+            db_models.CommandCopy.processed_at == None,  # noqa
+            db_models.CommandCopy.error == ''
+        )
 
         if last_seen is not None:
             query = query.filter(
@@ -77,7 +82,12 @@ class Database:
             last_seen: int | None,
     ) -> list[db_models.Media]:
         """Return list of media records to download."""
-        query = self.session.query(db_models.Media)
+        query = self.session.query(
+            db_models.Media
+        ).filter(
+            db_models.Media.processed_at == None,   # noqa
+            db_models.Media.error == ''
+        )
 
         if last_seen is not None:
             query = query.filter(
