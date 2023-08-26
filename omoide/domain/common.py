@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Models that used in more than one place.
 """
 from datetime import datetime
@@ -27,7 +26,6 @@ __all__ = [
     'Metainfo',
     'Aim',
     'SpaceUsage',
-    'COPIED_COVER_FROM',
     'CONTENT',
     'PREVIEW',
     'THUMBNAIL',
@@ -35,7 +33,6 @@ __all__ = [
     'MEDIA_TYPES',
 ]
 
-COPIED_COVER_FROM: Literal['copied_cover_from'] = 'copied_cover_from'
 CONTENT: Literal['content'] = 'content'
 PREVIEW: Literal['preview'] = 'preview'
 THUMBNAIL: Literal['thumbnail'] = 'thumbnail'

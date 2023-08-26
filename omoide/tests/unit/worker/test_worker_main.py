@@ -26,8 +26,8 @@ def test_worker_main_once(valid_worker_config):
     assert result.exit_code == 0
     fake_worker.download_media.assert_called_once()
     fake_worker.drop_media.assert_called_once()
-    fake_worker.copy_thumbnails.assert_called_once()
-    fake_worker.drop_thumbnail_copies.assert_called_once()
+    fake_worker.copy.assert_called_once()
+    fake_worker.drop_copies.assert_called_once()
 
 
 def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
@@ -50,8 +50,8 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
     assert result.exit_code == 0
     fake_worker.download_media.assert_called_once()
     fake_worker.drop_media.assert_called_once()
-    fake_worker.copy_thumbnails.assert_called_once()
-    fake_worker.drop_thumbnail_copies.assert_called_once()
+    fake_worker.copy.assert_called_once()
+    fake_worker.drop_copies.assert_called_once()
 
 
 def test_worker_get_strategy_windows(valid_worker_config):

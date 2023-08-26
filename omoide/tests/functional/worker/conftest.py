@@ -40,7 +40,7 @@ def functional_tests_worker_config():
                 should_process=True,
                 drop_after=True,
             ),
-            copy_thumbnails=dict(
+            copy_commands=dict(
                 should_process=True,
                 drop_after=True,
             ),
@@ -161,17 +161,19 @@ class WorkerTestingRepo:
             owner_uuid: str,
             source_uuid: str,
             target_uuid: str,
+            media_type: str,
             processed_at: datetime | None = None,
     ) -> int:
         """Create test copy commands."""
         with self.database.start_session() as session:
-            command = db_models.CommandCopyThumbnail(
+            command = db_models.CommandCopy(
                 created_at=utils.now(),
                 processed_at=processed_at,
                 error='',
                 owner_uuid=str(owner_uuid),
                 source_uuid=str(source_uuid),
                 target_uuid=str(target_uuid),
+                media_type=media_type,
                 ext='jpg',
             )
             session.add(command)
@@ -190,16 +192,14 @@ class WorkerTestingRepo:
         """Create test media."""
         with self.database.start_session() as session:
             media = db_models.Media(
-                owner_uuid=owner_uuid,
-                item_uuid=item_uuid,
-                target_folder=media_type,  # FIXME - change name
                 created_at=utils.now(),
                 processed_at=processed_at,
+                error='',
+                owner_uuid=owner_uuid,
+                item_uuid=item_uuid,
+                media_type=media_type,
                 content=content,
                 ext='jpg',
-                replication={}, # FIXME - remove
-                error='',
-                attempts=0,
             )
             session.add(media)
             session.commit()
@@ -216,21 +216,21 @@ class WorkerTestingRepo:
             if item is None:
                 return None, None, []
             command = session.query(
-                db_models.CommandCopyThumbnail
+                db_models.CommandCopy
             ).filter(
-                db_models.CommandCopyThumbnail.target_uuid == target_item_uuid
+                db_models.CommandCopy.target_uuid == target_item_uuid
             ).all()
             metainfo = item.metainfo
             media = item.media
             return item, metainfo, media, command
 
-    def get_all_thumbnail(self) -> list[db_models.CommandCopyThumbnail]:
+    def get_all_thumbnail(self) -> list[db_models.CommandCopy]:
         """Return all copy commands."""
         with self.database.start_session() as session:
-            commands = session.query(db_models.CommandCopyThumbnail).all()
+            commands = session.query(db_models.CommandCopy).all()
             return commands
 
-    def get_all_media(self) -> list[db_models.CommandCopyThumbnail]:
+    def get_all_media(self) -> list[db_models.CommandCopy]:
         """Return all media."""
         with self.database.start_session() as session:
             commands = session.query(db_models.Media).all()
@@ -250,7 +250,7 @@ class WorkerTestingRepo:
                 db_models.Media
             ).where(db_models.Media.id.in_(self.media))  # type: ignore
             session.execute(stmt)
-            stmt = sa.delete(db_models.CommandCopyThumbnail)
+            stmt = sa.delete(db_models.CommandCopy)
             session.execute(stmt)
             session.commit()
 

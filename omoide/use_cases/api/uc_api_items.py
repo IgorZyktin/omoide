@@ -720,12 +720,13 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
                     owner_uuid=user.uuid,
                     source_uuid=source_uuid,
                     target_uuid=target_uuid,
+                    media_type=each,
                     ext=str(generic.ext),
-                    target_folder=each,
                 )
+                key = f'copied_{each}_from'
+                await self.metainfo_repo.update_metainfo_extras(
+                    target_uuid, {key: str(source_uuid)})
 
-            await self.metainfo_repo.update_metainfo_extras(
-                target_uuid, {domain.COPIED_COVER_FROM: str(source_uuid)})
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())
 

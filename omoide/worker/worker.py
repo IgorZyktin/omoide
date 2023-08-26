@@ -2,6 +2,7 @@
 """
 import traceback
 
+from omoide import constants
 from omoide import utils
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
@@ -63,7 +64,7 @@ class Worker(interfaces.AbsWorker):
         self._filesystem.save_binary(
             owner_uuid=media.owner_uuid,
             item_uuid=media.item_uuid,
-            target_folder=media.target_folder,  # FIXME - alter to media_type
+            media_type=media.media_type,
             ext=media.ext,
             content=media.content,
         )
@@ -72,16 +73,22 @@ class Worker(interfaces.AbsWorker):
     @staticmethod
     def _alter_item_corresponding_to_media(media: db_models.Media) -> None:
         """Store changes in item description."""
-        # FIXME - alter to media_type
-        if media.target_folder == 'content':
+        if media.media_type == constants.CONTENT:
             media.item.content_ext = media.ext
-            media.item.metainfo.content_size = len(media.content or b'')
-        elif media.target_folder == 'preview':
+            media.item.metainfo.content_size = len(media.content)
+
+        elif media.media_type == constants.PREVIEW:
             media.item.preview_ext = media.ext
-            media.item.metainfo.preview_size = len(media.content or b'')
-        else:
+            media.item.metainfo.preview_size = len(media.content)
+
+        elif media.media_type == constants.THUMBNAIL:
             media.item.thumbnail_ext = media.ext
-            media.item.metainfo.thumbnail_size = len(media.content or b'')
+            media.item.metainfo.thumbnail_size = len(media.content)
+
+        else:
+            msg = (f'Got unknown media_type {media.media_type} '
+                   f'for media {media.id}')
+            raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()
 
@@ -93,24 +100,24 @@ class Worker(interfaces.AbsWorker):
         if dropped:
             LOG.debug('Dropped {} rows with media', dropped)
 
-    def copy_thumbnails(self) -> None:
-        """Perform manual thumbnail copy operations."""
+    def copy(self) -> None:
+        """Perform manual copy operations."""
         last_seen = None
         while True:
             with self._database.start_session():
-                batch = self._database.get_thumbnail_batch(
+                batch = self._database.get_copies_batch(
                     self._config.batch_size,
                     last_seen,
                 )
 
-                LOG.debug('Got {} thumbnails to copy', len(batch))
+                LOG.debug('Got {} images to copy', len(batch))
                 for command in batch:
                     # noinspection PyBroadException
                     try:
-                        self._copy_thumbnail(command)
+                        self._copy(command)
                     except Exception:
                         LOG.exception(
-                            'Failed to copy thumbnail for command {}',
+                            'Failed to copy image for command {}',
                             command.id,
                         )
                         command.error = traceback.format_exc()
@@ -123,26 +130,23 @@ class Worker(interfaces.AbsWorker):
                 if len(batch) < self._config.batch_size:
                     break
 
-    def _copy_thumbnail(
-            self,
-            command: db_models.CommandCopyThumbnail,
-    ) -> None:
+    def _copy(self, command: db_models.CommandCopy) -> None:
         """Perform filesystem operation on copying."""
         content = self._filesystem.load_binary(
             owner_uuid=command.owner_uuid,
             item_uuid=command.source_uuid,
-            target_folder='thumbnail',
+            media_type=command.media_type,
             ext=command.ext,
         )
         media = self._database.create_media_from_copy(command, content)
         self._database.session.add(media)
-        self._database.copy_thumbnail_parameters(command, len(content))
-        self._database.mark_origin_of_thumbnail(command)
+        self._database.copy_parameters(command, len(content))
+        self._database.mark_origin(command)
 
-    def drop_thumbnail_copies(self) -> None:
-        """Delete thumbnail copy operations from the DB."""
-        dropped = self._database.drop_thumbnail_copies()
+    def drop_copies(self) -> None:
+        """Delete copy operations from the DB."""
+        dropped = self._database.drop_copies()
         self.counter += dropped
 
         if dropped:
-            LOG.debug('Dropped {} rows with thumbnail copy commands', dropped)
+            LOG.debug('Dropped {} rows with copy commands', dropped)

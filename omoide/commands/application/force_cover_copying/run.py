@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Collection to force copying of covers.
 """
 from uuid import UUID
@@ -11,7 +10,7 @@ from omoide.commands.application.force_cover_copying.cfg import Config
 from omoide.commands.common import helpers
 from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -60,8 +59,8 @@ def run(
 
 def get_leaf_items(
         session: Session,
-        user: models.User,
-) -> list[models.Item]:
+        user: db_models.User,
+) -> list[db_models.Item]:
     """Get all items without children."""
     stmt = """
     SELECT *
@@ -81,7 +80,7 @@ def get_leaf_items(
     response = session.execute(stmt, values).fetchall()  # type: ignore
 
     return [
-        models.Item(
+        db_models.Item(
             uuid=x[0],
             parent_uuid=x[1],
             owner_uuid=x[2],
@@ -100,7 +99,7 @@ def get_leaf_items(
 
 def force_copy_to_all_parents(
         session: Session,
-        item: models.Item,
+        item: db_models.Item,
         already_handled: set[UUID],
 ) -> int:
     """Copy data from given item to all parents."""
@@ -127,10 +126,10 @@ def force_copy_to_all_parents(
 
 def copy_properties(
         session: Session,
-        parent: models.Item,
-        parent_metainfo: models.Metainfo,
-        child: models.Item,
-        child_metainfo: models.Metainfo,
+        parent: db_models.Item,
+        parent_metainfo: db_models.Metainfo,
+        child: db_models.Item,
+        child_metainfo: db_models.Metainfo,
 ) -> None:
     """Copy basic parameters."""
     parameters_items = [
@@ -167,7 +166,7 @@ def copy_properties(
     helpers.insert_into_metainfo_extras(
         session=session,
         metainfo=parent_metainfo,
-        new_data={domain.COPIED_COVER_FROM: str(child.uuid)}
+        new_data={'copied_thumbnail_from': str(child.uuid)}
     )
 
     parent_metainfo.updated_at = utils.now()
@@ -175,8 +174,8 @@ def copy_properties(
 
 def invoke_worker_to_copy(
         session: Session,
-        parent: models.Item,
-        child: models.Item,
+        parent: db_models.Item,
+        child: db_models.Item,
 ) -> None:
     """Write info in the db so worker could complete the job."""
     now = utils.now()
@@ -185,16 +184,15 @@ def invoke_worker_to_copy(
         ext = getattr(child, f'{media_type}_ext')
         assert ext is not None
 
-        copy = models.ManualCopy(
+        copy = db_models.CommandCopy(
             created_at=now,
             processed_at=None,
-            status='init',
             error='',
             owner_uuid=parent.owner_uuid,
             source_uuid=child.uuid,
             target_uuid=parent.uuid,
+            media_type=media_type,
             ext=ext,
-            target_folder=media_type,
         )
         session.add(copy)
         session.flush([copy])

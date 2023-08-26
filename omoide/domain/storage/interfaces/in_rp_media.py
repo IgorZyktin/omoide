@@ -38,7 +38,7 @@ class AbsMediaRepository(AbsBaseRepository):
             owner_uuid: UUID,
             source_uuid: UUID,
             target_uuid: UUID,
+            media_type: str,
             ext: str,
-            target_folder: str,
     ) -> int | errors.Error:
         """Save intention to copy data between items."""

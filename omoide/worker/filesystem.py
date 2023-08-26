@@ -30,7 +30,7 @@ class Filesystem:
             self,
             owner_uuid: UUID,
             item_uuid: UUID,
-            target_folder: str,
+            media_type: str,
             ext: str,
     ) -> bytes:
         """Load binary data from filesystem."""
@@ -38,7 +38,7 @@ class Filesystem:
         for folder in self._get_folders():
             path = (
                 Path(folder)
-                / target_folder
+                / media_type
                 / str(owner_uuid)
                 / bucket
                 / f'{item_uuid}.{ext}'
@@ -48,7 +48,7 @@ class Filesystem:
                 content = path.read_bytes()
                 return content
 
-        msg = (f'There is no corresponding file in folder {target_folder} '
+        msg = (f'There is no corresponding file in folder {media_type} '
                f'for {owner_uuid=}, {item_uuid=} and {ext=}')
         raise FileNotFoundError(msg)
 
@@ -56,7 +56,7 @@ class Filesystem:
             self,
             owner_uuid: UUID,
             item_uuid: UUID,
-            target_folder: str,
+            media_type: str,
             ext: str,
             content: bytes,
     ) -> None:
@@ -66,7 +66,7 @@ class Filesystem:
         for folder in self._get_folders():
             path = (
                 Path(folder)
-                / target_folder
+                / media_type
                 / str(owner_uuid)
                 / bucket
             )  # noqa: W503

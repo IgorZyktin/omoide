@@ -31,6 +31,7 @@ def populate_database_copies(functional_tests_worker_testing_repo):
         owner_uuid=user_uuid,
         source_uuid=source_item_uuid,
         target_uuid=target_item_uuid,
+        media_type='thumbnail',
     )
 
     return repo, user_uuid, source_item_uuid, target_item_uuid
@@ -60,6 +61,7 @@ def populate_database_ready_command(functional_tests_worker_testing_repo):
         source_uuid=source_item_uuid,
         target_uuid=target_item_uuid,
         processed_at=utils.now(),
+        media_type='thumbnail',
     )
 
     return repo, user_uuid, source_item_uuid, target_item_uuid
@@ -97,8 +99,8 @@ def test_worker_copy_thumbnails_only_save(
     worker = functional_tests_worker
     config.media.should_process = False
     config.media.drop_after = False
-    config.copy_thumbnails.should_process = True
-    config.copy_thumbnails.drop_after = False
+    config.copy_commands.should_process = True
+    config.copy_commands.drop_after = False
 
     runtime.run_once(config, worker)
 
@@ -127,8 +129,8 @@ def test_worker_copy_thumbnails_only_delete(
     worker = functional_tests_worker
     config.media.should_process = False
     config.media.drop_after = False
-    config.copy_thumbnails.should_process = False
-    config.copy_thumbnails.drop_after = True
+    config.copy_commands.should_process = False
+    config.copy_commands.drop_after = True
 
     runtime.run_once(config, worker)
 

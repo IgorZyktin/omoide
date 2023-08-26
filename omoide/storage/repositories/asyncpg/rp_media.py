@@ -25,16 +25,14 @@ class MediaRepository(AbsMediaRepository):
         stmt = sa.insert(
             db_models.Media
         ).values(
-            owner_uuid=media.owner_uuid,
-            item_uuid=media.item_uuid,
             created_at=media.created_at,
             processed_at=media.processed_at,
+            error='',
+            owner_uuid=media.owner_uuid,
+            item_uuid=media.item_uuid,
+            media_type=media.media_type,
             content=media.content,
             ext=media.ext,
-            target_folder=media.media_type,  # FIXME
-            replication={},
-            error='',
-            attempts=0,
         ).returning(db_models.Media.id)
 
         result: core_models.Media | errors.Error  # ---------------------------
@@ -108,22 +106,21 @@ class MediaRepository(AbsMediaRepository):
             source_uuid: UUID,
             target_uuid: UUID,
             ext: str,
-            target_folder: str,
+            media_type: str,
     ) -> int | errors.Error:
         """Save intention to copy data between items."""
         stmt = sa.insert(
-            db_models.ManualCopy
+            db_models.CommandCopy
         ).values(
             created_at=utils.now(),
             processed_at=None,
-            status='init',
             error='',
             owner_uuid=str(owner_uuid),
             source_uuid=str(source_uuid),
             target_uuid=str(target_uuid),
+            media_type=media_type,
             ext=ext,
-            target_folder=target_folder,  # FIXME
-        ).returning(db_models.ManualCopy.id)
+        ).returning(db_models.CommandCopy.id)
 
         result: int | errors.Error  # -----------------------------------------
 

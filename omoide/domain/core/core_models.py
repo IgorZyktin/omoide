@@ -31,13 +31,11 @@ class GuessResult:
 class Media:
     """Transient content fot the item."""
     id: int
+    created_at: datetime
+    processed_at: datetime | None
+    error: str
     owner_uuid: UUID
     item_uuid: UUID
+    media_type: str
     content: bytes
     ext: str
-    media_type: str
-    replication: dict[str, dict]
-    error: str
-    attempts: int
-    created_at: datetime
-    processed_at: datetime | None = None

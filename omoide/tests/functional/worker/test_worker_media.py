@@ -54,15 +54,15 @@ def test_worker_media_only_save(
     filesystem = Filesystem(config)
     config.media.should_process = True
     config.media.drop_after = False
-    config.copy_thumbnails.should_process = False
-    config.copy_thumbnails.drop_after = False
+    config.copy_commands.should_process = False
+    config.copy_commands.drop_after = False
 
     runtime.run_once(config, worker)
 
     content = filesystem.load_binary(
         owner_uuid=user_uuid,
         item_uuid=item_uuid,
-        target_folder='thumbnail',
+        media_type='thumbnail',
         ext='jpg',
     )
     assert content == b'event-cooler'
@@ -79,11 +79,11 @@ def test_worker_media_only_delete(
     worker = functional_tests_worker
     config.media.should_process = True
     config.media.drop_after = False
-    config.copy_thumbnails.should_process = False
-    config.copy_thumbnails.drop_after = False
+    config.copy_commands.should_process = False
+    config.copy_commands.drop_after = False
 
     runtime.run_once(config, worker)
 
     media = repo.get_all_media()
-    assert not media
+    assert len(media) == 1
     assert worker.counter == 1

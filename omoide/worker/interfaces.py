@@ -36,9 +36,9 @@ class AbsWorker(abc.ABC):
         """Delete media from the database."""
 
     @abc.abstractmethod
-    def copy_thumbnails(self) -> None:
+    def copy(self) -> None:
         """Perform manual copying of thumbnails."""
 
     @abc.abstractmethod
-    def drop_thumbnail_copies(self) -> None:
+    def drop_copies(self) -> None:
         """Delete thumbnail copy operations from the DB."""

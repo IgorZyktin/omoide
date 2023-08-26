@@ -26,7 +26,7 @@ def valid_worker_config_dict():
                 should_process=True,
                 drop_after=True,
             ),
-            copy_thumbnails=dict(
+            copy_commands=dict(
                 should_process=True,
                 drop_after=True,
             ),

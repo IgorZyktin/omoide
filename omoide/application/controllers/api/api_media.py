@@ -31,16 +31,14 @@ async def api_create_media(
     """Create or update media entry."""
     media = core_models.Media(
         id=-1,
-        owner_uuid=user.uuid,  # type: ignore
-        item_uuid=uuid,
         created_at=utils.now(),
         processed_at=None,
+        error='',
+        owner_uuid=user.uuid,  # type: ignore
+        item_uuid=uuid,
+        media_type=in_media.media_type,
         content=in_media.get_binary_content(),
         ext=in_media.ext,
-        media_type=in_media.media_type,
-        replication={},
-        error='',
-        attempts=0,
     )
 
     result = await use_case.execute(policy, user, uuid, media)

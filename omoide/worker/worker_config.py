@@ -96,7 +96,7 @@ class Config(pydantic_settings.BaseSettings):
     batch_size: int = 25
     prefix_size: int = 2
     media: Media = Media()
-    copy_thumbnails: CopyThumbnails = CopyThumbnails()
+    copy_commands: CopyThumbnails = CopyThumbnails()
     timer_strategy: TimerStrategy = TimerStrategy()
     strategy: Literal['TimerStrategy', 'SignalStrategy'] = 'SignalStrategy'
 
@@ -172,7 +172,7 @@ class Config(pydantic_settings.BaseSettings):
 
 def serialize(
         model: pydantic.BaseModel,
-        do_not_serialize: frozenset = frozenset(('replication_formula',))
+        do_not_serialize: frozenset = frozenset()
 ) -> str:
     """Convert config to human-readable string."""
     attributes: list[str] = []

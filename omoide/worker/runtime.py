@@ -75,11 +75,11 @@ def perform_one_work_cycle(
     if config.media.drop_after:
         worker.drop_media()
 
-    if config.copy_thumbnails.should_process:
-        worker.copy_thumbnails()
+    if config.copy_commands.should_process:
+        worker.copy()
 
-    if config.copy_thumbnails.drop_after:
-        worker.drop_thumbnail_copies()
+    if config.copy_commands.drop_after:
+        worker.drop_copies()
 
 
 def get_strategy(config: worker_config.Config) -> interfaces.AbsStrategy:
