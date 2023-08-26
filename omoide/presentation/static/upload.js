@@ -216,7 +216,7 @@ function createFileProxy(file, number) {
             generated: false,
             uploaded: false,
             user_time: null,
-            media_type: null,
+            content_type: null,
             content_width: null,
             content_height: null,
             preview_width: null,
