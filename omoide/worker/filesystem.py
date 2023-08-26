@@ -60,7 +60,7 @@ class Filesystem:
             ext: str,
             content: bytes,
     ) -> None:
-        """Load binary data from filesystem."""
+        """Save binary data to filesystem."""
         bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
         filename = f'{item_uuid}.{ext}'
         for folder in self._get_folders():
