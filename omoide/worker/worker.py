@@ -156,7 +156,7 @@ class Worker(interfaces.AbsWorker):
                 copy.status = 'done'
                 copy.processed_at = utils.now()
 
-    def _load_content_for_copy(self, copy: models.ManualCopy) -> bytes:
+    def _load_content_for_copy(self, copy: db_models.ManualCopy) -> bytes:
         """Return binary data corresponding to this copy operation."""
         folder = self.config.hot_folder or self.config.cold_folder
         bucket = utils.get_bucket(copy.source_uuid, self.config.prefix_size)

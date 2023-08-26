@@ -20,7 +20,7 @@ class TimerStrategy(interfaces.AbsStrategy):
         self._sleep_interval = min_interval
         self._stopping = False
 
-    def start(self) -> None:
+    def init(self) -> None:
         """Prepare for work."""
 
     def stop(self) -> None:

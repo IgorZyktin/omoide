@@ -1,4 +1,4 @@
-"""Database class.
+"""Database helper class for Worker.
 """
 import contextlib
 from typing import Generator
@@ -17,13 +17,13 @@ LOG = custom_logging.get_logger(__name__)
 
 
 class Database:
-    """Database class."""
+    """Database helper class for Worker."""
 
-    def __init__(self, db_url: str, echo: bool) -> None:
+    def __init__(self, db_uri: str, echo: bool) -> None:
         """Initialize instance."""
-        self._db_url = db_url
+        self._db_uri = db_uri
         self._engine = sa.create_engine(
-            self._db_url,
+            self._db_uri,
             echo=echo,
             pool_pre_ping=True,
         )

@@ -7,7 +7,7 @@ class AbsStrategy(abc.ABC):
     """How to wait for operations."""
 
     @abc.abstractmethod
-    def start(self) -> None:
+    def init(self) -> None:
         """Prepare to work."""
 
     @abc.abstractmethod

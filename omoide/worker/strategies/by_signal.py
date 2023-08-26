@@ -8,17 +8,13 @@ from omoide.worker import interfaces
 class SignalStrategy(interfaces.AbsStrategy):
     """Begin operations by signal."""
 
-    def __init__(
-            self,
-            delay: float,
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize instance."""
-        self._delay = delay
         self._event = threading.Event()
         self._stopping = False
         self._double_set = False
 
-    def start(self) -> None:
+    def init(self) -> None:
         """Prepare for work."""
         signal.signal(signal.SIGHUP, self._handle)
 

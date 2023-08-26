@@ -5,12 +5,17 @@ from pathlib import Path
 
 from omoide import utils
 from omoide.infra import custom_logging
+from omoide.worker.worker_config import Config
 
 LOG = custom_logging.get_logger(__name__)
 
 
 class Filesystem:
     """Special class that works with filesystem."""
+
+    def __init__(self, config: Config) -> None:
+        """Initialize instance."""
+        self._config = config
 
     @staticmethod
     def ensure_folder_exists(*args: str) -> Path:

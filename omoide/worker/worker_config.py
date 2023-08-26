@@ -27,11 +27,6 @@ SECONDS_IN_HOUR = 3600.0
 SECONDS_IN_DAY = 8760.0
 
 
-class SignalStrategy(pydantic.BaseModel):
-    """Settings for signal handling (if active)."""
-    delay: float = 1.0
-
-
 class TimerStrategy(pydantic.BaseModel):
     """Settings for timer handling (if active)."""
     min_interval: float = 0.1
@@ -103,7 +98,6 @@ class Config(pydantic_settings.BaseSettings):
     media: Media = Media()
     manual_copy: Copy = Copy()
     timer_strategy: TimerStrategy = TimerStrategy()
-    signal_strategy: SignalStrategy = SignalStrategy()
     strategy: Literal['TimerStrategy', 'SignalStrategy'] = 'SignalStrategy'
 
     model_config = pydantic_settings.SettingsConfigDict(
