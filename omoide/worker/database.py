@@ -17,7 +17,7 @@ LOG = custom_logging.get_logger(__name__)
 class Database:
     """Database helper class for Worker."""
 
-    def __init__(self, db_uri: str, echo: bool) -> None:
+    def __init__(self, db_uri: str, echo: bool = False) -> None:
         """Initialize instance."""
         self._db_uri = db_uri
         self._engine = sa.create_engine(
@@ -173,7 +173,7 @@ class Database:
             db_models.CommandCopyThumbnail
         ).where(
             db_models.CommandCopyThumbnail.processed_at != None,  # noqa
-            db_models.CommandCopyThumbnail.error != '',
+            db_models.CommandCopyThumbnail.error == '',
         )
 
         with self._engine.begin() as conn:

@@ -88,6 +88,7 @@ class Worker(interfaces.AbsWorker):
     def drop_media(self) -> None:
         """Delete media from the database."""
         dropped = self._database.drop_media()
+        self.counter += dropped
 
         if dropped:
             LOG.debug('Dropped {} rows with media', dropped)
@@ -141,6 +142,7 @@ class Worker(interfaces.AbsWorker):
     def drop_thumbnail_copies(self) -> None:
         """Delete thumbnail copy operations from the DB."""
         dropped = self._database.drop_thumbnail_copies()
+        self.counter += dropped
 
         if dropped:
             LOG.debug('Dropped {} rows with thumbnail copy commands', dropped)

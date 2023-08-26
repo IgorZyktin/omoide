@@ -19,6 +19,7 @@ Media = models.Media
 ManualCopy = models.ManualCopy
 Metainfo = models.Metainfo
 Item = models.Item
+User = models.User
 
 
 class CommandCopyThumbnail(Base):

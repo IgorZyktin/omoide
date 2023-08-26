@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
-from omoide.daemons.worker.database import Database
+from omoide.worker.database import Database
 from omoide.storage.database import models
 
 
