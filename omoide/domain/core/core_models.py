@@ -35,7 +35,7 @@ class Media:
     item_uuid: UUID
     content: bytes
     ext: str
-    media_type: list[str]
+    media_type: str
     replication: dict[str, dict]
     error: str
     attempts: int

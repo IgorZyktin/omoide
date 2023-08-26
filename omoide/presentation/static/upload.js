@@ -844,13 +844,11 @@ async function saveContentForProxy(proxy) {
             type: 'POST',
             url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
-            data: JSON.stringify([
-                {
+            data: JSON.stringify({
                     content: proxy.content,
                     media_type: 'content',
                     ext: proxy.contentExt,
-                }
-            ]),
+            }),
             success: function (response) {
                 proxy.contentUploaded = true
                 proxy.actualSteps.add('saveContentForProxy')
@@ -878,13 +876,11 @@ async function savePreviewForProxy(proxy) {
             type: 'POST',
             url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
-            data: JSON.stringify([
-                {
+            data: JSON.stringify({
                     content: proxy.preview,
                     media_type: 'preview',
                     ext: proxy.previewExt,
-                }
-            ]),
+            }),
             success: function (response) {
                 proxy.previewUploaded = true
                 proxy.actualSteps.add('savePreviewForProxy')
@@ -912,13 +908,11 @@ async function saveThumbnailForProxy(proxy) {
             type: 'POST',
             url: `/api/media/${proxy.uuid}`,
             contentType: 'application/json',
-            data: JSON.stringify([
-                {
+            data: JSON.stringify({
                     content: proxy.thumbnail,
                     media_type: 'thumbnail',
                     ext: proxy.thumbnailExt,
-                }
-            ]),
+            }),
             success: function (response) {
                 proxy.thumbnailUploaded = true
                 proxy.actualSteps.add('saveThumbnailForProxy')

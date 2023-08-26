@@ -16,7 +16,7 @@ class PatchOperation(pydantic.BaseModel):
     """Single operation in PATCH request."""
     op: str
     path: str
-    value: str | None = None
+    value: str | bool | None = None
 
 
 class CreateItemIn(pydantic.BaseModel):

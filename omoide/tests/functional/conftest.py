@@ -27,12 +27,11 @@ def safely_get_test_database(url: str | None = None) -> str:
                f'to set {constants.DB_ENV_VARIABLE} env variable')
         raise RuntimeError(msg)
 
-    parts = urlsplit(url, allow_fragments=True)
-    safe_url = f'{parts.scheme}://<username>:<password>{parts.path}'
-    if parts.query:
-        safe_url += f'?{parts.query}'
-
     if constants.TEST_DB_NAME not in url.lower():
+        parts = urlsplit(url, allow_fragments=True)
+        safe_url = f'{parts.scheme}://<username>:<password>{parts.path}'
+        if parts.query:
+            safe_url += f'?{parts.query}'
         msg = ("Are you sure that you're using test database? "
                f"Expected something with {constants.TEST_DB_NAME!r}, "
                f"got: {safe_url}")
@@ -73,17 +72,17 @@ def test_safely_get_test_database_incorrect_db():
 
 
 @pytest.fixture(scope='session')
-def functional_tests_db_url():
+def functional_tests_db_uri():
     """Return database url."""
     return safely_get_test_database()
 
 
 @pytest_asyncio.fixture(scope='session')
-async def functional_tests_database(functional_tests_db_url):
+async def functional_tests_database(functional_tests_db_uri):
     """Return database."""
     db = None
     try:
-        db = Database(functional_tests_db_url)
+        db = Database(functional_tests_db_uri)
         await db.connect()
         yield db
     except Exception as exc:

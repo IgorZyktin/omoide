@@ -16,7 +16,7 @@ class InEXIF(pydantic.BaseModel):
 class InMedia(pydantic.BaseModel):
     """Input info for media creation."""
     content: str
-    media_type: list[str]
+    media_type: str
     ext: str
 
     @pydantic.field_validator('media_type')
