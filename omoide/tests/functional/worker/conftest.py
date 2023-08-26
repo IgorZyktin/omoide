@@ -18,7 +18,7 @@ from omoide.worker.worker import Worker
 
 @pytest.fixture(scope='session')
 def functional_tests_worker_database(functional_tests_db_uri):
-    database = Database(db_uri=functional_tests_db_uri, echo=True)
+    database = Database(db_uri=functional_tests_db_uri)
     with database.life_cycle():
         yield database
 
@@ -85,6 +85,7 @@ class WorkerTestingRepo:
         self.items: list[str] = []
         self.users: list[str] = []
         self.copy_thumbnail: list[int] = []
+        self.media: list[int] = []
 
     def create_user(self) -> str:
         """Create test user."""
@@ -121,6 +122,13 @@ class WorkerTestingRepo:
                 permissions=[],
             )
 
+            default_kwargs = {
+                'thumbnail_size': None,
+                'thumbnail_width': None,
+                'thumbnail_height': None,
+            }
+            default_kwargs.update(kwargs)
+
             metainfo = db_models.Metainfo(
                 item_uuid=item_uuid,
                 created_at=utils.now(),
@@ -139,7 +147,7 @@ class WorkerTestingRepo:
                 content_height=None,
                 preview_width=None,
                 preview_height=None,
-                **kwargs,
+                **default_kwargs,
             )
 
             session.add(item)
@@ -150,9 +158,9 @@ class WorkerTestingRepo:
 
     def create_copy_command(
             self,
-            owner_uuid: UUID,
-            source_uuid: UUID,
-            target_uuid: UUID,
+            owner_uuid: str,
+            source_uuid: str,
+            target_uuid: str,
             processed_at: datetime | None = None,
     ) -> int:
         """Create test copy commands."""
@@ -170,6 +178,33 @@ class WorkerTestingRepo:
             session.commit()
             self.copy_thumbnail.append(command.id)
             return command.id
+
+    def create_media(
+            self,
+            owner_uuid: str,
+            item_uuid: str,
+            media_type: str,
+            content: bytes,
+            processed_at: datetime | None = None,
+    ) -> int:
+        """Create test media."""
+        with self.database.start_session() as session:
+            media = db_models.Media(
+                owner_uuid=owner_uuid,
+                item_uuid=item_uuid,
+                target_folder=media_type,  # FIXME - change name
+                created_at=utils.now(),
+                processed_at=processed_at,
+                content=content,
+                ext='jpg',
+                replication={}, # FIXME - remove
+                error='',
+                attempts=0,
+            )
+            session.add(media)
+            session.commit()
+            self.media.append(media.id)
+            return media.id
 
     def get_copy_thumbnail_result(
             self,
@@ -190,9 +225,15 @@ class WorkerTestingRepo:
             return item, metainfo, media, command
 
     def get_all_thumbnail(self) -> list[db_models.CommandCopyThumbnail]:
-        """Create test copy commands."""
+        """Return all copy commands."""
         with self.database.start_session() as session:
             commands = session.query(db_models.CommandCopyThumbnail).all()
+            return commands
+
+    def get_all_media(self) -> list[db_models.CommandCopyThumbnail]:
+        """Return all media."""
+        with self.database.start_session() as session:
+            commands = session.query(db_models.Media).all()
             return commands
 
     def drop_all(self) -> None:
@@ -200,16 +241,18 @@ class WorkerTestingRepo:
         if not self.users:
             return
 
-        # with self.database.start_session() as session:
-        #     stmt = sa.delete(
-        #         db_models.User
-        #     ).where(db_models.User.uuid.in_(self.users))  # type: ignore
-        #     session.execute(stmt)
-        #     stmt = sa.delete(db_models.Media)
-        #     session.execute(stmt)
-        #     # stmt = sa.delete(db_models.CommandCopyThumbnail)
-        #     # session.execute(stmt)
-        #     session.commit()
+        with self.database.start_session() as session:
+            stmt = sa.delete(
+                db_models.User
+            ).where(db_models.User.uuid.in_(self.users))  # type: ignore
+            session.execute(stmt)
+            stmt = sa.delete(
+                db_models.Media
+            ).where(db_models.Media.id.in_(self.media))  # type: ignore
+            session.execute(stmt)
+            stmt = sa.delete(db_models.CommandCopyThumbnail)
+            session.execute(stmt)
+            session.commit()
 
 
 @pytest.fixture

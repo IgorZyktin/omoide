@@ -1,153 +1,89 @@
-# -*- coding: utf-8 -*-
 """Tests.
 """
-from sqlalchemy.orm import Session
-from sqlalchemy.orm.attributes import flag_modified
+import pytest
 
 from omoide import utils
-from omoide.worker.database import Database
-from omoide.storage.database import models
+from omoide.worker import runtime
+from omoide.worker.filesystem import Filesystem
 
 
-def _fill_database(
-        database: Database,
-        user: models.User,
-        item: models.Item,
-) -> list[int]:
-    """Create required test objects."""
-    ids: list[int] = []
+@pytest.fixture
+def populate_database_media(functional_tests_worker_testing_repo):
+    repo = functional_tests_worker_testing_repo
 
-    def _create_media(_session: Session, media: models.Media) -> int:
-        _session.add(media)
-        _session.flush()
-        return media.id
+    user_uuid = repo.create_user()
+    item_uuid = repo.create_item(user_uuid)
 
-    with database.start_session() as session:
-        # this one is expected to be selected
-        new_id = _create_media(
-            session,
-            models.Media(
-                owner_uuid=user.uuid,
-                item_uuid=item.uuid,
-                target_folder='thumbnail',
-                created_at=utils.now(),
-                processed_at=None,
-                content=b'test-1',
-                ext='jpg',
-                replication={},
-                error='',
-                attempts=0,
-            )
-        )
-        ids.append(new_id)
-
-        # this one is expected to be skipped
-        new_id = _create_media(
-            session,
-            models.Media(
-                owner_uuid=user.uuid,
-                item_uuid=item.uuid,
-                target_folder='thumbnail',
-                created_at=utils.now(),
-                processed_at=None,
-                content=b'test-2',
-                ext='jpg',
-                replication={'test-hot': True},
-                error='',
-                attempts=0,
-            )
-        )
-        ids.append(new_id)
-
-        # this one is expected to be selected
-        new_id = _create_media(
-            session,
-            models.Media(
-                owner_uuid=user.uuid,
-                item_uuid=item.uuid,
-                target_folder='thumbnail',
-                created_at=utils.now(),
-                processed_at=None,
-                content=b'test-3',
-                ext='jpg',
-                replication={},
-                error='',
-                attempts=0,
-            )
-        )
-        ids.append(new_id)
-
-        # this one is expected to be skipped
-        new_id = _create_media(
-            session,
-            models.Media(
-                owner_uuid=user.uuid,
-                item_uuid=item.uuid,
-                target_folder='thumbnail',
-                created_at=utils.now(),
-                processed_at=None,
-                content=b'test-4',
-                ext='jpg',
-                replication={},
-                error='',
-                attempts=25,
-            )
-        )
-        ids.append(new_id)
-
-        session.commit()
-
-    return ids
-
-
-def _drop_resources(
-        database: Database,
-        ids: list[int],
-) -> None:
-    """Drop created test objects."""
-    with database.start_session() as session:
-        session.query(
-            models.Media
-        ).filter(
-            models.Media.id.in_(tuple(ids))  # noqa
-        ).delete()
-        session.commit()
-
-
-def _do_testing(
-        database: Database,
-        ids: list[int],
-) -> None:
-    """Perform test."""
-    selected_1, skipped_1, selected_2, skipped_2 = ids
-
-    valid_ids = database.get_media_ids(
-        formula={'test-hot': True},
-        limit=10,
-        max_attempts=5,
+    repo.create_media(
+        owner_uuid=user_uuid,
+        item_uuid=item_uuid,
+        media_type='thumbnail',
+        content=b'event-cooler',
     )
 
-    assert len(valid_ids) == 2
-
-    with database.start_session() as session:
-        media_1 = database.get_media(session, selected_1)
-        media_1.replication = {'test-hot': True}
-        flag_modified(media_1, 'replication')
-        session.commit()
-
-    dropped = database.drop_media(formula={'test-hot': True})
-    assert dropped == 2
+    return repo, user_uuid, item_uuid
 
 
-def test_worker_media_life_cycle(
-        worker_database,
-        db_test_user,
-        db_test_item,
+@pytest.fixture
+def populate_database_ready_media(functional_tests_worker_testing_repo):
+    repo = functional_tests_worker_testing_repo
+
+    user_uuid = repo.create_user()
+    item_uuid = repo.create_item(user_uuid)
+
+    repo.create_media(
+        owner_uuid=user_uuid,
+        item_uuid=item_uuid,
+        media_type='thumbnail',
+        content=b'even-cooler',
+        processed_at=utils.now(),
+    )
+
+    return repo, user_uuid, item_uuid
+
+
+def test_worker_media_only_save(
+        populate_database_media,
+        functional_tests_worker_config,
+        functional_tests_worker,
 ):
-    """Must ensure that media gets selected and deleted."""
-    ids = _fill_database(worker_database, db_test_user, db_test_item)
+    """Must ensure that media gets processed."""
+    repo, user_uuid, item_uuid = populate_database_media
+    config = functional_tests_worker_config
+    worker = functional_tests_worker
+    filesystem = Filesystem(config)
+    config.media.should_process = True
+    config.media.drop_after = False
+    config.copy_thumbnails.should_process = False
+    config.copy_thumbnails.drop_after = False
 
-    try:
-        _do_testing(worker_database, ids)
-    finally:
-        _drop_resources(worker_database, ids)
+    runtime.run_once(config, worker)
+
+    content = filesystem.load_binary(
+        owner_uuid=user_uuid,
+        item_uuid=item_uuid,
+        target_folder='thumbnail',
+        ext='jpg',
+    )
+    assert content == b'event-cooler'
+
+
+def test_worker_media_only_delete(
+        populate_database_ready_media,
+        functional_tests_worker_config,
+        functional_tests_worker,
+):
+    """Must ensure that media gets deleted."""
+    repo, *_ = populate_database_ready_media
+    config = functional_tests_worker_config
+    worker = functional_tests_worker
+    config.media.should_process = True
+    config.media.drop_after = False
+    config.copy_thumbnails.should_process = False
+    config.copy_thumbnails.drop_after = False
+
+    runtime.run_once(config, worker)
+
+    media = repo.get_all_media()
+    assert not media
+    assert worker.counter == 1

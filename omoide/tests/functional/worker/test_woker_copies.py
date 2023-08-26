@@ -9,7 +9,7 @@ from omoide.worker.filesystem import Filesystem
 
 
 @pytest.fixture
-def populate_database(functional_tests_worker_testing_repo):
+def populate_database_copies(functional_tests_worker_testing_repo):
     repo = functional_tests_worker_testing_repo
 
     user_uuid = repo.create_user()
@@ -67,11 +67,12 @@ def populate_database_ready_command(functional_tests_worker_testing_repo):
 
 @pytest.fixture
 def create_files(
-        populate_database,
+        populate_database_copies,
         functional_tests_worker_config,
         functional_tests_worker,
 ):
-    repo, user_uuid, source_item_uuid, target_item_uuid = populate_database
+    (repo, user_uuid, source_item_uuid,
+     target_item_uuid) = populate_database_copies
     config = functional_tests_worker_config
 
     filesystem = Filesystem(config)
@@ -120,7 +121,7 @@ def test_worker_copy_thumbnails_only_delete(
         functional_tests_worker_config,
         functional_tests_worker,
 ):
-    """Must ensure that copy gets processed."""
+    """Must ensure that copy gets deleted."""
     repo, *_ = populate_database_ready_command
     config = functional_tests_worker_config
     worker = functional_tests_worker
