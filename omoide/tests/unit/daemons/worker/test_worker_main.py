@@ -83,7 +83,7 @@ def test_worker_du_stuff(
     worker = mock.Mock()
     worker.config.download_media = download_media
     worker.config.drop_done_media = drop_done_media
-    worker.config.manual_copy = manual_copy
+    worker.config.copy_thumbnails = manual_copy
     worker.config.drop_done_copies = drop_done_copies
 
     worker.download_media.return_value = 1

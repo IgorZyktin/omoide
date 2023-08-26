@@ -1,17 +1,14 @@
 """Worker class.
 """
 import traceback
-from typing import Iterator
-
-from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
+from omoide.infra import custom_logging
+from omoide.storage.database import db_models
 from omoide.worker import interfaces
 from omoide.worker.database import Database
 from omoide.worker.filesystem import Filesystem
 from omoide.worker.worker_config import Config
-from omoide.infra import custom_logging
-from omoide.storage.database import models as db_models
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -35,13 +32,6 @@ class Worker(interfaces.AbsWorker):
     def counter(self) -> int:
         """Return value of the operation counter."""
         return self._counter
-
-    def _get_folders(self) -> Iterator[str]:
-        """Return all folders where we plan to save anything."""
-        if self._config.save_hot:
-            yield self._config.hot_folder
-        if self._config.save_cold:
-            yield self._config.cold_folder
 
     def download_media(self) -> None:
         """Download media from the database."""
@@ -110,70 +100,53 @@ class Worker(interfaces.AbsWorker):
         if dropped:
             LOG.debug('Dropped {} rows with media', dropped)
 
-    def manual_copy(self) -> None:
-        """Perform manual copy operations."""
-        targets = self.database.get_manual_copy_targets(self.config.batch_size)
-        LOG.debug('Got {} items to copy: {}', len(targets), targets)
+    def copy_thumbnails(self) -> None:
+        """Perform manual thumbnail copy operations."""
+        last_seen = None
+        while True:
+            with self._database.start_session():
+                batch = self._database.get_thumbnail_batch(
+                    self._config.batch_size,
+                    last_seen,
+                )
 
-        for copy_id in targets:
-            self._process_single_copy(copy_id)
+                LOG.debug('Got {} thumbnails to copy', len(batch))
+                for command in batch:
+                    # noinspection PyBroadException
+                    try:
+                        self._copy_thumbnail(command)
+                    except Exception:
+                        LOG.exception(
+                            'Failed to copy thumbnail for command {}',
+                            command.id,
+                        )
+                        command.error = traceback.format_exc()
+                    finally:
+                        command.processed_at = utils.now()
+                        last_seen = command.id
 
-    def _process_single_copy(self, copy_id: int) -> None:
+                if len(batch) < self._config.batch_size:
+                    break
+
+    def _copy_thumbnail(
+            self,
+            command: db_models.CommandCopyThumbnail,
+    ) -> None:
         """Perform filesystem operation on copying."""
-        with self.database.start_session() as session:
-            copy = self.database.select_copy_operation(session, copy_id)
-
-            if copy is None:
-                return
-
-            # noinspection PyBroadException
-            try:
-                content = self._load_content_for_copy(copy)
-                media = self.database.create_media_from_copy(copy,
-                                                             content)
-            except Exception:
-                LOG.exception('Failed to load content for copy {}',
-                              copy_id)
-                copy.status = 'fail'
-                copy.error += '\n' + traceback.format_exc()
-                copy.processed_at = utils.now()
-                session.commit()
-                return
-
-            session.add(media)
-
-            # noinspection PyBroadException
-            try:
-                self.database.copy_content_parameters(
-                    self.config, self.filesystem, session, copy)
-                self.database.mark_origin(copy)
-            except Exception:
-                LOG.exception('Failed to save changes in copy {}', copy_id)
-                copy.status = 'fail'
-                copy.error += '\n' + traceback.format_exc()
-                copy.processed_at = utils.now()
-            else:
-                copy.status = 'done'
-                copy.processed_at = utils.now()
-
-    def _load_content_for_copy(self, copy: db_models.ManualCopy) -> bytes:
-        """Return binary data corresponding to this copy operation."""
-        folder = self.config.hot_folder or self.config.cold_folder
-        bucket = utils.get_bucket(copy.source_uuid, self.config.prefix_size)
-
-        content = self.filesystem.load_from_filesystem(
-            folder,
-            str(copy.target_folder),
-            str(copy.owner_uuid),
-            bucket,
-            f'{copy.source_uuid}.{(copy.ext or "").lower()}'
+        content = self._filesystem.load_binary(
+            owner_uuid=command.owner_uuid,
+            item_uuid=command.source_uuid,
+            target_folder='thumbnail',
+            ext=command.ext,
         )
+        media = self._database.create_media_from_copy(command, content)
+        self._database.session.add(media)
+        self._database.copy_thumbnail_parameters(command, len(content))
+        self._database.mark_origin_of_thumbnail(command)
 
-        return content
-
-    def drop_manual_copies(self) -> None:
-        """Delete copy operations from the database."""
-        dropped = self._database.drop_manual_copies()
+    def drop_thumbnail_copies(self) -> None:
+        """Delete thumbnail copy operations from the DB."""
+        dropped = self._database.drop_thumbnail_copies()
 
         if dropped:
-            LOG.debug('Dropped {} rows with manual copies', dropped)
+            LOG.debug('Dropped {} rows with thumbnail copy commands', dropped)

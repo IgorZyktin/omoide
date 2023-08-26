@@ -2,6 +2,8 @@
 """
 import os.path
 from pathlib import Path
+from typing import Iterator
+from uuid import UUID
 
 from omoide import utils
 from omoide.infra import custom_logging
@@ -16,6 +18,39 @@ class Filesystem:
     def __init__(self, config: Config) -> None:
         """Initialize instance."""
         self._config = config
+
+    def _get_folders(self) -> Iterator[str]:
+        """Return all folders where we plan to save/load anything."""
+        if self._config.save_hot:
+            yield self._config.hot_folder
+        if self._config.save_cold:
+            yield self._config.cold_folder
+
+    def load_binary(
+            self,
+            owner_uuid: UUID,
+            item_uuid: UUID,
+            target_folder: str,
+            ext: str,
+    ) -> bytes:
+        """Load binary data from filesystem."""
+        bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
+        for folder in self._get_folders():
+            path = (
+                    Path(folder)
+                    / target_folder
+                    / str(owner_uuid)
+                    / bucket
+                    / f'{item_uuid}.{ext}'
+            )
+
+            if path.exists():
+                content = path.read_bytes()
+                return content
+
+        msg = (f'There is no corresponding file in folder {target_folder} '
+               f'for {owner_uuid=}, {item_uuid=} and {ext=}')
+        raise FileNotFoundError(msg)
 
     @staticmethod
     def ensure_folder_exists(*args: str) -> Path:
@@ -62,20 +97,3 @@ class Filesystem:
         left_segment, *_ = name.split(separator)
         moment = utils.now().isoformat()
         return f'{left_segment}{separator}{moment}{ext}'
-
-    @staticmethod
-    def load_from_filesystem(*args: str | Path) -> bytes:
-        """Load binary data from filesystem."""
-        filename = Path().joinpath(*args)
-        content = filename.read_bytes()
-        return content
-
-    @staticmethod
-    def get_size(*args: str | Path) -> int | None:
-        """Get sze of the file in bytes."""
-        try:
-            filename = Path().joinpath(*args)
-            size = os.stat(filename).st_size
-        except OSError:
-            size = None
-        return size

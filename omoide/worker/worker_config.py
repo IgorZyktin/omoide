@@ -16,8 +16,8 @@ class Media(pydantic.BaseModel):
     drop_after: bool = True
 
 
-class Copy(pydantic.BaseModel):
-    """Desired way of copy processing."""
+class CopyThumbnails(pydantic.BaseModel):
+    """Desired way of thumbnail copy processing."""
     should_process: bool = True
     drop_after: bool = True
 
@@ -96,7 +96,7 @@ class Config(pydantic_settings.BaseSettings):
     batch_size: int = 25
     prefix_size: int = 2
     media: Media = Media()
-    manual_copy: Copy = Copy()
+    copy_thumbnails: CopyThumbnails = CopyThumbnails()
     timer_strategy: TimerStrategy = TimerStrategy()
     strategy: Literal['TimerStrategy', 'SignalStrategy'] = 'SignalStrategy'
 

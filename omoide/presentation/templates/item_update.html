@@ -78,10 +78,10 @@
                    class="height-auto">
 
             <label for="thumbnail_origin">Origin of thumbnail:</label>
-            {% if metainfo and metainfo.extras.get('copied_cover_from') %}
+            {% if metainfo and metainfo.extras.get('copied_thumbnail_from') %}
                 <input id="thumbnail_origin"
                        type="text"
-                       value="{{ metainfo.extras.get('copied_cover_from') }}"
+                       value="{{ metainfo.extras.get('copied_thumbnail_from') }}"
                        class="height-auto">
             {% else %}
                 <input id="thumbnail_origin"

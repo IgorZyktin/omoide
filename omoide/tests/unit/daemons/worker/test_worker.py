@@ -104,7 +104,7 @@ def test_worker_manual_copy(valid_worker_config):
     database.get_manual_copy_targets.return_value = [1, 2, 3, 4, 5]
 
     # act
-    total = worker.manual_copy(mock.Mock(), database)
+    total = worker.copy_thumbnails(mock.Mock(), database)
 
     # assert
     assert total == 3
@@ -158,7 +158,7 @@ def test_worker_drop_manual_copies(valid_worker_config):
     database.drop_manual_copies.return_value = 1
 
     # act
-    total = worker.drop_manual_copies(mock.Mock(), database)
+    total = worker.drop_thumbnail_copies(mock.Mock(), database)
 
     # assert
     assert total == 1

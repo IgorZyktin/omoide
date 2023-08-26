@@ -133,7 +133,7 @@ def _do_testing(
             session.commit()
             assert media_1.id is not None
 
-    dropped = database.drop_manual_copies()
+    dropped = database.drop_thumbnail_copies()
     assert dropped == 1
 
     dropped = database.drop_media(formula={})
