@@ -52,25 +52,46 @@ class Filesystem:
                f'for {owner_uuid=}, {item_uuid=} and {ext=}')
         raise FileNotFoundError(msg)
 
+    def save_binary(
+            self,
+            owner_uuid: UUID,
+            item_uuid: UUID,
+            target_folder: str,
+            ext: str,
+            content: bytes,
+    ) -> None:
+        """Load binary data from filesystem."""
+        bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
+        filename = f'{item_uuid}.{ext}'
+        for folder in self._get_folders():
+            path = (
+                    Path(folder)
+                    / target_folder
+                    / str(owner_uuid)
+                    / bucket
+            )
+            self.ensure_folder_exists(path)
+            self.safely_save(path, filename, content)
+
     @staticmethod
-    def ensure_folder_exists(*args: str) -> Path:
+    def ensure_folder_exists(path: Path) -> bool:
         """Create folder if needed."""
-        path = Path().joinpath(*args)
+        created = False
 
         if not path.exists():
             LOG.debug('Creating path {}', path)
+            created = True
 
         path.mkdir(parents=True, exist_ok=True)
-        return path
+        return created
 
     def safely_save(
             self,
-            path: str | Path,
+            path: Path,
             filename: str,
             content: bytes,
     ) -> Path:
         """Save file but not overwrite."""
-        path = Path(path)
         old_path = path / filename
         target_path = old_path
 

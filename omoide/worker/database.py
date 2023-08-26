@@ -70,65 +70,24 @@ class Database:
 
         return query.all()
 
-    def get_media_ids(self, limit: int) -> list[int]:
-        """Extract media resources to save."""
-        stmt = sa.select(
-            db_models.Media.id
-        ).where(
-            db_models.Media.error == '',
-        ).order_by(
-            db_models.Media.id
-        ).limit(
-            limit
-        )
-        with self._engine.begin() as conn:
-            response = conn.execute(stmt).fetchall()
+    def get_media_batch(
+            self,
+            batch_size: int,
+            last_seen: int | None,
+    ) -> list[db_models.Media]:
+        """Return list of media records to download."""
+        query = self.session.query(db_models.Media)
 
-        return [x for x, in response]
+        if last_seen is not None:
+            query = query.filter(
+                db_models.Media.id > last_seen
+            )
 
-    @staticmethod
-    def get_media(
-            session: Session,
-            media_id: int,
-    ) -> db_models.Media | None:
-        """Select Media for update."""
-        return session.query(
-            db_models.Media
-        ).filter_by(
-            id=media_id
-        ).first()
+        query = query.order_by(
+            db_models.Media.id,
+        ).limit(batch_size)
 
-    def get_manual_copy_targets(self, limit: int) -> list[int]:
-        """Extract copy operations to process."""
-        stmt = sa.select(
-            db_models.ManualCopy.id
-        ).where(
-            db_models.ManualCopy.processed_at == None,  # noqa
-            db_models.ManualCopy.status == 'init',
-        ).order_by(
-            db_models.ManualCopy.id
-        ).limit(
-            limit
-        )
-        with self.engine.begin() as conn:
-            response = conn.execute(stmt).fetchall()
-
-        return [x for x, in response]
-
-    @staticmethod
-    def select_copy_operation(
-            session: Session,
-            copy_id: int,
-    ) -> db_models.ManualCopy | None:
-        """Select manual copy operation for update."""
-        result = session.query(
-            db_models.ManualCopy
-        ).with_for_update(
-            skip_locked=True
-        ).filter_by(
-            id=copy_id
-        ).first()
-        return result
+        return query.all()
 
     @staticmethod
     def create_media_from_copy(
@@ -140,7 +99,7 @@ class Database:
         return db_models.Media(
             owner_uuid=command.owner_uuid,
             item_uuid=command.target_uuid,
-            target_folder=command.target_folder,
+            target_folder='thumbnail',
             created_at=utils.now(),
             processed_at=None,
             content=content,

@@ -26,61 +26,53 @@ class Worker(interfaces.AbsWorker):
         self._config = config
         self._database = database
         self._filesystem = filesystem
-        self._counter = 0
-
-    @property
-    def counter(self) -> int:
-        """Return value of the operation counter."""
-        return self._counter
+        self.counter = 0
 
     def download_media(self) -> None:
         """Download media from the database."""
-        media_ids = self._database.get_media_ids(self._config.batch_size)
-        LOG.debug('Got {} media records: {}', len(media_ids), media_ids)
+        last_seen = None
+        while True:
+            with self._database.start_session():
+                batch = self._database.get_media_batch(
+                    self._config.batch_size,
+                    last_seen,
+                )
 
-        for media_id in media_ids:
-            self._download_single_media(media_id)
+                LOG.debug('Got {} media records to download', len(batch))
+                for media in batch:
+                    # noinspection PyBroadException
+                    try:
+                        self._download_single_media(media)
+                    except Exception:
+                        LOG.exception(
+                            'Failed to download media {}',
+                            media.id,
+                        )
+                        media.error = traceback.format_exc()
+                    finally:
+                        self.counter += 1
+                        media.processed_at = utils.now()
+                        last_seen = media.id
 
-    def _download_single_media(self, media_id: int) -> None:
+                self._database.session.commit()
+                if len(batch) < self._config.batch_size:
+                    break
+
+    def _download_single_media(self, media: db_models.Media) -> None:
         """Save single media record."""
-        with self._database.start_session() as session:
-            media = self._database.get_media(session, media_id)
-
-            if media is None:
-                return None
-
-            if not media.ext or not media.content:
-                return
-
-            # noinspection PyBroadException
-            try:
-                self._download_media_content(media)
-                self._alter_item_corresponding_to_media(media)
-            except Exception:
-                media.error = traceback.format_exc()
-                LOG.exception('Failed to download media {}', media_id)
-
-            media.processed_at = utils.now()
-            session.commit()
-
-    def _download_media_content(
-            self,
-            media: db_models.Media,
-    ) -> None:
-        """Save content for media as files."""
-        for folder in self._get_folders():
-            path = self._filesystem.ensure_folder_exists(
-                folder,
-                media.target_folder,
-                str(media.owner_uuid),
-                str(media.item_uuid)[:self._config.prefix_size],
-            )
-            filename = f'{media.item_uuid}.{media.ext or ""}'
-            self._filesystem.safely_save(path, filename, media.content)
+        self._filesystem.save_binary(
+            owner_uuid=media.owner_uuid,
+            item_uuid=media.item_uuid,
+            target_folder=media.target_folder,  # FIXME - alter to media_type
+            ext=media.ext,
+            content=media.content,
+        )
+        self._alter_item_corresponding_to_media(media)
 
     @staticmethod
     def _alter_item_corresponding_to_media(media: db_models.Media) -> None:
         """Store changes in item description."""
+        # FIXME - alter to media_type
         if media.target_folder == 'content':
             media.item.content_ext = media.ext
             media.item.metainfo.content_size = len(media.content or b'')
@@ -122,9 +114,11 @@ class Worker(interfaces.AbsWorker):
                         )
                         command.error = traceback.format_exc()
                     finally:
+                        self.counter += 1
                         command.processed_at = utils.now()
                         last_seen = command.id
 
+                self._database.session.commit()
                 if len(batch) < self._config.batch_size:
                     break
 

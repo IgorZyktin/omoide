@@ -69,11 +69,11 @@ def perform_one_work_cycle(
         worker: interfaces.AbsWorker,
 ) -> None:
     """Perform all worker related duties."""
-    # if config.media.should_process:
-    #     # worker.download_media()
-    #
-    #     if config.media.drop_after:
-    #         worker.drop_media()
+    if config.media.should_process:
+        worker.download_media()
+
+        if config.media.drop_after:
+            worker.drop_media()
 
     if config.copy_thumbnails.should_process:
         worker.copy_thumbnails()
