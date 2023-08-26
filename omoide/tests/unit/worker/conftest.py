@@ -4,17 +4,16 @@ import datetime
 import tempfile
 
 import pytest
-from pydantic import SecretStr
 
-from omoide.daemons.worker import worker_config
+from omoide.worker import worker_config
+from omoide.worker import interfaces
 
 
 @pytest.fixture
 def valid_worker_config_dict():
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield dict(
-            name='test',
-            db_uri=SecretStr('test'),
+            db_uri='test',
             db_echo=False,
             hot_folder=tmp_dir,
             cold_folder=None,
@@ -23,13 +22,11 @@ def valid_worker_config_dict():
             log_level='INFO',
             batch_size=5,
             prefix_size=3,
-            run_once=True,
             media=dict(
                 should_process=True,
                 drop_after=True,
-                replication_formula={'test-hot': True, 'test-cold': True}
             ),
-            manual_copy=dict(
+            copy_thumbnails=dict(
                 should_process=True,
                 drop_after=True,
             ),
@@ -45,6 +42,24 @@ def valid_worker_config_dict():
 @pytest.fixture
 def valid_worker_config(valid_worker_config_dict):
     return worker_config.Config(**valid_worker_config_dict)
+
+
+@pytest.fixture
+def dummy_worker_strategy():
+    class DummyStrategy(interfaces.AbsStrategy):
+        def init(self) -> None:
+            pass
+
+        def stop(self) -> None:
+            pass
+
+        def wait(self) -> bool:
+            return True
+
+        def adjust(self, done_something: bool) -> None:
+            pass
+
+    return DummyStrategy()
 
 
 @pytest.fixture

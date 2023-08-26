@@ -4,8 +4,8 @@ import pydantic
 import pytest
 from pydantic import ValidationError
 
-from omoide.daemons.worker.worker_config import Config
-from omoide.daemons.worker.worker_config import serialize
+from omoide.worker.worker_config import Config
+from omoide.worker.worker_config import serialize
 
 
 def test_worker_config_correct(valid_worker_config_dict):
