@@ -146,10 +146,12 @@ class Config(pydantic_settings.BaseSettings):
     @pydantic.model_validator(mode='after')
     def check_folders_exist(self) -> 'Config':
         """Check."""
-        hot_exists = (self.hot_folder is not None
-                      and self.hot_folder.exists())
-        cold_exists = (self.cold_folder is not None
-                       and self.cold_folder.exists())
+        hot_exists = (
+            self.hot_folder is not None and self.hot_folder.exists()
+        )
+        cold_exists = (
+            self.cold_folder is not None and self.cold_folder.exists()
+        )
 
         if not hot_exists and not cold_exists:
             msg = ('Both hot and cold folders do not exist: '
