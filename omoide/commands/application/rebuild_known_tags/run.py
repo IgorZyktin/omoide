@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Refresh cache for known tags.
 """
 from collections import defaultdict
@@ -86,23 +85,23 @@ def drop_unused_tags(session: Session) -> None:
     """Delete all tags with counter less or equal zero."""
     stmt = sa.delete(
         models.KnownTags
-    ).filter(
+    ).where(
         models.KnownTags.counter <= 0
     )
-    rowcount = session.execute(stmt).scalar()
+    response = session.execute(stmt)
 
-    if rowcount:
-        LOG.info('Dropped {} tags for known users', rowcount)
+    if response.rowcount:
+        LOG.info('Dropped {} tags for known users', response.rowcount)
 
     stmt = sa.delete(
         models.KnownTagsAnon
     ).filter(
         models.KnownTagsAnon.counter <= 0
     )
-    rowcount = session.execute(stmt).scalar()
+    response = session.execute(stmt)
 
-    if rowcount:
-        LOG.info('Dropped {} tags for anon user', rowcount)
+    if response.rowcount:
+        LOG.info('Dropped {} tags for anon user', response.rowcount)
 
     session.commit()
 
