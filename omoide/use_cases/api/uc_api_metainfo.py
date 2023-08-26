@@ -50,7 +50,7 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
             current_metainfo.updated_at = utils.now()
 
             current_metainfo.user_time = metainfo.user_time
-            current_metainfo.media_type = metainfo.media_type
+            current_metainfo.content_type = metainfo.content_type
 
             current_metainfo.author = metainfo.author
             current_metainfo.author_url = metainfo.author_url

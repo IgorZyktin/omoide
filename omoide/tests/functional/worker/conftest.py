@@ -135,7 +135,7 @@ class WorkerTestingRepo:
                 updated_at=utils.now(),
                 deleted_at=None,
                 user_time=None,
-                media_type='image/jpg',
+                content_type='image/jpg',
                 author=None,
                 author_url=None,
                 saved_from_url=None,

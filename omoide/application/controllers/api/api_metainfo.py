@@ -31,7 +31,7 @@ async def api_update_metainfo(
         updated_at=app_constants.DUMMY_TIME,
         deleted_at=None,
         user_time=in_metainfo.user_time,
-        media_type=in_metainfo.media_type,
+        content_type=in_metainfo.content_type,
         author=in_metainfo.author,
         author_url=in_metainfo.author_url,
         saved_from_url=in_metainfo.saved_from_url,

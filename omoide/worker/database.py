@@ -146,7 +146,7 @@ class Database:
             target.metainfo.content_width = source.metainfo.content_width
             target.metainfo.content_height = source.metainfo.content_height
             target.content_ext = source.content_ext
-            target.metainfo.media_type = source.metainfo.media_type
+            target.metainfo.content_type = source.metainfo.content_type
 
         elif command.media_type == constants.PREVIEW:
             target.metainfo.preview_size = size

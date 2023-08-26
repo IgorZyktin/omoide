@@ -613,7 +613,7 @@ async function uploadMetainfoForProxy(proxy) {
                 preview_height: proxy.metainfo.preview_height,
                 thumbnail_width: proxy.metainfo.thumbnail_width,
                 thumbnail_height: proxy.metainfo.thumbnail_height,
-                media_type: proxy.metainfo.media_type,
+                content_type: proxy.metainfo.content_type,
                 // TODO: add author metainfo to the form
                 author: null,
                 author_url: null,
@@ -673,7 +673,7 @@ async function generateMetainfoForProxy(proxy, uploadState) {
     proxy.metainfo.generated = true
     proxy.actualSteps.add('generateMetainfoForProxy')
     proxy.metainfo.user_time = tryGettingUserTime(proxy)
-    proxy.metainfo.media_type = proxy.file.type
+    proxy.metainfo.content_type = proxy.file.type
     proxy.metainfo.original_file_name = proxy.file.name
     proxy.metainfo.original_file_modified_at = lastModified
 }

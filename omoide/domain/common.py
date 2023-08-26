@@ -236,7 +236,7 @@ class Metainfo(BaseModel):
     deleted_at: datetime | None = None
     user_time: datetime | None = None
 
-    media_type: str | None = None
+    content_type: str | None = None
 
     author: str | None = None
     author_url: str | None = None
