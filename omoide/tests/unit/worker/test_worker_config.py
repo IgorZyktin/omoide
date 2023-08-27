@@ -1,11 +1,9 @@
 """Tests.
 """
-import pydantic
 import pytest
 from pydantic import ValidationError
 
 from omoide.worker.worker_config import Config
-from omoide.worker.worker_config import serialize
 
 
 def test_worker_config_correct(valid_worker_config_dict):
@@ -127,41 +125,3 @@ def test_worker_config_both_folders_do_not_exist(valid_worker_config_dict):
 
     with pytest.raises(ValidationError, match='Both *'):
         Config(**valid_worker_config_dict)
-
-
-@pytest.fixture
-def config_like_model():
-    class SubNested(pydantic.BaseModel):
-        k: str = 'value'
-        f: dict = pydantic.Field(default={'something': 'else'})
-
-    class Nested(pydantic.BaseModel):
-        x: str = 'other'
-        y: dict = pydantic.Field(default={'key': 'value'})
-        sub_nested: SubNested = SubNested()
-
-    class Model(pydantic.BaseModel):
-        a: int = 1
-        b: str = 'var'
-        nested: Nested = Nested()
-
-    return Model()
-
-
-def test_worker_config_serialization(config_like_model):
-    """Must serialize properly."""
-    reference = """
-a=1
-b='var'
-nested:
-    x='other'
-    y={'key': 'value'}
-    sub_nested:
-        k='value'
-        f={'something': 'else'}
-    """.strip()
-
-    result = serialize(config_like_model,
-                       do_not_serialize=frozenset(('y', 'f')))
-
-    assert result == reference

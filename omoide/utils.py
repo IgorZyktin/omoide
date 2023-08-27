@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Common utils.
 """
 import datetime
@@ -275,3 +274,42 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
         return result
 
     return wrapper
+
+
+def serialize_model(
+        model: Any,
+        do_not_serialize: Collection[str] = frozenset()
+) -> str:
+    """Convert model to human-readable string."""
+    attributes: list[str] = []
+    model_to_list(
+        model=model,
+        attributes=attributes,
+        do_not_serialize=do_not_serialize,
+        depth=0,
+    )
+    return '\n'.join(attributes)
+
+
+def model_to_list(
+        model: Any | dict[str, Any],
+        attributes: list[str],
+        do_not_serialize: Collection[str],
+        depth: int,
+) -> None:
+    """Convert each field to a list entry."""
+    if isinstance(model, dict):
+        payload = model
+    else:
+        method = getattr(model, 'model_dump')
+        payload = method()
+
+    prefix = '    ' * depth
+    for key, value in payload.items():
+        if isinstance(value, dict) and key not in do_not_serialize:
+            line = f'{prefix}{key}:'
+            attributes.append(line)
+            model_to_list(value, attributes, do_not_serialize, depth + 1)
+        else:
+            line = f'{prefix}{key}={value!r}'
+            attributes.append(line)

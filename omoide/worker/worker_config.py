@@ -2,7 +2,6 @@
 """
 from functools import cache
 from pathlib import Path
-from typing import Any
 from typing import Literal
 from typing import TypeAlias
 
@@ -168,44 +167,6 @@ class Config(pydantic_settings.BaseSettings):
             raise ValueError(msg)
 
         return self
-
-
-def serialize(
-        model: pydantic.BaseModel,
-        do_not_serialize: frozenset = frozenset()
-) -> str:
-    """Convert config to human-readable string."""
-    attributes: list[str] = []
-    model_to_list(
-        model=model,
-        attributes=attributes,
-        do_not_serialize=do_not_serialize,
-        depth=0,
-    )
-    return '\n'.join(attributes)
-
-
-def model_to_list(
-        model: pydantic.BaseModel | dict[str, Any],
-        attributes: list[str],
-        do_not_serialize: frozenset,
-        depth: int,
-) -> None:
-    """Convert each field to a list entry."""
-    if isinstance(model, pydantic.BaseModel):
-        payload = model.model_dump()
-    else:
-        payload = model
-
-    prefix = '    ' * depth
-    for key, value in payload.items():
-        if isinstance(value, dict) and key not in do_not_serialize:
-            line = f'{prefix}{key}:'
-            attributes.append(line)
-            model_to_list(value, attributes, do_not_serialize, depth + 1)
-        else:
-            line = f'{prefix}{key}={value!r}'
-            attributes.append(line)
 
 
 @cache
