@@ -1,32 +1,23 @@
-"""Collection to force copying of covers.
+"""Collection to force copying of thumbnails.
 """
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from omoide import domain
+from omoide import constants
 from omoide import utils
 from omoide.commands.application.force_cover_copying.cfg import Config
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
+from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
-    """Show disk usage for users."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+def run(config: Config, database: SyncDatabase) -> None:
+    """Copy thumbnail from children to parents."""
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
     with database.start_session() as session:
         users = helpers.get_all_corresponding_users(session, config.only_users)
@@ -52,9 +43,6 @@ def run(
             session.commit()
 
     LOG.info('Total operations: {}', total_operations)
-
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
 def get_leaf_items(
@@ -132,36 +120,11 @@ def copy_properties(
         child_metainfo: db_models.Metainfo,
 ) -> None:
     """Copy basic parameters."""
-    parameters_items = [
-        'content_ext',
-        'preview_ext',
-        'thumbnail_ext',
-    ]
+    parent.thumbnail_ext = child.thumbnail_ext
 
-    for parameter in parameters_items:
-        setattr(parent, parameter,
-                getattr(child, parameter))
-
-    parameters_metainfo = [
-        'media_type',
-
-        'content_size',
-        'preview_size',
-        'thumbnail_size',
-
-        'content_width',
-        'content_height',
-
-        'preview_width',
-        'preview_height',
-
-        'thumbnail_width',
-        'thumbnail_height',
-    ]
-
-    for parameter in parameters_metainfo:
-        setattr(parent_metainfo, parameter,
-                getattr(child_metainfo, parameter))
+    parent_metainfo.thumbnail_width = child_metainfo.thumbnail_width
+    parent_metainfo.thumbnail_height = child_metainfo.thumbnail_height
+    parent_metainfo.thumbnail_size = child_metainfo.thumbnail_size
 
     helpers.insert_into_metainfo_extras(
         session=session,
@@ -178,21 +141,15 @@ def invoke_worker_to_copy(
         child: db_models.Item,
 ) -> None:
     """Write info in the db so worker could complete the job."""
-    now = utils.now()
-
-    for media_type in domain.MEDIA_TYPES:
-        ext = getattr(child, f'{media_type}_ext')
-        assert ext is not None
-
-        copy = db_models.CommandCopy(
-            created_at=now,
-            processed_at=None,
-            error='',
-            owner_uuid=parent.owner_uuid,
-            source_uuid=child.uuid,
-            target_uuid=parent.uuid,
-            media_type=media_type,
-            ext=ext,
-        )
-        session.add(copy)
-        session.flush([copy])
+    copy = db_models.CommandCopy(
+        created_at=utils.now(),
+        processed_at=None,
+        error='',
+        owner_uuid=str(parent.owner_uuid),
+        source_uuid=str(child.uuid),
+        target_uuid=str(parent.uuid),
+        media_type=constants.THUMBNAIL,
+        ext=child.thumbnail_ext,
+    )
+    session.add(copy)
+    session.flush([copy])

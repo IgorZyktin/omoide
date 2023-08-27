@@ -209,21 +209,18 @@ def command_du(**kwargs) -> None:
             run.run(config, database)
 
 
-@cli.command(
-    name='force_cover_copying',
-)
+@cli.command(name='force_thumbnail_copying')
 @click.option(
     '--db-url',
     required=True,
     help='Database URL',
 )
 @click.option(
-    '--limit-to-user',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    '--only-users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 def command_force_cover_copying(**kwargs) -> None:
-    """Force collections to explicitly write origins of their covers.
+    """Force collections to explicitly write origins of their thumbnails.
 
     May require you to run it more than one time.
     """
@@ -231,16 +228,16 @@ def command_force_cover_copying(**kwargs) -> None:
     from omoide.commands.application.force_cover_copying import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user', []))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
         with helpers.timing(
                 callback=LOG.info,
-                start_template='Forcing items to copy covers...',
+                start_template='Forcing items to copy thumbnails...',
         ):
-            run.run(database, config)
+            run.run(config, database)
 
 
 # Filesystem related commands -------------------------------------------------
