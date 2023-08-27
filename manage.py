@@ -159,8 +159,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
 )
 @click.option(
     '--only-users',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 @click.option(
     '--log-every-item/--no-log-every-item',
@@ -173,7 +172,7 @@ def cmd_compact_tags(**kwargs: str | bool):
     from omoide.commands.application.compact_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('only_users'))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -183,9 +182,7 @@ def cmd_compact_tags(**kwargs: str | bool):
             run.run(config, database)
 
 
-@cli.command(
-    name='du',
-)
+@cli.command(name='du')
 @click.option(
     '--db-url',
     required=True,
@@ -193,9 +190,8 @@ def cmd_compact_tags(**kwargs: str | bool):
     help='Database URL',
 )
 @click.option(
-    '--limit-to-user',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    '--only-users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 def command_du(**kwargs) -> None:
     """Show disk usage for every user."""
@@ -203,16 +199,14 @@ def command_du(**kwargs) -> None:
     from omoide.commands.application.du import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user', []))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-                callback=LOG.info,
-                start_template='Calculating total disk usage...',
-        ):
-            run.run(database, config)
+        with helpers.timing(callback=LOG.info,
+                            start_template='Calculating total disk usage...'):
+            run.run(config, database)
 
 
 @cli.command(
