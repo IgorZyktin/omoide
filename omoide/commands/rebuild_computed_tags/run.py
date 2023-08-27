@@ -9,8 +9,8 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import Connection
 
 from omoide import utils
-from omoide.commands.application.rebuild_computed_tags.cfg import Config
-from omoide.commands.common import helpers
+from omoide.commands import helpers
+from omoide.commands.rebuild_computed_tags.cfg import Config
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database import sync_db

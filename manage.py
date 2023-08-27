@@ -8,7 +8,7 @@ import click
 from pydantic import SecretStr
 
 from omoide import utils
-from omoide.commands.common import helpers
+from omoide.commands import helpers
 from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
 from omoide.storage.database import sync_db
@@ -41,9 +41,8 @@ def cli():
 )
 def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
     """Manually create user."""
-    from omoide.commands.application.create_user import main
+    from omoide.commands.create_user import main
     asyncio.run(main.run(
-        logger=custom_logging.get_logger(__name__),
         authenticator=dep.get_authenticator(),
         items_repo=dep.get_items_write_repo(),
         users_repo=dep.get_users_write_repo(),
@@ -68,9 +67,8 @@ def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
 )
 def cmd_change_password(uuid: str, password: str):
     """Manually change password for user."""
-    from omoide.commands.application.change_password import main
+    from omoide.commands.change_password import main
     asyncio.run(main.run(
-        logger=custom_logging.get_logger(__name__),
         authenticator=dep.get_authenticator(),
         users_repo=dep.get_users_write_repo(),
         raw_uuid=uuid,
@@ -101,8 +99,8 @@ def cmd_change_password(uuid: str, password: str):
 )
 def command_rebuild_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
-    from omoide.commands.application.rebuild_known_tags import cfg
-    from omoide.commands.application.rebuild_known_tags import run
+    from omoide.commands.rebuild_known_tags import cfg
+    from omoide.commands.rebuild_known_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
@@ -133,8 +131,8 @@ def command_rebuild_known_tags(**kwargs: str | bool):
 )
 def command_rebuild_computed_tags(**kwargs: str | bool):
     """Rebuild all computed tags from the scratch."""
-    from omoide.commands.application.rebuild_computed_tags import cfg
-    from omoide.commands.application.rebuild_computed_tags import run
+    from omoide.commands.rebuild_computed_tags import cfg
+    from omoide.commands.rebuild_computed_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
@@ -165,8 +163,8 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
 )
 def cmd_compact_tags(**kwargs: str | bool):
     """If item and its parent share some tags, try to remove duplicates."""
-    from omoide.commands.application.compact_tags import cfg
-    from omoide.commands.application.compact_tags import run
+    from omoide.commands.compact_tags import cfg
+    from omoide.commands.compact_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
@@ -192,8 +190,8 @@ def cmd_compact_tags(**kwargs: str | bool):
 )
 def command_du(**kwargs) -> None:
     """Show disk usage for every user."""
-    from omoide.commands.application.du import cfg
-    from omoide.commands.application.du import run
+    from omoide.commands.du import cfg
+    from omoide.commands.du import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
@@ -221,8 +219,8 @@ def command_force_cover_copying(**kwargs) -> None:
 
     May require you to run it more than one time.
     """
-    from omoide.commands.application.force_cover_copying import cfg
-    from omoide.commands.application.force_cover_copying import run
+    from omoide.commands.force_cover_copying import cfg
+    from omoide.commands.force_cover_copying import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
@@ -280,8 +278,8 @@ def command_force_cover_copying(**kwargs) -> None:
 )
 def command_refresh_file_sizes_in_db(**kwargs) -> None:
     """Recalculate all file sizes for every item."""
-    from omoide.commands.filesystem.refresh_file_sizes_in_db import cfg
-    from omoide.commands.filesystem.refresh_file_sizes_in_db import run
+    from omoide.commands.refresh_file_sizes_in_db import cfg
+    from omoide.commands.refresh_file_sizes_in_db import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
@@ -339,8 +337,8 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
 )
 def command_rebuild_image_sizes(**kwargs) -> None:
     """Rebuild all content/preview/thumbnail sizes."""
-    from omoide.commands.filesystem.rebuild_image_sizes import cfg
-    from omoide.commands.filesystem.rebuild_image_sizes import run
+    from omoide.commands.rebuild_image_sizes import cfg
+    from omoide.commands.rebuild_image_sizes import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))

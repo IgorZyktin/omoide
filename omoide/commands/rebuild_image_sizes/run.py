@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from omoide import domain
 from omoide import infra
 from omoide import utils
-from omoide.commands.common import helpers
-from omoide.commands.filesystem.rebuild_image_sizes.cfg import Config
+from omoide.commands import helpers
+from omoide.commands.rebuild_image_sizes.cfg import Config
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
