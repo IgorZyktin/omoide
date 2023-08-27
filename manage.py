@@ -296,9 +296,7 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
             run.run(config, database)
 
 
-@cli.command(
-    name='rebuild_image_sizes',
-)
+@cli.command(name='rebuild_image_sizes')
 @click.option(
     '--db-url',
     required=True,
@@ -320,9 +318,8 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     show_default=True,
 )
 @click.option(
-    '--limit-to-user',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    '--only-users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 @click.option(
     '--only-corrupted',
@@ -346,15 +343,14 @@ def command_rebuild_image_sizes(**kwargs) -> None:
     from omoide.commands.filesystem.rebuild_image_sizes import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user', []))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-                start_template='Rebuilding all image sizes...',
-        ):
-            run.run(database, config)
+        with helpers.timing(callback=LOG.info,
+                            start_template='Rebuilding all image sizes...'):
+            run.run(config, database)
 
 
 if __name__ == '__main__':
