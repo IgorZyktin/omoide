@@ -5,9 +5,10 @@ import click
 from omoide.infra import custom_logging
 from omoide.worker import runtime
 from omoide.worker import worker_config
-from omoide.worker.database import Database
+from omoide.worker.database import WorkerDatabase
 from omoide.worker.filesystem import Filesystem
 from omoide.worker.worker import Worker
+from omoide import utils
 
 
 @click.command()
@@ -25,10 +26,10 @@ def main(once: bool):
 
     logger = custom_logging.get_logger(__name__)
     logger.info('Started Omoide Worker Daemon')
-    logger.info('\nConfig:\n{}', worker_config.serialize(config))
+    logger.info('\nConfig:\n{}', utils.serialize_model(config))
 
-    database = Database(
-        db_uri=config.db_uri.get_secret_value(),
+    database = WorkerDatabase(
+        db_url=config.db_url.get_secret_value(),
         echo=config.db_echo,
     )
 

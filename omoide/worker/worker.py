@@ -7,7 +7,7 @@ from omoide import utils
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
 from omoide.worker import interfaces
-from omoide.worker.database import Database
+from omoide.worker.database import WorkerDatabase
 from omoide.worker.filesystem import Filesystem
 from omoide.worker.worker_config import Config
 
@@ -20,7 +20,7 @@ class Worker(interfaces.AbsWorker):
     def __init__(
             self,
             config: Config,
-            database: Database,
+            database: WorkerDatabase,
             filesystem: Filesystem,
     ) -> None:
         """Initialize instance."""

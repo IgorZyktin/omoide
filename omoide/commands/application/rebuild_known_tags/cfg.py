@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
 """Command configuration.
 """
-from uuid import UUID
-
 from pydantic import BaseModel
 from pydantic import SecretStr
 
@@ -12,4 +9,4 @@ class Config(BaseModel):
     db_url: SecretStr
     anon: bool
     known: bool
-    only_users: list[UUID]
+    only_users: list[str]

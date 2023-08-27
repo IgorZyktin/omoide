@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """Tests.
 """
 from uuid import UUID
 
+import pydantic
 import pytest
 
 from omoide import utils
+from omoide.utils import serialize_model
 
 
 @pytest.mark.parametrize('uuid,length,result', [
@@ -103,3 +104,76 @@ def test_byte_count_to_text_en(size, reference):
 def test_format_as_human_readable_time(seconds, reference):
     """Must convert seconds into human-readable time."""
     assert utils.human_readable_time(seconds) == reference
+
+
+@pytest.fixture
+def config_like_model():
+    class SubNested(pydantic.BaseModel):
+        k: str = 'value'
+        f: dict = pydantic.Field(default={'something': 'else'})
+
+    class Nested(pydantic.BaseModel):
+        x: str = 'other'
+        y: dict = pydantic.Field(default={'key': 'value'})
+        sub_nested: SubNested = SubNested()
+
+    class Model(pydantic.BaseModel):
+        a: int = 1
+        b: str = 'var'
+        nested: Nested = Nested()
+
+    return Model()
+
+
+@pytest.fixture
+def config_like_dict():
+    return {
+        'a': 1,
+        'b': 'var',
+        'nested': {
+            'x': 'other',
+            'y': {'key': 'value'},
+            'sub_nested': {
+                'k': 'value',
+                'f': {'something': 'else'},
+            }
+        }
+    }
+
+
+@pytest.fixture
+def serialization_reference():
+    return """
+a=1
+b='var'
+nested:
+    x='other'
+    y={'key': 'value'}
+    sub_nested:
+        k='value'
+        f={'something': 'else'}
+    """.strip()
+
+
+def test_serialize_model_pydantic(config_like_model, serialization_reference):
+    """Must serialize properly."""
+    result = serialize_model(config_like_model,
+                             do_not_serialize=frozenset(('y', 'f')))
+
+    assert result == serialization_reference
+
+
+def test_serialize_model_dict(config_like_dict, serialization_reference):
+    """Must serialize properly."""
+    result = serialize_model(config_like_dict,
+                             do_not_serialize=frozenset(('y', 'f')))
+
+    assert result == serialization_reference
+
+
+def test_split():
+    """Must separate string and filter out empty values."""
+    reference = ['a', 'b', 'c']
+    result = utils.split(',a,b,,c,')
+
+    assert result == reference

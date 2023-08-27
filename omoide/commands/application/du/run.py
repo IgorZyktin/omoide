@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Disk Usage command.
 """
 import dataclasses
@@ -6,39 +5,30 @@ import functools
 
 import sqlalchemy as sa
 from prettytable import PrettyTable
-from sqlalchemy.orm import Session
+from sqlalchemy.engine import Connection
 
 from omoide import utils
 from omoide.commands.application.du.cfg import Config
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
+from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
+def run(config: Config, database: SyncDatabase) -> None:
     """Show disk usage for users."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
-    with Session(database.engine) as session:
-        users = helpers.get_all_corresponding_users(
-            session=session,
-            only_users=config.only_users,
-        )
+    with database.start_session() as session:
+        users = helpers.get_all_corresponding_users(session, config.only_users)
 
-    stats: list[Stats] = []
-    for user in users:
-        new_stats = scan_for_user(session, user)
-        stats.append(new_stats)
+    with database.start_transaction() as conn:
+        stats: list[Stats] = []
+        for user in users:
+            new_stats = scan_for_user(conn, user)
+            stats.append(new_stats)
 
     describe_result(stats)
 
@@ -46,7 +36,7 @@ def run(
 @dataclasses.dataclass
 class Stats:
     """Helper class that stores stats for a user."""
-    user: models.User
+    user: db_models.User
     content_size: int
     preview_size: int
     thumbnail_size: int
@@ -86,33 +76,30 @@ class Stats:
         return (self.total_size / total_size) * 100
 
 
-def scan_for_user(
-        session: Session,
-        user: models.User,
-) -> Stats:
+def scan_for_user(conn: Connection, user: db_models.User) -> Stats:
     """Calculate sizes for specific user."""
     stmt = sa.select(
         sa.func.coalesce(
-            sa.func.sum(models.Metainfo.content_size), 0
+            sa.func.sum(db_models.Metainfo.content_size), 0
         ).label('content_size'),
         sa.func.coalesce(
-            sa.func.sum(models.Metainfo.preview_size), 0
+            sa.func.sum(db_models.Metainfo.preview_size), 0
         ).label('preview_size'),
         sa.func.coalesce(
-            sa.func.sum(models.Metainfo.thumbnail_size), 0
+            sa.func.sum(db_models.Metainfo.thumbnail_size), 0
         ).label('thumbnail_size'),
-        sa.func.count(models.Item.content_ext).label('content_total'),
-        sa.func.count(models.Item.preview_ext).label('preview_total'),
-        sa.func.count(models.Item.thumbnail_ext).label('thumbnail_total'),
-        sa.func.count(models.Item.uuid).label('total_items'),
+        sa.func.count(db_models.Item.content_ext).label('content_total'),
+        sa.func.count(db_models.Item.preview_ext).label('preview_total'),
+        sa.func.count(db_models.Item.thumbnail_ext).label('thumbnail_total'),
+        sa.func.count(db_models.Item.uuid).label('total_items'),
     ).join(
-        models.Item,
-        models.Metainfo.item_uuid == models.Item.uuid,
+        db_models.Item,
+        db_models.Metainfo.item_uuid == db_models.Item.uuid,
     ).where(
-        models.Item.owner_uuid == user.uuid
+        db_models.Item.owner_uuid == user.uuid
     )
 
-    response = session.execute(stmt).fetchone()
+    response = conn.execute(stmt).fetchone()
 
     if response is None:
         return Stats(

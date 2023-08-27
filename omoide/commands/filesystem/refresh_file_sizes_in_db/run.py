@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Refresh size command.
 """
 from pathlib import Path
@@ -11,24 +10,17 @@ from omoide import domain
 from omoide import infra
 from omoide import utils
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.commands.filesystem.refresh_file_sizes_in_db.cfg import Config
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
+from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
+def run(config: Config, database: SyncDatabase) -> None:
     """Refresh disk usage for every item."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
     if config.hot_folder and Path(config.hot_folder).exists():
         path = config.hot_folder
@@ -37,18 +29,10 @@ def run(
         path = config.cold_folder
 
     else:
-        raise RuntimeError(
-            'No actual folder to work with '
-            '(give hot or cold folder path)'
-        )
+        msg = 'No actual folder to work with (give hot or cold folder path)'
+        raise RuntimeError(msg)
 
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
-
-    with Session(database.engine) as session:
+    with database.start_session() as session:
         users = helpers.get_all_corresponding_users(session, config.only_users)
 
     i = 0
@@ -57,7 +41,7 @@ def run(
     last_meta = None
 
     for user in users:
-        with Session(database.engine) as session:
+        with database.start_session() as session:
             LOG.info('Refreshing file sizes for user {} {}',
                      user.uuid, user.name)
 
@@ -92,8 +76,8 @@ def run(
 
 def update_size(
         config: Config,
-        metainfo: models.Metainfo,
-        item: models.Item,
+        metainfo: db_models.Metainfo,
+        item: db_models.Item,
         base_folder: str,
 ) -> int:
     """Get actual file size."""
@@ -145,31 +129,31 @@ def update_size(
 def get_models(
         session: Session,
         config: Config,
-        user: models.User,
-) -> list[tuple[models.Metainfo, models.Item]]:
+        user: db_models.User,
+) -> list[tuple[db_models.Metainfo, db_models.Item]]:
     """Get every item with some content."""
     query = session.query(
-        models.Metainfo,
-        models.Item,
+        db_models.Metainfo,
+        db_models.Item,
     ).join(
-        models.Item,
-        models.Item.uuid == models.Metainfo.item_uuid,
+        db_models.Item,
+        db_models.Item.uuid == db_models.Metainfo.item_uuid,
     ).filter(
-        models.Item.owner_uuid == user.uuid,
+        db_models.Item.owner_uuid == user.uuid,
         sa.or_(
-            models.Metainfo.content_size == None,  # noqa
-            models.Metainfo.preview_size == None,  # noqa
-            models.Metainfo.thumbnail_size == None,  # noqa
+            db_models.Metainfo.content_size == None,  # noqa
+            db_models.Metainfo.preview_size == None,  # noqa
+            db_models.Metainfo.thumbnail_size == None,  # noqa
         ),
     )
 
     if config.marker:
         query = query.filter(
-            models.Metainfo.item_uuid >= config.marker  # noqa
+            db_models.Metainfo.item_uuid >= config.marker  # noqa
         )
 
     query = query.order_by(
-        models.Metainfo.item_uuid,
+        db_models.Metainfo.item_uuid,
     )
 
     if config.limit != -1:

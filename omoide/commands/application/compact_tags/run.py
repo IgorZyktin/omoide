@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Compact tags.
 """
 import time
@@ -11,25 +10,18 @@ from omoide import utils
 from omoide.commands.application.compact_tags import cfg
 from omoide.commands.application.compact_tags.cfg import Config
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
+from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
+def run(config: Config, database: SyncDatabase) -> None:
     """Execute command."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
-    with Session(database.engine) as session:
+    with database.start_session() as session:
         users = helpers.get_all_corresponding_users(
             session=session,
             only_users=config.only_users,
@@ -55,34 +47,34 @@ def run(
 def compact_tags(
         session: Session,
         config: cfg.Config,
-        user: models.User,
+        user: db_models.User,
 ) -> int:
     """Compact tags for given user."""
     total_items = 0
 
-    alias = aliased(models.Item)
+    alias = aliased(db_models.Item)
 
     query = session.query(
-        models.Item,
-        models.ComputedTags,
+        db_models.Item,
+        db_models.ComputedTags,
     ).join(
-        models.ComputedTags,
-        models.ComputedTags.item_uuid == models.Item.parent_uuid,
+        db_models.ComputedTags,
+        db_models.ComputedTags.item_uuid == db_models.Item.parent_uuid,
     ).filter(
-        models.Item.owner_uuid == user.uuid
+        db_models.Item.owner_uuid == user.uuid
     ).filter(
-        models.ComputedTags.tags.overlap(
+        db_models.ComputedTags.tags.overlap(
             sa.select(
                 sa.func.string_to_array(
                     sa.func.lower(
-                        sa.func.array_to_string(models.Item.tags, '|'),
+                        sa.func.array_to_string(db_models.Item.tags, '|'),
                     ), '|')
             ).where(
-                alias.uuid == models.ComputedTags.item_uuid
+                alias.uuid == db_models.ComputedTags.item_uuid
             ).scalar_subquery()
         )
     ).order_by(
-        models.Item.number
+        db_models.Item.number
     )
 
     for item, computed_tags in query.all():
@@ -102,10 +94,10 @@ def compact_tags(
 
         for tag in can_drop:
             known_tag = session.query(
-                models.KnownTags
+                db_models.KnownTags
             ).filter(
-                models.KnownTags.user_uuid == user.uuid,
-                models.KnownTags.tag == tag,
+                db_models.KnownTags.user_uuid == user.uuid,
+                db_models.KnownTags.tag == tag,
             ).first()
 
             if known_tag:
@@ -116,9 +108,9 @@ def compact_tags(
         total_items += 1
 
     session.query(
-        models.KnownTags
+        db_models.KnownTags
     ).filter(
-        models.KnownTags.counter <= 0
+        db_models.KnownTags.counter <= 0
     ).delete()
 
     session.commit()

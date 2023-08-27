@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Rebuild all content/preview/thumbnail sizes.
 """
-import sys
 import time
 
 import sqlalchemy as sa
@@ -12,31 +10,21 @@ from omoide import domain
 from omoide import infra
 from omoide import utils
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.commands.filesystem.rebuild_image_sizes.cfg import Config
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
+from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
+def run(config: Config, database: SyncDatabase) -> None:
     """Execute command."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
     if not (config.hot_folder or config.cold_folder):
-        LOG.error('No base folder specified, '
-                  'you have to provide at least hot-folder or cold-folder')
-        sys.exit(1)
+        msg = 'No actual folder to work with (give hot or cold folder path)'
+        raise RuntimeError(msg)
 
     with database.start_session() as session:
         users = helpers.get_all_corresponding_users(session, config.only_users)
@@ -66,43 +54,41 @@ def run(
             session.commit()
 
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 def get_all_metainfo_records(
         session: Session,
         config: Config,
-        user: models.User,
-) -> list[tuple[models.Metainfo, models.Item]]:
+        user: db_models.User,
+) -> list[tuple[db_models.Metainfo, db_models.Item]]:
     """Rebuild computed tags for specific user."""
     query = session.query(
-        models.Metainfo,
-        models.Item,
+        db_models.Metainfo,
+        db_models.Item,
     ).join(
-        models.Item,
-        models.Item.uuid == models.Metainfo.item_uuid,
+        db_models.Item,
+        db_models.Item.uuid == db_models.Metainfo.item_uuid,
     ).filter(
-        models.Item.owner_uuid == user.uuid,
+        db_models.Item.owner_uuid == user.uuid,
         ~sa.and_(
-            models.Item.content_ext == None,  # noqa
-            models.Item.preview_ext == None,  # noqa
-            models.Item.thumbnail_ext == None,  # noqa
+            db_models.Item.content_ext == None,  # noqa
+            db_models.Item.preview_ext == None,  # noqa
+            db_models.Item.thumbnail_ext == None,  # noqa
         ),
     )
 
     if config.only_corrupted:
         query = query.filter(
             sa.or_(
-                models.Metainfo.content_width == None,  # noqa
-                models.Metainfo.content_height == None,  # noqa
-                models.Metainfo.preview_width == None,  # noqa
-                models.Metainfo.preview_height == None,  # noqa
-                models.Metainfo.thumbnail_width == None,  # noqa
-                models.Metainfo.thumbnail_height == None,  # noqa
+                db_models.Metainfo.content_width == None,  # noqa
+                db_models.Metainfo.content_height == None,  # noqa
+                db_models.Metainfo.preview_width == None,  # noqa
+                db_models.Metainfo.preview_height == None,  # noqa
+                db_models.Metainfo.thumbnail_width == None,  # noqa
+                db_models.Metainfo.thumbnail_height == None,  # noqa
             )
         )
 
     query = query.order_by(
-        models.Item.number
+        db_models.Item.number
     )
 
     if config.limit > 0:
@@ -125,8 +111,8 @@ class Sizes(BaseModel):
 
 def rebuild_sizes(
         config: Config,
-        user: models.User,
-        all_metainfo: list[tuple[models.Metainfo, models.Item]],
+        user: db_models.User,
+        all_metainfo: list[tuple[db_models.Metainfo, db_models.Item]],
 ) -> None:
     """Refresh computed tags for given child."""
     try:
@@ -188,8 +174,8 @@ def rebuild_sizes(
 
 def make_locator(
         config: Config,
-        user: models.User,
-        item: models.Item,
+        user: db_models.User,
+        item: db_models.Item,
 ) -> infra.FilesystemLocator:
     """Make locator from pieces of item data."""
     dom_item = domain.Item(

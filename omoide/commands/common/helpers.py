@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utils for commands.
 """
 import contextlib
@@ -14,6 +13,8 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
+from omoide import utils
+from omoide.storage.database import db_models
 from omoide.storage.database import models
 
 TPL = str | None | Callable[[], str | None]
@@ -55,28 +56,29 @@ def timing(
 
 def get_all_corresponding_users(
         session: Session,
-        only_users: list[UUID],
-) -> list[models.User]:
+        only_users: list[str],
+) -> list[db_models.User]:
     """Get all users according to config."""
-    query = session.query(models.User)
+    query = session.query(db_models.User)
+
+    uuids = []
+    strings = []
+    for user_string in only_users:
+        if utils.is_valid_uuid(user_string):
+            uuids.append(user_string)
+        else:
+            strings.append(user_string)
 
     if only_users:
         query = query.filter(
-            models.User.uuid.in_(tuple(str(x) for x in only_users))  # noqa
+            sa.or_(
+                db_models.User.uuid.in_(uuids),  # noqa
+                db_models.User.login.in_(strings),  # noqa
+                db_models.User.name.in_(strings),  # noqa
+            )
         )
 
-    return query.order_by(models.User.name).all()
-
-
-def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
-    """Return all direct children."""
-    return session.query(
-        models.Item
-    ).filter(
-        models.Item.parent_uuid == uuid
-    ).order_by(
-        models.Item.number
-    ).all()
+    return query.order_by(db_models.User.name).all()
 
 
 def get_file_size(
@@ -114,15 +116,46 @@ def get_children(
 def output_tree(
         session: Session,
         item: models.Item,
+        show_uuids: bool = False,
+        position: str = 'last',
         depth: int = 0,
+        callback: Callable = print,
 ) -> None:
     """Debug tool that show whole tree stating from some item."""
-    tab = '\t' * depth + '┗━ '
-    children = get_children(session, item)
-    print(f'{tab}{item.uuid} {item.name or "???"} -> {len(children)} children')
+    if position == 'middle':
+        prefix = '┣━ '
+    else:
+        prefix = '┗━ '
 
-    for child in children:
-        output_tree(session, child, depth + 1)
+    if depth:
+        tab = '\t' * depth + prefix
+    else:
+        tab = ''
+
+    children = get_children(session, item)
+
+    if children or item.is_collection:
+        if show_uuids:
+            label = f'{item.uuid} {item.name or "???"}'
+        else:
+            label = f'{item.name or "???"}'
+
+        callback(f'{tab}{label} -> {len(children)} children')
+
+    for i, child in enumerate(children, start=1):
+        if i < len(children):
+            position = 'middle'
+        else:
+            position = 'last'
+
+        output_tree(
+            session,
+            child,
+            show_uuids=show_uuids,
+            position=position,
+            depth=depth + 1,
+            callback=callback,
+        )
 
 
 def get_metainfo(
