@@ -72,17 +72,17 @@ def test_safely_get_test_database_incorrect_db():
 
 
 @pytest.fixture(scope='session')
-def functional_tests_db_uri():
+def functional_tests_db_url():
     """Return database url."""
     return safely_get_test_database()
 
 
 @pytest_asyncio.fixture(scope='session')
-async def functional_tests_database(functional_tests_db_uri):
+async def functional_tests_database(functional_tests_db_url):
     """Return database."""
     db = None
     try:
-        db = Database(functional_tests_db_uri)
+        db = Database(functional_tests_db_url)
         await db.connect()
         yield db
     except Exception as exc:

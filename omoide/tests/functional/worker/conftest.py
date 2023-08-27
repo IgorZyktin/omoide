@@ -17,8 +17,8 @@ from omoide.worker.worker import Worker
 
 
 @pytest.fixture(scope='session')
-def functional_tests_worker_database(functional_tests_db_uri):
-    database = WorkerDatabase(db_uri=functional_tests_db_uri)
+def functional_tests_worker_database(functional_tests_db_url):
+    database = WorkerDatabase(db_url=functional_tests_db_url)
     with database.life_cycle():
         yield database
 
@@ -27,7 +27,7 @@ def functional_tests_worker_database(functional_tests_db_uri):
 def functional_tests_worker_config():
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield worker_config.Config(
-            db_uri='test',
+            db_url='test',
             db_echo=False,
             hot_folder=tmp_dir,
             cold_folder=None,

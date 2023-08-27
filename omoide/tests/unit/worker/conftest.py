@@ -13,7 +13,7 @@ from omoide.worker import interfaces
 def valid_worker_config_dict():
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield dict(
-            db_uri='test',
+            db_url='test',
             db_echo=False,
             hot_folder=tmp_dir,
             cold_folder=None,

@@ -29,7 +29,7 @@ def main(once: bool):
     logger.info('\nConfig:\n{}', utils.serialize_model(config))
 
     database = WorkerDatabase(
-        db_uri=config.db_uri.get_secret_value(),
+        db_url=config.db_url.get_secret_value(),
         echo=config.db_echo,
     )
 

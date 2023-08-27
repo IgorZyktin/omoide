@@ -16,11 +16,11 @@ LOG = custom_logging.get_logger(__name__)
 class SyncDatabase:
     """Database helper class for Worker."""
 
-    def __init__(self, db_uri: str, echo: bool = False) -> None:
+    def __init__(self, db_url: str, echo: bool = False) -> None:
         """Initialize instance."""
-        self._db_uri = db_uri
+        self._db_url = db_url
         self._engine = sa.create_engine(
-            self._db_uri,
+            self._db_url,
             echo=echo,
             pool_pre_ping=True,
         )

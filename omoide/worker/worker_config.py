@@ -84,7 +84,7 @@ LOG_LEVEL: TypeAlias = Literal[
 
 class Config(pydantic_settings.BaseSettings):
     """Worker settings."""
-    db_uri: pydantic.SecretStr
+    db_url: pydantic.SecretStr
     db_echo: bool = False
     hot_folder: Path | None = None
     cold_folder: Path | None = None

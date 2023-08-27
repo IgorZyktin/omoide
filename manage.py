@@ -7,7 +7,6 @@ import click
 from pydantic import SecretStr
 
 from omoide import utils
-from omoide.commands.common import base_db
 from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
