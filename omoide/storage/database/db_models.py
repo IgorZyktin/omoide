@@ -425,7 +425,7 @@ class Metainfo(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<DB Metainfo, {self.item_uuid}, {self.media_type!r}>'
+        return f'<DB Metainfo, {self.item_uuid}, {self.content_type!r}>'
 
     # relations ---------------------------------------------------------------
 

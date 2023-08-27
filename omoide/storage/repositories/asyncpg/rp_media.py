@@ -105,8 +105,8 @@ class MediaRepository(AbsMediaRepository):
             owner_uuid: UUID,
             source_uuid: UUID,
             target_uuid: UUID,
-            ext: str,
             media_type: str,
+            ext: str,
     ) -> int | errors.Error:
         """Save intention to copy data between items."""
         stmt = sa.insert(

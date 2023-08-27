@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from omoide import constants
 from omoide import utils
 from omoide.commands import helpers
-from omoide.commands.force_cover_copying.cfg import Config
+from omoide.commands.force_thumbnail_copying.cfg import Config
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
@@ -145,11 +145,11 @@ def invoke_worker_to_copy(
         created_at=utils.now(),
         processed_at=None,
         error='',
-        owner_uuid=str(parent.owner_uuid),
-        source_uuid=str(child.uuid),
-        target_uuid=str(parent.uuid),
+        owner_uuid=parent.owner_uuid,
+        source_uuid=child.uuid,
+        target_uuid=parent.uuid,
         media_type=constants.THUMBNAIL,
-        ext=child.thumbnail_ext,
+        ext=child.thumbnail_ext or '',
     )
     session.add(copy)
     session.flush([copy])

@@ -373,8 +373,8 @@ class ApiItemUpdateUseCase:
                         (str(operation.value) if operation.value else None)
                 elif operation.path == '/copied_cover_from':
                     if operation.value \
-                            and utils.is_valid_uuid(operation.value):
-                        uuid = UUID(operation.value)
+                            and utils.is_valid_uuid(str(operation.value)):
+                        uuid = UUID(str(operation.value))
                         metainfo = await self.metainfo_repo.read_metainfo(uuid)
 
                         if metainfo is not None:

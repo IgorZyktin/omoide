@@ -219,8 +219,8 @@ def command_force_cover_copying(**kwargs) -> None:
 
     May require you to run it more than one time.
     """
-    from omoide.commands.force_cover_copying import cfg
-    from omoide.commands.force_cover_copying import run
+    from omoide.commands.force_thumbnail_copying import cfg
+    from omoide.commands.force_thumbnail_copying import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
     only_users = utils.split(kwargs.pop('only_users', ''))
