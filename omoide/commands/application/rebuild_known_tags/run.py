@@ -1,41 +1,30 @@
 """Refresh cache for known tags.
 """
 from collections import defaultdict
-from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.orm import Session
+from sqlalchemy.engine import Connection
 
 from omoide import utils
 from omoide.commands.application.rebuild_known_tags.cfg import Config
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
+from omoide.storage.database import sync_db
 
 LOG = custom_logging.get_logger(__name__)
 
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
+def run(config: Config, database: sync_db.SyncDatabase) -> None:
     """Execute command."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
     if config.anon and not config.only_users:
-        with database.start_session() as session:
-            set_all_tag_counters_to_zero(session, None)
-            rebuild_tags_for_anon(session)
+        with database.start_transaction() as conn:
+            set_all_tag_counters_to_zero_for_anon(conn)
+            rebuild_tags_for_anon(conn)
 
     if config.known:
         with database.start_session() as session:
@@ -43,26 +32,23 @@ def run(
                 session, config.only_users)
 
         for user in users:
-            with database.start_session() as session:
-                set_all_tag_counters_to_zero(session, user)
-                rebuild_tags_for_known(session, user)
+            with database.start_transaction() as conn:
+                set_all_tag_counters_to_zero(conn, user)
+                rebuild_tags_for_known(conn, user)
 
-    drop_unused_tags(session)
-
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    drop_unused_tags(conn)
 
 
-def get_public_users(session: Session) -> set[UUID]:
+def get_public_users(conn: Connection) -> set[UUID]:
     """Return all public users."""
-    stmt = sa.select(models.PublicUsers.user_uuid)
-    response = session.execute(stmt)
+    stmt = sa.select(db_models.PublicUsers.user_uuid)
+    response = conn.execute(stmt)
     return set(x for x, in response.all())
 
 
-def rebuild_tags_for_known(session: Session, user: models.User) -> None:
+def rebuild_tags_for_known(conn: Connection, user: db_models.User) -> None:
     """Rebuild tags for known user"""
-    total_tags, occurrences = rebuild_known_tags_for_known_user(session, user)
+    total_tags, occurrences = rebuild_known_tags_for_known_user(conn, user)
     LOG.info(
         '{} (got {} tags with {} occurrences)',
         user.name,
@@ -71,9 +57,9 @@ def rebuild_tags_for_known(session: Session, user: models.User) -> None:
     )
 
 
-def rebuild_tags_for_anon(session: Session) -> None:
+def rebuild_tags_for_anon(conn: Connection) -> None:
     """Rebuild tags for anon"""
-    total_tags, occurrences = rebuild_known_tags_for_anon_user(session)
+    total_tags, occurrences = rebuild_known_tags_for_anon_user(conn)
     LOG.info(
         'Anon (got {} tags with {} occurrences)',
         utils.sep_digits(total_tags),
@@ -81,72 +67,70 @@ def rebuild_tags_for_anon(session: Session) -> None:
     )
 
 
-def drop_unused_tags(session: Session) -> None:
+def drop_unused_tags(conn: Connection) -> None:
     """Delete all tags with counter less or equal zero."""
     stmt = sa.delete(
-        models.KnownTags
+        db_models.KnownTags
     ).where(
-        models.KnownTags.counter <= 0
+        db_models.KnownTags.counter <= 0
     )
-    response = session.execute(stmt)
+    response = conn.execute(stmt)
 
     if response.rowcount:
         LOG.info('Dropped {} tags for known users', response.rowcount)
 
     stmt = sa.delete(
-        models.KnownTagsAnon
+        db_models.KnownTagsAnon
     ).filter(
-        models.KnownTagsAnon.counter <= 0
+        db_models.KnownTagsAnon.counter <= 0
     )
-    response = session.execute(stmt)
+    response = conn.execute(stmt)
 
     if response.rowcount:
         LOG.info('Dropped {} tags for anon user', response.rowcount)
 
-    session.commit()
+
+def set_all_tag_counters_to_zero_for_anon(conn: Connection) -> None:
+    """Mark all counters as 0, so we could start recalculating."""
+    stmt = sa.update(
+        db_models.KnownTagsAnon
+    ).values(
+        counter=0
+    )
+
+    conn.execute(stmt)
 
 
 def set_all_tag_counters_to_zero(
-        session: Session,
-        user: Optional[models.User],
+        conn: Connection,
+        user: db_models.User,
 ) -> None:
     """Mark all counters as 0, so we could start recalculating."""
-    if user is None:
-        stmt = sa.update(
-            models.KnownTagsAnon
-        ).values(
-            counter=0
-        )
+    stmt = sa.update(
+        db_models.KnownTags
+    ).where(
+        db_models.KnownTags.user_uuid == user.uuid
+    ).values(
+        counter=0
+    )
 
-    else:
-        stmt = sa.update(
-            models.KnownTags
-        ).where(
-            models.KnownTags.user_uuid == user.uuid
-        ).values(
-            counter=0
-        )
-
-    session.execute(stmt)
-    session.commit()
+    conn.execute(stmt)
 
 
-def rebuild_known_tags_for_anon_user(
-        session: Session,
-) -> tuple[int, int]:
+def rebuild_known_tags_for_anon_user(conn: Connection) -> tuple[int, int]:
     """Refresh known tags for anon user (without dropping)."""
     total_count = 0
     occurrences = 0
 
-    public_users = get_public_users(session)
+    public_users = get_public_users(conn)
 
     stmt = sa.select(
-        models.Item.tags
+        db_models.Item.tags
     ).where(
-        models.Item.owner_uuid.in_(tuple(public_users)),  # noqa
+        db_models.Item.owner_uuid.in_(tuple(public_users)),  # noqa
     )
 
-    all_tags = session.execute(stmt)
+    all_tags = conn.execute(stmt).fetchall()
     counters: dict[str, int] = defaultdict(int)
 
     for tag_group, in all_tags:
@@ -157,7 +141,7 @@ def rebuild_known_tags_for_anon_user(
 
     for tag, counter in counters.items():
         insert = pg_insert(
-            models.KnownTagsAnon
+            db_models.KnownTagsAnon
         ).values(
             tag=tag,
             counter=counter,
@@ -165,37 +149,35 @@ def rebuild_known_tags_for_anon_user(
 
         stmt = insert.on_conflict_do_update(
             index_elements=[
-                models.KnownTagsAnon.tag,
+                db_models.KnownTagsAnon.tag,
             ],
             set_={
                 'counter': insert.excluded.counter,
             }
         )
-        session.execute(stmt)
-
-    session.commit()
+        conn.execute(stmt)
 
     return total_count, occurrences
 
 
 def rebuild_known_tags_for_known_user(
-        session: Session,
-        user: models.User,
+        conn: Connection,
+        user: db_models.User,
 ) -> tuple[int, int]:
     """Refresh known tags for known user (without dropping)."""
     total_count = 0
     occurrences = 0
 
     stmt = sa.select(
-        models.Item.tags
+        db_models.Item.tags
     ).where(
         sa.or_(
-            models.Item.owner_uuid == user.uuid,
-            models.Item.permissions.contains([str(user.uuid)]),
+            db_models.Item.owner_uuid == user.uuid,
+            db_models.Item.permissions.contains([str(user.uuid)]),
         )
     )
 
-    all_tags = [*session.execute(stmt)]
+    all_tags = conn.execute(stmt).fetchall()
     counters: dict[str, int] = defaultdict(int)
 
     for tag_group, in all_tags:
@@ -206,7 +188,7 @@ def rebuild_known_tags_for_known_user(
 
     for tag, counter in counters.items():
         insert = pg_insert(
-            models.KnownTags
+            db_models.KnownTags
         ).values(
             user_uuid=user.uuid,
             tag=tag,
@@ -215,15 +197,13 @@ def rebuild_known_tags_for_known_user(
 
         stmt = insert.on_conflict_do_update(
             index_elements=[
-                models.KnownTags.user_uuid,
-                models.KnownTags.tag,
+                db_models.KnownTags.user_uuid,
+                db_models.KnownTags.tag,
             ],
             set_={
                 'counter': insert.excluded.counter,
             }
         )
-        session.execute(stmt)
-
-    session.commit()
+        conn.execute(stmt)
 
     return total_count, occurrences

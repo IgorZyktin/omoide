@@ -169,3 +169,11 @@ def test_serialize_model_dict(config_like_dict, serialization_reference):
                              do_not_serialize=frozenset(('y', 'f')))
 
     assert result == serialization_reference
+
+
+def test_split():
+    """Must separate string and filter out empty values."""
+    reference = ['a', 'b', 'c']
+    result = utils.split(',a,b,,c,')
+
+    assert result == reference

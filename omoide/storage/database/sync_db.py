@@ -4,6 +4,7 @@ import contextlib
 from typing import Generator
 
 import sqlalchemy as sa
+from sqlalchemy.engine import Connection
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -48,3 +49,9 @@ class SyncDatabase:
             msg = 'You need to start session before using it'
             raise RuntimeError(msg)
         return self._session
+
+    @contextlib.contextmanager
+    def start_transaction(self) -> Generator[Connection, None, None]:
+        """Wrapper around SA connection."""
+        with self._engine.begin() as conn:
+            yield conn

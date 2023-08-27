@@ -313,3 +313,12 @@ def model_to_list(
         else:
             line = f'{prefix}{key}={value!r}'
             attributes.append(line)
+
+
+def split(string: str, separator: str = ',') -> list[str]:
+    """Split comma separated list."""
+    return [
+        clear
+        for raw in string.split(separator)
+        if (clear := raw.strip())
+    ]

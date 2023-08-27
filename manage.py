@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Manual CLI operations.
 """
 import asyncio
@@ -7,6 +6,7 @@ from typing import Optional
 import click
 from pydantic import SecretStr
 
+from omoide import utils
 from omoide.commands.common import base_db
 from omoide.commands.common import helpers
 from omoide.infra import custom_logging
@@ -81,9 +81,7 @@ def cmd_change_password(uuid: str, password: str):
     ))
 
 
-@cli.command(
-    name='rebuild_known_tags',
-)
+@cli.command(name='rebuild_known_tags')
 @click.option(
     '--db-url',
     required=True,
@@ -101,9 +99,8 @@ def cmd_change_password(uuid: str, password: str):
     help='Refresh known tags for known users',
 )
 @click.option(
-    '--limit-to-user',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    '--only-users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 def command_rebuild_known_tags(**kwargs: str | bool):
     """Refresh cache for known tags."""
@@ -111,16 +108,14 @@ def command_rebuild_known_tags(**kwargs: str | bool):
     from omoide.commands.application.rebuild_known_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user'))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-                callback=LOG.info,
-                start_template='Rebuilding known tags...',
-        ):
-            run.run(database, config)
+        with helpers.timing(callback=LOG.info,
+                            start_template='Rebuilding known tags...'):
+            run.run(config, database)
 
 
 @cli.command(
