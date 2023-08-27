@@ -56,7 +56,7 @@ def timing(
 
 def get_all_corresponding_users(
         session: Session,
-        only_users: list[UUID | str],
+        only_users: list[str],
 ) -> list[db_models.User]:
     """Get all users according to config."""
     query = session.query(db_models.User)
