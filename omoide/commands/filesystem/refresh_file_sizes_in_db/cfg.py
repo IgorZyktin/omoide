@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
 """Command configuration.
 """
-from uuid import UUID
-
 from pydantic import BaseModel
 from pydantic import SecretStr
 
@@ -12,7 +9,7 @@ class Config(BaseModel):
     db_url: SecretStr
     hot_folder: str
     cold_folder: str
-    only_users: list[UUID]
+    only_users: list[str]
     log_every_item: bool
     limit: int = -1
     prefix_size: int = 2

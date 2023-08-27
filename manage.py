@@ -21,9 +21,6 @@ def cli():
     """Manual CLI operations."""
 
 
-# Application related commands ------------------------------------------------
-
-
 @cli.command(
     name='create_user',
 )
@@ -240,12 +237,7 @@ def command_force_cover_copying(**kwargs) -> None:
             run.run(config, database)
 
 
-# Filesystem related commands -------------------------------------------------
-
-
-@cli.command(
-    name='refresh_file_sizes_in_db',
-)
+@cli.command(name='refresh_file_sizes_in_db')
 @click.option(
     '--db-url',
     required=True,
@@ -267,9 +259,8 @@ def command_force_cover_copying(**kwargs) -> None:
     show_default=True,
 )
 @click.option(
-    '--limit-to-user',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    '--only-users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 @click.option(
     '--log-every-item/--no-log-every-item',
@@ -293,15 +284,16 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     from omoide.commands.filesystem.refresh_file_sizes_in_db import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user', []))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
         with helpers.timing(
+                callback=LOG.info,
                 start_template='Refreshing file sizes for every item...',
         ):
-            run.run(database, config)
+            run.run(config, database)
 
 
 @cli.command(
