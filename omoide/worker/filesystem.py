@@ -36,13 +36,11 @@ class Filesystem:
         """Load binary data from filesystem."""
         bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
         for folder in self._get_folders():
-            path = (
-                Path(folder)
-                / media_type
-                / str(owner_uuid)
-                / bucket
-                / f'{item_uuid}.{ext}'
-            )  # noqa: W503
+            path = (Path(folder)  # noqa: W503
+                    / media_type  # noqa: W503
+                    / str(owner_uuid)  # noqa: W503
+                    / bucket  # noqa: W503
+                    / f'{item_uuid}.{ext}')  # noqa: W503
 
             if path.exists():
                 content = path.read_bytes()
@@ -64,12 +62,11 @@ class Filesystem:
         bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
         filename = f'{item_uuid}.{ext}'
         for folder in self._get_folders():
-            path = (
-                Path(folder)
-                / media_type
-                / str(owner_uuid)
-                / bucket
-            )  # noqa: W503
+            path = (Path(folder)  # noqa: W503
+                    / media_type  # noqa: W503
+                    / str(owner_uuid)  # noqa: W503
+                    / bucket)  # noqa: W503
+
             self.ensure_folder_exists(path)
             self.safely_save(path, filename, content)
 
