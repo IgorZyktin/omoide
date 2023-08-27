@@ -2,6 +2,7 @@
 """
 import asyncio
 from typing import Optional
+from uuid import UUID
 
 import click
 from pydantic import SecretStr
@@ -349,6 +350,38 @@ def command_rebuild_image_sizes(**kwargs) -> None:
     with database.life_cycle():
         with helpers.timing(callback=LOG.info,
                             start_template='Rebuilding all image sizes...'):
+            run.run(config, database)
+
+
+@cli.command(name='tree')
+@click.option(
+    '--db-url',
+    required=True,
+    type=str,
+    help='Database URL',
+)
+@click.option(
+    '--item-uuid',
+    type=UUID,
+    help='Starting item to show all descendants',
+)
+@click.option(
+    '--show-uuids/--no-show-uuids',
+    default=False,
+    help='Output items with uuids',
+)
+def command_tree(**kwargs) -> None:
+    """Output all descendants of given item."""
+    from omoide.commands.tree import cfg
+    from omoide.commands.tree import run
+
+    db_url = SecretStr(kwargs.pop('db_url'))
+    config = cfg.Config(db_url=db_url, **kwargs)
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
+
+    with database.life_cycle():
+        with helpers.timing(callback=LOG.info,
+                            start_template='Showing all descendants...'):
             run.run(config, database)
 
 

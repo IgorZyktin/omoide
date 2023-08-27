@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
-from omoide.storage.database import models
 from omoide.storage.database import db_models
+from omoide.storage.database import models
 
 TPL = str | None | Callable[[], str | None]
 
@@ -116,15 +116,46 @@ def get_children(
 def output_tree(
         session: Session,
         item: models.Item,
+        show_uuids: bool = False,
+        position: str = 'last',
         depth: int = 0,
+        callback: Callable = print,
 ) -> None:
     """Debug tool that show whole tree stating from some item."""
-    tab = '\t' * depth + '┗━ '
-    children = get_children(session, item)
-    print(f'{tab}{item.uuid} {item.name or "???"} -> {len(children)} children')
+    if position == 'middle':
+        prefix = '┣━ '
+    else:
+        prefix = '┗━ '
 
-    for child in children:
-        output_tree(session, child, depth + 1)
+    if depth:
+        tab = '\t' * depth + prefix
+    else:
+        tab = ''
+
+    children = get_children(session, item)
+
+    if children or item.is_collection:
+        if show_uuids:
+            label = f'{item.uuid} {item.name or "???"}'
+        else:
+            label = f'{item.name or "???"}'
+
+        callback(f'{tab}{label} -> {len(children)} children')
+
+    for i, child in enumerate(children, start=1):
+        if i < len(children):
+            position = 'middle'
+        else:
+            position = 'last'
+
+        output_tree(
+            session,
+            child,
+            show_uuids=show_uuids,
+            position=position,
+            depth=depth + 1,
+            callback=callback,
+        )
 
 
 def get_metainfo(
