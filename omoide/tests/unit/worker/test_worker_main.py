@@ -44,6 +44,7 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
         mock.patch('omoide.worker.__main__.Worker',
                    return_value=fake_worker),
     ):
+        fake_worker.counter = 0
         result = CliRunner().invoke(main, ['--no-once'])  # type: ignore
 
     # assert
