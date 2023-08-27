@@ -36,7 +36,8 @@ def run(config: Config, database: sync_db.SyncDatabase) -> None:
                 set_all_tag_counters_to_zero(conn, user)
                 rebuild_tags_for_known(conn, user)
 
-    drop_unused_tags(conn)
+    with database.start_transaction() as conn:
+        drop_unused_tags(conn)
 
 
 def get_public_users(conn: Connection) -> set[UUID]:

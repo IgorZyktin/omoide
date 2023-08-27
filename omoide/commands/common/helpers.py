@@ -13,6 +13,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
+from omoide import utils
 from omoide.storage.database import models
 from omoide.storage.database import db_models
 
@@ -61,12 +62,20 @@ def get_all_corresponding_users(
     query = session.query(db_models.User)
     values = [str(x) for x in only_users]
 
+    uuids = []
+    strings = []
+    for user_string in only_users:
+        if utils.is_valid_uuid(user_string):
+            uuids.append(user_string)
+        else:
+            strings.append(user_string)
+
     if only_users:
         query = query.filter(
             sa.or_(
-                db_models.User.uuid.in_(values),  # noqa
-                db_models.User.login.in_(values),  # noqa
-                db_models.User.name.in_(values),  # noqa
+                db_models.User.uuid.in_(uuids),  # noqa
+                db_models.User.login.in_(strings),  # noqa
+                db_models.User.name.in_(strings),  # noqa
             )
         )
 
