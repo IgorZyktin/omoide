@@ -11,6 +11,7 @@ from omoide.commands.common import base_db
 from omoide.commands.common import helpers
 from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
+from omoide.storage.database import sync_db
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -159,9 +160,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
             run.run(database, config)
 
 
-@cli.command(
-    name='compact_tags',
-)
+@cli.command(name='compact_tags')
 @click.option(
     '--db-url',
     required=True,
@@ -169,7 +168,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     help='Database URL',
 )
 @click.option(
-    '--limit-to-user',
+    '--only-users',
     multiple=True,
     help='Apply to one or more specially listed users',
 )
@@ -178,27 +177,20 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     default=False,
     help='Output every refreshed item',
 )
-@click.option(
-    '--output-items/--no-output-items',
-    default=True,
-    help='Output every refreshed item',
-)
 def cmd_compact_tags(**kwargs: str | bool):
     """If item and its parent share some tags, try to remove duplicates."""
     from omoide.commands.application.compact_tags import cfg
     from omoide.commands.application.compact_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user'))
+    only_users = list(kwargs.pop('only_users'))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-                callback=LOG.info,
-                start_template='Compacting tags...',
-        ):
-            run.run(database, config)
+        with helpers.timing(callback=LOG.info,
+                            start_template='Compacting tags...'):
+            run.run(config, database)
 
 
 @cli.command(

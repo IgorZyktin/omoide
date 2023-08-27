@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utils for commands.
 """
 import contextlib
@@ -15,6 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide.storage.database import models
+from omoide.storage.database import db_models
 
 TPL = str | None | Callable[[], str | None]
 
@@ -55,17 +55,22 @@ def timing(
 
 def get_all_corresponding_users(
         session: Session,
-        only_users: list[UUID],
-) -> list[models.User]:
+        only_users: list[UUID | str],
+) -> list[db_models.User]:
     """Get all users according to config."""
-    query = session.query(models.User)
+    query = session.query(db_models.User)
+    values = [str(x) for x in only_users]
 
     if only_users:
         query = query.filter(
-            models.User.uuid.in_(tuple(str(x) for x in only_users))  # noqa
+            sa.or_(
+                db_models.User.uuid.in_(values),  # noqa
+                db_models.User.login.in_(values),  # noqa
+                db_models.User.name.in_(values),  # noqa
+            )
         )
 
-    return query.order_by(models.User.name).all()
+    return query.order_by(db_models.User.name).all()
 
 
 def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:

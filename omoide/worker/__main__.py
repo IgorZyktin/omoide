@@ -8,6 +8,7 @@ from omoide.worker import worker_config
 from omoide.worker.database import WorkerDatabase
 from omoide.worker.filesystem import Filesystem
 from omoide.worker.worker import Worker
+from omoide import utils
 
 
 @click.command()
@@ -25,7 +26,7 @@ def main(once: bool):
 
     logger = custom_logging.get_logger(__name__)
     logger.info('Started Omoide Worker Daemon')
-    logger.info('\nConfig:\n{}', worker_config.serialize(config))
+    logger.info('\nConfig:\n{}', utils.serialize_model(config))
 
     database = WorkerDatabase(
         db_uri=config.db_uri.get_secret_value(),
