@@ -60,7 +60,6 @@ def get_all_corresponding_users(
 ) -> list[db_models.User]:
     """Get all users according to config."""
     query = session.query(db_models.User)
-    values = [str(x) for x in only_users]
 
     uuids = []
     strings = []
