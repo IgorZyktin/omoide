@@ -1,35 +1,26 @@
-# -*- coding: utf-8 -*-
 """Rebuild all computed tags from the scratch.
 """
 import time
-from typing import Optional
+from typing import cast
 from uuid import UUID
 
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.orm import Session
+from sqlalchemy.engine import Connection
 
 from omoide import utils
 from omoide.commands.application.rebuild_computed_tags.cfg import Config
 from omoide.commands.common import helpers
-from omoide.commands.common.base_db import BaseDatabase
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import db_models
+from omoide.storage.database import sync_db
 
 LOG = custom_logging.get_logger(__name__)
 
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-def run(
-        database: BaseDatabase,
-        config: Config,
-) -> None:
+def run(config: Config, database: sync_db.SyncDatabase) -> None:
     """Execute command."""
-    verbose_config = [
-        f'\t{key}={value},\n'
-        for key, value in config.model_dump().items()
-    ]
-    LOG.info(f'Config:\n{{\n{"".join(verbose_config)}}}')
+    LOG.info('\nConfig:\n{}', utils.serialize_model(config))
 
     with database.start_session() as session:
         users = helpers.get_all_corresponding_users(session, config.only_users)
@@ -37,9 +28,9 @@ def run(
     for user in users:
         LOG.info('Refreshing tags for user {} {}', user.uuid, user.name)
 
-        with database.start_session() as session:
+        with database.start_transaction() as conn:
             start = time.perf_counter()
-            children = rebuild_computed_tags(session, config, user)
+            children = rebuild_computed_tags(conn, config, user)
             spent = time.perf_counter() - start
             LOG.info(
                 'Rebuilt computed tags for '
@@ -49,15 +40,12 @@ def run(
                 utils.sep_digits(children),
                 spent,
             )
-            session.commit()
 
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 def rebuild_computed_tags(
-        session: Session,
+        conn: Connection,
         config: Config,
-        user: models.User,
+        user: db_models.User,
 ) -> int:
     """Rebuild computed tags for specific user."""
     if user.root_item is None:
@@ -68,52 +56,70 @@ def rebuild_computed_tags(
 
     def recursive(parent_uuid: UUID) -> None:
         nonlocal i, total_children
-        child_items = helpers.get_direct_children(session, parent_uuid)
-        for child in child_items:
+        child_items = get_direct_children(conn, parent_uuid)
+        for child_uuid, child_name in child_items:
             i += 1
             total_children += 1
-            tags = get_new_computed_tags(session, parent_uuid, child)
-            insert_new_computed_tags(session, child, tags)
+            tags = get_new_computed_tags(conn, parent_uuid, child_uuid)
+            insert_new_computed_tags(conn, child_uuid, tags)
 
             if config.log_every_item:
                 LOG.info(
                     '\t\tRefreshed tags for {}. {} {} {} {}',
                     utils.sep_digits(i),
-                    child.uuid,
-                    child.name or '???',
+                    child_uuid,
+                    child_name or '???',
                     utils.sep_digits(total_children),
                     sorted(tags),
                 )
 
-            recursive(child.uuid)
+            recursive(child_uuid)
 
     recursive(user.root_item)
 
     return total_children
 
 
+def get_direct_children(
+        conn: Connection,
+        uuid: UUID,
+) -> list[tuple[UUID, str]]:
+    """Return all direct children."""
+    stmt = sa.select(
+        db_models.Item.uuid,
+        db_models.Item.name,
+    ).where(
+        db_models.Item.parent_uuid == uuid
+    ).order_by(
+        db_models.Item.number
+    )
+    return cast(list[tuple[UUID, str]], conn.execute(stmt).fetchall())
+
+
 def get_new_computed_tags(
-        session: Session,
+        conn: Connection,
         parent_uuid: UUID,
-        child: models.Item,
+        child_uuid: UUID,
 ) -> tuple[str, ...]:
     """Refresh computed tags for given child."""
-    parent_tags = session.query(
-        models.ComputedTags.tags
-    ).filter(
-        models.ComputedTags.item_uuid == parent_uuid,
-    ).scalar()
+    stmt = sa.select(
+        db_models.ComputedTags.tags
+    ).where(
+        db_models.ComputedTags.item_uuid == parent_uuid
+    )
+    parent_tags = conn.execute(stmt).scalar()
 
-    child_tags = session.query(
-        models.ComputedTags.tags
-    ).filter(
-        models.ComputedTags.item_uuid == child.uuid
-    ).scalar()
+    stmt = sa.select(
+        db_models.ComputedTags.tags
+    ).where(
+        db_models.ComputedTags.item_uuid == child_uuid
+    )
+    child_tags = conn.execute(stmt).scalar()
 
     tags: tuple[str, ...] = gather_tags(
         parent_uuid=parent_uuid,
         parent_tags=parent_tags if parent_tags else [],
-        item_uuid=child.uuid,
+        item_uuid=child_uuid,
         item_tags=child_tags if child_tags else [],
     )
 
@@ -139,23 +145,23 @@ def gather_tags(
 
 
 def insert_new_computed_tags(
-        session: Session,
-        item: models.Item,
+        conn: Connection,
+        item_uuid: UUID,
         tags: tuple[str, ...],
 ) -> None:
     """Forcefully insert new tags."""
     insert = pg_insert(
-        models.ComputedTags
+        db_models.ComputedTags
     ).values(
-        item_uuid=item.uuid,
+        item_uuid=item_uuid,
         tags=tuple(tags),
     )
 
     stmt = insert.on_conflict_do_update(
-        index_elements=[models.ComputedTags.item_uuid],
+        index_elements=[db_models.ComputedTags.item_uuid],
         set_={
             'tags': insert.excluded.tags,
         }
     )
 
-    session.execute(stmt)
+    conn.execute(stmt)

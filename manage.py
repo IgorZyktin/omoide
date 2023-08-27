@@ -118,9 +118,7 @@ def command_rebuild_known_tags(**kwargs: str | bool):
             run.run(config, database)
 
 
-@cli.command(
-    name='rebuild_computed_tags',
-)
+@cli.command(name='rebuild_computed_tags')
 @click.option(
     '--db-url',
     required=True,
@@ -128,9 +126,8 @@ def command_rebuild_known_tags(**kwargs: str | bool):
     help='Database URL',
 )
 @click.option(
-    '--limit-to-user',
-    multiple=True,
-    help='Apply to one or more specially listed users',
+    '--only-users',
+    help='Apply to one or more specially listed users (comma separated)',
 )
 @click.option(
     '--log-every-item/--no-log-every-item',
@@ -143,16 +140,14 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     from omoide.commands.application.rebuild_computed_tags import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = list(kwargs.pop('limit_to_user'))
+    only_users = utils.split(kwargs.pop('only_users', ''))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = base_db.BaseDatabase(config.db_url.get_secret_value())
+    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-                callback=LOG.info,
-                start_template='Rebuilding computed tags...',
-        ):
-            run.run(database, config)
+        with helpers.timing(callback=LOG.info,
+                            start_template='Rebuilding computed tags...'):
+            run.run(config, database)
 
 
 @cli.command(name='compact_tags')

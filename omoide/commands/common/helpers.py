@@ -73,17 +73,6 @@ def get_all_corresponding_users(
     return query.order_by(db_models.User.name).all()
 
 
-def get_direct_children(session: Session, uuid: UUID) -> list[models.Item]:
-    """Return all direct children."""
-    return session.query(
-        models.Item
-    ).filter(
-        models.Item.parent_uuid == uuid
-    ).order_by(
-        models.Item.number
-    ).all()
-
-
 def get_file_size(
         path: str | Path,
         default: Optional[int] = None,
