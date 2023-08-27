@@ -11,14 +11,14 @@ import sqlalchemy as sa
 from omoide import utils
 from omoide.storage.database import db_models
 from omoide.worker import worker_config
-from omoide.worker.database import Database
+from omoide.worker.database import WorkerDatabase
 from omoide.worker.filesystem import Filesystem
 from omoide.worker.worker import Worker
 
 
 @pytest.fixture(scope='session')
 def functional_tests_worker_database(functional_tests_db_uri):
-    database = Database(db_uri=functional_tests_db_uri)
+    database = WorkerDatabase(db_uri=functional_tests_db_uri)
     with database.life_cycle():
         yield database
 
@@ -79,7 +79,7 @@ def functional_tests_worker(
 class WorkerTestingRepo:
     """Helper class for testing worker."""
 
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: WorkerDatabase) -> None:
         """Initialize instance."""
         self.database = database
         self.items: list[str] = []

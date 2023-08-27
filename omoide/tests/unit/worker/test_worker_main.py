@@ -15,7 +15,7 @@ def test_worker_main_once(valid_worker_config):
     with (
         mock.patch('omoide.worker.__main__.worker_config.get_config',
                    return_value=valid_worker_config),
-        mock.patch('omoide.worker.__main__.Database'),
+        mock.patch('omoide.worker.__main__.WorkerDatabase'),
         mock.patch('omoide.worker.__main__.Filesystem'),
         mock.patch('omoide.worker.__main__.Worker',
                    return_value=fake_worker),
@@ -39,7 +39,7 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
                    return_value=valid_worker_config),
         mock.patch('omoide.worker.runtime.get_strategy',
                    return_value=dummy_worker_strategy),
-        mock.patch('omoide.worker.__main__.Database'),
+        mock.patch('omoide.worker.__main__.WorkerDatabase'),
         mock.patch('omoide.worker.__main__.Filesystem'),
         mock.patch('omoide.worker.__main__.Worker',
                    return_value=fake_worker),
