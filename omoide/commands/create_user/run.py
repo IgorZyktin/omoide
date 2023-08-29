@@ -29,7 +29,7 @@ def run(database: SyncDatabase, login: str,
         exists = True
         while exists:
             uuid = utils.uuid4()
-            exists = session.execute(stmt, {'uuid': str(uuid)}).scalar()
+            exists = bool(session.execute(stmt, {'uuid': str(uuid)}).scalar())
 
         user = db_models.User(
             uuid=str(utils.uuid4()),
@@ -52,7 +52,7 @@ def run(database: SyncDatabase, login: str,
             uuid=str(utils.uuid4()),
             parent_uuid=None,
             owner_uuid=user.uuid,
-            number=number + 1,
+            number=(number or 0) + 1,
             name=user.name,
             is_collection=True,
             content_ext=None,
