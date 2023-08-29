@@ -95,7 +95,7 @@ class ApiCopyImageUseCase:
                          constants.PREVIEW,
                          constants.THUMBNAIL):
                 await self.media_repo.copy_image(
-                    owner_uuid=user.uuid,
+                    owner_uuid=source.owner_uuid,
                     source_uuid=source_uuid,
                     target_uuid=target_uuid,
                     media_type=each,
