@@ -122,6 +122,14 @@
                    onclick="saveBasicStuff('alerts_basic')"
                    value="Save basic parameters">
 
+        {% if item.parent_uuid %}
+            <input id="copy_image"
+                   type="button"
+                   class="button control-button"
+                   onclick="copyImageFromGivenItem('{{ item.parent_uuid }}', '{{ item.uuid }}', 'alerts_basic')"
+                   value="Use this image for parent">
+        {% endif %}
+
             <input id="reset_basic"
                    type="button"
                    class="button control-button"

@@ -79,19 +79,18 @@ function fillTextarea(elementId, values) {
     $('#' + elementId).val(lines)
 }
 
-function saveBasic(alertsElementId) {
-    // save changes + copy thumbnail if need to
-    // let childUUID = newModel['copied_image_from']
-    // let parentUUID = newModel['uuid']
-    // if (isUUID(childUUID) && isUUID(parentUUID)) {
-    //     copyImageFromGivenItem(parentUUID, childUUID, alertsElementId)
-    // } else {
-    //     console.log(`Failed to copy thumbnail form ${childUUID} to ${parentUUID}`)
-    // }
-}
-
 function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     // make parent use thumbnail from given item
+    if (!isUUID(childUUID)) {
+        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId)
+        return;
+    }
+
+    if (!isUUID(parentUUID)) {
+        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId)
+        return;
+    }
+
     if (parentUUID === childUUID) {
         console.log(`Skipping copy thumbnail for ${childUUID} ` +
             `because it points on itself`)
