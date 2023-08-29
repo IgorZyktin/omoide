@@ -377,5 +377,46 @@ def command_tree(**kwargs) -> None:
             run.run(config, database)
 
 
+@cli.command(name='rename_metainfo_key')
+@click.option(
+    '--db-url',
+    required=True,
+    help='Database URL',
+)
+@click.option(
+    '--key',
+    required=True,
+    help='Existing metainfo key',
+)
+@click.option(
+    '--new',
+    required=True,
+    help='New name for given key',
+)
+@click.option(
+    '--batch-size',
+    type=int,
+    default=50,
+    help='Amount of records to be processed at once',
+)
+@click.option(
+    '--limit',
+    type=int,
+    default=-1,
+    help='Maximum amount of items to process (-1 for infinity)',
+)
+def command_rename_metainfo_key(db_url: str, key: str,
+                                new: str, batch_size: int, limit: int) -> None:
+    """Change metainfo key without changing its value."""
+    from omoide.commands.rename_metainfo_key import run
+
+    database = sync_db.SyncDatabase(db_url)
+
+    with database.life_cycle():
+        with helpers.timing(callback=LOG.info,
+                            start_template='Changing metainfo key...'):
+            run.run(database, key, new, batch_size, limit)
+
+
 if __name__ == '__main__':
     cli()
