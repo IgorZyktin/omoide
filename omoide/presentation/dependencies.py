@@ -526,14 +526,16 @@ def api_item_update_permissions_use_case(
 
 @utils.memorize
 def api_item_copy_image_use_case(
-        items_write_repository:
-        interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
-        metainfo_repository:
-        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
-        media_repository: AbsMediaRepository = Depends(media_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        items_write_repository: Annotated[interfaces.AbsItemsWriteRepository,
+                                          Depends(get_items_write_repo)],
+        metainfo_repository: Annotated[interfaces.AbsMetainfoRepository,
+                                       Depends(get_metainfo_repo)],
+        media_repository: Annotated[AbsMediaRepository, Depends(media_repo)],
 ) -> use_cases.ApiCopyImageUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyImageUseCase(
+        policy=policy,
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,
@@ -542,16 +544,19 @@ def api_item_copy_image_use_case(
 
 @utils.memorize
 def api_item_update_parent_use_case(
-        users_read_repository:
-        interfaces.AbsUsersReadRepository = Depends(get_users_read_repo),
-        items_write_repository:
-        interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
-        metainfo_repository:
-        interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
-        media_repository: AbsMediaRepository = Depends(media_repo),
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        users_read_repository: Annotated[interfaces.AbsUsersReadRepository,
+                                         Depends(get_users_read_repo)],
+        items_write_repository: Annotated[interfaces.AbsItemsWriteRepository,
+                                          Depends(get_items_write_repo)],
+        metainfo_repository: Annotated[interfaces.AbsMetainfoRepository,
+                                       Depends(get_metainfo_repo)],
+        media_repository: Annotated[AbsMediaRepository,
+                                    Depends(media_repo)],
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateParentUseCase(
+        policy=policy,
         users_repo=users_read_repository,
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
@@ -590,11 +595,13 @@ def api_browse_use_case(
 # api media related use cases -------------------------------------------------
 
 
-def create_media_use_case(
-        media_repository: AbsMediaRepository = Depends(media_repo),
+def api_create_media_use_case(
+        policy: Annotated[AbsPolicy, Depends(get_policy)],
+        media_repository: Annotated[AbsMediaRepository, Depends(media_repo)],
 ) -> use_cases.CreateMediaUseCase:
     """Get use case instance."""
-    return use_cases.CreateMediaUseCase(media_repo=media_repository)
+    return use_cases.CreateMediaUseCase(policy=policy,
+                                        media_repo=media_repository)
 
 
 # api exif related use cases -------------------------------------------------

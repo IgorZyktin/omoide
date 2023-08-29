@@ -9,24 +9,21 @@ from fastapi import status
 
 from omoide import use_cases
 from omoide import utils
-from omoide.domain import errors
-from omoide.domain import interfaces
+from omoide.application import web
 from omoide.domain.application import input_models
 from omoide.domain.core import core_models
 from omoide.presentation import dependencies as dep
-from omoide.presentation import web
 
 router = APIRouter(prefix='/api/media')
 
 
-@router.post('/{uuid}', status_code=status.HTTP_201_CREATED)
+@router.post('/{item_uuid}', status_code=status.HTTP_201_CREATED)
 async def api_create_media(
-        uuid: UUID,
+        item_uuid: UUID,
         in_media: input_models.InMedia,
         user: Annotated[core_models.User, Depends(dep.get_known_user)],
-        policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
         use_case: Annotated[use_cases.CreateMediaUseCase,
-                            Depends(dep.create_media_use_case)],
+                            Depends(dep.api_create_media_use_case)],
 ):
     """Create or update media entry."""
     media = core_models.Media(
@@ -35,15 +32,26 @@ async def api_create_media(
         processed_at=None,
         error='',
         owner_uuid=user.uuid,  # type: ignore
-        item_uuid=uuid,
+        item_uuid=item_uuid,
         media_type=in_media.media_type,
         content=in_media.get_binary_content(),
         ext=in_media.ext,
     )
 
-    result = await use_case.execute(policy, user, uuid, media)
+    result = await web.run(use_case.execute, user, item_uuid, media)
 
-    if isinstance(result, errors.Error):
-        web.raise_from_error(result)
+    return {'media_id': result.id}
+
+
+@router.put('/{source_uuid}/copy_image/{target_uuid}')
+async def api_copy_image_from_given_item(
+        source_uuid: UUID,
+        target_uuid: UUID,
+        user: Annotated[core_models.User, Depends(dep.get_known_user)],
+        use_case: Annotated[use_cases.ApiCopyImageUseCase,
+                            Depends(dep.api_item_copy_image_use_case)],
+):
+    """Copy image from given item."""
+    await web.run(use_case.execute, user, source_uuid, target_uuid)
 
     return {}
