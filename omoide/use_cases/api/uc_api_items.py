@@ -28,7 +28,7 @@ __all__ = [
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
     'ApiItemsDownloadUseCase',
-    'ApiCopyThumbnailUseCase',
+    'ApiCopyImageUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
     'ApiItemUpdatePermissionsUseCase',
@@ -657,7 +657,7 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
         return Success(item.parent_uuid)
 
 
-class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
+class ApiCopyImageUseCase(BaseItemMediaUseCase):
     """Use case for changing parent thumbnail."""
 
     async def execute(
@@ -723,9 +723,9 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
                     media_type=each,
                     ext=str(generic.ext),
                 )
-                key = f'copied_{each}_from'
-                await self.metainfo_repo.update_metainfo_extras(
-                    target_uuid, {key: str(source_uuid)})
+
+            await self.metainfo_repo.update_metainfo_extras(
+                target_uuid, {'copied_image_from': str(source_uuid)})
 
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())
@@ -798,7 +798,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not new_parent.thumbnail_ext and item.thumbnail_ext:
-                nested_use_case = ApiCopyThumbnailUseCase(
+                nested_use_case = ApiCopyImageUseCase(
                     self.items_repo,
                     self.metainfo_repo,
                     self.media_repo,

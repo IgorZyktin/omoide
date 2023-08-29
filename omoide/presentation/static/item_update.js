@@ -81,19 +81,16 @@ function fillTextarea(elementId, values) {
 
 function saveBasic(alertsElementId) {
     // save changes + copy thumbnail if need to
-    let childUUID = newModel['copied_image_from']
-    let parentUUID = newModel['uuid']
-
-    saveBasicStuff(alertsElementId)
-
-    if (isUUID(childUUID) && isUUID(parentUUID)) {
-        copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId)
-    } else {
-        console.log(`Failed to copy thumbnail form ${childUUID} to ${parentUUID}`)
-    }
+    // let childUUID = newModel['copied_image_from']
+    // let parentUUID = newModel['uuid']
+    // if (isUUID(childUUID) && isUUID(parentUUID)) {
+    //     copyImageFromGivenItem(parentUUID, childUUID, alertsElementId)
+    // } else {
+    //     console.log(`Failed to copy thumbnail form ${childUUID} to ${parentUUID}`)
+    // }
 }
 
-function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
+function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     // make parent use thumbnail from given item
     if (parentUUID === childUUID) {
         console.log(`Skipping copy thumbnail for ${childUUID} ` +
@@ -104,11 +101,11 @@ function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${childUUID}/copy_thumbnail/${parentUUID}`,
+        url: `/api/items/${childUUID}/copy_image/${parentUUID}`,
         contentType: 'application/json',
         success: function (response) {
-            console.log('Enqueued thumbnail copying', response)
-            makeAnnounce('Enqueued thumbnail copying', alertsElementId)
+            console.log('Enqueued image copying', response)
+            makeAnnounce('Enqueued image copying', alertsElementId)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON, alertsElementId)
@@ -148,11 +145,6 @@ function saveBasicStuff(alertsElementId) {
                 'op': 'replace',
                 'path': '/is_collection',
                 'value': newModel['is_collection'],
-            },
-            {
-                'op': 'replace',
-                'path': '/copied_image_from',
-                'value': newModel['copied_image_from'],
             },
         ]),
         success: function (response) {
