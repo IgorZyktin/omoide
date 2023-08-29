@@ -109,11 +109,11 @@ async def app_item_update(
     model = serialize_item(item)
     thumbnail_origin = ''
     if metainfo:
-        copied_cover_from = metainfo.extras.get('copied_cover_from')
-        if copied_cover_from:
-            thumbnail_origin = copied_cover_from
+        copied_image_from = metainfo.extras.get('copied_image_from')
+        if copied_image_from:
+            thumbnail_origin = copied_image_from
 
-    model['copied_cover_from'] = thumbnail_origin or str(item.uuid)
+    model['copied_image_from'] = thumbnail_origin or str(item.uuid)
 
     context = {
         'request': request,

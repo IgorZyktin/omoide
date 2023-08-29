@@ -110,7 +110,7 @@ def test_worker_copy_thumbnails_only_save(
     assert metainfo.thumbnail_width == 4
     assert metainfo.thumbnail_height == 8
     assert metainfo.thumbnail_size > -1
-    assert metainfo.extras['copied_thumbnail_from'] == source_item_uuid
+    assert metainfo.extras['copied_image_from'] == source_item_uuid
     assert len(media) == 1
     assert media[0].content == b'something-cool'
     assert len(media) == 1

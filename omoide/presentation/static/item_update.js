@@ -47,7 +47,7 @@ function resetBasic() {
     }
 
     $('#item_name').val(oldModel['name'] || '')
-    $('#thumbnail_origin').val(oldModel['copied_cover_from'] || '').trigger('input')
+    $('#thumbnail_origin').val(oldModel['copied_image_from'] || '').trigger('input')
     $('#item_is_collection').prop('checked', oldModel['is_collection']);
     $('#item_content_ext').val(oldModel['content_ext'] || '')
     $('#item_preview_ext').val(oldModel['preview_ext'] || '')
@@ -81,7 +81,7 @@ function fillTextarea(elementId, values) {
 
 function saveBasic(alertsElementId) {
     // save changes + copy thumbnail if need to
-    let childUUID = newModel['copied_cover_from']
+    let childUUID = newModel['copied_image_from']
     let parentUUID = newModel['uuid']
 
     saveBasicStuff(alertsElementId)
@@ -151,8 +151,8 @@ function saveBasicStuff(alertsElementId) {
             },
             {
                 'op': 'replace',
-                'path': '/copied_cover_from',
-                'value': newModel['copied_cover_from'],
+                'path': '/copied_image_from',
+                'value': newModel['copied_image_from'],
             },
         ]),
         success: function (response) {
