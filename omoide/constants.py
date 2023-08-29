@@ -4,4 +4,4 @@ CONTENT = 'content'
 PREVIEW = 'preview'
 THUMBNAIL = 'thumbnail'
 
-AUTH_COMPLEXITY = 4
+AUTH_COMPLEXITY = 4  # minimal

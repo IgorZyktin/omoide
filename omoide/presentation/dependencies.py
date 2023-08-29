@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """External components.
 """
 import binascii
@@ -9,21 +8,22 @@ from typing import Optional
 
 from databases import Database
 from fastapi import Depends
-from fastapi.security import HTTPBasicCredentials
-from starlette.requests import Request
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.security import HTTPBasicCredentials
+from starlette.requests import Request
 
+from omoide import constants
 from omoide import infra
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import auth
 from omoide.domain import interfaces
+from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
-from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.presentation import app_config
-from omoide.presentation import constants
+from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 from omoide.storage.repositories import asyncpg
 
@@ -122,12 +122,6 @@ def get_users_read_repo() -> interfaces.AbsUsersReadRepository:
 
 
 @utils.memorize
-def get_users_write_repo() -> interfaces.AbsUsersWriteRepository:
-    """Get repo instance."""
-    return asyncpg.UsersWriteRepository(get_db())
-
-
-@utils.memorize
 def get_items_read_repo() -> interfaces.AbsItemsReadRepository:
     """Get repo instance."""
     return asyncpg.ItemsReadRepository(get_db())
@@ -165,8 +159,8 @@ def get_aim(
     params = dict(request.query_params)
     return web.AimWrapper.from_params(
         params=params,
-        items_per_page=min(constants.ITEMS_PER_PAGE,
-                           constants.MAX_ITEMS_PER_PAGE),
+        items_per_page=min(app_constants.ITEMS_PER_PAGE,
+                           app_constants.MAX_ITEMS_PER_PAGE),
     )
 
 
@@ -211,7 +205,7 @@ def get_auth_use_case(
 def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator(
-        complexity=4,  # minimal
+        complexity=constants.AUTH_COMPLEXITY,
     )
 
 
