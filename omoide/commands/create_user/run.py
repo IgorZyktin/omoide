@@ -21,6 +21,16 @@ def run(database: SyncDatabase, login: str,
         )
         encoded_password = authenticator.encode_password(password)
 
+        stmt = sa.text("""
+        SELECT 1 FROM users WHERE uuid = :uuid
+        UNION
+        SELECT 1 FROM orphan_files WHERE owner_uuid = :uuid;
+        """)
+        exists = True
+        while exists:
+            uuid = utils.uuid4()
+            exists = session.execute(stmt, {'uuid': str(uuid)}).scalar()
+
         user = db_models.User(
             uuid=str(utils.uuid4()),
             login=login,
