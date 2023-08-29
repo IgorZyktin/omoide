@@ -9,6 +9,7 @@ from typing import Collection
 from uuid import UUID
 
 from omoide import domain
+from omoide import use_cases
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
@@ -32,8 +33,6 @@ __all__ = [
     'ApiItemUpdateTagsUseCase',
     'ApiItemUpdatePermissionsUseCase',
 ]
-
-from omoide.use_cases import ApiCopyImageUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -724,7 +723,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not new_parent.thumbnail_ext and item.thumbnail_ext:
-                nested_use_case = ApiCopyImageUseCase(
+                nested_use_case = use_cases.ApiCopyImageUseCase(
                     policy,
                     self.items_repo,
                     self.metainfo_repo,
