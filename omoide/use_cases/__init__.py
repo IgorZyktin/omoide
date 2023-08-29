@@ -6,7 +6,6 @@ from omoide.use_cases.api.uc_api_media import *
 from omoide.use_cases.api.uc_api_metainfo import *
 from omoide.use_cases.api.uc_api_profile_new import *
 from omoide.use_cases.api.uc_api_search import *
-from omoide.use_cases.api.uc_api_users import *
 from omoide.use_cases.application.uc_app_auth import *
 from omoide.use_cases.application.uc_app_browse import *
 from omoide.use_cases.application.uc_app_home import *
