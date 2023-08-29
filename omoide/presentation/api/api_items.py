@@ -175,24 +175,6 @@ async def api_item_update_permissions(
     return {'result': 'ok'}
 
 
-@router.put('/{source_uuid}/copy_image/{target_uuid}')
-async def api_copy_image_from_given_item(
-        source_uuid: UUID,
-        target_uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiCopyImageUseCase = Depends(
-            dep.api_item_copy_image_use_case),
-):
-    """Copy image from given item."""
-    result = await use_case.execute(policy, user, source_uuid, target_uuid)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return {'result': 'ok'}
-
-
 @router.put('/{uuid}/parent/{new_parent_uuid}')
 async def api_item_update_parent(
         uuid: UUID,

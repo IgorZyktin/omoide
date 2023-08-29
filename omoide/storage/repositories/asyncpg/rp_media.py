@@ -20,14 +20,14 @@ class MediaRepository(AbsMediaRepository):
     async def create_media(
             self,
             media: core_models.Media,
-    ) -> core_models.Media | errors.Error:
+    ) -> core_models.Media:
         """Create Media."""
         stmt = sa.insert(
             db_models.Media
         ).values(
             created_at=media.created_at,
             processed_at=media.processed_at,
-            error='',
+            error=None,
             owner_uuid=media.owner_uuid,
             item_uuid=media.item_uuid,
             media_type=media.media_type,
@@ -35,70 +35,10 @@ class MediaRepository(AbsMediaRepository):
             ext=media.ext,
         ).returning(db_models.Media.id)
 
-        result: core_models.Media | errors.Error  # ---------------------------
+        media_id = await self.db.execute(stmt)
+        media.id = media_id
 
-        try:
-            media_id = await self.db.execute(stmt)
-        except Exception as exc:
-            LOG.exception('Failed to create media')  # TODO - refactor
-            result = errors.DatabaseError(exception=exc)
-        else:
-            media.id = media_id
-            result = media
-
-        return result
-
-    async def get_media_by_id(
-            self,
-            media_id: int,
-    ) -> core_models.Media | errors.Error:
-        """Return Media."""
-        stmt = sa.select(
-            db_models.Media
-        ).where(
-            db_models.Media.id == media_id,
-        )
-
-        result: core_models.Media | errors.Error  # ---------------------------
-
-        try:
-            response = await self.db.fetch_one(stmt)
-        except Exception as exc:
-            LOG.exception('Failed to get media')  # TODO - refactor
-            result = errors.DatabaseError(exception=exc)
-        else:
-            if response is None:
-                result = errors.MediaDoesNotExist(media_id=media_id)
-            else:
-                result = core_models.Media(**response)
-
-        return result
-
-    async def delete_media(
-            self,
-            media_id: int,
-    ) -> None | errors.Error:
-        """Delete Media."""
-        stmt = sa.delete(
-            db_models.Media
-        ).where(
-            db_models.Media.id == media_id,
-        ).returning(1)
-
-        result: None | errors.Error  # ----------------------------------------
-
-        try:
-            response = await self.db.fetch_one(stmt)
-        except Exception as exc:
-            LOG.exception('Failed to delete media')  # TODO - refactor
-            result = errors.DatabaseError(exception=exc)
-        else:
-            if response is None:
-                result = errors.MediaDoesNotExist(media_id=media_id)
-            else:
-                result = None
-
-        return result
+        return media
 
     async def copy_media(
             self,
@@ -114,7 +54,7 @@ class MediaRepository(AbsMediaRepository):
         ).values(
             created_at=utils.now(),
             processed_at=None,
-            error='',
+            error=None,
             owner_uuid=str(owner_uuid),
             source_uuid=str(source_uuid),
             target_uuid=str(target_uuid),

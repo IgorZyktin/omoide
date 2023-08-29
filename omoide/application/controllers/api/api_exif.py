@@ -38,7 +38,7 @@ async def api_create_exif(
     await web.run(use_case.execute, user, item_uuid, exif)
 
     response.headers['Location'] = str(
-        request.url_for('api_create_exif', item_uuid=item_uuid)
+        request.url_for('api_read_exif', item_uuid=item_uuid)
     )
 
     return {}

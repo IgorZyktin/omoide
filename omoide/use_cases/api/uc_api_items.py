@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Use case for items.
 """
 import asyncio
@@ -14,6 +13,7 @@ from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.domain.interfaces import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
 from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
@@ -28,7 +28,6 @@ __all__ = [
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
     'ApiItemsDownloadUseCase',
-    'ApiCopyImageUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
     'ApiItemUpdatePermissionsUseCase',
@@ -195,11 +194,13 @@ class BaseItemMediaUseCase:
 
     def __init__(
             self,
+            policy: AbsPolicy,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
+        self.policy = policy
         self.items_repo = items_repo
         self.metainfo_repo = metainfo_repo
         self.media_repo = media_repo
@@ -657,94 +658,19 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
         return Success(item.parent_uuid)
 
 
-class ApiCopyImageUseCase(BaseItemMediaUseCase):
-    """Use case for changing parent thumbnail."""
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: domain.User,
-            source_uuid: UUID,
-            target_uuid: UUID,
-    ) -> Result[errors.Error, UUID]:
-        """Business logic."""
-        if target_uuid == source_uuid:
-            return Failure(errors.ItemItself(uuid=target_uuid))
-
-        if user.uuid is None:
-            return Failure(errors.ItemModificationByAnon())
-
-        async with self.items_repo.transaction():
-
-            error = await policy.is_restricted(user, source_uuid,
-                                               actions.Item.UPDATE)
-            if error:
-                return Failure(error)
-
-            error = await policy.is_restricted(user, target_uuid,
-                                               actions.Item.UPDATE)
-            if error:
-                return Failure(error)
-
-            source = await self.items_repo.read_item(source_uuid)
-
-            if source is None:
-                return Failure(errors.ItemDoesNotExist(uuid=source_uuid))
-
-            if source.content_ext is None:
-                return Failure(errors.ItemHasNoContent(uuid=source_uuid))
-
-            if source.preview_ext is None:
-                return Failure(errors.ItemHasNoPreview(uuid=source_uuid))
-
-            if source.thumbnail_ext is None:
-                return Failure(errors.ItemHasNoThumbnail(uuid=source_uuid))
-
-            metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
-
-            if metainfo is None:
-                return Failure(errors.MetainfoDoesNotExist(uuid=target_uuid))
-
-            for each in domain.MEDIA_TYPES:
-                generic = source.get_generic()[each]
-                if generic.ext is None or not generic.ext:
-                    return Failure(errors.ItemIsInconsistent(
-                        uuid=target_uuid,
-                        message=f'no ext for {each}',
-                    ))
-
-            for each in domain.MEDIA_TYPES:
-                generic = source.get_generic()[each]
-
-                await self.media_repo.copy_media(
-                    owner_uuid=user.uuid,
-                    source_uuid=source_uuid,
-                    target_uuid=target_uuid,
-                    media_type=each,
-                    ext=str(generic.ext),
-                )
-
-            await self.metainfo_repo.update_metainfo_extras(
-                target_uuid, {'copied_image_from': str(source_uuid)})
-
-            await self.metainfo_repo.mark_metainfo_updated(
-                target_uuid, utils.now())
-
-        return Success(source_uuid)
-
-
 class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     """Use case for changing parent item."""
 
     def __init__(
             self,
+            policy: AbsPolicy,
             users_repo: interfaces.AbsUsersReadRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
-        super().__init__(items_repo, metainfo_repo, media_repo)
+        super().__init__(policy, items_repo, metainfo_repo, media_repo)
         self.users_repo = users_repo
 
     async def execute(

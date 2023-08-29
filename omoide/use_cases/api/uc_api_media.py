@@ -2,14 +2,18 @@
 """
 from uuid import UUID
 
+from omoide import constants
+from omoide import utils
 from omoide.domain import actions
-from omoide.domain import errors
+from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
+from omoide.domain.interfaces import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
 
 __all__ = [
     'CreateMediaUseCase',
+    'ApiCopyImageUseCase',
 ]
 
 
@@ -18,25 +22,93 @@ class CreateMediaUseCase:
 
     def __init__(
             self,
+            policy: AbsPolicy,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
+        self.policy = policy
         self.media_repo = media_repo
 
     async def execute(
             self,
-            policy: interfaces.AbsPolicy,
             user: core_models.User,
-            uuid: UUID,
+            item_uuid: UUID,
             media: core_models.Media,
-    ) -> core_models.Media | errors.Error:
+    ) -> core_models.Media:
         """Business logic."""
         async with self.media_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Media.CREATE)
-            if error:
-                return error
+            await self.policy.check(user, item_uuid, actions.Media.CREATE)
+            result = await self.media_repo.create_media(media)
 
-            created_media = await self.media_repo.create_media(media)
+        return result
 
-        return created_media
+
+class ApiCopyImageUseCase:
+    """Use case for changing parent thumbnail."""
+
+    def __init__(
+            self,
+            policy: AbsPolicy,
+            items_repo: interfaces.AbsItemsWriteRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepository,
+            media_repo: AbsMediaRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.policy = policy
+        self.items_repo = items_repo
+        self.metainfo_repo = metainfo_repo
+        self.media_repo = media_repo
+
+    async def execute(
+            self,
+            user: core_models.User,
+            source_uuid: UUID,
+            target_uuid: UUID,
+    ) -> None:
+        """Business logic."""
+        if target_uuid == source_uuid:
+            raise exceptions.CircularReference(uuid1=source_uuid,
+                                               uuid2=target_uuid)
+
+        async with self.items_repo.transaction():
+            await self.policy.check(user, source_uuid, actions.Item.UPDATE)
+            await self.policy.check(user, target_uuid, actions.Item.UPDATE)
+
+            source = await self.items_repo.read_item(source_uuid)
+
+            if source is None:
+                raise exceptions.ItemDoesNotExistError(item_uuid=source_uuid)
+
+            if source.content_ext is None:
+                raise exceptions.ItemHasNoFieldError(item_uuid=source_uuid,
+                                                     field='content_ext')
+
+            if source.preview_ext is None:
+                raise exceptions.ItemHasNoFieldError(item_uuid=source_uuid,
+                                                     field='preview_ext')
+
+            if source.thumbnail_ext is None:
+                raise exceptions.ItemHasNoFieldError(item_uuid=source_uuid,
+                                                     field='thumbnail_ext')
+
+            metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
+
+            if metainfo is None:
+                raise exceptions.MetainfoNotExistError(item_uuid=source_uuid)
+
+            for each in (constants.CONTENT,
+                         constants.PREVIEW,
+                         constants.THUMBNAIL):
+                await self.media_repo.copy_media(
+                    owner_uuid=user.uuid,
+                    source_uuid=source_uuid,
+                    target_uuid=target_uuid,
+                    media_type=each,
+                    ext=getattr(source, f'{each}_ext', ''),
+                )
+
+            await self.metainfo_repo.update_metainfo_extras(
+                target_uuid, {'copied_image_from': str(source_uuid)})
+
+            await self.metainfo_repo.mark_metainfo_updated(
+                target_uuid, utils.now())
