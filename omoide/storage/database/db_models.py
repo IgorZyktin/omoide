@@ -42,6 +42,7 @@ class User(Base):
                                                      ondelete='SET NULL'),
                                        nullable=True,
                                        index=True)
+    auth_complexity = sa.Column(sa.Integer, nullable=False)
     # relations ---------------------------------------------------------------
 
     items: list['Item'] = relationship('Item',

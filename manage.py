@@ -1,7 +1,5 @@
 """Manual CLI operations.
 """
-import asyncio
-from typing import Optional
 from uuid import UUID
 
 import click
@@ -10,7 +8,6 @@ from pydantic import SecretStr
 from omoide import utils
 from omoide.commands import helpers
 from omoide.infra import custom_logging
-from omoide.presentation import dependencies as dep
 from omoide.storage.database import sync_db
 
 LOG = custom_logging.get_logger(__name__)
@@ -21,8 +18,11 @@ def cli():
     """Manual CLI operations."""
 
 
-@cli.command(
-    name='create_user',
+@cli.command(name='create_user')
+@click.option(
+    '--db-url',
+    required=True,
+    help='Database URL',
 )
 @click.option(
     '--login',
@@ -39,24 +39,28 @@ def cli():
     default=None,
     help='Name for new user (if not specified will use login)',
 )
-def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
+def cmd_create_user(db_url: str, login: str,
+                    password: str, name: str | None) -> None:
     """Manually create user."""
-    from omoide.commands.create_user import main
-    asyncio.run(main.run(
-        authenticator=dep.get_authenticator(),
-        items_repo=dep.get_items_write_repo(),
-        users_repo=dep.get_users_write_repo(),
-        login=login,
-        password=password,
-        name=name,
-    ))
+    from omoide.commands.create_user import run
+
+    database = sync_db.SyncDatabase(db_url)
+
+    with database.life_cycle():
+        with helpers.timing(callback=LOG.info,
+                            start_template='Creating user...'):
+            run.run(database, login, password, name)
 
 
-@cli.command(
-    name='change_password',
+@cli.command(name='change_password')
+@click.option(
+    '--db-url',
+    required=True,
+    help='Database URL',
 )
 @click.option(
     '--uuid',
+    type=UUID,
     required=True,
     help='UUID for existing user',
 )
@@ -65,22 +69,22 @@ def cmd_create_user(login: str, password: str, name: Optional[str]) -> None:
     required=True,
     help='New password',
 )
-def cmd_change_password(uuid: str, password: str):
+def cmd_change_password(db_url: str, uuid: UUID, password: str):
     """Manually change password for user."""
-    from omoide.commands.change_password import main
-    asyncio.run(main.run(
-        authenticator=dep.get_authenticator(),
-        users_repo=dep.get_users_write_repo(),
-        raw_uuid=uuid,
-        new_password=password,
-    ))
+    from omoide.commands.change_password import run
+
+    database = sync_db.SyncDatabase(db_url)
+
+    with database.life_cycle():
+        with helpers.timing(callback=LOG.info,
+                            start_template='Changing password...'):
+            run.run(database, uuid, password)
 
 
 @cli.command(name='rebuild_known_tags')
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
@@ -117,7 +121,6 @@ def command_rebuild_known_tags(**kwargs: str | bool):
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
@@ -149,7 +152,6 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
@@ -181,7 +183,6 @@ def cmd_compact_tags(**kwargs: str | bool):
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
@@ -239,19 +240,16 @@ def command_force_cover_copying(**kwargs) -> None:
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
     '--hot-folder',
-    type=str,
     default='',
     help='Location of the hot folder (optional)',
     show_default=True,
 )
 @click.option(
     '--cold-folder',
-    type=str,
     default='',
     help='Location of the cold folder (optional)',
     show_default=True,
@@ -298,19 +296,16 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
     '--hot-folder',
-    type=str,
     default='',
     help='Location of the hot folder (optional)',
     show_default=True,
 )
 @click.option(
     '--cold-folder',
-    type=str,
     default='',
     help='Location of the cold folder (optional)',
     show_default=True,
@@ -355,7 +350,6 @@ def command_rebuild_image_sizes(**kwargs) -> None:
 @click.option(
     '--db-url',
     required=True,
-    type=str,
     help='Database URL',
 )
 @click.option(
