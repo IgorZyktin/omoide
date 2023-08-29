@@ -39,7 +39,7 @@ def cli():
     default=None,
     help='Name for new user (if not specified will use login)',
 )
-def cmd_create_user(db_url: str, login: str,
+def command_create_user(db_url: str, login: str,
                     password: str, name: str | None) -> None:
     """Manually create user."""
     from omoide.commands.create_user import run
@@ -69,7 +69,7 @@ def cmd_create_user(db_url: str, login: str,
     required=True,
     help='New password',
 )
-def cmd_change_password(db_url: str, uuid: UUID, password: str):
+def command_change_password(db_url: str, uuid: UUID, password: str):
     """Manually change password for user."""
     from omoide.commands.change_password import run
 
@@ -163,7 +163,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     default=False,
     help='Output every refreshed item',
 )
-def cmd_compact_tags(**kwargs: str | bool):
+def command_compact_tags(**kwargs: str | bool):
     """If item and its parent share some tags, try to remove duplicates."""
     from omoide.commands.compact_tags import cfg
     from omoide.commands.compact_tags import run
