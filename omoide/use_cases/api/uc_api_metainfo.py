@@ -4,7 +4,6 @@ from uuid import UUID
 
 from omoide import utils
 from omoide.domain import actions
-from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
 from omoide.domain.interfaces import AbsPolicy
@@ -42,10 +41,6 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
             await self.policy.check(user, item_uuid, actions.Metainfo.UPDATE)
 
             current_metainfo = await self.meta_repo.read_metainfo(item_uuid)
-
-            # FIXME - move it to repo
-            if current_metainfo is None:
-                raise exceptions.ItemDoesNotExistError(item_uuid=item_uuid)
 
             current_metainfo.updated_at = utils.now()
 
@@ -85,9 +80,5 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
         async with self.meta_repo.transaction():
             await self.policy.check(user, item_uuid, actions.Metainfo.READ)
             metainfo = await self.meta_repo.read_metainfo(item_uuid)
-
-            # FIXME - move it to repo
-            if metainfo is None:
-                raise exceptions.ItemDoesNotExistError(item_uuid=item_uuid)
 
         return metainfo

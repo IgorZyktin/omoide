@@ -144,9 +144,6 @@ class AppBrowseUseCase:
 
         metainfo = await self.meta_repo.read_metainfo(item.uuid)
 
-        if metainfo is None:
-            return Failure(errors.ItemDoesNotExist(uuid=item.uuid))
-
         return BrowseResult(
             item=item,
             metainfo=metainfo,

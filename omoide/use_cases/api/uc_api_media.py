@@ -93,9 +93,6 @@ class ApiCopyImageUseCase:
 
             metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
 
-            if metainfo is None:
-                raise exceptions.MetainfoNotExistError(item_uuid=source_uuid)
-
             for each in (constants.CONTENT,
                          constants.PREVIEW,
                          constants.THUMBNAIL):

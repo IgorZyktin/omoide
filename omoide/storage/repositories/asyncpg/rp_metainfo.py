@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
 """Repository that perform CRUD operations on metainfo.
 """
 import datetime
-from typing import Any
 from typing import Collection
 from typing import Optional
-from typing import Sequence
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -13,7 +10,9 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
 from omoide import utils
+from omoide.domain import exceptions
 from omoide.domain import interfaces
+from omoide.domain.core import core_models
 from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
 
@@ -42,21 +41,21 @@ class MetainfoRepository(interfaces.AbsMetainfoRepository):
 
     async def read_metainfo(
             self,
-            uuid: UUID,
-    ) -> Optional[domain.Metainfo]:
-        """Return metainfo or None."""
+            item_uuid: UUID,
+    ) -> core_models.Metainfo:
+        """Return metainfo."""
         stmt = sa.select(
             models.Metainfo
         ).where(
-            models.Metainfo.item_uuid == uuid
+            models.Metainfo.item_uuid == item_uuid
         )
 
         response = await self.db.fetch_one(stmt)
 
         if response is None:
-            return None
+            raise exceptions.MetainfoNotExistError(item_uuid=item_uuid)
 
-        return domain.Metainfo(**response)
+        return core_models.Metainfo(**response)
 
     async def read_children_to_download(
             self,

@@ -377,12 +377,10 @@ class ApiItemUpdateUseCase:
                             and utils.is_valid_uuid(str(operation.value)):
                         uuid = UUID(str(operation.value))
                         metainfo = await self.metainfo_repo.read_metainfo(uuid)
-
-                        if metainfo is not None:
-                            metainfo.extras['copied_image_from'] \
-                                = operation.value
-                            await self.metainfo_repo.update_metainfo(user,
-                                                                     metainfo)
+                        metainfo.extras['copied_image_from'] \
+                            = str(operation.value)
+                        await self.metainfo_repo.update_metainfo(user,
+                                                                 metainfo)
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid,
                                                            utils.now())

@@ -3,10 +3,10 @@
 import abc
 import datetime
 from typing import Collection
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
@@ -25,8 +25,8 @@ class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_metainfo(
             self,
-            uuid: UUID,
-    ) -> Optional[domain.Metainfo]:
+            item_uuid: UUID,
+    ) -> core_models.Metainfo:
         """Return Metainfo or None."""
 
     @abc.abstractmethod
