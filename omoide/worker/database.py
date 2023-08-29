@@ -87,7 +87,7 @@ class WorkerDatabase(SyncDatabase):
         ).values(
             extras=sa.func.jsonb_set(
                 db_models.Metainfo.extras,
-                [f'copied_image_from'],
+                ['copied_image_from'],
                 f'"{command.source_uuid}"',
             )
         )
