@@ -91,12 +91,10 @@ class ApiCopyImageUseCase:
                 raise exceptions.ItemHasNoFieldError(item_uuid=source_uuid,
                                                      field='thumbnail_ext')
 
-            metainfo = await self.metainfo_repo.read_metainfo(target_uuid)
-
             for each in (constants.CONTENT,
                          constants.PREVIEW,
                          constants.THUMBNAIL):
-                await self.media_repo.copy_media(
+                await self.media_repo.copy_image(
                     owner_uuid=user.uuid,
                     source_uuid=source_uuid,
                     target_uuid=target_uuid,

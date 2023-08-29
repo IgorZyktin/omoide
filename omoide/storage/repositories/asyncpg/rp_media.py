@@ -5,7 +5,6 @@ from uuid import UUID
 import sqlalchemy as sa
 
 from omoide import utils
-from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
 from omoide.infra import custom_logging
@@ -40,14 +39,14 @@ class MediaRepository(AbsMediaRepository):
 
         return media
 
-    async def copy_media(
+    async def copy_image(
             self,
             owner_uuid: UUID,
             source_uuid: UUID,
             target_uuid: UUID,
             media_type: str,
             ext: str,
-    ) -> int | errors.Error:
+    ) -> int:
         """Save intention to copy data between items."""
         stmt = sa.insert(
             db_models.CommandCopy
@@ -62,14 +61,6 @@ class MediaRepository(AbsMediaRepository):
             ext=ext,
         ).returning(db_models.CommandCopy.id)
 
-        result: int | errors.Error  # -----------------------------------------
+        copy_id = await self.db.execute(stmt)
 
-        try:
-            copy_id = await self.db.execute(stmt)
-        except Exception as exc:
-            LOG.exception('Failed to create manual copy')  # TODO - refactor
-            result = errors.DatabaseError(exception=exc)
-        else:
-            result = copy_id
-
-        return result
+        return copy_id

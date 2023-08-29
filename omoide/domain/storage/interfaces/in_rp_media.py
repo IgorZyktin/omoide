@@ -18,7 +18,7 @@ class AbsMediaRepository(AbsBaseRepository):
         """Create Media, return media id."""
 
     @abc.abstractmethod
-    async def copy_media(
+    async def copy_image(
             self,
             owner_uuid: UUID,
             source_uuid: UUID,

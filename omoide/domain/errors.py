@@ -120,24 +120,3 @@ class MetainfoDoesNotExist(Error):
 class AuthenticationRequired(Error):
     """User must log in."""
     template = 'You must be logged in to do this'
-
-
-class DatabaseError(Error):
-    """Failed to perform operation in the DB."""
-    template = 'Failed to perform operation'
-
-
-# -----------------------------------------------------------------------------
-
-class DoesNotExist(Error):
-    """Base class that shows that object does not exist."""
-
-
-class MediaDoesNotExist(DoesNotExist):
-    """Does not exist."""
-    template = 'Media with id {media_id} does not exist'
-
-    def __init__(self, media_id: int) -> None:
-        """Initialize instance."""
-        super().__init__()
-        self.media_id = media_id
