@@ -77,17 +77,12 @@
                    onchange="alterModelTextField(this, 'name')"
                    class="height-auto">
 
-            <label for="thumbnail_origin">Origin of thumbnail:</label>
-            {% if metainfo and metainfo.extras.get('copied_thumbnail_from') %}
-                <input id="thumbnail_origin"
-                       type="text"
-                       value="{{ metainfo.extras.get('copied_thumbnail_from') }}"
-                       class="height-auto">
-            {% else %}
-                <input id="thumbnail_origin"
-                       type="text"
-                       value="{{ item.uuid }}"
-                       class="height-auto">
+            {% if metainfo and metainfo.extras.get('copied_image_from') %}
+                <label for="thumbnail_origin">Copied image from:</label>
+                    <input id="thumbnail_origin"
+                           type="text"
+                           value="{{ metainfo.extras.get('copied_image_from') }}"
+                           class="height-auto">
             {% endif %}
 
             <div id="thumbnail" class="thumbnail"></div>
@@ -124,8 +119,16 @@
             <input id="save_basic"
                    type="button"
                    class="button control-button"
-                   onclick="saveBasic('alerts_basic')"
+                   onclick="saveBasicStuff('alerts_basic')"
                    value="Save basic parameters">
+
+        {% if item.parent_uuid %}
+            <input id="copy_image"
+                   type="button"
+                   class="button control-button"
+                   onclick="copyImageFromGivenItem('{{ item.parent_uuid }}', '{{ item.uuid }}', 'alerts_basic')"
+                   value="Use this image for parent">
+        {% endif %}
 
             <input id="reset_basic"
                    type="button"
@@ -232,7 +235,7 @@
             let origin = $('#thumbnail_origin')
 
             origin.on('input', function () {
-                alterModelTextField(this, 'copied_cover_from')
+                alterModelTextField(this, 'copied_image_from')
                 tryLoadingThumbnail($(this).val(), $('#thumbnail'))
             });
 

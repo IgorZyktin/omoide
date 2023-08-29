@@ -47,7 +47,7 @@ function resetBasic() {
     }
 
     $('#item_name').val(oldModel['name'] || '')
-    $('#thumbnail_origin').val(oldModel['copied_cover_from'] || '').trigger('input')
+    $('#thumbnail_origin').val(oldModel['copied_image_from'] || '').trigger('input')
     $('#item_is_collection').prop('checked', oldModel['is_collection']);
     $('#item_content_ext').val(oldModel['content_ext'] || '')
     $('#item_preview_ext').val(oldModel['preview_ext'] || '')
@@ -79,22 +79,18 @@ function fillTextarea(elementId, values) {
     $('#' + elementId).val(lines)
 }
 
-function saveBasic(alertsElementId) {
-    // save changes + copy thumbnail if need to
-    let childUUID = newModel['copied_cover_from']
-    let parentUUID = newModel['uuid']
-
-    saveBasicStuff(alertsElementId)
-
-    if (isUUID(childUUID) && isUUID(parentUUID)) {
-        copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId)
-    } else {
-        console.log(`Failed to copy thumbnail form ${childUUID} to ${parentUUID}`)
-    }
-}
-
-function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
+function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     // make parent use thumbnail from given item
+    if (!isUUID(childUUID)) {
+        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId)
+        return;
+    }
+
+    if (!isUUID(parentUUID)) {
+        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId)
+        return;
+    }
+
     if (parentUUID === childUUID) {
         console.log(`Skipping copy thumbnail for ${childUUID} ` +
             `because it points on itself`)
@@ -104,11 +100,11 @@ function copyThumbnailFromGivenItem(parentUUID, childUUID, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${childUUID}/copy_thumbnail/${parentUUID}`,
+        url: `/api/items/${childUUID}/copy_image/${parentUUID}`,
         contentType: 'application/json',
         success: function (response) {
-            console.log('Enqueued thumbnail copying', response)
-            makeAnnounce('Enqueued thumbnail copying', alertsElementId)
+            console.log('Enqueued image copying', response)
+            makeAnnounce('Enqueued image copying', alertsElementId)
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON, alertsElementId)
@@ -148,11 +144,6 @@ function saveBasicStuff(alertsElementId) {
                 'op': 'replace',
                 'path': '/is_collection',
                 'value': newModel['is_collection'],
-            },
-            {
-                'op': 'replace',
-                'path': '/copied_cover_from',
-                'value': newModel['copied_cover_from'],
             },
         ]),
         success: function (response) {

@@ -39,7 +39,7 @@ def cli():
     default=None,
     help='Name for new user (if not specified will use login)',
 )
-def cmd_create_user(db_url: str, login: str,
+def command_create_user(db_url: str, login: str,
                     password: str, name: str | None) -> None:
     """Manually create user."""
     from omoide.commands.create_user import run
@@ -69,7 +69,7 @@ def cmd_create_user(db_url: str, login: str,
     required=True,
     help='New password',
 )
-def cmd_change_password(db_url: str, uuid: UUID, password: str):
+def command_change_password(db_url: str, uuid: UUID, password: str):
     """Manually change password for user."""
     from omoide.commands.change_password import run
 
@@ -163,7 +163,7 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     default=False,
     help='Output every refreshed item',
 )
-def cmd_compact_tags(**kwargs: str | bool):
+def command_compact_tags(**kwargs: str | bool):
     """If item and its parent share some tags, try to remove duplicates."""
     from omoide.commands.compact_tags import cfg
     from omoide.commands.compact_tags import run
@@ -375,6 +375,47 @@ def command_tree(**kwargs) -> None:
         with helpers.timing(callback=LOG.info,
                             start_template='Showing all descendants...'):
             run.run(config, database)
+
+
+@cli.command(name='rename_metainfo_key')
+@click.option(
+    '--db-url',
+    required=True,
+    help='Database URL',
+)
+@click.option(
+    '--key',
+    required=True,
+    help='Existing metainfo key',
+)
+@click.option(
+    '--new',
+    required=True,
+    help='New name for given key',
+)
+@click.option(
+    '--batch-size',
+    type=int,
+    default=50,
+    help='Amount of records to be processed at once',
+)
+@click.option(
+    '--limit',
+    type=int,
+    default=-1,
+    help='Maximum amount of items to process (-1 for infinity)',
+)
+def command_rename_metainfo_key(db_url: str, key: str,
+                                new: str, batch_size: int, limit: int) -> None:
+    """Change metainfo key without changing its value."""
+    from omoide.commands.rename_metainfo_key import run
+
+    database = sync_db.SyncDatabase(db_url)
+
+    with database.life_cycle():
+        with helpers.timing(callback=LOG.info,
+                            start_template='Changing metainfo key...'):
+            run.run(database, key, new, batch_size, limit)
 
 
 if __name__ == '__main__':

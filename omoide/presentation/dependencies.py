@@ -525,15 +525,15 @@ def api_item_update_permissions_use_case(
 
 
 @utils.memorize
-def api_item_copy_thumbnail_use_case(
+def api_item_copy_image_use_case(
         items_write_repository:
         interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
         metainfo_repository:
         interfaces.AbsMetainfoRepository = Depends(get_metainfo_repo),
         media_repository: AbsMediaRepository = Depends(media_repo),
-) -> use_cases.ApiCopyThumbnailUseCase:
+) -> use_cases.ApiCopyImageUseCase:
     """Get use case instance."""
-    return use_cases.ApiCopyThumbnailUseCase(
+    return use_cases.ApiCopyImageUseCase(
         items_repo=items_write_repository,
         metainfo_repo=metainfo_repository,
         media_repo=media_repository,

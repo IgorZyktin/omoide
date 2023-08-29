@@ -84,7 +84,7 @@ class WorkerTestingRepo:
         self.database = database
         self.items: list[str] = []
         self.users: list[str] = []
-        self.copy_thumbnail: list[int] = []
+        self.copy_image: list[int] = []
         self.media: list[int] = []
 
     def create_user(self) -> str:
@@ -178,7 +178,7 @@ class WorkerTestingRepo:
             )
             session.add(command)
             session.commit()
-            self.copy_thumbnail.append(command.id)
+            self.copy_image.append(command.id)
             return command.id
 
     def create_media(
@@ -206,7 +206,7 @@ class WorkerTestingRepo:
             self.media.append(media.id)
             return media.id
 
-    def get_copy_thumbnail_result(
+    def get_copy_image_result(
             self,
             target_item_uuid: UUID | str,
     ) -> tuple:
@@ -224,7 +224,7 @@ class WorkerTestingRepo:
             media = item.media
             return item, metainfo, media, command
 
-    def get_all_thumbnail(self) -> list[db_models.CommandCopy]:
+    def get_all_copies(self) -> list[db_models.CommandCopy]:
         """Return all copy commands."""
         with self.database.start_session() as session:
             commands = session.query(db_models.CommandCopy).all()

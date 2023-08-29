@@ -88,7 +88,7 @@ def create_files(
     return repo, source_item_uuid, target_item_uuid
 
 
-def test_worker_copy_thumbnails_only_save(
+def test_worker_copy_images_only_save(
         create_files,
         functional_tests_worker_config,
         functional_tests_worker,
@@ -104,13 +104,13 @@ def test_worker_copy_thumbnails_only_save(
 
     runtime.run_once(config, worker)
 
-    item, metainfo, media, command = repo.get_copy_thumbnail_result(
+    item, metainfo, media, command = repo.get_copy_image_result(
         target_item_uuid)
     assert item.thumbnail_ext is not None
     assert metainfo.thumbnail_width == 4
     assert metainfo.thumbnail_height == 8
     assert metainfo.thumbnail_size > -1
-    assert metainfo.extras['copied_thumbnail_from'] == source_item_uuid
+    assert metainfo.extras['copied_image_from'] == source_item_uuid
     assert len(media) == 1
     assert media[0].content == b'something-cool'
     assert len(media) == 1
@@ -118,7 +118,7 @@ def test_worker_copy_thumbnails_only_save(
     assert worker.counter == 1
 
 
-def test_worker_copy_thumbnails_only_delete(
+def test_worker_copy_image_only_delete(
         populate_database_ready_command,
         functional_tests_worker_config,
         functional_tests_worker,
@@ -134,6 +134,6 @@ def test_worker_copy_thumbnails_only_delete(
 
     runtime.run_once(config, worker)
 
-    commands = repo.get_all_thumbnail()
+    commands = repo.get_all_copies()
     assert not commands
     assert worker.counter == 1

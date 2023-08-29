@@ -28,7 +28,7 @@ __all__ = [
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
     'ApiItemsDownloadUseCase',
-    'ApiCopyThumbnailUseCase',
+    'ApiCopyImageUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
     'ApiItemUpdatePermissionsUseCase',
@@ -371,14 +371,14 @@ class ApiItemUpdateUseCase:
                 elif operation.path == '/thumbnail_ext':
                     item.thumbnail_ext = \
                         (str(operation.value) if operation.value else None)
-                elif operation.path == '/copied_cover_from':
+                elif operation.path == '/copied_image_from':
                     if operation.value \
                             and utils.is_valid_uuid(str(operation.value)):
                         uuid = UUID(str(operation.value))
                         metainfo = await self.metainfo_repo.read_metainfo(uuid)
 
                         if metainfo is not None:
-                            metainfo.extras['copied_cover_from'] \
+                            metainfo.extras['copied_image_from'] \
                                 = operation.value
                             await self.metainfo_repo.update_metainfo(user,
                                                                      metainfo)
@@ -657,7 +657,7 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
         return Success(item.parent_uuid)
 
 
-class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
+class ApiCopyImageUseCase(BaseItemMediaUseCase):
     """Use case for changing parent thumbnail."""
 
     async def execute(
@@ -723,9 +723,9 @@ class ApiCopyThumbnailUseCase(BaseItemMediaUseCase):
                     media_type=each,
                     ext=str(generic.ext),
                 )
-                key = f'copied_{each}_from'
-                await self.metainfo_repo.update_metainfo_extras(
-                    target_uuid, {key: str(source_uuid)})
+
+            await self.metainfo_repo.update_metainfo_extras(
+                target_uuid, {'copied_image_from': str(source_uuid)})
 
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())
@@ -798,7 +798,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not new_parent.thumbnail_ext and item.thumbnail_ext:
-                nested_use_case = ApiCopyThumbnailUseCase(
+                nested_use_case = ApiCopyImageUseCase(
                     self.items_repo,
                     self.metainfo_repo,
                     self.media_repo,

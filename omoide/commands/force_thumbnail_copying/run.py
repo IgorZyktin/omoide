@@ -129,7 +129,7 @@ def copy_properties(
     helpers.insert_into_metainfo_extras(
         session=session,
         metainfo=parent_metainfo,
-        new_data={'copied_thumbnail_from': str(child.uuid)}
+        new_data={'copied_image_from': str(child.uuid)}
     )
 
     parent_metainfo.updated_at = utils.now()
