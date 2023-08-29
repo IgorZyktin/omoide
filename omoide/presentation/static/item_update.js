@@ -100,7 +100,7 @@ function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${childUUID}/copy_image/${parentUUID}`,
+        url: `/api/media/${childUUID}/copy_image/${parentUUID}`,
         contentType: 'application/json',
         success: function (response) {
             console.log('Enqueued image copying', response)
