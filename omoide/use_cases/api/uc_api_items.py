@@ -33,6 +33,8 @@ __all__ = [
     'ApiItemUpdatePermissionsUseCase',
 ]
 
+from omoide.use_cases import ApiCopyImageUseCase
+
 LOG = custom_logging.get_logger(__name__)
 
 
@@ -723,12 +725,12 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
             if not new_parent.thumbnail_ext and item.thumbnail_ext:
                 nested_use_case = ApiCopyImageUseCase(
+                    policy,
                     self.items_repo,
                     self.metainfo_repo,
                     self.media_repo,
                 )
                 nested_result = await nested_use_case.execute(
-                    policy=policy,
                     user=user,
                     source_uuid=item.uuid,
                     target_uuid=new_parent.uuid,
