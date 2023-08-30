@@ -24,7 +24,7 @@ class WorkerDatabase(SyncDatabase):
             db_models.CommandCopy
         ).filter(
             db_models.CommandCopy.processed_at == None,  # noqa
-            db_models.CommandCopy.error == ''
+            db_models.CommandCopy.error == None,  # noqa
         )
 
         if last_seen is not None:
@@ -48,7 +48,7 @@ class WorkerDatabase(SyncDatabase):
             db_models.Media
         ).filter(
             db_models.Media.processed_at == None,  # noqa
-            db_models.Media.error == ''
+            db_models.Media.error == None,  # noqa
         )
 
         if last_seen is not None:
@@ -143,7 +143,7 @@ class WorkerDatabase(SyncDatabase):
             db_models.Media
         ).where(
             db_models.Media.processed_at != None,  # noqa
-            db_models.Media.error == '',
+            db_models.Media.error == None,  # noqa,
         )
 
         with self._engine.begin() as conn:
@@ -157,7 +157,7 @@ class WorkerDatabase(SyncDatabase):
             db_models.CommandCopy
         ).where(
             db_models.CommandCopy.processed_at != None,  # noqa
-            db_models.CommandCopy.error == '',
+            db_models.CommandCopy.error == None,  # noqa
         )
 
         with self._engine.begin() as conn:
