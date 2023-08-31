@@ -40,7 +40,7 @@ def cli():
     help='Name for new user (if not specified will use login)',
 )
 def command_create_user(db_url: str, login: str,
-                    password: str, name: str | None) -> None:
+                        password: str, name: str | None) -> None:
     """Manually create user."""
     from omoide.commands.create_user import run
 
