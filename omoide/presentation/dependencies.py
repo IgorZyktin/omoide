@@ -226,12 +226,11 @@ async def get_known_user(
         authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
 ) -> auth.User:
     """Load current user, raise if got anon."""
-    if not credentials.username or not credentials.password:
-        user = auth.User.new_anon()
-    else:
+    user = None
+    if credentials.username and credentials.password:
         user = await use_case.execute(credentials, authenticator)
 
-    if user.is_not_registered:
+    if user is None or user.is_not_registered:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='You are not allowed to perform this operation',

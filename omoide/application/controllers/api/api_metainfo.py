@@ -20,7 +20,7 @@ router = APIRouter(prefix='/api/metainfo')
 async def api_update_metainfo(
         item_uuid: UUID,
         in_metainfo: input_models.InMetainfo,
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[core_models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.UpdateMetainfoUseCase,
                             Depends(dep.update_metainfo_use_case)],
 ):

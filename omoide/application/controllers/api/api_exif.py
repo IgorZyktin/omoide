@@ -25,7 +25,7 @@ async def api_create_exif(
         response: Response,
         item_uuid: UUID,
         in_exif: input_models.InEXIF,
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[core_models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.CreateEXIFUseCase,
                             Depends(dep.api_create_exif_use_case)],
 ):
@@ -63,7 +63,7 @@ async def api_read_exif(
 async def api_update_exif(
         item_uuid: UUID,
         in_exif: input_models.InEXIF,
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[core_models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.UpdateEXIFUseCase,
                             Depends(dep.api_update_exif_use_case)],
 ):
@@ -80,7 +80,7 @@ async def api_update_exif(
 @router.delete('/{item_uuid}', status_code=status.HTTP_202_ACCEPTED)
 async def api_delete_exif(
         item_uuid: UUID,
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[core_models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.DeleteEXIFUseCase,
                             Depends(dep.api_delete_exif_use_case)],
 ):
