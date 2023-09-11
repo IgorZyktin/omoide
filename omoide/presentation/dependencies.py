@@ -4,18 +4,16 @@ import binascii
 from base64 import b64decode
 from functools import partial
 from typing import Annotated
-from typing import Any
-from typing import Callable
 from typing import Optional
 
 from databases import Database
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
-from fastapi.datastructures import URL
 from fastapi.security import HTTPBasicCredentials
-from starlette.requests import Request
 from fastapi.templating import Jinja2Templates
+from starlette.requests import Request
+
 from omoide import constants
 from omoide import infra
 from omoide import use_cases
@@ -38,8 +36,8 @@ def get_config() -> app_config.Config:
 
 
 def patch_request(
-    request: Request,
-    config: Annotated[app_config.Config, Depends(get_config)],
+        request: Request,
+        config: Annotated[app_config.Config, Depends(get_config)],
 ) -> None:
     """Monkey-patch the request.
 
@@ -53,45 +51,12 @@ def patch_request(
     request.url_for = partial(web.patched_url_for, original_method)
 
 
-_URL_CACHE: dict[tuple[str, Any], str] = {}
-
-
 @utils.memorize
 def get_templates() -> Jinja2Templates:
     """Get templates instance."""
     templates = Jinja2Templates(directory='omoide/presentation/templates')
     templates.env.globals['zip'] = zip
     return templates
-
-
-@utils.memorize
-def get_url_for(
-        config: Annotated[app_config.Config, Depends(get_config)],
-) -> Callable[[Request, str, ...], URL]:
-    """Get URL converter."""
-
-    def _https_url_for(
-            request: Request,
-            name: str,
-            **path_params: Any,
-    ) -> URL:
-        """Rewrite static files to HTTPS if on prod and cache result."""
-        url = request.url_for(name, **path_params)
-        return url.replace(scheme='https')
-
-    def _url_for(
-            request: Request,
-            name: str,
-            **path_params: Any,
-    ) -> URL:
-        """Basic url_for."""
-        url = request.url_for(name, **path_params)
-        return url
-
-    if config.env == 'prod':
-        return _https_url_for
-    else:
-        return _url_for
 
 
 @utils.memorize
