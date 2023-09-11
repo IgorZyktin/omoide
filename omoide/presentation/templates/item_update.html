@@ -3,9 +3,9 @@
 
 {% block head %}
     <script type="text/javascript"
-            src="{{ url_for(request, 'static', path='crud.js') }}"></script>
+            src="{{ request.url_for('static', path='crud.js') }}"></script>
     <script type="text/javascript"
-            src="{{ url_for(request, 'static', path='item_update.js') }}"></script>
+            src="{{ request.url_for('static', path='item_update.js') }}"></script>
 {% endblock %}
 
 {% block body %}
@@ -27,7 +27,7 @@
                    onclick="copyText('{{ item.parent_uuid or '' }}', 'ID', 'copy-alerts-parent')"
                    style="height: 100%">
                     <img class="icon-big"
-                         src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                         src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
                          alt="Copy ID"
                          title="Copy ID"/></a>
             </div>
@@ -64,7 +64,7 @@
                    onclick="copyText('{{ item.uuid }}', 'ID', 'copy-alerts-item')"
                    style="height: 100%">
                     <img class="icon-big"
-                         src="{{ url_for(request, 'static', path='ic_copy_uuid.svg') }}"
+                         src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
                          alt="Copy ID"
                          title="Copy ID"/></a>
             </div>

@@ -3,7 +3,7 @@
 
 {% block head %}
     <script type="text/javascript"
-            src="{{ url_for(request, 'static', path='crud.js') }}"></script>
+            src="{{ request.url_for('static', path='crud.js') }}"></script>
 {% endblock %}
 
 {% block body %}

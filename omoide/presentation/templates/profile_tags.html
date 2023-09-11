@@ -13,7 +13,7 @@
             {% for tag, counter in known_tags %}
                 <tr>
                     <td>
-                        <a href="{{ url_for(request, 'app_search')|string + '?' + aim_wrapper.to_url(q=tag) }}" class="to-top-link">{{ tag }}</a>
+                        <a href="{{ request.url_for('app_search')|string + '?' + aim_wrapper.to_url(q=tag) }}" class="to-top-link">{{ tag }}</a>
                     </td>
                     <td>{{ sep_digits(counter) }}</td>
                 </tr>
