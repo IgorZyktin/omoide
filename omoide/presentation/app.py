@@ -5,19 +5,23 @@ This component is facing towards the user and displays search results.
 import os
 
 import fastapi
-from fastapi.staticfiles import StaticFiles
+from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
+from omoide.application.controllers import api
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
-from omoide.application.controllers import api
 
 app = fastapi.FastAPI(
     # openapi_url=None,
     # docs_url=None,
     # redoc_url=None,
+    dependencies=[
+        Depends(dep.patch_request),
+    ],
 )
 
 
