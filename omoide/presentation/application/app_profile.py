@@ -33,14 +33,14 @@ async def app_profile(
     """Show user home page."""
     if user.is_not_registered or user.uuid is None:
         error = errors.AuthenticationRequired()
-        return web.redirect_from_error(templates, request, error)
+        return web.redirect_from_error(request, error)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': templates.url_for(request, 'app_search'),
+        'url': request.url_for('app_search'),
     }
     return templates.TemplateResponse('profile.html', context)
 
@@ -60,7 +60,7 @@ async def app_profile_quotas(
     result = await use_case.execute(user)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(templates, request, result.error)
+        return web.redirect_from_error(request, result.error)
 
     items_size, total_items, total_collections = result.value
 
@@ -91,14 +91,14 @@ async def app_profile_new(
     """Show recent updates."""
     if user.is_not_registered or user.uuid is None:
         error = errors.AuthenticationRequired()
-        return web.redirect_from_error(templates, request, error)
+        return web.redirect_from_error(request, error)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'endpoint': templates.url_for(request, 'api_profile_new'),
+        'endpoint': request.url_for('api_profile_new'),
     }
     return templates.TemplateResponse('profile_new.html', context)
 
@@ -117,12 +117,12 @@ async def app_profile_tags(
     """Show know tags."""
     if user.is_not_registered or user.uuid is None:
         error = errors.AuthenticationRequired()
-        return web.redirect_from_error(templates, request, error)
+        return web.redirect_from_error(request, error)
 
     result = await use_case.execute(user)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(templates, request, result.error)
+        return web.redirect_from_error(request, result.error)
 
     known_tags = result.value
 

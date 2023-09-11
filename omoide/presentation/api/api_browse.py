@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Browse page related API operations.
 """
 import fastapi
@@ -27,7 +26,6 @@ async def api_browse(
             dep.api_browse_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Return portion of items for browse template."""
     valid_uuid = global_utils.cast_uuid(uuid)
@@ -42,5 +40,4 @@ async def api_browse(
 
     items, names = result.value
 
-    return web.items_to_dict(
-        request, templates, items, names, config.prefix_size)
+    return web.items_to_dict(request, items, names, config.prefix_size)

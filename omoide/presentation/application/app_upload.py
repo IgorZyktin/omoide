@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Routes related to media upload.
 """
 from typing import Type
@@ -39,14 +38,12 @@ async def app_upload(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        return web.redirect_from_error(
-            templates, request, errors.InvalidUUID(uuid=uuid))
+        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
 
     _result = await use_case.execute(policy, user, valid_uuid)
 
     if isinstance(_result, Failure):
-        return web.redirect_from_error(
-            templates, request, _result.error, valid_uuid)
+        return web.redirect_from_error(request, _result.error, valid_uuid)
 
     item, permissions = _result.value
 
@@ -55,10 +52,10 @@ async def app_upload(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': templates.url_for(request, 'app_search'),
+        'url': request.url_for('app_search'),
         'item': item,
         'permissions': permissions,
-        'locate': web.get_locator(templates, request, config.prefix_size),
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return templates.TemplateResponse('upload.html', context)

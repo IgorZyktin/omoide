@@ -4,7 +4,7 @@
     {{ super() }}
 
     <meta property="og:url"
-          content="{{ url_for(request, 'app_browse', uuid=current_item.uuid) }}"/>
+          content="{{ request.url_for('app_browse', uuid=current_item.uuid) }}"/>
 
     {% if current_item.preview_ext %}
         <meta property="og:image"

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Item related API operations.
 """
 import http
@@ -37,7 +36,6 @@ async def api_create_item(
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemCreateUseCase = Depends(
             dep.api_item_create_use_case),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Create item."""
     result = await use_case.execute(policy, user, payload)
@@ -45,8 +43,9 @@ async def api_create_item(
     if isinstance(result, Failure):
         web.raise_from_error(result.error)
 
-    response.headers['Location'] = templates.url_for(
-        request, 'api_read_item', uuid=result.value)
+    response.headers['Location'] = str(
+        request.url_for('api_read_item', uuid=result.value)
+    )
 
     return api_models.OnlyUUID(uuid=result.value)
 
@@ -239,7 +238,6 @@ async def api_items_download(
         use_case: use_cases.ApiItemsDownloadUseCase = Depends(
             dep.api_items_download_use_case),
         config: Config = Depends(dep.get_config),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = PlainTextResponse,
 ):
     """Return all children as zip archive.
@@ -249,7 +247,7 @@ async def api_items_download(
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(templates, request, result.error, uuid)
+        return web.redirect_from_error(request, result.error, uuid)
 
     parent, rows = result.value
 

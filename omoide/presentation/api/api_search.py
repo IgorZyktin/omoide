@@ -22,7 +22,6 @@ async def api_search(
             dep.api_search_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Return portion of random items."""
     result = await use_case.execute(user, aim_wrapper.aim)
@@ -32,7 +31,6 @@ async def api_search(
         return simple_items
 
     items, names = result.value
-    simple_items = web.items_to_dict(
-        request, templates, items, names, config.prefix_size)
+    simple_items = web.items_to_dict(request, items, names, config.prefix_size)
 
     return simple_items
