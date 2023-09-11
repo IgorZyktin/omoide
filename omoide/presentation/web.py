@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Internet related tools.
 """
 import copy
@@ -16,6 +15,7 @@ from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException
+from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
@@ -407,3 +407,24 @@ def items_to_dict(
         simple_items.append(simple_item)
 
     return simple_items
+
+
+def patched_url_for(
+        url_for: Callable[[str, ...], URL],
+        name: str,
+        **path_params: Any,
+) -> str:
+    """Sanitized version with scheme altering."""
+    url = str(url_for(name, **path_params))
+
+    # noinspection HttpUrlsUsage
+    if url.startswith('http://www'):
+        new_url = 'https://' + url[10:]
+        LOG.warning('Replacing {} to {} (got name {} with path_params {})',
+                    url, new_url, name, path_params)
+        url = new_url
+
+    elif url.startswith('http://'):
+        url = 'https://' + url[7:]
+
+    return url
