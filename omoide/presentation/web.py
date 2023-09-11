@@ -9,7 +9,6 @@ from typing import Callable
 from typing import NoReturn
 from typing import Optional
 from typing import Type
-from typing import TypeAlias
 from urllib.parse import urlencode
 from uuid import UUID
 
@@ -17,7 +16,6 @@ from fastapi import HTTPException
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
-from starlette.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import utils
@@ -28,8 +26,6 @@ from omoide.presentation import constants
 from omoide.utils import maybe_str
 
 LOG = custom_logging.get_logger(__name__)
-
-TemplateEngine: TypeAlias = Jinja2Templates
 
 # TODO - rewrite to base classes
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {

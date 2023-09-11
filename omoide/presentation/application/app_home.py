@@ -1,5 +1,6 @@
 """Hope page related routes.
 """
+from typing import Annotated
 from typing import Type
 
 import fastapi
@@ -7,6 +8,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
+from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide.presentation import dependencies as dep
@@ -19,10 +21,10 @@ router = fastapi.APIRouter()
 @router.get('/')
 async def app_home(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = fastapi.Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Home endpoint for user."""

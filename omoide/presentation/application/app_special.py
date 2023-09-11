@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 """Browse related routes.
 """
 import http
+from typing import Annotated
 from typing import Type
 
 import fastapi
@@ -9,6 +9,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
+from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide.presentation import dependencies as dep
@@ -21,10 +22,10 @@ router = fastapi.APIRouter()
 @router.get('/not_found')
 async def not_found(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <not found> page."""
@@ -44,10 +45,10 @@ async def not_found(
 @router.get('/unauthorized')
 async def unauthorized(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <unauthorized> page."""
@@ -67,10 +68,10 @@ async def unauthorized(
 @router.get('/forbidden')
 async def forbidden(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <forbidden> page."""
@@ -90,10 +91,10 @@ async def forbidden(
 @router.get('/bad_request')
 async def bad_request(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show <bad request> page."""

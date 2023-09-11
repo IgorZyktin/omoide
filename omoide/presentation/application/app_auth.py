@@ -1,6 +1,7 @@
 """Auth related routes.
 """
 import asyncio
+from typing import Annotated
 from typing import Type
 
 import fastapi
@@ -11,6 +12,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.security import HTTPBasic
 from fastapi.security import HTTPBasicCredentials
+from fastapi.templating import Jinja2Templates
 from starlette import status
 
 from omoide import domain
@@ -57,9 +59,9 @@ async def app_login(
 @router.get('/logout')
 async def app_logout(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Clear authorization."""

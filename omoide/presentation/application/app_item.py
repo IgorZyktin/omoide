@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Routes related to item operations.
 """
+from typing import Annotated
 from typing import Type
 from uuid import UUID
 
@@ -8,6 +9,7 @@ import fastapi
 import ujson
 from fastapi import Depends
 from fastapi import Request
+from fastapi.templating import Jinja2Templates
 from starlette.responses import HTMLResponse
 from starlette.responses import Response
 
@@ -27,13 +29,13 @@ router = fastapi.APIRouter(prefix='/items')
 async def app_item_create(
         request: Request,
         uuid: str,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Create item page."""
@@ -81,13 +83,13 @@ def serialize_item(
 async def app_item_update(
         request: Request,
         uuid: UUID,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Edit item page."""
@@ -138,13 +140,13 @@ async def app_item_update(
 async def app_item_delete(
         request: Request,
         uuid: UUID,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Delete item page."""

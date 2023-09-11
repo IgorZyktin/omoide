@@ -1,5 +1,6 @@
 """Browse related routes.
 """
+from typing import Annotated
 from typing import Type
 
 import fastapi
@@ -7,6 +8,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
+from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import use_cases
@@ -27,13 +29,13 @@ router = fastapi.APIRouter()
 async def app_browse(
         request: Request,
         uuid: str,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppBrowseUseCase = Depends(
             dep.app_browse_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item as collection."""

@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 """User profile related routes.
 """
+from typing import Annotated
 from typing import Type
 
 import fastapi
@@ -8,6 +8,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
+from fastapi.templating import Jinja2Templates
 
 from omoide import domain
 from omoide import use_cases
@@ -24,10 +25,10 @@ router = fastapi.APIRouter()
 @router.get('/profile')
 async def app_profile(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show user home page."""
@@ -48,12 +49,12 @@ async def app_profile(
 @router.get('/profile/quotas')
 async def app_profile_quotas(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileQuotasUseCase = Depends(
             dep.profile_quotas_use_case),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show space usage stats."""
@@ -82,10 +83,10 @@ async def app_profile_quotas(
 @router.get('/profile/new')
 async def app_profile_new(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show recent updates."""
@@ -106,12 +107,12 @@ async def app_profile_new(
 @router.get('/profile/tags')
 async def app_profile_tags(
         request: Request,
+        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: domain.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileTagsUseCase = Depends(
             dep.profile_tags_use_case),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show know tags."""
