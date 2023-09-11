@@ -4,12 +4,14 @@ import binascii
 from base64 import b64decode
 from typing import Annotated
 from typing import Any
+from typing import Callable
 from typing import Optional
 
 from databases import Database
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.datastructures import URL
 from fastapi.security import HTTPBasicCredentials
 from starlette.requests import Request
 
@@ -86,6 +88,36 @@ def get_templates() -> web.TemplateEngine:
     templates.env.globals['zip'] = zip
 
     return templates
+
+
+@utils.memorize
+def get_url_for(
+        config: Annotated[app_config.Config, Depends(get_config)],
+) -> Callable[[Request, str, ...], URL]:
+    """Get URL converter."""
+
+    def _https_url_for(
+            request: Request,
+            name: str,
+            **path_params: Any,
+    ) -> URL:
+        """Rewrite static files to HTTPS if on prod and cache result."""
+        url = request.url_for(name, **path_params)
+        return url.replace(scheme='https')
+
+    def _url_for(
+            request: Request,
+            name: str,
+            **path_params: Any,
+    ) -> URL:
+        """Basic url_for."""
+        url = request.url_for(name, **path_params)
+        return url
+
+    if config.env == 'prod':
+        return _https_url_for
+    else:
+        return _url_for
 
 
 @utils.memorize

@@ -5,53 +5,45 @@
         <table>
             <tr>
                 <th></th>
-                <th colspan="2">Items by number</th>
+                <th>Items by number</th>
             </tr>
             <tr>
                 <th></th>
                 <th>Usage</th>
-                <th>Limitation</th>
             </tr>
             <tr>
                 <td>Total items</td>
                 <td>{{ sep_digits(total_items) }}</td>
-                <td>none</td>
             </tr>
             <tr>
                 <td>Total collections</td>
                 <td>{{ sep_digits(total_collections) }}</td>
-                <td>none</td>
             </tr>
             <tr>
                 <th></th>
-                <th colspan="2">Item by size</th>
+                <th>Item by size</th>
             </tr>
             <tr>
                 <th></th>
                 <th>Usage</th>
-                <th>Limitation</th>
             </tr>
             <tr>
                 <td>Content</td>
                 <td>{{ byte_count_to_text(items_size.content_size) }}</td>
-                <td>none</td>
             </tr>
             <tr>
                 <td>Preview</td>
                 <td>{{ byte_count_to_text(items_size.preview_size) }}</td>
-                <td>none</td>
             </tr>
             <tr>
                 <td>Thumbnails</td>
                 <td>{{ byte_count_to_text(items_size.thumbnail_size) }}</td>
-                <td>none</td>
             </tr>
             <tr>
                 <td></td>
                 <td>
                     <strong>{{ byte_count_to_text(items_size.content_size + items_size.preview_size + items_size.thumbnail_size) }}</strong>
                 </td>
-                <td></td>
             </tr>
         </table>
     </div>
