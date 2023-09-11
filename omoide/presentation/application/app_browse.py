@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Browse related routes.
 """
 from typing import Type
@@ -42,14 +41,12 @@ async def app_browse(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        return web.redirect_from_error(
-            templates, request, errors.InvalidUUID(uuid=uuid))
+        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
 
     _result = await use_case.execute(policy, user, valid_uuid, aim)
 
     if isinstance(_result, Failure):
-        return web.redirect_from_error(
-            templates, request, _result.error, valid_uuid)
+        return web.redirect_from_error(request, _result.error, valid_uuid)
 
     result = _result.value
 
@@ -63,11 +60,11 @@ async def app_browse(
         'names': names,
         'aim_wrapper': aim_wrapper,
         'location': result.location,
-        'api_url': templates.url_for(request, 'api_browse', uuid=uuid),
+        'api_url': request.url_for('api_browse', uuid=uuid),
         'result': result,
         'current_item': result.item,
         'metainfo': result.metainfo,
-        'locate': web.get_locator(templates, request, config.prefix_size),
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     if result.paginated:

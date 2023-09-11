@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Hope page related routes.
 """
 from typing import Type
@@ -33,6 +32,6 @@ async def app_home(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_paginated': True,
-        'api_url': templates.url_for(request, 'api_home'),
+        'api_url': request.url_for('api_home'),
     }
     return templates.TemplateResponse('home.html', context)

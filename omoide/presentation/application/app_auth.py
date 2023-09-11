@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Auth related routes.
 """
 import asyncio
@@ -34,11 +33,10 @@ async def app_login(
             dep.get_authenticator),
         config: Config = Depends(dep.get_config),
         use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
         response_class: Type[Response] = HTMLResponse,
 ):
     """Ask user for login and password."""
-    url = templates.url_for(request, 'app_home')
+    url = request.url_for('app_home')
 
     if user.is_registered:
         return RedirectResponse(url)
@@ -70,7 +68,7 @@ async def app_logout(
         'config': config,
         'user': domain.User.new_anon(),
         'aim_wrapper': aim_wrapper,
-        'url': templates.url_for(request, 'app_search'),
+        'url': request.url_for('app_search'),
     }
     return templates.TemplateResponse(
         name='logout.html',

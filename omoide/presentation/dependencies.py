@@ -15,7 +15,7 @@ from fastapi import status
 from fastapi.datastructures import URL
 from fastapi.security import HTTPBasicCredentials
 from starlette.requests import Request
-
+from fastapi.templating import Jinja2Templates
 from omoide import constants
 from omoide import infra
 from omoide import use_cases
@@ -57,53 +57,10 @@ _URL_CACHE: dict[tuple[str, Any], str] = {}
 
 
 @utils.memorize
-def get_templates() -> web.TemplateEngine:
+def get_templates() -> Jinja2Templates:
     """Get templates instance."""
-    config = get_config()
-
-    def _https_url_for(
-            request: Request,
-            name: str,
-            **path_params: Any,
-    ) -> str:
-        """Rewrite static files to HTTPS if on prod and cache result."""
-        key = (name, tuple(path_params.items()))
-        url = _URL_CACHE.get(key)
-        if url is None:
-            raw_url = request.url_for(name, **path_params)
-            url = str(raw_url).replace('http:', 'https:', 1)
-            _URL_CACHE[key] = url
-        return url
-
-    def _url_for(
-            request: Request,
-            name: str,
-            **path_params: Any,
-    ) -> str:
-        """Basic url_for."""
-        key = (name, tuple(path_params.items()))
-        url = _URL_CACHE.get(key)
-        if url is None:
-            url = str(request.url_for(name, **path_params))
-            _URL_CACHE[key] = url
-        return url
-
-    if config.env != 'prod':
-        templates = web.TemplateEngine(
-            directory='omoide/presentation/templates',
-            url_for=_url_for,
-        )
-        templates.env.globals['url_for'] = _url_for
-
-    else:
-        templates = web.TemplateEngine(
-            directory='omoide/presentation/templates',
-            url_for=_https_url_for,
-        )
-        templates.env.globals['url_for'] = _https_url_for
-
+    templates = Jinja2Templates(directory='omoide/presentation/templates')
     templates.env.globals['zip'] = zip
-
     return templates
 
 

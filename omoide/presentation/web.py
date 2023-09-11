@@ -4,7 +4,6 @@ import copy
 import functools
 import http
 import re
-from os import PathLike
 from typing import Any
 from typing import Callable
 from typing import NoReturn
@@ -30,22 +29,7 @@ from omoide.utils import maybe_str
 
 LOG = custom_logging.get_logger(__name__)
 
-
-class CustomJinja2Templates(Jinja2Templates):
-    """Custom class that knows its url_for."""
-
-    def __init__(
-            self,
-            directory: str | PathLike,
-            url_for: Callable[..., str],
-            **env_options: Any,
-    ) -> None:
-        """Initialize instance."""
-        super().__init__(directory, **env_options)
-        self.url_for = url_for
-
-
-TemplateEngine: TypeAlias = CustomJinja2Templates
+TemplateEngine: TypeAlias = Jinja2Templates
 
 # TODO - rewrite to base classes
 CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
@@ -118,7 +102,6 @@ def raise_from_error(
 
 
 def redirect_from_error(
-        templates: TemplateEngine,
         request: Request,
         error: errors.Error,
         uuid: Optional[UUID] = None,
@@ -128,23 +111,21 @@ def redirect_from_error(
     response = None
 
     if code == http.HTTPStatus.BAD_REQUEST:
-        response = RedirectResponse(templates.url_for(request, 'bad_request'))
+        response = RedirectResponse(request.url_for('bad_request'))
 
     elif code == http.HTTPStatus.NOT_FOUND and uuid is not None:
         response = RedirectResponse(
-            templates.url_for(request, 'not_found') + f'?q={uuid}'
+            str(request.url_for('not_found')) + f'?q={uuid}'
         )
 
     if code in (http.HTTPStatus.FORBIDDEN, http.HTTPStatus.UNAUTHORIZED) \
             and uuid is not None:
         response = RedirectResponse(
-            templates.url_for(request, 'unauthorized') + f'?q={uuid}'
+            str(request.url_for('unauthorized')) + f'?q={uuid}'
         )
 
     if response is None:
-        response = RedirectResponse(
-            templates.url_for(request, 'bad_request')
-        )
+        response = RedirectResponse(request.url_for('bad_request'))
 
     return response
 
@@ -294,7 +275,6 @@ class Locator(interfaces.AbsLocator):
 
     def __init__(
             self,
-            templates: TemplateEngine,
             request: Request,
             item: domain.Item,
             prefix_size: int,
@@ -302,13 +282,13 @@ class Locator(interfaces.AbsLocator):
         """Initialize instance."""
         super().__init__(item, prefix_size)
         self.request = request
-        self.url_for = templates.url_for
+        self.url_for = request.url_for
 
     @functools.cached_property
     def head(self) -> str:
         """Return starting common part of the path."""
         return url_join(
-            maybe_str(self.url_for(self.request, 'app_home')),
+            maybe_str(self.url_for('app_home')),
             'content',
         )
 
@@ -352,13 +332,11 @@ class Locator(interfaces.AbsLocator):
 
 
 def get_locator(
-        templates: TemplateEngine,
         request: Request,
         prefix_size: int,
 ) -> Callable[[domain.Item], Locator]:
     """Make new locator."""
     return lambda item: Locator(
-        templates=templates,
         request=request,
         prefix_size=prefix_size,
         item=item,
@@ -367,28 +345,26 @@ def get_locator(
 
 def items_to_dict(
         request: Request,
-        templates: TemplateEngine,
         items: list[domain.Item],
         names: list[Optional[str]],
         prefix_size: int,
 ) -> list[domain.SimpleItem]:
     """Convert items to JSON compatible dicts."""
     assert len(items) == len(names)
-    empty_thumbnail = templates.url_for(request, 'static', path='empty.png')
+    empty_thumbnail = request.url_for('static', path='empty.png')
 
     simple_items: list[domain.SimpleItem] = []
 
     for name, item in zip(names, items):
         if item.is_collection:
-            href = templates.url_for(request, 'app_browse', uuid=item.uuid)
+            href = request.url_for('app_browse', uuid=item.uuid)
         else:
-            href = templates.url_for(request, 'app_preview', uuid=item.uuid)
+            href = request.url_for('app_preview', uuid=item.uuid)
 
         if item.thumbnail_ext is None:
             thumbnail = empty_thumbnail
         else:
             locator = Locator(
-                templates=templates,
                 request=request,
                 prefix_size=prefix_size,
                 item=item,

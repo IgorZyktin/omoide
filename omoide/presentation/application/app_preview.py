@@ -42,14 +42,12 @@ async def app_preview(
     valid_uuid = utils.cast_uuid(uuid)
 
     if valid_uuid is None:
-        return web.redirect_from_error(
-            templates, request, errors.InvalidUUID(uuid=uuid))
+        return web.redirect_from_error(request, errors.InvalidUUID(uuid=uuid))
 
     _result = await use_case.execute(policy, user, valid_uuid, aim)
 
     if isinstance(_result, Failure):
-        return web.redirect_from_error(
-            templates, request, _result.error, valid_uuid)
+        return web.redirect_from_error(request, _result.error, valid_uuid)
 
     result = _result.value
 
@@ -78,6 +76,6 @@ async def app_preview(
         'block_ordered': True,
         'block_nested': True,
         'block_paginated': True,
-        'locate': web.get_locator(templates, request, config.prefix_size),
+        'locate': web.get_locator(request, config.prefix_size),
     }
     return templates.TemplateResponse('preview.html', context)

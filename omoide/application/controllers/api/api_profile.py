@@ -24,7 +24,6 @@ async def api_profile_new(
                             Depends(dep.profile_new_use_case)],
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        templates: web.TemplateEngine = Depends(dep.get_templates),
 ):
     """Return portion of recently loaded items."""
     result = await use_case.execute(user, aim_wrapper.aim)
@@ -34,4 +33,4 @@ async def api_profile_new(
 
     items, names = result.value
     return web.items_to_dict(
-        request, templates, items, names, config.prefix_size)
+        request, items, names, config.prefix_size)

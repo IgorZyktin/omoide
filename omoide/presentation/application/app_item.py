@@ -42,8 +42,7 @@ async def app_item_create(
     result = await use_case.execute(policy, user, valid_uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(
-            templates, request, result.error, valid_uuid)
+        return web.redirect_from_error(request, result.error, valid_uuid)
 
     parent, permissions = result.value
 
@@ -52,10 +51,10 @@ async def app_item_create(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'url': templates.url_for(request, 'app_search'),
+        'url': request.url_for('app_search'),
         'parent': parent,
         'permissions': permissions,
-        'locate': web.get_locator(templates, request, config.prefix_size),
+        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return templates.TemplateResponse('item_create.html', context)
@@ -95,8 +94,7 @@ async def app_item_update(
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(
-            templates, request, result.error, uuid)
+        return web.redirect_from_error(request, result.error, uuid)
 
     item, total, permissions, computed_tags, metainfo = result.value
 
@@ -126,7 +124,7 @@ async def app_item_update(
         'total': utils.sep_digits(total),
         'permissions': permissions,
         'external_tags': external_tags,
-        'url': templates.url_for(request, 'app_search'),
+        'url': request.url_for('app_search'),
         'model': ujson.dumps(model, ensure_ascii=False),
         'initial_permissions': ujson.dumps([
             f'{x.uuid} {x.name}' for x in permissions
@@ -153,7 +151,7 @@ async def app_item_delete(
     result = await use_case.execute(policy, user, uuid)
 
     if isinstance(result, Failure):
-        return web.redirect_from_error(templates, request, result.error, uuid)
+        return web.redirect_from_error(request, result.error, uuid)
 
     item, total = result.value
 
@@ -164,7 +162,7 @@ async def app_item_delete(
         'aim_wrapper': aim_wrapper,
         'current_item': item,
         'item': item,
-        'url': templates.url_for(request, 'app_search'),
+        'url': request.url_for('app_search'),
         'uuid': uuid,
         'total': utils.sep_digits(total),
     }
