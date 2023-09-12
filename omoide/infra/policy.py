@@ -103,33 +103,44 @@ class Policy(interfaces.AbsPolicy):
     async def check(
             self,
             user: core_models.User,
-            uuid: UUID,  # FIXME - add None as a variant
+            uuid: UUID,
             action: actions.Action,
     ) -> None:
         """Raise if action is not permitted."""
         access = await self.items_repo.check_access(user, uuid)
 
+        if isinstance(action, actions.Item):
+            self._check_item_related(uuid, action, access)
+            self._check_for_item(uuid, access)
+            return
+
         if action in ITEM_RELATED and uuid is not None:
             self._check_item_related(uuid, action, access)
-        else:
-            raise exceptions.UnexpectedActionError(action=action)
+            return
+
+        raise exceptions.UnexpectedActionError(action=action)
+
+    @staticmethod
+    def _check_for_item(
+            item_uuid: UUID,
+            access: core_models.AccessStatus,
+    ) -> None:
+        """Raise if action is not permitted."""
+        if access.is_not_owner:
+            raise exceptions.CannotModifyItemError(item_uuid=item_uuid)
 
     @staticmethod
     def _check_item_related(
             item_uuid: UUID,
             action: actions.Action,
-            access: core_models.AccessStatus,  # FIXME - change import path
+            access: core_models.AccessStatus,
     ) -> None:
         """Raise if action is not permitted."""
         if access.is_not_given:
-            raise exceptions.ItemRequiresAccessError(
-                item_uuid=item_uuid,
-            )
+            raise exceptions.ItemRequiresAccessError(item_uuid=item_uuid)
 
         if access.does_not_exist:
-            raise exceptions.ItemDoesNotExistError(
-                item_uuid=item_uuid,
-            )
+            raise exceptions.ItemDoesNotExistError(item_uuid=item_uuid)
 
         if action in CHANGING_ITEM_RELATED and access.is_not_owner:
             raise exceptions.CannotModifyItemComponentError(

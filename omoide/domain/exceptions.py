@@ -36,6 +36,14 @@ class ForbiddenError(BaseOmoideException):
     """User has no rights to do this."""
 
 
+class CannotModifyItemError(ForbiddenError):
+    """You are not allowed to modify item {item_uuid}."""
+
+    def __init__(self, item_uuid: UUID) -> None:
+        """Initialize instance."""
+        self.item_uuid = item_uuid
+
+
 class CannotModifyItemComponentError(ForbiddenError):
     """You are not allowed to modify components of item {item_uuid}."""
 
