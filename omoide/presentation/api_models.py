@@ -19,6 +19,11 @@ class PatchOperation(pydantic.BaseModel):
     value: str | bool | None = None
 
 
+class ItemByName(pydantic.BaseModel):
+    """Simple model, that helps find item by its name."""
+    name: str
+
+
 class CreateItemIn(pydantic.BaseModel):
     """Input info for item creation."""
     uuid: Optional[UUID] = None

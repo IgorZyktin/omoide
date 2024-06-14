@@ -26,6 +26,7 @@ __all__ = [
     'ApiItemCreateUseCase',
     'ApiItemCreateBulkUseCase',
     'ApiItemReadUseCase',
+    'ApiItemReadByNameUseCase',
     'ApiItemUpdateUseCase',
     'ApiItemDeleteUseCase',
     'ApiItemsDownloadUseCase',
@@ -261,6 +262,7 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
             payload: api_models.CreateItemIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
+        LOG.warning(user)
         async with self.items_repo.transaction():
             parent_uuid = payload.parent_uuid or user.root_item
             error = await policy.is_restricted(user, parent_uuid,
@@ -324,6 +326,41 @@ class ApiItemReadUseCase:
 
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
+
+        return Success(item)
+
+
+class ApiItemReadByNameUseCase:
+    """Use case for getting an item."""
+
+    def __init__(
+            self,
+            items_repo: interfaces.AbsItemsWriteRepository,
+    ) -> None:
+        """Initialize instance."""
+        self.items_repo = items_repo
+
+    async def execute(
+            self,
+            policy: interfaces.AbsPolicy,
+            user: domain.User,
+            name: str,
+    ) -> Result[errors.Error, domain.Item]:
+        """Business logic."""
+        async with self.items_repo.transaction():
+            item = await self.items_repo.read_item_by_name(user, name)
+
+            if item is None:
+                return Failure(errors.ItemDoesNotExist(uuid=name))
+
+            error = await policy.is_restricted(
+                user,
+                item.uuid,
+                actions.Item.READ,
+            )
+
+            if error:
+                return Failure(error)
 
         return Success(item)
 

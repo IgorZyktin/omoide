@@ -261,3 +261,30 @@ class ItemsReadRepository(interfaces.AbsItemsReadRepository):
         if response:
             return list(response)
         return []
+
+    async def read_item_by_name(
+            self,
+            user: domain.User,
+            name: str,
+    ) -> domain.Item | None:
+        """Return corresponding item."""
+        stmt = sa.select(models.Item)
+
+        if user.is_registered:
+            stmt = stmt.where(
+                sa.and_(
+                    models.Item.owner_uuid == user.uuid,
+                    models.Item.name == name,
+                )
+            )
+        else:
+            stmt = stmt.where(
+                sa.and_(
+                    models.Item.name == name,
+                )
+            )
+
+        stmt = queries.ensure_user_has_permissions(user, stmt)
+        response = await self.db.fetch_one(stmt)
+
+        return domain.Item(**response) if response else None

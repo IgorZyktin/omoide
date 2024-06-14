@@ -447,6 +447,17 @@ def api_item_read_use_case(
 
 
 @utils.memorize
+def api_item_read_by_name_use_case(
+        items_write_repository:
+        interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
+) -> use_cases.ApiItemReadByNameUseCase:
+    """Get use case instance."""
+    return use_cases.ApiItemReadByNameUseCase(
+        items_repo=items_write_repository,
+    )
+
+
+@utils.memorize
 def api_item_update_use_case(
         items_write_repository:
         interfaces.AbsItemsWriteRepository = Depends(get_items_write_repo),
