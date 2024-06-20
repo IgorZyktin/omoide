@@ -8,7 +8,6 @@ import pydantic_settings
 class Config(pydantic_settings.BaseSettings):
     """Application settings."""
     db_url_app: pydantic.SecretStr
-    injection: str = ''
     env: str = 'dev'
     host: str = '0.0.0.0'
     prefix_size: int = 2
