@@ -213,7 +213,7 @@ class BaseItemModifyUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
+            users_repo: interfaces.AbsUsersRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
@@ -700,7 +700,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     def __init__(
             self,
             policy: AbsPolicy,
-            users_repo: interfaces.AbsUsersReadRepository,
+            users_repo: interfaces.AbsUsersRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: AbsMediaRepository,

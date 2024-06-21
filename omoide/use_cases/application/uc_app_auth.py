@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Use case for authentication.
 """
 from fastapi.security import HTTPBasicCredentials
@@ -14,7 +13,7 @@ __all__ = [
 class AuthUseCase:
     """Use case for authentication."""
 
-    def __init__(self, users_repo: interfaces.AbsUsersReadRepository) -> None:
+    def __init__(self, users_repo: interfaces.AbsUsersRepository) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
 

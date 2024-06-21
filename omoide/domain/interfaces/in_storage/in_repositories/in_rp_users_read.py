@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Repository that performs read operations on users.
+"""Repository that performs operations on users.
 """
 import abc
 from typing import Optional
@@ -9,7 +8,7 @@ from omoide import domain
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
-class AbsUsersReadRepository(in_rp_base.AbsBaseRepository):
+class AbsUsersRepository(in_rp_base.AbsBaseRepository):
     """Repository that performs read operations on users."""
 
     @abc.abstractmethod

@@ -17,4 +17,4 @@ from omoide.storage.repositories.asyncpg \
 from omoide.storage.repositories.asyncpg \
     .rp_search import SearchRepository
 from omoide.storage.repositories.asyncpg \
-    .rp_users_read import UsersReadRepository
+    .rp_users_read import UsersRepository

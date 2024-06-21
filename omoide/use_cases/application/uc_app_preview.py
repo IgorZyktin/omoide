@@ -22,7 +22,7 @@ class AppPreviewUseCase:
     def __init__(
             self,
             preview_repo: interfaces.AbsPreviewRepository,
-            users_repo: interfaces.AbsUsersReadRepository,
+            users_repo: interfaces.AbsUsersRepository,
             items_repo: interfaces.AbsItemsReadRepository,
             meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Repository that performs read operations on users.
 """
 from typing import Optional
@@ -11,7 +10,7 @@ from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class UsersReadRepository(interfaces.AbsUsersReadRepository):
+class UsersRepository(interfaces.AbsUsersRepository):
     """Repository that performs read operations on users."""
 
     async def read_user(

@@ -74,7 +74,7 @@ class BrowseRepository(
             user: domain.User,
             uuid: UUID,
             aim: domain.Aim,
-            users_repo: interfaces.AbsUsersReadRepository,
+            users_repo: interfaces.AbsUsersRepository,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
         current_item = await self.read_item(uuid)

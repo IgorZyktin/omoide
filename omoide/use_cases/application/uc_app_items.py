@@ -24,7 +24,7 @@ class AppItemCreateUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
+            users_repo: interfaces.AbsUsersRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
     ) -> None:
         """Initialize instance."""
@@ -65,7 +65,7 @@ class AppItemUpdateUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersReadRepository,
+            users_repo: interfaces.AbsUsersRepository,
             items_repo: interfaces.AbsItemsWriteRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
