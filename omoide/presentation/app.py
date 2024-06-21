@@ -6,6 +6,7 @@ import os
 
 import fastapi
 from fastapi import Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -37,7 +38,7 @@ async def shutdown():
     await dep.get_db().disconnect()
 
 
-def apply_middlewares(current_app: fastapi.FastAPI) -> None:
+def apply_middlewares(current_app: FastAPI) -> None:
     """Apply middlewares."""
     origins = [
         'https://omoide.ru',
@@ -99,3 +100,14 @@ if app_config.Config().env != 'prod':
         StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
         name='content',
     )
+
+
+    @app.get('/all_routes')
+    def get_all_urls_from_request(request: fastapi.Request):
+        url_list = [
+            {
+                'path': route.path,
+                'name': route.name
+            } for route in request.app.routes
+        ]
+        return url_list
