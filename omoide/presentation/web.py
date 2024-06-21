@@ -78,6 +78,32 @@ def safe_template(template: str, **kwargs) -> str:
     return message
 
 
+def to_simple_type(something: Any) -> None | str:
+    """Convert one item."""
+    if something is None:
+        return None
+
+    return str(something)
+
+
+def serialize(payload: dict[str, Any]) -> dict[str, None, str]:
+    """Convert dictionary to a web-compatible format."""
+    return {
+        key: to_simple_type(value)
+        for key, value in payload.items()
+    }
+
+
+def raise_from_exc(exc: Exception) -> NoReturn:
+    """Cast exception into HTTP response."""
+    error = errors.Error(
+        template='{error_type}: {error_message}',
+        error_type=type(exc).__name__,
+        errorm_message=str(exc),
+    )
+    raise_from_error(error)
+
+
 def raise_from_error(
         error: errors.Error,
         language: Optional[str] = None,
