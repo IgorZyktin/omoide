@@ -393,7 +393,7 @@ def items_to_dict(
                 prefix_size=prefix_size,
                 item=item,
             )
-            thumbnail = locator.thumbnail
+            thumbnail = locator.thumbnail  # type: ignore
 
         simple_item = domain.SimpleItem(
             uuid=str(item.uuid),
@@ -402,7 +402,7 @@ def items_to_dict(
             is_collection=item.is_collection,
             href=str(href),
             number=item.number,
-            thumbnail=thumbnail,
+            thumbnail=thumbnail,  # type: ignore
         )
         simple_items.append(simple_item)
 
@@ -415,7 +415,7 @@ def patched_url_for(
         **path_params: Any,
 ) -> str:
     """Sanitized version with scheme altering."""
-    url = str(url_for(name, **path_params))
+    url = str(url_for(name, **path_params))  # type: ignore
 
     # noinspection HttpUrlsUsage
     if url.startswith('http://www'):

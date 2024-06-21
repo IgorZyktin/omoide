@@ -766,14 +766,11 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     self.metainfo_repo,
                     self.media_repo,
                 )
-                nested_result = await nested_use_case.execute(
+                await nested_use_case.execute(
                     user=user,
                     source_uuid=item.uuid,
                     target_uuid=new_parent.uuid,
                 )
-
-                if isinstance(nested_result, Failure):
-                    return nested_result
 
             await self.metainfo_repo.mark_metainfo_updated(new_parent.uuid,
                                                            utils.now())

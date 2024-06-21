@@ -88,5 +88,5 @@ class AbsItemsReadRepository(in_rp_base.AbsBaseRepository):
             self,
             user: domain.User,
             name: str,
-    ) -> domain.Item:
+    ) -> domain.Item | None:
         """Return corresponding item."""
