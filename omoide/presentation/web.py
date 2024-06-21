@@ -86,7 +86,9 @@ def to_simple_type(something: Any) -> None | str:
     return str(something)
 
 
-def serialize(payload: dict[str, Any]) -> dict[str, None, str]:
+def serialize(
+    payload: dict[str, Any],
+) -> dict[str, None | str]:
     """Convert dictionary to a web-compatible format."""
     return {
         key: to_simple_type(value)
@@ -408,7 +410,7 @@ def items_to_dict(
 
 
 def patched_url_for(
-        url_for: Callable[[str, ...], URL],
+        url_for: Callable[[str, ...], URL],  # type: ignore
         name: str,
         **path_params: Any,
 ) -> str:

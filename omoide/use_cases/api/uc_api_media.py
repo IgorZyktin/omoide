@@ -107,3 +107,5 @@ class ApiCopyImageUseCase:
 
             await self.metainfo_repo.mark_metainfo_updated(
                 target_uuid, utils.now())
+
+        return None

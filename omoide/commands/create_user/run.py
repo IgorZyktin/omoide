@@ -32,7 +32,7 @@ def run(database: SyncDatabase, login: str,
             exists = bool(session.execute(stmt, {'uuid': str(uuid)}).scalar())
 
         user = db_models.User(
-            uuid=str(utils.uuid4()),  # noqa
+            uuid=str(utils.uuid4()),  # type: ignore
             login=login,
             password=encoded_password,
             name=name or login,
@@ -49,7 +49,7 @@ def run(database: SyncDatabase, login: str,
         number = session.execute(sa.func.max(db_models.Item.number)).scalar()
 
         root_item = db_models.Item(
-            uuid=str(utils.uuid4()),  # noqa
+            uuid=str(utils.uuid4()),  # type: ignore
             parent_uuid=None,
             owner_uuid=user.uuid,
             number=(number or 0) + 1,

@@ -49,7 +49,10 @@ def patch_request(
         return
 
     original_method = request.url_for
-    request.url_for = partial(web.patched_url_for, original_method)
+    request.url_for = partial(  # type: ignore
+        web.patched_url_for,
+        original_method
+    )
 
 
 @utils.memorize
