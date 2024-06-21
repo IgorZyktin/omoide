@@ -110,7 +110,6 @@ if app_config.Config().env != 'prod':
         name='content',
     )
 
-
     @app.get('/all_routes')
     def get_all_urls_from_request(request: fastapi.Request):
         url_list = [
