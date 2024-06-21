@@ -23,6 +23,7 @@ from omoide.domain import interfaces
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.infra.mediator import Mediator
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
@@ -218,6 +219,17 @@ def get_policy(
     """Get policy instance."""
     return infra.Policy(
         items_repo=items_read_repository,
+    )
+
+
+@utils.memorize
+def get_mediator(
+        users_repository:
+        interfaces.AbsUsersReadRepository = Depends(get_users_read_repo),
+) -> Mediator:
+    """Get mediator instance."""
+    return Mediator(
+        users_repository=users_repository,
     )
 
 
