@@ -5,12 +5,14 @@ This component is facing towards the user and displays search results.
 import os
 
 import fastapi
+from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from omoide.application.controllers import api
+from omoide.omoide_api import controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -56,8 +58,15 @@ def apply_middlewares(current_app: FastAPI) -> None:
     )
 
 
-def include_api_routes(current_app: fastapi.FastAPI) -> None:
+api_router_v1 = APIRouter(prefix='/api/v1')
+
+
+def include_api_routes(current_app: FastAPI) -> None:
     """Register API routes."""
+    api_router_v1.include_router(controllers.users_router)
+
+    current_app.include_router(api_router_v1)
+
     current_app.include_router(api.api_exif.router)
     current_app.include_router(api.api_media.router)
     current_app.include_router(api.api_metainfo.router)
