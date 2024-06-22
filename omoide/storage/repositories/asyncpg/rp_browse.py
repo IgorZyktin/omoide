@@ -15,12 +15,12 @@ from omoide.domain.interfaces.in_storage \
 from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
-    .rp_items import ItemsRepository
+    .rp_items import ItemsRepo
 
 
 class BrowseRepository(
     AbsBrowseRepository,
-    ItemsRepository,
+    ItemsRepo,
 ):
     """Repository that performs all browse queries."""
 

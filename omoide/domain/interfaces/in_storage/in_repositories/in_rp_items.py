@@ -10,7 +10,7 @@ from omoide import domain
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
-class AbsItemsRepository(in_rp_base.AbsBaseRepository):
+class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     """Repository that performs operations on items."""
 
     @abc.abstractmethod

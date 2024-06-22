@@ -144,7 +144,7 @@ def functional_tests_permanent_item():
 # noinspection PyShadowingNames
 @pytest.fixture(scope='session')
 def items_repository(functional_tests_database):
-    return asyncpg.ItemsRepository(functional_tests_database)
+    return asyncpg.ItemsRepo(functional_tests_database)
 
 
 @pytest.fixture(scope='session')

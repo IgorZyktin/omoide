@@ -13,7 +13,7 @@ from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
 
 
-class ItemsRepository(interfaces.AbsItemsRepository):
+class ItemsRepo(interfaces.AbsItemsRepo):
     """Repository that performs operations on items."""
 
     async def check_access(
