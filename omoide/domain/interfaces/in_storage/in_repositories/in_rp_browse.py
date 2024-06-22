@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Repository that performs all browse queries.
 """
 import abc
@@ -10,7 +9,7 @@ from omoide.domain import common
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_base import AbsBaseRepository
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_users_read import AbsUsersRepository
+    .in_repositories.in_rp_users import AbsUsersRepository
 
 
 class AbsBrowseRepository(
