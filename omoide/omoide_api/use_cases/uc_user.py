@@ -5,7 +5,7 @@ from omoide.omoide_api.use_cases.base import BaseAPIUseCase
 
 
 class GetCurrentUserStatsUseCase(BaseAPIUseCase):
-    """Use case for user stats."""
+    """Use case for getting current user stats."""
 
     async def execute(
         self,
@@ -51,3 +51,16 @@ class GetCurrentUserStatsUseCase(BaseAPIUseCase):
             'preview_bytes': size.preview_size,
             'thumbnail_bytes': size.thumbnail_size,
         }
+
+
+class GetCurrentUserTagsUseCase(BaseAPIUseCase):
+    """Use case for getting tags available to the current user."""
+
+    async def execute(
+        self,
+        user: core_models.User,
+    ) -> dict[str, int]:
+        """Execute."""
+        async with self.mediator.search_repo.transaction():
+            known_tags = await self.mediator.search_repo.count_all_tags(user)
+        return dict(known_tags)

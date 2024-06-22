@@ -217,11 +217,13 @@ def get_policy(
 def get_mediator(
         users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+        search_repo: interfaces.AbsSearchRepository = Depends(get_search_repo),
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         users_repo=users_repo,
         items_repo=items_repo,
+        search_repo=search_repo,
     )
 
 

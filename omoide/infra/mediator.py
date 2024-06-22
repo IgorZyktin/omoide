@@ -11,3 +11,4 @@ class Mediator:
     """
     users_repo: interfaces.AbsUsersRepo
     items_repo: interfaces.AbsItemsRepo
+    search_repo: interfaces.AbsSearchRepository
