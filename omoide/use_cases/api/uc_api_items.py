@@ -197,7 +197,7 @@ class BaseItemMediaUseCase:
     def __init__(
             self,
             policy: AbsPolicy,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: AbsMediaRepository,
     ) -> None:
@@ -214,7 +214,7 @@ class BaseItemModifyUseCase:
     def __init__(
             self,
             users_repo: interfaces.AbsUsersRepository,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
@@ -305,7 +305,7 @@ class ApiItemReadUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -335,7 +335,7 @@ class ApiItemReadByNameUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -370,7 +370,7 @@ class ApiItemUpdateUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
@@ -701,7 +701,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             self,
             policy: AbsPolicy,
             users_repo: interfaces.AbsUsersRepository,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: AbsMediaRepository,
     ) -> None:

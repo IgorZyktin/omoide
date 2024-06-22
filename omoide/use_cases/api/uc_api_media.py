@@ -49,7 +49,7 @@ class ApiCopyImageUseCase:
     def __init__(
             self,
             policy: AbsPolicy,
-            items_repo: interfaces.AbsItemsWriteRepository,
+            items_repo: interfaces.AbsItemsRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
             media_repo: AbsMediaRepository,
     ) -> None:
