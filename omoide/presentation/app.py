@@ -175,7 +175,7 @@ def apply_middlewares(current_app: FastAPI) -> None:
 
 app = get_app()
 api = get_api()
+app.mount('/api-new', api)
 apply_api_routes(api)
-app.mount('/api', api)
 apply_app_routes(app)
 apply_middlewares(app)
