@@ -11,7 +11,7 @@ from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
 # TODO - move to different folder
-class AbsMetainfoRepository(in_rp_base.AbsBaseRepository):
+class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     """Repository that perform CRUD operations on metainfo records."""
 
     @abc.abstractmethod

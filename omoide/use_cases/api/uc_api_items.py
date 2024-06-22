@@ -48,7 +48,7 @@ class Writeback:
 
 @asynccontextmanager
 async def _generic_call(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
+        metainfo_repo: interfaces.AbsMetainfoRepo,
         job_name: str,
         job_description: str,
         user_uuid: UUID,
@@ -112,7 +112,7 @@ async def _generic_call(
 
 @asynccontextmanager
 async def track_update_permissions_in_parents(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
+        metainfo_repo: interfaces.AbsMetainfoRepo,
         user: domain.User,
         item: domain.Item,
         added: Collection[UUID],
@@ -137,7 +137,7 @@ async def track_update_permissions_in_parents(
 
 @asynccontextmanager
 async def track_update_permissions_in_children(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
+        metainfo_repo: interfaces.AbsMetainfoRepo,
         user: domain.User,
         item: domain.Item,
         override: bool,
@@ -168,7 +168,7 @@ async def track_update_permissions_in_children(
 
 @asynccontextmanager
 async def track_update_tags_in_children(
-        metainfo_repo: interfaces.AbsMetainfoRepository,
+        metainfo_repo: interfaces.AbsMetainfoRepo,
         user: domain.User,
         item: domain.Item,
         added: Collection[str],
@@ -198,7 +198,7 @@ class BaseItemMediaUseCase:
             self,
             policy: AbsPolicy,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
@@ -215,7 +215,7 @@ class BaseItemModifyUseCase:
             self,
             users_repo: interfaces.AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -371,7 +371,7 @@ class ApiItemUpdateUseCase:
     def __init__(
             self,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -702,7 +702,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             policy: AbsPolicy,
             users_repo: interfaces.AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
@@ -816,7 +816,7 @@ class ApiItemsDownloadUseCase:
     def __init__(
             self,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo

@@ -50,7 +50,7 @@ class ApiCopyImageUseCase:
             self,
             policy: AbsPolicy,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""

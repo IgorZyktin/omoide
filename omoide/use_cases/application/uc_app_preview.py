@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Use case for preview.
 """
 from uuid import UUID
@@ -24,7 +23,7 @@ class AppPreviewUseCase:
             preview_repo: interfaces.AbsPreviewRepository,
             users_repo: interfaces.AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
-            meta_repo: interfaces.AbsMetainfoRepository,
+            meta_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.preview_repo = preview_repo

@@ -3,7 +3,7 @@ from omoide.domain.interfaces.in_storage \
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items import AbsItemsRepo
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_metainfo import AbsMetainfoRepository
+    .in_repositories.in_rp_metainfo import AbsMetainfoRepo
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_preview import AbsPreviewRepository
 from omoide.domain.interfaces.in_storage \

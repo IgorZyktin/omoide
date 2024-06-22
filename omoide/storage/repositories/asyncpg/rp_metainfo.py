@@ -17,7 +17,7 @@ from omoide.storage.database import models
 from omoide.storage.repositories.asyncpg import queries
 
 
-class MetainfoRepository(interfaces.AbsMetainfoRepository):
+class MetainfoRepo(interfaces.AbsMetainfoRepo):
     """Repository that perform CRUD operations on metainfo."""
 
     async def create_empty_metainfo(

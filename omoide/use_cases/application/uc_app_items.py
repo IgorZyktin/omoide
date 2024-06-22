@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Use case for items.
 """
 from typing import Optional
@@ -67,7 +66,7 @@ class AppItemUpdateUseCase:
             self,
             users_repo: interfaces.AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepository,
+            metainfo_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo

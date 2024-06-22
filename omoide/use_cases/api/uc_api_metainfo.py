@@ -20,7 +20,7 @@ class BaseMetainfoUseCase:
     def __init__(
             self,
             policy: AbsPolicy,
-            meta_repo: interfaces.AbsMetainfoRepository,
+            meta_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.policy = policy
