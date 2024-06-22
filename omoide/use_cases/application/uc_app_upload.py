@@ -21,7 +21,7 @@ class AppUploadUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersRepository,
+            users_repo: interfaces.AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""

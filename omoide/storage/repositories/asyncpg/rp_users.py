@@ -10,7 +10,7 @@ from omoide.domain import interfaces
 from omoide.storage.database import models
 
 
-class UsersRepository(interfaces.AbsUsersRepository):
+class UsersRepo(interfaces.AbsUsersRepo):
     """Repository that performs read operations on users."""
 
     async def read_user(

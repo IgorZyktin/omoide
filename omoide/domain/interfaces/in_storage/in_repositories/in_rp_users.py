@@ -8,7 +8,7 @@ from omoide import domain
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
-class AbsUsersRepository(in_rp_base.AbsBaseRepository):
+class AbsUsersRepo(in_rp_base.AbsBaseRepository):
     """Repository that performs read operations on users."""
 
     @abc.abstractmethod

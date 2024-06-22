@@ -13,7 +13,7 @@ __all__ = [
 class AuthUseCase:
     """Use case for authentication."""
 
-    def __init__(self, users_repo: interfaces.AbsUsersRepository) -> None:
+    def __init__(self, users_repo: interfaces.AbsUsersRepo) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
 

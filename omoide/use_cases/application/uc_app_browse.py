@@ -38,7 +38,7 @@ class AppBrowseUseCase:
     def __init__(
             self,
             browse_repo: interfaces.AbsBrowseRepository,
-            users_repo: interfaces.AbsUsersRepository,
+            users_repo: interfaces.AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
             meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:

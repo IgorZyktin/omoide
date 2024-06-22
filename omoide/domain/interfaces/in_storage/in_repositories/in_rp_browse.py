@@ -9,7 +9,7 @@ from omoide.domain import common
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_base import AbsBaseRepository
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_users import AbsUsersRepository
+    .in_repositories.in_rp_users import AbsUsersRepo
 
 
 class AbsBrowseRepository(
@@ -40,7 +40,7 @@ class AbsBrowseRepository(
             user: domain.User,
             uuid: UUID,
             aim: common.Aim,
-            users_repo: AbsUsersRepository,
+            users_repo: AbsUsersRepo,
     ) -> Optional[common.Location]:
         """Return Location of the item."""
 
