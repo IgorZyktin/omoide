@@ -39,7 +39,7 @@ class AppBrowseUseCase:
             self,
             browse_repo: interfaces.AbsBrowseRepository,
             users_repo: interfaces.AbsUsersRepository,
-            items_repo: interfaces.AbsItemsReadRepository,
+            items_repo: interfaces.AbsItemsRepository,
             meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""

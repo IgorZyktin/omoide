@@ -143,14 +143,13 @@ def functional_tests_permanent_item():
 
 # noinspection PyShadowingNames
 @pytest.fixture(scope='session')
-def items_write_repository(functional_tests_database):
-    # FIXME - need different repo
-    return asyncpg.ItemsWriteRepository(functional_tests_database)
+def items_repository(functional_tests_database):
+    return asyncpg.ItemsRepository(functional_tests_database)
 
 
 @pytest.fixture(scope='session')
-def functional_tests_policy(items_write_repository):
-    return infra.Policy(items_repo=items_write_repository)
+def functional_tests_policy(items_repository):
+    return infra.Policy(items_repo=items_repository)
 
 
 # noinspection PyShadowingNames

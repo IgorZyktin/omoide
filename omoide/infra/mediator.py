@@ -10,4 +10,4 @@ class Mediator:
     """Class that ties all components together.
     """
     users_repo: interfaces.AbsUsersRepository
-    items_repo: interfaces.AbsItemsReadRepository
+    items_repo: interfaces.AbsItemsRepository

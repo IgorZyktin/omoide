@@ -6,7 +6,7 @@ from uuid import UUID
 from omoide.domain import actions
 from omoide.domain.errors import Error
 from omoide.domain.interfaces.in_storage \
-    .in_repositories import in_rp_items_read
+    .in_repositories import in_rp_items
 from omoide.domain.core import core_models
 
 __all__ = [
@@ -19,7 +19,7 @@ class AbsPolicy(abc.ABC):
 
     def __init__(
             self,
-            items_repo: in_rp_items_read.AbsItemsReadRepository,
+            items_repo: in_rp_items_read.AbsItemsRepository,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo

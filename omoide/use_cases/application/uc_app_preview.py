@@ -23,7 +23,7 @@ class AppPreviewUseCase:
             self,
             preview_repo: interfaces.AbsPreviewRepository,
             users_repo: interfaces.AbsUsersRepository,
-            items_repo: interfaces.AbsItemsReadRepository,
+            items_repo: interfaces.AbsItemsRepository,
             meta_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""

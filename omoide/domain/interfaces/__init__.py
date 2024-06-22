@@ -1,7 +1,7 @@
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_items_read import AbsItemsReadRepository
+    .in_repositories.in_rp_items import AbsItemsRepository
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items_write import AbsItemsWriteRepository
 from omoide.domain.interfaces.in_storage \

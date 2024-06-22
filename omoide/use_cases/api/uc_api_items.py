@@ -815,7 +815,7 @@ class ApiItemsDownloadUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsReadRepository,
+            items_repo: interfaces.AbsItemsRepository,
             metainfo_repo: interfaces.AbsMetainfoRepository,
     ) -> None:
         """Initialize instance."""
