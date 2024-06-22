@@ -3,7 +3,7 @@
 import datetime
 from typing import Collection
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 

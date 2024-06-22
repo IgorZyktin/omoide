@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 """Repository that performs all search queries.
 """
 import abc
 
 from omoide import domain
-from omoide.domain import errors
 from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
