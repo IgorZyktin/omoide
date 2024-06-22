@@ -77,6 +77,7 @@ def get_app() -> FastAPI:
 def get_api() -> FastAPI:
     """Create API instance."""
     new_api = FastAPI(
+        redoc_url=None,
         title='OmoideAPI',
         version=api_info.__version__,
         description=api_info.DESCRIPTION,
