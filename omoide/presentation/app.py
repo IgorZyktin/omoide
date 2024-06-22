@@ -132,6 +132,7 @@ def get_middlewares() -> Iterator[list[tuple[Any, dict[str, Any]]]]:
 def apply_api_routes(current_api: FastAPI) -> None:
     """Register API routes."""
     api_router_v1 = APIRouter(prefix='/v1')
+    api_router_v1.include_router(controllers.user_router)
     api_router_v1.include_router(controllers.users_router)
 
     current_api.include_router(api_router_v1)
