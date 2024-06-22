@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "omoide"
-version = "4.0.0"
+version = "0.3.7"
 description = "Image storing application"
 authors = ["IgorZyktin <nicord@yandex.ru>"]
 license = "MIT"

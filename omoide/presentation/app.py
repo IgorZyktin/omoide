@@ -3,45 +3,112 @@
 This component is facing towards the user and displays search results.
 """
 import os
+from typing import Any
+from typing import Iterator
 
-import fastapi
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import FastAPI
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from omoide.application.controllers import api
+from omoide.application.controllers import api as api_legacy
+from omoide.omoide_api import api_info
 from omoide.omoide_api import controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
 from omoide.presentation import dependencies as dep
 
-app = fastapi.FastAPI(
-    # openapi_url=None,
-    # docs_url=None,
-    # redoc_url=None,
-    dependencies=[
-        Depends(dep.patch_request),
-    ],
-)
+
+def get_app() -> FastAPI:
+    """Create app instance."""
+    new_app = FastAPI(
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
+        dependencies=[
+            Depends(dep.patch_request),
+        ],
+    )
+
+    @new_app.on_event('startup')
+    async def startup():
+        """Connect to the database."""
+        await dep.get_db().connect()
+
+    @new_app.on_event('shutdown')
+    async def shutdown():
+        """Disconnect from the database."""
+        await dep.get_db().disconnect()
+
+    # TODO - use only during development
+    new_app.mount(
+        '/static',
+        StaticFiles(directory='omoide/presentation/static'),
+        name='static',
+    )
+
+    if app_config.Config().env != 'prod':
+        new_app.mount(
+            '/content',
+            StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
+            name='content',
+        )
+
+        @new_app.get('/all_routes')
+        def get_all_urls_from_request(request: Request):
+            """List all URLs for this Fastapi instance.
+
+            Supposed to be used only for debugging!
+            """
+            url_list = [
+                {
+                    'path': route.path,
+                    'name': route.name
+                } for route in request.app.routes
+            ]
+            return url_list
+
+    return new_app
 
 
-@app.on_event('startup')
-async def startup():
-    """Connect to the database."""
-    await dep.get_db().connect()
+def get_api() -> FastAPI:
+    """Create API instance."""
+    new_api = FastAPI(
+        title='OmoideAPI',
+        version=api_info.__version__,
+        description=api_info.DESCRIPTION,
+        openapi_tags=api_info.TAGS_METADATA,
+        license_info={
+            'name': 'MIT',
+            'url': 'https://opensource.org/license/mit',
+        },
+    )
+
+    if app_config.Config().env != 'prod':
+        @new_api.get('/all_routes')
+        def get_all_urls_from_request(request: Request):
+            """List all URLs for this Fastapi instance.
+
+            Supposed to be used only for debugging!
+            """
+            url_list = [
+                {
+                    'path': route.path,
+                    'name': route.name
+                } for route in request.app.routes
+            ]
+            return url_list
+
+    return new_api
 
 
-@app.on_event('shutdown')
-async def shutdown():
-    """Disconnect from the database."""
-    await dep.get_db().disconnect()
-
-
-def apply_middlewares(current_app: FastAPI) -> None:
-    """Apply middlewares."""
+def get_middlewares() -> Iterator[list[tuple[Any, dict[str, Any]]]]:
+    """Return list of needed middlewares."""
+    # CORS
+    # TODO - move it to config
     origins = [
         'https://omoide.ru',
         'https://www.omoide.ru',
@@ -49,73 +116,62 @@ def apply_middlewares(current_app: FastAPI) -> None:
         'http://localhost:8080',
     ]
 
-    current_app.add_middleware(
-        CORSMiddleware,
+    cors_config = dict(
         allow_origins=origins,
         allow_credentials=True,
         allow_methods=['*'],
         allow_headers=['*'],
     )
 
+    yield CORSMiddleware, cors_config
 
-api_router_v1 = APIRouter(prefix='/api/v1')
 
-
-def include_api_routes(current_app: FastAPI) -> None:
+def apply_api_routes(current_api: FastAPI) -> None:
     """Register API routes."""
+    api_router_v1 = APIRouter(prefix='/v1')
     api_router_v1.include_router(controllers.users_router)
 
-    current_app.include_router(api_router_v1)
-
-    current_app.include_router(api.api_exif.router)
-    current_app.include_router(api.api_media.router)
-    current_app.include_router(api.api_metainfo.router)
-    current_app.include_router(api.api_search.router)
-    current_app.include_router(api.api_profile.router)
+    current_api.include_router(api_router_v1)
 
 
-# Special application routes
-app.include_router(application.app_auth.router)
-app.include_router(application.app_special.router)
-app.include_router(application.app_profile.router)
+def apply_app_routes(current_app: FastAPI) -> None:
+    """Register APP routes."""
+    # legacy
+    current_app.include_router(api_legacy.api_exif.router)
+    current_app.include_router(api_legacy.api_media.router)
+    current_app.include_router(api_legacy.api_metainfo.router)
+    current_app.include_router(api_legacy.api_search.router)
+    current_app.include_router(api_legacy.api_profile.router)
 
-# API routes
-app.include_router(api_old.api_browse.router)
-app.include_router(api_old.api_home.router)
-app.include_router(api_old.api_items.router)
-app.include_router(api_old.api_search.router)
+    # Special application routes
+    current_app.include_router(application.app_auth.router)
+    current_app.include_router(application.app_special.router)
+    current_app.include_router(application.app_profile.router)
 
-# Application routes
-app.include_router(application.app_browse.router)
-app.include_router(application.app_home.router)
-app.include_router(application.app_item.router)
-app.include_router(application.app_preview.router)
-app.include_router(application.app_search.router)
-app.include_router(application.app_upload.router)
+    # API routes
+    current_app.include_router(api_old.api_browse.router)
+    current_app.include_router(api_old.api_home.router)
+    current_app.include_router(api_old.api_items.router)
+    current_app.include_router(api_old.api_search.router)
 
-# TODO - add app construction function
+    # Application routes
+    current_app.include_router(application.app_browse.router)
+    current_app.include_router(application.app_home.router)
+    current_app.include_router(application.app_item.router)
+    current_app.include_router(application.app_preview.router)
+    current_app.include_router(application.app_search.router)
+    current_app.include_router(application.app_upload.router)
+
+
+def apply_middlewares(current_app: FastAPI) -> None:
+    """Apply middlewares."""
+    for middleware_type, middleware_config in get_middlewares():
+        current_app.add_middleware(middleware_type, **middleware_config)
+
+
+app = get_app()
+api = get_api()
+apply_api_routes(api)
+app.mount('/api', api)
+apply_app_routes(app)
 apply_middlewares(app)
-include_api_routes(app)
-
-app.mount(
-    '/static',
-    StaticFiles(directory='omoide/presentation/static'),
-    name='static',
-)
-
-if app_config.Config().env != 'prod':
-    app.mount(
-        '/content',
-        StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
-        name='content',
-    )
-
-    @app.get('/all_routes')
-    def get_all_urls_from_request(request: fastapi.Request):
-        url_list = [
-            {
-                'path': route.path,
-                'name': route.name
-            } for route in request.app.routes
-        ]
-        return url_list
