@@ -3,6 +3,7 @@
 This component is facing towards the user and displays search results.
 """
 import os
+from contextlib import asynccontextmanager
 from typing import Any
 from typing import Iterator
 
@@ -24,7 +25,18 @@ from omoide.presentation import dependencies as dep
 
 def get_app() -> FastAPI:
     """Create app instance."""
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):  # noqa
+        """Application lifespan."""
+        # Connect to the database
+        await dep.get_db().connect()
+        yield
+        # Disconnect from the database
+        await dep.get_db().disconnect()
+
     new_app = FastAPI(
+        lifespan=lifespan,
         openapi_url=None,
         docs_url=None,
         redoc_url=None,
@@ -32,16 +44,6 @@ def get_app() -> FastAPI:
             Depends(dep.patch_request),
         ],
     )
-
-    @new_app.on_event('startup')
-    async def startup():
-        """Connect to the database."""
-        await dep.get_db().connect()
-
-    @new_app.on_event('shutdown')
-    async def shutdown():
-        """Disconnect from the database."""
-        await dep.get_db().disconnect()
 
     # TODO - use only during development
     new_app.mount(
