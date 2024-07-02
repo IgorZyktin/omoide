@@ -123,6 +123,7 @@ class SearchRepository(
             )
 
         response = await self.db.fetch_all(stmt)
+        # TODO - return dict from this method
         return [(x['tag'], x['counter']) for x in response]
 
     async def guess_tag_known(

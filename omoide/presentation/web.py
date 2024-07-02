@@ -101,7 +101,7 @@ def raise_from_exc(exc: Exception) -> NoReturn:
     error = errors.Error(
         template='{error_type}: {error_message}',
         error_type=type(exc).__name__,
-        errorm_message=str(exc),
+        error_message=str(exc),
     )
     raise_from_error(error)
 

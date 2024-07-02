@@ -1,5 +1,4 @@
-"""Web level API models.
-"""
+"""Web level API models."""
 from typing import Any
 
 from pydantic import BaseModel

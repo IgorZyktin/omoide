@@ -1,7 +1,10 @@
-"""Use cases for current User.
-"""
+"""Use cases for User-related operations."""
+from typing import Any
+from uuid import UUID
+
+from omoide.domain import exceptions
 from omoide.domain.core import core_models
-from omoide.omoide_api.use_cases.base import BaseAPIUseCase
+from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
 
 class GetCurrentUserStatsUseCase(BaseAPIUseCase):
@@ -64,3 +67,46 @@ class GetCurrentUserTagsUseCase(BaseAPIUseCase):
         async with self.mediator.search_repo.transaction():
             known_tags = await self.mediator.search_repo.count_all_tags(user)
         return dict(known_tags)
+
+
+class GetAllUsersUseCase(BaseAPIUseCase):
+    """Use case for getting all users."""
+
+    async def execute(
+        self,
+        user: core_models.User,
+    ) -> tuple[list[core_models.User], list[dict[str, Any]]]:
+        """Execute."""
+        users: list[core_models.User] = []
+        extras: list[dict[str, Any]] = []
+
+        if user.is_anon():
+            return users, extras
+
+        # TODO - implement business logic here
+
+        if user.is_registered:
+            return [user], [{'root_item': user.root_item}]
+
+        return users, extras
+
+
+class GetUserByUUIDUseCase(BaseAPIUseCase):
+    """Use case for getting user by UUID."""
+
+    async def execute(
+        self,
+        user: core_models.User,
+        uuid: UUID,
+    ) -> tuple[core_models.User, dict[str, Any]]:
+        """Execute."""
+        if user.is_anon():
+            msg = 'Anons are not allowed to get users'
+            raise exceptions.ForbiddenError(msg)
+
+        # TODO - implement business logic here
+
+        if user.is_registered:
+            return user, {'root_item': user.root_item}
+
+        return user, {'root_item': user.root_item}

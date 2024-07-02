@@ -1,5 +1,4 @@
-"""Base use case class for API.
-"""
+"""Common use case elements."""
 import abc
 
 from omoide.infra.mediator import Mediator
