@@ -52,4 +52,8 @@ class AbsSearchRepository(
             self,
             user: domain.User,
     ) -> list[tuple[str, int]]:
-        """Return statistics for known tags."""
+        """Return statistics for used tags."""
+
+    @abc.abstractmethod
+    async def count_all_tags_anon(self) -> dict[str, int]:
+        """Return statistics for used tags."""

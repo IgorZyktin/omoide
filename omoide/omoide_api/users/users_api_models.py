@@ -32,6 +32,11 @@ class UserOutput(BaseModel):
     }
 
 
+class UserCollectionOutput(BaseModel):
+    """Collection of users."""
+    users: list[UserOutput]
+
+
 class UserStatsOutput(BaseModel):
     """Statistics for user."""
     total_items: int

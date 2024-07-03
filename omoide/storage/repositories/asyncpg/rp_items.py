@@ -3,7 +3,8 @@
 import datetime
 from typing import Collection
 from typing import Optional
-from uuid import UUID, uuid4
+from uuid import UUID
+from uuid import uuid4
 
 import sqlalchemy as sa
 
@@ -76,6 +77,45 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             return 0
 
         return response['total']
+
+    async def read_root_item(
+            self,
+            user: domain.User,
+    ) -> Optional[domain.Item]:
+        """Return Item or None."""
+        stmt = sa.select(
+            models.Item
+        ).where(
+            sa.and_(
+                models.Item.owner_uuid == user.uuid,
+                models.Item.parent_uuid == None,  # noqa
+            )
+        )
+
+        response = await self.db.fetch_one(stmt)
+
+        return domain.Item(**response) if response else None
+
+    async def read_all_root_items(
+        self,
+        *users: domain.User,
+    ) -> list[domain.Item]:
+        """Return list of root items."""
+        stmt = sa.select(
+            models.Item
+        ).where(
+            models.Item.parent_uuid == None  # noqa
+        )
+
+        if users:
+            stmt = stmt.where(
+                models.Item.owner_uuid.in_(  # noqa
+                    tuple(str(user.uuid) for user in users)
+                )
+            )
+
+        response = await self.db.fetch_all(stmt)
+        return [domain.Item(**each) for each in response]
 
     async def read_item(
             self,

@@ -167,7 +167,7 @@
                 {% endif %}
             {% endif %}
 
-            {% if user.is_anon() %}
+            {% if user.is_anon %}
                 <a href="{{ request.url_for('app_login') }}"
                    title="Enter credentials to log in"
                    class="button qc-login">

@@ -2,19 +2,46 @@
 from typing import Any
 from uuid import UUID
 
-from omoide.domain import exceptions
-from omoide.domain.core import core_models
+from omoide import utils
+# TODO - create actual models module
+from omoide.domain.core import core_models as models
+from omoide.omoide_api import exceptions
 from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
 
-class GetCurrentUserStatsUseCase(BaseAPIUseCase):
+class BaseUsersUseCase(BaseAPIUseCase):
+    """Base class for user-related use cases."""
+
+    async def _get_target_user(
+        self,
+        who_asking: models.User,
+        uuid: UUID,
+    ) -> models.User:
+        """Read specified user."""
+        if who_asking.is_admin:
+            target_user = await self.mediator.users_repo.read_user(uuid)
+            if target_user is None:
+                msg = 'User with UUID {uuid} does not exist'
+                raise exceptions.DoesNotExistError(msg, uuid=uuid)
+        else:
+            target_user = who_asking
+
+        return target_user
+
+
+class GetUserStatsUseCase(BaseUsersUseCase):
     """Use case for getting current user stats."""
 
     async def execute(
         self,
-        user: core_models.User,
+        user: models.User,
+        uuid: UUID,
     ) -> dict[str, int]:
         """Execute."""
+        if user.is_anon:
+            msg = 'Anonymous users are not allowed to get user stats'
+            raise exceptions.RestrictedError(msg)
+
         empty = {
             'total_items': 0,
             'total_collections': 0,
@@ -23,26 +50,24 @@ class GetCurrentUserStatsUseCase(BaseAPIUseCase):
             'thumbnail_bytes': 0,
         }
 
-        if user.is_anon or user.root_item is None:
-            return empty
-
         async with self.mediator.users_repo.transaction():
-            root = await self.mediator.items_repo.read_item(user.root_item)
+            target_user = await self._get_target_user(user, uuid)
+            root = await self.mediator.items_repo.read_root_item(target_user)
 
             if root is None:
                 return empty
 
             size = await (
-                self.mediator.users_repo.calc_total_space_used_by(user)
+                self.mediator.users_repo.calc_total_space_used_by(target_user)
             )
 
             total_items = await (
-                self.mediator.items_repo.count_items_by_owner(user)
+                self.mediator.items_repo.count_items_by_owner(target_user)
             )
 
             total_collections = await (
                 self.mediator.items_repo.count_items_by_owner(
-                    user,
+                    target_user,
                     only_collections=True,
                 )
             )
@@ -56,17 +81,30 @@ class GetCurrentUserStatsUseCase(BaseAPIUseCase):
         }
 
 
-class GetCurrentUserTagsUseCase(BaseAPIUseCase):
+class GetUserTagsUseCase(BaseUsersUseCase):
     """Use case for getting tags available to the current user."""
 
     async def execute(
         self,
-        user: core_models.User,
+        user: models.User,
+        uuid: str,
     ) -> dict[str, int]:
         """Execute."""
         async with self.mediator.search_repo.transaction():
-            known_tags = await self.mediator.search_repo.count_all_tags(user)
-        return dict(known_tags)
+            if uuid.lower() == 'anon':
+                tags = await self.mediator.search_repo.count_all_tags_anon()
+
+            elif utils.is_valid_uuid(uuid):
+                target_user = await self._get_target_user(user, UUID(uuid))
+                tags = await self.mediator.search_repo.count_all_tags(
+                    user=target_user,
+                )
+
+            else:
+                msg = 'Given user UUID is not valid'
+                raise exceptions.InvalidInputError(msg)
+
+        return dict(tags)
 
 
 class GetAllUsersUseCase(BaseAPIUseCase):
@@ -74,39 +112,45 @@ class GetAllUsersUseCase(BaseAPIUseCase):
 
     async def execute(
         self,
-        user: core_models.User,
-    ) -> tuple[list[core_models.User], list[dict[str, Any]]]:
+        user: models.User,
+    ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
-        users: list[core_models.User] = []
-        extras: list[dict[str, Any]] = []
-
         if user.is_anon:
-            return users, extras
+            msg = 'Anonymous users are not allowed to get list of users'
+            raise exceptions.RestrictedError(msg)
 
-        # TODO - implement business logic here
+        async with self.mediator.users_repo.transaction():
+            if user.is_admin:
+                users = await self.mediator.users_repo.read_all_users()
+                roots = await self.mediator.items_repo.read_all_root_items(
+                    *users,
+                )
+                extras = {root.owner_uuid: root.uuid for root in roots}
 
-        if user.is_not_anon:
-            return [user], [{'root_item': user.root_item}]
+            else:
+                root = await self.mediator.items_repo.read_root_item(user)
+                users = [user]
+                extras = {user.uuid: root.uuid if root else None}
 
         return users, extras
 
 
-class GetUserByUUIDUseCase(BaseAPIUseCase):
+class GetUserByUUIDUseCase(BaseUsersUseCase):
     """Use case for getting user by UUID."""
 
     async def execute(
         self,
-        user: core_models.User,
+        user: models.User,
         uuid: UUID,
-    ) -> tuple[core_models.User, dict[str, Any]]:
+    ) -> tuple[models.User, dict[str, Any]]:
         """Execute."""
         if user.is_anon:
-            msg = 'Anons are not allowed to get users'
-            raise exceptions.ForbiddenError(msg)
+            msg = 'Anonymous users are not allowed to get user info'
+            raise exceptions.RestrictedError(msg)
 
-        # TODO - implement business logic here
+        async with self.mediator.users_repo.transaction():
+            target_user = await self._get_target_user(user, uuid)
+            root = await self.mediator.items_repo.read_root_item(target_user)
+            extras = {'root_item': root.uuid if root else None}
 
-        if user.is_not_anon:
-            return user, {'root_item': user.root_item}
-
-        return user, {'root_item': user.root_item}
+        return target_user, extras

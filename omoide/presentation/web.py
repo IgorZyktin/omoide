@@ -22,6 +22,7 @@ from omoide import utils
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.infra import custom_logging
+from omoide.omoide_api import exceptions as api_exceptions
 from omoide.presentation import constants
 from omoide.utils import maybe_str
 
@@ -59,11 +60,39 @@ ERROR_TO_CODE_MAP: dict[Type[errors.Error], int] = {
     for error in errors
 }
 
+CODES_TO_EXCEPTIONS: dict[int, list[Type[Exception]]] = {
+    http.HTTPStatus.BAD_REQUEST: [
+        api_exceptions.InvalidInputError,
+    ],
+
+    http.HTTPStatus.NOT_FOUND: [
+        api_exceptions.DoesNotExistError,
+    ],
+
+    http.HTTPStatus.FORBIDDEN: [
+        api_exceptions.RestrictedError,
+    ]
+}
+
+EXCEPTION_TO_CODE_MAP: dict[Type[Exception], int] = {
+    error: code
+    for code, errors in CODES_TO_EXCEPTIONS.items()
+    for error in errors
+}
+
 
 def get_corresponding_error_code(error: errors.Error) -> int:
     """Return HTTP code that corresponds to this error."""
     return ERROR_TO_CODE_MAP.get(
         type(error),
+        http.HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+
+def get_corresponding_exception_code(exc: Exception) -> int:
+    """Return HTTP code that corresponds to this exception."""
+    return EXCEPTION_TO_CODE_MAP.get(
+        type(exc),
         http.HTTPStatus.INTERNAL_SERVER_ERROR,
     )
 
@@ -96,14 +125,20 @@ def serialize(
     }
 
 
-def raise_from_exc(exc: Exception) -> NoReturn:
+def raise_from_exc(
+    exc: Exception,
+    language: str | None = None,
+) -> NoReturn:
     """Cast exception into HTTP response."""
-    error = errors.Error(
-        template='{error_type}: {error_message}',
-        error_type=type(exc).__name__,
-        error_message=str(exc),
-    )
-    raise_from_error(error)
+    code = get_corresponding_exception_code(exc)
+
+    if language:
+        # TODO - add localization
+        detail = str(exc)
+    else:
+        detail = str(exc)
+
+    raise HTTPException(status_code=code, detail=detail)
 
 
 def raise_from_error(

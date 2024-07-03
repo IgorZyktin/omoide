@@ -23,8 +23,14 @@ class UsersRepo(interfaces.AbsUsersRepo):
         ).where(
             models.User.uuid == uuid
         )
+
         response = await self.db.fetch_one(stmt)
-        return domain.User(**response) if response else None
+
+        if response:
+            user = domain.User(**response, role=domain.Role.user)
+            return user
+
+        return None
 
     async def read_user_by_login(
             self,
@@ -40,7 +46,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
         response = await self.db.fetch_one(stmt)
 
         if response:
-            user = domain.User(**response, role=domain.Role)
+            user = domain.User(**response, role=domain.Role.user)
             return user
 
         return None
@@ -49,15 +55,21 @@ class UsersRepo(interfaces.AbsUsersRepo):
             self,
             *uuids: UUID,
     ) -> list[domain.User]:
-        """Return list of users with given uuids."""
+        """Return list of users with given uuids (or all users)."""
         stmt = sa.select(
             models.User
-        ).where(
-            models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
         )
 
+        if uuids:
+            stmt = stmt.where(
+                models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
+            )
+
         response = await self.db.fetch_all(stmt)
-        return [domain.User(**record) for record in response]
+        return [
+            domain.User(**record, role=domain.Role.user)
+            for record in response
+        ]
 
     async def calc_total_space_used_by(
             self,

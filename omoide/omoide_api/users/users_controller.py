@@ -5,37 +5,37 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 
-from omoide import domain
+from omoide import domain as models  # TODO - create actual models module
 from omoide import utils
 from omoide.infra.mediator import Mediator
-from omoide.omoide_api.users import models
+from omoide.omoide_api.users import users_api_models
 from omoide.omoide_api.users import users_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-user_router = APIRouter(prefix='/user', tags=['user'])
 users_router = APIRouter(prefix='/users', tags=['users'])
 
 
-@user_router.get(
-    '/stats',
+@users_router.get(
+    '/{uuid}/stats',
     status_code=http.HTTPStatus.OK,
-    response_model=models.UserStatsOutput,
+    response_model=users_api_models.UserStatsOutput,
 )
-async def api_get_current_user_stats(
-    user: domain.User = Depends(dep.get_current_user),
+async def api_get_user_stats(
+    uuid: UUID,
+    user: models.User = Depends(dep.get_current_user),
     mediator: Mediator = Depends(dep.get_mediator),
 ):
-    """Get statistics for current user."""
-    use_case = users_use_cases.GetCurrentUserStatsUseCase(mediator)
+    """Get statistics for specific user."""
+    use_case = users_use_cases.GetUserStatsUseCase(mediator)
 
     try:
-        output = await use_case.execute(user)
+        output = await use_case.execute(user, uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return models.UserStatsOutput(
+    return users_api_models.UserStatsOutput(
         total_items=output['total_items'],
         total_collections=output['total_collections'],
         content_bytes=output['content_bytes'],
@@ -47,20 +47,24 @@ async def api_get_current_user_stats(
     )
 
 
-@user_router.get(
-    '/tags',
+@users_router.get(
+    '/{uuid}/tags',
     status_code=http.HTTPStatus.OK,
     response_model=dict[str, int],
 )
-async def api_get_current_user_tags(
-    user: domain.User = Depends(dep.get_current_user),
+async def api_get_user_tags(
+    uuid: str,
+    user: models.User = Depends(dep.get_current_user),
     mediator: Mediator = Depends(dep.get_mediator),
 ):
-    """Get all known tags for current user."""
-    use_case = users_use_cases.GetCurrentUserTagsUseCase(mediator)
+    """Get all known tags for specific user.
+
+    You can also pass 'anon' as UUID to get tags for anonymous user.
+    """
+    use_case = users_use_cases.GetUserTagsUseCase(mediator)
 
     try:
-        tags = await use_case.execute(user)
+        tags = await use_case.execute(user, uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -71,17 +75,13 @@ async def api_get_current_user_tags(
 @users_router.get(
     '',
     status_code=http.HTTPStatus.OK,
-    response_model=list[models.UserOutput],
+    response_model=users_api_models.UserCollectionOutput,
 )
 async def api_get_all_users(
-    user: domain.User = Depends(dep.get_current_user),
+    user: models.User = Depends(dep.get_current_user),
     mediator: Mediator = Depends(dep.get_mediator),
 ):
-    """Get list of users.
-
-    If you're anon, you will always get an empty list.
-    If you're registered, you will get a list with only yourself.
-    """
+    """Get list of users."""
     use_case = users_use_cases.GetAllUsersUseCase(mediator)
 
     try:
@@ -90,23 +90,27 @@ async def api_get_all_users(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return [
-        models.UserOutput(
-            **web.serialize(user.model_dump()),
-            extra=web.serialize(extra),
-        )
-        for user, extra in zip(users, extras)
-    ]
+    return {
+        'users': [
+            users_api_models.UserOutput(
+                **web.serialize(user.model_dump()),
+                extra={
+                    'root_item': web.to_simple_type(extras.get(user.uuid))
+                },
+            )
+            for user in users
+        ]
+    }
 
 
 @users_router.get(
     '/{uuid}',
     status_code=http.HTTPStatus.OK,
-    response_model=models.UserOutput,
+    response_model=users_api_models.UserOutput,
 )
 async def api_get_user_by_uuid(
     uuid: UUID,
-    user: domain.User = Depends(dep.get_current_user),
+    user: models.User = Depends(dep.get_current_user),
     mediator: Mediator = Depends(dep.get_mediator),
 ):
     """Get user by UUID."""
@@ -118,7 +122,7 @@ async def api_get_user_by_uuid(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return models.UserOutput(
+    return users_api_models.UserOutput(
         **web.serialize(user.model_dump()),
         extra=web.serialize(extra),
     )

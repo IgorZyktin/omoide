@@ -127,6 +127,18 @@ class SearchRepository(
         # TODO - return dict from this method
         return [(x['tag'], x['counter']) for x in response]
 
+    async def count_all_tags_anon(self) -> dict[str, int]:
+        """Return statistics for used tags."""
+        stmt = sa.select(
+            models.KnownTagsAnon.tag,
+            models.KnownTagsAnon.counter,
+        ).order_by(
+            sa.desc(models.KnownTagsAnon.counter),
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return {x['tag']: x['counter'] for x in response}
+
     async def guess_tag_known(
             self,
             user: core_models.User,

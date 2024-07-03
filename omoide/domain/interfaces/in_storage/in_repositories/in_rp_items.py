@@ -22,6 +22,20 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
         """Check access to the Item with given UUID for the given User."""
 
     @abc.abstractmethod
+    async def read_root_item(
+            self,
+            user: domain.User,
+    ) -> Optional[domain.Item]:
+        """Return Item or None."""
+
+    @abc.abstractmethod
+    async def read_all_root_items(
+        self,
+        *users: list[domain.User],
+    ) -> list[domain.Item]:
+        """Return list of root items."""
+
+    @abc.abstractmethod
     async def read_item(
             self,
             uuid: UUID,

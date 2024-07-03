@@ -9,6 +9,7 @@ from omoide.domain import common
 
 # FIXME - temporary import
 User = auth.User
+Role = auth.Role
 AccessStatus = common.AccessStatus
 Metainfo = common.Metainfo
 

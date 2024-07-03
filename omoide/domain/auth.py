@@ -13,8 +13,9 @@ __all__ = [
 ]
 
 
-class Role(enum.StrEnum):
+class Role(enum.Enum):
     """User role."""
+    # TODO - change to StrEnum in Python 3.11
     anon = enum.auto()
     user = enum.auto()
     admin = enum.auto()
