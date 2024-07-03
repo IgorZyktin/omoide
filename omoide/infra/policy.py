@@ -87,7 +87,7 @@ class Policy(interfaces.AbsPolicy):
                       actions.Item.UPDATE,
                       actions.Item.DELETE):
             # on create we're using uuid of the parent, not the item itself
-            if user.is_not_registered:
+            if user.is_anon:
                 error = errors.ItemModificationByAnon()
 
             elif access.is_not_owner:

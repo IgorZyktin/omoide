@@ -141,7 +141,7 @@ class BrowseRepository(
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
         # TODO - rewrite to sqlalchemy
-        if user.is_anon():
+        if user.is_anon:
             query = """
             WITH children AS (
                 SELECT uuid
@@ -262,7 +262,7 @@ class BrowseRepository(
         }
 
         # TODO - rewrite to sqlalchemy
-        if user.is_anon():
+        if user.is_anon:
             stmt = """
 WITH RECURSIVE nested_items AS
        (SELECT items.uuid          AS uuid,

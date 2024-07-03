@@ -196,7 +196,7 @@ async def get_known_user(
     if credentials.username and credentials.password:
         user = await use_case.execute(credentials, authenticator)
 
-    if user is None or user.is_not_registered:
+    if user is None or user.is_anon:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='You are not allowed to perform this operation',

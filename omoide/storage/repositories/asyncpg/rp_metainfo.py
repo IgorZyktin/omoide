@@ -175,7 +175,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
-        assert user.is_registered
+        assert user.is_not_anon
 
         for tag in tags:
             tag = tag.lower()
@@ -205,7 +205,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
-        assert user.is_registered
+        assert user.is_not_anon
 
         for tag in tags:
             tag = tag.lower()
@@ -229,7 +229,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         """Update counters for known tags."""
         for user in users:
             if tags_added:
-                if user.is_not_registered:
+                if user.is_anon:
                     await self._increase_known_tags_for_anon_user(
                         user, tags_added)
                 else:
@@ -237,7 +237,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
                         user, tags_added)
 
             if tags_deleted:
-                if user.is_not_registered:
+                if user.is_anon:
                     await self._decrease_known_tags_for_anon_user(
                         user, tags_deleted)
                 else:
@@ -251,7 +251,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
     ) -> None:
         """Drop tags with counter less of equal to 0."""
         for user in users:
-            if user.is_registered:
+            if user.is_not_anon:
                 stmt = sa.delete(
                     models.KnownTags
                 ).where(
@@ -260,7 +260,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
                 )
                 await self.db.execute(stmt)
 
-            elif user.is_not_registered or user.uuid in public_users:
+            elif user.is_anon or user.uuid in public_users:
                 stmt = sa.delete(
                     models.KnownTagsAnon
                 ).where(
@@ -274,7 +274,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
-        assert user.is_not_registered
+        assert user.is_anon
 
         for tag in tags:
             tag = tag.lower()
@@ -302,7 +302,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
-        assert user.is_not_registered
+        assert user.is_anon
 
         for tag in tags:
             tag = tag.lower()

@@ -163,7 +163,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
-        assert user.is_registered
+        assert user.is_not_anon
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
@@ -271,16 +271,16 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         """Return corresponding item."""
         stmt = sa.select(models.Item)
 
-        if user.is_registered:
+        if user.is_anon:
             stmt = stmt.where(
                 sa.and_(
-                    models.Item.owner_uuid == user.uuid,
                     models.Item.name == name,
                 )
             )
         else:
             stmt = stmt.where(
                 sa.and_(
+                    models.Item.owner_uuid == user.uuid,
                     models.Item.name == name,
                 )
             )

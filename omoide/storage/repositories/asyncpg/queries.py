@@ -40,6 +40,6 @@ def ensure_user_has_permissions(
         stmt: Select,
 ) -> Select:
     """Ensure that any user has permission to access this."""
-    if user.is_anon():
+    if user.is_anon:
         return ensure_anon_user_has_permissions(stmt)
     return ensure_registered_user_has_permissions(user, stmt)

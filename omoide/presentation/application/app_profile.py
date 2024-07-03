@@ -32,7 +32,7 @@ async def app_profile(
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show user home page."""
-    if user.is_not_registered or user.uuid is None:
+    if user.is_anon or user.uuid is None:
         error = errors.AuthenticationRequired()
         return web.redirect_from_error(request, error)
 
@@ -90,7 +90,7 @@ async def app_profile_new(
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show recent updates."""
-    if user.is_not_registered or user.uuid is None:
+    if user.is_anon or user.uuid is None:
         error = errors.AuthenticationRequired()
         return web.redirect_from_error(request, error)
 
@@ -116,7 +116,7 @@ async def app_profile_tags(
         response_class: Type[Response] = HTMLResponse,
 ):
     """Show know tags."""
-    if user.is_not_registered or user.uuid is None:
+    if user.is_anon or user.uuid is None:
         error = errors.AuthenticationRequired()
         return web.redirect_from_error(request, error)
 

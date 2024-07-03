@@ -64,11 +64,11 @@ class ApiSuggestTagUseCase:
     ) -> list[core_models.GuessResult]:
         """Return possible tags."""
         async with self.search_repo.transaction():
-            if user.is_registered:
-                variants = await self.search_repo \
-                    .guess_tag_known(user, user_input, limit)
-            else:
+            if user.is_anon:
                 variants = await self.search_repo \
                     .guess_tag_anon(user, user_input, limit)
+            else:
+                variants = await self.search_repo \
+                    .guess_tag_known(user, user_input, limit)
 
         return variants

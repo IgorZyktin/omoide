@@ -23,7 +23,7 @@ class GetCurrentUserStatsUseCase(BaseAPIUseCase):
             'thumbnail_bytes': 0,
         }
 
-        if user.is_anon() or user.root_item is None:
+        if user.is_anon or user.root_item is None:
             return empty
 
         async with self.mediator.users_repo.transaction():
@@ -80,12 +80,12 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         users: list[core_models.User] = []
         extras: list[dict[str, Any]] = []
 
-        if user.is_anon():
+        if user.is_anon:
             return users, extras
 
         # TODO - implement business logic here
 
-        if user.is_registered:
+        if user.is_not_anon:
             return [user], [{'root_item': user.root_item}]
 
         return users, extras
@@ -100,13 +100,13 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         uuid: UUID,
     ) -> tuple[core_models.User, dict[str, Any]]:
         """Execute."""
-        if user.is_anon():
+        if user.is_anon:
             msg = 'Anons are not allowed to get users'
             raise exceptions.ForbiddenError(msg)
 
         # TODO - implement business logic here
 
-        if user.is_registered:
+        if user.is_not_anon:
             return user, {'root_item': user.root_item}
 
         return user, {'root_item': user.root_item}

@@ -30,7 +30,7 @@ class AppProfileQuotasUseCase:
             user: domain.User,
     ) -> Result[errors.Error, tuple[domain.SpaceUsage, int, int]]:
         """Return amount of items that correspond to query (not items)."""
-        if user.is_anon() or user.uuid is None:
+        if user.is_anon or user.uuid is None:
             return Failure(errors.AuthenticationRequired())
 
         if user.root_item is None:

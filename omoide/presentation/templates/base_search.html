@@ -186,7 +186,7 @@
             {% endif %}
         </div>
 
-        {% if user.is_not_anon() %}
+        {% if user.is_not_anon %}
             <div class="menu-container">
                 {% if current_item %}
                     {% set parent_hint = current_item.uuid | string %}

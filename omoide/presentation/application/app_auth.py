@@ -40,12 +40,12 @@ async def app_login(
     """Ask user for login and password."""
     url = request.url_for('app_home')
 
-    if user.is_registered:
+    if user.is_not_anon:
         return RedirectResponse(url)
 
     new_user = await use_case.execute(credentials, authenticator)
 
-    if new_user.is_anon():
+    if new_user.is_anon:
         await asyncio.sleep(config.penalty_wrong_password)
         raise fastapi.HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

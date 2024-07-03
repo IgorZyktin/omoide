@@ -105,7 +105,15 @@ class SearchRepository(
             user: domain.User,
     ) -> list[tuple[str, int]]:
         """Return statistics for known tags."""
-        if user.is_registered:
+        if user.is_anon:
+            stmt = sa.select(
+                models.KnownTagsAnon.tag,
+                models.KnownTagsAnon.counter,
+            ).order_by(
+                sa.desc(models.KnownTagsAnon.counter),
+            )
+
+        else:
             stmt = sa.select(
                 models.KnownTags.tag,
                 models.KnownTags.counter,
@@ -113,13 +121,6 @@ class SearchRepository(
                 models.KnownTags.user_uuid == user.uuid,
             ).order_by(
                 sa.desc(models.KnownTags.counter),
-            )
-        else:
-            stmt = sa.select(
-                models.KnownTagsAnon.tag,
-                models.KnownTagsAnon.counter,
-            ).order_by(
-                sa.desc(models.KnownTagsAnon.counter),
             )
 
         response = await self.db.fetch_all(stmt)
