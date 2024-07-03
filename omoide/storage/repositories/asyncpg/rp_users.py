@@ -36,8 +36,14 @@ class UsersRepo(interfaces.AbsUsersRepo):
         ).where(
             models.User.login == login
         )
+
         response = await self.db.fetch_one(stmt)
-        return domain.User(**response) if response else None
+
+        if response:
+            user = domain.User(**response, role=domain.Role)
+            return user
+
+        return None
 
     async def read_all_users(
             self,
