@@ -1,5 +1,4 @@
-"""User profile related routes.
-"""
+"""User profile related routes."""
 from typing import Annotated
 from typing import Type
 
@@ -10,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
-from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import errors
@@ -26,7 +25,7 @@ router = fastapi.APIRouter()
 async def app_profile(
         request: Request,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
@@ -50,7 +49,7 @@ async def app_profile(
 async def app_profile_quotas(
         request: Request,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileQuotasUseCase = Depends(
@@ -84,7 +83,7 @@ async def app_profile_quotas(
 async def app_profile_new(
         request: Request,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         response_class: Type[Response] = HTMLResponse,
@@ -108,7 +107,7 @@ async def app_profile_new(
 async def app_profile_tags(
         request: Request,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
         use_case: use_cases.AppProfileTagsUseCase = Depends(

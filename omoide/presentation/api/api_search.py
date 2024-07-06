@@ -1,10 +1,10 @@
-"""Search related API operations.
-"""
+"""Search related API operations."""
 from fastapi import APIRouter
 from fastapi import Depends
 from starlette.requests import Request
 
 from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
@@ -17,7 +17,7 @@ router = APIRouter(prefix='/api/search')
 @router.get('')
 async def api_search(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         use_case: use_cases.ApiSearchUseCase = Depends(
             dep.api_search_use_case),
         config: Config = Depends(dep.get_config),

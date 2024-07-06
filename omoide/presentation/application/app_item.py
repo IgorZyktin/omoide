@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Routes related to item operations.
-"""
+"""Routes related to item operations."""
 from typing import Annotated
 from typing import Type
 from uuid import UUID
@@ -14,6 +12,7 @@ from starlette.responses import HTMLResponse
 from starlette.responses import Response
 
 from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import interfaces
@@ -30,7 +29,7 @@ async def app_item_create(
         request: Request,
         uuid: str,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemCreateUseCase = Depends(
             dep.app_item_create_use_case),
@@ -84,7 +83,7 @@ async def app_item_update(
         request: Request,
         uuid: UUID,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemUpdateUseCase = Depends(
             dep.app_item_update_use_case),
@@ -141,7 +140,7 @@ async def app_item_delete(
         request: Request,
         uuid: UUID,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppItemDeleteUseCase = Depends(
             dep.app_item_delete_use_case),

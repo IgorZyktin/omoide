@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Browse repository.
-"""
+"""Browse repository."""
 from typing import Optional
 from uuid import UUID
 
@@ -9,10 +7,11 @@ from sqlalchemy import cast
 from sqlalchemy.dialects import postgresql as pg
 
 from omoide import domain
+from omoide import models
 from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
     .rp_items import ItemsRepo
@@ -26,21 +25,21 @@ class BrowseRepository(
 
     async def get_children(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children of an item with given UUID."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.parent_uuid == uuid,
+            db_models.Item.parent_uuid == uuid,
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         stmt = stmt.order_by(
-            models.Item.number
+            db_models.Item.number
         ).limit(
             aim.items_per_page
         ).offset(
@@ -52,16 +51,16 @@ class BrowseRepository(
 
     async def count_children(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> int:
         """Count all children of an item with given UUID."""
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.parent_uuid == uuid
+            db_models.Item.parent_uuid == uuid
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
@@ -71,7 +70,7 @@ class BrowseRepository(
 
     async def get_location(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             aim: domain.Aim,
             users_repo: interfaces.AbsUsersRepo,
@@ -101,7 +100,7 @@ class BrowseRepository(
 
     async def get_complex_ancestors(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> list[domain.PositionedItem]:
@@ -134,7 +133,7 @@ class BrowseRepository(
 
     async def get_item_with_position(
             self,
-            user: domain.User,
+            user: models.User,
             item_uuid: UUID,
             child_uuid: UUID,
             aim: domain.Aim,
@@ -218,27 +217,27 @@ class BrowseRepository(
 
     async def simple_find_items_to_browse(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: Optional[UUID],
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items using simple request."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         if aim.nested:
             stmt = stmt.where(
-                models.Item.parent_uuid == uuid
+                db_models.Item.parent_uuid == uuid
             )
 
         if aim.ordered:
             stmt = stmt.where(
-                models.Item.number > aim.last_seen
+                db_models.Item.number > aim.last_seen
             ).order_by(
-                models.Item.number
+                db_models.Item.number
             )
 
         else:
@@ -251,7 +250,7 @@ class BrowseRepository(
 
     async def complex_find_items_to_browse(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: Optional[UUID],
             aim: domain.Aim,
     ) -> list[domain.Item]:
@@ -362,7 +361,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
     async def get_recent_items(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Return portion of recently loaded items."""
@@ -434,10 +433,10 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         ).subquery('given_uuid')
 
         stmt = sa.select(
-            subquery.c.uuid, models.Item.name
+            subquery.c.uuid, db_models.Item.name
         ).join(
-            models.Item,
-            models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
+            db_models.Item,
+            db_models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
             isouter=True,
         )
 

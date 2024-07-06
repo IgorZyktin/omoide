@@ -9,6 +9,7 @@ from typing import Collection
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import actions
@@ -113,7 +114,7 @@ async def _generic_call(
 @asynccontextmanager
 async def track_update_permissions_in_parents(
         metainfo_repo: interfaces.AbsMetainfoRepo,
-        user: domain.User,
+        user: models.User,
         item: domain.Item,
         added: Collection[UUID],
         deleted: Collection[UUID],
@@ -138,7 +139,7 @@ async def track_update_permissions_in_parents(
 @asynccontextmanager
 async def track_update_permissions_in_children(
         metainfo_repo: interfaces.AbsMetainfoRepo,
-        user: domain.User,
+        user: models.User,
         item: domain.Item,
         override: bool,
         added: Collection[UUID],
@@ -169,7 +170,7 @@ async def track_update_permissions_in_children(
 @asynccontextmanager
 async def track_update_tags_in_children(
         metainfo_repo: interfaces.AbsMetainfoRepo,
-        user: domain.User,
+        user: models.User,
         item: domain.Item,
         added: Collection[str],
         deleted: Collection[str],
@@ -224,7 +225,7 @@ class BaseItemModifyUseCase:
 
     async def _create_one_item(
             self,
-            user: domain.User,
+            user: models.User,
             payload: api_models.CreateItemIn | api_models.CreateItemsIn,
     ) -> UUID:
         """Helper functions that handles creation of an item."""
@@ -258,7 +259,7 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             payload: api_models.CreateItemIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
@@ -281,7 +282,7 @@ class ApiItemCreateBulkUseCase(BaseItemModifyUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             payload: api_models.CreateItemsIn,
     ) -> Result[errors.Error, list[UUID]]:
         """Business logic."""
@@ -313,7 +314,7 @@ class ApiItemReadUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> Result[errors.Error, domain.Item]:
         """Business logic."""
@@ -343,7 +344,7 @@ class ApiItemReadByNameUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             name: str,
     ) -> Result[errors.Error, domain.Item]:
         """Business logic."""
@@ -380,7 +381,7 @@ class ApiItemUpdateUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             operations: list[api_models.PatchOperation],
     ) -> Result[errors.Error, bool]:
@@ -431,7 +432,7 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             new_tags: list[str],
     ) -> Result[errors.Error, UUID]:
@@ -480,7 +481,7 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
 
     async def update_tags_in_children_of(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             added: Collection[str],
             deleted: Collection[str],
@@ -533,7 +534,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             new_permissions: api_models.NewPermissionsIn,
     ) -> Result[errors.Error, UUID]:
@@ -587,7 +588,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
     async def update_permissions_in_parents(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             added: Collection[UUID],
             deleted: Collection[UUID],
@@ -614,7 +615,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
 
     async def update_permissions_in_children(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             override: bool,
             added: Collection[UUID],
@@ -656,7 +657,7 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
@@ -712,7 +713,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             new_parent_uuid: UUID,
     ) -> Result[errors.Error, UUID]:
@@ -789,7 +790,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
     async def update_tags_in_children_of(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             added: Collection[str],
             deleted: Collection[str],
@@ -825,7 +826,7 @@ class ApiItemsDownloadUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> Result[
         errors.Error,

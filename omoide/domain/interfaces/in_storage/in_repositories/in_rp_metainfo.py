@@ -6,6 +6,7 @@ from typing import Collection
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
@@ -17,7 +18,7 @@ class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def create_empty_metainfo(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> bool:
         """Create metainfo with blank fields."""
@@ -32,7 +33,7 @@ class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_children_to_download(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> list[dict[str, UUID | str | int]]:
         """Return some components of the given item children with metainfo."""
@@ -40,7 +41,7 @@ class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def update_metainfo(
             self,
-            user: domain.User,
+            user: models.User,
             metainfo: domain.Metainfo,
     ) -> None:
         """Update metainfo and return true on success."""
@@ -48,7 +49,7 @@ class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def update_computed_tags(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> None:
         """Update computed tags for this item."""
@@ -56,7 +57,7 @@ class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def apply_new_known_tags(
             self,
-            users: Collection[domain.User],
+            users: Collection[models.User],
             tags_added: Collection[str],
             tags_deleted: Collection[str],
     ) -> None:
@@ -65,7 +66,7 @@ class AbsMetainfoRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def drop_unused_tags(
             self,
-            users: Collection[domain.User],
+            users: Collection[models.User],
             public_users: set[UUID],
     ) -> None:
         """Drop tags with counter less of equal to 0."""

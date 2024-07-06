@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-"""Use case for home page.
-"""
+"""Use case for home page."""
 from typing import Optional
 
 from omoide import domain
+from omoide import models
 from omoide.domain import interfaces
 from omoide.infra.special_types import Success
 
@@ -21,7 +20,7 @@ class AppHomeUseCase:
 
     async def execute(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
     ) -> Success[tuple[list[domain.Item], list[Optional[str]]]]:
         """Perform request for home directory."""

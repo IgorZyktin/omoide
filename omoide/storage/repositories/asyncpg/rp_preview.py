@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
-"""Preview repository.
-"""
+"""Preview repository."""
 from uuid import UUID
 
 import sqlalchemy as sa
 
-from omoide import domain
+from omoide import models
 from omoide.domain import interfaces
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg.rp_browse import BrowseRepository
 
@@ -20,24 +18,24 @@ class PreviewRepository(
 
     async def get_neighbours(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> list[UUID]:
         """Return uuids of all the neighbours for given item UUID."""
         stmt = sa.select(
-            models.Item.uuid
+            db_models.Item.uuid
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         stmt = stmt.where(
-            models.Item.parent_uuid == sa.select(
-                models.Item.parent_uuid
+            db_models.Item.parent_uuid == sa.select(
+                db_models.Item.parent_uuid
             ).where(
-                models.Item.uuid == str(uuid)
+                db_models.Item.uuid == str(uuid)
             ).scalar_subquery()
         ).order_by(
-            models.Item.number
+            db_models.Item.number
         )
 
         response = await self.db.fetch_all(stmt)

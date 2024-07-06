@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-"""Use case for browse.
-"""
+"""Use case for browse."""
 from typing import NamedTuple
 from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -51,7 +50,7 @@ class AppBrowseUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> Result[errors.Error, BrowseResult]:
@@ -86,7 +85,7 @@ class AppBrowseUseCase:
 
     async def go_browse_paginated(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> BrowseResult | Failure:
@@ -130,8 +129,8 @@ class AppBrowseUseCase:
 
     async def go_browse_dynamic(
             self,
-            user: domain.User,
-            owner: domain.User,
+            user: models.User,
+            owner: models.User,
             item: domain.Item,
             aim: domain.Aim,
     ) -> BrowseResult | Failure:

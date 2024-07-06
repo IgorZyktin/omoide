@@ -1,5 +1,4 @@
-"""Repository that perform CRUD operations on metainfo.
-"""
+"""Repository that perform CRUD operations on metainfo."""
 import datetime
 from typing import Collection
 from typing import Optional
@@ -9,11 +8,12 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import domain
+from omoide import models
 from omoide import utils
 from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 from omoide.storage.repositories.asyncpg import queries
 
 
@@ -22,12 +22,12 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def create_empty_metainfo(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> bool:
         """Create metainfo with blank fields."""
         stmt = sa.insert(
-            models.Metainfo
+            db_models.Metainfo
         ).values(
             item_uuid=item.uuid,
             created_at=utils.now(),
@@ -45,9 +45,9 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
     ) -> core_models.Metainfo:
         """Return metainfo."""
         stmt = sa.select(
-            models.Metainfo
+            db_models.Metainfo
         ).where(
-            models.Metainfo.item_uuid == item_uuid
+            db_models.Metainfo.item_uuid == item_uuid
         )
 
         response = await self.db.fetch_one(stmt)
@@ -59,29 +59,29 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def read_children_to_download(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> list[dict[str, UUID | str | int]]:
         """Return some components of the given item children with metainfo."""
         stmt = sa.select(
-            models.Item.uuid,
-            models.Metainfo.content_size,
-            models.Item.content_ext,
+            db_models.Item.uuid,
+            db_models.Metainfo.content_size,
+            db_models.Item.content_ext,
         ).join(
-            models.Metainfo,
-            models.Metainfo.item_uuid == models.Item.uuid,
+            db_models.Metainfo,
+            db_models.Metainfo.item_uuid == db_models.Item.uuid,
             isouter=True,
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         stmt = stmt.where(
-            models.Item.parent_uuid == item.uuid,
-            models.Item.is_collection == False,  # noqa
-            models.Item.content_ext != None,  # noqa
-            models.Metainfo.content_size != None,  # noqa
+            db_models.Item.parent_uuid == item.uuid,
+            db_models.Item.is_collection == False,  # noqa
+            db_models.Item.content_ext != None,  # noqa
+            db_models.Metainfo.content_size != None,  # noqa
         ).order_by(
-            models.Item.number,
+            db_models.Item.number,
         )
 
         response = await self.db.fetch_all(stmt)
@@ -89,14 +89,14 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def update_metainfo(
             self,
-            user: domain.User,
+            user: models.User,
             metainfo: domain.Metainfo,
     ) -> None:
         """Update metainfo and return true on success."""
         stmt = sa.update(
-            models.Metainfo
+            db_models.Metainfo
         ).where(
-            models.Metainfo.item_uuid == metainfo.item_uuid
+            db_models.Metainfo.item_uuid == metainfo.item_uuid
         ).values(
             **metainfo.model_dump(exclude={'item_uuid', 'created_at'})
         )
@@ -129,7 +129,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def update_computed_tags(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> None:
         """Update computed tags for this item."""
@@ -137,9 +137,9 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
         if item.parent_uuid is not None:
             parent_tags_stmt = sa.select(
-                models.ComputedTags.tags
+                db_models.ComputedTags.tags
             ).where(
-                models.ComputedTags.item_uuid == item.parent_uuid
+                db_models.ComputedTags.item_uuid == item.parent_uuid
             )
             parent_tags_response = await self.db.execute(parent_tags_stmt)
 
@@ -154,14 +154,14 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         )
 
         insert = pg_insert(
-            models.ComputedTags
+            db_models.ComputedTags
         ).values(
             item_uuid=item.uuid,
             tags=tuple(all_tags),
         )
 
         stmt = insert.on_conflict_do_update(
-            index_elements=[models.ComputedTags.item_uuid],
+            index_elements=[db_models.ComputedTags.item_uuid],
             set_={
                 'tags': insert.excluded.tags,
             }
@@ -171,7 +171,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def _increase_known_tags_for_known_user(
             self,
-            user: domain.User,
+            user: models.User,
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
@@ -180,7 +180,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         for tag in tags:
             tag = tag.lower()
             insert = pg_insert(
-                models.KnownTags
+                db_models.KnownTags
             ).values(
                 user_uuid=user.uuid,
                 tag=tag,
@@ -189,11 +189,11 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
             stmt = insert.on_conflict_do_update(
                 index_elements=[
-                    models.KnownTags.user_uuid,
-                    models.KnownTags.tag,
+                    db_models.KnownTags.user_uuid,
+                    db_models.KnownTags.tag,
                 ],
                 set_={
-                    'counter': models.KnownTags.counter + 1,
+                    'counter': db_models.KnownTags.counter + 1,
                 }
             )
 
@@ -201,7 +201,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def _decrease_known_tags_for_known_user(
             self,
-            user: domain.User,
+            user: models.User,
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
@@ -210,19 +210,19 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         for tag in tags:
             tag = tag.lower()
             stmt = sa.update(
-                models.KnownTags
+                db_models.KnownTags
             ).where(
-                models.KnownTags.user_uuid == user.uuid,
-                models.KnownTags.tag == tag,
+                db_models.KnownTags.user_uuid == user.uuid,
+                db_models.KnownTags.tag == tag,
             ).values(
-                counter=models.KnownTags.counter - 1,
+                counter=db_models.KnownTags.counter - 1,
             )
 
             await self.db.execute(stmt)
 
     async def apply_new_known_tags(
             self,
-            users: Collection[domain.User],
+            users: Collection[models.User],
             tags_added: Collection[str],
             tags_deleted: Collection[str],
     ) -> None:
@@ -246,31 +246,31 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def drop_unused_tags(
             self,
-            users: Collection[domain.User],
+            users: Collection[models.User],
             public_users: set[UUID],
     ) -> None:
         """Drop tags with counter less of equal to 0."""
         for user in users:
             if user.is_not_anon:
                 stmt = sa.delete(
-                    models.KnownTags
+                    db_models.KnownTags
                 ).where(
-                    models.KnownTags.user_uuid == user.uuid,
-                    models.KnownTags.counter <= 0,
+                    db_models.KnownTags.user_uuid == user.uuid,
+                    db_models.KnownTags.counter <= 0,
                 )
                 await self.db.execute(stmt)
 
             elif user.is_anon or user.uuid in public_users:
                 stmt = sa.delete(
-                    models.KnownTagsAnon
+                    db_models.KnownTagsAnon
                 ).where(
-                    models.KnownTagsAnon.counter <= 0,
+                    db_models.KnownTagsAnon.counter <= 0,
                 )
                 await self.db.execute(stmt)
 
     async def _increase_known_tags_for_anon_user(
             self,
-            user: domain.User,
+            user: models.User,
             tags: Collection[str],
     ) -> None:
         """Update known tags using this item."""
@@ -279,7 +279,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         for tag in tags:
             tag = tag.lower()
             insert = pg_insert(
-                models.KnownTagsAnon
+                db_models.KnownTagsAnon
             ).values(
                 tag=tag,
                 counter=1,
@@ -287,10 +287,10 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
             stmt = insert.on_conflict_do_update(
                 index_elements=[
-                    models.KnownTagsAnon.tag,
+                    db_models.KnownTagsAnon.tag,
                 ],
                 set_={
-                    'counter': models.KnownTagsAnon.counter + 1,
+                    'counter': db_models.KnownTagsAnon.counter + 1,
                 }
             )
 
@@ -298,7 +298,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
 
     async def _decrease_known_tags_for_anon_user(
             self,
-            user: domain.User,
+            user: models.User,
             tags: Collection[str],
     ) -> None:
         """Decrease counters for known tags using this item."""
@@ -307,11 +307,11 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         for tag in tags:
             tag = tag.lower()
             stmt = sa.update(
-                models.KnownTagsAnon
+                db_models.KnownTagsAnon
             ).where(
-                models.KnownTagsAnon.tag == tag,
+                db_models.KnownTagsAnon.tag == tag,
             ).values(
-                counter=models.KnownTagsAnon.counter - 1,
+                counter=db_models.KnownTagsAnon.counter - 1,
             )
 
             await self.db.execute(stmt)
@@ -323,11 +323,11 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
     ) -> None:
         """Set last updated at given tine for the item."""
         stmt = sa.update(
-            models.Metainfo
+            db_models.Metainfo
         ).values(
             updated_at=now
         ).where(
-            models.Metainfo.item_uuid == uuid
+            db_models.Metainfo.item_uuid == uuid
         )
 
         await self.db.execute(stmt)
@@ -340,12 +340,12 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
         """Add new data to extras."""
         for key, value in new_extras.items():
             stmt = sa.update(
-                models.Metainfo
+                db_models.Metainfo
             ).where(
-                models.Metainfo.item_uuid == uuid
+                db_models.Metainfo.item_uuid == uuid
             ).values(
                 extras=sa.func.jsonb_set(
-                    models.Metainfo.extras,
+                    db_models.Metainfo.extras,
                     [key],
                     f'"{value}"' if isinstance(value, str) else value,
                 )
@@ -365,7 +365,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
     ) -> int:
         """Start long job."""
         stmt = sa.insert(
-            models.LongJob
+            db_models.LongJob
         ).values(
             name=name,
             user_uuid=user_uuid,
@@ -379,7 +379,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
             extras=extras,
             error='',
         ).returning(
-            models.LongJob.id
+            db_models.LongJob.id
         )
 
         return int(await self.db.execute(stmt))
@@ -394,14 +394,14 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo):
     ) -> None:
         """Finish long job."""
         stmt = sa.update(
-            models.LongJob
+            db_models.LongJob
         ).values(
             status=status,
             duration=duration,
             operations=operations,
             error=error,
         ).where(
-            models.LongJob.id == id
+            db_models.LongJob.id == id
         )
 
         await self.db.execute(stmt)

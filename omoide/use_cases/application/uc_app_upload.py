@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-"""Use case for upload.
-"""
+"""Use case for upload."""
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -31,9 +30,9 @@ class AppUploadUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
-    ) -> Result[errors.Error, tuple[domain.Item, list[domain.User]]]:
+    ) -> Result[errors.Error, tuple[domain.Item, list[models.User]]]:
         """Return preview model suitable for rendering."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid,

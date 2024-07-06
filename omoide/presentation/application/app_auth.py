@@ -1,5 +1,4 @@
-"""Auth related routes.
-"""
+"""Auth related routes."""
 import asyncio
 from typing import Annotated
 from typing import Type
@@ -15,7 +14,7 @@ from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 from starlette import status
 
-from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide.domain import interfaces
 from omoide.presentation import dependencies as dep
@@ -29,7 +28,7 @@ security = HTTPBasic(realm='omoide')
 @router.get('/login')
 async def app_login(
         request: Request,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         credentials: HTTPBasicCredentials = Depends(security),
         authenticator: interfaces.AbsAuthenticator = Depends(
             dep.get_authenticator),
@@ -68,7 +67,7 @@ async def app_logout(
     context = {
         'request': request,
         'config': config,
-        'user': domain.User.new_anon(),
+        'user': models.User.new_anon(),
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
     }

@@ -7,6 +7,7 @@ from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
@@ -16,7 +17,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def check_access(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> domain.AccessStatus:
         """Check access to the Item with given UUID for the given User."""
@@ -24,14 +25,14 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_root_item(
             self,
-            user: domain.User,
+            user: models.User,
     ) -> Optional[domain.Item]:
         """Return Item or None."""
 
     @abc.abstractmethod
     async def read_all_root_items(
         self,
-        *users: list[domain.User],
+        *users: list[models.User],
     ) -> list[domain.Item]:
         """Return list of root items."""
 
@@ -45,7 +46,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_children_of(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             ignore_collections: bool,
     ) -> list[domain.Item]:
@@ -54,8 +55,8 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def get_simple_location(
             self,
-            user: domain.User,
-            owner: domain.User,
+            user: models.User,
+            owner: models.User,
             item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
@@ -63,7 +64,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def count_items_by_owner(
             self,
-            user: domain.User,
+            user: models.User,
             only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
@@ -78,7 +79,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def get_all_parents(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> list[domain.Item]:
         """Return all parents of the given item."""
@@ -86,7 +87,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def get_direct_children_uuids_of(
             self,
-            user: domain.User,
+            user: models.User,
             item_uuid: UUID,
     ) -> list[UUID]:
         """Return all direct items of th given item."""
@@ -101,7 +102,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def read_item_by_name(
             self,
-            user: domain.User,
+            user: models.User,
             name: str,
     ) -> domain.Item | None:
         """Return corresponding item."""
@@ -113,7 +114,7 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     @abc.abstractmethod
     async def create_item(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> UUID:
         """Return UUID for created item."""

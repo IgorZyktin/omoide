@@ -1,13 +1,13 @@
-"""Search repository.
-"""
+"""Search repository."""
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
 from omoide import domain
+from omoide import models
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
 from omoide.infra import custom_logging
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 from omoide.storage.repositories.asyncpg import queries
 
 LOG = custom_logging.get_logger(__name__)
@@ -20,25 +20,25 @@ class SearchRepository(
 
     @staticmethod
     def _expand_query(
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
             stmt: Select,
     ) -> Select:
         """Add access control and filtering."""
         stmt = stmt.join(
-            models.ComputedTags,
-            models.ComputedTags.item_uuid == models.Item.uuid,
+            db_models.ComputedTags,
+            db_models.ComputedTags.item_uuid == db_models.Item.uuid,
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         stmt = stmt.where(
-            models.ComputedTags.tags.contains(aim.query.tags_include),
-            ~models.ComputedTags.tags.overlap(aim.query.tags_exclude),
+            db_models.ComputedTags.tags.contains(aim.query.tags_include),
+            ~db_models.ComputedTags.tags.overlap(aim.query.tags_exclude),
         )
 
         if aim.nested:
-            stmt = stmt.where(models.Item.is_collection == True)  # noqa
+            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         return stmt
 
@@ -50,9 +50,9 @@ class SearchRepository(
         """Limit query if user demands it."""
         if aim.ordered:
             stmt = stmt.where(
-                models.Item.number > aim.last_seen,
+                db_models.Item.number > aim.last_seen,
             ).order_by(
-                models.Item.number,
+                db_models.Item.number,
             )
         else:
             stmt = stmt.order_by(sa.func.random())
@@ -61,14 +61,14 @@ class SearchRepository(
 
     async def count_matching_items(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
     ) -> int:
         """Count matching items for search query."""
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
-            models.Item
+            db_models.Item
         )
 
         stmt = self._expand_query(user, aim, stmt)
@@ -78,13 +78,13 @@ class SearchRepository(
 
     async def get_matching_items(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
             obligation: domain.Obligation,
     ) -> list[domain.Item]:
         """Find items for dynamic load."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         )
 
         stmt = self._expand_query(user, aim, stmt)
@@ -102,25 +102,25 @@ class SearchRepository(
 
     async def count_all_tags(
             self,
-            user: domain.User,
+            user: models.User,
     ) -> list[tuple[str, int]]:
         """Return statistics for known tags."""
         if user.is_anon:
             stmt = sa.select(
-                models.KnownTagsAnon.tag,
-                models.KnownTagsAnon.counter,
+                db_models.KnownTagsAnon.tag,
+                db_models.KnownTagsAnon.counter,
             ).order_by(
-                sa.desc(models.KnownTagsAnon.counter),
+                sa.desc(db_models.KnownTagsAnon.counter),
             )
 
         else:
             stmt = sa.select(
-                models.KnownTags.tag,
-                models.KnownTags.counter,
+                db_models.KnownTags.tag,
+                db_models.KnownTags.counter,
             ).where(
-                models.KnownTags.user_uuid == user.uuid,
+                db_models.KnownTags.user_uuid == user.uuid,
             ).order_by(
-                sa.desc(models.KnownTags.counter),
+                sa.desc(db_models.KnownTags.counter),
             )
 
         response = await self.db.fetch_all(stmt)
@@ -130,10 +130,10 @@ class SearchRepository(
     async def count_all_tags_anon(self) -> dict[str, int]:
         """Return statistics for used tags."""
         stmt = sa.select(
-            models.KnownTagsAnon.tag,
-            models.KnownTagsAnon.counter,
+            db_models.KnownTagsAnon.tag,
+            db_models.KnownTagsAnon.counter,
         ).order_by(
-            sa.desc(models.KnownTagsAnon.counter),
+            sa.desc(db_models.KnownTagsAnon.counter),
         )
 
         response = await self.db.fetch_all(stmt)
@@ -147,13 +147,13 @@ class SearchRepository(
     ) -> list[core_models.GuessResult]:
         """Guess tag for known user."""
         stmt = sa.select(
-            models.KnownTags.tag,
-            models.KnownTags.counter,
+            db_models.KnownTags.tag,
+            db_models.KnownTags.counter,
         ).where(
-            models.KnownTags.tag.ilike(user_input + '%'),  # type: ignore
-            models.KnownTags.user_uuid == user.uuid,
+            db_models.KnownTags.tag.ilike(user_input + '%'),  # type: ignore
+            db_models.KnownTags.user_uuid == user.uuid,
         ).order_by(
-            sa.desc(models.KnownTags.counter),
+            sa.desc(db_models.KnownTags.counter),
         ).limit(limit)
 
         response = await self.db.fetch_all(stmt)
@@ -168,12 +168,12 @@ class SearchRepository(
     ) -> list[core_models.GuessResult]:
         """Guess tag for anon user."""
         stmt = sa.select(
-            models.KnownTagsAnon.tag,
-            models.KnownTagsAnon.counter,
+            db_models.KnownTagsAnon.tag,
+            db_models.KnownTagsAnon.counter,
         ).where(
-            models.KnownTagsAnon.tag.ilike(user_input + '%'),  # type: ignore
+            db_models.KnownTagsAnon.tag.ilike(user_input + '%'),  # type: ignore
         ).order_by(
-            sa.desc(models.KnownTagsAnon.counter),
+            sa.desc(db_models.KnownTagsAnon.counter),
         ).limit(limit)
 
         response = await self.db.fetch_all(stmt)

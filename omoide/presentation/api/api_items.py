@@ -1,5 +1,4 @@
-"""Item related API operations.
-"""
+"""Item related API operations."""
 import http
 import urllib.parse
 from typing import Type
@@ -11,7 +10,7 @@ from fastapi import Request
 from fastapi import Response
 from starlette.responses import PlainTextResponse
 
-from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
@@ -32,7 +31,7 @@ async def api_create_item(
         request: Request,
         response: Response,
         payload: api_models.CreateItemIn,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemCreateUseCase = Depends(
             dep.api_item_create_use_case),
@@ -57,7 +56,7 @@ async def api_create_item(
 )
 async def api_create_item_bulk(
         payload: api_models.CreateItemsIn,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemCreateBulkUseCase = Depends(
             dep.api_item_create_bulk_use_case),
@@ -77,7 +76,7 @@ async def api_create_item_bulk(
 @router.get('/by-name')
 async def api_read_item_by_name(
         payload: api_models.ItemByName,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemReadByNameUseCase = Depends(
             dep.api_item_read_by_name_use_case),
@@ -94,7 +93,7 @@ async def api_read_item_by_name(
 @router.get('/{uuid}')
 async def api_read_item(
         uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemReadUseCase = Depends(
             dep.api_item_read_use_case),
@@ -112,7 +111,7 @@ async def api_read_item(
 async def api_partial_update_item(
         uuid: UUID,
         operations: list[api_models.PatchOperation],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemUpdateUseCase = Depends(
             dep.api_item_update_use_case),
@@ -132,7 +131,7 @@ async def api_partial_update_item(
 )
 async def api_delete_item(
         uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemDeleteUseCase = Depends(
             dep.api_item_delete_use_case),
@@ -159,7 +158,7 @@ async def api_delete_item(
 async def api_item_update_tags(
         uuid: UUID,
         new_tags: api_models.NewTagsIn,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemUpdateTagsUseCase = Depends(
             dep.api_item_update_tags_use_case),
@@ -177,7 +176,7 @@ async def api_item_update_tags(
 async def api_item_update_permissions(
         uuid: UUID,
         new_permissions: api_models.NewPermissionsIn,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemUpdatePermissionsUseCase = Depends(
             dep.api_item_update_permissions_use_case),
@@ -195,7 +194,7 @@ async def api_item_update_permissions(
 async def api_item_update_parent(
         uuid: UUID,
         new_parent_uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemUpdateParentUseCase = Depends(
             dep.api_item_update_parent_use_case),
@@ -250,7 +249,7 @@ def _convert_rows_to_strings_for_mod_zip(
 async def api_items_download(
         request: Request,
         uuid: UUID,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.ApiItemsDownloadUseCase = Depends(
             dep.api_items_download_use_case),

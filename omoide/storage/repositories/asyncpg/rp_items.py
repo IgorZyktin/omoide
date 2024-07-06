@@ -9,8 +9,9 @@ from uuid import uuid4
 import sqlalchemy as sa
 
 from omoide import domain
+from omoide import models
 from omoide.domain import interfaces
-from omoide.storage.database import models
+from omoide.storage.database import models as db_models
 from omoide.storage.repositories.asyncpg import queries
 
 
@@ -19,7 +20,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def check_access(
             self,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> domain.AccessStatus:
         """Check access to the Item with given UUID for the given User."""
@@ -80,15 +81,15 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def read_root_item(
             self,
-            user: domain.User,
+            user: models.User,
     ) -> Optional[domain.Item]:
         """Return Item or None."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         ).where(
             sa.and_(
-                models.Item.owner_uuid == user.uuid,
-                models.Item.parent_uuid == None,  # noqa
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.parent_uuid == None,  # noqa
             )
         )
 
@@ -98,18 +99,18 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def read_all_root_items(
         self,
-        *users: domain.User,
+        *users: models.User,
     ) -> list[domain.Item]:
         """Return list of root items."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.parent_uuid == None  # noqa
+            db_models.Item.parent_uuid == None  # noqa
         )
 
         if users:
             stmt = stmt.where(
-                models.Item.owner_uuid.in_(  # noqa
+                db_models.Item.owner_uuid.in_(  # noqa
                     tuple(str(user.uuid) for user in users)
                 )
             )
@@ -123,9 +124,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
     ) -> Optional[domain.Item]:
         """Return item or None."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.uuid == uuid
+            db_models.Item.uuid == uuid
         )
 
         response = await self.db.fetch_one(stmt)
@@ -134,26 +135,26 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def read_children_of(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
             ignore_collections: bool,
     ) -> list[domain.Item]:
         """Return all direct descendants of the given item."""
         stmt = sa.select(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.parent_uuid == item.uuid,
+            db_models.Item.parent_uuid == item.uuid,
         )
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         if ignore_collections:
             stmt = stmt.where(
-                models.Item.is_collection == False,  # noqa
+                db_models.Item.is_collection == False,  # noqa
             )
 
         stmt = stmt.order_by(
-            models.Item.number
+            db_models.Item.number
         )
 
         response = await self.db.fetch_all(stmt)
@@ -161,8 +162,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def get_simple_location(
             self,
-            user: domain.User,
-            owner: domain.User,
+            user: models.User,
+            owner: models.User,
             item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
@@ -171,7 +172,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def get_simple_ancestors(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> list[domain.Item]:
         """Return list of ancestors for given item."""
@@ -199,7 +200,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def count_items_by_owner(
             self,
-            user: domain.User,
+            user: models.User,
             only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
@@ -207,14 +208,14 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.owner_uuid == user.uuid
+            db_models.Item.owner_uuid == user.uuid
         )
 
         if only_collections:
             stmt = stmt.where(
-                models.Item.is_collection
+                db_models.Item.is_collection
             )
 
         response = await self.db.fetch_one(stmt)
@@ -222,7 +223,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def get_all_parents(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> list[domain.Item]:
         """Return all parents of the given item."""
@@ -268,19 +269,19 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def get_direct_children_uuids_of(
             self,
-            user: domain.User,
+            user: models.User,
             item_uuid: UUID,
     ) -> list[UUID]:
         """Return all direct items of th given item."""
         stmt = sa.select(
-            models.Item.uuid
+            db_models.Item.uuid
         ).where(
-            models.Item.parent_uuid == item_uuid,
+            db_models.Item.parent_uuid == item_uuid,
             sa.or_(
-                models.Item.permissions.any(str(user.uuid)),
-                models.Item.owner_uuid == user.uuid,
-                models.Item.owner_uuid.in_(  # noqa
-                    sa.select(models.PublicUsers.user_uuid)
+                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.owner_uuid.in_(  # noqa
+                    sa.select(db_models.PublicUsers.user_uuid)
                 )
             )
         )
@@ -293,9 +294,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
     ) -> list[str]:
         """Return all computed tags for the item."""
         stmt = sa.select(
-            models.ComputedTags.tags
+            db_models.ComputedTags.tags
         ).where(
-            models.ComputedTags.item_uuid == uuid,
+            db_models.ComputedTags.item_uuid == uuid,
         )
         response = await self.db.execute(stmt)
 
@@ -305,23 +306,23 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def read_item_by_name(
             self,
-            user: domain.User,
+            user: models.User,
             name: str,
     ) -> domain.Item | None:
         """Return corresponding item."""
-        stmt = sa.select(models.Item)
+        stmt = sa.select(db_models.Item)
 
         if user.is_anon:
             stmt = stmt.where(
                 sa.and_(
-                    models.Item.name == name,
+                    db_models.Item.name == name,
                 )
             )
         else:
             stmt = stmt.where(
                 sa.and_(
-                    models.Item.owner_uuid == user.uuid,
-                    models.Item.name == name,
+                    db_models.Item.owner_uuid == user.uuid,
+                    db_models.Item.name == name,
                 )
             )
 
@@ -346,7 +347,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
     async def create_item(
             self,
-            user: domain.User,
+            user: models.User,
             item: domain.Item,
     ) -> UUID:
         """Create item and return UUID."""
@@ -357,7 +358,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
         def get_number():
             if item.number == -1:
-                return sa.func.max(models.Item.number) + 1
+                return sa.func.max(db_models.Item.number) + 1
             return item.number
 
         select_stmt = sa.select(
@@ -375,11 +376,11 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         )
 
         stmt = sa.insert(
-            models.Item
+            db_models.Item
         ).from_select(
             [*select_stmt.columns],
             select_stmt
-        ).returning(models.Item.uuid)
+        ).returning(db_models.Item.uuid)
 
         return await self.db.execute(stmt)
 
@@ -389,7 +390,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
     ) -> UUID:
         """Update existing item."""
         stmt = sa.update(
-            models.Item
+            db_models.Item
         ).values(
             parent_uuid=item.parent_uuid,
             name=item.name,
@@ -400,7 +401,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             tags=item.tags,
             permissions=[str(x) for x in item.permissions],
         ).where(
-            models.Item.uuid == item.uuid,
+            db_models.Item.uuid == item.uuid,
         )
 
         return await self.db.execute(stmt)
@@ -415,7 +416,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             generic = item.get_generic()[each]
             if generic.ext is not None:
                 stmt = sa.insert(
-                    models.OrphanFiles
+                    db_models.OrphanFiles
                 ).values(
                     media_type=each,
                     owner_uuid=item.owner_uuid,
@@ -431,9 +432,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
     ) -> bool:
         """Delete item with given UUID."""
         stmt = sa.delete(
-            models.Item
+            db_models.Item
         ).where(
-            models.Item.uuid == item.uuid,
+            db_models.Item.uuid == item.uuid,
         ).returning(1)
 
         response = await self.db.fetch_one(stmt)
@@ -493,9 +494,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         """Apply new permissions for given item UUID."""
         if override:
             stmt = sa.update(
-                models.Item
+                db_models.Item
             ).where(
-                models.Item.uuid == uuid
+                db_models.Item.uuid == uuid
             ).values(
                 permissions=tuple(str(x) for x in all_permissions),
             )
@@ -505,12 +506,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             if deleted:
                 for user in deleted:
                     stmt = sa.update(
-                        models.Item
+                        db_models.Item
                     ).where(
-                        models.Item.uuid == uuid
+                        db_models.Item.uuid == uuid
                     ).values(
                         permissions=sa.func.array_remove(
-                            models.Item.permissions,
+                            db_models.Item.permissions,
                             str(user),
                         )
                     )
@@ -519,12 +520,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             if added:
                 for user in added:
                     stmt = sa.update(
-                        models.Item
+                        db_models.Item
                     ).where(
-                        models.Item.uuid == uuid
+                        db_models.Item.uuid == uuid
                     ).values(
                         permissions=sa.func.array_append(
-                            models.Item.permissions,
+                            db_models.Item.permissions,
                             str(user),
                         )
                     )
@@ -538,12 +539,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         """Add new tags to computed tags of the item."""
         for tag in tags:
             stmt = sa.update(
-                models.ComputedTags
+                db_models.ComputedTags
             ).where(
-                models.ComputedTags.item_uuid == uuid
+                db_models.ComputedTags.item_uuid == uuid
             ).values(
                 tags=sa.func.array_append(
-                    models.ComputedTags.tags,
+                    db_models.ComputedTags.tags,
                     tag,
                 )
             )
@@ -557,12 +558,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         """Remove tags from computed tags of the item."""
         for tag in tags:
             stmt = sa.update(
-                models.ComputedTags
+                db_models.ComputedTags
             ).where(
-                models.ComputedTags.item_uuid == uuid
+                db_models.ComputedTags.item_uuid == uuid
             ).values(
                 tags=sa.func.array_remove(
-                    models.ComputedTags.tags,
+                    db_models.ComputedTags.tags,
                     tag,
                 )
             )
@@ -576,12 +577,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         """Add new users to computed permissions of the item."""
         for user_uuid in permissions:
             stmt = sa.update(
-                models.Item
+                db_models.Item
             ).where(
-                models.Item.uuid == uuid
+                db_models.Item.uuid == uuid
             ).values(
                 permissions=sa.func.array_append(
-                    models.Item.permissions,
+                    db_models.Item.permissions,
                     str(user_uuid),
                 )
             )
@@ -595,12 +596,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         """Remove users from computed permissions of the item."""
         for user_uuid in permissions:
             stmt = sa.update(
-                models.Item
+                db_models.Item
             ).where(
-                models.Item.uuid == uuid
+                db_models.Item.uuid == uuid
             ).values(
                 permissions=sa.func.array_remove(
-                    models.Item.permissions,
+                    db_models.Item.permissions,
                     str(user_uuid),
                 )
             )

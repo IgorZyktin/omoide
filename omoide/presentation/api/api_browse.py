@@ -1,10 +1,9 @@
-"""Browse page related API operations.
-"""
+"""Browse page related API operations."""
 import fastapi
 from fastapi import Depends
 from starlette.requests import Request
 
-from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide import utils as global_utils
 from omoide.domain import interfaces
@@ -20,7 +19,7 @@ router = fastapi.APIRouter()
 async def api_browse(
         request: Request,
         uuid: str,
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.APIBrowseUseCase = Depends(
             dep.api_browse_use_case),

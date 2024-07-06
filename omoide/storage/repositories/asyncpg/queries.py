@@ -1,27 +1,25 @@
-# -*- coding: utf-8 -*-
-"""Common database queries.
-"""
+"""Common database queries."""
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
-from omoide import domain
-from omoide.storage.database import models
+from omoide import models
+from omoide.storage.database import models as db_models
 
 
 def public_user_uuids() -> Select:
     """Select public user uuids."""
-    return sa.select(models.PublicUsers.user_uuid)
+    return sa.select(db_models.PublicUsers.user_uuid)
 
 
 def ensure_registered_user_has_permissions(
-        user: domain.User,
+        user: models.User,
         stmt: Select,
 ) -> Select:
     """Ensure that registered user has permission to access this."""
     return stmt.where(
         sa.or_(
-            models.Item.owner_uuid == str(user.uuid),
-            models.Item.permissions.any(str(user.uuid)),
+            db_models.Item.owner_uuid == str(user.uuid),
+            db_models.Item.permissions.any(str(user.uuid)),
         )
     )
 
@@ -31,12 +29,12 @@ def ensure_anon_user_has_permissions(
 ) -> Select:
     """Ensure that anon user has permission to access this."""
     return stmt.where(
-        models.Item.owner_uuid.in_(public_user_uuids())  # noqa
+        db_models.Item.owner_uuid.in_(public_user_uuids())  # noqa
     )
 
 
 def ensure_user_has_permissions(
-        user: domain.User,
+        user: models.User,
         stmt: Select,
 ) -> Select:
     """Ensure that any user has permission to access this."""

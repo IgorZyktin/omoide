@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-"""Use case for checking up updates.
-"""
+"""Use case for checking up updates."""
 from typing import Optional
 
 from omoide import domain
+from omoide import models
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.infra.special_types import Result
@@ -26,7 +25,7 @@ class APIProfileNewUseCase:
 
     async def execute(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
     ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         async with self.browse_repo.transaction():

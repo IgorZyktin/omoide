@@ -1,5 +1,4 @@
-"""Routes related to media upload.
-"""
+"""Routes related to media upload."""
 from typing import Annotated
 from typing import Type
 
@@ -10,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
-from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import errors
@@ -28,7 +27,7 @@ async def app_upload(
         request: Request,
         uuid: str,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppUploadUseCase = Depends(
             dep.app_upload_use_case),

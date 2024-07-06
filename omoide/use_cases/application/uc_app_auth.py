@@ -1,8 +1,7 @@
-"""Use case for authentication.
-"""
+"""Use case for authentication."""
 from fastapi.security import HTTPBasicCredentials
 
-from omoide import domain
+from omoide import models
 from omoide.domain import interfaces
 
 __all__ = [
@@ -21,12 +20,12 @@ class AuthUseCase:
             self,
             credentials: HTTPBasicCredentials,
             authenticator: interfaces.AbsAuthenticator,
-    ) -> domain.User:
+    ) -> models.User:
         """Return user model."""
         user = await self.users_repo.read_user_by_login(credentials.username)
 
         if user is None:
-            return domain.User.new_anon()
+            return models.User.new_anon()
 
         if authenticator.password_is_correct(
                 given_password=credentials.password,
@@ -34,4 +33,4 @@ class AuthUseCase:
         ):
             return user
 
-        return domain.User.new_anon()
+        return models.User.new_anon()

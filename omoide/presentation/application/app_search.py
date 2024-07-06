@@ -1,5 +1,4 @@
-"""Search related routes.
-"""
+"""Search related routes."""
 import time
 from typing import Annotated
 from typing import Type
@@ -11,7 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
-from omoide import domain
+from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.infra.special_types import Failure
@@ -28,7 +27,7 @@ router = fastapi.APIRouter()
 async def app_search(
         request: Request,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: domain.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         use_case_dynamic: use_cases.AppDynamicSearchUseCase = Depends(
             dep.app_dynamic_search_use_case),
         use_case_paged: use_cases.AppPagedSearchUseCase = Depends(

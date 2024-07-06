@@ -1,8 +1,8 @@
-"""Use case for preview.
-"""
+"""Use case for preview."""
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -34,7 +34,7 @@ class AppPreviewUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
             aim: domain.Aim,
     ) -> Result[errors.Error, domain.SingleResult]:

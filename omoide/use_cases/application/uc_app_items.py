@@ -1,9 +1,9 @@
-"""Use case for items.
-"""
+"""Use case for items."""
 from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
@@ -33,9 +33,9 @@ class AppItemCreateUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             parent_uuid: Optional[UUID],
-    ) -> Result[errors.Error, tuple[domain.Item, list[domain.User]]]:
+    ) -> Result[errors.Error, tuple[domain.Item, list[models.User]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             if parent_uuid is None:
@@ -76,12 +76,12 @@ class AppItemUpdateUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> Result[errors.Error,
                 tuple[domain.Item,
                       int,
-                      list[domain.User],
+                      list[models.User],
                       list[str],
                       Optional[domain.Metainfo]]]:
         """Business logic."""
@@ -117,7 +117,7 @@ class AppItemDeleteUseCase:
     async def execute(
             self,
             policy: interfaces.AbsPolicy,
-            user: domain.User,
+            user: models.User,
             uuid: UUID,
     ) -> Result[errors.Error, tuple[domain.Item, int]]:
         """Business logic."""
