@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 
-from omoide import domain as models  # TODO - create actual models module
+from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.users import users_api_models

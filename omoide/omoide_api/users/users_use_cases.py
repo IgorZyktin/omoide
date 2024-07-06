@@ -2,9 +2,8 @@
 from typing import Any
 from uuid import UUID
 
+from omoide import models
 from omoide import utils
-# TODO - create actual models module
-from omoide.domain.core import core_models as models
 from omoide.omoide_api import exceptions
 from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
