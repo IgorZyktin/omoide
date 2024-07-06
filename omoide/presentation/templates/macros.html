@@ -3,7 +3,7 @@
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + query.at_page(paginator.previous_page).as_str() }}">
+                   href="{{ request.url_for('app_search')|string + query.at_page(paginator.previous_page).as_str() }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -30,10 +30,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() }}"
+                    <a href="{{ request.url_for('app_search')|string + query.at_page(page.number).as_str() }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ request.url_for('app_search') + query.at_page(page.number).as_str() }}"
+                    <a href="{{ request.url_for('app_search')|string + query.at_page(page.number).as_str() }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -41,7 +41,7 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + query.at_page(paginator.next_page).as_str() }}">
+                   href="{{ request.url_for('app_search')|string + query.at_page(paginator.next_page).as_str() }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -60,7 +60,7 @@
         <div class="pages">
             {% if paginator.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + '?' + aim.to_url(page=paginator.previous_page) }}">
+                   href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=paginator.previous_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -88,10 +88,10 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_search') + '?' + aim.to_url(page=page.number) }}"
+                    <a href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=page.number) }}"
                        class="active-page {{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ request.url_for('app_search') + '?' + aim.to_url(page=page.number) }}"
+                    <a href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=page.number) }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
@@ -99,7 +99,7 @@
             <span>&nbsp;</span>
             {% if paginator.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search') + '?' + aim.to_url(page=paginator.next_page) }}">
+                   href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=paginator.next_page) }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
