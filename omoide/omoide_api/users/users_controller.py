@@ -80,12 +80,13 @@ async def api_get_user_tags(
 async def api_get_all_users(
     user: models.User = Depends(dep.get_current_user),
     mediator: Mediator = Depends(dep.get_mediator),
+    login: str | None = None,
 ):
     """Get list of users."""
     use_case = users_use_cases.GetAllUsersUseCase(mediator)
 
     try:
-        users, extras = await use_case.execute(user)
+        users, extras = await use_case.execute(user, login)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn

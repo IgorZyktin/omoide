@@ -32,35 +32,20 @@ class UsersRepo(interfaces.AbsUsersRepo):
 
         return None
 
-    async def read_user_by_login(
-            self,
-            login: str,
-    ) -> Optional[models.User]:
-        """Return User or None."""
-        stmt = sa.select(
-            db_models.User
-        ).where(
-            db_models.User.login == login
-        )
-
-        response = await self.db.fetch_one(stmt)
-
-        if response:
-            user = models.User(**response, role=models.Role.user)
-            return user
-
-        return None
-
     async def read_all_users(
             self,
             *uuids: UUID,
+            login: str | None = None,
     ) -> list[models.User]:
         """Return list of users with given uuids (or all users)."""
         stmt = sa.select(
             db_models.User
         )
 
-        if uuids:
+        if login:
+            stmt = stmt.where(db_models.User.login == login)
+
+        elif uuids:
             stmt = stmt.where(
                 db_models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
             )

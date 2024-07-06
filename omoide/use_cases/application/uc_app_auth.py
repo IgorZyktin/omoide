@@ -22,10 +22,14 @@ class AuthUseCase:
             authenticator: interfaces.AbsAuthenticator,
     ) -> models.User:
         """Return user model."""
-        user = await self.users_repo.read_user_by_login(credentials.username)
+        users = await self.users_repo.read_all_users(
+            login=credentials.username,
+        )
 
-        if user is None:
+        if not users:
             return models.User.new_anon()
+
+        user = users[0]
 
         if authenticator.password_is_correct(
                 given_password=credentials.password,

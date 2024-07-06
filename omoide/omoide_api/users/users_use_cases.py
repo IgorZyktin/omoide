@@ -113,6 +113,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
     async def execute(
         self,
         user: models.User,
+        login: str,
     ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
         if user.is_anon:
@@ -121,7 +122,9 @@ class GetAllUsersUseCase(BaseAPIUseCase):
 
         async with self.mediator.users_repo.transaction():
             if user.is_admin:
-                users = await self.mediator.users_repo.read_all_users()
+                users = await self.mediator.users_repo.read_all_users(
+                    login=login,
+                )
                 roots = await self.mediator.items_repo.read_all_root_items(
                     *users,
                 )
