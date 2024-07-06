@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from omoide import domain
+from omoide import const
 from omoide import infra
 from omoide import utils
 from omoide.commands import helpers
@@ -131,7 +132,7 @@ def rebuild_sizes(
         locator = make_locator(config, user, item)
         sizes = Sizes()
 
-        for media_type in domain.MEDIA_TYPES:
+        for media_type in const.MEDIA_TYPES:
             x_width = f'{media_type}_width'
             x_height = f'{media_type}_height'
 

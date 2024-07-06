@@ -7,6 +7,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from omoide import domain
+from omoide import const
 from omoide import infra
 from omoide import utils
 from omoide.commands import helpers
@@ -102,7 +103,7 @@ def update_size(
     )
 
     changed = 0
-    for media_type in domain.MEDIA_TYPES:
+    for media_type in const.MEDIA_TYPES:
         ext = getattr(item, f'{media_type}_ext', None)
 
         if not ext:

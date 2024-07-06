@@ -9,6 +9,7 @@ from uuid import uuid4
 import sqlalchemy as sa
 
 from omoide import domain
+from omoide import const
 from omoide import models
 from omoide.domain import interfaces
 from omoide.storage.database import models as db_models
@@ -412,7 +413,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             moment: datetime.datetime,
     ) -> None:
         """Mark corresponding files as useless."""
-        for each in domain.MEDIA_TYPES:
+        for each in const.MEDIA_TYPES:
             generic = item.get_generic()[each]
             if generic.ext is not None:
                 stmt = sa.insert(

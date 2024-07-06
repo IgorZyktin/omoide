@@ -27,7 +27,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
         response = await self.db.fetch_one(stmt)
 
         if response:
-            user = models.User(**response, role=domain.Role.user)
+            user = models.User(**response, role=models.Role.user)
             return user
 
         return None
@@ -46,7 +46,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
         response = await self.db.fetch_one(stmt)
 
         if response:
-            user = models.User(**response, role=domain.Role.user)
+            user = models.User(**response, role=models.Role.user)
             return user
 
         return None
@@ -67,7 +67,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
 
         response = await self.db.fetch_all(stmt)
         return [
-            models.User(**record, role=domain.Role.user)
+            models.User(**record, role=models.Role.user)
             for record in response
         ]
 
