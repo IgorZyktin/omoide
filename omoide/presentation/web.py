@@ -22,7 +22,7 @@ from omoide import utils
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.infra import custom_logging
-from omoide.omoide_api import exceptions as api_exceptions
+from omoide import exceptions as api_exceptions
 from omoide.presentation import constants
 from omoide.utils import maybe_str
 
@@ -70,7 +70,7 @@ CODES_TO_EXCEPTIONS: dict[int, list[Type[Exception]]] = {
     ],
 
     http.HTTPStatus.FORBIDDEN: [
-        api_exceptions.RestrictedError,
+        api_exceptions.AccessDeniedError,
     ]
 }
 

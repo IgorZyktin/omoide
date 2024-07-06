@@ -1,4 +1,4 @@
-"""API-level exceptions."""
+"""Project exceptions."""
 from typing import Any
 
 
@@ -33,7 +33,7 @@ class DoesNotExistError(BaseOmoideApiError):
     """Target resource does not exist."""
 
 
-class RestrictedError(BaseOmoideApiError):
+class AccessDeniedError(BaseOmoideApiError):
     """User has no rights to do this."""
 
 

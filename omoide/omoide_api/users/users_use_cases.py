@@ -5,7 +5,7 @@ from uuid import UUID
 from omoide import const
 from omoide import models
 from omoide import utils
-from omoide.omoide_api import exceptions
+from omoide import exceptions
 from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
 
@@ -40,7 +40,7 @@ class GetUserStatsUseCase(BaseUsersUseCase):
         """Execute."""
         if user.is_anon:
             msg = 'Anonymous users are not allowed to get user stats'
-            raise exceptions.RestrictedError(msg)
+            raise exceptions.AccessDeniedError(msg)
 
         empty = {
             'total_items': 0,
@@ -117,7 +117,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         """Execute."""
         if user.is_anon:
             msg = 'Anonymous users are not allowed to get list of users'
-            raise exceptions.RestrictedError(msg)
+            raise exceptions.AccessDeniedError(msg)
 
         async with self.mediator.users_repo.transaction():
             if user.is_admin:
@@ -146,7 +146,7 @@ class GetUserByUUIDUseCase(BaseUsersUseCase):
         """Execute."""
         if user.is_anon:
             msg = 'Anonymous users are not allowed to get user info'
-            raise exceptions.RestrictedError(msg)
+            raise exceptions.AccessDeniedError(msg)
 
         async with self.mediator.users_repo.transaction():
             target_user = await self._get_target_user(user, uuid)
