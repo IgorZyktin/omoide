@@ -32,12 +32,20 @@ class UsersRepo(interfaces.AbsUsersRepo):
 
         return None
 
-    async def read_all_users(
+    async def read_filtered_users(
             self,
             *uuids: UUID,
             login: str | None = None,
     ) -> list[models.User]:
-        """Return list of users with given uuids (or all users)."""
+        """Return list of users with given uuids or filters."""
+        if not any(
+            (
+                bool(uuids),
+                bool(login),
+            )
+        ):
+            return []
+
         stmt = sa.select(
             db_models.User
         )
@@ -45,11 +53,26 @@ class UsersRepo(interfaces.AbsUsersRepo):
         if login:
             stmt = stmt.where(db_models.User.login == login)
 
-        elif uuids:
+        if uuids:
             stmt = stmt.where(
                 db_models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
             )
 
+        stmt = stmt.order_by(db_models.User.name)
+
+        response = await self.db.fetch_all(stmt)
+        return [
+            models.User(**record, role=models.Role.user)
+            for record in response
+        ]
+
+    async def read_all_users(
+            self,
+            *uuids: UUID,
+            login: str | None = None,
+    ) -> list[models.User]:
+        """Return list of users with given uuids (or all users)."""
+        stmt = sa.select(db_models.User).order_by(db_models.User.name)
         response = await self.db.fetch_all(stmt)
         return [
             models.User(**record, role=models.Role.user)

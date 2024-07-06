@@ -20,12 +20,16 @@ class AbsUsersRepo(in_rp_base.AbsBaseRepository):
         """Return User or None."""
 
     @abc.abstractmethod
-    async def read_all_users(
+    async def read_filtered_users(
             self,
             *uuids: UUID,
             login: str | None = None,
     ) -> list[models.User]:
-        """Return list of users with given uuids."""
+        """Return list of users with given uuids or filters."""
+
+    @abc.abstractmethod
+    async def read_all_users(self) -> list[models.User]:
+        """Return all users."""
 
     @abc.abstractmethod
     async def calc_total_space_used_by(

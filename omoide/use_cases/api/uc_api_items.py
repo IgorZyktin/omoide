@@ -247,7 +247,9 @@ class BaseItemModifyUseCase:
         await self.items_repo.create_item(user, item)
         await self.metainfo_repo.create_empty_metainfo(user, item)
         await self.metainfo_repo.update_computed_tags(user, item)
-        users = await self.users_repo.read_all_users(*payload.permissions)
+        users = await self.users_repo.read_filtered_users(
+            *payload.permissions
+        )
         await self.metainfo_repo.apply_new_known_tags(users, item.tags, [])
 
         return uuid
@@ -457,7 +459,9 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.items_repo.update_item(item)
 
             await self.metainfo_repo.update_computed_tags(user, item)
-            users = await self.users_repo.read_all_users(*item.permissions)
+            users = await self.users_repo.read_filtered_users(
+                *item.permissions
+            )
             users += [user]
             await self.metainfo_repo.apply_new_known_tags(
                 users, added, deleted)
@@ -497,7 +501,9 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.items_repo.delete_tags(item.uuid, deleted)
             operations += 1
 
-        users = await self.users_repo.read_all_users(*item.permissions)
+        users = await self.users_repo.read_filtered_users(
+            *item.permissions
+        )
         users += [user]
         await self.metainfo_repo.apply_new_known_tags(
             users, added, deleted)
@@ -675,7 +681,9 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
             if item.parent_uuid is None:
                 return Failure(errors.ItemNoDeleteForRoot(uuid=uuid))
 
-            users = await self.users_repo.read_all_users(*item.permissions)
+            users = await self.users_repo.read_filtered_users(
+                *item.permissions
+            )
             users += [user]
 
             await self.metainfo_repo.apply_new_known_tags(

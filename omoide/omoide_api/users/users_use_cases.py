@@ -20,6 +20,7 @@ class BaseUsersUseCase(BaseAPIUseCase):
         """Read specified user."""
         if who_asking.is_admin:
             target_user = await self.mediator.users_repo.read_user(uuid)
+            # FEATURE - raise right form repository
             if target_user is None:
                 msg = 'User with UUID {uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, uuid=uuid)
@@ -122,9 +123,14 @@ class GetAllUsersUseCase(BaseAPIUseCase):
 
         async with self.mediator.users_repo.transaction():
             if user.is_admin:
-                users = await self.mediator.users_repo.read_all_users(
-                    login=login,
-                )
+
+                if login:
+                    users = await self.mediator.users_repo.read_filtered_users(
+                        login=login,
+                    )
+                else:
+                    users = await self.mediator.users_repo.read_all_users()
+
                 roots = await self.mediator.items_repo.read_all_root_items(
                     *users,
                 )

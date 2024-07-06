@@ -45,6 +45,8 @@ class AppUploadUseCase:
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            can_see = await self.users_repo.read_all_users(*item.permissions)
+            can_see = await self.users_repo.read_filtered_users(
+                *item.permissions
+            )
 
         return Success((item, can_see))

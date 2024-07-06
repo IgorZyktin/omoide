@@ -22,7 +22,7 @@ class AuthUseCase:
             authenticator: interfaces.AbsAuthenticator,
     ) -> models.User:
         """Return user model."""
-        users = await self.users_repo.read_all_users(
+        users = await self.users_repo.read_filtered_users(
             login=credentials.username,
         )
 
