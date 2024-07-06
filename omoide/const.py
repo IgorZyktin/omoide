@@ -11,3 +11,5 @@ MEDIA_TYPE = Literal['content', 'preview', 'thumbnail']
 MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 
 AUTH_COMPLEXITY = 4  # minimal
+
+ANON: Literal['anon'] = 'anon'

@@ -2,6 +2,7 @@
 from typing import Any
 from uuid import UUID
 
+from omoide import const
 from omoide import models
 from omoide import utils
 from omoide.omoide_api import exceptions
@@ -90,7 +91,7 @@ class GetUserTagsUseCase(BaseUsersUseCase):
     ) -> dict[str, int]:
         """Execute."""
         async with self.mediator.search_repo.transaction():
-            if uuid.lower() == 'anon':
+            if uuid.lower() == const.ANON:
                 tags = await self.mediator.search_repo.count_all_tags_anon()
 
             elif utils.is_valid_uuid(uuid):
