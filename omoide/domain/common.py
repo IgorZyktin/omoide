@@ -3,13 +3,13 @@
 from datetime import datetime
 from typing import Callable
 from typing import Iterator
-from typing import Literal
 from typing import Optional
 from typing import TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel
 
+from omoide import const
 from omoide import models
 
 __all__ = [
@@ -26,18 +26,7 @@ __all__ = [
     'Metainfo',
     'Aim',
     'SpaceUsage',
-    'CONTENT',
-    'PREVIEW',
-    'THUMBNAIL',
-    'MEDIA_TYPE',
-    'MEDIA_TYPES',
 ]
-
-CONTENT: Literal['content'] = 'content'
-PREVIEW: Literal['preview'] = 'preview'
-THUMBNAIL: Literal['thumbnail'] = 'thumbnail'
-MEDIA_TYPE = Literal['content', 'preview', 'thumbnail']
-MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 
 
 class Item(BaseModel):
@@ -54,21 +43,21 @@ class Item(BaseModel):
     tags: list[str] = []
     permissions: list[UUID] = []
 
-    def get_generic(self) -> dict[MEDIA_TYPE, 'ItemGeneric']:
+    def get_generic(self) -> dict[const.MEDIA_TYPE, 'ItemGeneric']:
         """Proxy that helps with content/preview/thumbnail."""
         return {
-            CONTENT: ItemGeneric(
-                media_type=CONTENT,
+            const.CONTENT: ItemGeneric(
+                media_type=const.CONTENT,
                 original_ext=self.content_ext,
                 set_callback=lambda ext: setattr(self, 'content_ext', ext),
             ),
-            PREVIEW: ItemGeneric(
-                media_type=PREVIEW,
+            const.PREVIEW: ItemGeneric(
+                media_type=const.PREVIEW,
                 original_ext=self.preview_ext,
                 set_callback=lambda ext: setattr(self, 'preview_ext', ext),
             ),
-            THUMBNAIL: ItemGeneric(
-                media_type=THUMBNAIL,
+            const.THUMBNAIL: ItemGeneric(
+                media_type=const.THUMBNAIL,
                 original_ext=self.thumbnail_ext,
                 set_callback=lambda ext: setattr(self, 'thumbnail_ext', ext),
             ),
@@ -77,7 +66,7 @@ class Item(BaseModel):
 
 class ItemGeneric(BaseModel):
     """Wrapper that helps with different item fields."""
-    media_type: MEDIA_TYPE
+    media_type: const.MEDIA_TYPE
     original_ext: Optional[str] = None
     set_callback: Callable[[Optional[str]], None]
 
