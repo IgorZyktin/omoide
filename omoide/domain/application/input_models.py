@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pydantic
 
-from omoide.domain.core import core_constants
+from omoide import const
 
 
 class InEXIF(pydantic.BaseModel):
@@ -23,9 +23,9 @@ class InMedia(pydantic.BaseModel):
     @classmethod
     def check_media_type(cls, v):
         """Check."""
-        if v not in core_constants.MEDIA_TYPES:
+        if v not in const.MEDIA_TYPES:
             msg = (f'Incorrect media type: {v}, '
-                   f'must be one of {core_constants.MEDIA_TYPES}')
+                   f'must be one of {const.MEDIA_TYPES}')
             raise ValueError(msg)
         return v
 
