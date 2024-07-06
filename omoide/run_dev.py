@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
-"""Development runner, do not use in production!
-"""
+"""Development runner, do not use in production!"""
 import uvicorn
 
 from omoide.presentation import app_config
+from omoide.presentation.app import app
 
 
 def main():
     """Entry point."""
     config = app_config.Config()
     uvicorn.run(
-        'omoide.presentation.app:app',
+        app,
         host=config.host,
         port=8080,
-        reload=True,
     )
 
 
