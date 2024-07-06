@@ -2,7 +2,7 @@
 """
 from uuid import UUID
 
-from omoide import constants
+from omoide import const
 from omoide import infra
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
@@ -21,12 +21,12 @@ def run(database: SyncDatabase, uuid: UUID, password: str) -> None:
             return
 
         authenticator = infra.BcryptAuthenticator(
-            complexity=constants.AUTH_COMPLEXITY,
+            complexity=const.AUTH_COMPLEXITY,
         )
 
         encoded_password = authenticator.encode_password(password)
         user.password = encoded_password
-        user.auth_complexity = constants.AUTH_COMPLEXITY
+        user.auth_complexity = const.AUTH_COMPLEXITY
         session.commit()
 
         LOG.info('Changed password for user {} {}', user.uuid, user.name)

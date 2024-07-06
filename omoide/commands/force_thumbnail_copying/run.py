@@ -4,7 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from omoide import constants
+from omoide import const
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.force_thumbnail_copying.cfg import Config
@@ -148,7 +148,7 @@ def invoke_worker_to_copy(
         owner_uuid=parent.owner_uuid,
         source_uuid=child.uuid,
         target_uuid=parent.uuid,
-        media_type=constants.THUMBNAIL,
+        media_type=const.THUMBNAIL,
         ext=child.thumbnail_ext or '',
     )
     session.add(copy)

@@ -2,7 +2,7 @@
 """
 from uuid import UUID
 
-from omoide import constants
+from omoide import const
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import exceptions
@@ -91,9 +91,9 @@ class ApiCopyImageUseCase:
                 raise exceptions.ItemHasNoFieldError(item_uuid=source_uuid,
                                                      field='thumbnail_ext')
 
-            for each in (constants.CONTENT,
-                         constants.PREVIEW,
-                         constants.THUMBNAIL):
+            for each in (const.CONTENT,
+                         const.PREVIEW,
+                         const.THUMBNAIL):
                 await self.media_repo.copy_image(
                     owner_uuid=source.owner_uuid,
                     source_uuid=source_uuid,

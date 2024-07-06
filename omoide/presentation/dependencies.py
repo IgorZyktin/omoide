@@ -14,7 +14,7 @@ from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-from omoide import constants
+from omoide import const
 from omoide import infra
 from omoide import use_cases
 from omoide import utils
@@ -171,7 +171,7 @@ def get_auth_use_case(
 def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator(
-        complexity=constants.AUTH_COMPLEXITY,
+        complexity=const.AUTH_COMPLEXITY,
     )
 
 

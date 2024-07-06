@@ -2,7 +2,7 @@
 """
 import traceback
 
-from omoide import constants
+from omoide import const
 from omoide import utils
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
@@ -73,15 +73,15 @@ class Worker(interfaces.AbsWorker):
     @staticmethod
     def _alter_item_corresponding_to_media(media: db_models.Media) -> None:
         """Store changes in item description."""
-        if media.media_type == constants.CONTENT:
+        if media.media_type == const.CONTENT:
             media.item.content_ext = media.ext
             media.item.metainfo.content_size = len(media.content)
 
-        elif media.media_type == constants.PREVIEW:
+        elif media.media_type == const.PREVIEW:
             media.item.preview_ext = media.ext
             media.item.metainfo.preview_size = len(media.content)
 
-        elif media.media_type == constants.THUMBNAIL:
+        elif media.media_type == const.THUMBNAIL:
             media.item.thumbnail_ext = media.ext
             media.item.metainfo.thumbnail_size = len(media.content)
 

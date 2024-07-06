@@ -2,7 +2,7 @@
 """
 import sqlalchemy as sa
 
-from omoide import constants
+from omoide import const
 from omoide import utils
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
@@ -113,20 +113,20 @@ class WorkerDatabase(SyncDatabase):
                    f'cannot copy image for {command.id}')
             raise RuntimeError(msg)
 
-        if command.media_type == constants.CONTENT:
+        if command.media_type == const.CONTENT:
             target.metainfo.content_size = size
             target.metainfo.content_width = source.metainfo.content_width
             target.metainfo.content_height = source.metainfo.content_height
             target.content_ext = source.content_ext
             target.metainfo.content_type = source.metainfo.content_type
 
-        elif command.media_type == constants.PREVIEW:
+        elif command.media_type == const.PREVIEW:
             target.metainfo.preview_size = size
             target.metainfo.preview_width = source.metainfo.preview_width
             target.metainfo.preview_height = source.metainfo.preview_height
             target.preview_ext = source.preview_ext
 
-        elif command.media_type == constants.THUMBNAIL:
+        elif command.media_type == const.THUMBNAIL:
             target.metainfo.thumbnail_size = size
             target.metainfo.thumbnail_width = source.metainfo.thumbnail_width
             target.metainfo.thumbnail_height = source.metainfo.thumbnail_height

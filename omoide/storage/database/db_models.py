@@ -10,7 +10,7 @@ from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
-from omoide import constants
+from omoide import const
 
 metadata = sa.MetaData()
 Base = declarative_base(metadata=metadata)
@@ -174,9 +174,9 @@ class OrphanFiles(Base):
 
     # fields ------------------------------------------------------------------
 
-    media_type: str = sa.Column(sa.Enum(constants.CONTENT,
-                                        constants.PREVIEW,
-                                        constants.THUMBNAIL,
+    media_type: str = sa.Column(sa.Enum(const.CONTENT,
+                                        const.PREVIEW,
+                                        const.THUMBNAIL,
                                         name='media_type'))
 
     owner_uuid: UUID = sa.Column(pg.UUID(),
@@ -476,9 +476,9 @@ class Media(Base):
                                 nullable=False,
                                 index=True)
 
-    media_type: str = sa.Column(sa.Enum(constants.CONTENT,
-                                        constants.PREVIEW,
-                                        constants.THUMBNAIL,
+    media_type: str = sa.Column(sa.Enum(const.CONTENT,
+                                        const.PREVIEW,
+                                        const.THUMBNAIL,
                                         name='media_type'),
                                 nullable=False)
 
@@ -538,9 +538,9 @@ class CommandCopy(Base):
                                                 ondelete='CASCADE'),
                                   nullable=False)
 
-    media_type: str = sa.Column(sa.Enum(constants.CONTENT,
-                                        constants.PREVIEW,
-                                        constants.THUMBNAIL,
+    media_type: str = sa.Column(sa.Enum(const.CONTENT,
+                                        const.PREVIEW,
+                                        const.THUMBNAIL,
                                         name='media_type'),
                                 nullable=False)
 

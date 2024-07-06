@@ -2,7 +2,7 @@
 """
 import sqlalchemy as sa
 
-from omoide import constants
+from omoide import const
 from omoide import infra
 from omoide import utils
 from omoide.infra import custom_logging
@@ -17,7 +17,7 @@ def run(database: SyncDatabase, login: str,
     """Create new user."""
     with database.start_session() as session:
         authenticator = infra.BcryptAuthenticator(
-            complexity=constants.AUTH_COMPLEXITY,
+            complexity=const.AUTH_COMPLEXITY,
         )
         encoded_password = authenticator.encode_password(password)
 
@@ -37,7 +37,7 @@ def run(database: SyncDatabase, login: str,
             password=encoded_password,
             name=name or login,
             root_item=None,
-            auth_complexity=constants.AUTH_COMPLEXITY,
+            auth_complexity=const.AUTH_COMPLEXITY,
         )
         session.add(user)
         try:
