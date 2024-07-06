@@ -1,4 +1,4 @@
-"""User related interfaces and objects."""
+"""Logic models."""
 import enum
 from typing import Optional
 from uuid import UUID
@@ -7,15 +7,10 @@ from pydantic import BaseModel
 
 from omoide import const
 
-__all__ = [
-    'Role',
-    'User',
-]
-
 
 class Role(enum.Enum):
     """User role."""
-    # TODO - change to StrEnum in Python 3.11
+    # FEATURE - change to StrEnum in Python 3.11
     anon = enum.auto()
     user = enum.auto()
     admin = enum.auto()
@@ -24,9 +19,9 @@ class Role(enum.Enum):
 class User(BaseModel):
     """User model."""
     uuid: UUID
-    login: str
-    password: str
     name: str
+    login: str  # FEATURE - change to SecretStr
+    password: str  # FEATURE - change to SecretStr
     root_item: Optional[UUID] = None
     role: Role
 

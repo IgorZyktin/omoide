@@ -3,6 +3,7 @@
 from typing import Optional
 
 from omoide import domain
+from omoide import models
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
@@ -29,7 +30,7 @@ class ApiSearchUseCase:
 
     async def execute(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
     ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         """Perform search request."""
@@ -58,7 +59,7 @@ class ApiSuggestTagUseCase:
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             user_input: str,
             limit: int,
     ) -> list[core_models.GuessResult]:

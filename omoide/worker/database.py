@@ -142,8 +142,8 @@ class WorkerDatabase(SyncDatabase):
         stmt = sa.delete(
             db_models.Media
         ).where(
-            db_models.Media.processed_at != None,  # noqa
-            db_models.Media.error == None,  # noqa,
+            db_models.Media.processed_at != None,  # noqa: E711
+            db_models.Media.error == None,  # noqa: E711
         )
 
         with self._engine.begin() as conn:

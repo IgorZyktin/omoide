@@ -2,6 +2,7 @@
 """
 from uuid import UUID
 
+from omoide import models
 from omoide.domain import actions
 from omoide.domain.core import core_models
 from omoide.domain.interfaces import AbsPolicy
@@ -33,7 +34,7 @@ class CreateEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
             exif: core_models.EXIF,
     ) -> core_models.EXIF:
@@ -50,7 +51,7 @@ class ReadEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
     ) -> core_models.EXIF:
         async with self.exif_repo.transaction():
@@ -65,7 +66,7 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
             exif: core_models.EXIF,
     ) -> core_models.EXIF:
@@ -82,7 +83,7 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
     ) -> None:
         """Business logic."""

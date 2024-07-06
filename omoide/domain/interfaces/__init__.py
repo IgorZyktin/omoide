@@ -1,15 +1,15 @@
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_browse import AbsBrowseRepository
+    .in_repositories.in_rp_browse import AbsBrowseRepository  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_items import AbsItemsRepo
+    .in_repositories.in_rp_items import AbsItemsRepo  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_metainfo import AbsMetainfoRepo
+    .in_repositories.in_rp_metainfo import AbsMetainfoRepo  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_preview import AbsPreviewRepository
+    .in_repositories.in_rp_preview import AbsPreviewRepository  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_search import AbsSearchRepository
+    .in_repositories.in_rp_search import AbsSearchRepository  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_users import AbsUsersRepo
-from omoide.domain.interfaces.infra.in_authenticator import AbsAuthenticator
-from omoide.domain.interfaces.infra.in_locator import AbsLocator
-from omoide.domain.interfaces.infra.in_policy import AbsPolicy
+    .in_repositories.in_rp_users import AbsUsersRepo  # noqa: F401,F403
+from omoide.domain.interfaces.infra.in_authenticator import AbsAuthenticator  # noqa: F401,F403
+from omoide.domain.interfaces.infra.in_locator import AbsLocator  # noqa: F401,F403
+from omoide.domain.interfaces.infra.in_policy import AbsPolicy  # noqa: F401,F403

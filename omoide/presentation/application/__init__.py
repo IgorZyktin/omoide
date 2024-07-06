@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
-from omoide.presentation.application import app_auth
-from omoide.presentation.application import app_browse
-from omoide.presentation.application import app_home
-from omoide.presentation.application import app_item
-from omoide.presentation.application import app_preview
-from omoide.presentation.application import app_profile
-from omoide.presentation.application import app_search
-from omoide.presentation.application import app_special
-from omoide.presentation.application import app_upload
+from omoide.presentation.application import app_auth  # noqa: F401,F403
+from omoide.presentation.application import app_browse  # noqa: F401,F403
+from omoide.presentation.application import app_home  # noqa: F401,F403
+from omoide.presentation.application import app_item  # noqa: F401,F403
+from omoide.presentation.application import app_preview  # noqa: F401,F403
+from omoide.presentation.application import app_profile  # noqa: F401,F403
+from omoide.presentation.application import app_search  # noqa: F401,F403
+from omoide.presentation.application import app_special  # noqa: F401,F403
+from omoide.presentation.application import app_upload  # noqa: F401,F403

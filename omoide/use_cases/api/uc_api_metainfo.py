@@ -2,6 +2,7 @@
 """
 from uuid import UUID
 
+from omoide import models
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import interfaces
@@ -32,7 +33,7 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
             metainfo: core_models.Metainfo,
     ) -> None:
@@ -74,7 +75,7 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
     ) -> core_models.Metainfo:
         async with self.meta_repo.transaction():

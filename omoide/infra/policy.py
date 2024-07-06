@@ -3,6 +3,7 @@
 from typing import Optional
 from uuid import UUID
 
+from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import exceptions
@@ -39,7 +40,7 @@ class Policy(interfaces.AbsPolicy):
 
     async def is_restricted(
             self,
-            user: core_models.User,
+            user: models.User,
             uuid: UUID | None,
             action: actions.Action,
     ) -> errors.Error | None:
@@ -71,7 +72,7 @@ class Policy(interfaces.AbsPolicy):
 
     async def _is_restricted_for_item(
             self,
-            user: core_models.User,
+            user: models.User,
             uuid: UUID,
             action: actions.Action,
     ) -> errors.Error | None:
@@ -102,7 +103,7 @@ class Policy(interfaces.AbsPolicy):
 
     async def check(
             self,
-            user: core_models.User,
+            user: models.User,
             uuid: UUID,
             action: actions.Action,
     ) -> None:

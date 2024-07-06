@@ -18,7 +18,7 @@ from omoide import const
 from omoide import infra
 from omoide import use_cases
 from omoide import utils
-from omoide.domain import auth
+from omoide import models
 from omoide.domain import interfaces
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
@@ -179,10 +179,10 @@ async def get_current_user(
         credentials: HTTPBasicCredentials = Depends(get_credentials),
         use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
         authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
-) -> auth.User:
+) -> models.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
-        return auth.User.new_anon()
+        return models.User.new_anon()
     return await use_case.execute(credentials, authenticator)
 
 
@@ -190,7 +190,7 @@ async def get_known_user(
         credentials: HTTPBasicCredentials = Depends(get_credentials),
         use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
         authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
-) -> auth.User:
+) -> models.User:
     """Load current user, raise if got anon."""
     user = None
     if credentials.username and credentials.password:

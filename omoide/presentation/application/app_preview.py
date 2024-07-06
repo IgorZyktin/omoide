@@ -1,5 +1,4 @@
-"""Preview related routes.
-"""
+"""Preview related routes."""
 from typing import Annotated
 from typing import Type
 
@@ -10,9 +9,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from omoide import models
 from omoide import use_cases
 from omoide import utils
-from omoide.domain import auth
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
@@ -30,7 +29,7 @@ async def app_preview(
         request: Request,
         uuid: str,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: auth.User = Depends(dep.get_current_user),
+        user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
         use_case: use_cases.AppPreviewUseCase = Depends(
             dep.app_preview_use_case),

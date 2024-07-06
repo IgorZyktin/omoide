@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from omoide.presentation.infra.album import Album
-from omoide.presentation.infra.album import PageVal
-from omoide.presentation.infra.paginator import PageNum
-from omoide.presentation.infra.paginator import Paginator
+from omoide.presentation.infra.album import Album  # noqa: F401,F403
+from omoide.presentation.infra.album import PageVal  # noqa: F401,F403
+from omoide.presentation.infra.paginator import PageNum  # noqa: F401,F403
+from omoide.presentation.infra.paginator import Paginator  # noqa: F401,F403

@@ -3,6 +3,7 @@
 import abc
 
 from omoide import domain
+from omoide import models
 from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
@@ -15,7 +16,7 @@ class AbsSearchRepository(
     @abc.abstractmethod
     async def count_matching_items(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
     ) -> int:
         """Count matching items for search query."""
@@ -23,7 +24,7 @@ class AbsSearchRepository(
     @abc.abstractmethod
     async def get_matching_items(
             self,
-            user: domain.User,
+            user: models.User,
             aim: domain.Aim,
             obligation: domain.Obligation,
     ) -> list[domain.Item]:
@@ -32,7 +33,7 @@ class AbsSearchRepository(
     @abc.abstractmethod
     async def guess_tag_known(
             self,
-            user: core_models.User,
+            user: models.User,
             user_input: str,
             limit: int,
     ) -> list[core_models.GuessResult]:
@@ -41,7 +42,7 @@ class AbsSearchRepository(
     @abc.abstractmethod
     async def guess_tag_anon(
             self,
-            user: core_models.User,
+            user: models.User,
             user_input: str,
             limit: int,
     ) -> list[core_models.GuessResult]:
@@ -50,7 +51,7 @@ class AbsSearchRepository(
     @abc.abstractmethod
     async def count_all_tags(
             self,
-            user: domain.User,
+            user: models.User,
     ) -> list[tuple[str, int]]:
         """Return statistics for used tags."""
 

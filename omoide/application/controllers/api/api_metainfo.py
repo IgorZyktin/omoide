@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 
+from omoide import models
 from omoide import use_cases
 from omoide.application import web
 from omoide.domain.application import app_constants
@@ -20,7 +21,7 @@ router = APIRouter(prefix='/api/metainfo')
 async def api_update_metainfo(
         item_uuid: UUID,
         in_metainfo: input_models.InMetainfo,
-        user: Annotated[core_models.User, Depends(dep.get_known_user)],
+        user: Annotated[models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.UpdateMetainfoUseCase,
                             Depends(dep.update_metainfo_use_case)],
 ):
@@ -55,7 +56,7 @@ async def api_update_metainfo(
 @router.get('/{item_uuid}')
 async def api_read_metainfo(
         item_uuid: UUID,
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[models.User, Depends(dep.get_current_user)],
         use_case: Annotated[use_cases.ReadMetainfoUseCase,
                             Depends(dep.read_metainfo_use_case)],
 ):

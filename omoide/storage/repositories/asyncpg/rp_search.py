@@ -141,7 +141,7 @@ class SearchRepository(
 
     async def guess_tag_known(
             self,
-            user: core_models.User,
+            user: models.User,
             user_input: str,
             limit: int,
     ) -> list[core_models.GuessResult]:
@@ -162,7 +162,7 @@ class SearchRepository(
 
     async def guess_tag_anon(
             self,
-            user: core_models.User,
+            user: models.User,
             user_input: str,
             limit: int,
     ) -> list[core_models.GuessResult]:

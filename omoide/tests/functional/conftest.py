@@ -10,8 +10,9 @@ import pytest
 import pytest_asyncio
 from databases import Database
 
+from omoide import const
 from omoide import infra
-from omoide.domain import auth
+from omoide import models
 from omoide.domain import common
 from omoide.storage.repositories import asyncpg
 from omoide.storage.repositories.asyncpg.rp_test import RepositoryForTests
@@ -101,7 +102,7 @@ def event_loop():
 @pytest.fixture(scope='session')
 def functional_tests_permanent_user():
     """Return permanent user (always exists in the database)."""
-    return auth.User(
+    return models.User(
         uuid=UUID('00000000-0000-0000-0000-000000000000'),
         login='test-user',
         password='$2b$04$XRT/zbfYO8jB.M68OYMi'
@@ -114,8 +115,8 @@ def functional_tests_permanent_user():
 @pytest.fixture(scope='session')
 def functional_tests_anon_user():
     """Return anon user."""
-    return auth.User(
-        uuid=None,
+    return models.User(
+        uuid=const.DUMMY_UUID,
         login='test-anon',
         password='',
         name='anon',

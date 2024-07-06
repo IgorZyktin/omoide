@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
+from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.application import web
@@ -21,7 +22,7 @@ router = APIRouter(prefix='/api/media')
 async def api_create_media(
         item_uuid: UUID,
         in_media: input_models.InMedia,
-        user: Annotated[core_models.User, Depends(dep.get_known_user)],
+        user: Annotated[models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.CreateMediaUseCase,
                             Depends(dep.api_create_media_use_case)],
 ):
@@ -47,7 +48,7 @@ async def api_create_media(
 async def api_copy_image_from_given_item(
         source_uuid: UUID,
         target_uuid: UUID,
-        user: Annotated[core_models.User, Depends(dep.get_known_user)],
+        user: Annotated[models.User, Depends(dep.get_known_user)],
         use_case: Annotated[use_cases.ApiCopyImageUseCase,
                             Depends(dep.api_item_copy_image_use_case)],
 ):

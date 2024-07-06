@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from omoide import domain
+from omoide import models
 
 __all__ = [
     'Item',
@@ -119,7 +119,7 @@ class PositionedItem(BaseModel):
 
 class PositionedByUserItem(BaseModel):
     """Same as PositionedItem but according to user catalogue."""
-    user: domain.User
+    user: models.User
     position: int
     total_items: int
     items_per_page: int
@@ -133,7 +133,7 @@ class PositionedByUserItem(BaseModel):
 
 class Location(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: domain.User
+    owner: models.User
     items: list[PositionedItem]
     current_item: Optional[Item] = None
 
@@ -161,7 +161,7 @@ class SimpleLocation(BaseModel):
 
 class ComplexLocation(BaseModel):
     """Path-like sequence of parents for specific item."""
-    owner: domain.User
+    owner: models.User
     items: list[PositionedItem]
     current_item: Optional[Item] = None
 

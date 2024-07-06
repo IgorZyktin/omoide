@@ -5,11 +5,11 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi import Depends
 
+from omoide import models
 from omoide import use_cases
 from omoide.application import web
 from omoide.domain.application import app_constants
 from omoide.domain.application import output_models
-from omoide.domain.core import core_models
 from omoide.infra import custom_logging
 from omoide.presentation import dependencies as dep
 
@@ -20,7 +20,7 @@ LOG = custom_logging.get_logger(__name__)
 
 @router.get('/suggest')
 async def api_suggest_tag(
-        user: Annotated[core_models.User, Depends(dep.get_current_user)],
+        user: Annotated[models.User, Depends(dep.get_current_user)],
         use_case: Annotated[use_cases.ApiSuggestTagUseCase,
                             Depends(dep.api_suggest_tag_use_case)],
         text: str = '',

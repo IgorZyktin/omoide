@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from omoide.domain.auth import *
-from omoide.domain.common import *
-from omoide.domain.dtos import *
-from omoide.domain.interfaces.infra import *
+from omoide.domain.common import *  # noqa: F401,F403
+from omoide.domain.dtos import *  # noqa: F401,F403
+from omoide.domain.interfaces.infra import *  # noqa: F401,F403

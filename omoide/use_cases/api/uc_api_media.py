@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from omoide import const
+from omoide import models
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import exceptions
@@ -31,7 +32,7 @@ class CreateMediaUseCase:
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             item_uuid: UUID,
             media: core_models.Media,
     ) -> core_models.Media:
@@ -61,7 +62,7 @@ class ApiCopyImageUseCase:
 
     async def execute(
             self,
-            user: core_models.User,
+            user: models.User,
             source_uuid: UUID,
             target_uuid: UUID,
     ) -> None:
