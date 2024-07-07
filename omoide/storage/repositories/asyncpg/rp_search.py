@@ -5,7 +5,6 @@ from sqlalchemy.sql import Select
 from omoide import domain
 from omoide import models
 from omoide.domain import interfaces
-from omoide.domain.core import core_models
 from omoide.infra import custom_logging
 from omoide.storage.database import models as db_models
 from omoide.storage.repositories.asyncpg import queries
@@ -13,9 +12,7 @@ from omoide.storage.repositories.asyncpg import queries
 LOG = custom_logging.get_logger(__name__)
 
 
-class SearchRepository(
-    interfaces.AbsSearchRepository,
-):
+class SearchRepository(interfaces.AbsSearchRepository):
     """Repository that performs all search queries."""
 
     @staticmethod
@@ -139,43 +136,44 @@ class SearchRepository(
         response = await self.db.fetch_all(stmt)
         return {x['tag']: x['counter'] for x in response}
 
-    async def guess_tag_known(
+    async def autocomplete_tag_anon(
             self,
-            user: models.User,
-            user_input: str,
+            tag: str,
             limit: int,
-    ) -> list[core_models.GuessResult]:
-        """Guess tag for known user."""
+    ) -> list[str]:
+        """Autocomplete tag for anon user."""
         stmt = sa.select(
-            db_models.KnownTags.tag,
-            db_models.KnownTags.counter,
+            db_models.KnownTagsAnon.tag
         ).where(
-            db_models.KnownTags.tag.ilike(user_input + '%'),  # type: ignore
-            db_models.KnownTags.user_uuid == user.uuid,
-        ).order_by(
-            sa.desc(db_models.KnownTags.counter),
-        ).limit(limit)
-
-        response = await self.db.fetch_all(stmt)
-
-        return [core_models.GuessResult(**x) for x in response]
-
-    async def guess_tag_anon(
-            self,
-            user: models.User,
-            user_input: str,
-            limit: int,
-    ) -> list[core_models.GuessResult]:
-        """Guess tag for anon user."""
-        stmt = sa.select(
-            db_models.KnownTagsAnon.tag,
-            db_models.KnownTagsAnon.counter,
-        ).where(
-            db_models.KnownTagsAnon.tag.ilike(user_input + '%'),  # type: ignore
+            db_models.KnownTagsAnon.tag.ilike(tag + '%'),  # type: ignore
+            db_models.KnownTagsAnon.counter > 0,
         ).order_by(
             sa.desc(db_models.KnownTagsAnon.counter),
+            sa.asc(db_models.KnownTagsAnon.tag),
         ).limit(limit)
 
         response = await self.db.fetch_all(stmt)
 
-        return [core_models.GuessResult(**x) for x in response]
+        return [x.tag for x in response]
+
+    async def autocomplete_tag_known(
+            self,
+            user: models.User,
+            tag: str,
+            limit: int,
+    ) -> list[str]:
+        """Autocomplete tag for known user."""
+        stmt = sa.select(
+            db_models.KnownTags.tag,
+        ).where(
+            db_models.KnownTags.tag.ilike(tag + '%'),  # type: ignore
+            db_models.KnownTags.user_uuid == user.uuid,
+            db_models.KnownTagsAnon.counter > 0,
+        ).order_by(
+            sa.desc(db_models.KnownTags.counter),
+            sa.asc(db_models.KnownTags.tag),
+        ).limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+
+        return [x.tag for x in response]

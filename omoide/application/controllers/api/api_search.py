@@ -30,8 +30,7 @@ async def api_suggest_tag(
     variants: list[str] = []
 
     if len(text) > 1:
-        result = await web.run(
+        variants = await web.run(
             use_case.execute, user, text, app_constants.AUTOCOMPLETE_VARIANTS)
-        variants = [guess_result.tag for guess_result in result]
 
     return output_models.OutAutocomplete(variants=variants)

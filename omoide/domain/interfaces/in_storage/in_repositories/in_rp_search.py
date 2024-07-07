@@ -1,16 +1,12 @@
-"""Repository that performs all search queries.
-"""
+"""Repository that performs all search queries."""
 import abc
 
 from omoide import domain
 from omoide import models
-from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
-class AbsSearchRepository(
-    in_rp_base.AbsBaseRepository,
-):
+class AbsSearchRepository(in_rp_base.AbsBaseRepository):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
@@ -31,22 +27,21 @@ class AbsSearchRepository(
         """Return matching items for search query."""
 
     @abc.abstractmethod
-    async def guess_tag_known(
+    async def autocomplete_tag_anon(
             self,
-            user: models.User,
-            user_input: str,
+            tag: str,
             limit: int,
-    ) -> list[core_models.GuessResult]:
-        """Guess tag for known user."""
+    ) -> list[str]:
+        """Autocomplete tag for anon user."""
 
     @abc.abstractmethod
-    async def guess_tag_anon(
+    async def autocomplete_tag_known(
             self,
             user: models.User,
-            user_input: str,
+            tag: str,
             limit: int,
-    ) -> list[core_models.GuessResult]:
-        """Guess tag for anon user."""
+    ) -> list[str]:
+        """Autocomplete tag for known user."""
 
     @abc.abstractmethod
     async def count_all_tags(
