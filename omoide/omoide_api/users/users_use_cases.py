@@ -97,7 +97,7 @@ class GetUserTagsUseCase(BaseUsersUseCase):
 
             elif utils.is_valid_uuid(uuid):
                 target_user = await self._get_target_user(user, UUID(uuid))
-                tags = await self.mediator.search_repo.count_all_tags(
+                tags = await self.mediator.search_repo.count_all_tags_known(
                     user=target_user,
                 )
 
@@ -105,7 +105,7 @@ class GetUserTagsUseCase(BaseUsersUseCase):
                 msg = 'Given user UUID is not valid'
                 raise exceptions.InvalidInputError(msg)
 
-        return dict(tags)
+        return tags
 
 
 class GetAllUsersUseCase(BaseAPIUseCase):

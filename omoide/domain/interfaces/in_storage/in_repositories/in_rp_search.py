@@ -27,6 +27,14 @@ class AbsSearchRepository(in_rp_base.AbsBaseRepository):
         """Return matching items for search query."""
 
     @abc.abstractmethod
+    async def count_all_tags_anon(self) -> dict[str, int]:
+        """Return counters for known tags (anon user)."""
+
+    @abc.abstractmethod
+    async def count_all_tags_known(self, user: models.User) -> dict[str, int]:
+        """Return counters for known tags (known user)."""
+
+    @abc.abstractmethod
     async def autocomplete_tag_anon(
             self,
             tag: str,
@@ -48,8 +56,4 @@ class AbsSearchRepository(in_rp_base.AbsBaseRepository):
             self,
             user: models.User,
     ) -> list[tuple[str, int]]:
-        """Return statistics for used tags."""
-
-    @abc.abstractmethod
-    async def count_all_tags_anon(self) -> dict[str, int]:
         """Return statistics for used tags."""

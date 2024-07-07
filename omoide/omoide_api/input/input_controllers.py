@@ -25,10 +25,12 @@ async def api_autocomplete(
     tag: str = '',
 ):
     """Return tags that match supplied string."""
+    use_case = input_use_cases.AutocompleteUseCase(mediator)
+
     try:
-        use_case = input_use_cases.AutocompleteUseCase(mediator)
         variants = await use_case.execute(user, tag)
     except Exception as exc:
         web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return input_api_models.AutocompleteOutput(variants=variants)

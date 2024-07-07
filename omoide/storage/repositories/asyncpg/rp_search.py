@@ -125,7 +125,7 @@ class SearchRepository(interfaces.AbsSearchRepository):
         return [(x['tag'], x['counter']) for x in response]
 
     async def count_all_tags_anon(self) -> dict[str, int]:
-        """Return statistics for used tags."""
+        """Return counters for known tags (anon user)."""
         stmt = sa.select(
             db_models.KnownTagsAnon.tag,
             db_models.KnownTagsAnon.counter,
@@ -134,6 +134,22 @@ class SearchRepository(interfaces.AbsSearchRepository):
         )
 
         response = await self.db.fetch_all(stmt)
+
+        return {x['tag']: x['counter'] for x in response}
+
+    async def count_all_tags_known(self, user: models.User) -> dict[str, int]:
+        """Return counters for known tags (known user)."""
+        stmt = sa.select(
+            db_models.KnownTags.tag,
+            db_models.KnownTags.counter,
+        ).where(
+            db_models.KnownTags.user_uuid == user.uuid,
+        ).order_by(
+            sa.desc(db_models.KnownTags.counter),
+        )
+
+        response = await self.db.fetch_all(stmt)
+
         return {x['tag']: x['counter'] for x in response}
 
     async def autocomplete_tag_anon(
