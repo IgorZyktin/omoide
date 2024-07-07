@@ -3,7 +3,6 @@ import abc
 from typing import Optional
 from uuid import UUID
 
-from omoide import domain
 from omoide import models
 from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
@@ -31,7 +30,7 @@ class AbsUsersRepo(in_rp_base.AbsBaseRepository):
     async def calc_total_space_used_by(
             self,
             user: models.User,
-    ) -> domain.SpaceUsage:
+    ) -> models.SpaceUsage:
         """Return total amount of used space for user."""
 
     @abc.abstractmethod

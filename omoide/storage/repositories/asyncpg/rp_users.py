@@ -3,7 +3,6 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
-from omoide import domain
 from omoide import models
 from omoide.domain import interfaces
 from omoide.storage.database import models as db_models
@@ -63,7 +62,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
     async def calc_total_space_used_by(
         self,
         user: models.User,
-    ) -> domain.SpaceUsage:
+    ) -> models.SpaceUsage:
         """Return total amount of used space for user."""
         stmt = sa.select(
             sa.func.sum(db_models.Metainfo.content_size).label(
@@ -81,8 +80,10 @@ class UsersRepo(interfaces.AbsUsersRepo):
         ).where(
             db_models.Item.owner_uuid == str(user.uuid)
         )
+
         response = await self.db.fetch_one(stmt)
-        return domain.SpaceUsage(
+
+        return models.SpaceUsage(
             uuid=user.uuid,
             content_size=response['content_size'] or 0,
             preview_size=response['preview_size'] or 0,

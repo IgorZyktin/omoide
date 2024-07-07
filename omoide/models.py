@@ -51,3 +51,21 @@ class User(BaseModel):
             root_item=None,
             role=Role.anon,
         )
+
+
+class SpaceUsage(BaseModel):
+    """Total size of user data for specific user."""
+    uuid: UUID
+    content_size: int
+    preview_size: int
+    thumbnail_size: int
+
+    @classmethod
+    def empty(cls, uuid: UUID) -> 'SpaceUsage':
+        """Return empty result."""
+        return cls(
+            uuid=uuid,
+            content_size=0,
+            preview_size=0,
+            thumbnail_size=0,
+        )

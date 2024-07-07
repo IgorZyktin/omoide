@@ -25,7 +25,6 @@ __all__ = [
     'ComplexLocation',
     'Metainfo',
     'Aim',
-    'SpaceUsage',
 ]
 
 
@@ -289,21 +288,3 @@ class SingleResult(BaseModel):
     aim: Aim
     location: Location
     neighbours: list[UUID]
-
-
-class SpaceUsage(BaseModel):
-    """Total size of user data."""
-    uuid: UUID
-    content_size: int
-    preview_size: int
-    thumbnail_size: int
-
-    @classmethod
-    def empty(cls, uuid: UUID) -> 'SpaceUsage':
-        """Return empty result."""
-        return cls(
-            uuid=uuid,
-            content_size=0,
-            preview_size=0,
-            thumbnail_size=0,
-        )
