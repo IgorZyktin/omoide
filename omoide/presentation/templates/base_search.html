@@ -264,7 +264,10 @@
 
         input.addEventListener('keyup', function (e) {
             if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
-                guessTag(this, '{{ request.url_for('api_suggest_tag') }}')
+                autocompleteTag(
+                    this,
+                    '{{ request.url_for('api_autocomplete') }}',
+                )
             }
         })
 
@@ -291,7 +294,7 @@
         });
 
         document.addEventListener('click', function (e) {
-            clearGuesses(e.target);
+            clearAutocompletion(e.target);
         })
     })
 </script>

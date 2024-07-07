@@ -245,8 +245,8 @@ function jumpToTop(targetId) {
     }
 }
 
-function clearGuesses(element) {
-    // Hide all guess variants for tag
+function clearAutocompletion(element) {
+    // Hide all autocomplete tags
     let items = document.getElementsByClassName('autocomplete-items')
     let inp = document.getElementById('query_element')
 
@@ -277,11 +277,11 @@ function removeActive(element) {
     }
 }
 
-async function getGuessVariants(tag, endpoint) {
-    // Load possible variants
+async function getAutocompletionVariants(tag, endpoint) {
+    // Load possible autocompletion variants
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `${endpoint}?text=${tag.trim()}`,
+            url: `${endpoint}?tag=${tag.trim()}`,
             type: 'GET',
             timeout: 10000,
             success: (response) => {
@@ -321,9 +321,9 @@ function splitLastTag(text) {
     return [body, separator, lastTag]
 }
 
-async function guessTag(element, endpoint) {
+async function autocompleteTag(element, endpoint) {
     // Help user by guessing tag
-    clearGuesses();
+    clearAutocompletion();
 
     let text = element.value
 
@@ -334,7 +334,7 @@ async function guessTag(element, endpoint) {
     const [body, separator, tag] = splitLastTag(text)
 
     if (tag.length <= 1) {
-        clearGuesses();
+        clearAutocompletion();
         return
     }
 
@@ -343,7 +343,7 @@ async function guessTag(element, endpoint) {
     dropdown.setAttribute('class', 'autocomplete-items');
     element.parentNode.appendChild(dropdown);
 
-    let variants = await getGuessVariants(tag, endpoint)
+    let variants = await getAutocompletionVariants(tag, endpoint)
 
     for (const variant of variants) {
         let item = document.createElement('div');
@@ -354,7 +354,7 @@ async function guessTag(element, endpoint) {
         item.addEventListener('click', function (e) {
             let ending = this.getElementsByTagName('input')[0].value;
             element.value = body + separator + ending + ' '
-            clearGuesses();
+            clearAutocompletion();
             setFocusAtTheEnd(element)
         });
         dropdown.appendChild(item);
