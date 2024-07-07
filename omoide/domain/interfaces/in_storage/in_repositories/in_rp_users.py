@@ -1,5 +1,4 @@
-"""Repository that performs operations on users.
-"""
+"""Repository that performs operations on users."""
 import abc
 from typing import Optional
 from uuid import UUID
@@ -13,10 +12,7 @@ class AbsUsersRepo(in_rp_base.AbsBaseRepository):
     """Repository that performs read operations on users."""
 
     @abc.abstractmethod
-    async def read_user(
-            self,
-            uuid: UUID,
-    ) -> Optional[models.User]:
+    async def read_user(self, uuid: UUID) -> Optional[models.User]:
         """Return User or None."""
 
     @abc.abstractmethod
@@ -39,14 +35,9 @@ class AbsUsersRepo(in_rp_base.AbsBaseRepository):
         """Return total amount of used space for user."""
 
     @abc.abstractmethod
-    async def user_is_public(
-            self,
-            uuid: UUID,
-    ) -> bool:
+    async def user_is_public(self, uuid: UUID) -> bool:
         """Return True if given user is public."""
 
     @abc.abstractmethod
-    async def get_public_users_uuids(
-            self,
-    ) -> set[UUID]:
-        """Return set of UUIDs of public users."""
+    async def get_public_users_uuids(self) -> set[UUID]:
+        """Return set of UUIDs for public users."""

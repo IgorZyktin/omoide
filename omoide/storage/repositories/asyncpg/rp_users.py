@@ -1,5 +1,4 @@
 """Repository that performs read operations on users."""
-from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -13,16 +12,9 @@ from omoide.storage.database import models as db_models
 class UsersRepo(interfaces.AbsUsersRepo):
     """Repository that performs read operations on users."""
 
-    async def read_user(
-            self,
-            uuid: UUID,
-    ) -> Optional[models.User]:
+    async def read_user(self, uuid: UUID) -> models.User | None:
         """Return User or None."""
-        stmt = sa.select(
-            db_models.User
-        ).where(
-            db_models.User.uuid == uuid
-        )
+        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
 
         response = await self.db.fetch_one(stmt)
 
@@ -33,22 +25,15 @@ class UsersRepo(interfaces.AbsUsersRepo):
         return None
 
     async def read_filtered_users(
-            self,
-            *uuids: UUID,
-            login: str | None = None,
+        self,
+        *uuids: UUID,
+        login: str | None = None,
     ) -> list[models.User]:
         """Return list of users with given uuids or filters."""
-        if not any(
-            (
-                bool(uuids),
-                bool(login),
-            )
-        ):
+        if not any((bool(uuids), bool(login))):
             return []
 
-        stmt = sa.select(
-            db_models.User
-        )
+        stmt = sa.select(db_models.User)
 
         if login:
             stmt = stmt.where(db_models.User.login == login)
@@ -66,11 +51,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
             for record in response
         ]
 
-    async def read_all_users(
-            self,
-            *uuids: UUID,
-            login: str | None = None,
-    ) -> list[models.User]:
+    async def read_all_users(self) -> list[models.User]:
         """Return list of users with given uuids (or all users)."""
         stmt = sa.select(db_models.User).order_by(db_models.User.name)
         response = await self.db.fetch_all(stmt)
@@ -80,8 +61,8 @@ class UsersRepo(interfaces.AbsUsersRepo):
         ]
 
     async def calc_total_space_used_by(
-            self,
-            user: models.User,
+        self,
+        user: models.User,
     ) -> domain.SpaceUsage:
         """Return total amount of used space for user."""
         stmt = sa.select(
@@ -108,10 +89,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
             thumbnail_size=response['thumbnail_size'] or 0,
         )
 
-    async def user_is_public(
-            self,
-            uuid: UUID,
-    ) -> bool:
+    async def user_is_public(self, uuid: UUID) -> bool:
         """Return True if given user is public."""
         stmt = sa.select(
             db_models.PublicUsers.user_uuid
@@ -121,15 +99,13 @@ class UsersRepo(interfaces.AbsUsersRepo):
         response = await self.db.fetch_one(stmt)
         return response is not None
 
-    async def get_public_users_uuids(
-            self,
-    ) -> set[UUID]:
+    async def get_public_users_uuids(self) -> set[UUID]:
         """Return set of UUIDs of public users."""
-        stmt = sa.select(
-            db_models.PublicUsers.user_uuid
-        )
+        stmt = sa.select(db_models.PublicUsers.user_uuid)
 
         response = await self.db.fetch_all(stmt)
+
         if response is None:
             return set()
+
         return set(x['user_uuid'] for x in response)
