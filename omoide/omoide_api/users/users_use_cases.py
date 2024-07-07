@@ -51,7 +51,7 @@ class GetUserStatsUseCase(BaseUsersUseCase):
             'thumbnail_bytes': 0,
         }
 
-        async with self.mediator.users_repo.transaction():
+        async with self.mediator.storage.transaction():
             target_user = await self._get_target_user(user, uuid)
             root = await self.mediator.items_repo.read_root_item(target_user)
 
@@ -91,7 +91,7 @@ class GetUserTagsUseCase(BaseUsersUseCase):
         uuid: str,
     ) -> dict[str, int]:
         """Execute."""
-        async with self.mediator.search_repo.transaction():
+        async with self.mediator.storage.transaction():
             if uuid.lower() == const.ANON:
                 tags = await self.mediator.search_repo.count_all_tags_anon()
 
@@ -121,7 +121,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
             msg = 'Anonymous users are not allowed to get list of users'
             raise exceptions.AccessDeniedError(msg)
 
-        async with self.mediator.users_repo.transaction():
+        async with self.mediator.storage.transaction():
             if user.is_admin:
 
                 if login:
@@ -157,7 +157,7 @@ class GetUserByUUIDUseCase(BaseUsersUseCase):
             msg = 'Anonymous users are not allowed to get user info'
             raise exceptions.AccessDeniedError(msg)
 
-        async with self.mediator.users_repo.transaction():
+        async with self.mediator.storage.transaction():
             target_user = await self._get_target_user(user, uuid)
             root = await self.mediator.items_repo.read_root_item(target_user)
             extras = {'root_item': root.uuid if root else None}

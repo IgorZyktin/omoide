@@ -17,7 +17,7 @@ class AutocompleteUseCase(BaseAPIUseCase):
         if len(tag) < const.MINIMAL_AUTOCOMPLETE_SIZE:
             return []
 
-        async with self.mediator.search_repo.transaction():
+        async with self.mediator.storage.transaction():
             if user.is_anon:
                 variants = await self.mediator.search_repo \
                     .autocomplete_tag_anon(

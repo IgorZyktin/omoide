@@ -16,9 +16,9 @@ from starlette.requests import Request
 
 from omoide import const
 from omoide import infra
+from omoide import models
 from omoide import use_cases
 from omoide import utils
-from omoide import models
 from omoide.domain import interfaces
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
@@ -27,6 +27,7 @@ from omoide.infra.mediator import Mediator
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
+from omoide.storage.asyncpg_storage import AsyncpgStorage
 from omoide.storage.repositories import asyncpg
 
 
@@ -67,6 +68,12 @@ def get_templates() -> Jinja2Templates:
 def get_db() -> Database:
     """Get database instance."""
     return Database(get_config().db_url_app.get_secret_value())
+
+
+@utils.memorize
+def get_storage() -> interfaces.AbsStorage:
+    """Get storage instance."""
+    return AsyncpgStorage(get_db())
 
 
 # repositories ----------------------------------------------------------------
@@ -215,12 +222,14 @@ def get_policy(
 
 @utils.memorize
 def get_mediator(
+        storage: interfaces.AbsStorage = Depends(get_storage),
         users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         search_repo: interfaces.AbsSearchRepository = Depends(get_search_repo),
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
+        storage=storage,
         users_repo=users_repo,
         items_repo=items_repo,
         search_repo=search_repo,

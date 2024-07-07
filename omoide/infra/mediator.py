@@ -9,6 +9,7 @@ from omoide.domain import interfaces
 class Mediator:
     """Class that ties all components together.
     """
+    storage: interfaces.AbsStorage
     users_repo: interfaces.AbsUsersRepo
     items_repo: interfaces.AbsItemsRepo
     search_repo: interfaces.AbsSearchRepository
