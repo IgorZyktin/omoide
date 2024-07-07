@@ -1,5 +1,4 @@
-"""Utils for commands.
-"""
+"""Utils for commands."""
 import contextlib
 import time
 from pathlib import Path
@@ -13,9 +12,9 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
+from omoide import domain
 from omoide import utils
 from omoide.storage.database import db_models
-from omoide.storage.database import models
 
 TPL = str | None | Callable[[], str | None]
 
@@ -99,15 +98,15 @@ def get_file_size(
 
 def get_children(
         session: Session,
-        item: models.Item,
-) -> list[models.Item]:
+        item: domain.Item,
+) -> list[db_models.Item]:
     """Get child items."""
     query = session.query(
-        models.Item
+        db_models.Item
     ).where(
-        models.Item.parent_uuid == item.uuid,
+        db_models.Item.parent_uuid == item.uuid,
     ).order_by(
-        models.Item.number
+        db_models.Item.number
     )
 
     return query.all()
@@ -115,7 +114,7 @@ def get_children(
 
 def output_tree(
         session: Session,
-        item: models.Item,
+        item: domain.Item,
         show_uuids: bool = False,
         position: str = 'last',
         depth: int = 0,
@@ -160,13 +159,13 @@ def output_tree(
 
 def get_metainfo(
         session: Session,
-        item: models.Item,
-) -> models.Metainfo:
+        item: db_models.Item,
+) -> db_models.Metainfo:
     """Get metainfo for given item."""
     metainfo = session.query(
-        models.Metainfo
+        db_models.Metainfo
     ).where(
-        models.Metainfo.item_uuid == str(item.uuid)
+        db_models.Metainfo.item_uuid == str(item.uuid)
     ).first()
 
     if metainfo is None:
@@ -178,12 +177,12 @@ def get_metainfo(
 def get_item(
         session: Session,
         item_uuid: UUID,
-) -> models.Item:
+) -> db_models.Item:
     """Get item but only if it is collection."""
     item = session.query(
-        models.Item
+        db_models.Item
     ).where(
-        models.Item.uuid == str(item_uuid),
+        db_models.Item.uuid == str(item_uuid),
     ).first()
 
     if item is None:
@@ -194,18 +193,18 @@ def get_item(
 
 def insert_into_metainfo_extras(
         session: Session,
-        metainfo: models.Metainfo,
+        metainfo: db_models.Metainfo,
         new_data: dict[str, Any],
 ) -> None:
     """Insert new keys and values to JSONB field in metainfo."""
     for key, value in new_data.items():
         stmt = sa.update(
-            models.Metainfo
+            db_models.Metainfo
         ).where(
-            models.Metainfo.item_uuid == metainfo.item_uuid
+            db_models.Metainfo.item_uuid == metainfo.item_uuid
         ).values(
             extras=sa.func.jsonb_set(
-                models.Metainfo.extras,
+                db_models.Metainfo.extras,
                 [key],
                 f'"{value}"' if isinstance(value, str) else value,
             )

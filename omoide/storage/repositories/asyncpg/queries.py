@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
 from omoide import models
-from omoide.storage.database import models as db_models
+from omoide.storage.database import db_models
 
 
 def public_user_uuids() -> Select:

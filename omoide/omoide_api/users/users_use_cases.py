@@ -114,7 +114,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
     async def execute(
         self,
         user: models.User,
-        login: str,
+        login: str | None,
     ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
         if user.is_anon:

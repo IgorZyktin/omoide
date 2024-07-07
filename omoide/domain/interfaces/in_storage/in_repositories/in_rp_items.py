@@ -26,13 +26,13 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     async def read_root_item(
             self,
             user: models.User,
-    ) -> Optional[domain.Item]:
+    ) -> domain.Item | None:
         """Return Item or None."""
 
     @abc.abstractmethod
     async def read_all_root_items(
         self,
-        *users: list[models.User],
+        *users: models.User,
     ) -> list[domain.Item]:
         """Return list of root items."""
 

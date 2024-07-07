@@ -6,8 +6,6 @@ PostgreSQL specific because application needs arrays.
 # TODO - remove after refactoring
 from omoide.storage.database import db_models
 
-User = db_models.User
-PublicUsers = db_models.PublicUsers
 ComputedTags = db_models.ComputedTags
 Signature = db_models.Signature
 OrphanFiles = db_models.OrphanFiles

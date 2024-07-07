@@ -5,7 +5,7 @@ import sqlalchemy as sa
 
 from omoide import models
 from omoide.domain import interfaces
-from omoide.storage.database import models as db_models
+from omoide.storage.database import db_models
 from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg.rp_browse import BrowseRepository
 

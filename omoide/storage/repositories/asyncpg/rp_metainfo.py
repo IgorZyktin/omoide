@@ -13,7 +13,7 @@ from omoide import utils
 from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
-from omoide.storage.database import models as db_models
+from omoide.storage.database import db_models
 from omoide.storage.repositories.asyncpg import queries
 
 

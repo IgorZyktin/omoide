@@ -1,5 +1,4 @@
-"""Repository that performs operations on items.
-"""
+"""Repository that performs operations on items."""
 import datetime
 from typing import Collection
 from typing import Optional
@@ -12,7 +11,7 @@ from omoide import domain
 from omoide import const
 from omoide import models
 from omoide.domain import interfaces
-from omoide.storage.database import models as db_models
+from omoide.storage.database import db_models
 from omoide.storage.repositories.asyncpg import queries
 
 

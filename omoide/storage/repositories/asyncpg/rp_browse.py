@@ -11,7 +11,7 @@ from omoide import models
 from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
-from omoide.storage.database import models as db_models
+from omoide.storage.database import db_models
 from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
     .rp_items import ItemsRepo
