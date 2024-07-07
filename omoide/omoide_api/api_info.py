@@ -16,4 +16,8 @@ TAGS_METADATA = [
         'name': 'items',
         'description': 'Operations with items.',
     },
+    {
+        'name': 'input',
+        'description': 'Operations with user input.',
+    },
 ]
