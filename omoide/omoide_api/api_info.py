@@ -9,6 +9,10 @@ Backend of Omoide application.
 
 TAGS_METADATA = [
     {
+        'name': 'info',
+        'description': 'Technical information about the API.',
+    },
+    {
         'name': 'users',
         'description': 'Operations with users.',
     },

@@ -18,6 +18,7 @@ from omoide.application.controllers import api as api_legacy
 from omoide.omoide_api import api_info
 from omoide.omoide_api.input import input_controllers
 from omoide.omoide_api.users import users_controllers
+from omoide.omoide_api.info import info_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -133,8 +134,9 @@ def get_middlewares() -> Iterator[list[tuple[Any, dict[str, Any]]]]:
 def apply_api_routes(current_api: FastAPI) -> None:
     """Register API routes."""
     api_router_v1 = APIRouter(prefix='/v1')
-    api_router_v1.include_router(input_controllers.input_router)
+    api_router_v1.include_router(info_controllers.info_router)
     api_router_v1.include_router(users_controllers.users_router)
+    api_router_v1.include_router(input_controllers.input_router)
 
     current_api.include_router(api_router_v1)
 
