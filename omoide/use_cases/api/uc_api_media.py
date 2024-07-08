@@ -108,7 +108,6 @@ class ApiCopyImageUseCase:
             await self.metainfo_repo.update_metainfo_extras(
                 target_uuid, {'copied_image_from': str(source_uuid)})
 
-            await self.metainfo_repo.mark_metainfo_updated(
-                target_uuid, utils.now())
+            await self.metainfo_repo.mark_metainfo_updated(target_uuid)
 
         return None

@@ -33,6 +33,14 @@ class AbsMetainfoRepo(abc.ABC):
     async def mark_metainfo_updated(self, item_uuid: UUID) -> None:
         """Set `updated_at` field to current datetime."""
 
+    @abc.abstractmethod
+    async def update_metainfo_extras(
+        self,
+        uuid: UUID,
+        new_extras: dict[str, None | int | float | str | bool],
+    ) -> None:
+        """Add new data to extras."""
+
     # @abc.abstractmethod
     # async def read_children_to_download(
     #     self,
@@ -65,14 +73,6 @@ class AbsMetainfoRepo(abc.ABC):
     #     public_users: set[UUID],
     # ) -> None:
     #     """Drop tags with counter less of equal to 0."""
-
-    # @abc.abstractmethod
-    # async def update_metainfo_extras(
-    #     self,
-    #     uuid: UUID,
-    #     new_extras: dict[str, None | int | float | str | bool],
-    # ) -> None:
-    #     """Add new data to extras."""
 
     # @abc.abstractmethod
     # async def start_long_job(

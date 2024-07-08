@@ -57,7 +57,7 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo, AsyncpgStorage):
         stmt = sa.update(
             db_models.Metainfo
         ).where(
-            db_models.Metainfo.item_uuid == metainfo.item_uuid
+            db_models.Metainfo.item_uuid == item_uuid
         ).values(
             **metainfo.model_dump(exclude={'item_uuid', 'created_at'})
         ).returning(1)
@@ -83,6 +83,26 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo, AsyncpgStorage):
         if response is None:
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
+
+    async def update_metainfo_extras(
+        self,
+        uuid: UUID,
+        new_extras: dict[str, None | int | float | str | bool],
+    ) -> None:
+        """Add new data to extras."""
+        for key, value in new_extras.items():
+            stmt = sa.update(
+                db_models.Metainfo
+            ).where(
+                db_models.Metainfo.item_uuid == uuid
+            ).values(
+                extras=sa.func.jsonb_set(
+                    db_models.Metainfo.extras,
+                    [key],
+                    f'"{value}"' if isinstance(value, str) else value,
+                )
+            )
+            await self.db.execute(stmt)
 
     # async def read_children_to_download(
     #     self,
@@ -325,26 +345,6 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo, AsyncpgStorage):
     #             counter=db_models.KnownTagsAnon.counter - 1,
     #         )
     #
-    #         await self.db.execute(stmt)
-
-    # async def update_metainfo_extras(
-    #     self,
-    #     uuid: UUID,
-    #     new_extras: dict[str, None | int | float | str | bool],
-    # ) -> None:
-    #     """Add new data to extras."""
-    #     for key, value in new_extras.items():
-    #         stmt = sa.update(
-    #             db_models.Metainfo
-    #         ).where(
-    #             db_models.Metainfo.item_uuid == uuid
-    #         ).values(
-    #             extras=sa.func.jsonb_set(
-    #                 db_models.Metainfo.extras,
-    #                 [key],
-    #                 f'"{value}"' if isinstance(value, str) else value,
-    #             )
-    #         )
     #         await self.db.execute(stmt)
 
     # async def start_long_job(
