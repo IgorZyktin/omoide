@@ -12,7 +12,7 @@ from omoide.omoide_api.input import input_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-input_router = APIRouter(prefix='/input', tags=['input'])
+input_router = APIRouter(prefix='/input', tags=['Input'])
 
 
 @input_router.get(

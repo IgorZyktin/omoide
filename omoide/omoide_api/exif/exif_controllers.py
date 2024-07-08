@@ -15,7 +15,7 @@ from omoide.omoide_api.exif import exif_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-exif_router = APIRouter(prefix='/exif', tags=['exif'])
+exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
 
 
 @exif_router.post(

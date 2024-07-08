@@ -4,7 +4,7 @@ from fastapi import status
 
 from omoide import const
 
-info_router = APIRouter(prefix='/info', tags=['info'])
+info_router = APIRouter(prefix='/info', tags=['Info'])
 
 
 @info_router.get(

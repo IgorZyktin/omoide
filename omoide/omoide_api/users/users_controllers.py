@@ -14,7 +14,7 @@ from omoide.omoide_api.users import users_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-users_router = APIRouter(prefix='/users', tags=['users'])
+users_router = APIRouter(prefix='/users', tags=['Users'])
 
 
 @users_router.get(
