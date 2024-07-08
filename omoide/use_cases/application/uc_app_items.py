@@ -17,13 +17,15 @@ __all__ = [
     'AppItemDeleteUseCase',
 ]
 
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
+
 
 class AppItemCreateUseCase:
     """Use case for item creation page."""
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersRepo,
+            users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
@@ -66,7 +68,7 @@ class AppItemUpdateUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersRepo,
+            users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
             metainfo_repo: interfaces.AbsMetainfoRepo,
     ) -> None:

@@ -1,60 +1,39 @@
-"""Repository that performs CRUD operations on EXIF.
-"""
+"""Repository that performs CRUD operations on EXIF."""
 from uuid import UUID
 
 import sqlalchemy as sa
 from asyncpg import exceptions as asyncpg_exceptions
 
-from omoide.domain import exceptions
-from omoide.domain.core import core_models
-from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
-from omoide.infra import custom_logging
+from omoide import exceptions
+from omoide.storage.asyncpg_storage import AsyncpgStorage
 from omoide.storage.database import db_models
+from omoide.storage.interfaces.in_repositories.in_rp_exif import (
+    AbsEXIFRepository,
+)
 
-LOG = custom_logging.get_logger(__name__)
 
-
-class EXIFRepository(AbsEXIFRepository):
+class EXIFRepository(AbsEXIFRepository, AsyncpgStorage):
     """Repository that performs CRUD operations on EXIF."""
 
-    async def create_exif(self, exif: core_models.EXIF) -> core_models.EXIF:
+    async def create_exif(self, item_uuid: UUID, exif: dict[str, str]) -> None:
         """Create EXIF."""
         stmt = sa.insert(
             db_models.EXIF
         ).values(
-            item_uuid=exif.item_uuid,
-            exif=exif.exif,
+            item_uuid=item_uuid,
+            exif=exif,
         )
 
         try:
             await self.db.execute(stmt)
         except asyncpg_exceptions.UniqueViolationError as exc:
-            raise exceptions.EXIFAlreadyExistError(
-                item_uuid=exif.item_uuid,
+            msg = 'EXIF data for item {item_uuid} already exists'
+            raise exceptions.AlreadyExistsError(
+                msg,
+                item_uuid=item_uuid,
             ) from exc
-        else:
-            result = exif
 
-        return result
-
-    async def update_exif(self, exif: core_models.EXIF) -> core_models.EXIF:
-        """Update EXIF."""
-        stmt = sa.update(
-            db_models.EXIF
-        ).where(
-            db_models.EXIF.item_uuid == exif.item_uuid
-        ).values(
-            exif=exif.exif,
-        ).returning(1)
-
-        response = await self.db.fetch_one(stmt)
-
-        if response is None:
-            raise exceptions.EXIFDoesNotExistError(item_uuid=exif.item_uuid)
-
-        return exif
-
-    async def get_exif_by_item_uuid(self, item_uuid: UUID) -> core_models.EXIF:
+    async def read_exif(self, item_uuid: UUID) -> dict[str, str]:
         """Return EXIF."""
         stmt = sa.select(
             db_models.EXIF
@@ -65,12 +44,26 @@ class EXIFRepository(AbsEXIFRepository):
         response = await self.db.fetch_one(stmt)
 
         if response is None:
-            raise exceptions.EXIFDoesNotExistError(item_uuid=item_uuid)
+            msg = 'EXIF data for item {item_uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-        return core_models.EXIF(
-            item_uuid=response['item_uuid'],
-            exif=response['exif'],
-        )
+        return dict(response['exif'])
+
+    async def update_exif(self, item_uuid: UUID, exif: dict[str, str]) -> None:
+        """Update EXIF."""
+        stmt = sa.update(
+            db_models.EXIF
+        ).where(
+            db_models.EXIF.item_uuid == item_uuid
+        ).values(
+            exif=exif,
+        ).returning(1)
+
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            msg = 'EXIF data for item {item_uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
     async def delete_exif(self, item_uuid: UUID) -> None:
         """Delete EXIF."""
@@ -83,6 +76,5 @@ class EXIFRepository(AbsEXIFRepository):
         response = await self.db.fetch_one(stmt)
 
         if response is None:
-            raise exceptions.EXIFDoesNotExistError(item_uuid=item_uuid)
-
-        return None
+            msg = 'EXIF data for item {item_uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)

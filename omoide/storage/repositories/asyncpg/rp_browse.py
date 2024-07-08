@@ -8,10 +8,10 @@ from sqlalchemy.dialects import postgresql as pg
 
 from omoide import domain
 from omoide import models
-from omoide.domain import interfaces
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
 from omoide.storage.database import db_models
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 from omoide.storage.repositories.asyncpg import queries
 from omoide.storage.repositories.asyncpg \
     .rp_items import ItemsRepo
@@ -73,7 +73,7 @@ class BrowseRepository(
             user: models.User,
             uuid: UUID,
             aim: domain.Aim,
-            users_repo: interfaces.AbsUsersRepo,
+            users_repo: AbsUsersRepo,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
         current_item = await self.read_item(uuid)

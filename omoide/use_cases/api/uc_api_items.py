@@ -36,6 +36,8 @@ __all__ = [
     'ApiItemUpdatePermissionsUseCase',
 ]
 
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
+
 LOG = custom_logging.get_logger(__name__)
 
 
@@ -214,7 +216,7 @@ class BaseItemModifyUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersRepo,
+            users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
             metainfo_repo: interfaces.AbsMetainfoRepo,
     ) -> None:
@@ -709,7 +711,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     def __init__(
             self,
             policy: AbsPolicy,
-            users_repo: interfaces.AbsUsersRepo,
+            users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
             metainfo_repo: interfaces.AbsMetainfoRepo,
             media_repo: AbsMediaRepository,

@@ -1,9 +1,7 @@
 """Base storage class."""
 from typing import Any
 
-from omoide.domain.interfaces.in_storage.in_repositories.in_rp_base import (
-    AbsStorage
-)
+from omoide.storage.interfaces.base_storage_interfaces import AbsStorage
 
 
 class AsyncpgStorage(AbsStorage):

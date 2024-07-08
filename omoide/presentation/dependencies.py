@@ -1,5 +1,4 @@
-"""External components.
-"""
+"""Dependencies."""
 import binascii
 from base64 import b64decode
 from functools import partial
@@ -20,14 +19,22 @@ from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import interfaces
+from omoide.domain.interfaces import AbsBrowseRepository
+from omoide.domain.interfaces import AbsItemsRepo
+from omoide.domain.interfaces import AbsMetainfoRepo
+from omoide.domain.interfaces import AbsPreviewRepository
+from omoide.domain.interfaces import AbsSearchRepository
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
-from omoide.domain.storage.interfaces.in_rp_exif import AbsEXIFRepository
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
 from omoide.infra.mediator import Mediator
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 from omoide.storage.asyncpg_storage import AsyncpgStorage
+from omoide.storage.interfaces.base_storage_interfaces import AbsStorage
+from omoide.storage.interfaces.in_repositories.in_rp_exif import \
+    AbsEXIFRepository
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 from omoide.storage.repositories import asyncpg
 
 
@@ -71,7 +78,7 @@ def get_db() -> Database:
 
 
 @utils.memorize
-def get_storage() -> interfaces.AbsStorage:
+def get_storage() -> AbsStorage:
     """Get storage instance."""
     return AsyncpgStorage(get_db())
 
@@ -80,31 +87,31 @@ def get_storage() -> interfaces.AbsStorage:
 
 
 @utils.memorize
-def get_search_repo() -> interfaces.AbsSearchRepository:
+def get_search_repo() -> AbsSearchRepository:
     """Get repo instance."""
     return asyncpg.SearchRepository(get_db())
 
 
 @utils.memorize
-def get_preview_repo() -> interfaces.AbsPreviewRepository:
+def get_preview_repo() -> AbsPreviewRepository:
     """Get repo instance."""
     return asyncpg.PreviewRepository(get_db())
 
 
 @utils.memorize
-def get_browse_repo() -> interfaces.AbsBrowseRepository:
+def get_browse_repo() -> AbsBrowseRepository:
     """Get repo instance."""
     return asyncpg.BrowseRepository(get_db())
 
 
 @utils.memorize
-def get_users_repo() -> interfaces.AbsUsersRepo:
+def get_users_repo() -> AbsUsersRepo:
     """Get repo instance."""
     return asyncpg.UsersRepo(get_db())
 
 
 @utils.memorize
-def get_items_repo() -> interfaces.AbsItemsRepo:
+def get_items_repo() -> AbsItemsRepo:
     """Get repo instance."""
     return asyncpg.ItemsRepo(get_db())
 
@@ -114,13 +121,13 @@ def media_repo() -> AbsMediaRepository:
     return asyncpg.MediaRepository(get_db())
 
 
-def exif_repo() -> AbsEXIFRepository:
+def get_exif_repo() -> AbsEXIFRepository:
     """Get repo instance."""
     return asyncpg.EXIFRepository(get_db())
 
 
 @utils.memorize
-def get_metainfo_repo() -> interfaces.AbsMetainfoRepo:
+def get_metainfo_repo() -> AbsMetainfoRepo:
     """Get repo instance."""
     return asyncpg.MetainfoRepo(get_db())
 
@@ -128,9 +135,7 @@ def get_metainfo_repo() -> interfaces.AbsMetainfoRepo:
 # application specific objects ------------------------------------------------
 
 
-def get_aim(
-        request: Request,
-) -> web.AimWrapper:
+def get_aim(request: Request) -> web.AimWrapper:
     """General way of getting aim."""
     params = dict(request.query_params)
     return web.AimWrapper.from_params(
@@ -140,9 +145,7 @@ def get_aim(
     )
 
 
-def get_credentials(
-        request: Request,
-) -> HTTPBasicCredentials:
+def get_credentials(request: Request) -> HTTPBasicCredentials:
     """Try extraction credentials from user request, but not trigger login."""
     authorization: Optional[str] = request.headers.get('Authorization')
     anon = HTTPBasicCredentials(username='', password='')
@@ -168,7 +171,7 @@ def get_credentials(
 
 @utils.memorize
 def get_auth_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+    users_repo: Annotated[AbsUsersRepo, Depends(get_users_repo)],
 ) -> use_cases.AuthUseCase:
     """Get use case instance."""
     return use_cases.AuthUseCase(users_repo=users_repo)
@@ -222,17 +225,19 @@ def get_policy(
 
 @utils.memorize
 def get_mediator(
-        storage: interfaces.AbsStorage = Depends(get_storage),
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        search_repo: interfaces.AbsSearchRepository = Depends(get_search_repo),
+    exif_repo: Annotated[AbsEXIFRepository, Depends(get_exif_repo)],
+    items_repo: Annotated[AbsItemsRepo, Depends(get_items_repo)],
+    search_repo: Annotated[AbsSearchRepository, Depends(get_search_repo)],
+    storage: Annotated[AbsStorage, Depends(get_storage)],
+    users_repo: Annotated[AbsUsersRepo, Depends(get_users_repo)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
-        storage=storage,
-        users_repo=users_repo,
+        exif_repo=exif_repo,
         items_repo=items_repo,
         search_repo=search_repo,
+        storage=storage,
+        users_repo=users_repo,
     )
 
 
@@ -271,7 +276,7 @@ def app_paged_search_use_case(
 def app_preview_use_case(
         preview_repository:
         interfaces.AbsPreviewRepository = Depends(get_preview_repo),
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.AppPreviewUseCase:
@@ -288,7 +293,7 @@ def app_preview_use_case(
 def app_browse_use_case(
         browse_repository:
         interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.AppBrowseUseCase:
@@ -314,7 +319,7 @@ def app_home_use_case(
 
 @utils.memorize
 def app_upload_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppUploadUseCase:
     """Get use case instance."""
@@ -351,7 +356,7 @@ def api_suggest_tag_use_case(
 
 @utils.memorize
 def app_item_create_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppItemCreateUseCase:
     """Get use case instance."""
@@ -363,7 +368,7 @@ def app_item_create_use_case(
 
 @utils.memorize
 def app_item_update_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.AppItemUpdateUseCase:
@@ -402,7 +407,7 @@ def api_items_download_use_case(
 
 @utils.memorize
 def api_item_create_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.ApiItemCreateUseCase:
@@ -416,7 +421,7 @@ def api_item_create_use_case(
 
 @utils.memorize
 def api_item_create_bulk_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.ApiItemCreateBulkUseCase:
@@ -462,7 +467,7 @@ def api_item_update_use_case(
 
 @utils.memorize
 def api_item_update_tags_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.ApiItemUpdateTagsUseCase:
@@ -476,7 +481,7 @@ def api_item_update_tags_use_case(
 
 @utils.memorize
 def api_item_update_permissions_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.ApiItemUpdatePermissionsUseCase:
@@ -509,8 +514,7 @@ def api_item_copy_image_use_case(
 @utils.memorize
 def api_item_update_parent_use_case(
         policy: Annotated[AbsPolicy, Depends(get_policy)],
-        users_repo: Annotated[interfaces.AbsUsersRepo,
-                              Depends(get_users_repo)],
+        users_repo: Annotated[AbsUsersRepo, Depends(get_users_repo)],
         items_repo: Annotated[interfaces.AbsItemsRepo,
                               Depends(get_items_repo)],
         metainfo_repo: Annotated[interfaces.AbsMetainfoRepo,
@@ -530,7 +534,7 @@ def api_item_update_parent_use_case(
 
 @utils.memorize
 def api_item_delete_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
         metainfo_repo: interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.ApiItemDeleteUseCase:
@@ -565,45 +569,6 @@ def api_create_media_use_case(
                                         media_repo=media_repository)
 
 
-# api exif related use cases -------------------------------------------------
-
-
-def api_create_exif_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
-) -> use_cases.CreateEXIFUseCase:
-    """Get use case instance."""
-    return use_cases.CreateEXIFUseCase(policy=policy,
-                                       exif_repo=exif_repository)
-
-
-def api_read_exif_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
-) -> use_cases.ReadEXIFUseCase:
-    """Get use case instance."""
-    return use_cases.ReadEXIFUseCase(policy=policy,
-                                     exif_repo=exif_repository)
-
-
-def api_update_exif_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
-) -> use_cases.UpdateEXIFUseCase:
-    """Get use case instance."""
-    return use_cases.UpdateEXIFUseCase(policy=policy,
-                                       exif_repo=exif_repository)
-
-
-def api_delete_exif_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        exif_repository: Annotated[AbsEXIFRepository, Depends(exif_repo)],
-) -> use_cases.DeleteEXIFUseCase:
-    """Get use case instance."""
-    return use_cases.DeleteEXIFUseCase(policy=policy,
-                                       exif_repo=exif_repository)
-
-
 # api metainfo related use cases ----------------------------------------------
 
 
@@ -632,11 +597,13 @@ def update_metainfo_use_case(
 
 @utils.memorize
 def profile_quotas_use_case(
-        users_repo: interfaces.AbsUsersRepo = Depends(get_users_repo),
+        mediator: Mediator = Depends(get_mediator),
+        users_repo: AbsUsersRepo = Depends(get_users_repo),
         items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppProfileQuotasUseCase:
     """Get use case instance."""
     return use_cases.AppProfileQuotasUseCase(
+        mediator=mediator,
         users_repo=users_repo,
         items_repo=items_repo,
     )

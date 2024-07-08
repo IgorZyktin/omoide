@@ -24,4 +24,8 @@ TAGS_METADATA = [
         'name': 'input',
         'description': 'Operations with user input.',
     },
+    {
+        'name': 'EXIF',
+        'description': 'Managing EXIF info.',
+    },
 ]

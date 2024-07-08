@@ -8,11 +8,6 @@ import pydantic
 from omoide import const
 
 
-class InEXIF(pydantic.BaseModel):
-    """Input info for EXIF creation."""
-    exif: dict[str, str | float | int | bool | None | list | dict]
-
-
 class InMedia(pydantic.BaseModel):
     """Input info for media creation."""
     content: str

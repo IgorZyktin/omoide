@@ -14,6 +14,8 @@ __all__ = [
     'AppPreviewUseCase',
 ]
 
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
+
 
 class AppPreviewUseCase:
     """Use case for preview."""
@@ -21,7 +23,7 @@ class AppPreviewUseCase:
     def __init__(
             self,
             preview_repo: interfaces.AbsPreviewRepository,
-            users_repo: interfaces.AbsUsersRepo,
+            users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
             meta_repo: interfaces.AbsMetainfoRepo,
     ) -> None:

@@ -1,5 +1,4 @@
 from omoide.use_cases.api.uc_api_browse import *  # noqa: F401,F403
-from omoide.use_cases.api.uc_api_exif import *  # noqa: F401,F403
 from omoide.use_cases.api.uc_api_items import *  # noqa: F401,F403
 from omoide.use_cases.api.uc_api_media import *  # noqa: F401,F403
 from omoide.use_cases.api.uc_api_metainfo import *  # noqa: F401,F403

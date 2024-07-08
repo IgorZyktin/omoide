@@ -2,9 +2,11 @@
 from omoide import models
 from omoide.domain import errors
 from omoide.domain import interfaces
+from omoide.infra.mediator import Mediator
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 
 __all__ = [
     'AppProfileQuotasUseCase',
@@ -16,10 +18,12 @@ class AppProfileQuotasUseCase:
 
     def __init__(
             self,
-            users_repo: interfaces.AbsUsersRepo,
+            mediator: Mediator,
+            users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
+        self.mediator = mediator
         self.users_repo = users_repo
         self.items_repo = items_repo
 
@@ -34,7 +38,7 @@ class AppProfileQuotasUseCase:
         if user.root_item is None:
             return Success((models.SpaceUsage.empty(user.uuid), 0, 0))
 
-        async with self.users_repo.transaction():
+        async with self.mediator.storage.transaction():
             root = await self.items_repo.read_item(user.root_item)
             if root is None:
                 return Success((models.SpaceUsage.empty(user.uuid), 0, 0))
