@@ -1,6 +1,4 @@
-"""Models that used in more than one place.
-"""
-from datetime import datetime
+"""Models that used in more than one place."""
 from typing import Callable
 from typing import Iterator
 from typing import Optional
@@ -23,7 +21,6 @@ __all__ = [
     'SingleResult',
     'SimpleLocation',
     'ComplexLocation',
-    'Metainfo',
     'Aim',
 ]
 
@@ -215,36 +212,6 @@ class Query(BaseModel):
         return any((self.tags_include, self.tags_exclude))
 
 
-class Metainfo(BaseModel):
-    """Metainfo for item."""
-    item_uuid: UUID
-
-    created_at: datetime
-    updated_at: datetime
-    deleted_at: datetime | None = None
-    user_time: datetime | None = None
-
-    content_type: str | None = None
-
-    author: str | None = None
-    author_url: str | None = None
-    saved_from_url: str | None = None
-    description: str | None = None
-
-    extras: dict
-
-    content_size: int | None = None
-    preview_size: int | None = None
-    thumbnail_size: int | None = None
-
-    content_width: int | None = None
-    content_height: int | None = None
-    preview_width: int | None = None
-    preview_height: int | None = None
-    thumbnail_width: int | None = None
-    thumbnail_height: int | None = None
-
-
 class Aim(BaseModel):
     """Object that describes user's desired output."""
     query: Query
@@ -284,7 +251,7 @@ class Aim(BaseModel):
 class SingleResult(BaseModel):
     """Result of a request for a single item."""
     item: Item
-    metainfo: Metainfo
+    metainfo: models.Metainfo
     aim: Aim
     location: Location
     neighbours: list[UUID]

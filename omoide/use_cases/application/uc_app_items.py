@@ -10,14 +10,14 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
+from omoide.storage.interfaces import AbsMetainfoRepo
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 
 __all__ = [
     'AppItemCreateUseCase',
     'AppItemUpdateUseCase',
     'AppItemDeleteUseCase',
 ]
-
-from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 
 
 class AppItemCreateUseCase:
@@ -70,7 +70,7 @@ class AppItemUpdateUseCase:
             self,
             users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepo,
+            metainfo_repo: AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -87,7 +87,7 @@ class AppItemUpdateUseCase:
                       int,
                       list[models.User],
                       list[str],
-                      Optional[domain.Metainfo]]]:
+                      Optional[models.Metainfo]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)

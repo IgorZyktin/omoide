@@ -17,6 +17,8 @@ __all__ = [
     'ApiCopyImageUseCase',
 ]
 
+from omoide.storage.interfaces import AbsMetainfoRepo
+
 
 class CreateMediaUseCase:
     """Use case for uploading media content."""
@@ -51,7 +53,7 @@ class ApiCopyImageUseCase:
             self,
             policy: AbsPolicy,
             items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: interfaces.AbsMetainfoRepo,
+            metainfo_repo: AbsMetainfoRepo,
             media_repo: AbsMediaRepository,
     ) -> None:
         """Initialize instance."""

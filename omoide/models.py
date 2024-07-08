@@ -1,5 +1,6 @@
 """Logic models."""
 import enum
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -51,6 +52,34 @@ class User(BaseModel):
             root_item=None,
             role=Role.anon,
         )
+
+
+class Metainfo(BaseModel):
+    """Metainfo for item."""
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+    user_time: datetime | None = None
+
+    content_type: str | None = None
+
+    author: str | None = None
+    author_url: str | None = None
+    saved_from_url: str | None = None
+    description: str | None = None
+
+    extras: dict
+
+    content_size: int | None = None
+    preview_size: int | None = None
+    thumbnail_size: int | None = None
+
+    content_width: int | None = None
+    content_height: int | None = None
+    preview_width: int | None = None
+    preview_height: int | None = None
+    thumbnail_width: int | None = None
+    thumbnail_height: int | None = None
 
 
 class SpaceUsage(BaseModel):

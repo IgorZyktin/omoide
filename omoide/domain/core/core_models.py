@@ -8,7 +8,6 @@ from omoide.domain import common
 
 # FIXME - temporary import
 AccessStatus = common.AccessStatus
-Metainfo = common.Metainfo
 
 
 @dataclass(eq=True)

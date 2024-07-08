@@ -25,7 +25,11 @@ TAGS_METADATA = [
         'description': 'Operations with user input.',
     },
     {
+        'name': 'Metainfo',
+        'description': 'Operations with item metainfo.',
+    },
+    {
         'name': 'EXIF',
-        'description': 'Managing EXIF info.',
+        'description': 'Operations with item EXIF info.',
     },
 ]

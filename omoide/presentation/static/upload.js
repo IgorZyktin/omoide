@@ -603,7 +603,7 @@ async function uploadMetainfoForProxy(proxy) {
         $.ajax({
             timeout: 10000, // 10 seconds
             type: 'PUT',
-            url: `/api/metainfo/${proxy.uuid}`,
+            url: METAINFO_ENDPOINT + `/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 user_time: proxy.metainfo.user_time,

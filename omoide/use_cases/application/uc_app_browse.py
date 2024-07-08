@@ -11,6 +11,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
+from omoide.storage.interfaces import AbsMetainfoRepo
 from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 
 __all__ = [
@@ -22,7 +23,7 @@ __all__ = [
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
     item: domain.Item
-    metainfo: domain.Metainfo
+    metainfo: models.Metainfo
     location: domain.SimpleLocation | domain.Location | None
     total_items: int
     total_pages: int
@@ -40,7 +41,7 @@ class AppBrowseUseCase:
             browse_repo: interfaces.AbsBrowseRepository,
             users_repo: AbsUsersRepo,
             items_repo: interfaces.AbsItemsRepo,
-            meta_repo: interfaces.AbsMetainfoRepo,
+            meta_repo: AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo

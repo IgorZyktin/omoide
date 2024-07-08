@@ -4,12 +4,12 @@ from uuid import UUID
 import sqlalchemy as sa
 
 from omoide import models
+from omoide.storage import interfaces
 from omoide.storage.asyncpg_storage import AsyncpgStorage
 from omoide.storage.database import db_models
-from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 
 
-class UsersRepo(AbsUsersRepo, AsyncpgStorage):
+class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
     """Repository that performs read operations on users."""
 
     async def read_user(self, uuid: UUID) -> models.User | None:

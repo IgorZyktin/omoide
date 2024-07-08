@@ -20,6 +20,7 @@ from omoide.omoide_api.input import input_controllers
 from omoide.omoide_api.users import users_controllers
 from omoide.omoide_api.info import info_controllers
 from omoide.omoide_api.exif import exif_controllers
+from omoide.omoide_api.metainfo import metainfo_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -138,6 +139,7 @@ def apply_api_routes(current_api: FastAPI) -> None:
     api_router_v1.include_router(exif_controllers.exif_router)
     api_router_v1.include_router(info_controllers.info_router)
     api_router_v1.include_router(input_controllers.input_router)
+    api_router_v1.include_router(metainfo_controllers.metainfo_router)
     api_router_v1.include_router(users_controllers.users_router)
 
     current_api.include_router(api_router_v1)
@@ -147,7 +149,6 @@ def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
     # legacy
     current_app.include_router(api_legacy.api_media.router)
-    current_app.include_router(api_legacy.api_metainfo.router)
     current_app.include_router(api_legacy.api_search.router)
     current_app.include_router(api_legacy.api_profile.router)
 

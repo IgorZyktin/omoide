@@ -2,6 +2,7 @@ const UUID_PREFIX_LENGTH = 2
 const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
 const EXIF_ENDPOINT = '/api-new/v1/exif'
+const METAINFO_ENDPOINT = '/api-new/v1/metainfo'
 
 
 function makeAlert(text, alertsElementId) {
