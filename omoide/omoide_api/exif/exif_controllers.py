@@ -19,7 +19,7 @@ exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
 
 
 @exif_router.post(
-    '',
+    '/{item_uuid}',
     status_code=status.HTTP_201_CREATED,
     response_model=dict[str, str],
 )
@@ -44,7 +44,7 @@ async def api_create_exif(
         request.url_for('api_read_exif', item_uuid=item_uuid)
     )
 
-    return {'result': f'Created EXIF for {item_uuid}'}
+    return {'result': f'Created EXIF for item {item_uuid}'}
 
 
 @exif_router.get(
