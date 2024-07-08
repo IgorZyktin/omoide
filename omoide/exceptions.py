@@ -15,9 +15,19 @@ class BaseOmoideApiError(Exception):
         self.msg = msg
         self.kwargs = kwargs
         self.rendered_text = msg
+        self.name = type(self).__name__
 
         if kwargs:
-            self.rendered_text = self.rendered_text.format(**kwargs)
+            self.rendered_text = self._render_text(**kwargs)
+
+    @staticmethod
+    def _render_text(template: str, **kwargs) -> str:
+        """Safely convert error to text message."""
+        try:
+            rendered_text = template.format(**kwargs)
+        except (IndexError, KeyError, ValueError) as exc:
+            rendered_text = f'{template} {kwargs} ({exc})'
+        return rendered_text
 
     def __str__(self) -> str:
         """Return textual representation."""
