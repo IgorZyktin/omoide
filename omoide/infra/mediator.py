@@ -13,6 +13,7 @@ class Mediator:
     exif_repo: interfaces.AbsEXIFRepository
     items_repo: AbsItemsRepo
     meta_repo: interfaces.AbsMetainfoRepo
+    misc_repo: interfaces.AbsMiscRepo
     search_repo: AbsSearchRepository
     storage: interfaces.AbsStorage
     users_repo: interfaces.AbsUsersRepo

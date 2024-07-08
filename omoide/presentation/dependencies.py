@@ -21,7 +21,6 @@ from omoide import utils
 from omoide.domain import interfaces
 from omoide.domain.interfaces import AbsBrowseRepository
 from omoide.domain.interfaces import AbsItemsRepo
-from omoide.storage import interfaces as st_interfaces
 from omoide.domain.interfaces import AbsPreviewRepository
 from omoide.domain.interfaces import AbsSearchRepository
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
@@ -30,6 +29,7 @@ from omoide.infra.mediator import Mediator
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
+from omoide.storage import interfaces as st_interfaces
 from omoide.storage.asyncpg_storage import AsyncpgStorage
 from omoide.storage.repositories import asyncpg
 
@@ -113,14 +113,22 @@ def get_items_repo() -> AbsItemsRepo:
     return asyncpg.ItemsRepo(get_db())
 
 
+@utils.memorize
 def media_repo() -> AbsMediaRepository:
     """Get repo instance."""
     return asyncpg.MediaRepository(get_db())
 
 
+@utils.memorize
 def get_exif_repo() -> st_interfaces.AbsEXIFRepository:
     """Get repo instance."""
     return asyncpg.EXIFRepository(get_db())
+
+
+@utils.memorize
+def get_misc_repo() -> st_interfaces.AbsMiscRepo:
+    """Get repo instance."""
+    return asyncpg.MiscRepo(get_db())
 
 
 @utils.memorize
@@ -227,6 +235,7 @@ def get_mediator(
     items_repo: Annotated[AbsItemsRepo, Depends(get_items_repo)],
     meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
     search_repo: Annotated[AbsSearchRepository, Depends(get_search_repo)],
     storage: Annotated[st_interfaces.AbsStorage, Depends(get_storage)],
     users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
@@ -236,6 +245,7 @@ def get_mediator(
         exif_repo=exif_repo,
         items_repo=items_repo,
         meta_repo=meta_repo,
+        misc_repo=misc_repo,
         search_repo=search_repo,
         storage=storage,
         users_repo=users_repo,
@@ -393,13 +403,16 @@ def app_item_delete_use_case(
 
 @utils.memorize
 def api_items_download_use_case(
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
+    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemsDownloadUseCase:
     """Get use case instance."""
     return use_cases.ApiItemsDownloadUseCase(
         items_repo=items_repo,
         metainfo_repo=meta_repo,
+        misc_repo=misc_repo,
     )
 
 
@@ -408,29 +421,35 @@ def api_items_download_use_case(
 
 @utils.memorize
 def api_item_create_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
+    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
     return use_cases.ApiItemCreateUseCase(
         users_repo=users_repo,
         items_repo=items_repo,
         metainfo_repo=meta_repo,
+        misc_repo=misc_repo,
     )
 
 
 @utils.memorize
 def api_item_create_bulk_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
+    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemCreateBulkUseCase:
     """Get use case instance."""
     return use_cases.ApiItemCreateBulkUseCase(
         users_repo=users_repo,
         items_repo=items_repo,
         metainfo_repo=meta_repo,
+        misc_repo=misc_repo,
     )
 
 
@@ -468,29 +487,35 @@ def api_item_update_use_case(
 
 @utils.memorize
 def api_item_update_tags_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
+    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdateTagsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateTagsUseCase(
         users_repo=users_repo,
         items_repo=items_repo,
         metainfo_repo=meta_repo,
+        misc_repo=misc_repo,
     )
 
 
 @utils.memorize
 def api_item_update_permissions_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
+    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdatePermissionsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdatePermissionsUseCase(
         users_repo=users_repo,
         items_repo=items_repo,
         metainfo_repo=meta_repo,
+        misc_repo=misc_repo,
     )
 
 
@@ -514,15 +539,16 @@ def api_item_copy_image_use_case(
 
 @utils.memorize
 def api_item_update_parent_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        users_repo: Annotated[st_interfaces.AbsUsersRepo,
-                              Depends(get_users_repo)],
-        items_repo: Annotated[interfaces.AbsItemsRepo,
-                              Depends(get_items_repo)],
-        metainfo_repo: Annotated[st_interfaces.AbsMetainfoRepo,
-                                 Depends(get_metainfo_repo)],
-        media_repository: Annotated[AbsMediaRepository,
-                                    Depends(media_repo)],
+    policy: Annotated[AbsPolicy, Depends(get_policy)],
+    users_repo: Annotated[st_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    metainfo_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                             Depends(get_metainfo_repo)],
+    media_repository: Annotated[AbsMediaRepository,
+                                Depends(media_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateParentUseCase(
@@ -531,20 +557,24 @@ def api_item_update_parent_use_case(
         items_repo=items_repo,
         metainfo_repo=metainfo_repo,
         media_repo=media_repository,
+        misc_repo=misc_repo,
     )
 
 
 @utils.memorize
 def api_item_delete_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
+    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
+    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.ApiItemDeleteUseCase(
         users_repo=users_repo,
         items_repo=items_repo,
         metainfo_repo=meta_repo,
+        misc_repo=misc_repo,
     )
 
 
