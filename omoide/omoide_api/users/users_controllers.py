@@ -1,9 +1,10 @@
 """User related API operations."""
-import http
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import status
 
 from omoide import models
 from omoide import utils
@@ -18,13 +19,13 @@ users_router = APIRouter(prefix='/users', tags=['users'])
 
 @users_router.get(
     '/{uuid}/stats',
-    status_code=http.HTTPStatus.OK,
+    status_code=status.HTTP_200_OK,
     response_model=users_api_models.UserStatsOutput,
 )
 async def api_get_user_stats(
     uuid: UUID,
-    user: models.User = Depends(dep.get_current_user),
-    mediator: Mediator = Depends(dep.get_mediator),
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get statistics for specific user."""
     use_case = users_use_cases.GetUserStatsUseCase(mediator)
@@ -49,13 +50,13 @@ async def api_get_user_stats(
 
 @users_router.get(
     '/{uuid}/tags',
-    status_code=http.HTTPStatus.OK,
+    status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
 )
 async def api_get_user_tags(
     uuid: str,
-    user: models.User = Depends(dep.get_current_user),
-    mediator: Mediator = Depends(dep.get_mediator),
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get all known tags for specific user.
 
@@ -74,12 +75,12 @@ async def api_get_user_tags(
 
 @users_router.get(
     '',
-    status_code=http.HTTPStatus.OK,
+    status_code=status.HTTP_200_OK,
     response_model=users_api_models.UserCollectionOutput,
 )
 async def api_get_all_users(
-    user: models.User = Depends(dep.get_current_user),
-    mediator: Mediator = Depends(dep.get_mediator),
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     login: str | None = None,
 ):
     """Get list of users."""
@@ -106,13 +107,13 @@ async def api_get_all_users(
 
 @users_router.get(
     '/{uuid}',
-    status_code=http.HTTPStatus.OK,
+    status_code=status.HTTP_202_ACCEPTED,
     response_model=users_api_models.UserOutput,
 )
 async def api_get_user_by_uuid(
     uuid: UUID,
-    user: models.User = Depends(dep.get_current_user),
-    mediator: Mediator = Depends(dep.get_mediator),
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get user by UUID."""
     use_case = users_use_cases.GetUserByUUIDUseCase(mediator)

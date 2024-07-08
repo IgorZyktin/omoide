@@ -1,8 +1,9 @@
 """API operations that process commands from users."""
-import http
+from typing import Annotated
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import status
 
 from omoide import models
 from omoide.infra.mediator import Mediator
@@ -16,12 +17,12 @@ input_router = APIRouter(prefix='/input', tags=['input'])
 
 @input_router.get(
     '/autocomplete',
-    status_code=http.HTTPStatus.OK,
+    status_code=status.HTTP_200_OK,
     response_model=input_api_models.AutocompleteOutput,
 )
 async def api_autocomplete(
-    user: models.User = Depends(dep.get_current_user),
-    mediator: Mediator = Depends(dep.get_mediator),
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     tag: str = '',
 ):
     """Return tags that match supplied string."""
