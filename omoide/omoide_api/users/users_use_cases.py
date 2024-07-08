@@ -116,6 +116,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
     ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
         self.ensure_not_anon(user, target='get list of users')
+        extras: dict[UUID, UUID | None]
 
         async with self.mediator.storage.transaction():
             if user.is_admin:

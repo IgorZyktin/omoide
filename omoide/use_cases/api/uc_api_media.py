@@ -1,23 +1,20 @@
-"""Use cases for media.
-"""
+"""Use cases for media."""
 from uuid import UUID
 
 from omoide import const
 from omoide import models
-from omoide import utils
 from omoide.domain import actions
 from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
 from omoide.domain.interfaces import AbsPolicy
 from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.storage.interfaces import AbsMetainfoRepo
 
 __all__ = [
     'CreateMediaUseCase',
     'ApiCopyImageUseCase',
 ]
-
-from omoide.storage.interfaces import AbsMetainfoRepo
 
 
 class CreateMediaUseCase:

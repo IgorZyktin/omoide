@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
+from omoide import const
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.metainfo import metainfo_api_models
@@ -53,6 +54,8 @@ async def api_update_metainfo(
     use_case = metainfo_use_cases.UpdateMetainfoUseCase(mediator)
 
     metainfo = models.Metainfo(
+        created_at=const.DUMMY_TIME,
+        updated_at=const.DUMMY_TIME,
         user_time=in_metainfo.user_time,
         content_type=in_metainfo.content_type,
         author=in_metainfo.author,

@@ -106,8 +106,8 @@ def command_rebuild_known_tags(**kwargs: str | bool):
     from omoide.commands.rebuild_known_tags import cfg
     from omoide.commands.rebuild_known_tags import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
+    only_users = utils.split(str(kwargs.pop('only_users', '')))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -137,8 +137,8 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     from omoide.commands.rebuild_computed_tags import cfg
     from omoide.commands.rebuild_computed_tags import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
+    only_users = utils.split(str(kwargs.pop('only_users', '')))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -168,8 +168,8 @@ def command_compact_tags(**kwargs: str | bool):
     from omoide.commands.compact_tags import cfg
     from omoide.commands.compact_tags import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
+    only_users = utils.split(str(kwargs.pop('only_users', '')))
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 

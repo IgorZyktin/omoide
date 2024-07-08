@@ -112,7 +112,7 @@ def get_api() -> FastAPI:
     return new_api
 
 
-def get_middlewares() -> Iterator[list[tuple[Any, dict[str, Any]]]]:
+def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:
     """Return list of needed middlewares."""
     # CORS
     # TODO - move it to config
