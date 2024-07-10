@@ -3,7 +3,6 @@
 import pytest
 import pytest_asyncio
 
-from omoide.domain import exceptions
 from omoide.storage.repositories.asyncpg.rp_exif import EXIFRepository
 
 
