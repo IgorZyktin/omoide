@@ -14,7 +14,6 @@ __all__ = [
     'Item',
     'SimpleItem',
     'PositionedItem',
-    'PositionedByUserItem',
     'Location',
     'AccessStatus',
     'Query',
@@ -91,20 +90,6 @@ class SimpleItem(TypedDict):
 
 class PositionedItem(BaseModel):
     """Primitive version of an item with position information."""
-    position: int
-    total_items: int
-    items_per_page: int
-    item: Item
-
-    @property
-    def page(self) -> int:
-        """Return page number for this item in parent's collection."""
-        return self.position // self.items_per_page + 1
-
-
-class PositionedByUserItem(BaseModel):
-    """Same as PositionedItem but according to user catalogue."""
-    user: models.User
     position: int
     total_items: int
     items_per_page: int

@@ -1,15 +1,16 @@
 """Logic models."""
 import abc
 import enum
+from collections import UserString
 from dataclasses import asdict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import SecretStr
 
 from omoide import const
 from omoide import utils
@@ -33,6 +34,24 @@ class ModelMixin(abc.ABC):
         }
 
 
+# TODO - Use this in model instead of pydantic one
+class SecretStrCustom(UserString):
+    """String class that adds functionality similar to pydantic."""
+
+    def get_secret_value(self) -> str:
+        """Get the secret value."""
+        return self.data
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return '***'
+
+    def __repr__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'{name}(***)'
+
+
 class Role(enum.Enum):
     """User role."""
     # FEATURE - change to StrEnum in Python 3.11
@@ -45,10 +64,10 @@ class User(BaseModel):
     """User model."""
     uuid: UUID
     name: str
-    login: str  # FEATURE - change to SecretStr
-    password: str  # FEATURE - change to SecretStr
-    root_item: Optional[UUID] = None
+    login: SecretStr
+    password: SecretStr
     role: Role
+    root_item: UUID | None = None
 
     @property
     def is_admin(self) -> bool:
@@ -66,15 +85,15 @@ class User(BaseModel):
         return self.role is not Role.anon
 
     @classmethod
-    def new_anon(cls) -> 'User':
+    def new_anon(cls) -> 'User':  # TODO - replace with Self
         """Return new anon user."""
         return cls(
             uuid=const.DUMMY_UUID,
-            login='',
-            password='',
-            name='anon',
-            root_item=None,
+            login=SecretStr(''),
+            password=SecretStr(''),
+            name=const.ANON,
             role=Role.anon,
+            root_item=None,
         )
 
 
