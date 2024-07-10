@@ -41,12 +41,12 @@ class UserStatsOutput(BaseModel):
     """Statistics for user."""
     total_items: int
     total_collections: int
-    content_bytes: int
-    content_hr: str
-    preview_bytes: int
-    preview_hr: str
-    thumbnail_bytes: int
-    thumbnail_hr: str
+    content_size: int
+    content_size_hr: str
+    preview_size: int
+    preview_size_hr: str
+    thumbnail_size: int
+    thumbnail_size_hr: str
 
     model_config = {
         'json_schema_extra': {
@@ -54,12 +54,12 @@ class UserStatsOutput(BaseModel):
                 {
                     'total_items': 2735,
                     'total_collections': 22,
-                    'content_bytes': 1177374884,
-                    'content_hr': '1.1 GiB',
-                    'preview_bytes': 256635453,
-                    'preview_hr': '244.7 MiB',
-                    'thumbnail_bytes': 62661090,
-                    'thumbnail_hr': '59.8 MiB',
+                    'content_size': 1177374884,
+                    'content_size_hr': '1.1 GiB',
+                    'preview_size': 256635453,
+                    'preview_size_hr': '244.7 MiB',
+                    'thumbnail_size': 62661090,
+                    'thumbnail_size_hr': '59.8 MiB',
                 },
             ]
         }

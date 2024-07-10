@@ -1,5 +1,7 @@
 """Logic models."""
+import abc
 import enum
+from dataclasses import asdict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -11,6 +13,24 @@ from pydantic import Field
 
 from omoide import const
 from omoide import utils
+
+
+@dataclass
+class ModelMixin(abc.ABC):
+    """Mixin that adds functionality similar to pydantic."""
+
+    def model_dump(self, exclude: set[str] | None = None) -> dict[str, Any]:
+        """Convert model to dictionary."""
+        dump = asdict(self)
+
+        if not exclude:
+            return dump
+
+        return {
+            key: value
+            for key, value in dump.items()
+            if key in exclude
+        }
 
 
 class Role(enum.Enum):
@@ -86,8 +106,8 @@ class Metainfo(BaseModel):
     thumbnail_height: int | None = None
 
 
-@dataclass(frozen=True)
-class SpaceUsage:
+@dataclass
+class SpaceUsage(ModelMixin):
     """Total size of user data for specific user."""
     uuid: UUID
     content_size: int

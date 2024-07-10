@@ -37,16 +37,19 @@ class GetUserStatsUseCase(BaseUsersUseCase):
         self,
         user: models.User,
         uuid: UUID,
-    ) -> dict[str, int]:
+    ) -> dict[str, int | str]:
         """Execute."""
         self.ensure_not_anon(user, target='get user stats')
 
-        empty = {
+        empty: dict[str, int | str] = {
             'total_items': 0,
             'total_collections': 0,
-            'content_bytes': 0,
-            'preview_bytes': 0,
-            'thumbnail_bytes': 0,
+            'content_size': 0,
+            'content_size_hr': '0 B',
+            'preview_size': 0,
+            'preview_size_hr': '0 B',
+            'thumbnail_size': 0,
+            'thumbnail_size_hr': '0 B',
         }
 
         async with self.mediator.storage.transaction():
@@ -74,9 +77,12 @@ class GetUserStatsUseCase(BaseUsersUseCase):
         return {
             'total_items': total_items,
             'total_collections': total_collections,
-            'content_bytes': size.content_size,
-            'preview_bytes': size.preview_size,
-            'thumbnail_bytes': size.thumbnail_size,
+            'content_size': size.content_size,
+            'content_size_hr': size.content_size_hr,
+            'preview_size': size.preview_size,
+            'preview_size_hr': size.preview_size_hr,
+            'thumbnail_size': size.thumbnail_size,
+            'thumbnail_size_hr': size.thumbnail_size_hr,
         }
 
 
