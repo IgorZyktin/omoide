@@ -18,40 +18,6 @@ def cli():
     """Manual CLI operations."""
 
 
-@cli.command(name='create_user')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--login',
-    required=True,
-    help='Login for new user',
-)
-@click.option(
-    '--password',
-    required=True,
-    help='Password for new user',
-)
-@click.option(
-    '--name',
-    default=None,
-    help='Name for new user (if not specified will use login)',
-)
-def command_create_user(db_url: str, login: str,
-                        password: str, name: str | None) -> None:
-    """Manually create user."""
-    from omoide.commands.create_user import run
-
-    database = sync_db.SyncDatabase(db_url)
-
-    with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Creating user...'):
-            run.run(database, login, password, name)
-
-
 @cli.command(name='change_password')
 @click.option(
     '--db-url',

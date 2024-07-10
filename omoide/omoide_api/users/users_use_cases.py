@@ -149,6 +149,7 @@ class GetUserStatsUseCase(BaseUsersUseCase):
         uuid: UUID,
     ) -> dict[str, int | str]:
         """Execute."""
+        # TODO - allow requesting more than one user
         self.ensure_not_anon(user, target='get user stats')
 
         empty: dict[str, int | str] = {
@@ -205,6 +206,7 @@ class GetUserTagsUseCase(BaseUsersUseCase):
         uuid: str,
     ) -> dict[str, int]:
         """Execute."""
+        # TODO - allow requesting more than one user
         async with self.mediator.storage.transaction():
             if uuid.lower() == const.ANON:
                 tags = await self.mediator.search_repo.count_all_tags_anon()
