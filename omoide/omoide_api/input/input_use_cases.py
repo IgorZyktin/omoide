@@ -1,6 +1,4 @@
 """Use cases that process commands from users."""
-
-from omoide import const
 from omoide import models
 from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
@@ -12,9 +10,11 @@ class AutocompleteUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         tag: str,
+        minimal_length: int,
+        limit: int,
     ) -> list[str]:
         """Execute."""
-        if len(tag) < const.MINIMAL_AUTOCOMPLETE_SIZE:
+        if len(tag) < minimal_length:
             return []
 
         async with self.mediator.storage.transaction():
@@ -22,14 +22,14 @@ class AutocompleteUseCase(BaseAPIUseCase):
                 variants = await self.mediator.search_repo \
                     .autocomplete_tag_anon(
                         tag=tag,
-                        limit=const.AUTOCOMPLETE_VARIANTS,
+                        limit=limit,
                     )
             else:
                 variants = await self.mediator.search_repo \
                     .autocomplete_tag_known(
                         user=user,
                         tag=tag,
-                        limit=const.AUTOCOMPLETE_VARIANTS,
+                        limit=limit,
                     )
 
         return variants

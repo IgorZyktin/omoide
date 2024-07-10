@@ -29,7 +29,12 @@ async def api_autocomplete(
     use_case = input_use_cases.AutocompleteUseCase(mediator)
 
     try:
-        variants = await use_case.execute(user, tag)
+        variants = await use_case.execute(
+            user=user,
+            tag=tag[:input_api_models.MAXIMUM_AUTOCOMPLETE_SIZE],
+            minimal_length=input_api_models.MINIMAL_AUTOCOMPLETE_SIZE,
+            limit=input_api_models.AUTOCOMPLETE_VARIANTS,
+        )
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
