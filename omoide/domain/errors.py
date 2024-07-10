@@ -62,21 +62,6 @@ class ItemDoesNotExist(Error):
     template = 'Item {uuid} does not exist'
 
 
-class ItemHasNoThumbnail(Error):
-    """Item has no thumbnail."""
-    template = 'Item {uuid} has no thumbnail to copy'
-
-
-class ItemHasNoPreview(Error):
-    """Item has no preview."""
-    template = 'Item {uuid} has no preview to copy'
-
-
-class ItemHasNoContent(Error):
-    """Item has no preview."""
-    template = 'Item {uuid} has no content to copy'
-
-
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
     template = 'You are not allowed to interact with item {uuid}'
@@ -97,24 +82,9 @@ class ItemWrongParent(Error):
     template = 'Item {new_parent_uuid} cannot be used as a parent for {uuid}'
 
 
-class ItemItself(Error):
-    """User tries to set item as a parent to itself or something like that."""
-    template = 'Item {uuid} cannot be a target to itself'
-
-
-class ItemIsInconsistent(Error):
-    """Item has discrepancy, like having content ext but no preview ext."""
-    template = 'Item {uuid} is not consistent {message}'
-
-
 class UserDoesNotExist(Error):
     """User with uuid does not exist."""
     template = 'User {uuid} does not exist'
-
-
-class MetainfoDoesNotExist(Error):
-    """Metainfo for item does not exist."""
-    template = 'Metainfo for item {uuid} does not exist'
 
 
 class AuthenticationRequired(Error):

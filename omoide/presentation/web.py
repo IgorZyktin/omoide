@@ -43,7 +43,6 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     http.HTTPStatus.NOT_FOUND: [
         errors.ItemDoesNotExist,
         errors.UserDoesNotExist,
-        errors.MetainfoDoesNotExist,
     ],
 
     http.HTTPStatus.FORBIDDEN: [
