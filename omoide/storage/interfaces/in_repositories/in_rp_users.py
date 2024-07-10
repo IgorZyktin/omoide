@@ -18,7 +18,7 @@ class AbsUsersRepo(abc.ABC):
         self,
         user: models.User,
         auth_complexity: int,
-    ) -> models.User:
+    ) -> None:
         """Create new user."""
 
     @abc.abstractmethod

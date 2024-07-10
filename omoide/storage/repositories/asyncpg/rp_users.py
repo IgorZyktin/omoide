@@ -77,7 +77,7 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             stmt = sa.update(
                 db_models.User
             ).where(
-                db_models.User.item_uuid == user_uuid
+                db_models.User.uuid == user_uuid
             ).values(
                 **values
             )
