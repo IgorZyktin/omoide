@@ -230,6 +230,8 @@ def get_policy(
 
 @utils.memorize
 def get_mediator(
+    authenticator: Annotated[interfaces.AbsAuthenticator,
+                             Depends(get_authenticator)],
     exif_repo: Annotated[st_interfaces.AbsEXIFRepository,
                          Depends(get_exif_repo)],
     items_repo: Annotated[AbsItemsRepo, Depends(get_items_repo)],
@@ -242,6 +244,7 @@ def get_mediator(
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
+        authenticator=authenticator,
         exif_repo=exif_repo,
         items_repo=items_repo,
         meta_repo=meta_repo,

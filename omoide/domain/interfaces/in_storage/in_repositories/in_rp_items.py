@@ -108,8 +108,8 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
         """Return corresponding item."""
 
     @abc.abstractmethod
-    async def generate_item_uuid(self) -> UUID:
-        """Generate new UUID4 for the item."""
+    async def get_free_uuid(self) -> UUID:
+        """Generate new UUID for the item."""
 
     @abc.abstractmethod
     async def create_item(

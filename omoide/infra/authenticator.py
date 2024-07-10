@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Authentication variants.
-"""
+"""Authentication variants."""
 import bcrypt
 
 from omoide.domain import interfaces
@@ -22,9 +20,9 @@ class BcryptAuthenticator(interfaces.AbsAuthenticator):
         return result.decode('utf-8')
 
     def password_is_correct(
-            self,
-            given_password: str,
-            reference: str,
+        self,
+        given_password: str,
+        reference: str,
     ) -> bool:
         """Return True if user password is correct."""
         return bcrypt.checkpw(

@@ -331,7 +331,7 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
         return domain.Item(**response) if response else None
 
-    async def generate_item_uuid(self) -> UUID:
+    async def get_free_uuid(self) -> UUID:
         """Generate new UUID4 for an item."""
         stmt = """
         SELECT 1 FROM items WHERE uuid = :uuid

@@ -4,6 +4,25 @@ from typing import Any
 from pydantic import BaseModel
 
 
+class UserInput(BaseModel):
+    """Simple user format."""
+    name: str
+    login: str
+    password: str
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {
+                    'name': 'John Smith',
+                    'login': 'john',
+                    'password': 'qwerty',
+                }
+            ]
+        }
+    }
+
+
 class UserOutput(BaseModel):
     """Simple user format."""
     uuid: str

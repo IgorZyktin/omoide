@@ -1,5 +1,6 @@
 """Repository that performs read operations on users."""
 from uuid import UUID
+from uuid import uuid4
 
 import sqlalchemy as sa
 
@@ -11,6 +12,40 @@ from omoide.storage.database import db_models
 
 class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
     """Repository that performs read operations on users."""
+
+    async def get_free_uuid(self) -> UUID:
+        """Generate new unused UUID4."""
+        while True:
+            uuid = uuid4()
+
+            stmt = sa.select(
+                db_models.User.uuid
+            ).where(
+                db_models.User.uuid == uuid
+            ).exists()
+
+            exists = await self.db.fetch_one(stmt, {'uuid': uuid})
+
+            if not exists:
+                return uuid
+
+    async def create_user(
+        self,
+        user: models.User,
+        auth_complexity: int,
+    ) -> None:
+        """Create new user."""
+        stmt = sa.insert(
+            db_models.User
+        ).values(
+            uuid=user.uuid,
+            login=user.login,
+            password=user.password,
+            root_item=user.root_item,
+            auth_complexity=auth_complexity,
+        )
+
+        await self.db.execute(stmt)
 
     async def read_user(self, uuid: UUID) -> models.User | None:
         """Return User or None."""

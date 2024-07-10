@@ -75,6 +75,11 @@ class User(BaseModel):
         return self.role is Role.admin
 
     @property
+    def is_not_admin(self) -> bool:
+        """Return True if user is not an administrator."""
+        return self.role is not Role.admin
+
+    @property
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
         return self.role is Role.anon

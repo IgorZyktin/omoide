@@ -3,6 +3,7 @@ from typing import Any
 from uuid import UUID
 
 from omoide import const
+from omoide import domain
 from omoide import models
 from omoide import utils
 from omoide import exceptions
@@ -28,6 +29,115 @@ class BaseUsersUseCase(BaseAPIUseCase):
             target_user = who_asking
 
         return target_user
+
+
+class CreateUserUseCase(BaseAPIUseCase):
+    """Use case for getting user by UUID."""
+
+    async def execute(
+        self,
+        user: models.User,
+        user_in: dict[str, Any],
+    ) -> tuple[models.User, dict[str, Any]]:
+        """Execute."""
+        if user.is_not_admin:
+            msg = 'You are not allowed to perform such operation with users'
+            raise exceptions.AccessDeniedError(msg)
+
+        # TODO - make user and items tables less tied
+        async with self.mediator.storage.transaction():
+            user_uuid = await self.mediator.users_repo.get_free_uuid()
+            new_user = models.User(
+                uuid=user_uuid,
+                name=user_in['name'],
+                login=user_in['login'],
+                password=self.mediator.authenticator.encode_password(
+                    given_password=user_in['password'],
+                ),
+                role=models.Role.user,
+                root_item=None,  # TODO - remove this field
+            )
+
+            item_uuid = await self.mediator.items_repo.get_free_uuid()
+            new_item = domain.Item(
+                uuid=item_uuid,
+                parent_uuid=None,
+                owner_uuid=user_uuid,
+                name=new_user.name,
+                is_collection=True,
+                number=-1,
+            )
+            user.root_item = new_item.uuid
+
+            await self.mediator.users_repo.create_user(
+                user,
+                auth_complexity=const.AUTH_COMPLEXITY,
+            )
+
+            await self.mediator.items_repo.create_item(new_user, new_item)
+            # TODO - make normal CRUD for metainfo
+            await self.mediator.meta_repo.create_empty_metainfo(
+                user=new_user,
+                item_uuid=item_uuid,
+            )
+
+            extras = {'root_item': item_uuid}
+
+        return user, extras
+
+
+class GetAllUsersUseCase(BaseAPIUseCase):
+    """Use case for getting all users."""
+
+    async def execute(
+        self,
+        user: models.User,
+        login: str | None,
+    ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
+        """Execute."""
+        self.ensure_not_anon(user, target='get list of users')
+        extras: dict[UUID, UUID | None]
+
+        async with self.mediator.storage.transaction():
+            if user.is_admin:
+
+                if login:
+                    users = await self.mediator.users_repo.read_filtered_users(
+                        login=login,
+                    )
+                else:
+                    users = await self.mediator.users_repo.read_all_users()
+
+                roots = await self.mediator.items_repo.read_all_root_items(
+                    *users,
+                )
+                extras = {root.owner_uuid: root.uuid for root in roots}
+
+            else:
+                root = await self.mediator.items_repo.read_root_item(user)
+                users = [user]
+                extras = {user.uuid: root.uuid if root else None}
+
+        return users, extras
+
+
+class GetUserByUUIDUseCase(BaseUsersUseCase):
+    """Use case for getting user by UUID."""
+
+    async def execute(
+        self,
+        user: models.User,
+        uuid: UUID,
+    ) -> tuple[models.User, dict[str, Any]]:
+        """Execute."""
+        self.ensure_not_anon(user, target='get user info')
+
+        async with self.mediator.storage.transaction():
+            target_user = await self._get_target_user(user, uuid)
+            root = await self.mediator.items_repo.read_root_item(target_user)
+            extras = {'root_item': root.uuid if root else None}
+
+        return target_user, extras
 
 
 class GetUserStatsUseCase(BaseUsersUseCase):
@@ -110,57 +220,3 @@ class GetUserTagsUseCase(BaseUsersUseCase):
                 raise exceptions.InvalidInputError(msg)
 
         return tags
-
-
-class GetAllUsersUseCase(BaseAPIUseCase):
-    """Use case for getting all users."""
-
-    async def execute(
-        self,
-        user: models.User,
-        login: str | None,
-    ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
-        """Execute."""
-        self.ensure_not_anon(user, target='get list of users')
-        extras: dict[UUID, UUID | None]
-
-        async with self.mediator.storage.transaction():
-            if user.is_admin:
-
-                if login:
-                    users = await self.mediator.users_repo.read_filtered_users(
-                        login=login,
-                    )
-                else:
-                    users = await self.mediator.users_repo.read_all_users()
-
-                roots = await self.mediator.items_repo.read_all_root_items(
-                    *users,
-                )
-                extras = {root.owner_uuid: root.uuid for root in roots}
-
-            else:
-                root = await self.mediator.items_repo.read_root_item(user)
-                users = [user]
-                extras = {user.uuid: root.uuid if root else None}
-
-        return users, extras
-
-
-class GetUserByUUIDUseCase(BaseUsersUseCase):
-    """Use case for getting user by UUID."""
-
-    async def execute(
-        self,
-        user: models.User,
-        uuid: UUID,
-    ) -> tuple[models.User, dict[str, Any]]:
-        """Execute."""
-        self.ensure_not_anon(user, target='get user info')
-
-        async with self.mediator.storage.transaction():
-            target_user = await self._get_target_user(user, uuid)
-            root = await self.mediator.items_repo.read_root_item(target_user)
-            extras = {'root_item': root.uuid if root else None}
-
-        return target_user, extras

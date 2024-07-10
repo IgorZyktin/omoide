@@ -16,6 +16,34 @@ from omoide.presentation import web
 users_router = APIRouter(prefix='/users', tags=['Users'])
 
 
+@users_router.post(
+    '',
+    status_code=status.HTTP_201_CREATED,
+    response_model=users_api_models.UserOutput,
+)
+async def api_create_user(
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user_in: users_api_models.UserInput,
+):
+    """Create new user.
+
+    Only admin can do this.
+    """
+    use_case = users_use_cases.CreateUserUseCase(mediator)
+
+    try:
+        user, extras = await use_case.execute(user, user_in.model_dump())
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return users_api_models.UserOutput(
+        **web.serialize(user.model_dump()),
+        extras=web.serialize(extras),
+    )
+
+
 @users_router.get(
     '',
     status_code=status.HTTP_200_OK,
