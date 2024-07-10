@@ -1,8 +1,17 @@
 """Web level API models."""
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
+from pydantic import Field
+from pydantic import NonNegativeInt
+from pydantic import model_validator
 
+from omoide import utils
+
+MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
+
+# TODO - drop unused columns
 _BASE_EXAMPLE = {
     'user_time': None,
     'content_type': 'image/jpeg',
@@ -36,24 +45,38 @@ class MetainfoInput(BaseModel):
     saved_from_url: str | None = None
     description: str | None = None
 
-    extras: dict
+    extras: dict[str, Any] = Field(default_factory=dict)
 
-    content_size: int | None = None
-    preview_size: int | None = None
-    thumbnail_size: int | None = None
+    content_size: NonNegativeInt | None = None
+    preview_size: NonNegativeInt | None = None
+    thumbnail_size: NonNegativeInt | None = None
 
-    content_width: int | None = None
-    content_height: int | None = None
-    preview_width: int | None = None
-    preview_height: int | None = None
-    thumbnail_width: int | None = None
-    thumbnail_height: int | None = None
+    content_width: NonNegativeInt | None = None
+    content_height: NonNegativeInt | None = None
+    preview_width: NonNegativeInt | None = None
+    preview_height: NonNegativeInt | None = None
+    thumbnail_width: NonNegativeInt | None = None
+    thumbnail_height: NonNegativeInt | None = None
 
     model_config = {
         'json_schema_extra': {
             'examples': [_BASE_EXAMPLE]
         }
     }
+
+    @model_validator(mode='after')
+    def ensure_extras_are_not_too_big(self) -> 'MetainfoInput':  # TODO - Self
+        """Raise if given string is too big."""
+        size = utils.get_size(self.exif)
+        if size > MAXIMUM_EXTRAS_SIZE:
+            hr_size = utils.human_readable_size(size)
+            hr_limit = utils.human_readable_size(MAXIMUM_EXTRAS_SIZE)
+            msg = (
+                f'Given item extras are too big (got {hr_size}), '
+                f'allowed maximum is {hr_limit}'
+            )
+            raise ValueError(msg)
+        return self
 
 
 class MetainfoOutput(BaseModel):
@@ -70,7 +93,7 @@ class MetainfoOutput(BaseModel):
     saved_from_url: str | None = None
     description: str | None = None
 
-    extras: dict
+    extras: dict[str, Any] = Field(default_factory=dict)
 
     content_size: int | None = None
     preview_size: int | None = None

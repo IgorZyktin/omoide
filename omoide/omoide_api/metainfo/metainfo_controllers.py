@@ -6,7 +6,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
-from omoide import const
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.metainfo import metainfo_api_models
@@ -20,7 +19,7 @@ metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 @metainfo_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
-    response_model=metainfo_api_models.MetainfoInput,
+    response_model=metainfo_api_models.MetainfoOutput,
 )
 async def api_read_metainfo(
     item_uuid: UUID,
@@ -36,45 +35,34 @@ async def api_read_metainfo(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return metainfo
+    return metainfo_api_models.MetainfoOutput(
+        created_at=str(metainfo.created_at),  # FIXME - use iso8601
+        updated_at=str(metainfo.updated_at),  # FIXME - also return local time
+        deleted_at=str(metainfo.deleted_at) if metainfo.deleted_at else None,
+        user_time=str(metainfo.user_time) if metainfo.user_time else None,
+        **metainfo.model_dump(
+            exclude={'created_at', 'updated_at', 'deleted_at', 'user_time'},
+        )
+
+    )
 
 
 @metainfo_router.put(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=metainfo_api_models.MetainfoInput,
+    response_model=dict[str, str],
 )
 async def api_update_metainfo(
     item_uuid: UUID,
-    in_metainfo: metainfo_api_models.MetainfoInput,
+    metainfo_input: metainfo_api_models.MetainfoInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Update metainfo entry."""
     use_case = metainfo_use_cases.UpdateMetainfoUseCase(mediator)
 
-    metainfo = models.Metainfo(
-        created_at=const.DUMMY_TIME,
-        updated_at=const.DUMMY_TIME,
-        user_time=in_metainfo.user_time,
-        content_type=in_metainfo.content_type,
-        author=in_metainfo.author,
-        author_url=in_metainfo.author_url,
-        saved_from_url=in_metainfo.saved_from_url,
-        description=in_metainfo.description,
-        extras=in_metainfo.extras or {},
-        content_size=in_metainfo.content_size,
-        preview_size=in_metainfo.preview_size,
-        thumbnail_size=in_metainfo.thumbnail_size,
-        content_width=in_metainfo.content_width,
-        content_height=in_metainfo.content_height,
-        preview_width=in_metainfo.preview_width,
-        preview_height=in_metainfo.preview_height,
-        thumbnail_width=in_metainfo.thumbnail_width,
-        thumbnail_height=in_metainfo.thumbnail_height,
-    )
-
     try:
+        metainfo = models.Metainfo(**metainfo_input.model_dump())
         await use_case.execute(user, item_uuid, metainfo)
     except Exception as exc:
         web.raise_from_exc(exc)

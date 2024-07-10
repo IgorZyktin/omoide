@@ -1,10 +1,12 @@
 """Logic models."""
 import enum
 from datetime import datetime
+from typing import Any
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
+from pydantic import Field
 
 from omoide import const
 
@@ -56,8 +58,8 @@ class User(BaseModel):
 
 class Metainfo(BaseModel):
     """Metainfo for item."""
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = const.DUMMY_TIME
+    updated_at: datetime = const.DUMMY_TIME
     deleted_at: datetime | None = None
     user_time: datetime | None = None
 
@@ -68,7 +70,7 @@ class Metainfo(BaseModel):
     saved_from_url: str | None = None
     description: str | None = None
 
-    extras: dict
+    extras: dict[str, Any] = Field(default_factory=dict)
 
     content_size: int | None = None
     preview_size: int | None = None

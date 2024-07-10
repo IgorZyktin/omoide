@@ -29,7 +29,7 @@ class EXIFModel(BaseModel):
     }
 
     @model_validator(mode='after')
-    def ensure_exif_is_not_too_big(self) -> 'EXIFModel':
+    def ensure_exif_is_not_too_big(self) -> 'EXIFModel':  # TODO - Self
         """Raise if given string is too big."""
         size = utils.get_size(self.exif)
         if size > MAXIMUM_EXIF_SIZE:
