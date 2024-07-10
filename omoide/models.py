@@ -1,5 +1,6 @@
 """Logic models."""
 import enum
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from typing import Optional
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from omoide import const
+from omoide import utils
 
 
 class Role(enum.Enum):
@@ -84,19 +86,55 @@ class Metainfo(BaseModel):
     thumbnail_height: int | None = None
 
 
-class SpaceUsage(BaseModel):
+@dataclass(frozen=True)
+class SpaceUsage:
     """Total size of user data for specific user."""
     uuid: UUID
     content_size: int
     preview_size: int
     thumbnail_size: int
 
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return (
+            f'<{name}, uuid={self.uuid}, '
+            f'content={self.content_size_hr}, '
+            f'preview={self.preview_size_hr}, '
+            f'thumbnail={self.thumbnail_size_hr}>'
+        )
+
+    def __repr__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return (
+            f'{name}(uuid={self.uuid!r}, '
+            f'content_size={self.content_size}, '
+            f'preview_size={self.preview_size}, '
+            f'thumbnail_size={self.thumbnail_size})'
+        )
+
     @classmethod
-    def empty(cls, uuid: UUID) -> 'SpaceUsage':
-        """Return empty result."""
+    def empty(cls, uuid: UUID) -> 'SpaceUsage':  # TODO - replace with Self
+        """Return result with zero bytes used."""
         return cls(
             uuid=uuid,
             content_size=0,
             preview_size=0,
             thumbnail_size=0,
         )
+
+    @property
+    def content_size_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.content_size)
+
+    @property
+    def preview_size_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.preview_size)
+
+    @property
+    def thumbnail_size_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.thumbnail_size)
