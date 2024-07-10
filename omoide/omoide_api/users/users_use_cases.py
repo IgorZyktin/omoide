@@ -21,7 +21,7 @@ class BaseUsersUseCase(BaseAPIUseCase):
         """Read specified user."""
         if who_asking.is_admin:
             target_user = await self.mediator.users_repo.read_user(uuid)
-            # FEATURE - raise right from repository
+            # TODO - raise right from repository
             if target_user is None:
                 msg = 'User with UUID {uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, uuid=uuid)
@@ -98,7 +98,7 @@ class UpdateUserUseCase(BaseAPIUseCase):
         """Execute."""
         async with self.mediator.storage.transaction():
             target_user = await self.mediator.users_repo.read_user(uuid)
-            # FEATURE - raise right from repository
+            # TODO - raise right from repository
             if target_user is None:
                 msg = 'User with UUID {uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, uuid=uuid)

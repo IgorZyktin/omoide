@@ -54,7 +54,7 @@ class SecretStrCustom(UserString):
 
 class Role(enum.Enum):
     """User role."""
-    # FEATURE - change to StrEnum in Python 3.11
+    # TODO - change to StrEnum in Python 3.11
     anon = enum.auto()
     user = enum.auto()
     admin = enum.auto()

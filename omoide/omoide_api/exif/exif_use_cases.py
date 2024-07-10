@@ -16,7 +16,7 @@ class BaseEXIFsUseCase(BaseAPIUseCase):
 
     async def _get_item(self, item_uuid: UUID) -> Item:
         """Generic checks before work."""
-        # FEATURE - raise right from repository
+        # TODO - raise right from repository
         item = await self.mediator.items_repo.read_item(item_uuid)
 
         if item is None:
