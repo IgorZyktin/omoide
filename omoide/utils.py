@@ -1,8 +1,8 @@
-"""Common utils.
-"""
+"""Common utils."""
 import datetime
 import functools
 import re
+import sys
 from itertools import zip_longest
 from typing import Any
 from typing import Callable
@@ -152,6 +152,10 @@ def byte_count_to_text(total_bytes: int | float, language: str = 'EN') -> str:
     return f'{total_bytes / 1024 / 1024 :0.1f} {suffix}'
 
 
+# TODO - use only this name in future
+human_readable_size = byte_count_to_text
+
+
 def human_readable_time(seconds: int) -> str:
     """Format interval as human readable description.
     >>> human_readable_time(46551387)
@@ -242,8 +246,8 @@ def maybe_take(value_in: Optional[T], default: T) -> T:
 
 
 def get_delta(
-        before: Collection[T],
-        after: Collection[T],
+    before: Collection[T],
+    after: Collection[T],
 ) -> tuple[set[T], set[T]]:
     """Return which elements were added and deleted."""
     before_set = set(before)
@@ -277,8 +281,8 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
 
 
 def serialize_model(
-        model: Any,
-        do_not_serialize: Collection[str] = frozenset()
+    model: Any,
+    do_not_serialize: Collection[str] = frozenset()
 ) -> str:
     """Convert model to human-readable string."""
     attributes: list[str] = []
@@ -292,10 +296,10 @@ def serialize_model(
 
 
 def model_to_list(
-        model: Any | dict[str, Any],
-        attributes: list[str],
-        do_not_serialize: Collection[str],
-        depth: int,
+    model: Any | dict[str, Any],
+    attributes: list[str],
+    do_not_serialize: Collection[str],
+    depth: int,
 ) -> None:
     """Convert each field to a list entry."""
     if isinstance(model, dict):
@@ -322,3 +326,33 @@ def split(string: str, separator: str = ',') -> list[str]:
         for raw in string.split(separator)
         if (clear := raw.strip())
     ]
+
+
+def get_size(obj, seen: set[int] | None = None) -> int:
+    """Recursively finds size of objects."""
+    size = sys.getsizeof(obj)
+
+    if seen is None:
+        seen = set()
+
+    obj_id = id(obj)
+
+    if obj_id in seen:
+        return 0
+
+    seen.add(obj_id)
+
+    if isinstance(obj, dict):
+        size += sum([get_size(v, seen) for v in obj.values()])
+        size += sum([get_size(k, seen) for k in obj.keys()])
+
+    elif hasattr(obj, '__dict__'):
+        size += get_size(obj.__dict__, seen)
+
+    elif (
+        hasattr(obj, '__iter__')
+        and not isinstance(obj, (str, bytes, bytearray))
+    ):
+        size += sum([get_size(i, seen) for i in obj])
+
+    return size

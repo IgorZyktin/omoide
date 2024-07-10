@@ -16,4 +16,3 @@ Item = db_models.Item
 Metainfo = db_models.Metainfo
 Media = db_models.Media
 CommandCopy = db_models.CommandCopy
-EXIF = db_models.EXIF

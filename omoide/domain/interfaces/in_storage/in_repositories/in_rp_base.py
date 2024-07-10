@@ -13,11 +13,3 @@ class AbsBaseRepository(abc.ABC):
     def transaction(self) -> Any:
         """Start transaction."""
         return self.db.transaction()
-
-
-class AbsStorage(abc.ABC):
-    """Base storage class."""
-
-    @abc.abstractmethod
-    def transaction(self) -> Any:
-        """Start transaction."""

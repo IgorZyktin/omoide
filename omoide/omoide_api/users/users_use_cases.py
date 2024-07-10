@@ -20,7 +20,7 @@ class BaseUsersUseCase(BaseAPIUseCase):
         """Read specified user."""
         if who_asking.is_admin:
             target_user = await self.mediator.users_repo.read_user(uuid)
-            # FEATURE - raise right form repository
+            # FEATURE - raise right from repository
             if target_user is None:
                 msg = 'User with UUID {uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, uuid=uuid)
@@ -39,9 +39,7 @@ class GetUserStatsUseCase(BaseUsersUseCase):
         uuid: UUID,
     ) -> dict[str, int]:
         """Execute."""
-        if user.is_anon:
-            msg = 'Anonymous users are not allowed to get user stats'
-            raise exceptions.AccessDeniedError(msg)
+        self.ensure_not_anon(user, target='get user stats')
 
         empty = {
             'total_items': 0,
@@ -117,9 +115,8 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         login: str | None,
     ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
-        if user.is_anon:
-            msg = 'Anonymous users are not allowed to get list of users'
-            raise exceptions.AccessDeniedError(msg)
+        self.ensure_not_anon(user, target='get list of users')
+        extras: dict[UUID, UUID | None]
 
         async with self.mediator.storage.transaction():
             if user.is_admin:
@@ -153,9 +150,7 @@ class GetUserByUUIDUseCase(BaseUsersUseCase):
         uuid: UUID,
     ) -> tuple[models.User, dict[str, Any]]:
         """Execute."""
-        if user.is_anon:
-            msg = 'Anonymous users are not allowed to get user info'
-            raise exceptions.AccessDeniedError(msg)
+        self.ensure_not_anon(user, target='get user info')
 
         async with self.mediator.storage.transaction():
             target_user = await self._get_target_user(user, uuid)

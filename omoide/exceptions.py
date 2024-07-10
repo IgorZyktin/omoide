@@ -6,9 +6,9 @@ class BaseOmoideApiError(Exception):
     """Base class for all API exception."""
 
     def __init__(
-            self,
-            msg: str,
-            **kwargs: Any,
+        self,
+        msg: str,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance."""
         super().__init__(msg)
@@ -41,6 +41,10 @@ class BaseOmoideApiError(Exception):
 
 class DoesNotExistError(BaseOmoideApiError):
     """Target resource does not exist."""
+
+
+class AlreadyExistsError(BaseOmoideApiError):
+    """Target resource already exists."""
 
 
 class AccessDeniedError(BaseOmoideApiError):

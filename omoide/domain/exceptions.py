@@ -68,22 +68,6 @@ class UnexpectedActionError(ForbiddenError):
         self.action = action
 
 
-class EXIFAlreadyExistError(AlreadyExistError):
-    """EXIF for item {item_uuid} is already exist."""
-
-    def __init__(self, item_uuid: UUID) -> None:
-        """Initialize instance."""
-        self.item_uuid = item_uuid
-
-
-class EXIFDoesNotExistError(DoesNotExistError):
-    """EXIF for item {item_uuid} does not exist."""
-
-    def __init__(self, item_uuid: UUID) -> None:
-        """Initialize instance."""
-        self.item_uuid = item_uuid
-
-
 class ItemDoesNotExistError(DoesNotExistError):
     """Item with {uuid} does not exist."""
 

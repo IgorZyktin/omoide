@@ -3,16 +3,18 @@ from fastapi.security import HTTPBasicCredentials
 
 from omoide import models
 from omoide.domain import interfaces
+from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
 
 __all__ = [
     'AuthUseCase',
 ]
 
 
+
 class AuthUseCase:
     """Use case for authentication."""
 
-    def __init__(self, users_repo: interfaces.AbsUsersRepo) -> None:
+    def __init__(self, users_repo: AbsUsersRepo) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
 

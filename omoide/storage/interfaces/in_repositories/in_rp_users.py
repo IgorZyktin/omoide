@@ -1,24 +1,22 @@
 """Repository that performs operations on users."""
 import abc
-from typing import Optional
 from uuid import UUID
 
 from omoide import models
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
 
 
-class AbsUsersRepo(in_rp_base.AbsBaseRepository):
+class AbsUsersRepo(abc.ABC):
     """Repository that performs read operations on users."""
 
     @abc.abstractmethod
-    async def read_user(self, uuid: UUID) -> Optional[models.User]:
+    async def read_user(self, uuid: UUID) -> models.User | None:
         """Return User or None."""
 
     @abc.abstractmethod
     async def read_filtered_users(
-            self,
-            *uuids: UUID,
-            login: str | None = None,
+        self,
+        *uuids: UUID,
+        login: str | None = None,
     ) -> list[models.User]:
         """Return list of users with given uuids or filters."""
 
@@ -28,8 +26,8 @@ class AbsUsersRepo(in_rp_base.AbsBaseRepository):
 
     @abc.abstractmethod
     async def calc_total_space_used_by(
-            self,
-            user: models.User,
+        self,
+        user: models.User,
     ) -> models.SpaceUsage:
         """Return total amount of used space for user."""
 
