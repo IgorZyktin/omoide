@@ -19,20 +19,20 @@ async def ensure_there_is_no_exif(
         functional_tests_exif_repo,
 ):
     """Delete all corresponding EXIFs before and after all tests."""
-    item = functional_tests_permanent_item
-    exif_repo = functional_tests_exif_repo
-
-    try:
-        await exif_repo.delete_exif(item.uuid)
-    except exceptions.EXIFDoesNotExistError:
-        pass
-
-    yield
-
-    try:
-        await exif_repo.delete_exif(item.uuid)
-    except exceptions.EXIFDoesNotExistError:
-        pass
+    # item = functional_tests_permanent_item
+    # exif_repo = functional_tests_exif_repo
+    #
+    # try:
+    #     await exif_repo.delete_exif(item.uuid)
+    # except exceptions.EXIFDoesNotExistError:
+    #     pass
+    #
+    # yield
+    #
+    # try:
+    #     await exif_repo.delete_exif(item.uuid)
+    # except exceptions.EXIFDoesNotExistError:
+    #     pass
 
 
 @pytest.mark.usefixtures('ensure_there_is_no_exif')
