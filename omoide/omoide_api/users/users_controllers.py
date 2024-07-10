@@ -101,6 +101,32 @@ async def api_get_user_by_uuid(
     )
 
 
+@users_router.put(
+    '/{uuid}',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=users_api_models.UserOutput,
+)
+async def api_update_user(
+    uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user_in: users_api_models.UserUpdateInput,
+):
+    """Update existing user."""
+    use_case = users_use_cases.UpdateUserUseCase(mediator)
+
+    try:
+        user, extras = await use_case.execute(user, uuid, user_in.model_dump())
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return users_api_models.UserOutput(
+        **web.serialize(user.model_dump()),
+        extras=web.serialize(extras),
+    )
+
+
 @users_router.get(
     '/{uuid}/stats',
     status_code=status.HTTP_200_OK,

@@ -4,9 +4,9 @@ from uuid import UUID
 
 from omoide import const
 from omoide import domain
+from omoide import exceptions
 from omoide import models
 from omoide import utils
-from omoide import exceptions
 from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
 
@@ -32,7 +32,7 @@ class BaseUsersUseCase(BaseAPIUseCase):
 
 
 class CreateUserUseCase(BaseAPIUseCase):
-    """Use case for getting user by UUID."""
+    """Use case for creating a new user."""
 
     async def execute(
         self,
@@ -84,6 +84,39 @@ class CreateUserUseCase(BaseAPIUseCase):
             extras = {'root_item': item_uuid}
 
         return user, extras
+
+
+class UpdateUserUseCase(BaseAPIUseCase):
+    """Use case for updating existing user."""
+
+    async def execute(
+        self,
+        user: models.User,
+        uuid: UUID,
+        user_in: dict[str, Any],
+    ) -> tuple[models.User, dict[str, Any]]:
+        """Execute."""
+        async with self.mediator.storage.transaction():
+            target_user = await self.mediator.users_repo.read_user(uuid)
+            # FEATURE - raise right from repository
+            if target_user is None:
+                msg = 'User with UUID {uuid} does not exist'
+                raise exceptions.DoesNotExistError(msg, uuid=uuid)
+
+            if user.uuid != target_user.uuid and user.is_not_admin:
+                msg = (
+                    'You are not allowed to perform such operation with users'
+                )
+                raise exceptions.AccessDeniedError(msg)
+
+            user_in['password'] = self.mediator.authenticator.encode_password(
+                user_in['password']
+            )
+            await self.mediator.users_repo.update_user(uuid, user_in)
+            root = await self.mediator.items_repo.read_root_item(target_user)
+            extras = {'root_item': root.uuid if root else None}
+
+        return target_user, extras
 
 
 class GetAllUsersUseCase(BaseAPIUseCase):

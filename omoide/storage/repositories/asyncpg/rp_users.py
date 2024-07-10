@@ -1,4 +1,5 @@
 """Repository that performs read operations on users."""
+from typing import Any
 from uuid import UUID
 from uuid import uuid4
 
@@ -58,6 +59,29 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             return user
 
         return None
+
+    async def update_user(self, user_uuid: UUID, user: dict[str, Any]) -> None:
+        """Update User."""
+        values = {}
+
+        if name := user.get('name'):
+            values['name'] = name
+
+        if login := user.get('login'):
+            values['login'] = login
+
+        if password := user.get('password'):
+            values['password'] = password
+
+        if values:
+            stmt = sa.update(
+                db_models.User
+            ).where(
+                db_models.User.item_uuid == user_uuid
+            ).values(
+                **values
+            )
+            await self.db.execute(stmt)
 
     async def read_filtered_users(
         self,

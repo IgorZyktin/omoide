@@ -2,6 +2,7 @@
 from typing import Any
 
 from pydantic import BaseModel
+from pydantic import model_validator
 
 
 class UserInput(BaseModel):
@@ -21,6 +22,40 @@ class UserInput(BaseModel):
             ]
         }
     }
+
+
+class UserUpdateInput(BaseModel):
+    """Simple user format for user update."""
+    name: str = ''
+    login: str = ''
+    password: str = ''
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {
+                    'name': 'John Dow',
+                },
+                {
+                    'password': '12345',
+                }
+            ]
+        }
+    }
+
+    @model_validator(mode='after')
+    def ensure_at_least_one_given(self) -> 'UserUpdateInput':  # TODO - Self
+        """Raise if nothing is actually sent."""
+        if not any(
+            (
+                self.name,
+                self.login,
+                self.password,
+            )
+        ):
+            msg = 'You have to specify new name, new login, or new password'
+            raise ValueError(msg)
+        return self
 
 
 class UserOutput(BaseModel):
