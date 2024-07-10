@@ -11,11 +11,6 @@ from omoide.domain import interfaces
 from omoide.domain.core import core_models
 
 ITEM_RELATED = frozenset((
-    actions.EXIF.CREATE,
-    actions.EXIF.READ,
-    actions.EXIF.UPDATE,
-    actions.EXIF.DELETE,
-
     actions.Media.CREATE,
 
     actions.Metainfo.READ,
@@ -23,16 +18,11 @@ ITEM_RELATED = frozenset((
 ))
 
 READ_ONLY = frozenset((
-    actions.EXIF.READ,
     actions.Metainfo.READ,
     actions.Item.READ,
 ))
 
-CHANGING_ITEM_RELATED = frozenset((
-    actions.EXIF.CREATE,
-    actions.EXIF.UPDATE,
-    actions.EXIF.DELETE,
-))
+CHANGING_ITEM_RELATED = frozenset(())
 
 
 class Policy(interfaces.AbsPolicy):

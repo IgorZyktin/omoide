@@ -8,15 +8,6 @@ class Action(enum.Enum):
 
 
 # noinspection PyArgumentList
-class EXIF(Action):
-    """Operations on EXIF."""
-    CREATE = enum.auto()
-    READ = enum.auto()
-    UPDATE = enum.auto()
-    DELETE = enum.auto()
-
-
-# noinspection PyArgumentList
 class Media(Action):
     """Operations on Media."""
     CREATE = enum.auto()
