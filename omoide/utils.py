@@ -152,6 +152,10 @@ def byte_count_to_text(total_bytes: int | float, language: str = 'EN') -> str:
     return f'{total_bytes / 1024 / 1024 :0.1f} {suffix}'
 
 
+# TODO - use only this name in future
+human_readable_size = byte_count_to_text
+
+
 def human_readable_time(seconds: int) -> str:
     """Format interval as human readable description.
     >>> human_readable_time(46551387)
@@ -242,8 +246,8 @@ def maybe_take(value_in: Optional[T], default: T) -> T:
 
 
 def get_delta(
-        before: Collection[T],
-        after: Collection[T],
+    before: Collection[T],
+    after: Collection[T],
 ) -> tuple[set[T], set[T]]:
     """Return which elements were added and deleted."""
     before_set = set(before)
@@ -277,8 +281,8 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
 
 
 def serialize_model(
-        model: Any,
-        do_not_serialize: Collection[str] = frozenset()
+    model: Any,
+    do_not_serialize: Collection[str] = frozenset()
 ) -> str:
     """Convert model to human-readable string."""
     attributes: list[str] = []
@@ -292,10 +296,10 @@ def serialize_model(
 
 
 def model_to_list(
-        model: Any | dict[str, Any],
-        attributes: list[str],
-        do_not_serialize: Collection[str],
-        depth: int,
+    model: Any | dict[str, Any],
+    attributes: list[str],
+    do_not_serialize: Collection[str],
+    depth: int,
 ) -> None:
     """Convert each field to a list entry."""
     if isinstance(model, dict):
