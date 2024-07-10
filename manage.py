@@ -18,35 +18,6 @@ def cli():
     """Manual CLI operations."""
 
 
-@cli.command(name='change_password')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--uuid',
-    type=UUID,
-    required=True,
-    help='UUID for existing user',
-)
-@click.option(
-    '--password',
-    required=True,
-    help='New password',
-)
-def command_change_password(db_url: str, uuid: UUID, password: str):
-    """Manually change password for user."""
-    from omoide.commands.change_password import run
-
-    database = sync_db.SyncDatabase(db_url)
-
-    with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Changing password...'):
-            run.run(database, uuid, password)
-
-
 @cli.command(name='rebuild_known_tags')
 @click.option(
     '--db-url',
