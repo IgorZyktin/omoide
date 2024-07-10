@@ -67,7 +67,12 @@ class User(BaseModel):
     login: SecretStr
     password: SecretStr
     role: Role
-    root_item: UUID | None = None
+    root_item: UUID | None = None  # TODO - remove this field
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'<{name} {self.uuid} {self.name}>'
 
     @property
     def is_admin(self) -> bool:
@@ -98,7 +103,7 @@ class User(BaseModel):
             password=SecretStr(''),
             name=const.ANON,
             role=Role.anon,
-            root_item=None,
+            root_item=None,  # TODO - remove this field
         )
 
 

@@ -34,21 +34,13 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
         user: models.User,
         item_uuid: UUID,
     ) -> models.Metainfo:
-        self.ensure_not_anon(user, target='read metainfo records')
+        """Execute."""
+        self.ensure_not_anon(user, operation='read metainfo records')
 
         async with self.mediator.storage.transaction():
             item = await self._get_item(item_uuid)
-
-            if (
-                item.owner_uuid != user.uuid
-                and str(user.uuid) not in item.permissions
-                and not user.is_admin
-            ):
-                msg = (
-                    'You are not allowed to perform '
-                    'such operation with item metadata'
-                )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+            self.ensure_admin_or_allowed_to(user, item,
+                                            subject='item metadata')
 
             metainfo = await self.mediator.meta_repo.read_metainfo(item_uuid)
 
@@ -64,21 +56,14 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
         item_uuid: UUID,
         metainfo: models.Metainfo,
     ) -> None:
-        """Business logic."""
-        LOG.info('Updating metainfo for item {}, command by user {}',
-                 item_uuid, user.uuid)
-
-        self.ensure_not_anon(user, target='update metainfo records')
+        """Execute."""
+        self.ensure_not_anon(user, operation='update metainfo records')
 
         async with self.mediator.storage.transaction():
             item = await self._get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='item metadata')
 
-            if item.owner_uuid != user.uuid and not user.is_admin:
-                msg = (
-                    'You are not allowed to perform '
-                    'such operation with item metadata'
-                )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+            LOG.info('Updating metainfo for {}, command by {}', item, user)
 
             current_metainfo = await self.mediator.meta_repo.read_metainfo(
                 item_uuid

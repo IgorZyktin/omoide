@@ -128,7 +128,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         login: str | None,
     ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
-        self.ensure_not_anon(user, target='get list of users')
+        self.ensure_not_anon(user, operation='get list of users')
         extras: dict[UUID, UUID | None]
 
         async with self.mediator.storage.transaction():
@@ -163,7 +163,7 @@ class GetUserByUUIDUseCase(BaseUsersUseCase):
         uuid: UUID,
     ) -> tuple[models.User, dict[str, Any]]:
         """Execute."""
-        self.ensure_not_anon(user, target='get user info')
+        self.ensure_not_anon(user, operation='get user info')
 
         async with self.mediator.storage.transaction():
             target_user = await self._get_target_user(user, uuid)
@@ -183,7 +183,7 @@ class GetUserStatsUseCase(BaseUsersUseCase):
     ) -> dict[str, int | str]:
         """Execute."""
         # TODO - allow requesting more than one user
-        self.ensure_not_anon(user, target='get user stats')
+        self.ensure_not_anon(user, operation='get user stats')
 
         empty: dict[str, int | str] = {
             'total_items': 0,

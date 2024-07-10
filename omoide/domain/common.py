@@ -38,6 +38,11 @@ class Item(BaseModel):
     tags: list[str] = []
     permissions: list[UUID] = []
 
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'<{name} {self.uuid} {self.name}>'
+
     def get_generic(self) -> dict[const.MEDIA_TYPE, 'ItemGeneric']:
         """Proxy that helps with content/preview/thumbnail."""
         return {
