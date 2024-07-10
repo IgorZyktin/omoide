@@ -48,7 +48,7 @@ class CreateEXIFUseCase(BaseEXIFsUseCase):
                     'You are not allowed to perform '
                     'such operation with EXIF data'
                 )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+                raise exceptions.AccessDeniedError(msg)
 
             await self.mediator.exif_repo.create_exif(item_uuid, exif)
 
@@ -106,7 +106,7 @@ class UpdateEXIFUseCase(BaseEXIFsUseCase):
                     'You are not allowed to perform '
                     'such operation with EXIF data'
                 )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+                raise exceptions.AccessDeniedError(msg)
 
             await self.mediator.exif_repo.update_exif(item_uuid, exif)
 
@@ -133,6 +133,6 @@ class DeleteEXIFUseCase(BaseEXIFsUseCase):
                     'You are not allowed to perform '
                     'such operation with EXIF data'
                 )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+                raise exceptions.AccessDeniedError(msg)
 
             await self.mediator.exif_repo.delete_exif(item_uuid)
