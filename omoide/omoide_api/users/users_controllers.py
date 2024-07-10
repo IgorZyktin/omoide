@@ -39,7 +39,7 @@ async def api_get_all_users(
         'users': [
             users_api_models.UserOutput(
                 **web.serialize(user.model_dump()),
-                extra={
+                extras={
                     'root_item': web.to_simple_type(extras.get(user.uuid))
                 },
             )
@@ -62,14 +62,14 @@ async def api_get_user_by_uuid(
     use_case = users_use_cases.GetUserByUUIDUseCase(mediator)
 
     try:
-        user, extra = await use_case.execute(user, uuid)
+        user, extras = await use_case.execute(user, uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return users_api_models.UserOutput(
         **web.serialize(user.model_dump()),
-        extra=web.serialize(extra),
+        extras=web.serialize(extras),
     )
 
 
