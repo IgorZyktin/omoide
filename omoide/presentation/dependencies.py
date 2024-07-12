@@ -64,7 +64,7 @@ def get_templates() -> Jinja2Templates:
     """Get templates instance."""
     templates = Jinja2Templates(directory='omoide/presentation/templates')
     templates.env.globals['zip'] = zip
-    templates.env.globals['version'] = const.VERSION
+    templates.env.globals['version'] = str(const.FRONTEND_VERSION)
     return templates
 
 
