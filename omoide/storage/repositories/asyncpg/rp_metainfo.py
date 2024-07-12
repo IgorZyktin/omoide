@@ -6,9 +6,9 @@ import sqlalchemy as sa
 from omoide import exceptions
 from omoide import models
 from omoide import utils
+from omoide.storage import interfaces
 from omoide.storage.asyncpg_storage import AsyncpgStorage
 from omoide.storage.database import db_models
-from omoide.storage import interfaces
 
 
 class MetainfoRepo(interfaces.AbsMetainfoRepo, AsyncpgStorage):
@@ -103,3 +103,35 @@ class MetainfoRepo(interfaces.AbsMetainfoRepo, AsyncpgStorage):
                 )
             )
             await self.db.execute(stmt)
+
+    async def get_total_disk_usage(
+        self,
+        user: models.User,
+    ) -> models.DiskUsage:
+        """Return total disk usage for specified user."""
+        stmt = sa.select(
+            sa.func.sum(
+                sa.func.coalesce(db_models.Metainfo.content_size, 0)
+            ).label(
+                'content_bytes'
+            ),
+            sa.func.sum(
+                sa.func.coalesce(db_models.Metainfo.preview_size, 0)
+            ).label(
+                'preview_bytes'
+            ),
+            sa.func.sum(
+                sa.func.coalesce(db_models.Metainfo.thumbnail_size, 0)
+            ).label(
+                'thumbnail_bytes'
+            )
+        ).join(
+            db_models.Item,
+            db_models.Item.uuid == db_models.Metainfo.item_uuid,
+        ).where(
+            db_models.Item.owner_uuid == user.uuid
+        )
+
+        response = await self.db.fetch_one(stmt)
+
+        return models.DiskUsage(**response)

@@ -2,14 +2,16 @@
 from typing import Any
 
 from pydantic import BaseModel
-from pydantic import model_validator
+from pydantic import Field
+
+MAX_LENGTH_FOR_USER_FILED = 1024
 
 
 class UserInput(BaseModel):
     """Simple user format."""
-    name: str
-    login: str
-    password: str
+    name: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
+    login: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
+    password: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
 
     model_config = {
         'json_schema_extra': {
@@ -24,38 +26,9 @@ class UserInput(BaseModel):
     }
 
 
-class UserUpdateInput(BaseModel):
-    """Simple user format for user update."""
-    name: str = ''
-    login: str = ''
-    password: str = ''
-
-    model_config = {
-        'json_schema_extra': {
-            'examples': [
-                {
-                    'name': 'John Dow',
-                },
-                {
-                    'password': '12345',
-                }
-            ]
-        }
-    }
-
-    @model_validator(mode='after')
-    def ensure_at_least_one_given(self) -> 'UserUpdateInput':  # TODO - Self
-        """Raise if nothing is actually sent."""
-        if not any(
-            (
-                self.name,
-                self.login,
-                self.password,
-            )
-        ):
-            msg = 'You have to specify new name, new login, or new password'
-            raise ValueError(msg)
-        return self
+class UserValueInput(BaseModel):
+    """New name/login/password."""
+    value: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
 
 
 class UserOutput(BaseModel):
@@ -91,29 +64,31 @@ class UserCollectionOutput(BaseModel):
     users: list[UserOutput]
 
 
-class UserStatsOutput(BaseModel):
-    """Statistics for user."""
+class UserResourceUsageOutput(BaseModel):
+    """Total resource usage for specific user."""
+    user_uuid: str
     total_items: int
     total_collections: int
-    content_size: int
-    content_size_hr: str
-    preview_size: int
-    preview_size_hr: str
-    thumbnail_size: int
-    thumbnail_size_hr: str
+    content_bytes: int
+    content_hr: str
+    preview_bytes: int
+    preview_hr: str
+    thumbnail_bytes: int
+    thumbnail_hr: str
 
     model_config = {
         'json_schema_extra': {
             'examples': [
                 {
+                    'user_uuid': '66292021-e68b-4cbb-a511-9f23a9256b5b',
                     'total_items': 2735,
                     'total_collections': 22,
-                    'content_size': 1177374884,
-                    'content_size_hr': '1.1 GiB',
-                    'preview_size': 256635453,
-                    'preview_size_hr': '244.7 MiB',
-                    'thumbnail_size': 62661090,
-                    'thumbnail_size_hr': '59.8 MiB',
+                    'content_bytes': 1177374884,
+                    'content_hr': '1.1 GiB',
+                    'preview_bytes': 256635453,
+                    'preview_hr': '244.7 MiB',
+                    'thumbnail_bytes': 62661090,
+                    'thumbnail_hr': '59.8 MiB',
                 },
             ]
         }

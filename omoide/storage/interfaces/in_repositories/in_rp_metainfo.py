@@ -40,3 +40,10 @@ class AbsMetainfoRepo(abc.ABC):
         new_extras: dict[str, None | int | float | str | bool],
     ) -> None:
         """Add new data to extras."""
+
+    @abc.abstractmethod
+    async def get_total_disk_usage(
+        self,
+        user: models.User,
+    ) -> models.DiskUsage:
+        """Return total disk usage for specified user."""

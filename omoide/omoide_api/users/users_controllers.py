@@ -28,7 +28,7 @@ async def api_create_user(
 ):
     """Create new user.
 
-    Only admin can do this.
+    Only admins can do this.
     """
     use_case = users_use_cases.CreateUserUseCase(mediator)
 
@@ -52,13 +52,15 @@ async def api_create_user(
 async def api_get_all_users(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    login: str | None = None,
 ):
-    """Get list of users."""
+    """Get list of users.
+
+    Admins can get all users, registered users will get only themselves.
+    """
     use_case = users_use_cases.GetAllUsersUseCase(mediator)
 
     try:
-        users, extras = await use_case.execute(user, login)
+        users, extras = await use_case.execute(user)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -77,8 +79,82 @@ async def api_get_all_users(
 
 
 @users_router.get(
+    '/{uuid}/resource_usage',
+    status_code=status.HTTP_200_OK,
+    response_model=users_api_models.UserResourceUsageOutput,
+)
+async def api_get_user_resource_usage(
+    uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Get resource usage info for specific user."""
+    use_case = users_use_cases.GetUserResourceUsageUseCase(mediator)
+
+    try:
+        output = await use_case.execute(user, uuid)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return users_api_models.UserResourceUsageOutput(
+        user_uuid=str(output.user_uuid),
+        total_items=output.total_items,
+        total_collections=output.total_collections,
+        content_bytes=output.disk_usage.content_bytes,
+        content_hr=output.disk_usage.content_hr,
+        preview_bytes=output.disk_usage.preview_bytes,
+        preview_hr=output.disk_usage.preview_hr,
+        thumbnail_bytes=output.disk_usage.thumbnail_bytes,
+        thumbnail_hr=output.disk_usage.thumbnail_hr,
+    )
+
+
+@users_router.get(
+    '/anon/tags',
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, int],
+)
+async def api_get_anon_tags(
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Get all known tags for anon user."""
+    use_case = users_use_cases.GetAnonUserTagsUseCase(mediator)
+
+    try:
+        tags = await use_case.execute()
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return tags
+
+
+@users_router.get(
+    '/{uuid}/tags',
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, int],
+)
+async def api_get_user_tags(
+    uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Get all known tags for specific user."""
+    use_case = users_use_cases.GetKnownUserTagsUseCase(mediator)
+
+    try:
+        tags = await use_case.execute(user, uuid)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return tags
+
+
+@users_router.get(
     '/{uuid}',
-    status_code=status.HTTP_202_ACCEPTED,
+    status_code=status.HTTP_200_OK,
     response_model=users_api_models.UserOutput,
 )
 async def api_get_user_by_uuid(
@@ -102,21 +178,21 @@ async def api_get_user_by_uuid(
 
 
 @users_router.put(
-    '/{uuid}',
+    '/{uuid}/name',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=users_api_models.UserOutput,
 )
-async def api_update_user(
+async def api_change_user_name(
     uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    user_in: users_api_models.UserUpdateInput,
+    payload: users_api_models.UserValueInput,
 ):
-    """Update existing user."""
-    use_case = users_use_cases.UpdateUserUseCase(mediator)
+    """Update name of existing user."""
+    use_case = users_use_cases.ChangeUserNameUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, uuid, user_in.model_dump())
+        user, extras = await use_case.execute(user, uuid, payload.value)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -127,48 +203,53 @@ async def api_update_user(
     )
 
 
-@users_router.get(
-    '/{uuid}/stats',
-    status_code=status.HTTP_200_OK,
-    response_model=users_api_models.UserStatsOutput,
+@users_router.put(
+    '/{uuid}/login',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=users_api_models.UserOutput,
 )
-async def api_get_user_stats(
+async def api_change_user_login(
     uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    payload: users_api_models.UserValueInput,
 ):
-    """Get statistics for specific user."""
-    use_case = users_use_cases.GetUserStatsUseCase(mediator)
+    """Update login of existing user."""
+    use_case = users_use_cases.ChangeUserLoginUseCase(mediator)
 
     try:
-        output = await use_case.execute(user, uuid)
+        user, extras = await use_case.execute(user, uuid, payload.value)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return users_api_models.UserStatsOutput(**output)
+    return users_api_models.UserOutput(
+        **web.serialize(user.model_dump()),
+        extras=web.serialize(extras),
+    )
 
 
-@users_router.get(
-    '/{uuid}/tags',
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, int],
+@users_router.put(
+    '/{uuid}/password',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=users_api_models.UserOutput,
 )
-async def api_get_user_tags(
-    uuid: str,
+async def api_change_user_password(
+    uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    payload: users_api_models.UserValueInput,
 ):
-    """Get all known tags for specific user.
-
-    You can also pass 'anon' as UUID to get tags for anonymous user.
-    """
-    use_case = users_use_cases.GetUserTagsUseCase(mediator)
+    """Update password of existing user."""
+    use_case = users_use_cases.ChangeUserPasswordUseCase(mediator)
 
     try:
-        tags = await use_case.execute(user, uuid)
+        user, extras = await use_case.execute(user, uuid, payload.value)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return tags
+    return users_api_models.UserOutput(
+        **web.serialize(user.model_dump()),
+        extras=web.serialize(extras),
+    )

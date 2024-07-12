@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import sqlalchemy as sa
 
+from omoide import exceptions
 from omoide import models
 from omoide.storage import interfaces
 from omoide.storage.asyncpg_storage import AsyncpgStorage
@@ -60,28 +61,52 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
 
         return None
 
-    async def update_user(self, user_uuid: UUID, user: dict[str, Any]) -> None:
+    async def get_user(
+        self,
+        uuid: UUID,
+        allow_absence: bool = False,
+    ) -> models.User | None:
+        """Return User or None."""
+        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            if allow_absence:
+                return None
+
+            msg = 'User with UUID {uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, uuid=uuid)
+
+        return models.User(**response, role=models.Role.user)
+
+    async def get_user_by_login(
+        self,
+        login: str,
+        allow_absence: bool = False,
+    ) -> models.User | None:
+        """Return User or None."""
+        stmt = sa.select(db_models.User).where(db_models.User.login == login)
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            if allow_absence:
+                return None
+
+            msg = 'User with given login does not exist'
+            raise exceptions.DoesNotExistError(msg)
+
+        return models.User(**response, role=models.Role.user)
+
+    async def update_user(self, user_uuid: UUID, **kwargs: str) -> None:
         """Update User."""
-        values = {}
-
-        if name := user.get('name'):
-            values['name'] = name
-
-        if login := user.get('login'):
-            values['login'] = login
-
-        if password := user.get('password'):
-            values['password'] = password
-
-        if values:
-            stmt = sa.update(
-                db_models.User
-            ).where(
-                db_models.User.uuid == user_uuid
-            ).values(
-                **values
-            )
-            await self.db.execute(stmt)
+        stmt = sa.update(
+            db_models.User
+        ).where(
+            db_models.User.uuid == user_uuid
+        ).values(
+            **kwargs
+        )
+        await self.db.execute(stmt)
 
     async def read_filtered_users(
         self,

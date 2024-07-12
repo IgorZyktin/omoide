@@ -1,6 +1,5 @@
 """Repository that performs operations on users."""
 import abc
-from typing import Any
 from uuid import UUID
 
 from omoide import models
@@ -43,7 +42,7 @@ class AbsUsersRepo(abc.ABC):
         """Return User or None."""
 
     @abc.abstractmethod
-    async def update_user(self, uuid: UUID, user: dict[str, Any]) -> None:
+    async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""
 
     @abc.abstractmethod

@@ -187,3 +187,35 @@ class SpaceUsage(ModelMixin):
     def thumbnail_size_hr(self) -> str:
         """Return human-readable value."""
         return utils.human_readable_size(self.thumbnail_size)
+
+
+@dataclass
+class DiskUsage(ModelMixin):
+    """Total disk usage of a specific user."""
+    content_bytes: int
+    preview_bytes: int
+    thumbnail_bytes: int
+
+    @property
+    def content_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.content_bytes)
+
+    @property
+    def preview_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.preview_bytes)
+
+    @property
+    def thumbnail_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.thumbnail_bytes)
+
+
+@dataclass
+class ResourceUsage(ModelMixin):
+    """Total resource usage for specific user."""
+    user_uuid: UUID
+    total_items: int
+    total_collections: int
+    disk_usage: DiskUsage
