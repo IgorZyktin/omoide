@@ -237,14 +237,14 @@ def get_mediator(
     exif_repo: Annotated[st_interfaces.AbsEXIFRepository,
                          Depends(get_exif_repo)],
     items_repo: Annotated[AbsItemsRepo, Depends(get_items_repo)],
+    media_repo: Annotated[interfaces.AbsMediaRepository,
+                          Depends(get_media_repo)],
     meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
     misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
     search_repo: Annotated[AbsSearchRepository, Depends(get_search_repo)],
     storage: Annotated[st_interfaces.AbsStorage, Depends(get_storage)],
     users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
-    media_repo: Annotated[interfaces.AbsMediaRepository,
-                          Depends(get_media_repo)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
