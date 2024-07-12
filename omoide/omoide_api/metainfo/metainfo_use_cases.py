@@ -22,8 +22,8 @@ class ReadMetainfoUseCase(BaseAPIUseCase):
 
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_allowed_to(user, item,
-                                            subject='item metadata')
+            self.ensure_admin_or_owner_or_allowed_to(user, item,
+                                                     subject='item metadata')
 
             metainfo = await self.mediator.meta_repo.read_metainfo(item_uuid)
 

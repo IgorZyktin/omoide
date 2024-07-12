@@ -36,6 +36,34 @@ class BaseAPIUseCase(abc.ABC):
         raise exceptions.AccessDeniedError(msg)
 
     @staticmethod
+    def ensure_admin_or_owner_or_allowed_to(
+        user: models.User,
+        item: domain.Item,  # TODO - import Item from models
+        subject: str = '',
+        error_message: str = '',
+    ) -> None:
+        """Raise if one user tries to manage object of some other user."""
+        if any(
+            (
+                item.owner_uuid == user.uuid,
+                str(user.uuid) in item.permissions,
+            )
+        ) or user.is_admin:
+            return
+
+        if error_message:
+            msg = error_message
+        elif subject:
+            msg = (
+                'You are not allowed to perform '
+                f'such operations with {subject}'
+            )
+        else:
+            msg = 'You are not allowed to perform such operations'
+
+        raise exceptions.AccessDeniedError(msg)
+
+    @staticmethod
     def ensure_admin_or_owner(
         user: models.User,
         target: domain.Item | models.User,  # TODO - import Item from models
