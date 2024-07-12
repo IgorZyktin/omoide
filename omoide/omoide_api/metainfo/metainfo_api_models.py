@@ -13,7 +13,7 @@ MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
 
 # TODO - drop unused columns
 _BASE_EXAMPLE = {
-    'user_time': None,
+    'user_time': '2022-02-16 19:51:14.321331+00:00',
     'content_type': 'image/jpeg',
     'author': None,
     'author_url': None,
