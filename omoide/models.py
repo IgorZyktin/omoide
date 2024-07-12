@@ -136,7 +136,7 @@ class Metainfo(BaseModel):
 
 
 @dataclass
-class RawMedia:
+class RawMedia(ModelMixin):
     """Transient content fot the item (raw user input)."""
     media_type: str
     content: bytes
@@ -144,12 +144,12 @@ class RawMedia:
 
 
 @dataclass
-class Media:
+class Media(ModelMixin):
     """Transient content fot the item."""
     id: int
     created_at: datetime
     processed_at: datetime | None
-    error: str
+    error: str | None
     owner_uuid: UUID
     item_uuid: UUID
     media_type: str

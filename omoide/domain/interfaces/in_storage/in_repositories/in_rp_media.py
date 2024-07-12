@@ -3,6 +3,7 @@
 import abc
 from uuid import UUID
 
+from omoide import models
 from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories.in_rp_base import (
     AbsBaseRepository,
@@ -17,6 +18,10 @@ class AbsMediaRepository(AbsBaseRepository):
         self,
         media: core_models.Media,
     ) -> core_models.Media:
+        """Create Media, return media id."""
+
+    @abc.abstractmethod
+    async def create_media2(self, media: models.Media) -> int:
         """Create Media, return media id."""
 
     @abc.abstractmethod

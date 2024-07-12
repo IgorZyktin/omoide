@@ -1,9 +1,9 @@
-"""Repository that perform CRUD operations on media.
-"""
+"""Repository that perform CRUD operations on media."""
 from uuid import UUID
 
 import sqlalchemy as sa
 
+from omoide import models
 from omoide import utils
 from omoide.domain.core import core_models
 from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
@@ -40,6 +40,17 @@ class MediaRepository(AbsMediaRepository):
         media.id = media_id
 
         return media
+
+    async def create_media2(self, media: models.Media) -> int:
+        """Create Media, return media id."""
+        stmt = sa.insert(
+            db_models.Media
+        ).values(
+            **media.model_dump()
+        ).returning(db_models.Media.id)
+
+        media_id = await self.db.execute(stmt)
+        return media_id
 
     async def copy_image(
         self,
