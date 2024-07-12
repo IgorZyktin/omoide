@@ -19,6 +19,7 @@ from omoide.omoide_api import api_info
 from omoide.omoide_api.exif import exif_controllers
 from omoide.omoide_api.info import info_controllers
 from omoide.omoide_api.input import input_controllers
+from omoide.omoide_api.items import item_controllers
 from omoide.omoide_api.media import media_controllers
 from omoide.omoide_api.metainfo import metainfo_controllers
 from omoide.omoide_api.users import users_controllers
@@ -140,6 +141,7 @@ def apply_api_routes(current_api: FastAPI) -> None:
     api_router_v1.include_router(exif_controllers.exif_router)
     api_router_v1.include_router(info_controllers.info_router)
     api_router_v1.include_router(input_controllers.input_router)
+    api_router_v1.include_router(item_controllers.items_router)
     api_router_v1.include_router(media_controllers.media_router)
     api_router_v1.include_router(metainfo_controllers.metainfo_router)
     api_router_v1.include_router(users_controllers.users_router)

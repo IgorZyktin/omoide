@@ -107,6 +107,26 @@ class User(BaseModel):
         )
 
 
+class Item(ModelMixin):
+    """Standard item."""
+    uuid: UUID
+    parent_uuid: UUID | None
+    owner_uuid: UUID
+    number: int
+    name: str
+    is_collection: bool
+    content_ext: str | None
+    preview_ext: str | None
+    thumbnail_ext: str | None
+    tags: list[str] = Field(default_factory=list)
+    permissions: list[UUID] = Field(default_factory=list)
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'<{name} {self.uuid} {self.name}>'
+
+
 class Metainfo(BaseModel):
     """Metainfo for item."""
     created_at: datetime = const.DUMMY_TIME
