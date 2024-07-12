@@ -1,21 +1,60 @@
 """Logic models."""
+import abc
 import enum
+from collections import UserString
+from dataclasses import asdict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import SecretStr
 
 from omoide import const
 from omoide import utils
 
 
+@dataclass
+class ModelMixin(abc.ABC):
+    """Mixin that adds functionality similar to pydantic."""
+
+    def model_dump(self, exclude: set[str] | None = None) -> dict[str, Any]:
+        """Convert model to dictionary."""
+        dump = asdict(self)
+
+        if not exclude:
+            return dump
+
+        return {
+            key: value
+            for key, value in dump.items()
+            if key in exclude
+        }
+
+
+# TODO - Use this in model instead of pydantic one
+class SecretStrCustom(UserString):
+    """String class that adds functionality similar to pydantic."""
+
+    def get_secret_value(self) -> str:
+        """Get the secret value."""
+        return self.data
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return '***'
+
+    def __repr__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'{name}(***)'
+
+
 class Role(enum.Enum):
     """User role."""
-    # FEATURE - change to StrEnum in Python 3.11
+    # TODO - change to StrEnum in Python 3.11
     anon = enum.auto()
     user = enum.auto()
     admin = enum.auto()
@@ -25,15 +64,25 @@ class User(BaseModel):
     """User model."""
     uuid: UUID
     name: str
-    login: str  # FEATURE - change to SecretStr
-    password: str  # FEATURE - change to SecretStr
-    root_item: Optional[UUID] = None
+    login: SecretStr
+    password: SecretStr
     role: Role
+    root_item: UUID | None = None  # TODO - remove this field
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'<{name} {self.uuid} {self.name}>'
 
     @property
     def is_admin(self) -> bool:
         """Return True if user is an administrator."""
         return self.role is Role.admin
+
+    @property
+    def is_not_admin(self) -> bool:
+        """Return True if user is not an administrator."""
+        return self.role is not Role.admin
 
     @property
     def is_anon(self) -> bool:
@@ -46,15 +95,15 @@ class User(BaseModel):
         return self.role is not Role.anon
 
     @classmethod
-    def new_anon(cls) -> 'User':
+    def new_anon(cls) -> 'User':  # TODO - replace with Self
         """Return new anon user."""
         return cls(
             uuid=const.DUMMY_UUID,
-            login='',
-            password='',
-            name='anon',
-            root_item=None,
+            login=SecretStr(''),
+            password=SecretStr(''),
+            name=const.ANON,
             role=Role.anon,
+            root_item=None,  # TODO - remove this field
         )
 
 
@@ -86,8 +135,8 @@ class Metainfo(BaseModel):
     thumbnail_height: int | None = None
 
 
-@dataclass(frozen=True)
-class SpaceUsage:
+@dataclass
+class SpaceUsage(ModelMixin):
     """Total size of user data for specific user."""
     uuid: UUID
     content_size: int
@@ -138,3 +187,35 @@ class SpaceUsage:
     def thumbnail_size_hr(self) -> str:
         """Return human-readable value."""
         return utils.human_readable_size(self.thumbnail_size)
+
+
+@dataclass
+class DiskUsage(ModelMixin):
+    """Total disk usage of a specific user."""
+    content_bytes: int
+    preview_bytes: int
+    thumbnail_bytes: int
+
+    @property
+    def content_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.content_bytes)
+
+    @property
+    def preview_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.preview_bytes)
+
+    @property
+    def thumbnail_hr(self) -> str:
+        """Return human-readable value."""
+        return utils.human_readable_size(self.thumbnail_bytes)
+
+
+@dataclass
+class ResourceUsage(ModelMixin):
+    """Total resource usage for specific user."""
+    user_uuid: UUID
+    total_items: int
+    total_collections: int
+    disk_usage: DiskUsage

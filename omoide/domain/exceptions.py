@@ -76,14 +76,6 @@ class ItemDoesNotExistError(DoesNotExistError):
         self.item_uuid = item_uuid
 
 
-class MetainfoNotExistError(DoesNotExistError):
-    """Metainfo for item with {uuid} does not exist."""
-
-    def __init__(self, item_uuid: UUID) -> None:
-        """Initialize instance."""
-        self.item_uuid = item_uuid
-
-
 class CircularReference(DoesNotExistError):
     """Got circular reference between {uuid1} and {uuid2}."""
 

@@ -10,7 +10,6 @@ __all__ = [
 ]
 
 
-
 class AuthUseCase:
     """Use case for authentication."""
 
@@ -34,8 +33,8 @@ class AuthUseCase:
         user = users[0]
 
         if authenticator.password_is_correct(
-                given_password=credentials.password,
-                reference=user.password,
+            given_password=credentials.password,
+            reference=user.password.get_secret_value(),
         ):
             return user
 

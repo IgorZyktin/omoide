@@ -12,13 +12,9 @@ from omoide.domain.core import core_models
 
 ITEM_RELATED = frozenset((
     actions.Media.CREATE,
-
-    actions.Metainfo.READ,
-    actions.Metainfo.UPDATE,
 ))
 
 READ_ONLY = frozenset((
-    actions.Metainfo.READ,
     actions.Item.READ,
 ))
 

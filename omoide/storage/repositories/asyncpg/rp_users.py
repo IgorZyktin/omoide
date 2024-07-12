@@ -1,8 +1,10 @@
 """Repository that performs read operations on users."""
 from uuid import UUID
+from uuid import uuid4
 
 import sqlalchemy as sa
 
+from omoide import exceptions
 from omoide import models
 from omoide.storage import interfaces
 from omoide.storage.asyncpg_storage import AsyncpgStorage
@@ -11,6 +13,40 @@ from omoide.storage.database import db_models
 
 class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
     """Repository that performs read operations on users."""
+
+    async def get_free_uuid(self) -> UUID:
+        """Generate new unused UUID4."""
+        while True:
+            uuid = uuid4()
+
+            stmt = sa.select(
+                db_models.User.uuid
+            ).where(
+                db_models.User.uuid == uuid
+            ).exists()
+
+            exists = await self.db.fetch_one(stmt, {'uuid': uuid})
+
+            if not exists:
+                return uuid
+
+    async def create_user(
+        self,
+        user: models.User,
+        auth_complexity: int,
+    ) -> None:
+        """Create new user."""
+        stmt = sa.insert(
+            db_models.User
+        ).values(
+            uuid=user.uuid,
+            login=user.login,
+            password=user.password,
+            root_item=user.root_item,
+            auth_complexity=auth_complexity,
+        )
+
+        await self.db.execute(stmt)
 
     async def read_user(self, uuid: UUID) -> models.User | None:
         """Return User or None."""
@@ -23,6 +59,46 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             return user
 
         return None
+
+    async def get_user(self, uuid: UUID) -> models.User:
+        """Return User."""
+        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            msg = 'User with UUID {uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, uuid=uuid)
+
+        return models.User(**response, role=models.Role.user)
+
+    async def get_user_by_login(
+        self,
+        login: str,
+        allow_absence: bool = False,
+    ) -> models.User | None:
+        """Return User or None."""
+        stmt = sa.select(db_models.User).where(db_models.User.login == login)
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            if allow_absence:
+                return None
+
+            msg = 'User with given login does not exist'
+            raise exceptions.DoesNotExistError(msg)
+
+        return models.User(**response, role=models.Role.user)
+
+    async def update_user(self, uuid: UUID, **kwargs: str) -> None:
+        """Update User."""
+        stmt = sa.update(
+            db_models.User
+        ).where(
+            db_models.User.uuid == uuid
+        ).values(
+            **kwargs
+        )
+        await self.db.execute(stmt)
 
     async def read_filtered_users(
         self,

@@ -9,8 +9,37 @@ class AbsUsersRepo(abc.ABC):
     """Repository that performs read operations on users."""
 
     @abc.abstractmethod
+    async def get_free_uuid(self) -> UUID:
+        """Generate new unused UUID."""
+
+    @abc.abstractmethod
+    async def create_user(
+        self,
+        user: models.User,
+        auth_complexity: int,
+    ) -> None:
+        """Create new user."""
+
+    # TODO - remove this method
+    @abc.abstractmethod
     async def read_user(self, uuid: UUID) -> models.User | None:
         """Return User or None."""
+
+    @abc.abstractmethod
+    async def get_user(self, uuid: UUID) -> models.User:
+        """Return User."""
+
+    @abc.abstractmethod
+    async def get_user_by_login(
+        self,
+        login: str,
+        allow_absence: bool = False,
+    ) -> models.User | None:
+        """Return User or None."""
+
+    @abc.abstractmethod
+    async def update_user(self, uuid: UUID, **kwargs: str) -> None:
+        """Update User."""
 
     @abc.abstractmethod
     async def read_filtered_users(

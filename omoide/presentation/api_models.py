@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Input and output models for the API.
-"""
+"""Input and output models for the API."""
 from typing import Optional
 from uuid import UUID
 
@@ -99,15 +97,6 @@ class CreateItemIn(pydantic.BaseModel):
 class CreateItemsIn(CreateItemIn):
     """Input info for bulk item creation."""
     total: int
-
-
-class CreateUserIn(pydantic.BaseModel):
-    """Input info for user creation."""
-    uuid: Optional[UUID] = None
-    root_item: Optional[UUID] = None
-    login: str
-    password: str
-    name: Optional[str] = None
 
 
 class NewTagsIn(pydantic.BaseModel):

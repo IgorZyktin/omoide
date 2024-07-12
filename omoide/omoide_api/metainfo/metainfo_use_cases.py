@@ -1,32 +1,15 @@
-"""Use cases for Metainfo."""
+"""Use cases for Metainfo-related operations."""
 from uuid import UUID
 
-from omoide import exceptions
 from omoide import models
 from omoide import utils
-from omoide.domain import Item  # FIXME - import from models
 from omoide.infra import custom_logging
 from omoide.omoide_api.common.use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseMetainfoUseCase(BaseAPIUseCase):
-    """Base class for metainfo-related use cases."""
-
-    async def _get_item(self, item_uuid: UUID) -> Item:
-        """Generic checks before work."""
-        # FEATURE - raise right from repository
-        item = await self.mediator.items_repo.read_item(item_uuid)
-
-        if item is None:
-            msg = 'Item with UUID {uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, uuid=item_uuid)
-
-        return item
-
-
-class ReadMetainfoUseCase(BaseMetainfoUseCase):
+class ReadMetainfoUseCase(BaseAPIUseCase):
     """Use case for getting Metainfo."""
 
     async def execute(
@@ -34,28 +17,20 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
         user: models.User,
         item_uuid: UUID,
     ) -> models.Metainfo:
-        self.ensure_not_anon(user, target='read metainfo records')
+        """Execute."""
+        self.ensure_not_anon(user, operation='read metainfo records')
 
         async with self.mediator.storage.transaction():
-            item = await self._get_item(item_uuid)
-
-            if (
-                item.owner_uuid != user.uuid
-                and str(user.uuid) not in item.permissions
-                and not user.is_admin
-            ):
-                msg = (
-                    'You are not allowed to perform '
-                    'such operation with item metadata'
-                )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_allowed_to(user, item,
+                                            subject='item metadata')
 
             metainfo = await self.mediator.meta_repo.read_metainfo(item_uuid)
 
         return metainfo
 
 
-class UpdateMetainfoUseCase(BaseMetainfoUseCase):
+class UpdateMetainfoUseCase(BaseAPIUseCase):
     """Use case for updating Metainfo."""
 
     async def execute(
@@ -64,21 +39,14 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
         item_uuid: UUID,
         metainfo: models.Metainfo,
     ) -> None:
-        """Business logic."""
-        LOG.info('Updating metainfo for item {}, command by user {}',
-                 item_uuid, user.uuid)
-
-        self.ensure_not_anon(user, target='update metainfo records')
+        """Execute."""
+        self.ensure_not_anon(user, operation='update metainfo records')
 
         async with self.mediator.storage.transaction():
-            item = await self._get_item(item_uuid)
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='item metadata')
 
-            if item.owner_uuid != user.uuid and not user.is_admin:
-                msg = (
-                    'You are not allowed to perform '
-                    'such operation with item metadata'
-                )
-                raise exceptions.AccessDeniedError(msg, uuid=item_uuid)
+            LOG.info('Updating metainfo for {}, command by {}', item, user)
 
             current_metainfo = await self.mediator.meta_repo.read_metainfo(
                 item_uuid

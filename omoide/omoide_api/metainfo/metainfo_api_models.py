@@ -13,7 +13,7 @@ MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
 
 # TODO - drop unused columns
 _BASE_EXAMPLE = {
-    'user_time': None,
+    'user_time': '2022-02-16 19:51:14.321331+00:00',
     'content_type': 'image/jpeg',
     'author': None,
     'author_url': None,
@@ -67,7 +67,7 @@ class MetainfoInput(BaseModel):
     @model_validator(mode='after')
     def ensure_extras_are_not_too_big(self) -> 'MetainfoInput':  # TODO - Self
         """Raise if given string is too big."""
-        size = utils.get_size(self.exif)
+        size = utils.get_size(self.extras)
         if size > MAXIMUM_EXTRAS_SIZE:
             hr_size = utils.human_readable_size(size)
             hr_limit = utils.human_readable_size(MAXIMUM_EXTRAS_SIZE)

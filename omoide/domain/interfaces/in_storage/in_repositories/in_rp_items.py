@@ -36,12 +36,18 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     ) -> list[domain.Item]:
         """Return list of root items."""
 
+    # TODO - remove this method
     @abc.abstractmethod
     async def read_item(
             self,
             uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return Item or None."""
+
+    # TODO - import from models
+    @abc.abstractmethod
+    async def get_item(self, uuid: UUID) -> domain.Item:
+        """Return Item."""
 
     @abc.abstractmethod
     async def read_children_of(
@@ -108,8 +114,8 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
         """Return corresponding item."""
 
     @abc.abstractmethod
-    async def generate_item_uuid(self) -> UUID:
-        """Generate new UUID4 for the item."""
+    async def get_free_uuid(self) -> UUID:
+        """Generate new UUID for the item."""
 
     @abc.abstractmethod
     async def create_item(

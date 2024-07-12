@@ -234,7 +234,7 @@ class BaseItemModifyUseCase:
             payload: api_models.CreateItemIn | api_models.CreateItemsIn,
     ) -> UUID:
         """Helper functions that handles creation of an item."""
-        uuid = await self.items_repo.generate_item_uuid()
+        uuid = await self.items_repo.get_free_uuid()
 
         item = domain.Item(
             uuid=uuid,

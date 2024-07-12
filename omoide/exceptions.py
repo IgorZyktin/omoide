@@ -18,7 +18,7 @@ class BaseOmoideApiError(Exception):
         self.name = type(self).__name__
 
         if kwargs:
-            self.rendered_text = self._render_text(**kwargs)
+            self.rendered_text = self._render_text(msg, **kwargs)
 
     @staticmethod
     def _render_text(template: str, **kwargs) -> str:

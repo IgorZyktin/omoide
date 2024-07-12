@@ -14,7 +14,6 @@ __all__ = [
     'Item',
     'SimpleItem',
     'PositionedItem',
-    'PositionedByUserItem',
     'Location',
     'AccessStatus',
     'Query',
@@ -38,6 +37,11 @@ class Item(BaseModel):
     thumbnail_ext: Optional[str] = None
     tags: list[str] = []
     permissions: list[UUID] = []
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        name = type(self).__name__
+        return f'<{name} {self.uuid} {self.name}>'
 
     def get_generic(self) -> dict[const.MEDIA_TYPE, 'ItemGeneric']:
         """Proxy that helps with content/preview/thumbnail."""
@@ -91,20 +95,6 @@ class SimpleItem(TypedDict):
 
 class PositionedItem(BaseModel):
     """Primitive version of an item with position information."""
-    position: int
-    total_items: int
-    items_per_page: int
-    item: Item
-
-    @property
-    def page(self) -> int:
-        """Return page number for this item in parent's collection."""
-        return self.position // self.items_per_page + 1
-
-
-class PositionedByUserItem(BaseModel):
-    """Same as PositionedItem but according to user catalogue."""
-    user: models.User
     position: int
     total_items: int
     items_per_page: int

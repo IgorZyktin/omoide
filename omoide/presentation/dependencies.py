@@ -230,6 +230,8 @@ def get_policy(
 
 @utils.memorize
 def get_mediator(
+    authenticator: Annotated[interfaces.AbsAuthenticator,
+                             Depends(get_authenticator)],
     exif_repo: Annotated[st_interfaces.AbsEXIFRepository,
                          Depends(get_exif_repo)],
     items_repo: Annotated[AbsItemsRepo, Depends(get_items_repo)],
@@ -242,6 +244,7 @@ def get_mediator(
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
+        authenticator=authenticator,
         exif_repo=exif_repo,
         items_repo=items_repo,
         meta_repo=meta_repo,
@@ -355,14 +358,6 @@ def api_search_use_case(
         search_repo=search_repository,
         browse_repo=browse_repository,
     )
-
-
-def api_suggest_tag_use_case(
-        search_repository:
-        interfaces.AbsSearchRepository = Depends(get_search_repo),
-) -> use_cases.ApiSuggestTagUseCase:
-    """Get use case instance."""
-    return use_cases.ApiSuggestTagUseCase(search_repo=search_repository)
 
 
 @utils.memorize

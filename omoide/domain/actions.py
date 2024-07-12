@@ -20,10 +20,3 @@ class Item(Action):
     READ = enum.auto()
     UPDATE = enum.auto()
     DELETE = enum.auto()
-
-
-# noinspection PyArgumentList
-class Metainfo(Action):
-    """Operations on Metainfo."""
-    READ = enum.auto()
-    UPDATE = enum.auto()

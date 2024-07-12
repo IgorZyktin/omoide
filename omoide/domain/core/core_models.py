@@ -11,13 +11,6 @@ AccessStatus = common.AccessStatus
 
 
 @dataclass
-class GuessResult:
-    """Variants that can possibly match with user guess."""
-    tag: str
-    counter: int
-
-
-@dataclass
 class Media:
     """Transient content fot the item."""
     id: int
