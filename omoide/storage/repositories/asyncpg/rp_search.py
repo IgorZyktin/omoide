@@ -159,7 +159,7 @@ class SearchRepository(interfaces.AbsSearchRepository):
     ) -> list[str]:
         """Autocomplete tag for anon user."""
         stmt = sa.select(
-            db_models.KnownTagsAnon.tag
+            sa.func.distinct(db_models.KnownTagsAnon.tag)
         ).where(
             db_models.KnownTagsAnon.tag.ilike(tag + '%'),  # type: ignore
             db_models.KnownTagsAnon.counter > 0,
@@ -184,7 +184,7 @@ class SearchRepository(interfaces.AbsSearchRepository):
         ).where(
             db_models.KnownTags.tag.ilike(tag + '%'),  # type: ignore
             db_models.KnownTags.user_uuid == user.uuid,
-            db_models.KnownTagsAnon.counter > 0,
+            db_models.KnownTags.counter > 0,
         ).order_by(
             sa.desc(db_models.KnownTags.counter),
             sa.asc(db_models.KnownTags.tag),
