@@ -22,7 +22,7 @@ users_router = APIRouter(prefix='/users', tags=['Users'])
     response_model=users_api_models.UserOutput,
 )
 async def api_create_user(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_in: users_api_models.UserInput,
 ):
@@ -50,7 +50,7 @@ async def api_create_user(
     response_model=users_api_models.UserCollectionOutput,
 )
 async def api_get_all_users(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get list of users.
@@ -85,7 +85,7 @@ async def api_get_all_users(
 )
 async def api_get_user_resource_usage(
     uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get resource usage info for specific user."""
@@ -137,7 +137,7 @@ async def api_get_anon_tags(
 )
 async def api_get_user_tags(
     uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get all known tags for specific user."""
@@ -159,7 +159,7 @@ async def api_get_user_tags(
 )
 async def api_get_user_by_uuid(
     uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get user by UUID."""
@@ -184,7 +184,7 @@ async def api_get_user_by_uuid(
 )
 async def api_change_user_name(
     uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     payload: users_api_models.UserValueInput,
 ):
@@ -210,7 +210,7 @@ async def api_change_user_name(
 )
 async def api_change_user_login(
     uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     payload: users_api_models.UserValueInput,
 ):
@@ -236,7 +236,7 @@ async def api_change_user_login(
 )
 async def api_change_user_password(
     uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     payload: users_api_models.UserValueInput,
 ):

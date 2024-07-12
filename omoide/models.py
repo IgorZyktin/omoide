@@ -136,6 +136,28 @@ class Metainfo(BaseModel):
 
 
 @dataclass
+class RawMedia:
+    """Transient content fot the item (raw user input)."""
+    media_type: str
+    content: bytes
+    ext: str
+
+
+@dataclass
+class Media:
+    """Transient content fot the item."""
+    id: int
+    created_at: datetime
+    processed_at: datetime | None
+    error: str
+    owner_uuid: UUID
+    item_uuid: UUID
+    media_type: str
+    content: bytes
+    ext: str
+
+
+@dataclass
 class SpaceUsage(ModelMixin):
     """Total size of user data for specific user."""
     uuid: UUID
