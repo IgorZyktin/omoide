@@ -3,6 +3,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 from asyncpg import exceptions as asyncpg_exceptions
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import exceptions
 from omoide.storage import interfaces
@@ -49,19 +50,22 @@ class EXIFRepository(interfaces.AbsEXIFRepository, AsyncpgStorage):
 
     async def update_exif(self, item_uuid: UUID, exif: dict[str, str]) -> None:
         """Update EXIF."""
-        stmt = sa.update(
+        insert = pg_insert(
             db_models.EXIF
         ).where(
             db_models.EXIF.item_uuid == item_uuid
         ).values(
             exif=exif,
-        ).returning(1)
+        )
 
-        response = await self.db.fetch_one(stmt)
+        stmt = insert.on_conflict_do_update(
+            index_elements=[db_models.EXIF.item_uuid],
+            set_={
+                'tags': insert.excluded.tags,
+            }
+        )
 
-        if response is None:
-            msg = 'EXIF data for item {item_uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
+        await self.db.execute(stmt)
 
     async def delete_exif(self, item_uuid: UUID) -> None:
         """Delete EXIF."""

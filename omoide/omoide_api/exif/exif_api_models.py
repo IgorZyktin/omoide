@@ -23,6 +23,10 @@ class EXIFModel(BaseModel):
                     'FNumber': 2.8,
                     'Contrast': 'Normal',
                     'DateTime': '2007:08:10 08:23:29',
+                    'thumbnail': {
+                        'ImageWidth': 512,
+                        'ImageHeight': 384,
+                    }
                 }
             ]
         }
