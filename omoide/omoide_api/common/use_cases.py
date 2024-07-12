@@ -21,62 +21,96 @@ class BaseAPIUseCase(abc.ABC):
         error_message: str = '',
     ) -> None:
         """Raise if Anon requesting this."""
-        if user.is_anon:
-            if error_message:
-                msg = error_message
-            elif operation:
-                msg = f'Anonymous users are not allowed to {operation}'
-            else:
-                msg = (
-                    'Anonymous users are not allowed to perform such requests'
-                )
+        if user.is_not_anon:
+            return
 
-            raise exceptions.AccessDeniedError(msg)
+        if error_message:
+            msg = error_message
+        elif operation:
+            msg = f'Anonymous users are not allowed to {operation}'
+        else:
+            msg = (
+                'Anonymous users are not allowed to perform such requests'
+            )
 
-        return None
+        raise exceptions.AccessDeniedError(msg)
 
     @staticmethod
     def ensure_admin_or_owner(
         user: models.User,
-        item: domain.Item,
+        target: domain.Item | models.User,  # TODO - import Item from models
         subject: str = '',
         error_message: str = '',
     ) -> None:
         """Raise if one user tries to manage object of some other user."""
-        if item.owner_uuid != user.uuid and not user.is_admin:
-            if error_message:
-                msg = error_message
-            elif subject:
-                msg = (
-                    'You are not allowed to perform '
-                    f'such operations with {subject}'
-                )
-            else:
-                msg = 'You are not allowed to perform such operations'
+        conditions: list[bool] = []
 
-            raise exceptions.AccessDeniedError(msg)
+        if isinstance(target, models.User):
+            conditions.append(user.uuid == target.uuid)
+        else:
+            conditions.append(target.owner_uuid == user.uuid)
+
+        if all(conditions) or user.is_admin:
+            return
+
+        if error_message:
+            msg = error_message
+        elif subject:
+            msg = (
+                'You are not allowed to perform '
+                f'such operations with {subject}'
+            )
+        else:
+            msg = 'You are not allowed to perform such operations'
+
+        raise exceptions.AccessDeniedError(msg)
 
     @staticmethod
     def ensure_admin_or_allowed_to(
         user: models.User,
-        item: domain.Item,
+        item: domain.Item,  # TODO - import Item from models
         subject: str = '',
         error_message: str = '',
     ) -> None:
         """Raise if one user tries to manage object of some other user."""
-        if (
-            item.owner_uuid != user.uuid
-            and not user.is_admin
-            and str(user.uuid) not in item.permissions
-        ):
-            if error_message:
-                msg = error_message
-            elif subject:
-                msg = (
-                    'You are not allowed to perform '
-                    f'such operations with {subject}'
-                )
-            else:
-                msg = 'You are not allowed to perform such operations'
+        if all(
+            (
+                item.owner_uuid == user.uuid,
+                str(user.uuid) in item.permissions
+            )
+        ) or user.is_admin:
+            return
 
-            raise exceptions.AccessDeniedError(msg)
+        if error_message:
+            msg = error_message
+        elif subject:
+            msg = (
+                'You are not allowed to perform '
+                f'such operations with {subject}'
+            )
+        else:
+            msg = 'You are not allowed to perform such operations'
+
+        raise exceptions.AccessDeniedError(msg)
+
+    @staticmethod
+    def ensure_admin(
+        user: models.User,
+        subject: str = '',
+        error_message: str = '',
+    ) -> None:
+        """Raise if user is not admin."""
+        if user.is_admin:
+            return
+
+        if error_message:
+            msg = error_message
+        elif subject:
+            msg = (
+                'You are not allowed to perform '
+                f'such operations with {subject}'
+            )
+        else:
+            msg = 'You are not allowed to perform such operations'
+
+        raise exceptions.AccessDeniedError(msg)
