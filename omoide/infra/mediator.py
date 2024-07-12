@@ -1,23 +1,19 @@
 """Class that ties all components together."""
 from dataclasses import dataclass
 
-# FIXME - make uniform import path
-from omoide.domain.interfaces import AbsAuthenticator
-from omoide.domain.interfaces import AbsItemsRepo
-from omoide.domain.interfaces import AbsMediaRepository
-from omoide.domain.interfaces import AbsSearchRepository
-from omoide.storage import interfaces
+from omoide.domain import interfaces
+from omoide.storage import interfaces as storage_interfaces
 
 
 @dataclass()
 class Mediator:
     """Class that ties all components together."""
-    authenticator: AbsAuthenticator
-    exif_repo: interfaces.AbsEXIFRepository
-    items_repo: AbsItemsRepo
-    media_repo: AbsMediaRepository
-    meta_repo: interfaces.AbsMetainfoRepo
-    misc_repo: interfaces.AbsMiscRepo
-    search_repo: AbsSearchRepository
-    storage: interfaces.AbsStorage
-    users_repo: interfaces.AbsUsersRepo
+    authenticator: interfaces.AbsAuthenticator
+    exif_repo: storage_interfaces.AbsEXIFRepository
+    items_repo: storage_interfaces.AbsItemsRepo
+    media_repo: storage_interfaces.AbsMediaRepository
+    meta_repo: storage_interfaces.AbsMetainfoRepo
+    misc_repo: storage_interfaces.AbsMiscRepo
+    search_repo: storage_interfaces.AbsSearchRepository
+    storage: storage_interfaces.AbsStorage
+    users_repo: storage_interfaces.AbsUsersRepo

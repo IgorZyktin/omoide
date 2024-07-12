@@ -1,9 +1,9 @@
 """Use case for user profile tags."""
 from omoide import models
 from omoide.domain import errors
-from omoide.domain import interfaces
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
+from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'AppProfileTagsUseCase',
@@ -15,7 +15,7 @@ class AppProfileTagsUseCase:
 
     def __init__(
             self,
-            search_repo: interfaces.AbsSearchRepository,
+            search_repo: storage_interfaces.AbsSearchRepository,
     ) -> None:
         """Initialize instance."""
         self.search_repo = search_repo

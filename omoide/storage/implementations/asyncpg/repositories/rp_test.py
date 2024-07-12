@@ -4,14 +4,14 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
-from omoide.domain.interfaces.in_storage.in_repositories import in_rp_base
+from omoide.storage.interfaces.abs_storage import AbsStorage
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class RepositoryForTests(in_rp_base.AbsBaseRepository):
+class RepositoryForTests(AbsStorage):
     """Repository that performs special operations for tests."""
 
     async def drop_known_tags_for_known_user(self, user_uuid: UUID) -> None:

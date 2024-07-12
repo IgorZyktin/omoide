@@ -4,14 +4,14 @@ from uuid import UUID
 import sqlalchemy as sa
 
 from omoide import models
-from omoide.domain import interfaces
 from omoide.storage.database import db_models
+from omoide.storage.implementations.asyncpg import BrowseRepository
 from omoide.storage.implementations.asyncpg.repositories import queries
-from omoide.storage.implementations.asyncpg.repositories.rp_browse import BrowseRepository
+from omoide.storage import interfaces as storage_interfaces
 
 
 class PreviewRepository(
-    interfaces.AbsPreviewRepository,
+    storage_interfaces.AbsPreviewRepository,
     BrowseRepository,
 ):
     """Repository that performs all preview queries."""

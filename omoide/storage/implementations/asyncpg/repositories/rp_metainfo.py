@@ -6,12 +6,12 @@ import sqlalchemy as sa
 from omoide import exceptions
 from omoide import models
 from omoide import utils
-from omoide.storage import interfaces
-from omoide.storage.implementations.asyncpg.asyncpg_storage import AsyncpgStorage
+from omoide.storage import interfaces as storage_interfaces
+from omoide.storage.implementations import asyncpg
 from omoide.storage.database import db_models
 
 
-class MetainfoRepo(interfaces.AbsMetainfoRepo, AsyncpgStorage):
+class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
     """Repository that perform CRUD operations on metainfo."""
 
     async def create_empty_metainfo(

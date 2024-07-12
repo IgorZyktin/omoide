@@ -4,15 +4,16 @@ from sqlalchemy.sql import Select
 
 from omoide import domain
 from omoide import models
-from omoide.domain import interfaces
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.implementations.asyncpg.repositories import queries
-
+from omoide.storage import interfaces as storage_interfaces
+from omoide.storage.implementations import asyncpg
 LOG = custom_logging.get_logger(__name__)
 
 
-class SearchRepository(interfaces.AbsSearchRepository):
+class SearchRepository(storage_interfaces.AbsSearchRepository,
+                       asyncpg.AsyncpgStorage):
     """Repository that performs all search queries."""
 
     @staticmethod

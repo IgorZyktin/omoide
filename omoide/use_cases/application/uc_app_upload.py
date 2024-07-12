@@ -9,7 +9,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
+from omoide.storage import interfaces as storage_interfaces
 
 
 __all__ = [
@@ -22,8 +22,8 @@ class AppUploadUseCase:
 
     def __init__(
             self,
-            users_repo: AbsUsersRepo,
-            items_repo: interfaces.AbsItemsRepo,
+            users_repo: storage_interfaces.AbsUsersRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo

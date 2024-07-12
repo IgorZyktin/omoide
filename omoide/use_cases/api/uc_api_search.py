@@ -5,7 +5,7 @@ from typing import Optional
 from omoide import domain
 from omoide import models
 from omoide.domain import errors
-from omoide.domain import interfaces
+from omoide.storage import interfaces as storage_interfaces
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 
@@ -19,8 +19,8 @@ class ApiSearchUseCase:
 
     def __init__(
             self,
-            search_repo: interfaces.AbsSearchRepository,
-            browse_repo: interfaces.AbsBrowseRepository,
+            search_repo: storage_interfaces.AbsSearchRepository,
+            browse_repo: storage_interfaces.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.search_repo = search_repo

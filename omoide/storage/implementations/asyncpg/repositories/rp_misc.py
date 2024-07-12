@@ -9,14 +9,12 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from omoide import domain  # FIXME - use models instead
 from omoide import models
 from omoide.storage import interfaces
-from omoide.storage.implementations.asyncpg.asyncpg_storage import (
-    AsyncpgStorage
-)
 from omoide.storage.database import db_models
+from omoide.storage.implementations import asyncpg
 from omoide.storage.implementations.asyncpg.repositories import queries
 
 
-class MiscRepo(interfaces.AbsMiscRepo, AsyncpgStorage):
+class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     """Repository that performs various operations on different objects."""
 
     async def read_children_to_download(

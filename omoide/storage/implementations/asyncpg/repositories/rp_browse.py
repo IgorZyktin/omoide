@@ -8,8 +8,7 @@ from sqlalchemy.dialects import postgresql as pg
 
 from omoide import domain
 from omoide import models
-from omoide.domain.interfaces.in_storage \
-    .in_repositories.in_rp_browse import AbsBrowseRepository
+from omoide.storage import interfaces as storage_interfaces
 from omoide.storage.database import db_models
 from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 from omoide.storage.implementations.asyncpg.repositories import queries
@@ -19,7 +18,7 @@ from omoide.storage.implementations.asyncpg.repositories.rp_items import (
 
 
 class BrowseRepository(
-    AbsBrowseRepository,
+    storage_interfaces.AbsBrowseRepository,
     ItemsRepo,
 ):
     """Repository that performs all browse queries."""

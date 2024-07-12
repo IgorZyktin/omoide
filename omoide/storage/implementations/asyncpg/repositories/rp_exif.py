@@ -7,11 +7,11 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import exceptions
 from omoide.storage import interfaces
-from omoide.storage.implementations.asyncpg.asyncpg_storage import AsyncpgStorage
 from omoide.storage.database import db_models
+from omoide.storage.implementations import asyncpg
 
 
-class EXIFRepository(interfaces.AbsEXIFRepository, AsyncpgStorage):
+class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
     """Repository that performs CRUD operations on EXIF."""
 
     async def create_exif(self, item_uuid: UUID, exif: dict[str, str]) -> None:

@@ -9,8 +9,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
-from omoide.storage.interfaces import AbsMetainfoRepo
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
+from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'AppPreviewUseCase',
@@ -22,10 +21,10 @@ class AppPreviewUseCase:
 
     def __init__(
             self,
-            preview_repo: interfaces.AbsPreviewRepository,
-            users_repo: AbsUsersRepo,
-            items_repo: interfaces.AbsItemsRepo,
-            meta_repo: AbsMetainfoRepo,
+            preview_repo: storage_interfaces.AbsPreviewRepository,
+            users_repo: storage_interfaces.AbsUsersRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            meta_repo: storage_interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.preview_repo = preview_repo

@@ -3,7 +3,7 @@ from typing import Optional
 
 from omoide import domain
 from omoide import models
-from omoide.domain import interfaces
+from omoide.storage import interfaces as storage_interfaces
 from omoide.infra.special_types import Success
 
 __all__ = [
@@ -14,7 +14,10 @@ __all__ = [
 class AppHomeUseCase:
     """Use case for home page."""
 
-    def __init__(self, browse_repo: interfaces.AbsBrowseRepository) -> None:
+    def __init__(
+        self,
+        browse_repo: storage_interfaces.AbsBrowseRepository,
+    ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
 

@@ -4,7 +4,7 @@ from typing import Optional
 from omoide import domain
 from omoide import models
 from omoide.domain import errors
-from omoide.domain import interfaces
+from omoide.storage import interfaces as storage_interfaces
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 
@@ -18,7 +18,7 @@ class APIProfileNewUseCase:
 
     def __init__(
             self,
-            browse_repo: interfaces.AbsBrowseRepository,
+            browse_repo: storage_interfaces.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo

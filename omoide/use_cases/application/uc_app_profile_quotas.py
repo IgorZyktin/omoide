@@ -1,12 +1,11 @@
 """Use case for user profile quotas."""
 from omoide import models
 from omoide.domain import errors
-from omoide.domain import interfaces
 from omoide.infra.mediator import Mediator
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
+from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'AppProfileQuotasUseCase',
@@ -17,10 +16,10 @@ class AppProfileQuotasUseCase:
     """Use case for user profile quotas."""
 
     def __init__(
-            self,
-            mediator: Mediator,
-            users_repo: AbsUsersRepo,
-            items_repo: interfaces.AbsItemsRepo,
+        self,
+        mediator: Mediator,
+        users_repo: storage_interfaces.AbsUsersRepo,
+        items_repo: storage_interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
         self.mediator = mediator
@@ -28,8 +27,8 @@ class AppProfileQuotasUseCase:
         self.items_repo = items_repo
 
     async def execute(
-            self,
-            user: models.User,
+        self,
+        user: models.User,
     ) -> Result[errors.Error, tuple[models.SpaceUsage, int, int]]:
         """Return amount of items that correspond to query (not items)."""
         if user.is_anon or user.uuid is None:

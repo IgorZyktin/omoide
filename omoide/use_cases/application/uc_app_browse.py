@@ -11,8 +11,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
-from omoide.storage.interfaces import AbsMetainfoRepo
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
+from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'BrowseResult',
@@ -38,10 +37,10 @@ class AppBrowseUseCase:
 
     def __init__(
             self,
-            browse_repo: interfaces.AbsBrowseRepository,
-            users_repo: AbsUsersRepo,
-            items_repo: interfaces.AbsItemsRepo,
-            meta_repo: AbsMetainfoRepo,
+            browse_repo: storage_interfaces.AbsBrowseRepository,
+            users_repo: storage_interfaces.AbsUsersRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            meta_repo: storage_interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo

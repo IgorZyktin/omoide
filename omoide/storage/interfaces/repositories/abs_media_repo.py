@@ -1,16 +1,12 @@
-"""Repository that perform CRUD operations on media records.
-"""
+"""Repository that perform CRUD operations on media records."""
 import abc
 from uuid import UUID
 
 from omoide import models
 from omoide.domain.core import core_models
-from omoide.domain.interfaces.in_storage.in_repositories.in_rp_base import (
-    AbsBaseRepository,
-)
 
 
-class AbsMediaRepository(AbsBaseRepository):
+class AbsMediaRepository(abc.ABC):
     """Repository that perform CRUD operations on media records."""
 
     @abc.abstractmethod

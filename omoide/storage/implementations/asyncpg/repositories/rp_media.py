@@ -6,16 +6,14 @@ import sqlalchemy as sa
 from omoide import models
 from omoide import utils
 from omoide.domain.core import core_models
-from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
-    AbsMediaRepository
-)
+from omoide.storage import interfaces
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
-
+from omoide.storage.implementations import asyncpg
 LOG = custom_logging.get_logger(__name__)
 
 
-class MediaRepository(AbsMediaRepository):
+class MediaRepository(interfaces.AbsMediaRepository, asyncpg.AsyncpgStorage):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(

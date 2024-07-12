@@ -16,17 +16,12 @@ from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.interfaces import AbsPolicy
-from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
-    AbsMediaRepository
-)
+from omoide.storage import interfaces as storage_interfaces
 from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 from omoide.presentation import api_models
-from omoide.storage.interfaces import AbsMiscRepo
-from omoide.storage.interfaces import AbsMetainfoRepo
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 
 __all__ = [
     'ApiItemCreateUseCase',
@@ -54,7 +49,7 @@ class Writeback:
 
 @asynccontextmanager
 async def _generic_call(
-        misc_repo: AbsMiscRepo,
+        misc_repo: storage_interfaces.AbsMiscRepo,
         job_name: str,
         job_description: str,
         user_uuid: UUID,
@@ -118,7 +113,7 @@ async def _generic_call(
 
 @asynccontextmanager
 async def track_update_permissions_in_parents(
-        misc_repo: AbsMiscRepo,
+        misc_repo: storage_interfaces.AbsMiscRepo,
         user: models.User,
         item: domain.Item,
         added: Collection[UUID],
@@ -143,7 +138,7 @@ async def track_update_permissions_in_parents(
 
 @asynccontextmanager
 async def track_update_permissions_in_children(
-        misc_repo: AbsMiscRepo,
+        misc_repo: storage_interfaces.AbsMiscRepo,
         user: models.User,
         item: domain.Item,
         override: bool,
@@ -174,7 +169,7 @@ async def track_update_permissions_in_children(
 
 @asynccontextmanager
 async def track_update_tags_in_children(
-        misc_repo: AbsMiscRepo,
+        misc_repo: storage_interfaces.AbsMiscRepo,
         user: models.User,
         item: domain.Item,
         added: Collection[str],
@@ -203,9 +198,9 @@ class BaseItemMediaUseCase:
     def __init__(
             self,
             policy: AbsPolicy,
-            items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: AbsMetainfoRepo,
-            media_repo: AbsMediaRepository,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+            media_repo: storage_interfaces.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
         self.policy = policy
@@ -219,10 +214,10 @@ class BaseItemModifyUseCase:
 
     def __init__(
             self,
-            users_repo: AbsUsersRepo,
-            items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: AbsMetainfoRepo,
-            misc_repo: AbsMiscRepo,
+            users_repo: storage_interfaces.AbsUsersRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+            misc_repo: storage_interfaces.AbsMiscRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -315,7 +310,7 @@ class ApiItemReadUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -345,7 +340,7 @@ class ApiItemReadByNameUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -380,8 +375,8 @@ class ApiItemUpdateUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: AbsMetainfoRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
@@ -714,11 +709,11 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     def __init__(
             self,
             policy: AbsPolicy,
-            users_repo: AbsUsersRepo,
-            items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: AbsMetainfoRepo,
-            media_repo: AbsMediaRepository,
-            misc_repo: AbsMiscRepo,
+            users_repo: storage_interfaces.AbsUsersRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+            media_repo: storage_interfaces.AbsMediaRepository,
+            misc_repo: storage_interfaces.AbsMiscRepo,
     ) -> None:
         """Initialize instance."""
         super().__init__(policy, items_repo, metainfo_repo, media_repo)
@@ -831,9 +826,9 @@ class ApiItemsDownloadUseCase:
 
     def __init__(
             self,
-            items_repo: interfaces.AbsItemsRepo,
-            metainfo_repo: AbsMetainfoRepo,
-            misc_repo: AbsMiscRepo,
+            items_repo: storage_interfaces.AbsItemsRepo,
+            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+            misc_repo: storage_interfaces.AbsMiscRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo

@@ -11,6 +11,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
+from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'APIBrowseUseCase',
@@ -22,7 +23,7 @@ class APIBrowseUseCase:
 
     def __init__(
             self,
-            browse_repo: interfaces.AbsBrowseRepository,
+            browse_repo: storage_interfaces.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
