@@ -8,7 +8,9 @@ from omoide.domain import exceptions
 from omoide.domain import interfaces
 from omoide.domain.core import core_models
 from omoide.domain.interfaces import AbsPolicy
-from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
+    AbsMediaRepository,
+)
 from omoide.storage.interfaces import AbsMetainfoRepo
 
 __all__ = [

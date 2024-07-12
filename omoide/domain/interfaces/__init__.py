@@ -3,6 +3,8 @@ from omoide.domain.interfaces.in_storage \
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_items import AbsItemsRepo  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \
+    .in_repositories.in_rp_media import AbsMediaRepository  # noqa: F401,F403
+from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_preview import \
     AbsPreviewRepository  # noqa: F401,F403
 from omoide.domain.interfaces.in_storage \

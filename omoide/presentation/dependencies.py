@@ -24,7 +24,9 @@ from omoide.domain.interfaces import AbsItemsRepo
 from omoide.domain.interfaces import AbsPreviewRepository
 from omoide.domain.interfaces import AbsSearchRepository
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
-from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
+    AbsMediaRepository,
+)
 from omoide.infra.mediator import Mediator
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
@@ -114,7 +116,7 @@ def get_items_repo() -> AbsItemsRepo:
 
 
 @utils.memorize
-def media_repo() -> AbsMediaRepository:
+def get_media_repo() -> AbsMediaRepository:
     """Get repo instance."""
     return asyncpg.MediaRepository(get_db())
 
@@ -241,12 +243,15 @@ def get_mediator(
     search_repo: Annotated[AbsSearchRepository, Depends(get_search_repo)],
     storage: Annotated[st_interfaces.AbsStorage, Depends(get_storage)],
     users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    media_repo: Annotated[interfaces.AbsMediaRepository,
+                          Depends(get_media_repo)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
         exif_repo=exif_repo,
         items_repo=items_repo,
+        media_repo=media_repo,
         meta_repo=meta_repo,
         misc_repo=misc_repo,
         search_repo=search_repo,
@@ -521,7 +526,8 @@ def api_item_copy_image_use_case(
                               Depends(get_items_repo)],
         metainfo_repo: Annotated[st_interfaces.AbsMetainfoRepo,
                                  Depends(get_metainfo_repo)],
-        media_repository: Annotated[AbsMediaRepository, Depends(media_repo)],
+        media_repository: Annotated[AbsMediaRepository,
+                                    Depends(get_media_repo)],
 ) -> use_cases.ApiCopyImageUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyImageUseCase(
@@ -542,7 +548,7 @@ def api_item_update_parent_use_case(
     metainfo_repo: Annotated[st_interfaces.AbsMetainfoRepo,
                              Depends(get_metainfo_repo)],
     media_repository: Annotated[AbsMediaRepository,
-                                Depends(media_repo)],
+                                Depends(get_media_repo)],
     misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
@@ -589,7 +595,8 @@ def api_browse_use_case(
 
 def api_create_media_use_case(
         policy: Annotated[AbsPolicy, Depends(get_policy)],
-        media_repository: Annotated[AbsMediaRepository, Depends(media_repo)],
+        media_repository: Annotated[AbsMediaRepository,
+                                    Depends(get_media_repo)],
 ) -> use_cases.CreateMediaUseCase:
     """Get use case instance."""
     return use_cases.CreateMediaUseCase(policy=policy,

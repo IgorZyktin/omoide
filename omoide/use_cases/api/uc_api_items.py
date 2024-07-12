@@ -16,7 +16,9 @@ from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import interfaces
 from omoide.domain.interfaces import AbsPolicy
-from omoide.domain.storage.interfaces.in_rp_media import AbsMediaRepository
+from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
+    AbsMediaRepository
+)
 from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result

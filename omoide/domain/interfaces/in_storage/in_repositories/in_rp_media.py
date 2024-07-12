@@ -4,7 +4,9 @@ import abc
 from uuid import UUID
 
 from omoide.domain.core import core_models
-from omoide.domain.storage.interfaces.in_rp_base import AbsBaseRepository
+from omoide.domain.interfaces.in_storage.in_repositories.in_rp_base import (
+    AbsBaseRepository,
+)
 
 
 class AbsMediaRepository(AbsBaseRepository):
@@ -12,18 +14,18 @@ class AbsMediaRepository(AbsBaseRepository):
 
     @abc.abstractmethod
     async def create_media(
-            self,
-            media: core_models.Media,
+        self,
+        media: core_models.Media,
     ) -> core_models.Media:
         """Create Media, return media id."""
 
     @abc.abstractmethod
     async def copy_image(
-            self,
-            owner_uuid: UUID,
-            source_uuid: UUID,
-            target_uuid: UUID,
-            media_type: str,
-            ext: str,
+        self,
+        owner_uuid: UUID,
+        source_uuid: UUID,
+        target_uuid: UUID,
+        media_type: str,
+        ext: str,
     ) -> int:
         """Save intention to copy data between items."""
