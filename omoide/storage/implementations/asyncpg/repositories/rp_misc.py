@@ -9,9 +9,11 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from omoide import domain  # FIXME - use models instead
 from omoide import models
 from omoide.storage import interfaces
-from omoide.storage.asyncpg_storage import AsyncpgStorage
+from omoide.storage.implementations.asyncpg.asyncpg_storage import (
+    AsyncpgStorage
+)
 from omoide.storage.database import db_models
-from omoide.storage.repositories.asyncpg import queries
+from omoide.storage.implementations.asyncpg.repositories import queries
 
 
 class MiscRepo(interfaces.AbsMiscRepo, AsyncpgStorage):

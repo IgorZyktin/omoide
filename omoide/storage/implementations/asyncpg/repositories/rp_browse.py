@@ -11,10 +11,11 @@ from omoide import models
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_browse import AbsBrowseRepository
 from omoide.storage.database import db_models
-from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
-from omoide.storage.repositories.asyncpg import queries
-from omoide.storage.repositories.asyncpg \
-    .rp_items import ItemsRepo
+from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
+from omoide.storage.implementations.asyncpg.repositories import queries
+from omoide.storage.implementations.asyncpg.repositories.rp_items import (
+    ItemsRepo
+)
 
 
 class BrowseRepository(

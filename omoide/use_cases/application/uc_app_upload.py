@@ -9,7 +9,7 @@ from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
-from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
+from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 
 
 __all__ = [

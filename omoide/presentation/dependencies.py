@@ -21,19 +21,16 @@ from omoide import utils
 from omoide.domain import interfaces
 from omoide.domain.interfaces import AbsBrowseRepository
 from omoide.domain.interfaces import AbsItemsRepo
+from omoide.domain.interfaces import AbsMediaRepository
 from omoide.domain.interfaces import AbsPreviewRepository
 from omoide.domain.interfaces import AbsSearchRepository
 from omoide.domain.interfaces.infra.in_policy import AbsPolicy
-from omoide.domain.interfaces.in_storage.in_repositories.in_rp_media import (
-    AbsMediaRepository,
-)
 from omoide.infra.mediator import Mediator
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
-from omoide.storage import interfaces as st_interfaces
-from omoide.storage.asyncpg_storage import AsyncpgStorage
-from omoide.storage.repositories import asyncpg
+from omoide.storage import interfaces as storage_interfaces
+from omoide.storage.implementations import asyncpg
 
 
 @utils.memorize
@@ -43,8 +40,8 @@ def get_config() -> app_config.Config:
 
 
 def patch_request(
-        request: Request,
-        config: Annotated[app_config.Config, Depends(get_config)],
+    request: Request,
+    config: Annotated[app_config.Config, Depends(get_config)],
 ) -> None:
     """Monkey-patch the request.
 
@@ -77,64 +74,73 @@ def get_db() -> Database:
 
 
 @utils.memorize
-def get_storage() -> st_interfaces.AbsStorage:
+def get_storage() -> storage_interfaces.AbsStorage:
     """Get storage instance."""
-    return AsyncpgStorage(get_db())
+    return asyncpg.AsyncpgStorage(get_db())
 
 
 # repositories ----------------------------------------------------------------
 
 
+# TODO - remove
 @utils.memorize
 def get_search_repo() -> AbsSearchRepository:
     """Get repo instance."""
     return asyncpg.SearchRepository(get_db())
 
 
+# TODO - remove
 @utils.memorize
 def get_preview_repo() -> AbsPreviewRepository:
     """Get repo instance."""
     return asyncpg.PreviewRepository(get_db())
 
 
+# TODO - remove
 @utils.memorize
 def get_browse_repo() -> AbsBrowseRepository:
     """Get repo instance."""
     return asyncpg.BrowseRepository(get_db())
 
 
+# TODO - remove
 @utils.memorize
-def get_users_repo() -> st_interfaces.AbsUsersRepo:
+def get_users_repo() -> storage_interfaces.AbsUsersRepo:
     """Get repo instance."""
     return asyncpg.UsersRepo(get_db())
 
 
+# TODO - remove
 @utils.memorize
-def get_items_repo() -> AbsItemsRepo:
+def get_items_repo() -> interfaces.AbsItemsRepo:
     """Get repo instance."""
     return asyncpg.ItemsRepo(get_db())
 
 
+# TODO - remove
 @utils.memorize
-def get_media_repo() -> AbsMediaRepository:
+def get_media_repo() -> interfaces.AbsMediaRepository:
     """Get repo instance."""
     return asyncpg.MediaRepository(get_db())
 
 
+# TODO - remove
 @utils.memorize
-def get_exif_repo() -> st_interfaces.AbsEXIFRepository:
+def get_exif_repo() -> storage_interfaces.AbsEXIFRepository:
     """Get repo instance."""
     return asyncpg.EXIFRepository(get_db())
 
 
+# TODO - remove
 @utils.memorize
-def get_misc_repo() -> st_interfaces.AbsMiscRepo:
+def get_misc_repo() -> storage_interfaces.AbsMiscRepo:
     """Get repo instance."""
     return asyncpg.MiscRepo(get_db())
 
 
+# TODO - remove
 @utils.memorize
-def get_metainfo_repo() -> st_interfaces.AbsMetainfoRepo:
+def get_metainfo_repo() -> storage_interfaces.AbsMetainfoRepo:
     """Get repo instance."""
     return asyncpg.MetainfoRepo(get_db())
 
@@ -178,7 +184,8 @@ def get_credentials(request: Request) -> HTTPBasicCredentials:
 
 @utils.memorize
 def get_auth_use_case(
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
 ) -> use_cases.AuthUseCase:
     """Get use case instance."""
     return use_cases.AuthUseCase(users_repo=users_repo)
@@ -193,9 +200,9 @@ def get_authenticator() -> interfaces.AbsAuthenticator:
 
 
 async def get_current_user(
-        credentials: HTTPBasicCredentials = Depends(get_credentials),
-        use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
-        authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
+    credentials: HTTPBasicCredentials = Depends(get_credentials),
+    use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
+    authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
 ) -> models.User:
     """Load current user or use anon user."""
     if not credentials.username or not credentials.password:
@@ -204,9 +211,9 @@ async def get_current_user(
 
 
 async def get_known_user(
-        credentials: HTTPBasicCredentials = Depends(get_credentials),
-        use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
-        authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
+    credentials: HTTPBasicCredentials = Depends(get_credentials),
+    use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
+    authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
 ) -> models.User:
     """Load current user, raise if got anon."""
     user = None
@@ -224,7 +231,7 @@ async def get_known_user(
 
 @utils.memorize
 def get_policy(
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> interfaces.AbsPolicy:
     """Get policy instance."""
     return infra.Policy(items_repo=items_repo)
@@ -234,17 +241,21 @@ def get_policy(
 def get_mediator(
     authenticator: Annotated[interfaces.AbsAuthenticator,
                              Depends(get_authenticator)],
-    exif_repo: Annotated[st_interfaces.AbsEXIFRepository,
+    exif_repo: Annotated[storage_interfaces.AbsEXIFRepository,
                          Depends(get_exif_repo)],
     items_repo: Annotated[AbsItemsRepo, Depends(get_items_repo)],
     media_repo: Annotated[interfaces.AbsMediaRepository,
                           Depends(get_media_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
-    search_repo: Annotated[AbsSearchRepository, Depends(get_search_repo)],
-    storage: Annotated[st_interfaces.AbsStorage, Depends(get_storage)],
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
+    search_repo: Annotated[AbsSearchRepository,
+                           Depends(get_search_repo)],
+    storage: Annotated[storage_interfaces.AbsStorage,
+                       Depends(get_storage)],
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
@@ -265,10 +276,10 @@ def get_mediator(
 
 @utils.memorize
 def app_dynamic_search_use_case(
-        search_repository:
-        interfaces.AbsSearchRepository = Depends(get_search_repo),
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    search_repository:
+    interfaces.AbsSearchRepository = Depends(get_search_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppDynamicSearchUseCase:
     """Get use case instance."""
     return use_cases.AppDynamicSearchUseCase(
@@ -279,10 +290,10 @@ def app_dynamic_search_use_case(
 
 @utils.memorize
 def app_paged_search_use_case(
-        search_repository:
-        interfaces.AbsSearchRepository = Depends(get_search_repo),
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    search_repository:
+    interfaces.AbsSearchRepository = Depends(get_search_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppPagedSearchUseCase:
     """Get use case instance."""
     return use_cases.AppPagedSearchUseCase(
@@ -293,11 +304,11 @@ def app_paged_search_use_case(
 
 @utils.memorize
 def app_preview_use_case(
-        preview_repository:
-        interfaces.AbsPreviewRepository = Depends(get_preview_repo),
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    preview_repository:
+    interfaces.AbsPreviewRepository = Depends(get_preview_repo),
+    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.AppPreviewUseCase:
     """Get use case instance."""
     return use_cases.AppPreviewUseCase(
@@ -310,11 +321,11 @@ def app_preview_use_case(
 
 @utils.memorize
 def app_browse_use_case(
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.AppBrowseUseCase:
     """Get use case instance."""
     return use_cases.AppBrowseUseCase(
@@ -327,8 +338,8 @@ def app_browse_use_case(
 
 @utils.memorize
 def app_home_use_case(
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.AppHomeUseCase:
     """Get use case instance."""
     return use_cases.AppHomeUseCase(
@@ -338,8 +349,8 @@ def app_home_use_case(
 
 @utils.memorize
 def app_upload_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppUploadUseCase:
     """Get use case instance."""
     return use_cases.AppUploadUseCase(
@@ -353,10 +364,10 @@ def app_upload_use_case(
 
 @utils.memorize
 def api_search_use_case(
-        search_repository:
-        interfaces.AbsSearchRepository = Depends(get_search_repo),
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    search_repository:
+    interfaces.AbsSearchRepository = Depends(get_search_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.ApiSearchUseCase:
     """Get use case instance."""
     return use_cases.ApiSearchUseCase(
@@ -367,8 +378,8 @@ def api_search_use_case(
 
 @utils.memorize
 def app_item_create_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppItemCreateUseCase:
     """Get use case instance."""
     return use_cases.AppItemCreateUseCase(
@@ -379,9 +390,9 @@ def app_item_create_use_case(
 
 @utils.memorize
 def app_item_update_use_case(
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.AppItemUpdateUseCase(
@@ -393,7 +404,7 @@ def app_item_update_use_case(
 
 @utils.memorize
 def app_item_delete_use_case(
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.AppItemDeleteUseCase(
@@ -404,9 +415,10 @@ def app_item_delete_use_case(
 @utils.memorize
 def api_items_download_use_case(
     items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
 ) -> use_cases.ApiItemsDownloadUseCase:
     """Get use case instance."""
     return use_cases.ApiItemsDownloadUseCase(
@@ -421,11 +433,14 @@ def api_items_download_use_case(
 
 @utils.memorize
 def api_item_create_use_case(
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
-    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
 ) -> use_cases.ApiItemCreateUseCase:
     """Get use case instance."""
     return use_cases.ApiItemCreateUseCase(
@@ -438,11 +453,14 @@ def api_item_create_use_case(
 
 @utils.memorize
 def api_item_create_bulk_use_case(
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
-    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
 ) -> use_cases.ApiItemCreateBulkUseCase:
     """Get use case instance."""
     return use_cases.ApiItemCreateBulkUseCase(
@@ -455,7 +473,7 @@ def api_item_create_bulk_use_case(
 
 @utils.memorize
 def api_item_read_use_case(
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.ApiItemReadUseCase:
     """Get use case instance."""
     return use_cases.ApiItemReadUseCase(
@@ -465,7 +483,7 @@ def api_item_read_use_case(
 
 @utils.memorize
 def api_item_read_by_name_use_case(
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.ApiItemReadByNameUseCase:
     """Get use case instance."""
     return use_cases.ApiItemReadByNameUseCase(
@@ -475,8 +493,8 @@ def api_item_read_by_name_use_case(
 
 @utils.memorize
 def api_item_update_use_case(
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
-        meta_repo: st_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
 ) -> use_cases.ApiItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateUseCase(
@@ -487,11 +505,14 @@ def api_item_update_use_case(
 
 @utils.memorize
 def api_item_update_tags_use_case(
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
-    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdateTagsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateTagsUseCase(
@@ -504,11 +525,14 @@ def api_item_update_tags_use_case(
 
 @utils.memorize
 def api_item_update_permissions_use_case(
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
-    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdatePermissionsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdatePermissionsUseCase(
@@ -521,13 +545,13 @@ def api_item_update_permissions_use_case(
 
 @utils.memorize
 def api_item_copy_image_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        items_repo: Annotated[interfaces.AbsItemsRepo,
-                              Depends(get_items_repo)],
-        metainfo_repo: Annotated[st_interfaces.AbsMetainfoRepo,
-                                 Depends(get_metainfo_repo)],
-        media_repository: Annotated[AbsMediaRepository,
-                                    Depends(get_media_repo)],
+    policy: Annotated[AbsPolicy, Depends(get_policy)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    metainfo_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
+                             Depends(get_metainfo_repo)],
+    media_repository: Annotated[interfaces.AbsMediaRepository,
+                                Depends(get_media_repo)],
 ) -> use_cases.ApiCopyImageUseCase:
     """Get use case instance."""
     return use_cases.ApiCopyImageUseCase(
@@ -541,15 +565,16 @@ def api_item_copy_image_use_case(
 @utils.memorize
 def api_item_update_parent_use_case(
     policy: Annotated[AbsPolicy, Depends(get_policy)],
-    users_repo: Annotated[st_interfaces.AbsUsersRepo,
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
                           Depends(get_users_repo)],
     items_repo: Annotated[interfaces.AbsItemsRepo,
                           Depends(get_items_repo)],
-    metainfo_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    metainfo_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                              Depends(get_metainfo_repo)],
     media_repository: Annotated[AbsMediaRepository,
                                 Depends(get_media_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[
+        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateParentUseCase(
@@ -564,11 +589,14 @@ def api_item_update_parent_use_case(
 
 @utils.memorize
 def api_item_delete_use_case(
-    users_repo: Annotated[st_interfaces.AbsUsersRepo, Depends(get_users_repo)],
-    items_repo: Annotated[interfaces.AbsItemsRepo, Depends(get_items_repo)],
-    meta_repo: Annotated[st_interfaces.AbsMetainfoRepo,
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
-    misc_repo: Annotated[st_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
+                         Depends(get_misc_repo)],
 ) -> use_cases.ApiItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.ApiItemDeleteUseCase(
@@ -581,8 +609,8 @@ def api_item_delete_use_case(
 
 @utils.memorize
 def api_browse_use_case(
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.APIBrowseUseCase:
     """Get use case instance."""
     return use_cases.APIBrowseUseCase(
@@ -594,9 +622,9 @@ def api_browse_use_case(
 
 
 def api_create_media_use_case(
-        policy: Annotated[AbsPolicy, Depends(get_policy)],
-        media_repository: Annotated[AbsMediaRepository,
-                                    Depends(get_media_repo)],
+    policy: Annotated[AbsPolicy, Depends(get_policy)],
+    media_repository: Annotated[AbsMediaRepository,
+                                Depends(get_media_repo)],
 ) -> use_cases.CreateMediaUseCase:
     """Get use case instance."""
     return use_cases.CreateMediaUseCase(policy=policy,
@@ -608,9 +636,9 @@ def api_create_media_use_case(
 
 @utils.memorize
 def profile_quotas_use_case(
-        mediator: Mediator = Depends(get_mediator),
-        users_repo: st_interfaces.AbsUsersRepo = Depends(get_users_repo),
-        items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
+    mediator: Mediator = Depends(get_mediator),
+    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
+    items_repo: interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.AppProfileQuotasUseCase:
     """Get use case instance."""
     return use_cases.AppProfileQuotasUseCase(
@@ -622,8 +650,8 @@ def profile_quotas_use_case(
 
 @utils.memorize
 def profile_new_use_case(
-        browse_repository:
-        interfaces.AbsBrowseRepository = Depends(get_browse_repo),
+    browse_repository:
+    interfaces.AbsBrowseRepository = Depends(get_browse_repo),
 ) -> use_cases.APIProfileNewUseCase:
     """Get use case instance."""
     return use_cases.APIProfileNewUseCase(
@@ -633,8 +661,8 @@ def profile_new_use_case(
 
 @utils.memorize
 def profile_tags_use_case(
-        search_repository:
-        interfaces.AbsSearchRepository = Depends(get_search_repo),
+    search_repository:
+    interfaces.AbsSearchRepository = Depends(get_search_repo),
 ) -> use_cases.AppProfileTagsUseCase:
     """Get use case instance."""
     return use_cases.AppProfileTagsUseCase(

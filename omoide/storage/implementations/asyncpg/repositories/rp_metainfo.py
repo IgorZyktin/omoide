@@ -7,7 +7,7 @@ from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.storage import interfaces
-from omoide.storage.asyncpg_storage import AsyncpgStorage
+from omoide.storage.implementations.asyncpg.asyncpg_storage import AsyncpgStorage
 from omoide.storage.database import db_models
 
 

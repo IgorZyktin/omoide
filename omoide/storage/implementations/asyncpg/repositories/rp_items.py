@@ -13,7 +13,7 @@ from omoide import exceptions
 from omoide import models
 from omoide.domain import interfaces
 from omoide.storage.database import db_models
-from omoide.storage.repositories.asyncpg import queries
+from omoide.storage.implementations.asyncpg.repositories import queries
 
 
 class ItemsRepo(interfaces.AbsItemsRepo):

@@ -2,7 +2,7 @@
 import pytest
 import pytest_asyncio
 
-from omoide.storage.repositories.asyncpg.rp_search import SearchRepository
+from omoide.storage.implementations.asyncpg.repositories.rp_search import SearchRepository
 
 
 @pytest.fixture(scope='session')

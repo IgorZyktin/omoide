@@ -3,7 +3,7 @@ from fastapi.security import HTTPBasicCredentials
 
 from omoide import models
 from omoide.domain import interfaces
-from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
+from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 
 __all__ = [
     'AuthUseCase',

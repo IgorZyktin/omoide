@@ -9,12 +9,10 @@ from omoide import models
 from omoide.domain import common
 from omoide.domain.interfaces.in_storage \
     .in_repositories.in_rp_base import AbsBaseRepository
-from omoide.storage.interfaces.in_repositories.in_rp_users import AbsUsersRepo
+from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 
 
-class AbsBrowseRepository(
-    AbsBaseRepository
-):
+class AbsBrowseRepository(AbsBaseRepository):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod

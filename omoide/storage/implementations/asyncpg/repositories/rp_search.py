@@ -7,7 +7,7 @@ from omoide import models
 from omoide.domain import interfaces
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
-from omoide.storage.repositories.asyncpg import queries
+from omoide.storage.implementations.asyncpg.repositories import queries
 
 LOG = custom_logging.get_logger(__name__)
 

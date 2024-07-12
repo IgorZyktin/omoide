@@ -3,7 +3,7 @@
 import pytest
 import pytest_asyncio
 
-from omoide.storage.repositories.asyncpg.rp_exif import EXIFRepository
+from omoide.storage.implementations.asyncpg.repositories.rp_exif import EXIFRepository
 
 
 @pytest.fixture(scope='session')

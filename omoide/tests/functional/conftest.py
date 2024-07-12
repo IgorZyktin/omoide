@@ -15,7 +15,7 @@ from omoide import infra
 from omoide import models
 from omoide.domain import common
 from omoide.storage.repositories import asyncpg
-from omoide.storage.repositories.asyncpg.rp_test import RepositoryForTests
+from omoide.storage.implementations.asyncpg.repositories.rp_test import RepositoryForTests
 from omoide.tests import constants
 
 

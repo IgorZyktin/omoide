@@ -6,8 +6,8 @@ import sqlalchemy as sa
 from omoide import models
 from omoide.domain import interfaces
 from omoide.storage.database import db_models
-from omoide.storage.repositories.asyncpg import queries
-from omoide.storage.repositories.asyncpg.rp_browse import BrowseRepository
+from omoide.storage.implementations.asyncpg.repositories import queries
+from omoide.storage.implementations.asyncpg.repositories.rp_browse import BrowseRepository
 
 
 class PreviewRepository(
