@@ -1,5 +1,4 @@
 """Repository that performs read operations on users."""
-from typing import Any
 from uuid import UUID
 from uuid import uuid4
 
