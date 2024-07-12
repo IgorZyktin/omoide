@@ -7,8 +7,9 @@ from uuid import uuid4
 
 import sqlalchemy as sa
 
-from omoide import domain
 from omoide import const
+from omoide import domain
+from omoide import exceptions
 from omoide import models
 from omoide.domain import interfaces
 from omoide.storage.database import db_models
@@ -19,9 +20,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
     """Repository that performs operations on items."""
 
     async def check_access(
-            self,
-            user: models.User,
-            uuid: UUID,
+        self,
+        user: models.User,
+        uuid: UUID,
     ) -> domain.AccessStatus:
         """Check access to the Item with given UUID for the given User."""
         query = """
@@ -52,8 +53,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         )
 
     async def count_all_children_of(
-            self,
-            item: domain.Item,
+        self,
+        item: domain.Item,
     ) -> int:
         """Count dependant items."""
         stmt = """
@@ -80,8 +81,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return response['total']
 
     async def read_root_item(
-            self,
-            user: models.User,
+        self,
+        user: models.User,
     ) -> Optional[domain.Item]:
         """Return Item or None."""
         stmt = sa.select(
@@ -119,8 +120,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return [domain.Item(**each) for each in response]
 
     async def read_item(
-            self,
-            uuid: UUID,
+        self,
+        uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
         stmt = sa.select(
@@ -133,11 +134,30 @@ class ItemsRepo(interfaces.AbsItemsRepo):
 
         return domain.Item(**response) if response else None
 
+    # TODO - fix naming
+    async def get_item(
+        self,
+        uuid: UUID,
+        allow_absence: bool = False,
+    ) -> domain.Item | None:  # TODO - import from models
+        """Return Item or None."""
+        stmt = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            if allow_absence:
+                return None
+
+            msg = 'Item with UUID {uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, uuid=uuid)
+
+        return domain.Item(**response)
+
     async def read_children_of(
-            self,
-            user: models.User,
-            item: domain.Item,
-            ignore_collections: bool,
+        self,
+        user: models.User,
+        item: domain.Item,
+        ignore_collections: bool,
     ) -> list[domain.Item]:
         """Return all direct descendants of the given item."""
         stmt = sa.select(
@@ -161,19 +181,19 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return [domain.Item(**each) for each in response]
 
     async def get_simple_location(
-            self,
-            user: models.User,
-            owner: models.User,
-            item: domain.Item,
+        self,
+        user: models.User,
+        owner: models.User,
+        item: domain.Item,
     ) -> Optional[domain.SimpleLocation]:
         """Return Location of the item (without pagination)."""
         ancestors = await self.get_simple_ancestors(user, item)
         return domain.SimpleLocation(items=ancestors + [item])
 
     async def get_simple_ancestors(
-            self,
-            user: models.User,
-            item: domain.Item,
+        self,
+        user: models.User,
+        item: domain.Item,
     ) -> list[domain.Item]:
         """Return list of ancestors for given item."""
         assert user
@@ -199,9 +219,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return ancestors
 
     async def count_items_by_owner(
-            self,
-            user: models.User,
-            only_collections: bool = False,
+        self,
+        user: models.User,
+        only_collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
         assert user.is_not_anon
@@ -222,9 +242,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return int(response['total_items'])
 
     async def get_all_parents(
-            self,
-            user: models.User,
-            item: domain.Item,
+        self,
+        user: models.User,
+        item: domain.Item,
     ) -> list[domain.Item]:
         """Return all parents of the given item."""
         stmt = """
@@ -268,9 +288,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return [domain.Item(**x) for x in response]
 
     async def get_direct_children_uuids_of(
-            self,
-            user: models.User,
-            item_uuid: UUID,
+        self,
+        user: models.User,
+        item_uuid: UUID,
     ) -> list[UUID]:
         """Return all direct items of th given item."""
         stmt = sa.select(
@@ -289,8 +309,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return list(x['uuid'] for x in response)
 
     async def read_computed_tags(
-            self,
-            uuid: UUID,
+        self,
+        uuid: UUID,
     ) -> list[str]:
         """Return all computed tags for the item."""
         stmt = sa.select(
@@ -305,9 +325,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return []
 
     async def read_item_by_name(
-            self,
-            user: models.User,
-            name: str,
+        self,
+        user: models.User,
+        name: str,
     ) -> domain.Item | None:
         """Return corresponding item."""
         stmt = sa.select(db_models.Item)
@@ -346,9 +366,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
                 return uuid
 
     async def create_item(
-            self,
-            user: models.User,
-            item: domain.Item,
+        self,
+        user: models.User,
+        item: domain.Item,
     ) -> UUID:
         """Create item and return UUID."""
         if item.parent_uuid is None:
@@ -385,8 +405,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return await self.db.execute(stmt)
 
     async def update_item(
-            self,
-            item: domain.Item,
+        self,
+        item: domain.Item,
     ) -> UUID:
         """Update existing item."""
         stmt = sa.update(
@@ -407,9 +427,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return await self.db.execute(stmt)
 
     async def mark_files_as_orphans(
-            self,
-            item: domain.Item,
-            moment: datetime.datetime,
+        self,
+        item: domain.Item,
+        moment: datetime.datetime,
     ) -> None:
         """Mark corresponding files as useless."""
         for each in const.MEDIA_TYPES:
@@ -427,8 +447,8 @@ class ItemsRepo(interfaces.AbsItemsRepo):
                 await self.db.execute(stmt)
 
     async def delete_item(
-            self,
-            item: domain.Item,
+        self,
+        item: domain.Item,
     ) -> bool:
         """Delete item with given UUID."""
         stmt = sa.delete(
@@ -441,9 +461,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return response is not None
 
     async def check_child(
-            self,
-            possible_parent_uuid: UUID,
-            possible_child_uuid: UUID,
+        self,
+        possible_parent_uuid: UUID,
+        possible_child_uuid: UUID,
     ) -> bool:
         """Return True if given item is actually a child.
 
@@ -484,12 +504,12 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return response['total'] >= 1
 
     async def update_permissions(
-            self,
-            uuid: UUID,
-            override: bool,
-            added: Collection[UUID],
-            deleted: Collection[UUID],
-            all_permissions: Collection[UUID],
+        self,
+        uuid: UUID,
+        override: bool,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
+        all_permissions: Collection[UUID],
     ) -> None:
         """Apply new permissions for given item UUID."""
         if override:
@@ -532,9 +552,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
                     await self.db.execute(stmt)
 
     async def add_tags(
-            self,
-            uuid: UUID,
-            tags: Collection[str],
+        self,
+        uuid: UUID,
+        tags: Collection[str],
     ) -> None:
         """Add new tags to computed tags of the item."""
         for tag in tags:
@@ -551,9 +571,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             await self.db.execute(stmt)
 
     async def delete_tags(
-            self,
-            uuid: UUID,
-            tags: Collection[str],
+        self,
+        uuid: UUID,
+        tags: Collection[str],
     ) -> None:
         """Remove tags from computed tags of the item."""
         for tag in tags:
@@ -570,9 +590,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             await self.db.execute(stmt)
 
     async def add_permissions(
-            self,
-            uuid: UUID,
-            permissions: Collection[UUID],
+        self,
+        uuid: UUID,
+        permissions: Collection[UUID],
     ) -> None:
         """Add new users to computed permissions of the item."""
         for user_uuid in permissions:
@@ -589,9 +609,9 @@ class ItemsRepo(interfaces.AbsItemsRepo):
             await self.db.execute(stmt)
 
     async def delete_permissions(
-            self,
-            uuid: UUID,
-            permissions: Collection[UUID],
+        self,
+        uuid: UUID,
+        permissions: Collection[UUID],
     ) -> None:
         """Remove users from computed permissions of the item."""
         for user_uuid in permissions:

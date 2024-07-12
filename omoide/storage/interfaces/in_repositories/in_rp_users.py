@@ -21,8 +21,25 @@ class AbsUsersRepo(abc.ABC):
     ) -> None:
         """Create new user."""
 
+    # TODO - remove this method
     @abc.abstractmethod
     async def read_user(self, uuid: UUID) -> models.User | None:
+        """Return User or None."""
+
+    @abc.abstractmethod
+    async def get_user(
+        self,
+        uuid: UUID,
+        allow_absence: bool = False,
+    ) -> models.User | None:
+        """Return User or None."""
+
+    @abc.abstractmethod
+    async def get_user_by_login(
+        self,
+        login: str,
+        allow_absence: bool = False,
+    ) -> models.User | None:
         """Return User or None."""
 
     @abc.abstractmethod
