@@ -60,19 +60,12 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
 
         return None
 
-    async def get_user(
-        self,
-        uuid: UUID,
-        allow_absence: bool = False,
-    ) -> models.User | None:
-        """Return User or None."""
+    async def get_user(self, uuid: UUID) -> models.User:
+        """Return User."""
         stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
         response = await self.db.fetch_one(stmt)
 
         if response is None:
-            if allow_absence:
-                return None
-
             msg = 'User with UUID {uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, uuid=uuid)
 
@@ -96,12 +89,12 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
 
         return models.User(**response, role=models.Role.user)
 
-    async def update_user(self, user_uuid: UUID, **kwargs: str) -> None:
+    async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""
         stmt = sa.update(
             db_models.User
         ).where(
-            db_models.User.uuid == user_uuid
+            db_models.User.uuid == uuid
         ).values(
             **kwargs
         )

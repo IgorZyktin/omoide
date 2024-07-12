@@ -135,19 +135,13 @@ class ItemsRepo(interfaces.AbsItemsRepo):
         return domain.Item(**response) if response else None
 
     # TODO - fix naming
-    async def get_item(
-        self,
-        uuid: UUID,
-        allow_absence: bool = False,
-    ) -> domain.Item | None:  # TODO - import from models
-        """Return Item or None."""
+    # TODO - import from models
+    async def get_item(self, uuid: UUID) -> domain.Item:
+        """Return Item."""
         stmt = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
         response = await self.db.fetch_one(stmt)
 
         if response is None:
-            if allow_absence:
-                return None
-
             msg = 'Item with UUID {uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, uuid=uuid)
 

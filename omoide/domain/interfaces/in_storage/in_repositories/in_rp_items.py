@@ -44,13 +44,10 @@ class AbsItemsRepo(in_rp_base.AbsBaseRepository):
     ) -> Optional[domain.Item]:
         """Return Item or None."""
 
+    # TODO - import from models
     @abc.abstractmethod
-    async def get_item(
-            self,
-            uuid: UUID,
-            allow_absence: bool = False,
-    ) -> domain.Item | None:  # TODO - import from models
-        """Return Item or None."""
+    async def get_item(self, uuid: UUID) -> domain.Item:
+        """Return Item."""
 
     @abc.abstractmethod
     async def read_children_of(

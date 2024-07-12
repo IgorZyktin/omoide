@@ -26,12 +26,8 @@ class AbsUsersRepo(abc.ABC):
         """Return User or None."""
 
     @abc.abstractmethod
-    async def get_user(
-        self,
-        uuid: UUID,
-        allow_absence: bool = False,
-    ) -> models.User | None:
-        """Return User or None."""
+    async def get_user(self, uuid: UUID) -> models.User:
+        """Return User."""
 
     @abc.abstractmethod
     async def get_user_by_login(
