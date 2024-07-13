@@ -1,5 +1,4 @@
-"""Manual CLI operations.
-"""
+"""Manual CLI operations."""
 from uuid import UUID
 
 import click
@@ -44,7 +43,11 @@ def command_rebuild_known_tags(**kwargs: str | bool):
     from omoide.commands.rebuild_known_tags import run
 
     db_url = SecretStr(str(kwargs.pop('db_url')))
-    only_users = utils.split(str(kwargs.pop('only_users', '')))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -75,7 +78,11 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
     from omoide.commands.rebuild_computed_tags import run
 
     db_url = SecretStr(str(kwargs.pop('db_url')))
-    only_users = utils.split(str(kwargs.pop('only_users', '')))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -106,7 +113,11 @@ def command_compact_tags(**kwargs: str | bool):
     from omoide.commands.compact_tags import run
 
     db_url = SecretStr(str(kwargs.pop('db_url')))
-    only_users = utils.split(str(kwargs.pop('only_users', '')))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -132,7 +143,11 @@ def command_du(**kwargs) -> None:
     from omoide.commands.du import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
@@ -161,14 +176,18 @@ def command_force_cover_copying(**kwargs) -> None:
     from omoide.commands.force_thumbnail_copying import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
         with helpers.timing(
-                callback=LOG.info,
-                start_template='Forcing items to copy thumbnails...',
+            callback=LOG.info,
+            start_template='Forcing items to copy thumbnails...',
         ):
             run.run(config, database)
 
@@ -217,14 +236,18 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     from omoide.commands.refresh_file_sizes_in_db import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
         with helpers.timing(
-                callback=LOG.info,
-                start_template='Refreshing file sizes for every item...',
+            callback=LOG.info,
+            start_template='Refreshing file sizes for every item...',
         ):
             run.run(config, database)
 
@@ -273,7 +296,11 @@ def command_rebuild_image_sizes(**kwargs) -> None:
     from omoide.commands.rebuild_image_sizes import run
 
     db_url = SecretStr(kwargs.pop('db_url'))
-    only_users = utils.split(kwargs.pop('only_users', ''))
+
+    only_users = []
+    if kwargs.pop('only_users', ''):
+        only_users = utils.split(str(kwargs.pop('only_users', '')))
+
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
