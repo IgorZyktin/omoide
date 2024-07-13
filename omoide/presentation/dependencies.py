@@ -257,34 +257,6 @@ async def get_known_user(
 
 
 @utils.memorize
-def app_dynamic_search_use_case(
-    search_repository:
-    storage_interfaces.AbsSearchRepository = Depends(get_search_repo),
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-) -> use_cases.AppDynamicSearchUseCase:
-    """Get use case instance."""
-    return use_cases.AppDynamicSearchUseCase(
-        search_repo=search_repository,
-        browse_repo=browse_repository,
-    )
-
-
-@utils.memorize
-def app_paged_search_use_case(
-    search_repository:
-    storage_interfaces.AbsSearchRepository = Depends(get_search_repo),
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-) -> use_cases.AppPagedSearchUseCase:
-    """Get use case instance."""
-    return use_cases.AppPagedSearchUseCase(
-        search_repo=search_repository,
-        browse_repo=browse_repository,
-    )
-
-
-@utils.memorize
 def app_preview_use_case(
     preview_repository:
     storage_interfaces.AbsPreviewRepository = Depends(get_preview_repo),
@@ -331,20 +303,6 @@ def app_upload_use_case(
 
 
 # app item related use cases --------------------------------------------------
-
-
-@utils.memorize
-def api_search_use_case(
-    search_repository:
-    storage_interfaces.AbsSearchRepository = Depends(get_search_repo),
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-) -> use_cases.ApiSearchUseCase:
-    """Get use case instance."""
-    return use_cases.ApiSearchUseCase(
-        search_repo=search_repository,
-        browse_repo=browse_repository,
-    )
 
 
 @utils.memorize

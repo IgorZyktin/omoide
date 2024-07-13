@@ -25,6 +25,7 @@ from omoide.omoide_api.metainfo import metainfo_controllers
 from omoide.omoide_api.users import users_controllers
 from omoide.omoide_app.auth import auth_controllers
 from omoide.omoide_app.home import home_controllers
+from omoide.omoide_app.search import search_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -155,6 +156,8 @@ def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
     current_app.include_router(auth_controllers.auth_router)
     current_app.include_router(home_controllers.home_router)
+    current_app.include_router(search_controllers.api_search_router)
+    current_app.include_router(search_controllers.app_search_router)
 
     # legacy
     current_app.include_router(api_legacy.api_media.router)
@@ -167,14 +170,12 @@ def apply_app_routes(current_app: FastAPI) -> None:
     # API routes
     current_app.include_router(api_old.api_browse.router)
     current_app.include_router(api_old.api_items.router)
-    current_app.include_router(api_old.api_search.router)
 
     # Application routes
     current_app.include_router(application.app_browse.router)
     current_app.include_router(application.app_home.router)
     current_app.include_router(application.app_item.router)
     current_app.include_router(application.app_preview.router)
-    current_app.include_router(application.app_search.router)
     current_app.include_router(application.app_upload.router)
 
 
