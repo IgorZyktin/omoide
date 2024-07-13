@@ -1,4 +1,4 @@
-"""API operations that process commands from users."""
+"""API operations that process textual requests from users."""
 from typing import Annotated
 
 from fastapi import APIRouter
