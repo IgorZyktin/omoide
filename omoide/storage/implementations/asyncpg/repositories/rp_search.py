@@ -9,6 +9,7 @@ from omoide.storage.database import db_models
 from omoide.storage.implementations.asyncpg.repositories import queries
 from omoide.storage import interfaces as storage_interfaces
 from omoide.storage.implementations import asyncpg
+
 LOG = custom_logging.get_logger(__name__)
 
 
@@ -160,7 +161,7 @@ class SearchRepository(storage_interfaces.AbsSearchRepository,
     ) -> list[str]:
         """Autocomplete tag for anon user."""
         stmt = sa.select(
-            sa.func.distinct(db_models.KnownTagsAnon.tag)
+            db_models.KnownTagsAnon.tag
         ).where(
             db_models.KnownTagsAnon.tag.ilike(tag + '%'),  # type: ignore
             db_models.KnownTagsAnon.counter > 0,

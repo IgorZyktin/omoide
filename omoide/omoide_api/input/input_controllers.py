@@ -6,11 +6,13 @@ from fastapi import Depends
 from fastapi import status
 
 from omoide import models
+from omoide.infra import custom_logging
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.input import input_api_models
 from omoide.omoide_api.input import input_use_cases
 from omoide.presentation import dependencies as dep
-from omoide.presentation import web
+
+LOG = custom_logging.get_logger(__name__)
 
 input_router = APIRouter(prefix='/input', tags=['Input'])
 
@@ -35,8 +37,12 @@ async def api_autocomplete(
             minimal_length=input_api_models.MINIMAL_AUTOCOMPLETE_SIZE,
             limit=input_api_models.AUTOCOMPLETE_VARIANTS,
         )
-    except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+    except Exception:
+        LOG.exception(
+            'Failed to perform autocompletion for user {} and input {!r}',
+            user,
+            tag
+        )
+        variants = []
 
     return input_api_models.AutocompleteOutput(variants=variants)
