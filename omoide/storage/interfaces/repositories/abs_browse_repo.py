@@ -1,6 +1,5 @@
 """Repository that performs all browse queries."""
 import abc
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
@@ -36,7 +35,7 @@ class AbsBrowseRepository(abc.ABC):
         uuid: UUID,
         aim: common.Aim,
         users_repo: storage_interfaces.AbsUsersRepo,
-    ) -> Optional[common.Location]:
+    ) -> common.Location | None:
         """Return Location of the item."""
 
     @abc.abstractmethod
@@ -46,14 +45,14 @@ class AbsBrowseRepository(abc.ABC):
         item_uuid: UUID,
         child_uuid: UUID,
         aim: common.Aim,
-    ) -> Optional[common.PositionedItem]:
+    ) -> common.PositionedItem | None:
         """Return item with its position in siblings."""
 
     @abc.abstractmethod
     async def simple_find_items_to_browse(
         self,
         user: models.User,
-        uuid: Optional[UUID],
+        uuid: UUID | None,
         aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (simple)."""
@@ -62,7 +61,7 @@ class AbsBrowseRepository(abc.ABC):
     async def complex_find_items_to_browse(
         self,
         user: models.User,
-        uuid: Optional[UUID],
+        uuid: UUID | None,
         aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
@@ -79,5 +78,5 @@ class AbsBrowseRepository(abc.ABC):
     async def get_parents_names(
         self,
         items: list[domain.Item],
-    ) -> list[Optional[str]]:
+    ) -> list[str | None]:
         """Get names of parents of the given items."""

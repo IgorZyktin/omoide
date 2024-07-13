@@ -195,6 +195,8 @@ def get_policy(
 def get_mediator(
     authenticator: Annotated[interfaces.AbsAuthenticator,
                              Depends(get_authenticator)],
+    browse_repo: Annotated[storage_interfaces.AbsBrowseRepository,
+                           Depends(get_browse_repo)],
     exif_repo: Annotated[storage_interfaces.AbsEXIFRepository,
                          Depends(get_exif_repo)],
     items_repo: Annotated[storage_interfaces.AbsItemsRepo,
@@ -215,6 +217,7 @@ def get_mediator(
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
+        browse_repo=browse_repo,  # FIXME - app-related dependency
         exif_repo=exif_repo,
         items_repo=items_repo,
         media_repo=media_repo,
@@ -312,17 +315,6 @@ def app_browse_use_case(
         users_repo=users_repo,
         items_repo=items_repo,
         meta_repo=meta_repo
-    )
-
-
-@utils.memorize
-def app_home_use_case(
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-) -> use_cases.AppHomeUseCase:
-    """Get use case instance."""
-    return use_cases.AppHomeUseCase(
-        browse_repo=browse_repository,
     )
 
 

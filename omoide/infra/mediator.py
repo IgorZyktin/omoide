@@ -9,6 +9,7 @@ from omoide.storage import interfaces as storage_interfaces
 class Mediator:
     """Class that ties all components together."""
     authenticator: interfaces.AbsAuthenticator
+    browse_repo: storage_interfaces.AbsBrowseRepository
     exif_repo: storage_interfaces.AbsEXIFRepository
     items_repo: storage_interfaces.AbsItemsRepo
     media_repo: storage_interfaces.AbsMediaRepository
