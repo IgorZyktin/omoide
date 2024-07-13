@@ -16,13 +16,12 @@ from omoide.presentation import web
 media_router = APIRouter(prefix='/media', tags=['Media'])
 
 
-# TODO - change name
 @media_router.post(
     '/{item_uuid}',
     status_code=status.HTTP_201_CREATED,
     response_model=dict[str, str],
 )
-async def api_create_media2(
+async def api_create_media(
     item_uuid: UUID,
     media: media_api_models.MediaInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
@@ -41,4 +40,7 @@ async def api_create_media2(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return {'result': f'Created Media with id={media_id} for item {item_uuid}'}
+    return {
+        'media_id': media_id,
+        'result': f'Created Media with id={media_id} for item {item_uuid}',
+    }

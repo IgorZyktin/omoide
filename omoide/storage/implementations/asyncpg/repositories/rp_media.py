@@ -5,41 +5,18 @@ import sqlalchemy as sa
 
 from omoide import models
 from omoide import utils
-from omoide.domain.core import core_models
-from omoide.storage import interfaces
 from omoide.infra import custom_logging
+from omoide.storage import interfaces
 from omoide.storage.database import db_models
 from omoide.storage.implementations import asyncpg
+
 LOG = custom_logging.get_logger(__name__)
 
 
 class MediaRepository(interfaces.AbsMediaRepository, asyncpg.AsyncpgStorage):
     """Repository that perform CRUD operations on media."""
 
-    async def create_media(
-        self,
-        media: core_models.Media,
-    ) -> core_models.Media:
-        """Create Media."""
-        stmt = sa.insert(
-            db_models.Media
-        ).values(
-            created_at=media.created_at,
-            processed_at=media.processed_at,
-            error=None,
-            owner_uuid=media.owner_uuid,
-            item_uuid=media.item_uuid,
-            media_type=media.media_type,
-            content=media.content,
-            ext=media.ext,
-        ).returning(db_models.Media.id)
-
-        media_id = await self.db.execute(stmt)
-        media.id = media_id
-
-        return media
-
-    async def create_media2(self, media: models.Media) -> int:
+    async def create_media(self, media: models.Media) -> int:
         """Create Media, return media id."""
         stmt = sa.insert(
             db_models.Media
@@ -73,5 +50,4 @@ class MediaRepository(interfaces.AbsMediaRepository, asyncpg.AsyncpgStorage):
         ).returning(db_models.CommandCopy.id)
 
         copy_id = await self.db.execute(stmt)
-
         return copy_id

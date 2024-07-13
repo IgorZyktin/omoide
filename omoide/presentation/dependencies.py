@@ -531,19 +531,6 @@ def api_browse_use_case(
     )
 
 
-# api media related use cases -------------------------------------------------
-
-
-def api_create_media_use_case(
-    policy: Annotated[interfaces.AbsPolicy, Depends(get_policy)],
-    media_repository: Annotated[storage_interfaces.AbsMediaRepository,
-                                Depends(get_media_repo)],
-) -> use_cases.CreateMediaUseCase:
-    """Get use case instance."""
-    return use_cases.CreateMediaUseCase(policy=policy,
-                                        media_repo=media_repository)
-
-
 # app profile related use cases -----------------------------------------------
 
 

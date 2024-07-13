@@ -5,40 +5,12 @@ from omoide import const
 from omoide import models
 from omoide.domain import actions
 from omoide.domain import exceptions
-from omoide.domain.core import core_models
 from omoide import interfaces
 from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
-    'CreateMediaUseCase',
     'ApiCopyImageUseCase',
 ]
-
-
-class CreateMediaUseCase:
-    """Use case for uploading media content."""
-
-    def __init__(
-            self,
-            policy: interfaces.AbsPolicy,
-            media_repo: storage_interfaces.AbsMediaRepository,
-    ) -> None:
-        """Initialize instance."""
-        self.policy = policy
-        self.media_repo = media_repo
-
-    async def execute(
-            self,
-            user: models.User,
-            item_uuid: UUID,
-            media: core_models.Media,
-    ) -> core_models.Media:
-        """Business logic."""
-        async with self.media_repo.transaction():
-            await self.policy.check(user, item_uuid, actions.Media.CREATE)
-            result = await self.media_repo.create_media(media)
-
-        return result
 
 
 class ApiCopyImageUseCase:
