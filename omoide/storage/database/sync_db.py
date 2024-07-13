@@ -1,5 +1,4 @@
-"""Common synchronous database connector.
-"""
+"""Common synchronous database connector."""
 import contextlib
 from typing import Generator
 

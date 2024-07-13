@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from omoide.worker.worker_config import Config
+from omoide.omoide_worker.worker_config import Config
 
 
 def test_worker_config_correct(valid_worker_config_dict):

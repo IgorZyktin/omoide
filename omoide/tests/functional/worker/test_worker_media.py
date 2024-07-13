@@ -3,8 +3,8 @@
 import pytest
 
 from omoide import utils
-from omoide.worker import runtime
-from omoide.worker.filesystem import Filesystem
+from omoide.omoide_worker import runtime
+from omoide.omoide_worker.filesystem import Filesystem
 
 
 @pytest.fixture

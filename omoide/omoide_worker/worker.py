@@ -1,15 +1,15 @@
-"""Worker class.
-"""
+"""Worker class."""
+
 import traceback
 
 from omoide import const
 from omoide import utils
 from omoide.infra import custom_logging
 from omoide.storage.database import db_models
-from omoide.worker import interfaces
-from omoide.worker.database import WorkerDatabase
-from omoide.worker.filesystem import Filesystem
-from omoide.worker.worker_config import Config
+from omoide.omoide_worker import interfaces
+from omoide.omoide_worker.database import WorkerDatabase
+from omoide.omoide_worker.filesystem import Filesystem
+from omoide.omoide_worker.worker_config import Config
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -18,10 +18,10 @@ class Worker(interfaces.AbsWorker):
     """Worker class."""
 
     def __init__(
-            self,
-            config: Config,
-            database: WorkerDatabase,
-            filesystem: Filesystem,
+        self,
+        config: Config,
+        database: WorkerDatabase,
+        filesystem: Filesystem,
     ) -> None:
         """Initialize instance."""
         self._config = config
@@ -39,14 +39,14 @@ class Worker(interfaces.AbsWorker):
                     last_seen,
                 )
 
-                LOG.debug('Got {} media records to download', len(batch))
+                LOG.debug("Got {} media records to download", len(batch))
                 for media in batch:
                     # noinspection PyBroadException
                     try:
                         self._download_single_media(media)
                     except Exception:
                         LOG.exception(
-                            'Failed to download media {}',
+                            "Failed to download media {}",
                             media.id,
                         )
                         media.error = traceback.format_exc()
@@ -86,8 +86,10 @@ class Worker(interfaces.AbsWorker):
             media.item.metainfo.thumbnail_size = len(media.content)
 
         else:
-            msg = (f'Got unknown media_type {media.media_type} '
-                   f'for media {media.id}')
+            msg = (
+                f'Got unknown media_type {media.media_type} ' 
+                f'for media {media.id}'
+            )
             raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()

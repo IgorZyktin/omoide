@@ -1,5 +1,5 @@
-"""Database helper class for Worker.
-"""
+"""Database helper class for Worker."""
+
 import sqlalchemy as sa
 
 from omoide import const
@@ -15,22 +15,18 @@ class WorkerDatabase(SyncDatabase):
     """Database helper class for Worker."""
 
     def get_copies_batch(
-            self,
-            batch_size: int,
-            last_seen: int | None,
+        self,
+        batch_size: int,
+        last_seen: int | None,
     ) -> list[db_models.CommandCopy]:
         """Return list of images to copy."""
-        query = self.session.query(
-            db_models.CommandCopy
-        ).filter(
+        query = self.session.query(db_models.CommandCopy).filter(
             db_models.CommandCopy.processed_at == None,  # noqa
             db_models.CommandCopy.error == None,  # noqa
         )
 
         if last_seen is not None:
-            query = query.filter(
-                db_models.CommandCopy.id > last_seen
-            )
+            query = query.filter(db_models.CommandCopy.id > last_seen)
 
         query = query.order_by(
             db_models.CommandCopy.id,
@@ -39,22 +35,18 @@ class WorkerDatabase(SyncDatabase):
         return query.all()
 
     def get_media_batch(
-            self,
-            batch_size: int,
-            last_seen: int | None,
+        self,
+        batch_size: int,
+        last_seen: int | None,
     ) -> list[db_models.Media]:
         """Return list of media records to download."""
-        query = self.session.query(
-            db_models.Media
-        ).filter(
+        query = self.session.query(db_models.Media).filter(
             db_models.Media.processed_at == None,  # noqa
             db_models.Media.error == None,  # noqa
         )
 
         if last_seen is not None:
-            query = query.filter(
-                db_models.Media.id > last_seen
-            )
+            query = query.filter(db_models.Media.id > last_seen)
 
         query = query.order_by(
             db_models.Media.id,
@@ -64,8 +56,8 @@ class WorkerDatabase(SyncDatabase):
 
     @staticmethod
     def create_media_from_copy(
-            command: db_models.CommandCopy,
-            content: bytes,
+        command: db_models.CommandCopy,
+        content: bytes,
     ) -> db_models.Media:
         """Convert copy operation into media."""
         return db_models.Media(
@@ -80,37 +72,41 @@ class WorkerDatabase(SyncDatabase):
 
     def mark_origin(self, command: db_models.CommandCopy) -> None:
         """Mark where item got its image."""
-        stmt = sa.update(
-            db_models.Metainfo
-        ).where(
-            db_models.Metainfo.item_uuid == command.target_uuid
-        ).values(
-            extras=sa.func.jsonb_set(
-                db_models.Metainfo.extras,
-                ['copied_image_from'],
-                f'"{command.source_uuid}"',
+        stmt = (
+            sa.update(db_models.Metainfo)
+            .where(db_models.Metainfo.item_uuid == command.target_uuid)
+            .values(
+                extras=sa.func.jsonb_set(
+                    db_models.Metainfo.extras,
+                    ["copied_image_from"],
+                    f'"{command.source_uuid}"',
+                )
             )
         )
         self.session.execute(stmt)
 
     def copy_parameters(
-            self,
-            command: db_models.CommandCopy,
-            size: int,
+        self,
+        command: db_models.CommandCopy,
+        size: int,
     ) -> None:
         """Copy width/height from origin."""
         source = self.session.query(db_models.Item).get(command.source_uuid)
 
         if not source:
-            msg = (f'Source item {command.source_uuid} does not exist, '
-                   f'cannot copy image for {command.id}')
+            msg = (
+                f"Source item {command.source_uuid} does not exist, "
+                f"cannot copy image for {command.id}"
+            )
             raise RuntimeError(msg)
 
         target = self.session.query(db_models.Item).get(command.target_uuid)
 
         if not target:
-            msg = (f'Target item {command.source_uuid} does not exist, '
-                   f'cannot copy image for {command.id}')
+            msg = (
+                f"Target item {command.source_uuid} does not exist, "
+                f"cannot copy image for {command.id}"
+            )
             raise RuntimeError(msg)
 
         if command.media_type == const.CONTENT:
@@ -133,15 +129,15 @@ class WorkerDatabase(SyncDatabase):
             target.thumbnail_ext = source.thumbnail_ext
 
         else:
-            msg = (f'Got unknown media_type {command.media_type} '
-                   f'for copy command {command.id}')
+            msg = (
+                f"Got unknown media_type {command.media_type} "
+                f"for copy command {command.id}"
+            )
             raise ValueError(msg)
 
     def drop_media(self) -> int:
         """Delete fully downloaded media rows, return total amount."""
-        stmt = sa.delete(
-            db_models.Media
-        ).where(
+        stmt = sa.delete(db_models.Media).where(
             db_models.Media.processed_at != None,  # noqa: E711
             db_models.Media.error == None,  # noqa: E711
         )
@@ -153,9 +149,7 @@ class WorkerDatabase(SyncDatabase):
 
     def drop_copies(self) -> int:
         """Delete complete copy operations, return total deleted amount."""
-        stmt = sa.delete(
-            db_models.CommandCopy
-        ).where(
+        stmt = sa.delete(db_models.CommandCopy).where(
             db_models.CommandCopy.processed_at != None,  # noqa
             db_models.CommandCopy.error == None,  # noqa
         )

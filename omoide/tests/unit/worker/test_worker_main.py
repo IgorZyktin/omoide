@@ -4,8 +4,8 @@ from unittest import mock
 
 from click.testing import CliRunner
 
-from omoide.worker import runtime
-from omoide.worker.__main__ import main
+from omoide.omoide_worker import runtime
+from omoide.omoide_worker.__main__ import main
 
 
 def test_worker_main_once(valid_worker_config):

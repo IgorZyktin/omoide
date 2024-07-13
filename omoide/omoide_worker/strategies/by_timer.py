@@ -1,17 +1,18 @@
 """Begin operations by timer."""
+
 import time
 
-from omoide.worker import interfaces
+from omoide.omoide_worker import interfaces
 
 
 class TimerStrategy(interfaces.AbsStrategy):
     """Begin operations by timer."""
 
     def __init__(
-            self,
-            min_interval: float,
-            max_interval: float,
-            warm_up_coefficient: float,
+        self,
+        min_interval: float,
+        max_interval: float,
+        warm_up_coefficient: float,
     ) -> None:
         """Initialize instance."""
         self._min_interval = min_interval
@@ -37,7 +38,9 @@ class TimerStrategy(interfaces.AbsStrategy):
         if done_something:
             self._sleep_interval = self._min_interval
         else:
-            self._sleep_interval = min((
-                self._sleep_interval * self._warm_up_coefficient,
-                self._max_interval,
-            ))
+            self._sleep_interval = min(
+                (
+                    self._sleep_interval * self._warm_up_coefficient,
+                    self._max_interval,
+                )
+            )

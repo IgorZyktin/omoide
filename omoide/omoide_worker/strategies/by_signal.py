@@ -1,8 +1,9 @@
 """Begin operations by signal."""
+
 import signal
 import threading
 
-from omoide.worker import interfaces
+from omoide.omoide_worker import interfaces
 
 
 class SignalStrategy(interfaces.AbsStrategy):

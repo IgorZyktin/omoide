@@ -5,8 +5,8 @@ import tempfile
 
 import pytest
 
-from omoide.worker import worker_config
-from omoide.worker import interfaces
+from omoide.omoide_worker import worker_config
+from omoide.omoide_worker import interfaces
 
 
 @pytest.fixture

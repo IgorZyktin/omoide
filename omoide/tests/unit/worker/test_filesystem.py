@@ -9,7 +9,7 @@ from unittest import mock
 import pytest
 
 from omoide import utils
-from omoide.worker.filesystem import Filesystem
+from omoide.omoide_worker.filesystem import Filesystem
 
 
 def test_filesystem_ensure_folder_exists(valid_worker_config):

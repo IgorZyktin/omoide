@@ -1,5 +1,5 @@
-"""Interfaces for worker components.
-"""
+"""Interfaces for worker components."""
+
 import abc
 
 
@@ -25,6 +25,7 @@ class AbsStrategy(abc.ABC):
 
 class AbsWorker(abc.ABC):
     """Base worker class."""
+
     counter: int
 
     @abc.abstractmethod

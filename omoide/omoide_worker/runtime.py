@@ -1,18 +1,17 @@
-"""Worker runtime.
-"""
+"""Worker runtime."""
 import sys
 import threading
 
 from omoide.infra import custom_logging
-from omoide.worker import interfaces
-from omoide.worker import worker_config
+from omoide.omoide_worker import interfaces
+from omoide.omoide_worker import worker_config
 
 LOG = custom_logging.get_logger(__name__)
 
 
 def run_once(
-        config: worker_config.Config,
-        worker: interfaces.AbsWorker,
+    config: worker_config.Config,
+    worker: interfaces.AbsWorker,
 ) -> None:
     """Perform one cycle (expected to be launched manually)."""
     with LOG.catch():
@@ -20,9 +19,9 @@ def run_once(
 
 
 def run_forever(
-        config: worker_config.Config,
-        worker: interfaces.AbsWorker,
-        strategy: interfaces.AbsStrategy,
+    config: worker_config.Config,
+    worker: interfaces.AbsWorker,
+    strategy: interfaces.AbsStrategy,
 ) -> None:
     """Indefinitely repeat cycles."""
     strategy.init()
@@ -44,9 +43,9 @@ def run_forever(
 
 
 def execute(
-        config: worker_config.Config,
-        worker: interfaces.AbsWorker,
-        strategy: interfaces.AbsStrategy,
+    config: worker_config.Config,
+    worker: interfaces.AbsWorker,
+    strategy: interfaces.AbsStrategy,
 ) -> None:
     """Perform all worker related duties."""
     should_stop = False
@@ -65,8 +64,8 @@ def execute(
 
 
 def perform_one_work_cycle(
-        config: worker_config.Config,
-        worker: interfaces.AbsWorker,
+    config: worker_config.Config,
+    worker: interfaces.AbsWorker,
 ) -> None:
     """Perform all worker related duties."""
     if config.media.should_process:

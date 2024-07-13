@@ -10,10 +10,10 @@ import sqlalchemy as sa
 
 from omoide import utils
 from omoide.storage.database import db_models
-from omoide.worker import worker_config
-from omoide.worker.database import WorkerDatabase
-from omoide.worker.filesystem import Filesystem
-from omoide.worker.worker import Worker
+from omoide.omoide_worker import worker_config
+from omoide.omoide_worker.database import WorkerDatabase
+from omoide.omoide_worker.filesystem import Filesystem
+from omoide.omoide_worker.worker import Worker
 
 
 @pytest.fixture(scope='session')
