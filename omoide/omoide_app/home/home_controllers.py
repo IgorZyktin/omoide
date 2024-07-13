@@ -3,7 +3,7 @@ from typing import Annotated
 
 import fastapi
 from fastapi import Depends
-from starlette.requests import Request
+from fastapi import Request
 
 from omoide import models
 from omoide.infra.mediator import Mediator

@@ -6,20 +6,20 @@ from typing import Type
 import fastapi
 from fastapi import Depends
 from fastapi import Request
+from fastapi import status
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.security import HTTPBasic
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
-from starlette import status
 
 from omoide import models
 from omoide.infra.mediator import Mediator
+from omoide.omoide_app.auth import auth_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
-from omoide.omoide_app.auth import auth_use_cases
 
 auth_router = fastapi.APIRouter()
 security = HTTPBasic(realm='omoide')
