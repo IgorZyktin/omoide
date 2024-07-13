@@ -14,8 +14,7 @@ from omoide import use_cases
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import interfaces
-from omoide.domain.interfaces import AbsPolicy
+from omoide import interfaces
 from omoide.storage import interfaces as storage_interfaces
 from omoide.infra import custom_logging
 from omoide.infra.special_types import Failure
@@ -197,7 +196,7 @@ class BaseItemMediaUseCase:
 
     def __init__(
             self,
-            policy: AbsPolicy,
+            policy: interfaces.AbsPolicy,
             items_repo: storage_interfaces.AbsItemsRepo,
             metainfo_repo: storage_interfaces.AbsMetainfoRepo,
             media_repo: storage_interfaces.AbsMediaRepository,
@@ -708,7 +707,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
 
     def __init__(
             self,
-            policy: AbsPolicy,
+            policy: interfaces.AbsPolicy,
             users_repo: storage_interfaces.AbsUsersRepo,
             items_repo: storage_interfaces.AbsItemsRepo,
             metainfo_repo: storage_interfaces.AbsMetainfoRepo,

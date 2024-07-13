@@ -1,13 +1,12 @@
-"""Use case for browse.
-"""
+"""Use case for browse."""
 from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide import interfaces
 from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
@@ -22,18 +21,18 @@ class APIBrowseUseCase:
     """Use case for browse (api)."""
 
     def __init__(
-            self,
-            browse_repo: storage_interfaces.AbsBrowseRepository,
+        self,
+        browse_repo: storage_interfaces.AbsBrowseRepository,
     ) -> None:
         """Initialize instance."""
         self.browse_repo = browse_repo
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-            aim: domain.Aim,
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
+        aim: domain.Aim,
     ) -> Result[errors.Error, tuple[list[domain.Item], list[Optional[str]]]]:
         async with self.browse_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.READ)

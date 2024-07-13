@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Filesystem implementation for locator object.
-"""
+"""Filesystem implementation for locator object."""
 import functools
 import os.path
 
 from omoide import domain
-from omoide.domain import interfaces
+from omoide import interfaces
 
 __all__ = [
     'FilesystemLocator',
@@ -16,10 +14,10 @@ class FilesystemLocator(interfaces.AbsLocator):
     """Helper object that generates paths for files."""
 
     def __init__(
-            self,
-            base_folder: str,
-            item: domain.Item,
-            prefix_size: int,
+        self,
+        base_folder: str,
+        item: domain.Item,
+        prefix_size: int,
     ) -> None:
         """Initialize instance."""
         super().__init__(item, prefix_size)

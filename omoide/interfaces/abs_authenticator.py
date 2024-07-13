@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-"""Interface for authentication policy.
-"""
+"""Interface for authentication policy."""
 import abc
-
-__all__ = [
-    'AbsAuthenticator',
-]
 
 
 class AbsAuthenticator(abc.ABC):
@@ -17,8 +11,8 @@ class AbsAuthenticator(abc.ABC):
 
     @abc.abstractmethod
     def password_is_correct(
-            self,
-            given_password: str,
-            reference: str,
+        self,
+        given_password: str,
+        reference: str,
     ) -> bool:
         """Return True if user password is correct."""

@@ -1,7 +1,7 @@
 """Authentication variants."""
 import bcrypt
 
-from omoide.domain import interfaces
+from omoide import interfaces
 
 
 class BcryptAuthenticator(interfaces.AbsAuthenticator):

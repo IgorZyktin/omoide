@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""Interface for locator object.
-"""
+"""Interface for locator object."""
 import abc
 import functools
 
 from omoide import domain
-
-__all__ = [
-    'AbsLocator',
-]
 
 
 class AbsLocator(abc.ABC):
@@ -18,9 +12,9 @@ class AbsLocator(abc.ABC):
     """
 
     def __init__(
-            self,
-            item: domain.Item,
-            prefix_size: int,
+        self,
+        item: domain.Item,
+        prefix_size: int,
     ) -> None:
         """Initialize instance."""
         self.item = item

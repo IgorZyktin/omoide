@@ -3,11 +3,11 @@
 from typing import Optional
 from uuid import UUID
 
+from omoide import interfaces
 from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import exceptions
-from omoide.domain import interfaces
 from omoide.domain.core import core_models
 
 ITEM_RELATED = frozenset((
@@ -25,10 +25,10 @@ class Policy(interfaces.AbsPolicy):
     """Policy checker."""
 
     async def is_restricted(
-            self,
-            user: models.User,
-            uuid: UUID | None,
-            action: actions.Action,
+        self,
+        user: models.User,
+        uuid: UUID | None,
+        action: actions.Action,
     ) -> errors.Error | None:
         """Return Error if action is not permitted."""
         error: Optional[errors.Error] = None
@@ -57,10 +57,10 @@ class Policy(interfaces.AbsPolicy):
         return error or None
 
     async def _is_restricted_for_item(
-            self,
-            user: models.User,
-            uuid: UUID,
-            action: actions.Action,
+        self,
+        user: models.User,
+        uuid: UUID,
+        action: actions.Action,
     ) -> errors.Error | None:
         """Check specifically for item related actions."""
         error: Optional[errors.Error] = None
@@ -88,10 +88,10 @@ class Policy(interfaces.AbsPolicy):
         return error or None
 
     async def check(
-            self,
-            user: models.User,
-            uuid: UUID,
-            action: actions.Action,
+        self,
+        user: models.User,
+        uuid: UUID,
+        action: actions.Action,
     ) -> None:
         """Raise if action is not permitted."""
         access = await self.items_repo.check_access(user, uuid)
@@ -109,8 +109,8 @@ class Policy(interfaces.AbsPolicy):
 
     @staticmethod
     def _check_for_item(
-            item_uuid: UUID,
-            access: core_models.AccessStatus,
+        item_uuid: UUID,
+        access: core_models.AccessStatus,
     ) -> None:
         """Raise if action is not permitted."""
         if access.is_not_owner:
@@ -118,9 +118,9 @@ class Policy(interfaces.AbsPolicy):
 
     @staticmethod
     def _check_item_related(
-            item_uuid: UUID,
-            action: actions.Action,
-            access: core_models.AccessStatus,
+        item_uuid: UUID,
+        action: actions.Action,
+        access: core_models.AccessStatus,
     ) -> None:
         """Raise if action is not permitted."""
         if access.is_not_given:

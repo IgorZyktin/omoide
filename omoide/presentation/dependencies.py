@@ -15,10 +15,10 @@ from starlette.requests import Request
 
 from omoide import const
 from omoide import infra
+from omoide import interfaces
 from omoide import models
 from omoide import use_cases
 from omoide import utils
-from omoide.domain import interfaces
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import app_config

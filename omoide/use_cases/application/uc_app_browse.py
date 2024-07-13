@@ -7,7 +7,7 @@ from omoide import domain
 from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide.domain import interfaces
+from omoide import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success

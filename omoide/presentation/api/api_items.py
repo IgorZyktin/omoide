@@ -12,7 +12,7 @@ from starlette.responses import PlainTextResponse
 
 from omoide import models
 from omoide import use_cases
-from omoide.domain import interfaces
+from omoide import interfaces
 from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep

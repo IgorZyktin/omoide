@@ -1,7 +1,7 @@
 """Class that ties all components together."""
 from dataclasses import dataclass
 
-from omoide.domain import interfaces
+from omoide import interfaces
 from omoide.storage import interfaces as storage_interfaces
 
 

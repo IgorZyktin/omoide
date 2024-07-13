@@ -15,7 +15,7 @@ from omoide import domain
 from omoide import models
 from omoide import use_cases
 from omoide import utils
-from omoide.domain import interfaces
+from omoide import interfaces
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web

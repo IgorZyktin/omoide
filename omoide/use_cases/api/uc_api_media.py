@@ -6,7 +6,7 @@ from omoide import models
 from omoide.domain import actions
 from omoide.domain import exceptions
 from omoide.domain.core import core_models
-from omoide.domain.interfaces import AbsPolicy
+from omoide import interfaces
 from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
@@ -20,7 +20,7 @@ class CreateMediaUseCase:
 
     def __init__(
             self,
-            policy: AbsPolicy,
+            policy: interfaces.AbsPolicy,
             media_repo: storage_interfaces.AbsMediaRepository,
     ) -> None:
         """Initialize instance."""
@@ -46,7 +46,7 @@ class ApiCopyImageUseCase:
 
     def __init__(
             self,
-            policy: AbsPolicy,
+            policy: interfaces.AbsPolicy,
             items_repo: storage_interfaces.AbsItemsRepo,
             metainfo_repo: storage_interfaces.AbsMetainfoRepo,
             media_repo: storage_interfaces.AbsMediaRepository,

@@ -20,7 +20,7 @@ from starlette.responses import RedirectResponse
 from omoide import domain
 from omoide import utils
 from omoide.domain import errors
-from omoide.domain import interfaces
+from omoide import interfaces
 from omoide.infra import custom_logging
 from omoide import exceptions as api_exceptions
 from omoide.presentation import constants
