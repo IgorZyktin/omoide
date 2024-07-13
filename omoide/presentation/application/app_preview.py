@@ -76,6 +76,5 @@ async def app_preview(
         'block_ordered': True,
         'block_nested': True,
         'block_paginated': True,
-        'locate': web.get_locator(request, config.prefix_size),
     }
     return templates.TemplateResponse('preview.html', context)

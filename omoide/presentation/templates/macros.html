@@ -339,7 +339,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_thumbnail_for_item(request, locate, item, name, aim_wrapper) %}
+{% macro render_thumbnail_for_item(request, item, name, aim_wrapper) %}
     {% if item.is_collection %}
         {% set additional_style = ' env-collection' %}
     {% else %}
@@ -365,7 +365,7 @@
                  alt="thumbnail for the item"
                  title="{{ name }}"/>
         {%- else -%}
-            <img src="{{ locate(item).thumbnail }}"
+            <img src="{{ get_thumbnail_href(request, item) }}"
                  alt="thumbnail for the item"
                  title="{{ name }}"/>
         {%- endif -%}

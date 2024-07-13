@@ -55,7 +55,6 @@ async def app_item_create(
         'url': request.url_for('app_search'),
         'parent': parent,
         'permissions': permissions,
-        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return templates.TemplateResponse('item_create.html', context)

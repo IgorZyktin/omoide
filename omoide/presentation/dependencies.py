@@ -59,6 +59,9 @@ def get_templates() -> Jinja2Templates:
     templates = Jinja2Templates(directory='omoide/presentation/templates')
     templates.env.globals['zip'] = zip
     templates.env.globals['version'] = str(const.FRONTEND_VERSION)
+    templates.env.globals['get_content_href'] = web.get_content_href
+    templates.env.globals['get_preview_href'] = web.get_preview_href
+    templates.env.globals['get_thumbnail_href'] = web.get_thumbnail_href
     return templates
 
 

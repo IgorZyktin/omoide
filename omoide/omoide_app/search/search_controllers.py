@@ -29,13 +29,12 @@ async def api_search(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
 ):
     """Return portion of random items."""
     use_case = search_use_cases.ApiSearchUseCase(mediator)
     items, names = await use_case.execute(user, aim_wrapper.aim)
-    return web.items_to_dict(request, items, names, config.prefix_size)
+    return web.items_to_dict(request, items, names)
 
 
 @app_search_router.get('')
@@ -85,7 +84,6 @@ async def app_search(
         'matching_items': utils.sep_digits(matching_items),
         'delta': f'{delta:0.3f}',
         'endpoint': request.url_for('api_search'),
-        'locate': web.get_locator(request, config.prefix_size),
     }
 
     return templates.TemplateResponse(template, context)

@@ -11,7 +11,7 @@
 
     <div class="envelope-container">
         {% for item, name in zip(result.items, names) %}
-            {{ render_thumbnail_for_item(request, locate, item, name, aim_wrapper) }}
+            {{ render_thumbnail_for_item(request, item, name, aim_wrapper) }}
         {% endfor %}
     </div>
 
