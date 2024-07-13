@@ -78,7 +78,7 @@ class SearchRepository(storage_interfaces.AbsSearchRepository,
             self,
             user: models.User,
             aim: domain.Aim,
-            obligation: domain.Obligation,
+            limit: int,
     ) -> list[domain.Item]:
         """Find items for dynamic load."""
         stmt = sa.select(
@@ -92,7 +92,7 @@ class SearchRepository(storage_interfaces.AbsSearchRepository,
             stmt = stmt.offset(aim.offset)
 
         stmt = stmt.limit(
-            min(aim.items_per_page, obligation.max_results),
+            min(aim.items_per_page, limit),
         )
 
         response = await self.db.fetch_all(stmt)

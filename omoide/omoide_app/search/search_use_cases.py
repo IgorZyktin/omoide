@@ -16,10 +16,9 @@ class ApiSearchUseCase(BaseAPIUseCase):
         if not aim.query:
             return [], []
 
-        obligation = domain.Obligation(max_results=1000)
         async with self.mediator.storage.transaction():
             items = await self.mediator.search_repo \
-                .get_matching_items(user, aim, obligation)
+                .get_matching_items(user, aim, limit=1000)
             names = await self.mediator.browse_repo.get_parents_names(items)
         return items, names
 
@@ -57,9 +56,8 @@ class AppPagedSearchUseCase(BaseAPIUseCase):
         names = []
         async with self.mediator.storage.transaction():
             if aim.query:
-                obligation = domain.Obligation(max_results=1000)
                 items = await self.mediator.search_repo \
-                    .get_matching_items(user, aim, obligation)
+                    .get_matching_items(user, aim, limit=1000)
                 names = await self.mediator.browse_repo.get_parents_names(
                     items)
 

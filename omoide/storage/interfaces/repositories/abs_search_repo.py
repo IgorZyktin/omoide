@@ -21,7 +21,7 @@ class AbsSearchRepository(abc.ABC):
         self,
         user: models.User,
         aim: domain.Aim,
-        obligation: domain.Obligation,
+        limit: int,
     ) -> list[domain.Item]:
         """Return matching items for search query."""
 
