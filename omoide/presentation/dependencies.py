@@ -20,6 +20,7 @@ from omoide import use_cases
 from omoide import utils
 from omoide.domain import interfaces
 from omoide.infra.mediator import Mediator
+from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
@@ -153,7 +154,7 @@ def get_aim(request: Request) -> web.AimWrapper:
 
 
 def get_credentials(request: Request) -> HTTPBasicCredentials:
-    """Try extraction credentials from user request, but not trigger login."""
+    """Extract credentials from user request, but do not trigger login."""
     authorization: Optional[str] = request.headers.get('Authorization')
     anon = HTTPBasicCredentials(username='', password='')
 
@@ -177,50 +178,9 @@ def get_credentials(request: Request) -> HTTPBasicCredentials:
 
 
 @utils.memorize
-def get_auth_use_case(
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-) -> use_cases.AuthUseCase:
-    """Get use case instance."""
-    return use_cases.AuthUseCase(users_repo=users_repo)
-
-
-@utils.memorize
 def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
-    return infra.BcryptAuthenticator(
-        complexity=const.AUTH_COMPLEXITY,
-    )
-
-
-async def get_current_user(
-    credentials: HTTPBasicCredentials = Depends(get_credentials),
-    use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
-    authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
-) -> models.User:
-    """Load current user or use anon user."""
-    if not credentials.username or not credentials.password:
-        return models.User.new_anon()
-    return await use_case.execute(credentials, authenticator)
-
-
-async def get_known_user(
-    credentials: HTTPBasicCredentials = Depends(get_credentials),
-    use_case: use_cases.AuthUseCase = Depends(get_auth_use_case),
-    authenticator: interfaces.AbsAuthenticator = Depends(get_authenticator)
-) -> models.User:
-    """Load current user, raise if got anon."""
-    user = None
-    if credentials.username and credentials.password:
-        user = await use_case.execute(credentials, authenticator)
-
-    if user is None or user.is_anon:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='You are not allowed to perform this operation',
-        )
-
-    return user
+    return infra.BcryptAuthenticator(complexity=const.AUTH_COMPLEXITY)
 
 
 @utils.memorize
@@ -264,6 +224,30 @@ def get_mediator(
         storage=storage,
         users_repo=users_repo,
     )
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
+) -> models.User:
+    """Return current user or create anon."""
+    use_case = LoginUserUseCase(mediator)
+    if not credentials.username or not credentials.password:
+        return models.User.new_anon()
+    return await use_case.execute(credentials.username, credentials.password)
+
+
+async def get_known_user(
+    current_user: Annotated[models.User, Depends(get_current_user)],
+) -> models.User:
+    """Return current user, raise if got anon."""
+    if current_user.is_anon:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You are not allowed to perform this operation',
+        )
+
+    return current_user
 
 
 # application related use cases -----------------------------------------------

@@ -15,26 +15,24 @@ from fastapi.templating import Jinja2Templates
 from starlette import status
 
 from omoide import models
-from omoide import use_cases
-from omoide.domain import interfaces
+from omoide.infra.mediator import Mediator
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
+from omoide.omoide_app.auth import auth_use_cases
 
-router = fastapi.APIRouter()
+auth_router = fastapi.APIRouter()
 security = HTTPBasic(realm='omoide')
 
 
-@router.get('/login')
+@auth_router.get('/login')
 async def app_login(
-        request: Request,
-        user: models.User = Depends(dep.get_current_user),
-        credentials: HTTPBasicCredentials = Depends(security),
-        authenticator: interfaces.AbsAuthenticator = Depends(
-            dep.get_authenticator),
-        config: Config = Depends(dep.get_config),
-        use_case: use_cases.AuthUseCase = Depends(dep.get_auth_use_case),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    response_class: Type[Response] = RedirectResponse,
 ):
     """Ask user for login and password."""
     url = request.url_for('app_home')
@@ -42,7 +40,16 @@ async def app_login(
     if user.is_not_anon:
         return RedirectResponse(url)
 
-    new_user = await use_case.execute(credentials, authenticator)
+    use_case = auth_use_cases.LoginUserUseCase(mediator)
+
+    try:
+        new_user = await use_case.execute(
+            login=credentials.username,
+            password=credentials.password,
+        )
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     if new_user.is_anon:
         await asyncio.sleep(config.penalty_wrong_password)
@@ -55,13 +62,13 @@ async def app_login(
     return RedirectResponse(url)
 
 
-@router.get('/logout')
+@auth_router.get('/logout')
 async def app_logout(
-        request: Request,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: Type[Response] = HTMLResponse,
 ):
     """Clear authorization."""
     context = {
@@ -74,5 +81,5 @@ async def app_logout(
     return templates.TemplateResponse(
         name='logout.html',
         context=context,
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
     )

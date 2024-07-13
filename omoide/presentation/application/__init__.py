@@ -1,4 +1,3 @@
-from omoide.presentation.application import app_auth  # noqa: F401,F403
 from omoide.presentation.application import app_browse  # noqa: F401,F403
 from omoide.presentation.application import app_home  # noqa: F401,F403
 from omoide.presentation.application import app_item  # noqa: F401,F403

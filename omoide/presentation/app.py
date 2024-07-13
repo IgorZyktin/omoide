@@ -23,6 +23,7 @@ from omoide.omoide_api.items import item_controllers
 from omoide.omoide_api.media import media_controllers
 from omoide.omoide_api.metainfo import metainfo_controllers
 from omoide.omoide_api.users import users_controllers
+from omoide.omoide_app.auth import auth_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -151,12 +152,13 @@ def apply_api_routes(current_api: FastAPI) -> None:
 
 def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
+    current_app.include_router(auth_controllers.auth_router)
+
     # legacy
     current_app.include_router(api_legacy.api_media.router)
     current_app.include_router(api_legacy.api_profile.router)
 
     # Special application routes
-    current_app.include_router(application.app_auth.router)
     current_app.include_router(application.app_special.router)
     current_app.include_router(application.app_profile.router)
 
