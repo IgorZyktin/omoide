@@ -842,7 +842,7 @@ async function saveContentForProxy(proxy) {
         $.ajax({
             timeout: 100000, // 100 seconds
             type: 'POST',
-            url: `/api/media/${proxy.uuid}`,
+            url: `${MEDIA_ENDPOINT}/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                     content: proxy.content,
@@ -874,7 +874,7 @@ async function savePreviewForProxy(proxy) {
         $.ajax({
             timeout: 100000, // 100 seconds
             type: 'POST',
-            url: `/api/media/${proxy.uuid}`,
+            url: `${MEDIA_ENDPOINT}/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                     content: proxy.preview,
@@ -906,7 +906,7 @@ async function saveThumbnailForProxy(proxy) {
         $.ajax({
             timeout: 100000, // 100 seconds
             type: 'POST',
-            url: `/api/media/${proxy.uuid}`,
+            url: `${MEDIA_ENDPOINT}/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                     content: proxy.thumbnail,
@@ -1005,7 +1005,7 @@ async function copyContent(parent, firstChild) {
         $.ajax({
             timeout: 5000, // 5 seconds
             type: 'POST',
-            url: `/api/media/${parent.uuid}`,
+            url: `${MEDIA_ENDPOINT}/${parent.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: firstChild.content,
@@ -1029,7 +1029,7 @@ async function copyPreview(parent, firstChild) {
         $.ajax({
             timeout: 5000, // 5 seconds
             type: 'POST',
-            url: `/api/media/${parent.uuid}`,
+            url: `${MEDIA_ENDPOINT}/${parent.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: firstChild.preview,
@@ -1053,7 +1053,7 @@ async function copyThumbnail(parent, firstChild) {
         $.ajax({
             timeout: 5000, // 5 seconds
             type: 'POST',
-            url: `/api/media/${parent.uuid}`,
+            url: `${MEDIA_ENDPOINT}/${parent.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: firstChild.thumbnail,

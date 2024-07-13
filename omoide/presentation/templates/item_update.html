@@ -3,9 +3,9 @@
 
 {% block head %}
     <script type="text/javascript"
-            src="{{ request.url_for('static', path='crud.js') }}"></script>
+            src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
     <script type="text/javascript"
-            src="{{ request.url_for('static', path='item_update.js') }}"></script>
+            src="{{ request.url_for('static', path='item_update.js?' + version) }}"></script>
 {% endblock %}
 
 {% block body %}

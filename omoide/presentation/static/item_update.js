@@ -100,6 +100,7 @@ function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
+        // FIXME - use alternate endpoint
         url: `/api/media/${childUUID}/copy_image/${parentUUID}`,
         contentType: 'application/json',
         success: function (response) {
