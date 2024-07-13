@@ -49,9 +49,6 @@ def get_app() -> FastAPI:
         openapi_url=None,
         docs_url=None,
         redoc_url=None,
-        dependencies=[
-            Depends(dep.patch_request),
-        ],
     )
 
     # TODO - use only during development

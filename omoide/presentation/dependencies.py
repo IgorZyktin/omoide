@@ -1,7 +1,6 @@
 """Dependencies."""
 import binascii
 from base64 import b64decode
-from functools import partial
 from typing import Annotated
 from typing import Optional
 
@@ -32,25 +31,6 @@ from omoide.storage.implementations import asyncpg
 def get_config() -> app_config.Config:
     """Get config instance."""
     return app_config.Config()
-
-
-def patch_request(
-    request: Request,
-    config: Annotated[app_config.Config, Depends(get_config)],
-) -> None:
-    """Monkey-patch the request.
-
-    Solution to a problem that should not exit.
-    This must be solved using reverse proxy configuration.
-    """
-    if config.env != 'prod':
-        return
-
-    original_method = request.url_for
-    request.url_for = partial(  # type: ignore
-        web.patched_url_for,
-        original_method
-    )
 
 
 @utils.memorize

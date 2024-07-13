@@ -346,27 +346,6 @@ def items_to_dict(
     return simple_items
 
 
-def patched_url_for(
-        url_for: Callable[[str, ...], URL],  # type: ignore
-        name: str,
-        **path_params: Any,
-) -> str:
-    """Sanitized version with scheme altering."""
-    url = str(url_for(name, **path_params))  # type: ignore
-
-    # noinspection HttpUrlsUsage
-    if url.startswith('http://www'):
-        new_url = 'https://' + url[10:]
-        LOG.warning('Replacing {} to {} (got name {} with path_params {})',
-                    url, new_url, name, path_params)
-        url = new_url
-
-    elif url.startswith('http://'):
-        url = 'https://' + url[7:]
-
-    return url
-
-
 def _get_href(request: Request, item: domain.Item) -> str:
     """Return base for HREF formation."""
     base = request.scope.get('root_path')
