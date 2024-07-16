@@ -238,8 +238,7 @@
                 alterModelTextField(this, 'copied_image_from')
                 tryLoadingThumbnail($(this).val(), $('#thumbnail'))
             });
-
-            tryLoadingThumbnail(origin.val(), $('#thumbnail'))
+            tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
         });
     </script>
     <br>
