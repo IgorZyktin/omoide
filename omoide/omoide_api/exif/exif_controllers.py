@@ -44,7 +44,7 @@ async def api_create_exif(
         request.url_for('api_read_exif', item_uuid=item_uuid)
     )
 
-    return {'result': f'Created EXIF for item {item_uuid}'}
+    return {'result': f'Created EXIF for the item {item_uuid}'}
 
 
 @exif_router.get(
@@ -80,7 +80,10 @@ async def api_update_exif(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Replace EXIF data for existing item."""
+    """Update EXIF data for existing item.
+
+    If item has no EXIF data at the moment, it will be created.
+    """
     use_case = exif_use_cases.UpdateEXIFUseCase(mediator)
 
     try:
@@ -110,4 +113,4 @@ async def api_delete_exif(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return {'result': f'Deleted EXIF for item {item_uuid}'}
+    return {'result': f'Deleted EXIF for the item {item_uuid}'}

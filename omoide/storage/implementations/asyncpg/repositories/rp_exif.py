@@ -1,4 +1,5 @@
 """Repository that performs CRUD operations on EXIF."""
+from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -14,7 +15,7 @@ from omoide.storage.implementations import asyncpg
 class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
     """Repository that performs CRUD operations on EXIF."""
 
-    async def create_exif(self, item_uuid: UUID, exif: dict[str, str]) -> None:
+    async def create_exif(self, item_uuid: UUID, exif: dict[str, Any]) -> None:
         """Create EXIF."""
         stmt = sa.insert(
             db_models.EXIF
@@ -32,7 +33,7 @@ class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
                 item_uuid=item_uuid,
             ) from exc
 
-    async def read_exif(self, item_uuid: UUID) -> dict[str, str]:
+    async def read_exif(self, item_uuid: UUID) -> dict[str, Any]:
         """Return EXIF."""
         stmt = sa.select(
             db_models.EXIF
@@ -48,7 +49,7 @@ class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
 
         return dict(response['exif'])
 
-    async def update_exif(self, item_uuid: UUID, exif: dict[str, str]) -> None:
+    async def update_exif(self, item_uuid: UUID, exif: dict[str, Any]) -> None:
         """Update EXIF."""
         insert = pg_insert(
             db_models.EXIF
@@ -60,9 +61,7 @@ class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.EXIF.item_uuid],
-            set_={
-                'tags': insert.excluded.tags,
-            }
+            set_={'exif': insert.excluded.exif}
         )
 
         await self.db.execute(stmt)

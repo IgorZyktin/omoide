@@ -25,7 +25,7 @@ class CreateEXIFUseCase(BaseAPIUseCase):
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
-            LOG.info('Creating EXIF for {}, command by {}', item, user)
+            LOG.info('User {} is creating EXIF for item {}', user, item)
             await self.mediator.exif_repo.create_exif(item_uuid, exif)
 
 
@@ -64,7 +64,7 @@ class UpdateEXIFUseCase(BaseAPIUseCase):
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
-            LOG.info('Updating EXIF for {}, command by {}', item, user)
+            LOG.info('User {} is updating EXIF for item {}', user, item)
             await self.mediator.exif_repo.update_exif(item_uuid, exif)
 
 
@@ -79,5 +79,5 @@ class DeleteEXIFUseCase(BaseAPIUseCase):
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
-            LOG.info('Deleting EXIF for {}, command by {}', item, user)
+            LOG.info('User {} is deleting EXIF for item {}', user, item)
             await self.mediator.exif_repo.delete_exif(item_uuid)
