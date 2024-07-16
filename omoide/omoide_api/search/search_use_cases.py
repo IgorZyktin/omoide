@@ -17,19 +17,13 @@ class AutocompleteUseCase(BaseAPIUseCase):
         if len(tag) < minimal_length:
             return []
 
+        repo = self.mediator.search_repo
         async with self.mediator.storage.transaction():
             if user.is_anon:
-                variants = await self.mediator.search_repo \
-                    .autocomplete_tag_anon(
-                        tag=tag,
-                        limit=limit,
-                    )
+                variants = await repo.autocomplete_tag_anon(tag=tag,
+                                                            limit=limit)
             else:
-                variants = await self.mediator.search_repo \
-                    .autocomplete_tag_known(
-                        user=user,
-                        tag=tag,
-                        limit=limit,
-                    )
-
+                variants = await repo.autocomplete_tag_known(user=user,
+                                                             tag=tag,
+                                                             limit=limit)
         return variants

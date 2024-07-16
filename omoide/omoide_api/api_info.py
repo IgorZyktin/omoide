@@ -1,5 +1,4 @@
-"""Information about the API itself.
-"""
+"""Information about the API itself."""
 
 __version__ = '0.3.7'
 
@@ -13,16 +12,16 @@ TAGS_METADATA = [
         'description': 'Technical information about the API.',
     },
     {
+        'name': 'Search',
+        'description': 'Operations with user search requests.',
+    },
+    {
         'name': 'Users',
         'description': 'Operations with users.',
     },
     {
         'name': 'Items',
         'description': 'Operations with items.',
-    },
-    {
-        'name': 'Input',
-        'description': 'Operations with user input.',
     },
     {
         'name': 'Metainfo',
