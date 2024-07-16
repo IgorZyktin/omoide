@@ -7,6 +7,7 @@ from fastapi import Depends
 from fastapi import status
 
 from omoide import models
+from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.users import users_api_models
 from omoide.omoide_api.users import users_use_cases
@@ -39,8 +40,8 @@ async def api_create_user(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return users_api_models.UserOutput(
-        **web.serialize(user.model_dump()),
-        extras=web.serialize(extras),
+        **utils.serialize(user.model_dump()),
+        extras=utils.serialize(extras),
     )
 
 
@@ -68,9 +69,9 @@ async def api_get_all_users(
     return {
         'users': [
             users_api_models.UserOutput(
-                **web.serialize(user.model_dump()),
+                **utils.serialize(user.model_dump()),
                 extras={
-                    'root_item': web.to_simple_type(extras.get(user.uuid))
+                    'root_item': utils.to_simple_type(extras.get(user.uuid))
                 },
             )
             for user in users
@@ -172,8 +173,8 @@ async def api_get_user_by_uuid(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return users_api_models.UserOutput(
-        **web.serialize(user.model_dump()),
-        extras=web.serialize(extras),
+        **utils.serialize(user.model_dump()),
+        extras=utils.serialize(extras),
     )
 
 
@@ -198,8 +199,8 @@ async def api_change_user_name(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return users_api_models.UserOutput(
-        **web.serialize(user.model_dump()),
-        extras=web.serialize(extras),
+        **utils.serialize(user.model_dump()),
+        extras=utils.serialize(extras),
     )
 
 
@@ -224,8 +225,8 @@ async def api_change_user_login(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return users_api_models.UserOutput(
-        **web.serialize(user.model_dump()),
-        extras=web.serialize(extras),
+        **utils.serialize(user.model_dump()),
+        extras=utils.serialize(extras),
     )
 
 
@@ -250,6 +251,6 @@ async def api_change_user_password(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return users_api_models.UserOutput(
-        **web.serialize(user.model_dump()),
-        extras=web.serialize(extras),
+        **utils.serialize(user.model_dump()),
+        extras=utils.serialize(extras),
     )

@@ -3,7 +3,6 @@ import copy
 import http
 import re
 from typing import Any
-from typing import Callable
 from typing import NoReturn
 from typing import Optional
 from typing import Type
@@ -11,15 +10,14 @@ from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException
-from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import domain
+from omoide import exceptions as api_exceptions
 from omoide import utils
 from omoide.domain import errors
 from omoide.infra import custom_logging
-from omoide import exceptions as api_exceptions
 from omoide.presentation import constants
 
 LOG = custom_logging.get_logger(__name__)
@@ -102,24 +100,6 @@ def safe_template(template: str, **kwargs) -> str:
     return message
 
 
-def to_simple_type(something: Any) -> None | str:
-    """Convert one item."""
-    if something is None:
-        return None
-
-    return str(something)
-
-
-def serialize(
-    payload: dict[str, Any],
-) -> dict[str, None | str]:
-    """Convert dictionary to a web-compatible format."""
-    return {
-        key: to_simple_type(value)
-        for key, value in payload.items()
-    }
-
-
 def raise_from_exc(
     exc: Exception,
     language: str | None = None,
@@ -137,8 +117,8 @@ def raise_from_exc(
 
 
 def raise_from_error(
-        error: errors.Error,
-        language: Optional[str] = None,
+    error: errors.Error,
+    language: Optional[str] = None,
 ) -> NoReturn:
     """Cast domain level Error into HTTP response."""
     code = get_corresponding_error_code(error)
@@ -156,9 +136,9 @@ def raise_from_error(
 
 
 def redirect_from_error(
-        request: Request,
-        error: errors.Error,
-        uuid: Optional[UUID] = None,
+    request: Request,
+    error: errors.Error,
+    uuid: Optional[UUID] = None,
 ) -> RedirectResponse:
     """Return appropriate response."""
     code = get_corresponding_error_code(error)
@@ -173,7 +153,7 @@ def redirect_from_error(
         )
 
     if code in (http.HTTPStatus.FORBIDDEN, http.HTTPStatus.UNAUTHORIZED) \
-            and uuid is not None:
+        and uuid is not None:
         response = RedirectResponse(
             str(request.url_for('unauthorized')) + f'?q={uuid}'
         )
@@ -188,8 +168,8 @@ class AimWrapper:
     """Wrapper around aim object."""
 
     def __init__(
-            self,
-            aim: domain.Aim,
+        self,
+        aim: domain.Aim,
     ) -> None:
         """Initialize instance."""
         self.aim = aim
@@ -200,9 +180,9 @@ class AimWrapper:
 
     @classmethod
     def from_params(
-            cls,
-            params: dict,
-            **kwargs,
+        cls,
+        params: dict,
+        **kwargs,
     ) -> 'AimWrapper':
         """Build Aim object from raw params."""
         raw_query = params.get('q', '')
@@ -222,8 +202,8 @@ class AimWrapper:
 
     @classmethod
     def _fill_defaults(
-            cls,
-            params: dict,
+        cls,
+        params: dict,
     ) -> None:
         """Add default values if they were not supplied."""
         params['ordered'] = cls.extract_bool(params, 'ordered', False)
@@ -236,9 +216,9 @@ class AimWrapper:
 
     @staticmethod
     def extract_bool(
-            params: dict,
-            key: str,
-            default: bool,
+        params: dict,
+        key: str,
+        default: bool,
     ) -> bool:
         """Safely extract boolean value from user input."""
         value = params.get(key)
@@ -252,9 +232,9 @@ class AimWrapper:
 
     @staticmethod
     def extract_int(
-            params: dict,
-            key: str,
-            default: int,
+        params: dict,
+        key: str,
+        default: int,
     ) -> int:
         """Safely extract int value from user input."""
         try:
@@ -312,9 +292,9 @@ def parse_tags(raw_query: str) -> tuple[list[str], list[str]]:
 
 
 def items_to_dict(
-        request: Request,
-        items: list[domain.Item],
-        names: list[Optional[str]],
+    request: Request,
+    items: list[domain.Item],
+    names: list[Optional[str]],
 ) -> list[domain.SimpleItem]:
     """Convert items to JSON compatible dicts."""
     empty_thumbnail = request.url_for('static', path='empty.png')

@@ -356,3 +356,19 @@ def get_size(obj, seen: set[int] | None = None) -> int:
         size += sum([get_size(i, seen) for i in obj])
 
     return size
+
+
+def to_simple_type(something: Any) -> None | str:
+    """Convert one item."""
+    if something is None:
+        return None
+
+    return str(something)
+
+
+def serialize(payload: dict[str, Any]) -> dict[str, str | None]:
+    """Convert dictionary to a web-compatible format."""
+    return {
+        key: to_simple_type(value)
+        for key, value in payload.items()
+    }
