@@ -40,7 +40,29 @@ async def api_create_media(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return {
-        'media_id': media_id,
-        'result': f'Created Media with id={media_id} for item {item_uuid}',
-    }
+    return {'result': f'Created Media with id={media_id} for item {item_uuid}'}
+
+
+@media_router.delete(
+    '',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str],
+)
+async def api_delete_processed_media(
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Delete processed media.
+
+    Will delete all records, that were successfully
+    processed and had no errors.
+    """
+    use_case = media_use_cases.DeleteProcessedMediaUseCase(mediator)
+
+    try:
+        await use_case.execute(user)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return {'result': 'Deleted all processed Media records'}

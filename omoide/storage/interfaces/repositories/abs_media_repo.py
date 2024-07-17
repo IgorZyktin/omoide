@@ -13,6 +13,14 @@ class AbsMediaRepository(abc.ABC):
         """Create Media, return media id."""
 
     @abc.abstractmethod
+    async def delete_processed_media(self, user: models.User) -> None:
+        """Delete fully downloaded media rows."""
+
+    @abc.abstractmethod
+    async def delete_all_processed_media(self) -> None:
+        """Delete fully downloaded media rows."""
+
+    @abc.abstractmethod
     async def copy_image(
         self,
         owner_uuid: UUID,

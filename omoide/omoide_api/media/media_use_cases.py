@@ -41,3 +41,21 @@ class CreateMediaUseCase(BaseAPIUseCase):
             media_id = await self.mediator.media_repo.create_media2(media)
 
         return media_id
+
+
+class DeleteProcessedMediaUseCase(BaseAPIUseCase):
+    """Use case for cleaning processed records."""
+
+    async def execute(self, user: models.User) -> None:
+        """Execute."""
+        self.ensure_not_anon(user, operation='delete media data')
+
+        async with self.mediator.storage.transaction():
+            LOG.info('User {} is deleting processed media', user)
+
+            if user.is_admin:
+                await self.mediator.media_repo.delete_all_processed_media()
+            else:
+                await self.mediator.media_repo.delete_processed_media(
+                    user=user,
+                )
