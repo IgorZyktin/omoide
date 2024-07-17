@@ -31,4 +31,8 @@ TAGS_METADATA = [
         'name': 'EXIF',
         'description': 'Operations with item EXIF info.',
     },
+    {
+        'name': 'Actions',
+        'description': 'Computationally heavy operations.',
+    },
 ]

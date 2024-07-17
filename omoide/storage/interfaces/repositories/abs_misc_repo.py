@@ -49,7 +49,7 @@ class AbsMiscRepo(abc.ABC):
         self,
         name: str,
         user_uuid: UUID,
-        target_uuid: UUID,
+        target_uuid: UUID | None,
         added: Collection[str],
         deleted: Collection[str],
         status: str,

@@ -264,7 +264,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         self,
         name: str,
         user_uuid: UUID,
-        target_uuid: UUID,
+        target_uuid: UUID | None,
         added: Collection[str],
         deleted: Collection[str],
         status: str,
