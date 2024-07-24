@@ -60,7 +60,6 @@ async def unauthorized(
     return templates.TemplateResponse(
         name='exc_unauthorized.html',
         context=context,
-        status_code=http.HTTPStatus.UNAUTHORIZED,
     )
 
 
