@@ -1,11 +1,11 @@
 [Unit]
-Description=Omoide application web server
+Description=Omoide web server
 After=network.target
 
 [Service]
-User=omoide
-WorkingDirectory=/home/omoide/omoide
-ExecStart=/home/omoide/omoide/run_app.sh
+User=omoide-user
+WorkingDirectory=/home/omoide-user/omoide
+ExecStart=/home/omoide-user/omoide/run_app.sh
 EnvironmentFile=/etc/omoide/env
 CPUAccounting=true
 MemoryAccounting=true
