@@ -9,7 +9,6 @@ from typing import Iterator
 
 from fastapi import FastAPI
 from fastapi import Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from omoide.application.controllers import api as api_legacy
@@ -74,23 +73,10 @@ def get_app() -> FastAPI:
 
 def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:
     """Return list of needed middlewares."""
-    # CORS
-    # TODO - move it to config
-    origins = [
-        'https://omoide.ru',
-        'https://www.omoide.ru',
-        'http://localhost',
-        'http://localhost:8080',
-    ]
-
-    cors_config = dict(
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=['*'],
-        allow_headers=['*'],
-    )
-
-    yield CORSMiddleware, cors_config
+    for description in app_config.Config().middlewares:
+        if description.name.casefold() == 'CORSMiddleware'.casefold():
+            from fastapi.middleware.cors import CORSMiddleware
+            yield CORSMiddleware, description.config
 
 
 def apply_app_routes(current_app: FastAPI) -> None:
