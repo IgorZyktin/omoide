@@ -22,7 +22,7 @@ actions_router = APIRouter(prefix='/actions', tags=['Actions'])
     response_model=dict[str, str],
 )
 async def api_action_rebuild_known_tags(
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     target: actions_api_models.RebuildTagsTargetUser,
     background_tasks: BackgroundTasks,
@@ -31,7 +31,7 @@ async def api_action_rebuild_known_tags(
     use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
 
     try:
-        target_user, job_id = await use_case.pre_execute(user,
+        target_user, job_id = await use_case.pre_execute(admin,
                                                          target.user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
@@ -42,5 +42,5 @@ async def api_action_rebuild_known_tags(
     else:
         name = target_user.name
 
-    background_tasks.add_task(use_case.execute, user, target_user, job_id)
+    background_tasks.add_task(use_case.execute, admin, target_user, job_id)
     return {'result': f'Rebuilding known tags for {name}'}

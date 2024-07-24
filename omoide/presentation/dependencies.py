@@ -226,14 +226,27 @@ async def get_current_user(
 async def get_known_user(
     current_user: Annotated[models.User, Depends(get_current_user)],
 ) -> models.User:
-    """Return current user, raise if got anon."""
-    if current_user.is_anon:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='You are not allowed to perform this operation',
-        )
+    """Return current user, raise if user is anon."""
+    if current_user.is_not_anon:
+        return current_user
 
-    return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail='You are not allowed to perform this operation',
+    )
+
+
+async def get_admin_user(
+    current_user: Annotated[models.User, Depends(get_known_user)],
+) -> models.User:
+    """Return current user, raise if user is not admin."""
+    if current_user.is_admin:
+        return current_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail='You are not allowed to perform this operation',
+    )
 
 
 # application related use cases -----------------------------------------------

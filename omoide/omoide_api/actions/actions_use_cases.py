@@ -16,16 +16,16 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
 
     async def pre_execute(
         self,
-        user: models.User,
+        admin: models.User,
         target: UUID | None,
     ) -> tuple[models.User, int]:
         """Prepare for execution."""
         async with self.mediator.storage.transaction():
             if target is None:
-                self.ensure_admin(user, subject='known tags for anon')
+                self.ensure_admin(admin, subject='known tags for anon')
                 LOG.info(
                     'User {} is rebuilding known tags for anon user',
-                    user,
+                    admin,
                 )
                 name = 'known-tags-anon'
                 target_user = None
@@ -33,19 +33,19 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
 
             else:
                 target_user = await self.mediator.users_repo.get_user(target)
-                self.ensure_admin_or_owner(user, target_user,
+                self.ensure_admin_or_owner(admin, target_user,
                                            'known tags for a user')
                 name = 'known-tags-user'
                 LOG.info(
                     'User {} is rebuilding known tags for user',
-                    user,
+                    admin,
                     target_user,
                 )
                 extras = {'target_user_uuid': target_user.uuid}
 
             new_job = await self.mediator.misc_repo.start_long_job(
                 name=name,
-                user_uuid=user.uuid if target is None else target_user.uuid,
+                user_uuid=admin.uuid if target is None else target_user.uuid,
                 target_uuid=None,
                 added=[],
                 deleted=[],
