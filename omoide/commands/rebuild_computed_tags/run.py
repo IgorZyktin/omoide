@@ -159,9 +159,7 @@ def insert_new_computed_tags(
 
     stmt = insert.on_conflict_do_update(
         index_elements=[db_models.ComputedTags.item_uuid],
-        set_={
-            'tags': insert.excluded.tags,
-        }
+        set_={'tags': insert.excluded.tags}
     )
 
     conn.execute(stmt)

@@ -28,7 +28,7 @@ class AbsMiscRepo(abc.ABC):
         """Update computed tags for this item."""
 
     @abc.abstractmethod
-    async def apply_new_known_tags(
+    async def update_known_tags(
         self,
         users: Collection[models.User],
         tags_added: Collection[str],
@@ -37,7 +37,7 @@ class AbsMiscRepo(abc.ABC):
         """Update counters for known tags."""
 
     @abc.abstractmethod
-    async def drop_unused_tags(
+    async def drop_unused_known_tags(
         self,
         users: Collection[models.User],
         public_users: set[UUID],

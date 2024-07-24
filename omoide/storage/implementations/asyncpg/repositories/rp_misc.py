@@ -106,28 +106,78 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.ComputedTags.item_uuid],
-            set_={
-                'tags': insert.excluded.tags,
-            }
+            set_={'tags': insert.excluded.tags}
         )
 
         await self.db.execute(stmt)
 
-    async def _increase_known_tags_for_known_user(
+    async def update_known_tags(
+        self,
+        users: Collection[models.User],
+        tags_added: Collection[str],
+        tags_deleted: Collection[str],
+    ) -> None:
+        """Update counters for known tags."""
+        for user in users:
+            if user.is_anon:
+                await self._increment_known_tags_for_anon_user(tags_added)
+                await self._decrement_known_tags_for_anon_user(tags_deleted)
+            else:
+                await self._increment_known_tags_for_known_user(user,
+                                                                tags_added)
+                await self._decrement_known_tags_for_known_user(user,
+                                                                tags_deleted)
+
+    async def _increment_known_tags_for_anon_user(
+        self,
+        tags: Collection[str],
+    ) -> None:
+        """Increment tag counter."""
+        for tag in tags:
+            insert = pg_insert(
+                db_models.KnownTagsAnon
+            ).values(
+                tag=tag.casefold(),
+                counter=1,
+            )
+
+            stmt = insert.on_conflict_do_update(
+                index_elements=[
+                    db_models.KnownTagsAnon.tag,
+                ],
+                set_={'counter': insert.excluded.counter + 1}
+            )
+
+            await self.db.execute(stmt)
+
+    async def _decrement_known_tags_for_anon_user(
+        self,
+        tags: Collection[str],
+    ) -> None:
+        """Decrement tag counter."""
+        for tag in tags:
+            stmt = sa.update(
+                db_models.KnownTagsAnon
+            ).where(
+                db_models.KnownTagsAnon.tag == tag.casefold(),
+            ).values(
+                counter=db_models.KnownTagsAnon.counter - 1,
+            )
+
+            await self.db.execute(stmt)
+
+    async def _increment_known_tags_for_known_user(
         self,
         user: models.User,
         tags: Collection[str],
     ) -> None:
-        """Update known tags using this item."""
-        assert user.is_not_anon
-
+        """Increment tag counter."""
         for tag in tags:
-            tag = tag.lower()
             insert = pg_insert(
                 db_models.KnownTags
             ).values(
                 user_uuid=user.uuid,
-                tag=tag,
+                tag=tag.casefold(),
                 counter=1,
             )
 
@@ -136,59 +186,30 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
                     db_models.KnownTags.user_uuid,
                     db_models.KnownTags.tag,
                 ],
-                set_={
-                    'counter': db_models.KnownTags.counter + 1,
-                }
+                set_={'counter': insert.excluded.counter + 1}
             )
 
             await self.db.execute(stmt)
 
-    async def _decrease_known_tags_for_known_user(
+    async def _decrement_known_tags_for_known_user(
         self,
         user: models.User,
         tags: Collection[str],
     ) -> None:
-        """Decrease counters for known tags using this item."""
-        assert user.is_not_anon
-
+        """Decrement tag counter."""
         for tag in tags:
-            tag = tag.lower()
             stmt = sa.update(
                 db_models.KnownTags
             ).where(
                 db_models.KnownTags.user_uuid == user.uuid,
-                db_models.KnownTags.tag == tag,
+                db_models.KnownTags.tag == tag.casefold(),
             ).values(
                 counter=db_models.KnownTags.counter - 1,
             )
 
             await self.db.execute(stmt)
 
-    async def apply_new_known_tags(
-        self,
-        users: Collection[models.User],
-        tags_added: Collection[str],
-        tags_deleted: Collection[str],
-    ) -> None:
-        """Update counters for known tags."""
-        for user in users:
-            if tags_added:
-                if user.is_anon:
-                    await self._increase_known_tags_for_anon_user(
-                        user, tags_added)
-                else:
-                    await self._increase_known_tags_for_known_user(
-                        user, tags_added)
-
-            if tags_deleted:
-                if user.is_anon:
-                    await self._decrease_known_tags_for_anon_user(
-                        user, tags_deleted)
-                else:
-                    await self._decrease_known_tags_for_known_user(
-                        user, tags_deleted)
-
-    async def drop_unused_tags(
+    async def drop_unused_known_tags(
         self,
         users: Collection[models.User],
         public_users: set[UUID],
@@ -211,54 +232,6 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
                     db_models.KnownTagsAnon.counter <= 0,
                 )
                 await self.db.execute(stmt)
-
-    async def _increase_known_tags_for_anon_user(
-        self,
-        user: models.User,
-        tags: Collection[str],
-    ) -> None:
-        """Update known tags using this item."""
-        assert user.is_anon
-
-        for tag in tags:
-            tag = tag.lower()
-            insert = pg_insert(
-                db_models.KnownTagsAnon
-            ).values(
-                tag=tag,
-                counter=1,
-            )
-
-            stmt = insert.on_conflict_do_update(
-                index_elements=[
-                    db_models.KnownTagsAnon.tag,
-                ],
-                set_={
-                    'counter': db_models.KnownTagsAnon.counter + 1,
-                }
-            )
-
-            await self.db.execute(stmt)
-
-    async def _decrease_known_tags_for_anon_user(
-        self,
-        user: models.User,
-        tags: Collection[str],
-    ) -> None:
-        """Decrease counters for known tags using this item."""
-        assert user.is_anon
-
-        for tag in tags:
-            tag = tag.lower()
-            stmt = sa.update(
-                db_models.KnownTagsAnon
-            ).where(
-                db_models.KnownTagsAnon.tag == tag,
-            ).values(
-                counter=db_models.KnownTagsAnon.counter - 1,
-            )
-
-            await self.db.execute(stmt)
 
     async def start_long_job(
         self,

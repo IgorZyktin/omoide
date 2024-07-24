@@ -152,9 +152,7 @@ def rebuild_known_tags_for_anon_user(conn: Connection) -> tuple[int, int]:
             index_elements=[
                 db_models.KnownTagsAnon.tag,
             ],
-            set_={
-                'counter': insert.excluded.counter,
-            }
+            set_={'counter': insert.excluded.counter}
         )
         conn.execute(stmt)
 
@@ -201,9 +199,7 @@ def rebuild_known_tags_for_known_user(
                 db_models.KnownTags.user_uuid,
                 db_models.KnownTags.tag,
             ],
-            set_={
-                'counter': insert.excluded.counter,
-            }
+            set_={'counter': insert.excluded.counter}
         )
         conn.execute(stmt)
 

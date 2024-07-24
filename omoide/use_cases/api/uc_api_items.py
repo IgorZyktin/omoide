@@ -251,7 +251,7 @@ class BaseItemModifyUseCase:
         users = await self.users_repo.read_filtered_users(
             *payload.permissions
         )
-        await self.misc_repo.apply_new_known_tags(users, item.tags, [])
+        await self.misc_repo.update_known_tags(users, item.tags, [])
 
         return uuid
 
@@ -464,7 +464,7 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
                 *item.permissions
             )
             users += [user]
-            await self.misc_repo.apply_new_known_tags(
+            await self.misc_repo.update_known_tags(
                 users, added, deleted)
 
             await self.metainfo_repo.mark_metainfo_updated(item.uuid)
@@ -505,7 +505,7 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             *item.permissions
         )
         users += [user]
-        await self.misc_repo.apply_new_known_tags(
+        await self.misc_repo.update_known_tags(
             users, added, deleted)
 
         async def recursive(item_uuid: UUID) -> None:
@@ -685,14 +685,14 @@ class ApiItemDeleteUseCase(BaseItemModifyUseCase):
             )
             users += [user]
 
-            await self.misc_repo.apply_new_known_tags(
+            await self.misc_repo.update_known_tags(
                 users=users,
                 tags_added=[],
                 tags_deleted=item.tags,
             )
 
             public_users = await self.users_repo.get_public_users_uuids()
-            await self.misc_repo.drop_unused_tags(users, public_users)
+            await self.misc_repo.drop_unused_known_tags(users, public_users)
             await self.items_repo.mark_files_as_orphans(item, utils.now())
             deleted = await self.items_repo.delete_item(item)
 
