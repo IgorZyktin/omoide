@@ -9,7 +9,7 @@
 {% block head %}
     {{ super() }}
     <script type="text/javascript"
-            src="{{ request.url_for('static', path='scroller.js') }}"></script>
+            src="{{ request.url_for('static', path='scroller.js?' + version) }}"></script>
 {% endblock %}
 
 {% block body %}

@@ -470,25 +470,6 @@ def api_item_update_permissions_use_case(
 
 
 @utils.memorize
-def api_item_copy_image_use_case(
-    policy: Annotated[interfaces.AbsPolicy, Depends(get_policy)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    metainfo_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                             Depends(get_metainfo_repo)],
-    media_repository: Annotated[storage_interfaces.AbsMediaRepository,
-                                Depends(get_media_repo)],
-) -> use_cases.ApiCopyImageUseCase:
-    """Get use case instance."""
-    return use_cases.ApiCopyImageUseCase(
-        policy=policy,
-        items_repo=items_repo,
-        metainfo_repo=metainfo_repo,
-        media_repo=media_repository,
-    )
-
-
-@utils.memorize
 def api_item_update_parent_use_case(
     policy: Annotated[interfaces.AbsPolicy, Depends(get_policy)],
     users_repo: Annotated[storage_interfaces.AbsUsersRepo,

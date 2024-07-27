@@ -111,11 +111,11 @@ function toggleOrdered() {
     // toggle random/ordered search mode
     let searchParams = new URLSearchParams(window.location.search)
 
-    if (searchParams.get('ordered') === 'on') {
-        searchParams.set('ordered', 'off')
-        searchParams.set('paged', 'off')
+    if (searchParams.get('order') === 'asc') {
+        searchParams.set('order', 'rand')
+        searchParams.set('page', '0')
     } else
-        searchParams.set('ordered', 'on')
+        searchParams.set('order', 'rand')
 
     reloadSearchParams(searchParams)
 }

@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <link rel="shortcut icon"
           type='image/x-icon'
-          href="{{ request.url_for('static', path='favicon.ico') }}">
+          href="{{ request.url_for('static', path='favicon.ico?' + version) }}">
     <link type="text/css"
-          href="{{ request.url_for('static', path='styles.css') }}"
+          href="{{ request.url_for('static', path='styles.css?' + version) }}"
           rel="stylesheet">
     <link type="text/css"
           href="{{ request.url_for('static', path='thirdparty/bootstrap/css/bootstrap.min.css') }}"
@@ -50,7 +50,7 @@
                 <input id="query_element"
                        name="query"
                        type="search"
-                       value="{{ aim_wrapper.query.raw_query or '' }}"
+                       value="{{ request.query_params.get('q', '') }}"
                        class="query_input"
                        autocomplete="off"
                        placeholder="Search (for example it + movie)"
@@ -69,27 +69,19 @@
 
             {% if block_ordered %}
                 <span class="button-disabled qc-order">
-                {% if aim_wrapper.ordered %}
-                    <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
-                         alt="Ordering is not supported in this section"/>
-                    <span title="Change view mode to see items in random order">Now ordered</span>
-                {% else %}
+
+                {% if request.query_params.get('order') == 'rand' %}
                     <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
                          alt="Ordering is not supported in this section"/>
                     <span title="Change view mode to see items ordered">Now random</span>
+                {% else %}
+                    <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
+                         alt="Ordering is not supported in this section"/>
+                    <span title="Change view mode to see items in random order">Now ordered</span>
                 {% endif %}
             </span>
             {% else %}
-                {% if aim_wrapper.ordered %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items in random order"
-                       onclick="toggleOrdered()"
-                       class="button qc-order">
-                        <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
-                             alt="Change view mode to see items ordered"/>
-                        <span>Now ordered</span>
-                    </a>
-                {% else %}
+                {% if request.query_params.get('order') == 'rand' %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see items ordered"
                        onclick="toggleOrdered()"
@@ -97,6 +89,15 @@
                         <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
                              alt="Change view mode to see items ordered"/>
                         <span title="Change view mode to see items ordered">Now random</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items in random order"
+                       onclick="toggleOrdered()"
+                       class="button qc-order">
+                        <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
+                             alt="Change view mode to see items ordered"/>
+                        <span>Now ordered</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -131,38 +132,6 @@
                         <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                              alt="Change view mode to see items only from top level"/>
                         <span>Now flat</span>
-                    </a>
-                {% endif %}
-            {% endif %}
-
-            {% if block_paginated or False %}
-                <span class="button-disabled qc-paged">
-                <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
-                     alt="Pagination is not supported in this section"/>
-                    {% if aim_wrapper.paged %}
-                        <span title="Change view mode to see items with dynamic load">Now paginated</span>
-                    {% else %}
-                        <span title="Change view mode to see items on static pages">Now dynamic</span>
-                    {% endif %}
-            </span>
-            {% else %}
-                {% if aim_wrapper.paged %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items with dynamic load"
-                       onclick="togglePaged()"
-                       class="button qc-paged">
-                        <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
-                             alt="Change view mode to see items with dynamic load"/>
-                        <span>Now paginated</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items on static pages"
-                       onclick="togglePaged()"
-                       class="button qc-paged">
-                        <img src="{{ request.url_for('static', path='ic_paginated_off.svg') }}"
-                             alt="Change view mode to see items on static pages"/>
-                        <span>Now dynamic</span>
                     </a>
                 {% endif %}
             {% endif %}
