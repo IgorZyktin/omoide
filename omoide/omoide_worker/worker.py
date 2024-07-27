@@ -39,14 +39,14 @@ class Worker(interfaces.AbsWorker):
                     last_seen,
                 )
 
-                LOG.debug("Got {} media records to download", len(batch))
+                LOG.info('Got {} media records to download', len(batch))
                 for media in batch:
                     # noinspection PyBroadException
                     try:
                         self._download_single_media(media)
                     except Exception:
                         LOG.exception(
-                            "Failed to download media {}",
+                            'Failed to download media {}',
                             media.id,
                         )
                         media.error = traceback.format_exc()
