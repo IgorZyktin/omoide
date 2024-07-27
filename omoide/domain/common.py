@@ -1,6 +1,7 @@
 """Models that used in more than one place."""
 from typing import Callable
 from typing import Iterator
+from typing import Literal
 from typing import Optional
 from typing import TypedDict
 from uuid import UUID
@@ -162,7 +163,7 @@ class Query(BaseModel):
 class Aim(BaseModel):
     """Object that describes user's desired output."""
     query: Query
-    ordered: bool
+    ordering: Literal['asc', 'desc', 'random']
     nested: bool
     paged: bool
     page: int

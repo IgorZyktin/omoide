@@ -70,7 +70,7 @@
             {% if block_ordered %}
                 <span class="button-disabled qc-order">
 
-                {% if request.query_params.get('order') == 'rand' %}
+                {% if request.query_params.get('ordering') == 'random' %}
                     <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
                          alt="Ordering is not supported in this section"/>
                     <span title="Change view mode to see items ordered">Now random</span>
@@ -81,7 +81,7 @@
                 {% endif %}
             </span>
             {% else %}
-                {% if request.query_params.get('order') == 'rand' %}
+                {% if request.query_params.get('ordering') == 'random' %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see items ordered"
                        onclick="toggleOrdered()"
@@ -132,6 +132,38 @@
                         <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                              alt="Change view mode to see items only from top level"/>
                         <span>Now flat</span>
+                    </a>
+                {% endif %}
+            {% endif %}
+
+            {% if block_paginated or False %}
+                <span class="button-disabled qc-paged">
+                <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
+                     alt="Pagination is not supported in this section"/>
+                    {% if aim_wrapper.paged %}
+                        <span title="Change view mode to see items with dynamic load">Now paginated</span>
+                    {% else %}
+                        <span title="Change view mode to see items on static pages">Now dynamic</span>
+                    {% endif %}
+            </span>
+            {% else %}
+                {% if aim_wrapper.paged %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items with dynamic load"
+                       onclick="togglePaged()"
+                       class="button qc-paged">
+                        <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
+                             alt="Change view mode to see items with dynamic load"/>
+                        <span>Now paginated</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see items on static pages"
+                       onclick="togglePaged()"
+                       class="button qc-paged">
+                        <img src="{{ request.url_for('static', path='ic_paginated_off.svg') }}"
+                             alt="Change view mode to see items on static pages"/>
+                        <span>Now dynamic</span>
                     </a>
                 {% endif %}
             {% endif %}

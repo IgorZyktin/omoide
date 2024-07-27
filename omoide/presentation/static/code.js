@@ -90,7 +90,7 @@ async function copyText(text, title, alertId) {
 
 function goSearch() {
     // escape special symbols in query and relocate
-    let element = document.getElementById("query_element")
+    let element = document.getElementById('query_element')
 
     if (!element)
         return
@@ -98,7 +98,7 @@ function goSearch() {
     let searchParams = new URLSearchParams(window.location.search)
     searchParams.set('q', element.value)
     searchParams.set('page', '1')
-    window.location.href = "/search?" + searchParams.toString();
+    window.location.href = '/search?' + searchParams.toString();
 }
 
 function reloadSearchParams(newSearchParams) {
@@ -111,11 +111,12 @@ function toggleOrdered() {
     // toggle random/ordered search mode
     let searchParams = new URLSearchParams(window.location.search)
 
-    if (searchParams.get('order') === 'asc') {
-        searchParams.set('order', 'rand')
+    if (searchParams.get('ordering') === 'asc') {
+        searchParams.set('ordering', 'random')
         searchParams.set('page', '0')
-    } else
-        searchParams.set('order', 'rand')
+    } else {
+        searchParams.set('ordering', 'asc')
+    }
 
     reloadSearchParams(searchParams)
 }

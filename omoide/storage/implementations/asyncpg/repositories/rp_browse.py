@@ -233,13 +233,18 @@ class BrowseRepository(
                 db_models.Item.parent_uuid == uuid
             )
 
-        if aim.ordered:
+        if aim.ordering == 'asc':
             stmt = stmt.where(
                 db_models.Item.number > aim.last_seen
             ).order_by(
                 db_models.Item.number
             )
-
+        elif aim.ordering == 'desc':
+            stmt = stmt.where(
+                db_models.Item.number < aim.last_seen
+            ).order_by(
+                db_models.Item.number
+            )
         else:
             stmt = stmt.order_by(sa.func.random())
 
@@ -345,12 +350,14 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             """
             values['user_uuid'] = str(user.uuid)
 
-        if aim.ordered:
+        if aim.ordering == 'asc':
             stmt += ' AND number > :last_seen'
-            values['last_seen'] = aim.last_seen
-
-        if aim.ordered:
             stmt += ' ORDER BY number'
+            values['last_seen'] = aim.last_seen
+        elif aim.ordering == 'desc':
+            stmt += ' AND number < :last_seen'
+            stmt += ' ORDER BY number'
+            values['last_seen'] = aim.last_seen
         else:
             stmt += ' ORDER BY random()'
 
