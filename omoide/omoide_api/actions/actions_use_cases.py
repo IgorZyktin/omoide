@@ -51,7 +51,6 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
                 target_uuid=None,
                 added=[],
                 deleted=[],
-                status='started',
                 started=utils.now(),
                 extras=extras,
             )

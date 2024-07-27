@@ -73,7 +73,6 @@ async def _generic_call(
         target_uuid=item_uuid,
         added=added,
         deleted=deleted,
-        status='started',
         started=utils.now(),
         extras=extras,
     )

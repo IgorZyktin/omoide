@@ -19,7 +19,7 @@ actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 @actions_router.post(
     '/rebuild_known_tags',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str],
+    response_model=dict[str, str | None],
 )
 async def api_action_rebuild_known_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
@@ -43,7 +43,10 @@ async def api_action_rebuild_known_tags(
         name = target_user.name
 
     background_tasks.add_task(use_case.execute, admin, target_user, job_id)
-    return {'result': f'Rebuilding known tags for user {name}'}
+    return {
+        'result': 'Rebuilding known tags',
+        'target_user': name,
+    }
 
 
 @actions_router.post(

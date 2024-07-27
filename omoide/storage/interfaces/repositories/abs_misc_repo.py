@@ -53,7 +53,6 @@ class AbsMiscRepo(abc.ABC):
         target_uuid: UUID | None,
         added: Collection[str],
         deleted: Collection[str],
-        status: str,
         started: datetime,
         extras: dict[str, Any],
     ) -> int:

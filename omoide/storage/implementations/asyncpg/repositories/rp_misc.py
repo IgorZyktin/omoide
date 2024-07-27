@@ -241,7 +241,6 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         target_uuid: UUID | None,
         added: Collection[str],
         deleted: Collection[str],
-        status: str,
         started: datetime,
         extras: dict[str, Any],
     ) -> int:
@@ -254,7 +253,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
             target_uuid=target_uuid,
             added=list(added),
             deleted=list(deleted),
-            status=status,
+            status='started',
             started=started,
             duration=None,
             operations=None,
