@@ -56,21 +56,14 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
 
             current_metainfo.user_time = metainfo.user_time
             current_metainfo.content_type = metainfo.content_type
-
-            current_metainfo.author = metainfo.author
-            current_metainfo.author_url = metainfo.author_url
-            current_metainfo.saved_from_url = metainfo.saved_from_url
-            current_metainfo.description = metainfo.description
             current_metainfo.extras = metainfo.extras
-
-            current_metainfo.content_size = metainfo.content_size
-            current_metainfo.preview_size = metainfo.preview_size
-            current_metainfo.thumbnail_size = metainfo.thumbnail_size
 
             current_metainfo.content_width = metainfo.content_width
             current_metainfo.content_height = metainfo.content_height
+
             current_metainfo.preview_width = metainfo.preview_width
             current_metainfo.preview_height = metainfo.preview_height
+
             current_metainfo.thumbnail_width = metainfo.thumbnail_width
             current_metainfo.thumbnail_height = metainfo.thumbnail_height
 

@@ -613,11 +613,6 @@ async function uploadMetainfoForProxy(proxy) {
                 thumbnail_width: proxy.metainfo.thumbnail_width,
                 thumbnail_height: proxy.metainfo.thumbnail_height,
                 content_type: proxy.metainfo.content_type,
-                // TODO: add author metainfo to the form
-                author: null,
-                author_url: null,
-                saved_from_url: null,
-                description: null,
                 extras: {
                     original_file_name: proxy.metainfo.original_file_name,
                     original_file_modified_at: proxy.metainfo.original_file_modified_at,

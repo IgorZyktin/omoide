@@ -11,20 +11,12 @@ from omoide import utils
 
 MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
 
-# TODO - drop unused columns
 _BASE_EXAMPLE = {
     'user_time': '2022-02-16 19:51:14.321331+00:00',
     'content_type': 'image/jpeg',
-    'author': None,
-    'author_url': None,
-    'saved_from_url': None,
-    'description': None,
     'extras': {
         'original_file_name': 'IMG_6607.jpg'
     },
-    'content_size': 1159935,
-    'preview_size': 167872,
-    'thumbnail_size': 39411,
     'content_width': 2104,
     'content_height': 1480,
     'preview_width': 1456,
@@ -37,24 +29,15 @@ _BASE_EXAMPLE = {
 class MetainfoInput(BaseModel):
     """Metainfo for item."""
     user_time: datetime | None = None
-
     content_type: str | None = None
-
-    author: str | None = None
-    author_url: str | None = None
-    saved_from_url: str | None = None
-    description: str | None = None
-
     extras: dict[str, Any] = Field(default_factory=dict)
-
-    content_size: NonNegativeInt | None = None
-    preview_size: NonNegativeInt | None = None
-    thumbnail_size: NonNegativeInt | None = None
 
     content_width: NonNegativeInt | None = None
     content_height: NonNegativeInt | None = None
+
     preview_width: NonNegativeInt | None = None
     preview_height: NonNegativeInt | None = None
+
     thumbnail_width: NonNegativeInt | None = None
     thumbnail_height: NonNegativeInt | None = None
 

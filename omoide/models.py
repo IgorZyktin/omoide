@@ -179,12 +179,6 @@ class Metainfo(BaseModel):
     user_time: datetime | None = None
 
     content_type: str | None = None
-
-    author: str | None = None
-    author_url: str | None = None
-    saved_from_url: str | None = None
-    description: str | None = None
-
     extras: dict[str, Any] = Field(default_factory=dict)
 
     content_size: int | None = None

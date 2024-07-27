@@ -404,11 +404,6 @@ class Metainfo(Base):
 
     content_type = sa.Column(sa.String(length=SMALL), nullable=True)
 
-    author = sa.Column(sa.String(length=MEDIUM), nullable=True)
-    author_url = sa.Column(sa.String(length=HUGE), nullable=True)
-    saved_from_url = sa.Column(sa.String(length=HUGE), nullable=True)
-    description = sa.Column(sa.String(length=HUGE), nullable=True)
-
     extras: dict = sa.Column(pg.JSONB, nullable=False)
 
     content_size: int | None = sa.Column(sa.Integer, nullable=True)
