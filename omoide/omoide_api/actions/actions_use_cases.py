@@ -1,4 +1,5 @@
 """Use cases for heavy operations."""
+import abc
 import asyncio
 import time
 from uuid import UUID
@@ -12,8 +13,18 @@ from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildKnownTagsUseCase(BaseAPIUseCase):
-    """Use case for rebuilding known tags for anon."""
+class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
+    """Base class for tag rebuilds."""
+    affected_target: str
+
+    @abc.abstractmethod
+    async def _execute(
+        self,
+        user: models.User,
+        target_user: models.User | None,
+        job_id: int,
+    ) -> int:
+        """Execute."""
 
     async def pre_execute(
         self,
@@ -21,31 +32,33 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
         target: UUID | None,
     ) -> tuple[models.User | None, int]:
         """Prepare for execution."""
-        self.ensure_admin(admin, subject='known tags')
+        self.ensure_admin(admin, subject=self.affected_target)
 
         async with self.mediator.storage.transaction():
             if target is None:
                 LOG.info(
-                    'User {} is rebuilding known tags for anon user',
+                    'User {} is rebuilding {} for anon user',
                     admin,
+                    self.affected_target,
                 )
-                name = 'known-tags-anon'
+                name = f'{self.affected_target}-anon'.replace(' ', '-')
                 target_user = None
                 user_uuid = None
                 extras = {}
 
             else:
                 target_user = await self.mediator.users_repo.get_user(target)
-                name = 'known-tags-user'
+                name = f'{self.affected_target}-user'.replace(' ', '-')
                 LOG.info(
-                    'User {} is rebuilding known tags for user {}',
+                    'User {} is rebuilding {} for user {}',
                     admin,
+                    self.affected_target,
                     target_user,
                 )
                 user_uuid = target_user.uuid
                 extras = {'target_user_uuid': target_user.uuid}
 
-            new_job = await self.mediator.misc_repo.start_long_job(
+            job_id = await self.mediator.misc_repo.start_long_job(
                 name=name,
                 user_uuid=user_uuid or admin.uuid,
                 target_uuid=None,
@@ -55,7 +68,7 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
                 extras=extras,
             )
 
-        return target_user, new_job
+        return target_user, job_id
 
     async def execute(
         self,
@@ -65,13 +78,16 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
     ) -> None:
         """Execute."""
         start = time.perf_counter()
+        # TODO - make separate methods finish_long_job and fail_long_job
+        # TODO - calculate time inside _execute
 
         try:
             total = await self._execute(user, target_user, job_id)
         except Exception as exc:
             LOG.exception(
-                'Failed to complete background rebuilding of known tags, '
+                'Failed to complete background rebuilding of {}, '
                 'command by {}, target is {}, job_id is {}',
+                self.affected_target,
                 user,
                 target_user,
                 job_id,
@@ -85,11 +101,13 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
             )
         else:
             LOG.info(
-                'Done background rebuilding of known tags, '
-                'command by {}, target is {}, job_id is {}',
+                'Done background rebuilding of {}, '
+                'command by {}, target is {}, job_id is {} ({} changes)',
+                self.affected_target,
                 user,
                 target_user,
                 job_id,
+                total,
             )
             await self.mediator.misc_repo.finish_long_job(
                 id=job_id,
@@ -98,6 +116,27 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
                 operations=total,
                 error='',
             )
+
+
+class RebuildKnownTagsUseCase(BaseRebuildTagsUseCase):
+    """Use case for rebuilding known tags."""
+    affected_target = 'known tags'
+
+    async def _execute(
+        self,
+        user: models.User,
+        target_user: models.User | None,
+        job_id: int,
+    ) -> int:
+        """Execute."""
+        # TODO
+        await asyncio.sleep(5)
+        return 1
+
+
+class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
+    """Use case for rebuilding computed tags."""
+    affected_target = 'computed tags'
 
     async def _execute(
         self,

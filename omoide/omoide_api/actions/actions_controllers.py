@@ -27,25 +27,46 @@ async def api_action_rebuild_known_tags(
     target: actions_api_models.RebuildTagsInput,
     background_tasks: BackgroundTasks,
 ):
-    """Recalculate all known tags for anon user."""
+    """Recalculate all known tags for user."""
     use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
 
     try:
-        target_user, job_id = await use_case.pre_execute(admin,
-                                                         target.user_uuid)
+        user, job_id = await use_case.pre_execute(admin, target.user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    if target_user is None:
-        name = 'anon'
-    else:
-        name = target_user.name
-
-    background_tasks.add_task(use_case.execute, admin, target_user, job_id)
+    background_tasks.add_task(use_case.execute, admin, user, job_id)
     return {
         'result': 'Rebuilding known tags',
-        'target_user': name,
+        'target_user': user.name if user else 'anon',
+    }
+
+
+@actions_router.post(
+    '/rebuild_computed_tags',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str | None],
+)
+async def api_action_rebuild_computed_tags(
+    admin: Annotated[models.User, Depends(dep.get_admin_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    target: actions_api_models.RebuildTagsInput,
+    background_tasks: BackgroundTasks,
+):
+    """Recalculate all computed tags for user."""
+    use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
+
+    try:
+        user, job_id = await use_case.pre_execute(admin, target.user_uuid)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    background_tasks.add_task(use_case.execute, admin, user, job_id)
+    return {
+        'result': 'Rebuilding computed tags',
+        'target_user': user.name if user else 'anon',
     }
 
 
