@@ -6,7 +6,7 @@ from pydantic import SecretStr
 
 from omoide import utils
 from omoide.commands import helpers
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.storage.database import sync_db
 
 LOG = custom_logging.get_logger(__name__)

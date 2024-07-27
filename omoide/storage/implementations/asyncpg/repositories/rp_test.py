@@ -5,7 +5,7 @@ from uuid import UUID
 import sqlalchemy as sa
 
 from omoide.storage.interfaces.abs_storage import AbsStorage
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.storage.database import db_models
 
 LOG = custom_logging.get_logger(__name__)

@@ -6,7 +6,7 @@ from typing import Iterator
 from uuid import UUID
 
 from omoide import utils
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.omoide_worker.worker_config import Config
 
 LOG = custom_logging.get_logger(__name__)

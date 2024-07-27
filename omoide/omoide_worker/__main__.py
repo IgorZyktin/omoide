@@ -2,7 +2,7 @@
 
 import click
 
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.omoide_worker import runtime
 from omoide.omoide_worker import worker_config
 from omoide.omoide_worker.database import WorkerDatabase

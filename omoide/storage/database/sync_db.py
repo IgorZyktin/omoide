@@ -7,7 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from omoide.infra import custom_logging
+from omoide import custom_logging
 
 LOG = custom_logging.get_logger(__name__)
 

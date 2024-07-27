@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Logging tools.
-"""
-from __future__ import annotations
-
+"""Logging tools."""
 import sys
 from typing import TypeAlias
 

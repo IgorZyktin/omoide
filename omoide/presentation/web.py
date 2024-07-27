@@ -17,7 +17,7 @@ from omoide import domain
 from omoide import exceptions as api_exceptions
 from omoide import utils
 from omoide.domain import errors
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.presentation import constants
 
 LOG = custom_logging.get_logger(__name__)

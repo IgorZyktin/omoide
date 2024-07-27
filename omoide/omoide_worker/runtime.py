@@ -2,7 +2,7 @@
 import sys
 import threading
 
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.omoide_worker import interfaces
 from omoide.omoide_worker import worker_config
 

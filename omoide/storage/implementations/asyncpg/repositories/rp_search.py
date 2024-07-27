@@ -4,7 +4,7 @@ from sqlalchemy.sql import Select
 
 from omoide import domain
 from omoide import models
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.implementations.asyncpg.repositories import queries
 from omoide.storage import interfaces as storage_interfaces

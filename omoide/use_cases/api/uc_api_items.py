@@ -16,7 +16,7 @@ from omoide.domain import actions
 from omoide.domain import errors
 from omoide import interfaces
 from omoide.storage import interfaces as storage_interfaces
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success

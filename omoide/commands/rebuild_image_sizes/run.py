@@ -12,7 +12,7 @@ from omoide import infra
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.rebuild_image_sizes.cfg import Config
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 

@@ -10,7 +10,7 @@ from sqlalchemy.engine import Connection
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.rebuild_known_tags.cfg import Config
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database import sync_db
 

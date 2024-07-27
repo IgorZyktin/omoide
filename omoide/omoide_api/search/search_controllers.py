@@ -6,7 +6,7 @@ from fastapi import Depends
 from fastapi import status
 
 from omoide import models
-from omoide.infra import custom_logging
+from omoide import custom_logging
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
