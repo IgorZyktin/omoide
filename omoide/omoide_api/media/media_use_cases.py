@@ -1,7 +1,7 @@
 """Use cases for Media-related operations."""
 from omoide import models
 from omoide.infra import custom_logging
-from omoide.omoide_api.common.use_cases import BaseAPIUseCase
+from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
 

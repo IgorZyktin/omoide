@@ -1,7 +1,7 @@
 """Use cases for home page."""
 from omoide import domain
 from omoide import models
-from omoide.omoide_api.common.use_cases import BaseAPIUseCase
+from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 
 class GetHomePageItemsUseCase(BaseAPIUseCase):

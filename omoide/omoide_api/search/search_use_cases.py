@@ -1,6 +1,6 @@
 """Use cases that process commands from users."""
 from omoide import models
-from omoide.omoide_api.common.use_cases import BaseAPIUseCase
+from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 
 class AutocompleteUseCase(BaseAPIUseCase):
