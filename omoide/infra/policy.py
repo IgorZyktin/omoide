@@ -8,7 +8,6 @@ from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import exceptions
-from omoide.domain.core import core_models
 
 ITEM_RELATED = frozenset((
     actions.Media.CREATE,
@@ -110,7 +109,7 @@ class Policy(interfaces.AbsPolicy):
     @staticmethod
     def _check_for_item(
         item_uuid: UUID,
-        access: core_models.AccessStatus,
+        access: models.AccessStatus,
     ) -> None:
         """Raise if action is not permitted."""
         if access.is_not_owner:
@@ -120,7 +119,7 @@ class Policy(interfaces.AbsPolicy):
     def _check_item_related(
         item_uuid: UUID,
         action: actions.Action,
-        access: core_models.AccessStatus,
+        access: models.AccessStatus,
     ) -> None:
         """Raise if action is not permitted."""
         if access.is_not_given:

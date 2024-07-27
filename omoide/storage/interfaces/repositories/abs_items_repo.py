@@ -16,7 +16,7 @@ class AbsItemsRepo(abc.ABC):
         self,
         user: models.User,
         uuid: UUID,
-    ) -> domain.AccessStatus:
+    ) -> models.AccessStatus:
         """Check access to the Item with given UUID for the given User."""
 
     @abc.abstractmethod

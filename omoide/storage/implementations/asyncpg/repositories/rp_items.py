@@ -24,7 +24,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         self,
         user: models.User,
         uuid: UUID,
-    ) -> domain.AccessStatus:
+    ) -> models.AccessStatus:
         """Check access to the Item with given UUID for the given User."""
         query = """
         SELECT owner_uuid,
@@ -44,9 +44,9 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_one(query, values)
 
         if response is None:
-            return domain.AccessStatus.not_found()
+            return models.AccessStatus.not_found()
 
-        return domain.AccessStatus(
+        return models.AccessStatus(
             exists=True,
             is_public=bool(response['is_public']),
             is_permitted=bool(response['is_permitted']),

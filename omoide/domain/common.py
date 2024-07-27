@@ -15,7 +15,6 @@ __all__ = [
     'SimpleItem',
     'PositionedItem',
     'Location',
-    'AccessStatus',
     'Query',
     'SingleResult',
     'SimpleLocation',
@@ -147,48 +146,6 @@ class ComplexLocation(BaseModel):
     def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
         """Iterate over items."""
         return iter(self.items)
-
-
-class AccessStatus(BaseModel):
-    """Status of an access and existence check."""
-    exists: bool
-    is_public: bool
-    is_permitted: bool
-    is_owner: bool
-
-    @property
-    def does_not_exist(self) -> bool:
-        """Return True if item does not exist."""
-        return not self.exists
-
-    @property
-    def is_given(self) -> bool:
-        """Return True if user can access this item."""
-        return any([
-            self.is_public,
-            self.is_owner,
-            self.is_permitted,
-        ])
-
-    @property
-    def is_not_given(self) -> bool:
-        """Return True if user cannot access this item."""
-        return not self.is_given
-
-    @property
-    def is_not_owner(self) -> bool:
-        """Return True if user is not owner of the item."""
-        return not self.is_owner
-
-    @classmethod
-    def not_found(cls) -> 'AccessStatus':
-        """Item does not exist."""
-        return cls(
-            exists=False,
-            is_public=False,
-            is_permitted=False,
-            is_owner=False,
-        )
 
 
 class Query(BaseModel):
