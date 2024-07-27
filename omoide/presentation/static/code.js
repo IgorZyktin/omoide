@@ -4,6 +4,7 @@ const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-
 const EXIF_ENDPOINT = '/api-new/v1/exif'
 const METAINFO_ENDPOINT = '/api-new/v1/metainfo'
 const MEDIA_ENDPOINT = '/api-new/v1/media'
+const ITEMS_ENDPOINT = '/api-new/v1/items'
 
 
 function makeAlert(text, alertsElementId) {
