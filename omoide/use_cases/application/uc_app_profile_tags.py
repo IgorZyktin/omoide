@@ -26,5 +26,5 @@ class AppProfileTagsUseCase:
     ) -> Result[errors.Error, list[tuple[str, int]]]:
         """Return tags with their counters."""
         async with self.search_repo.transaction():
-            known_tags = await self.search_repo.count_all_tags(user)
+            known_tags = await self.search_repo.count_all_tags_known(user)
         return Success(known_tags)

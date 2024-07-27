@@ -1,7 +1,7 @@
 """Repository that performs all search queries."""
 import abc
+from typing import Literal
 
-from omoide import domain
 from omoide import models
 
 
@@ -9,20 +9,26 @@ class AbsSearchRepository(abc.ABC):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def count_matching_items(
+    async def count(
         self,
         user: models.User,
-        aim: domain.Aim,
+        tags_include: set[str],
+        tags_exclude: set[str],
+        only_collections: bool,
     ) -> int:
-        """Count matching items for search query."""
+        """Return total amount of items relevant to this search query."""
 
     @abc.abstractmethod
-    async def get_matching_items(
+    async def search(
         self,
         user: models.User,
-        aim: domain.Aim,
+        tags_include: set[str],
+        tags_exclude: set[str],
+        only_collections: bool,
+        ordering: Literal['asc', 'desc', 'random'],
+        last_seen: int,
         limit: int,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Return matching items for search query."""
 
     @abc.abstractmethod
@@ -34,11 +40,7 @@ class AbsSearchRepository(abc.ABC):
         """Return counters for known tags (known user)."""
 
     @abc.abstractmethod
-    async def autocomplete_tag_anon(
-        self,
-        tag: str,
-        limit: int,
-    ) -> list[str]:
+    async def autocomplete_tag_anon(self, tag: str, limit: int) -> list[str]:
         """Autocomplete tag for anon user."""
 
     @abc.abstractmethod
@@ -49,10 +51,3 @@ class AbsSearchRepository(abc.ABC):
         limit: int,
     ) -> list[str]:
         """Autocomplete tag for known user."""
-
-    @abc.abstractmethod
-    async def count_all_tags(
-        self,
-        user: models.User,
-    ) -> list[tuple[str, int]]:
-        """Return statistics for used tags."""

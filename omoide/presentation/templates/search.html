@@ -1,0 +1,47 @@
+{% extends "base_search.html" %}
+
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='scroller.js?' + version) }}">
+    </script>
+{% endblock %}
+
+{% block body %}
+
+    <h3 id="search_total"></h3>
+    <div class="envelope-container"></div>
+
+    <script>
+        $(document).ready(function () {
+            let container = document.querySelector('.envelope-container')
+            let endpoint = '{{ endpoint }}'
+            let total_endpoint = '{{ total_endpoint }}'
+            let scroller = new Scroller(container, endpoint)
+            let callback = function () {
+                scroller.trigger()
+            }
+
+            let searchParams = new URLSearchParams(window.location.search)
+            $.ajax({
+                url: total_endpoint + '?' + searchParams.toString(),
+                contentType: 'application/json',
+            }).done(function (response) {
+                let total = Number(response['total']).toLocaleString('RU-ru')
+                let duration = response['duration'].toFixed(3)
+                $('#search_total').text(`Got ${total} results in ${duration} sec.`)
+            }).fail(function (response) {
+                let text = JSON.stringify(response)
+                console.log(`Request to ${this.endpoint} returned response: ${text}`)
+            });
+
+            window.addEventListener('scroll', callback)
+            scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
+            callback()
+
+            activateFloatingHeader()
+            updateHeaderPadding()
+        });
+    </script>
+
+{% endblock %}

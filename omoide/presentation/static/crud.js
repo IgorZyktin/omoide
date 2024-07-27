@@ -124,45 +124,11 @@ function isUUID(uuid) {
     return s !== null;
 }
 
-
-function getContentUrl(item, desiredContentType) {
-    // generate link to the desired content type of the given item
-    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
-    let ext = ''
-
-    if (desiredContentType === 'thumbnail')
-        ext = item.thumbnail_ext
-    else if (desiredContentType === 'preview')
-        ext = item.preview_ext
-    else if (desiredContentType === 'content')
-        ext = item.content_ext
-    else
-        return null
-
-    return `/content/${desiredContentType}/${item.owner_uuid}/${prefix}/${item.uuid}.${ext}`
-}
-
-function getPreviewUrl(item) {
-    // generate preview url for the item
-    let searchParams = new URLSearchParams(window.location.search)
-    if (item.is_collection) {
-        return `/browse/${item.uuid}` + '?' + searchParams.toString()
-    }
-    return `/preview/${item.uuid}` + '?' + searchParams.toString()
-}
-
-function getThumbnailContentUrl(item) {
-    // generate thumbnail content url for the item
-    if (!item.thumbnail_ext)
-        return `/static/empty.png`
-    return getContentUrl(item, 'thumbnail')
-}
-
 function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
     // try to load thumbnail for the item
     if (!isUUID(uuid)) {
         thumbnailElement.empty()
-        renderThumbnailStatic(thumbnailElement, '/static/empty.png')
+        renderThumbnailStatic(thumbnailElement, EMPTY_FILE)
         return
     }
 

@@ -74,7 +74,6 @@ def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
     current_app.include_router(auth_controllers.auth_router)
     current_app.include_router(home_controllers.home_router)
-    current_app.include_router(search_controllers.api_search_router)
     current_app.include_router(search_controllers.app_search_router)
 
     # Special application routes

@@ -358,10 +358,19 @@ def get_size(obj, seen: set[int] | None = None) -> int:
     return size
 
 
-def to_simple_type(something: Any) -> None | str:
+def to_simple_type(something: Any) -> Any:
     """Convert one item."""
     if something is None:
         return None
+
+    if something is True or something is False:
+        return something
+
+    if isinstance(something, datetime.datetime):
+        return something.isoformat()
+
+    if isinstance(something, list):
+        return [to_simple_type(value) for value in something]
 
     return str(something)
 
@@ -369,6 +378,6 @@ def to_simple_type(something: Any) -> None | str:
 def serialize(payload: dict[str, Any]) -> dict[str, str | None]:
     """Convert dictionary to a web-compatible format."""
     return {
-        key: to_simple_type(value)
+        str(key): to_simple_type(value)
         for key, value in payload.items()
     }
