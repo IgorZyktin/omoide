@@ -87,7 +87,6 @@ def apply_app_routes(current_app: FastAPI) -> None:
     current_app.include_router(search_controllers.app_search_router)
 
     # legacy
-    current_app.include_router(api_legacy.api_media.router)
     current_app.include_router(api_legacy.api_profile.router)
 
     # Special application routes

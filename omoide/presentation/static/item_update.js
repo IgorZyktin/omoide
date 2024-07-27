@@ -99,9 +99,12 @@ function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
 
     $.ajax({
         timeout: 5000, // 5 seconds
-        type: 'PUT',
-        // FIXME - use alternate endpoint
-        url: `/api/media/${childUUID}/copy_image/${parentUUID}`,
+        type: 'POST',
+        url: `${ACTIONS_ENDPOINT}/copy_image`,
+        data: JSON.stringify({
+            'source_item_uuid': childUUID,
+            'target_item_uuid': parentUUID,
+        }),
         contentType: 'application/json',
         success: function (response) {
             console.log('Enqueued image copying', response)

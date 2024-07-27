@@ -5,6 +5,7 @@ const EXIF_ENDPOINT = '/api-new/v1/exif'
 const METAINFO_ENDPOINT = '/api-new/v1/metainfo'
 const MEDIA_ENDPOINT = '/api-new/v1/media'
 const ITEMS_ENDPOINT = '/api-new/v1/items'
+const ACTIONS_ENDPOINT = '/api-new/v1/actions'
 
 
 function makeAlert(text, alertsElementId) {
