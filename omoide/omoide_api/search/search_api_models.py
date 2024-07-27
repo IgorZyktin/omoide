@@ -65,20 +65,3 @@ class SearchTotalOutput(BaseModel):
             ],
         }
     }
-
-
-class SearchOutput(BaseModel):
-    """Search result."""
-    duration: float
-    items: list[common_api_models.ItemOutput]
-
-    model_config = {
-        'json_schema_extra': {
-            'examples': [
-                {
-                    'duration': 0.025,
-                    'items': [common_api_models.DEFAULT_ITEM_EXAMPLE],
-                }
-            ],
-        }
-    }

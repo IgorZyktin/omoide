@@ -37,3 +37,20 @@ DEFAULT_ITEM_EXAMPLE = {
         'parent_name': 'Cool cats',
     }
 }
+
+
+class ManyItemsOutput(BaseModel):
+    """Search result."""
+    duration: float
+    items: list[ItemOutput]
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {
+                    'duration': 0.025,
+                    'items': [DEFAULT_ITEM_EXAMPLE],
+                }
+            ],
+        }
+    }

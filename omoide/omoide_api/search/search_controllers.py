@@ -137,7 +137,7 @@ async def api_search_total(
 
 @search_router.get(
     '',
-    response_model=search_api_models.SearchOutput,
+    response_model=common_api_models.ManyItemsOutput,
 )
 async def api_search(
     user: Annotated[models.User, Depends(dep.get_current_user)],
@@ -171,7 +171,7 @@ async def api_search(
         limit=limit,
     )
 
-    return search_api_models.SearchOutput(
+    return common_api_models.ManyItemsOutput(
         duration=duration,
         items=[
             common_api_models.ItemOutput(
