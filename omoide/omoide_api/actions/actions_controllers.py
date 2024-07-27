@@ -24,7 +24,7 @@ actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 async def api_action_rebuild_known_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.RebuildTagsTargetUser,
+    target: actions_api_models.RebuildTagsInput,
     background_tasks: BackgroundTasks,
 ):
     """Recalculate all known tags for anon user."""
@@ -43,4 +43,4 @@ async def api_action_rebuild_known_tags(
         name = target_user.name
 
     background_tasks.add_task(use_case.execute, admin, target_user, job_id)
-    return {'result': f'Rebuilding known tags for {name}'}
+    return {'result': f'Rebuilding known tags for user {name}'}

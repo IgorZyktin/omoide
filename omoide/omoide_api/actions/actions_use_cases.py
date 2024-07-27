@@ -20,9 +20,10 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
         target: UUID | None,
     ) -> tuple[models.User, int]:
         """Prepare for execution."""
+        self.ensure_admin(admin, subject='known tags')
+
         async with self.mediator.storage.transaction():
             if target is None:
-                self.ensure_admin(admin, subject='known tags for anon')
                 LOG.info(
                     'User {} is rebuilding known tags for anon user',
                     admin,
@@ -33,11 +34,9 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
 
             else:
                 target_user = await self.mediator.users_repo.get_user(target)
-                self.ensure_admin_or_owner(admin, target_user,
-                                           'known tags for a user')
                 name = 'known-tags-user'
                 LOG.info(
-                    'User {} is rebuilding known tags for user',
+                    'User {} is rebuilding known tags for user {}',
                     admin,
                     target_user,
                 )

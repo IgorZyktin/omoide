@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class RebuildTagsTargetUser(BaseModel):
+class RebuildTagsInput(BaseModel):
     """Info about target user for tag rebuilding."""
     user_uuid: UUID | None
 
