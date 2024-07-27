@@ -80,7 +80,10 @@ async def api_action_copy_image(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     target: actions_api_models.CopyContentInput,
 ):
-    """Copy image from one item to another."""
+    """Copy image from one item to another.
+
+    This will invoke copying of content, preview and a thumbnail.
+    """
     use_case = actions_use_cases.CopyImageUseCase(mediator)
 
     try:

@@ -27,6 +27,10 @@ async def api_delete_processed_media(
 
     Will delete all records, that were successfully
     processed and had no errors.
+
+    Anons are not allowed to do this. If registered user will request this,
+    it will only affect items owned by this user.
+    If admin request this, it will delete all processed items.
     """
     use_case = media_use_cases.DeleteProcessedMediaUseCase(mediator)
 

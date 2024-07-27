@@ -28,7 +28,10 @@ async def api_upload_item_content(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Store content data for given item."""
+    """Store content data for given item.
+
+    Operation is asynchronous, you will get job_id in response.
+    """
     use_case = item_use_cases.UploadContentForItemUseCase(mediator)
 
     try:
@@ -60,7 +63,10 @@ async def api_upload_item_preview(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Store preview data for given item."""
+    """Store preview data for given item.
+
+    Operation is asynchronous, you will get job_id in response.
+    """
     use_case = item_use_cases.UploadPreviewForItemUseCase(mediator)
 
     try:
@@ -92,7 +98,10 @@ async def api_upload_item_thumbnail(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Store thumbnail data for given item."""
+    """Store thumbnail data for given item.
+
+    Operation is asynchronous, you will get job_id in response.
+    """
     use_case = item_use_cases.UploadContentForItemUseCase(mediator)
 
     try:
