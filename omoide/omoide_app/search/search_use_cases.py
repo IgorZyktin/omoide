@@ -11,7 +11,7 @@ class ApiSearchUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         aim: domain.Aim,
-    ) -> tuple[list[domain.Item], list[[str | None]]]:
+    ) -> tuple[list[domain.Item], list[str | None]]:
         """Perform search request."""
         if not aim.query:
             return [], []

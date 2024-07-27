@@ -137,7 +137,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
     # TODO - fix naming
     # TODO - import from models
-    async def get_item(self, uuid: UUID) -> domain.Item:
+    async def get_item(self, uuid: UUID) -> models.Item:
         """Return Item."""
         stmt = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
         response = await self.db.fetch_one(stmt)
@@ -146,7 +146,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             msg = 'Item with UUID {uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, uuid=uuid)
 
-        return domain.Item(**response)
+        return models.Item(**response)
 
     async def read_children_of(
         self,

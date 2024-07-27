@@ -421,7 +421,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         user: models.User,
         last_seen: int,
         limit: int,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Return recently updated items."""
         stmt = """
         WITH valid_items AS (
@@ -470,10 +470,39 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**x) for x in response]
 
+    # FIXME - delete this method
     async def get_parents_names(
             self,
             items: list[domain.Item],
     ) -> list[Optional[str]]:
+        """Get names of parents of the given items."""
+        uuids = [
+            str(x.parent_uuid)
+            if x.parent_uuid else None
+            for x in items
+        ]
+
+        subquery = sa.select(
+            sa.func.unnest(
+                cast(uuids, pg.ARRAY(sa.Text))  # type: ignore
+            ).label('uuid')
+        ).subquery('given_uuid')
+
+        stmt = sa.select(
+            subquery.c.uuid, db_models.Item.name
+        ).join(
+            db_models.Item,
+            db_models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
+            isouter=True,
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return [record['name'] for record in response]
+
+    async def get_parent_names(
+        self,
+        items: list[models.Item],
+    ) -> list[str | None]:
         """Get names of parents of the given items."""
         uuids = [
             str(x.parent_uuid)

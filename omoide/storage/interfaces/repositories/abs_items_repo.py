@@ -43,7 +43,7 @@ class AbsItemsRepo(abc.ABC):
 
     # TODO - import from models
     @abc.abstractmethod
-    async def get_item(self, uuid: UUID) -> domain.Item:
+    async def get_item(self, uuid: UUID) -> models.Item:
         """Return Item."""
 
     @abc.abstractmethod

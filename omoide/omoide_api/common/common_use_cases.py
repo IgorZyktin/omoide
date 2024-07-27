@@ -1,7 +1,6 @@
 """Common use case elements."""
 import abc
 
-from omoide import domain
 from omoide import exceptions
 from omoide import models
 from omoide.infra.mediator import Mediator
@@ -38,7 +37,7 @@ class BaseAPIUseCase(abc.ABC):
     @staticmethod
     def ensure_admin_or_owner_or_allowed_to(
         user: models.User,
-        item: domain.Item,  # TODO - import Item from models
+        item: models.Item,
         subject: str = '',
         error_message: str = '',
     ) -> None:
@@ -66,7 +65,7 @@ class BaseAPIUseCase(abc.ABC):
     @staticmethod
     def ensure_admin_or_owner(
         user: models.User,
-        target: domain.Item | models.User,  # TODO - import Item from models
+        target: models.Item | models.User,
         subject: str = '',
         error_message: str = '',
     ) -> None:
@@ -96,7 +95,7 @@ class BaseAPIUseCase(abc.ABC):
     @staticmethod
     def ensure_admin_or_allowed_to(
         user: models.User,
-        item: domain.Item,  # TODO - import Item from models
+        item: models.Item,
         subject: str = '',
         error_message: str = '',
     ) -> None:

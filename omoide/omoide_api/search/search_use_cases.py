@@ -47,6 +47,6 @@ class RecentUpdatesUseCase(BaseAPIUseCase):
                 last_seen=last_seen,
                 limit=limit,
             )
-            names = await self.mediator.browse_repo.get_parents_names(items)
+            names = await self.mediator.browse_repo.get_parent_names(items)
 
         return items, names

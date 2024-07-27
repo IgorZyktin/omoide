@@ -11,7 +11,6 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 
-from omoide.application.controllers import api as api_legacy
 from omoide.omoide_app.auth import auth_controllers
 from omoide.omoide_app.home import home_controllers
 from omoide.omoide_app.search import search_controllers
@@ -71,14 +70,6 @@ def get_app() -> FastAPI:
     return new_app
 
 
-def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:
-    """Return list of needed middlewares."""
-    for description in app_config.Config().middlewares:
-        if description.name.casefold() == 'CORSMiddleware'.casefold():
-            from fastapi.middleware.cors import CORSMiddleware
-            yield CORSMiddleware, description.config
-
-
 def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
     current_app.include_router(auth_controllers.auth_router)
@@ -100,6 +91,14 @@ def apply_app_routes(current_app: FastAPI) -> None:
     current_app.include_router(application.app_item.router)
     current_app.include_router(application.app_preview.router)
     current_app.include_router(application.app_upload.router)
+
+
+def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:
+    """Return list of needed middlewares."""
+    for description in app_config.Config().middlewares:
+        if description.name.casefold() == 'CORSMiddleware'.casefold():
+            from fastapi.middleware.cors import CORSMiddleware
+            yield CORSMiddleware, description.config
 
 
 def apply_middlewares(current_app: FastAPI) -> None:

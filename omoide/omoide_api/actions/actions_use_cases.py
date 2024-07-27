@@ -19,7 +19,7 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
         self,
         admin: models.User,
         target: UUID | None,
-    ) -> tuple[models.User, int]:
+    ) -> tuple[models.User | None, int]:
         """Prepare for execution."""
         self.ensure_admin(admin, subject='known tags')
 
@@ -31,6 +31,7 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
                 )
                 name = 'known-tags-anon'
                 target_user = None
+                user_uuid = None
                 extras = {}
 
             else:
@@ -41,11 +42,12 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
                     admin,
                     target_user,
                 )
+                user_uuid = target_user.uuid
                 extras = {'target_user_uuid': target_user.uuid}
 
             new_job = await self.mediator.misc_repo.start_long_job(
                 name=name,
-                user_uuid=admin.uuid if target is None else target_user.uuid,
+                user_uuid=user_uuid or admin.uuid,
                 target_uuid=None,
                 added=[],
                 deleted=[],
@@ -101,7 +103,7 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
     async def _execute(
         self,
         user: models.User,
-        target_user: models.User,
+        target_user: models.User | None,
         job_id: int,
     ) -> int:
         """Execute."""
@@ -124,8 +126,8 @@ class CopyImageUseCase(BaseAPIUseCase):
         job_ids: list[int] = []
 
         async with self.mediator.storage.transaction():
-            source = await self.mediator.items_repo.read_item(source_uuid)
-            target = await self.mediator.items_repo.read_item(target_uuid)
+            source = await self.mediator.items_repo.get_item(source_uuid)
+            target = await self.mediator.items_repo.get_item(target_uuid)
 
             self.ensure_admin_or_owner(user, source, subject='item content')
             self.ensure_admin_or_owner(user, target, subject='item content')

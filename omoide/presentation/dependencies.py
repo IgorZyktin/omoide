@@ -562,17 +562,6 @@ def profile_quotas_use_case(
 
 
 @utils.memorize
-def profile_new_use_case(
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-) -> use_cases.APIProfileNewUseCase:
-    """Get use case instance."""
-    return use_cases.APIProfileNewUseCase(
-        browse_repo=browse_repository,
-    )
-
-
-@utils.memorize
 def profile_tags_use_case(
     search_repository:
     storage_interfaces.AbsSearchRepository = Depends(get_search_repo),

@@ -81,12 +81,20 @@ class AbsBrowseRepository(abc.ABC):
         user: models.User,
         last_seen: int,
         limit: int,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Return recently updated items."""
 
+    # FIXME - delete this method
     @abc.abstractmethod
     async def get_parents_names(
         self,
         items: list[domain.Item],
+    ) -> list[str | None]:
+        """Get names of parents of the given items."""
+
+    @abc.abstractmethod
+    async def get_parent_names(
+        self,
+        items: list[models.Item],
     ) -> list[str | None]:
         """Get names of parents of the given items."""

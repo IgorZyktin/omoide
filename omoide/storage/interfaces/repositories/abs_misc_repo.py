@@ -2,6 +2,7 @@
 import abc
 from collections.abc import Collection
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from omoide import domain  # FIXME - use models instead
@@ -54,7 +55,7 @@ class AbsMiscRepo(abc.ABC):
         deleted: Collection[str],
         status: str,
         started: datetime,
-        extras: dict[str, int | float | bool | str | None],
+        extras: dict[str, Any],
     ) -> int:
         """Start long job."""
 

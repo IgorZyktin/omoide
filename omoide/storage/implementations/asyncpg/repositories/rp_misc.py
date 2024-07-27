@@ -1,6 +1,7 @@
 """Repository that performs various operations on different objects."""
 from collections.abc import Collection
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -242,7 +243,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         deleted: Collection[str],
         status: str,
         started: datetime,
-        extras: dict[str, int | float | bool | str | None],
+        extras: dict[str, Any],
     ) -> int:
         """Start long job."""
         stmt = sa.insert(
