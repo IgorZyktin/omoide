@@ -96,11 +96,11 @@ def get_strategy(config: worker_config.Config) -> interfaces.AbsStrategy:
 
     match strategy_name:
         case 'SignalStrategy':
-            from omoide.worker.strategies import by_signal
+            from omoide.omoide_worker.strategies import by_signal
             strategy = by_signal.SignalStrategy()
 
         case 'TimerStrategy':
-            from omoide.worker.strategies import by_timer
+            from omoide.omoide_worker.strategies import by_timer
             strategy = by_timer.TimerStrategy(
                 min_interval=config.timer_strategy.min_interval,
                 max_interval=config.timer_strategy.max_interval,
