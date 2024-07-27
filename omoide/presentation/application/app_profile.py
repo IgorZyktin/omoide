@@ -98,7 +98,7 @@ async def app_profile_new(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'endpoint': request.url_for('api_profile_new'),
+        'endpoint': request.url_for('api_get_recent_updates'),
     }
     return templates.TemplateResponse('profile_new.html', context)
 

@@ -27,3 +27,26 @@ class AutocompleteUseCase(BaseAPIUseCase):
                                                              tag=tag,
                                                              limit=limit)
         return variants
+
+
+class RecentUpdatesUseCase(BaseAPIUseCase):
+    """Use case for getting recently updated items."""
+
+    async def execute(
+        self,
+        user: models.User,
+        last_seen: int,
+        limit: int,
+    ) -> tuple[list[models.Item], list[str | None]]:
+        """Execute."""
+        self.ensure_not_anon(user, operation='read recently updated items')
+
+        async with self.mediator.storage.transaction():
+            items = await self.mediator.browse_repo.get_recently_updated_items(
+                user=user,
+                last_seen=last_seen,
+                limit=limit,
+            )
+            names = await self.mediator.browse_repo.get_parents_names(items)
+
+        return items, names

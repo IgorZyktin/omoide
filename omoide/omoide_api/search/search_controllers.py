@@ -8,6 +8,7 @@ from fastapi import status
 from omoide import models
 from omoide.infra import custom_logging
 from omoide.infra.mediator import Mediator
+from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
 from omoide.omoide_api.search import search_use_cases
 from omoide.presentation import dependencies as dep
@@ -55,3 +56,40 @@ async def api_autocomplete(
         variants = []
 
     return search_api_models.AutocompleteOutput(variants=variants)
+
+
+@search_router.get(
+    '/recent_updates',
+    status_code=status.HTTP_200_OK,
+    response_model=search_api_models.RecentUpdatesOutput,
+)
+async def api_get_recent_updates(
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    last_seen: int = -1,
+):
+    """Return recently updated items.
+
+    Request will find when newest item was updated.
+    And then return all items uploaded at that day.
+
+    This endpoint can be used by any registered user,
+    but each will get tailored output.
+    """
+    use_case = search_use_cases.RecentUpdatesUseCase(mediator)
+
+    items, parent_names = await use_case.execute(
+        user=user,
+        last_seen=last_seen,
+        limit=search_api_models.ITEMS_IN_RECENT_UPDATES_RESPONSE,
+    )
+
+    return search_api_models.RecentUpdatesOutput(
+        items=[
+            common_api_models.ItemOutput(
+                **item.model_dump(),
+                extras={'parent_name': parent_name}
+            )
+            for item, parent_name in zip(items, parent_names)
+        ],
+    )

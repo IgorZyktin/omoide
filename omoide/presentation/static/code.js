@@ -1,6 +1,8 @@
 const UUID_PREFIX_LENGTH = 2
 const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
+const EMPTY_FILE = '/static/empty.png'
+
 const EXIF_ENDPOINT = '/api-new/v1/exif'
 const METAINFO_ENDPOINT = '/api-new/v1/metainfo'
 const MEDIA_ENDPOINT = '/api-new/v1/media'
@@ -391,4 +393,40 @@ function updateHeaderPadding() {
     if (header && content) {
         content.style.paddingTop = (header.clientHeight).toString() + 'px'
     }
+}
+
+function getThumbnailContentUrl(item) {
+    // generate thumbnail content url for the item
+    if (!item.thumbnail_ext)
+        return EMPTY_FILE
+
+    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
+    return `/content/thumbnail/${item.owner_uuid}/${prefix}/${item.uuid}.${item.thumbnail_ext}`
+}
+
+function getPreviewContentUrl(item) {
+    // generate preview content url for the item
+    if (!item.preview_ext)
+        return EMPTY_FILE
+
+    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
+    return `/content/preview/${item.owner_uuid}/${prefix}/${item.uuid}.${item.preview_ext}`
+}
+
+function getContentUrl(item) {
+    // generate preview content url for the item
+    if (!item.content_ext)
+        return EMPTY_FILE
+
+    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
+    return `/content/content/${item.owner_uuid}/${prefix}/${item.uuid}.${item.content_ext}`
+}
+
+function getPreviewUrl(item) {
+    // generate preview url for the item
+    let searchParams = new URLSearchParams(window.location.search)
+    if (item.is_collection) {
+        return `/browse/${item.uuid}` + '?' + searchParams.toString()
+    }
+    return `/preview/${item.uuid}` + '?' + searchParams.toString()
 }

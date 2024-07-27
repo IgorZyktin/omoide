@@ -150,6 +150,7 @@ class AccessStatus(ModelMixin):
         )
 
 
+@dataclass
 class Item(ModelMixin):
     """Standard item."""
     uuid: UUID
