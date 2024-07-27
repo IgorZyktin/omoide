@@ -28,10 +28,6 @@ class DoesNotExistError(BaseOmoideException):
     """Target resource does not exist."""
 
 
-class AlreadyExistError(BaseOmoideException):
-    """Target resource already exist."""
-
-
 class ForbiddenError(BaseOmoideException):
     """User has no rights to do this."""
 
