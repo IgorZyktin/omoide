@@ -3,6 +3,7 @@ import asyncio
 import time
 from uuid import UUID
 
+from omoide import const
 from omoide import models
 from omoide import utils
 from omoide.infra import custom_logging
@@ -107,3 +108,62 @@ class RebuildKnownTagsUseCase(BaseAPIUseCase):
         # TODO
         await asyncio.sleep(5)
         return 1
+
+
+class CopyImageUseCase(BaseAPIUseCase):
+    """Copy image from one item to another."""
+
+    async def execute(
+        self,
+        user: models.User,
+        source_uuid: UUID,
+        target_uuid: UUID,
+    ) -> list[int]:
+        """Execute."""
+        self.ensure_not_anon(user, operation='copy content for items')
+        job_ids: list[int] = []
+
+        async with self.mediator.storage.transaction():
+            source = await self.mediator.items_repo.read_item(source_uuid)
+            target = await self.mediator.items_repo.read_item(target_uuid)
+
+            self.ensure_admin_or_owner(user, source, subject='item content')
+            self.ensure_admin_or_owner(user, target, subject='item content')
+
+            if source.content_ext is not None:
+                job_id = await self.mediator.media_repo.copy_image(
+                    owner_uuid=source.owner_uuid,
+                    source_uuid=source_uuid,
+                    target_uuid=target_uuid,
+                    media_type=const.CONTENT,
+                    ext=source.content_ext,
+                )
+                job_ids.append(job_id)
+
+            if source.preview_ext is not None:
+                job_id = await self.mediator.media_repo.copy_image(
+                    owner_uuid=source.owner_uuid,
+                    source_uuid=source_uuid,
+                    target_uuid=target_uuid,
+                    media_type=const.PREVIEW,
+                    ext=source.preview_ext,
+                )
+                job_ids.append(job_id)
+
+            if source.thumbnail_ext is not None:
+                job_id = await self.mediator.media_repo.copy_image(
+                    owner_uuid=source.owner_uuid,
+                    source_uuid=source_uuid,
+                    target_uuid=target_uuid,
+                    media_type=const.THUMBNAIL,
+                    ext=source.thumbnail_ext,
+                )
+                job_ids.append(job_id)
+
+            if job_ids:
+                await self.mediator.meta_repo.update_metainfo_extras(
+                    uuid=target_uuid,
+                    new_extras={'copied_image_from': str(source_uuid)},
+                )
+
+        return job_ids

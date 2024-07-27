@@ -44,3 +44,32 @@ async def api_action_rebuild_known_tags(
 
     background_tasks.add_task(use_case.execute, admin, target_user, job_id)
     return {'result': f'Rebuilding known tags for user {name}'}
+
+
+@actions_router.post(
+    '/copy_image',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str],
+)
+async def api_action_copy_image(
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    target: actions_api_models.CopyContentInput,
+):
+    """Copy image from one item to another."""
+    use_case = actions_use_cases.CopyImageUseCase(mediator)
+
+    try:
+        job_ids = await use_case.execute(
+            user=user,
+            source_uuid=target.source_item_uuid,
+            target_uuid=target.target_item_uuid,
+        )
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return {
+        'result': 'Copying content',
+        'job_ids': job_ids,
+    }

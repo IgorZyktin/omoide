@@ -1,6 +1,7 @@
 """Web level API models."""
 from uuid import UUID
 
+import pydantic
 from pydantic import BaseModel
 
 
@@ -16,3 +17,29 @@ class RebuildTagsInput(BaseModel):
             ]
         }
     }
+
+
+class CopyContentInput(BaseModel):
+    """Info about affected items."""
+    source_item_uuid: UUID
+    target_item_uuid: UUID
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {
+                    'source_item_uuid': '281585ec-aed0-4518-b9df-1d2d446d249b',
+                    'target_item_uuid': 'acc45593-fe9e-46dc-bd99-72d373dcac3f',
+                },
+            ]
+        }
+    }
+
+    @pydantic.model_validator(mode="after")
+    def check_not_the_same(self) -> 'CopyContentInput':
+        """Check items are not the same."""
+        if self.source_item_uuid == self.target_item_uuid:
+            msg = 'You cannot copy item content to itself'
+            raise ValueError(msg)
+
+        return self
