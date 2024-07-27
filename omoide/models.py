@@ -30,7 +30,7 @@ class ModelMixin(abc.ABC):
         return {
             key: value
             for key, value in dump.items()
-            if key in exclude
+            if key not in exclude
         }
 
 
@@ -168,7 +168,9 @@ class Item(ModelMixin):
     def __str__(self) -> str:
         """Return textual representation."""
         name = type(self).__name__
-        return f'<{name} {self.uuid} {self.name}>'
+        if self.name:
+            return f'<{name} {self.uuid} {self.name}>'
+        return f'<{name} {self.uuid}>'
 
 
 class Metainfo(BaseModel):

@@ -21,7 +21,7 @@ class MediaRepository(interfaces.AbsMediaRepository, asyncpg.AsyncpgStorage):
         stmt = sa.insert(
             db_models.Media
         ).values(
-            **media.model_dump()
+            **media.model_dump(exclude={'id'})
         ).returning(db_models.Media.id)
 
         media_id = await self.db.execute(stmt)

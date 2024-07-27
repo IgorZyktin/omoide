@@ -34,7 +34,9 @@ class UploadContentForItemUseCase(BaseAPIUseCase):
                 error=None,
                 owner_uuid=user.uuid,
                 item_uuid=item_uuid,
-                **raw_media.model_dump(),
+                media_type=raw_media.media_type,
+                content=raw_media.content,
+                ext=raw_media.ext,
             )
 
             media_id = await self.mediator.media_repo.create_media(media)
@@ -67,7 +69,9 @@ class UploadPreviewForItemUseCase(BaseAPIUseCase):
                 error=None,
                 owner_uuid=user.uuid,
                 item_uuid=item_uuid,
-                **raw_media.model_dump(),
+                media_type=raw_media.media_type,
+                content=raw_media.content,
+                ext=raw_media.ext,
             )
 
             media_id = await self.mediator.media_repo.create_media(media)
@@ -100,7 +104,9 @@ class UploadThumbnailForItemUseCase(BaseAPIUseCase):
                 error=None,
                 owner_uuid=user.uuid,
                 item_uuid=item_uuid,
-                **raw_media.model_dump(),
+                media_type=raw_media.media_type,
+                content=raw_media.content,
+                ext=raw_media.ext,
             )
 
             media_id = await self.mediator.media_repo.create_media(media)
