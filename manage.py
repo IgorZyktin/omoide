@@ -92,41 +92,6 @@ def command_rebuild_computed_tags(**kwargs: str | bool):
             run.run(config, database)
 
 
-@cli.command(name='compact_tags')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--only-users',
-    help='Apply to one or more specially listed users (comma separated)',
-)
-@click.option(
-    '--log-every-item/--no-log-every-item',
-    default=False,
-    help='Output every refreshed item',
-)
-def command_compact_tags(**kwargs: str | bool):
-    """If item and its parent share some tags, try to remove duplicates."""
-    from omoide.commands.compact_tags import cfg
-    from omoide.commands.compact_tags import run
-
-    db_url = SecretStr(str(kwargs.pop('db_url')))
-
-    only_users = []
-    if kwargs.pop('only_users', ''):
-        only_users = utils.split(str(kwargs.pop('only_users', '')))
-
-    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
-
-    with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Compacting tags...'):
-            run.run(config, database)
-
-
 @cli.command(name='du')
 @click.option(
     '--db-url',
