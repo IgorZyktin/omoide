@@ -1,7 +1,11 @@
 """Repository that performs various operations on different objects."""
+import abc
+from collections import defaultdict
 from collections.abc import Collection
 from datetime import datetime
 from typing import Any
+from typing import Awaitable
+from typing import Callable
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -15,7 +19,103 @@ from omoide.storage.implementations import asyncpg
 from omoide.storage.implementations.asyncpg.repositories import queries
 
 
-class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
+class _MiscRepoBase(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage, abc.ABC):
+    """Helper methods here."""
+
+    @staticmethod
+    def _convert_known_tags_to_rows(
+        user_uuid: UUID | None,
+        known_tags: dict[str, int],
+    ) -> list[dict[str, str | int]]:
+        """Convert from {'cat': 1} to [{'tag': 'cat', 'counter': 1}]."""
+        if user_uuid is None:
+            return [
+                {'tag': tag, 'counter': counter}
+                for tag, counter in known_tags.items()
+            ]
+
+        user_uuid_str = str(user_uuid)
+        return [
+            {'user_uuid': user_uuid_str, 'tag': tag, 'counter': counter}
+            for tag, counter in known_tags.items()
+        ]
+
+    async def _get_available_tags_anon(
+        self,
+        marker: UUID | None,
+        limit: int,
+    ) -> list[tuple[str, list[str]]]:
+        """Return tags for available items."""
+        sub_query = sa.select(db_models.PublicUsers.user_uuid)
+
+        stmt = sa.select(
+            db_models.Item.uuid,
+            db_models.Item.tags,
+        ).where(
+            db_models.Item.owner_uuid.in_(sub_query),  # noqa
+        )
+
+        if marker is not None:
+            stmt = stmt.where(db_models.Item.uuid > marker)
+
+        stmt = stmt.order_by(db_models.Item.uuid).limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+
+        return [(row['uuid'], row['tags']) for row in response]
+
+    async def _get_available_tags_known(
+        self,
+        marker: UUID | None,
+        limit: int,
+        user_uuid: UUID,
+    ) -> list[tuple[str, list[str]]]:
+        """Return tags for available items."""
+        stmt = sa.select(
+            db_models.Item.uuid,
+            db_models.Item.tags,
+        ).where(
+            sa.or_(
+                db_models.Item.owner_uuid == user_uuid,
+                db_models.Item.permissions.any(str(user_uuid)),
+            )
+        )
+
+        if marker is not None:
+            stmt = stmt.where(db_models.Item.uuid > marker)
+
+        stmt = stmt.order_by(db_models.Item.uuid).limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+
+        return [(row['uuid'], row['tags']) for row in response]
+
+    @staticmethod
+    async def _process_tags_batched(
+        func: Callable[..., Awaitable[list[tuple[str, list[str]]]]],
+        batch_size: int,
+        *args: Any,
+    ) -> dict[str, int]:
+        """Recalculate all known tags for known user."""
+        marker = None
+        known_tags: dict[str, int] = defaultdict(int)
+
+        while True:
+            batch = await func(marker, batch_size, *args)
+
+            for item_uuid, tags in batch:
+                for tag in tags:
+                    known_tags[tag.casefold()] += 1
+
+                marker = item_uuid
+
+            if len(batch) < batch_size or marker is None:
+                break
+
+        return dict(known_tags)
+
+
+class MiscRepo(_MiscRepoBase):
     """Repository that performs various operations on different objects."""
 
     async def read_children_to_download(
@@ -233,6 +333,56 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
                     db_models.KnownTagsAnon.counter <= 0,
                 )
                 await self.db.execute(stmt)
+
+    async def calculate_known_tags_anon(
+        self,
+        batch_size: int,
+    ) -> dict[str, int]:
+        """Recalculate all known tags for anon."""
+        return await self._process_tags_batched(
+            self._get_available_tags_anon, batch_size)
+
+    async def calculate_known_tags_known(
+        self,
+        user: models.User,
+        batch_size: int,
+    ) -> dict[str, int]:
+        """Recalculate all known tags for known user."""
+        return await self._process_tags_batched(
+            self._get_available_tags_known, batch_size, user.uuid)
+
+    async def insert_known_tags_anon(
+        self,
+        known_tags: dict[str, int],
+    ) -> None:
+        """Insert batch of known tags."""
+        tag_rows = self._convert_known_tags_to_rows(None, known_tags)
+        stmt = sa.insert(db_models.KnownTagsAnon)
+        await self.db.execute_many(stmt, tag_rows)
+
+    async def insert_known_tags_known(
+        self,
+        user: models.User,
+        known_tags: dict[str, int],
+    ) -> None:
+        """Insert batch of known tags."""
+        tag_rows = self._convert_known_tags_to_rows(user.uuid, known_tags)
+        stmt = sa.insert(db_models.KnownTags)
+        await self.db.execute_many(stmt, tag_rows)
+
+    async def drop_known_tags_anon(self) -> None:
+        """Clean all known tags for anon."""
+        stmt = sa.delete(db_models.KnownTagsAnon)
+        await self.db.execute(stmt)
+
+    async def drop_known_tags_known(self, user: models.User) -> None:
+        """Clean all known tags for known user."""
+        stmt = sa.delete(
+            db_models.KnownTags
+        ).where(
+            db_models.KnownTags.user_uuid == user.uuid
+        )
+        await self.db.execute(stmt)
 
     async def start_long_job(
         self,

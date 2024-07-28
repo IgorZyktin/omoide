@@ -46,6 +46,44 @@ class AbsMiscRepo(abc.ABC):
         """Drop tags with counter less of equal to 0."""
 
     @abc.abstractmethod
+    async def calculate_known_tags_anon(
+        self,
+        batch_size: int,
+    ) -> dict[str, int]:
+        """Recalculate all known tags for anon."""
+
+    @abc.abstractmethod
+    async def calculate_known_tags_known(
+        self,
+        user: models.User,
+        batch_size: int,
+    ) -> dict[str, int]:
+        """Recalculate all known tags for known user."""
+
+    @abc.abstractmethod
+    async def insert_known_tags_anon(
+        self,
+        known_tags: dict[str, int],
+    ) -> None:
+        """Insert batch of known tags."""
+
+    @abc.abstractmethod
+    async def insert_known_tags_known(
+        self,
+        user: models.User,
+        known_tags: dict[str, int],
+    ) -> None:
+        """Insert batch of known tags."""
+
+    @abc.abstractmethod
+    async def drop_known_tags_anon(self) -> None:
+        """Clean all known tags for anon."""
+
+    @abc.abstractmethod
+    async def drop_known_tags_known(self, user: models.User) -> None:
+        """Clean all known tags for known user."""
+
+    @abc.abstractmethod
     async def start_long_job(
         self,
         name: str,

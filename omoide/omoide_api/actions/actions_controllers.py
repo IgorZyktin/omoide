@@ -19,7 +19,7 @@ actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 @actions_router.post(
     '/rebuild_known_tags',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | None],
+    response_model=dict[str, int | str | None],
 )
 async def api_action_rebuild_known_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
@@ -27,7 +27,10 @@ async def api_action_rebuild_known_tags(
     target: actions_api_models.RebuildTagsInput,
     background_tasks: BackgroundTasks,
 ):
-    """Recalculate all known tags for user."""
+    """Recalculate all known tags for user.
+
+    If given user UUID is null, recalculation will be done for anon user.
+    """
     use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
 
     try:
@@ -40,13 +43,14 @@ async def api_action_rebuild_known_tags(
     return {
         'result': 'Rebuilding known tags',
         'target_user': user.name if user else 'anon',
+        'job_id': job_id,
     }
 
 
 @actions_router.post(
     '/rebuild_computed_tags',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | None],
+    response_model=dict[str, int | str | None],
 )
 async def api_action_rebuild_computed_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
@@ -67,6 +71,7 @@ async def api_action_rebuild_computed_tags(
     return {
         'result': 'Rebuilding computed tags',
         'target_user': user.name if user else 'anon',
+        'job_id': job_id,
     }
 
 

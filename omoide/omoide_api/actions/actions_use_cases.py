@@ -5,9 +5,9 @@ import time
 from uuid import UUID
 
 from omoide import const
+from omoide import custom_logging
 from omoide import models
 from omoide import utils
-from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
@@ -56,7 +56,7 @@ class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
                     target_user,
                 )
                 user_uuid = target_user.uuid
-                extras = {'target_user_uuid': target_user.uuid}
+                extras = {'target_user_uuid': str(target_user.uuid)}
 
             job_id = await self.mediator.misc_repo.start_long_job(
                 name=name,
@@ -78,30 +78,20 @@ class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
     ) -> None:
         """Execute."""
         start = time.perf_counter()
+        total = 0
+
         # TODO - make separate methods finish_long_job and fail_long_job
         # TODO - calculate time inside _execute
 
         try:
-            total = await self._execute(user, target_user, job_id)
+            loop = asyncio.get_running_loop()
+            coro = await loop.run_in_executor(None, self._execute, user,
+                                              target_user, job_id)
+            total = await coro
         except Exception as exc:
+            duration = time.perf_counter() - start
             LOG.exception(
                 'Failed to complete background rebuilding of {}, '
-                'command by {}, target is {}, job_id is {}',
-                self.affected_target,
-                user,
-                target_user,
-                job_id,
-            )
-            await self.mediator.misc_repo.finish_long_job(
-                id=job_id,
-                status='fail',
-                duration=time.perf_counter() - start,
-                operations=0,
-                error=f'{type(exc).__name__}: {exc}',
-            )
-        else:
-            LOG.info(
-                'Done background rebuilding of {}, '
                 'command by {}, target is {}, job_id is {} ({} changes)',
                 self.affected_target,
                 user,
@@ -111,8 +101,27 @@ class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
             )
             await self.mediator.misc_repo.finish_long_job(
                 id=job_id,
+                status='fail',
+                duration=duration,
+                operations=0,
+                error=f'{type(exc).__name__}: {exc}',
+            )
+        else:
+            duration = time.perf_counter() - start
+            LOG.info(
+                'Done background rebuilding of {}, '
+                'command by {}, target is {}, job_id is {} ({} changes in {})',
+                self.affected_target,
+                user,
+                target_user or 'anon',
+                job_id,
+                total,
+                duration,
+            )
+            await self.mediator.misc_repo.finish_long_job(
+                id=job_id,
                 status='done',
-                duration=time.perf_counter() - start,
+                duration=duration,
                 operations=total,
                 error='',
             )
@@ -129,9 +138,50 @@ class RebuildKnownTagsUseCase(BaseRebuildTagsUseCase):
         job_id: int,
     ) -> int:
         """Execute."""
-        # TODO
-        await asyncio.sleep(5)
-        return 1
+        repo = self.mediator.misc_repo
+
+        async with self.mediator.storage.transaction():
+            if target_user is None:
+                LOG.info(
+                    'Known tags rebuilding for '
+                    'anon has started (command by {})',
+                    user,
+                )
+                known_tags = await repo.calculate_known_tags_anon(
+                    batch_size=const.DB_BATCH_SIZE,
+                )
+            else:
+                LOG.info(
+                    'Known tags rebuilding for '
+                    '{} has started (command by {})',
+                    target_user,
+                    user,
+                )
+                known_tags = await repo.calculate_known_tags_known(
+                    user=target_user,
+                    batch_size=const.DB_BATCH_SIZE,
+                )
+
+        async with self.mediator.storage.transaction():
+            if target_user is None:
+                await repo.drop_known_tags_anon()
+                await repo.insert_known_tags_anon(known_tags)
+                LOG.info(
+                    'Known tags rebuilding for '
+                    'anon has finished (command by {})',
+                    user,
+                )
+            else:
+                await repo.drop_known_tags_known(target_user)
+                await repo.insert_known_tags_known(target_user, known_tags)
+                LOG.info(
+                    'Known tags rebuilding for '
+                    '{} has finished (command by {})',
+                    target_user,
+                    user,
+                )
+
+        return len(known_tags)
 
 
 class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):

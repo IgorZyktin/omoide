@@ -20,3 +20,5 @@ MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 AUTH_COMPLEXITY = 4  # minimal
 
 ANON: Literal['anon'] = 'anon'
+
+DB_BATCH_SIZE = 200

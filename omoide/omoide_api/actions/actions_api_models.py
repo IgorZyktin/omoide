@@ -12,8 +12,8 @@ class RebuildTagsInput(BaseModel):
     model_config = {
         'json_schema_extra': {
             'examples': [
-                {'user_uuid': '2613f5c6-2508-474b-b4cf-feab4987211e'},
                 {'user_uuid': None},
+                {'user_uuid': '2613f5c6-2508-474b-b4cf-feab4987211e'},
             ]
         }
     }
