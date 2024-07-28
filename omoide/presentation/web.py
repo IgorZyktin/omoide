@@ -203,11 +203,15 @@ class AimWrapper:
         params: dict,
     ) -> None:
         """Add default values if they were not supplied."""
-        params['order'] = params.get('order', 'asc')
+        # NOTE: backward compatibility for legacy endpoints
+        order = params.get('order')
+        ordering = params.get('ordering')
 
-        if params['order'] == 'on':
-            params['order'] = 'asc'
+        order_final = order or ordering or 'random'
+        if order_final == 'on':
+            order_final = 'asc'
 
+        params['order'] = order_final
         params['nested'] = cls.extract_bool(params, 'nested', False)
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)
