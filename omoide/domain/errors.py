@@ -67,11 +67,6 @@ class ItemRequiresAccess(Error):
     template = 'You are not allowed to interact with item {uuid}'
 
 
-class ItemNoDeleteForRoot(Error):
-    """User tries to delete root level item."""
-    template = 'Top level item {uuid} cannot be deleted'
-
-
 class ItemModificationByAnon(Error):
     """Anon user tries to modify item."""
     template = 'Anonymous users are not allowed to modify items'

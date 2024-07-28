@@ -40,7 +40,6 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     http.HTTPStatus.FORBIDDEN: [
         errors.AuthenticationRequired,
         errors.ItemRequiresAccess,
-        errors.ItemNoDeleteForRoot,
         errors.ItemModificationByAnon,
     ]
 }
