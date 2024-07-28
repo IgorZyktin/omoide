@@ -90,23 +90,6 @@ async def api_read_item_by_name(
     return result.value
 
 
-@router.get('/{uuid}')
-async def api_read_item(
-        uuid: UUID,
-        user: models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemReadUseCase = Depends(
-            dep.api_item_read_use_case),
-):
-    """Get item."""
-    result = await use_case.execute(policy, user, uuid)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return result.value
-
-
 @router.patch('/{uuid}')
 async def api_partial_update_item(
         uuid: UUID,

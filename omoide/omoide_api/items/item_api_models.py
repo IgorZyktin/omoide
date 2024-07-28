@@ -1,6 +1,7 @@
 """Web level API models."""
 import base64
 import math
+from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import model_validator
@@ -18,6 +19,41 @@ SUPPORTED_EXTENSION = frozenset(
         'webp',
     )
 )
+
+
+class ItemOutput(BaseModel):
+    """Output form of an item."""
+    uuid: UUID
+    parent_uuid: UUID | None
+    owner_uuid: UUID
+    number: int
+    name: str
+    is_collection: bool
+    content_ext: str | None
+    preview_ext: str | None
+    thumbnail_ext: str | None
+    tags: list[str] = []
+    permissions: list[UUID] = []
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {
+                    'uuid': 'f2528be0-73bc-4808-bda6-3d54e7b80950',
+                    'parent_uuid': '2ef3086c-79a7-4a84-9f17-fa602a3467dc',
+                    'owner_uuid': 'c044fc6d-394d-4dd3-a0bf-41df10cab01a',
+                    'number': 68695,
+                    'name': 'Something',
+                    'is_collection': True,
+                    'content_ext': 'jpg',
+                    'preview_ext': 'jpg',
+                    'thumbnail_ext': 'jpg',
+                    'tags': ['tag1', 'tag2'],
+                    'permissions': ['c044fc6d-394d-4dd3-a0bf-41df10cab01a'],
+                }
+            ]
+        }
+    }
 
 
 class MediaInput(BaseModel):

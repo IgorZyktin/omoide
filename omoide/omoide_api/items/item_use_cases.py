@@ -10,6 +10,34 @@ from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 LOG = custom_logging.get_logger(__name__)
 
 
+class ReadItemUseCase(BaseAPIUseCase):
+    """Use case for item getting."""
+
+    async def execute(self, user: models.User, item_uuid: UUID) -> models.Item:
+        """Execute."""
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+
+            if any(
+                (
+                    item.owner_uuid == user.uuid,
+                    str(user.uuid) in item.permissions,
+                )
+            ):
+                return item
+
+            public_users = (
+                await self.mediator.users_repo.get_public_users_uuids()
+            )
+
+            if item.owner_uuid in public_users:
+                return item
+
+        # NOTE - hiding the fact
+        msg = 'Item {item_uuid} does not exist'
+        raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
+
+
 class DeleteItemUseCase(BaseAPIUseCase):
     """Use case for item deletion."""
 

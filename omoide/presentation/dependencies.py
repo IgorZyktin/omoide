@@ -398,16 +398,6 @@ def api_item_create_bulk_use_case(
 
 
 @utils.memorize
-def api_item_read_use_case(
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-) -> use_cases.ApiItemReadUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemReadUseCase(
-        items_repo=items_repo,
-    )
-
-
-@utils.memorize
 def api_item_read_by_name_use_case(
     items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.ApiItemReadByNameUseCase:

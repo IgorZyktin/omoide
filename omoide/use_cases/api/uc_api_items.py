@@ -25,7 +25,6 @@ from omoide.presentation import api_models
 __all__ = [
     'ApiItemCreateUseCase',
     'ApiItemCreateBulkUseCase',
-    'ApiItemReadUseCase',
     'ApiItemReadByNameUseCase',
     'ApiItemUpdateUseCase',
     'ApiItemsDownloadUseCase',
@@ -300,36 +299,6 @@ class ApiItemCreateBulkUseCase(BaseItemModifyUseCase):
                 uuids.append(uuid)
 
         return Success(uuids)
-
-
-class ApiItemReadUseCase:
-    """Use case for getting an item."""
-
-    def __init__(
-            self,
-            items_repo: storage_interfaces.AbsItemsRepo,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-    ) -> Result[errors.Error, domain.Item]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.Item.READ)
-            if error:
-                return Failure(error)
-
-            item = await self.items_repo.read_item(uuid)
-
-            if item is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-        return Success(item)
 
 
 class ApiItemReadByNameUseCase:

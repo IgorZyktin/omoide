@@ -17,6 +17,28 @@ from omoide.presentation import web
 items_router = APIRouter(prefix='/items', tags=['Items'])
 
 
+@items_router.get(
+    '/{item_uuid}',
+    status_code=status.HTTP_200_OK,
+    response_model=item_api_models.ItemOutput,
+)
+async def api_read_item(
+    item_uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Get exising item."""
+    use_case = item_use_cases.ReadItemUseCase(mediator)
+
+    try:
+        item = await use_case.execute(user, item_uuid)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return item_api_models.ItemOutput(**item.model_dump())
+
+
 @items_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
