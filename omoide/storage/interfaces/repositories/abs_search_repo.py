@@ -25,7 +25,7 @@ class AbsSearchRepository(abc.ABC):
         tags_include: set[str],
         tags_exclude: set[str],
         only_collections: bool,
-        ordering: Literal['asc', 'desc', 'random'],
+        order: Literal['asc', 'desc', 'random'],
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:

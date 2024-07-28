@@ -48,16 +48,16 @@ class _SearchRepositoryBase(
     @staticmethod
     def _apply_ordering(
         stmt: Select,
-        ordering: Literal['asc', 'desc', 'random'],
+        order: Literal['asc', 'desc', 'random'],
         last_seen: int,
     ) -> Select:
         """Limit query if user demands it."""
-        if ordering != 'random' and last_seen >= 0:
+        if order != 'random' and last_seen >= 0:
             stmt = stmt.where(db_models.Item.number > last_seen)
 
-        if ordering == 'asc':
+        if order == 'asc':
             stmt = stmt.order_by(db_models.Item.number)
-        elif ordering == 'desc':
+        elif order == 'desc':
             stmt = stmt.order_by(sa.desc(db_models.Item.number))
         else:
             stmt = stmt.order_by(sa.func.random())
@@ -100,7 +100,7 @@ class SearchRepository(_SearchRepositoryBase):
         tags_include: set[str],
         tags_exclude: set[str],
         only_collections: bool,
-        ordering: Literal['asc', 'desc', 'random'],
+        order: Literal['asc', 'desc', 'random'],
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -117,7 +117,7 @@ class SearchRepository(_SearchRepositoryBase):
 
         stmt = self._apply_ordering(
             stmt=stmt,
-            ordering=ordering,
+            order=order,
             last_seen=last_seen,
         )
 

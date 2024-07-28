@@ -146,7 +146,7 @@ async def api_search(
         max_length=search_api_models.SEARCH_QUERY_MAX_LENGTH,
     )] = search_api_models.SEARCH_QUERY_DEFAULT,
     only_collections: Annotated[bool, Query()] = False,
-    ordering: Annotated[Literal['asc', 'desc', 'random'], Query()] = 'random',
+    order: Annotated[Literal['asc', 'desc', 'random'], Query()] = 'random',
     last_seen: Annotated[int, Query()] = search_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
         ge=search_api_models.SEARCH_QUERY_MIN_LIMIT,
@@ -166,7 +166,7 @@ async def api_search(
         query=q,
         minimal_length=search_api_models.SEARCH_QUERY_MIN_LENGTH,
         only_collections=only_collections,
-        ordering=ordering,
+        order=order,
         last_seen=last_seen,
         limit=limit,
     )

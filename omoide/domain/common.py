@@ -163,7 +163,7 @@ class Query(BaseModel):
 class Aim(BaseModel):
     """Object that describes user's desired output."""
     query: Query
-    ordering: Literal['asc', 'desc', 'random']
+    order: Literal['asc', 'desc', 'random']
     nested: bool
     paged: bool
     page: int

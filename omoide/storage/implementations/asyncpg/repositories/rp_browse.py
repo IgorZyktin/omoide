@@ -233,13 +233,13 @@ class BrowseRepository(
                 db_models.Item.parent_uuid == uuid
             )
 
-        if aim.ordering == 'asc':
+        if aim.order == 'asc':
             stmt = stmt.where(
                 db_models.Item.number > aim.last_seen
             ).order_by(
                 db_models.Item.number
             )
-        elif aim.ordering == 'desc':
+        elif aim.order == 'desc':
             stmt = stmt.where(
                 db_models.Item.number < aim.last_seen
             ).order_by(
@@ -350,11 +350,11 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
             """
             values['user_uuid'] = str(user.uuid)
 
-        if aim.ordering == 'asc':
+        if aim.order == 'asc':
             stmt += ' AND number > :last_seen'
             stmt += ' ORDER BY number'
             values['last_seen'] = aim.last_seen
-        elif aim.ordering == 'desc':
+        elif aim.order == 'desc':
             stmt += ' AND number < :last_seen'
             stmt += ' ORDER BY number'
             values['last_seen'] = aim.last_seen
