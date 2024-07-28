@@ -39,7 +39,12 @@ class Worker(interfaces.AbsWorker):
                     last_seen,
                 )
 
+                if not batch:
+                    self._database.session.commit()
+                    return
+
                 LOG.info('Got {} media records to download', len(batch))
+
                 for media in batch:
                     # noinspection PyBroadException
                     try:
