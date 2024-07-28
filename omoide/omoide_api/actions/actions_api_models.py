@@ -12,8 +12,8 @@ class RebuildKnownTagsInput(BaseModel):
     model_config = {
         'json_schema_extra': {
             'examples': [
-                {'user_uuid': None},
                 {'user_uuid': '2613f5c6-2508-474b-b4cf-feab4987211e'},
+                {'user_uuid': None},
             ]
         }
     }
@@ -27,7 +27,10 @@ class RebuildComputedTagsInput(BaseModel):
     model_config = {
         'json_schema_extra': {
             'examples': [
-                {'user_uuid': '3efa5072-a225-4b43-9a13-3a7833ca74b7'},
+                {
+                    'user_uuid': '3efa5072-a225-4b43-9a13-3a7833ca74b7',
+                    'including_children': True,
+                },
             ]
         }
     }
