@@ -263,7 +263,6 @@ class ApiItemCreateUseCase(BaseItemModifyUseCase):
             payload: api_models.CreateItemIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
-        LOG.warning(user)
         async with self.items_repo.transaction():
             parent_uuid = payload.parent_uuid or user.root_item
             error = await policy.is_restricted(user, parent_uuid,
