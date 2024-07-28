@@ -136,7 +136,7 @@ function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
 
     $.ajax({
         type: 'GET',
-        url: `/api/items/${uuid}`,
+        url: `${ITEMS_ENDPOINT}/${uuid}`,
         contentType: 'application/json',
         success: function (response) {
             renderThumbnailDynamic(thumbnailElement, response)

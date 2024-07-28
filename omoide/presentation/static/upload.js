@@ -961,7 +961,7 @@ async function getItem(itemUUID) {
         $.ajax({
             timeout: 5000, // 5 seconds
             type: 'GET',
-            url: `/api/items/${itemUUID}`,
+            url: `${ITEMS_ENDPOINT}/${itemUUID}`,
             contentType: 'application/json',
             success: function (response) {
                 resolve(response)
