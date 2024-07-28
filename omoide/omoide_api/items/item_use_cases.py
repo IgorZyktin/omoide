@@ -84,106 +84,57 @@ class DeleteItemUseCase(BaseAPIUseCase):
         return parent_uuid
 
 
-class UploadContentForItemUseCase(BaseAPIUseCase):
+class BaseUploadUseCase(BaseAPIUseCase):
+    """Base class for uploading."""
+    target: str
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        raw_media: models.RawMedia,
+    ) -> int:
+        """Execute."""
+        self.ensure_not_anon(user, operation='upload item media data')
+
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='item media data')
+
+            LOG.info(
+                'User {} is uploading {} for item {}',
+                user,
+                self.target,
+                item,
+            )
+
+            media = models.Media(
+                id=-1,
+                created_at=utils.now(),
+                processed_at=None,
+                error=None,
+                owner_uuid=user.uuid,
+                item_uuid=item_uuid,
+                media_type=raw_media.media_type,
+                content=raw_media.content,
+                ext=raw_media.ext,
+            )
+
+            media_id = await self.mediator.media_repo.create_media(media)
+
+        return media_id
+
+
+class UploadContentForItemUseCase(BaseUploadUseCase):
     """Use case for content uploading."""
-
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        raw_media: models.RawMedia,
-    ) -> int:
-        """Execute."""
-        self.ensure_not_anon(user, operation='upload item media data')
-
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='item media data')
-
-            LOG.info('User {} is uploading content for item {}', user, item)
-
-            media = models.Media(
-                id=-1,
-                created_at=utils.now(),
-                processed_at=None,
-                error=None,
-                owner_uuid=user.uuid,
-                item_uuid=item_uuid,
-                media_type=raw_media.media_type,
-                content=raw_media.content,
-                ext=raw_media.ext,
-            )
-
-            media_id = await self.mediator.media_repo.create_media(media)
-
-        return media_id
+    target: str = 'content'
 
 
-class UploadPreviewForItemUseCase(BaseAPIUseCase):
+class UploadPreviewForItemUseCase(BaseUploadUseCase):
     """Use case for preview uploading."""
-
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        raw_media: models.RawMedia,
-    ) -> int:
-        """Execute."""
-        self.ensure_not_anon(user, operation='upload item media data')
-
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='item media data')
-
-            LOG.info('User {} is uploading preview for item {}', user, item)
-
-            media = models.Media(
-                id=-1,
-                created_at=utils.now(),
-                processed_at=None,
-                error=None,
-                owner_uuid=user.uuid,
-                item_uuid=item_uuid,
-                media_type=raw_media.media_type,
-                content=raw_media.content,
-                ext=raw_media.ext,
-            )
-
-            media_id = await self.mediator.media_repo.create_media(media)
-
-        return media_id
+    target: str = 'preview'
 
 
-class UploadThumbnailForItemUseCase(BaseAPIUseCase):
+class UploadThumbnailForItemUseCase(BaseUploadUseCase):
     """Use case for thumbnail uploading."""
-
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        raw_media: models.RawMedia,
-    ) -> int:
-        """Execute."""
-        self.ensure_not_anon(user, operation='upload item media data')
-
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='item media data')
-
-            LOG.info('User {} is uploading thumbnail for item {}', user, item)
-
-            media = models.Media(
-                id=-1,
-                created_at=utils.now(),
-                processed_at=None,
-                error=None,
-                owner_uuid=user.uuid,
-                item_uuid=item_uuid,
-                media_type=raw_media.media_type,
-                content=raw_media.content,
-                ext=raw_media.ext,
-            )
-
-            media_id = await self.mediator.media_repo.create_media(media)
-
-        return media_id
+    target: str = 'thumbnail'

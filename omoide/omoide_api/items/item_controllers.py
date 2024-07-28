@@ -152,7 +152,7 @@ async def api_upload_item_thumbnail(
 
     Operation is asynchronous, you will get job_id in response.
     """
-    use_case = item_use_cases.UploadContentForItemUseCase(mediator)
+    use_case = item_use_cases.UploadThumbnailForItemUseCase(mediator)
 
     try:
         raw_media = models.RawMedia(
