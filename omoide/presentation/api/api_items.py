@@ -43,7 +43,7 @@ async def api_create_item(
         web.raise_from_error(result.error)
 
     response.headers['Location'] = str(
-        request.url_for('api_read_item', uuid=result.value)
+        request.url_for('api_read_item', item_uuid=result.value)
     )
 
     return api_models.OnlyUUID(uuid=result.value)
