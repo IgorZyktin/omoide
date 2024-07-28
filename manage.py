@@ -17,46 +17,6 @@ def cli():
     """Manual CLI operations."""
 
 
-@cli.command(name='rebuild_known_tags')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--anon/--no-anon',
-    default=True,
-    help='Refresh known tags for anon user',
-)
-@click.option(
-    '--known/--no-known',
-    default=True,
-    help='Refresh known tags for known users',
-)
-@click.option(
-    '--only-users',
-    help='Apply to one or more specially listed users (comma separated)',
-)
-def command_rebuild_known_tags(**kwargs: str | bool):
-    """Refresh cache for known tags."""
-    from omoide.commands.rebuild_known_tags import cfg
-    from omoide.commands.rebuild_known_tags import run
-
-    db_url = SecretStr(str(kwargs.pop('db_url')))
-
-    only_users = []
-    if kwargs.pop('only_users', ''):
-        only_users = utils.split(str(kwargs.pop('only_users', '')))
-
-    config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
-    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
-
-    with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Rebuilding known tags...'):
-            run.run(config, database)
-
-
 @cli.command(name='rebuild_computed_tags')
 @click.option(
     '--db-url',
