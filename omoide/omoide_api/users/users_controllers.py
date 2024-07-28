@@ -112,7 +112,7 @@ async def api_get_user_resource_usage(
 
 
 @users_router.get(
-    '/anon/tags',
+    '/anon/known_tags',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
 )
@@ -132,7 +132,7 @@ async def api_get_anon_tags(
 
 
 @users_router.get(
-    '/{uuid}/tags',
+    '/{uuid}/known_tags',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
 )

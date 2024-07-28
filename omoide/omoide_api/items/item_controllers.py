@@ -17,6 +17,34 @@ from omoide.presentation import web
 items_router = APIRouter(prefix='/items', tags=['Items'])
 
 
+@items_router.delete(
+    '/{item_uuid}',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str],
+)
+async def api_delete_item(
+    item_uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Delete exising item."""
+    use_case = item_use_cases.DeleteItemUseCase(mediator)
+
+    try:
+        parent_uuid = await use_case.execute(user, item_uuid)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    # TODO - actually we can return not only
+    #  parent but also next item in collection
+    return {
+        'result': f'Deleted item {item_uuid}',
+        'item_uuid': str(item_uuid),
+        'parent_uuid': str(parent_uuid),
+    }
+
+
 @items_router.put(
     '/{item_uuid}/content',
     status_code=status.HTTP_202_ACCEPTED,

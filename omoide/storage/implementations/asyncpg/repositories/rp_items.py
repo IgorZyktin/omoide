@@ -462,17 +462,15 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
     async def delete_item(
         self,
-        item: domain.Item,
-    ) -> bool:
+        item_uuid: UUID,
+    ) -> None:
         """Delete item with given UUID."""
         stmt = sa.delete(
             db_models.Item
         ).where(
-            db_models.Item.uuid == item.uuid,
-        ).returning(1)
-
-        response = await self.db.fetch_one(stmt)
-        return response is not None
+            db_models.Item.uuid == item_uuid
+        )
+        await self.db.execute(stmt)
 
     async def check_child(
         self,

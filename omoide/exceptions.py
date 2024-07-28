@@ -53,3 +53,7 @@ class AccessDeniedError(BaseOmoideApiError):
 
 class InvalidInputError(BaseOmoideApiError):
     """User sent us something strange."""
+
+
+class NotAllowedError(BaseOmoideApiError):
+    """User has access to the object, but cannot perform specific operation."""

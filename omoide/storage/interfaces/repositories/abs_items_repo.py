@@ -147,8 +147,8 @@ class AbsItemsRepo(abc.ABC):
     @abc.abstractmethod
     async def delete_item(
         self,
-        item: domain.Item,
-    ) -> bool:
+        item_uuid: UUID,
+    ) -> None:
         """Delete item with given UUID."""
 
     @abc.abstractmethod

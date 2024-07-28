@@ -28,7 +28,6 @@ __all__ = [
     'ApiItemReadUseCase',
     'ApiItemReadByNameUseCase',
     'ApiItemUpdateUseCase',
-    'ApiItemDeleteUseCase',
     'ApiItemsDownloadUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
@@ -653,52 +652,6 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                         await recursive(child_uuid)
 
                 await recursive(item.uuid)
-
-
-class ApiItemDeleteUseCase(BaseItemModifyUseCase):
-    """Use case for deleting an item."""
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-    ) -> Result[errors.Error, UUID]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.Item.DELETE)
-
-            if error:
-                return Failure(error)
-
-            item = await self.items_repo.read_item(uuid)
-
-            if item is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-            if item.parent_uuid is None:
-                return Failure(errors.ItemNoDeleteForRoot(uuid=uuid))
-
-            users = await self.users_repo.read_filtered_users(
-                *item.permissions
-            )
-            users += [user]
-
-            await self.misc_repo.update_known_tags(
-                users=users,
-                tags_added=[],
-                tags_deleted=item.tags,
-            )
-
-            public_users = await self.users_repo.get_public_users_uuids()
-            await self.misc_repo.drop_unused_known_tags(users, public_users)
-            await self.items_repo.mark_files_as_orphans(item, utils.now())
-            deleted = await self.items_repo.delete_item(item)
-
-            if not deleted:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-        return Success(item.parent_uuid)
 
 
 class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):

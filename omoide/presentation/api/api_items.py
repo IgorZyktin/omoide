@@ -125,32 +125,6 @@ async def api_partial_update_item(
     return {'result': 'ok'}
 
 
-@router.delete(
-    '/{uuid}',
-    response_model=api_models.OnlyUUID,
-)
-async def api_delete_item(
-        uuid: UUID,
-        user: models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemDeleteUseCase = Depends(
-            dep.api_item_delete_use_case),
-):
-    """Delete item.
-
-    If item does not exist return 404.
-
-    If item was successfully deleted, return UUID of the parent
-    (so you could browse which items are still exist in this collection).
-    """
-    result = await use_case.execute(policy, user, uuid)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return api_models.OnlyUUID(uuid=result.value)
-
-
 # Not actually REST api endpoints >> heavy operations
 
 

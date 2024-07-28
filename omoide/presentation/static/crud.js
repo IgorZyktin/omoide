@@ -72,13 +72,13 @@ async function deleteItem(button, uuid) {
     // send command for item deletion
     $.ajax({
         type: 'DELETE',
-        url: `/api/items/${uuid}`,
+        url: `${ITEMS_ENDPOINT}/${uuid}`,
         contentType: 'application/json',
         beforeSend: function () {
             $(button).addClass('button-disabled')
         },
         success: function (response) {
-            let uuid = response['uuid']
+            let uuid = response['parent_uuid']
 
             if (uuid)
                 relocateWithAim(`/browse/${uuid}`)
