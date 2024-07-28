@@ -84,7 +84,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     async def read_root_item(
         self,
         user: models.User,
-    ) -> Optional[domain.Item]:
+    ) -> models.Item | None:
         """Return Item or None."""
         stmt = sa.select(
             db_models.Item
@@ -97,7 +97,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         response = await self.db.fetch_one(stmt)
 
-        return domain.Item(**response) if response else None
+        return models.Item(**response) if response else None
 
     async def read_all_root_items(
         self,
@@ -147,6 +147,25 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             raise exceptions.DoesNotExistError(msg, uuid=uuid)
 
         return models.Item(**response)
+
+    # TODO - fix naming
+    async def get_children_(
+        self,
+        item: domain.Item,
+    ) -> list[models.Item]:
+        """Return all direct descendants of the given item."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            db_models.Item.parent_uuid == item.uuid,
+        )
+
+        stmt = stmt.order_by(
+            db_models.Item.number
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**row) for row in response]
 
     async def read_children_of(
         self,

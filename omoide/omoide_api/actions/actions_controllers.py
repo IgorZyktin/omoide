@@ -24,7 +24,7 @@ actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 async def api_action_rebuild_known_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.RebuildTagsInput,
+    target: actions_api_models.RebuildKnownTagsInput,
     background_tasks: BackgroundTasks,
 ):
     """Recalculate all known tags for user.
@@ -55,22 +55,30 @@ async def api_action_rebuild_known_tags(
 async def api_action_rebuild_computed_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.RebuildTagsInput,
+    target: actions_api_models.RebuildComputedTagsInput,
     background_tasks: BackgroundTasks,
 ):
-    """Recalculate all computed tags for user."""
-    use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
+    """Recalculate all computed tags for specific user.
+
+    As a starting point we will take root item for this user.
+    If `including_children` is set to True, this will also affect all
+    descendants of the item. This operation potentially can take a lot of time.
+    """
+    use_case = actions_use_cases.RebuildComputedTagsUseCase(mediator)
 
     try:
-        user, job_id = await use_case.pre_execute(admin, target.user_uuid)
+        owner, item, job_id = await use_case.pre_execute(admin,
+                                                         target.user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    background_tasks.add_task(use_case.execute, admin, user, job_id)
+    background_tasks.add_task(use_case.execute, admin, item,
+                              job_id, target.including_children)
     return {
         'result': 'Rebuilding computed tags',
-        'target_user': user.name if user else 'anon',
+        'target_user': owner.name or str(owner.uuid),
+        'target_item': item.name or str(item.uuid),
         'job_id': job_id,
     }
 

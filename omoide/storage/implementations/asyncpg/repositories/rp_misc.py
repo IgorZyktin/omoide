@@ -212,6 +212,21 @@ class MiscRepo(_MiscRepoBase):
 
         await self.db.execute(stmt)
 
+    async def replace_computed_tags(
+        self,
+        item: models.Item,
+        tags: set[str]
+    ) -> None:
+        """Replace all computed tags for this item."""
+        stmt = sa.update(
+            db_models.ComputedTags
+        ).where(
+            db_models.ComputedTags.item_uuid == item.uuid
+        ).values(
+            tags=tuple(tags)
+        )
+        await self.db.execute(stmt)
+
     async def update_known_tags(
         self,
         users: Collection[models.User],

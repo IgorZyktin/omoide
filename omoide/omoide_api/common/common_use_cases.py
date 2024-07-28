@@ -88,7 +88,7 @@ class BaseAPIUseCase(abc.ABC):
                 f'such operations with {subject}'
             )
         else:
-            msg = 'You are not allowed to perform such operations'
+            msg = 'You are not allowed to perform this operation'
 
         raise exceptions.AccessDeniedError(msg)
 

@@ -23,7 +23,7 @@ class AbsItemsRepo(abc.ABC):
     async def read_root_item(
         self,
         user: models.User,
-    ) -> domain.Item | None:
+    ) -> models.Item | None:
         """Return Item or None."""
 
     @abc.abstractmethod
@@ -41,10 +41,17 @@ class AbsItemsRepo(abc.ABC):
     ) -> domain.Item | None:
         """Return Item or None."""
 
-    # TODO - import from models
     @abc.abstractmethod
     async def get_item(self, uuid: UUID) -> models.Item:
         """Return Item."""
+
+    # TODO - change naming
+    @abc.abstractmethod
+    async def get_children_(
+        self,
+        item: domain.Item,
+    ) -> list[models.Item]:
+        """Return all direct descendants of the given item."""
 
     @abc.abstractmethod
     async def read_children_of(

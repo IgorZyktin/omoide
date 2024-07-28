@@ -5,7 +5,7 @@ import pydantic
 from pydantic import BaseModel
 
 
-class RebuildTagsInput(BaseModel):
+class RebuildKnownTagsInput(BaseModel):
     """Info about target user for tag rebuilding."""
     user_uuid: UUID | None
 
@@ -14,6 +14,20 @@ class RebuildTagsInput(BaseModel):
             'examples': [
                 {'user_uuid': None},
                 {'user_uuid': '2613f5c6-2508-474b-b4cf-feab4987211e'},
+            ]
+        }
+    }
+
+
+class RebuildComputedTagsInput(BaseModel):
+    """Info about target user for tag rebuilding."""
+    user_uuid: UUID
+    including_children: bool = True
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {'user_uuid': '3efa5072-a225-4b43-9a13-3a7833ca74b7'},
             ]
         }
     }

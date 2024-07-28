@@ -172,6 +172,28 @@ class Item(ModelMixin):
             return f'<{name} {self.uuid} {self.name}>'
         return f'<{name} {self.uuid}>'
 
+    def get_computed_tags(self, parent_tags: set[str]) -> set[str]:
+        """Return computed tags.
+
+        Resulting collection is not visible for users and includes
+        technical information.
+        """
+        computed_tags: set[str] = {
+            tag.casefold() for tag in self.tags
+        }
+
+        computed_tags.add(str(self.uuid).casefold())
+
+        if self.name:
+            computed_tags.add(self.name)
+
+        computed_tags.update(parent_tags)
+
+        if self.parent_uuid is not None:
+            computed_tags.add(str(self.parent_uuid))
+
+        return computed_tags
+
 
 class Metainfo(BaseModel):
     """Metainfo for item."""

@@ -29,6 +29,14 @@ class AbsMiscRepo(abc.ABC):
         """Update computed tags for this item."""
 
     @abc.abstractmethod
+    async def replace_computed_tags(
+        self,
+        item: models.Item,
+        tags: set[str]
+    ) -> None:
+        """Replace all computed tags for this item."""
+
+    @abc.abstractmethod
     async def update_known_tags(
         self,
         users: Collection[models.User],
