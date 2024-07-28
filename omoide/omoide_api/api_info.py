@@ -1,6 +1,6 @@
 """Information about the API itself."""
 
-__version__ = '0.3.7'
+__version__ = '0.3.8'
 
 DESCRIPTION = """
 Backend of Omoide application.

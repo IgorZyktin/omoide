@@ -4,7 +4,7 @@ from datetime import timezone
 from typing import Literal
 from uuid import UUID
 
-VERSION = '0.3.7'
+VERSION = '0.3.8'
 
 FRONTEND_VERSION = 4
 
