@@ -76,6 +76,7 @@ async def app_browse(
             pages_in_block=constants.PAGES_IN_BLOCK,
         )
         context['paginator'] = paginator
+        context['block_collections'] = True
     else:
         template = 'browse_dynamic.html'
 

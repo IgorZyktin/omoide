@@ -133,6 +133,18 @@ function toggleNested() {
     reloadSearchParams(searchParams)
 }
 
+function toggleCollections() {
+    // toggle only_collections/all browse mode
+    let searchParams = new URLSearchParams(window.location.search)
+
+    if (searchParams.get('only_collections') === 'on')
+        searchParams.set('only_collections', 'off')
+    else
+        searchParams.set('only_collections', 'on')
+
+    reloadSearchParams(searchParams)
+}
+
 function togglePaged() {
     // toggle paged/dynamic load mode
     let searchParams = new URLSearchParams(window.location.search)

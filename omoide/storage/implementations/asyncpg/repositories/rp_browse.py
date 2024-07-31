@@ -233,6 +233,11 @@ class BrowseRepository(
                 db_models.Item.parent_uuid == uuid
             )
 
+        if aim.only_collections:
+            stmt = stmt.where(
+                db_models.Item.is_collection == True  # noqa
+            )
+
         if aim.order == 'asc':
             stmt = stmt.where(
                 db_models.Item.number > aim.last_seen

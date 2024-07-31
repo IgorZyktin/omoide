@@ -37,6 +37,8 @@
 <div id="header" class="header-static">
     <div id="sub_header" class="sub_header">
         <div class="query-container">
+
+            {# Home button ------------------------------------------------- #}
             <a href="{{ request.url_for('app_home')|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                title="Go to starting page"
                class="button qc-home">
@@ -45,7 +47,9 @@
                      alt="Home icon"/>
                 <span>Home</span>
             </a>
+            {# ------------------------------------------------------------- #}
 
+            {# Query field ------------------------------------------------- #}
             <div id="guess" class="guess qc-input">
                 <input id="query_element"
                        name="query"
@@ -56,7 +60,9 @@
                        placeholder="Search (for example it + movie)"
                        autofocus/>
             </div>
+            {# ------------------------------------------------------------- #}
 
+            {# Search button ----------------------------------------------- #}
             <a id="search_button"
                href="javascript:void(0)"
                title="Press to perform search"
@@ -66,7 +72,9 @@
                      alt="Looking glass icon"/>
                 <span>Search</span>
             </a>
+            {# ------------------------------------------------------------- #}
 
+            {# Ordering button --------------------------------------------- #}
             {% if block_ordered %}
                 <span class="button-disabled qc-order">
 
@@ -101,7 +109,45 @@
                     </a>
                 {% endif %}
             {% endif %}
+            {# ------------------------------------------------------------- #}
 
+            {# Collections button ------------------------------------------ #}
+            {% if block_collections %}
+                <span class="button-disabled qc-collections">
+                {% if aim_wrapper.only_collections %}
+                    <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                         alt="Collection filtering is not supported in this section"/>
+                    <span title="Change view mode to see all items">Now collections</span>
+                {% else %}
+                    <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                         alt="Collection filtering is not supported in this section"/>
+                    <span title="Change view mode to see only collections">Now all</span>
+                {% endif %}
+            </span>
+            {% else %}
+                {% if aim_wrapper.only_collections %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see all items"
+                       onclick="toggleCollections()"
+                       class="button qc-collections">
+                        <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                             alt="Change view mode to see all items"/>
+                        <span title="Change view mode to see all items">Only collections</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0)"
+                       title="Change view mode to see only collections"
+                       onclick="toggleCollections()"
+                       class="button qc-collections">
+                        <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                             alt="Change view mode to see only collections"/>
+                        <span>Any item</span>
+                    </a>
+                {% endif %}
+            {% endif %}
+            {# ------------------------------------------------------------- #}
+
+            {# Nesting button ---------------------------------------------- #}
             {% if block_nested %}
                 <span class="button-disabled qc-nested">
                 {% if aim_wrapper.nested %}
@@ -135,7 +181,9 @@
                     </a>
                 {% endif %}
             {% endif %}
+            {# ------------------------------------------------------------- #}
 
+            {# Paged button ------------------------------------------------ #}
             {% if block_paginated or False %}
                 <span class="button-disabled qc-paged">
                 <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
@@ -167,7 +215,9 @@
                     </a>
                 {% endif %}
             {% endif %}
+            {# ------------------------------------------------------------- #}
 
+            {# Login button ------------------------------------------------ #}
             {% if user.is_anon %}
                 <a href="{{ request.url_for('app_login') }}"
                    title="Enter credentials to log in"
@@ -185,6 +235,7 @@
                     <span>{{ user.name }}</span>
                 </a>
             {% endif %}
+            {# ------------------------------------------------------------- #}
         </div>
 
         {% if user.is_not_anon %}

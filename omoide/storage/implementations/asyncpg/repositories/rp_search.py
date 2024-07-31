@@ -130,6 +130,9 @@ class SearchRepository(_SearchRepositoryBase):
             )
         )
 
+        if only_collections:
+            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+
         stmt = queries.apply_ordering(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
@@ -156,6 +159,9 @@ class SearchRepository(_SearchRepositoryBase):
                 db_models.Item.permissions.any(str(user.uuid)),
             )
         )
+
+        if only_collections:
+            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         stmt = queries.apply_ordering(stmt, order, last_seen)
         stmt = stmt.limit(limit)

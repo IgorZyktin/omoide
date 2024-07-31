@@ -164,6 +164,7 @@ class Aim(BaseModel):
     """Object that describes user's desired output."""
     query: Query
     order: Literal['asc', 'desc', 'random']
+    only_collections: bool
     nested: bool
     paged: bool
     page: int

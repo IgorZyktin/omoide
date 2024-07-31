@@ -73,6 +73,7 @@ async def app_preview(
         ),
         'current_item': result.item,
         'tags': sorted(tags),
+        'block_collections': True,
         'block_ordered': True,
         'block_nested': True,
         'block_paginated': True,
