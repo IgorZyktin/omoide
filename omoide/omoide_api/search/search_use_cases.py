@@ -99,7 +99,7 @@ class ApiSearchTotalUseCase(BaseSearchUseCase):
         minimal_length: int,
         only_collections: bool,
     ) -> tuple[int, float]:
-        """Perform search request."""
+        """Execute."""
         total = 0
         duration = 0.0
 
@@ -122,6 +122,47 @@ class ApiSearchTotalUseCase(BaseSearchUseCase):
         return total, duration
 
 
+class ApiHomeUseCase(BaseAPIUseCase):
+    """Use case for getting home items."""
+
+    async def execute(
+        self,
+        user: models.User,
+        order: Literal['asc', 'desc', 'random'],
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
+        """Perform search request."""
+        start = time.perf_counter()
+        repo = self.mediator.search_repo
+
+        async with self.mediator.storage.transaction():
+            if user.is_anon:
+                items = await repo.get_home_items_for_anon(
+                    user,
+                    order=order,
+                    only_collections=only_collections,
+                    last_seen=last_seen,
+                    limit=limit,
+                )
+
+            else:
+                items = await repo.get_home_items_for_known(
+                    user,
+                    order=order,
+                    only_collections=only_collections,
+                    last_seen=last_seen,
+                    limit=limit,
+                )
+
+            names = await self.mediator.browse_repo.get_parent_names(items)
+
+        duration = time.perf_counter() - start
+
+        return duration, items, [{'parent_name': name} for name in names]
+
+
 class ApiSearchUseCase(BaseSearchUseCase):
     """Use case for search."""
 
@@ -135,7 +176,7 @@ class ApiSearchUseCase(BaseSearchUseCase):
         last_seen: int,
         limit: int,
     ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
-        """Perform search request."""
+        """Execute."""
         duration = 0.0
         items: list[models.Item] = []
         extras: list[dict[str, Any]] = []

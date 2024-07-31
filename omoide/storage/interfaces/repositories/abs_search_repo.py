@@ -32,6 +32,28 @@ class AbsSearchRepository(abc.ABC):
         """Return matching items for search query."""
 
     @abc.abstractmethod
+    async def get_home_items_for_anon(
+        self,
+        user: models.User,
+        only_collections: bool,
+        order: Literal['asc', 'desc', 'random'],
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return home items for anon."""
+
+    @abc.abstractmethod
+    async def get_home_items_for_known(
+        self,
+        user: models.User,
+        only_collections: bool,
+        order: Literal['asc', 'desc', 'random'],
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return home items for known user."""
+
+    @abc.abstractmethod
     async def count_all_tags_anon(self) -> dict[str, int]:
         """Return counters for known tags (anon user)."""
 

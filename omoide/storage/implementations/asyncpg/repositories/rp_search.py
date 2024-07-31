@@ -35,32 +35,18 @@ class _SearchRepositoryBase(
 
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
-        stmt = stmt.where(
-            db_models.ComputedTags.tags.contains(tuple(tags_include)),
-            ~db_models.ComputedTags.tags.overlap(tuple(tags_exclude)),
-        )
+        if tags_include:
+            stmt = stmt.where(
+                db_models.ComputedTags.tags.contains(tuple(tags_include)),
+            )
+
+        if tags_exclude:
+            stmt = stmt.where(
+                ~db_models.ComputedTags.tags.overlap(tuple(tags_exclude)),
+            )
 
         if only_collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
-
-        return stmt
-
-    @staticmethod
-    def _apply_ordering(
-        stmt: Select,
-        order: Literal['asc', 'desc', 'random'],
-        last_seen: int,
-    ) -> Select:
-        """Limit query if user demands it."""
-        if order != 'random' and last_seen >= 0:
-            stmt = stmt.where(db_models.Item.number > last_seen)
-
-        if order == 'asc':
-            stmt = stmt.order_by(db_models.Item.number)
-        elif order == 'desc':
-            stmt = stmt.order_by(sa.desc(db_models.Item.number))
-        else:
-            stmt = stmt.order_by(sa.func.random())
 
         return stmt
 
@@ -115,7 +101,7 @@ class SearchRepository(_SearchRepositoryBase):
             only_collections=only_collections,
         )
 
-        stmt = self._apply_ordering(
+        stmt = queries.apply_ordering(
             stmt=stmt,
             order=order,
             last_seen=last_seen,
@@ -125,6 +111,56 @@ class SearchRepository(_SearchRepositoryBase):
 
         response = await self.db.fetch_all(stmt)
 
+        return [models.Item(**row) for row in response]
+
+    async def get_home_items_for_anon(
+        self,
+        user: models.User,
+        only_collections: bool,
+        order: Literal['asc', 'desc', 'random'],
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return home items for anon."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            db_models.Item.owner_uuid.in_(  # noqa
+                sa.select(db_models.PublicUsers.user_uuid)
+            )
+        )
+
+        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = stmt.limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**row) for row in response]
+
+    async def get_home_items_for_known(
+        self,
+        user: models.User,
+        only_collections: bool,
+        order: Literal['asc', 'desc', 'random'],
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return home items for known user."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            ~db_models.Item.owner_uuid.in_(  # noqa
+                sa.select(db_models.PublicUsers.user_uuid)
+            ),
+            sa.or_(
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.permissions.any(str(user.uuid)),
+            )
+        )
+
+        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = stmt.limit(limit)
+
+        response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
 
     async def count_all_tags_anon(self) -> dict[str, int]:
