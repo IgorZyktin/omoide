@@ -12,7 +12,6 @@ from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 
 from omoide.omoide_app.auth import auth_controllers
-from omoide.omoide_app.home import home_controllers
 from omoide.omoide_app.search import search_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
@@ -73,7 +72,6 @@ def get_app() -> FastAPI:
 def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
     current_app.include_router(auth_controllers.auth_router)
-    current_app.include_router(home_controllers.home_router)
     current_app.include_router(search_controllers.app_search_router)
 
     # Special application routes
@@ -86,7 +84,7 @@ def apply_app_routes(current_app: FastAPI) -> None:
 
     # Application routes
     current_app.include_router(application.app_browse.router)
-    current_app.include_router(application.app_home.router)
+    current_app.include_router(application.app_home.app_home_router)
     current_app.include_router(application.app_item.router)
     current_app.include_router(application.app_preview.router)
     current_app.include_router(application.app_upload.router)

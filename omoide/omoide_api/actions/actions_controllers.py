@@ -73,12 +73,20 @@ async def api_action_rebuild_computed_tags(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    background_tasks.add_task(use_case.execute, admin, item,
-                              job_id, target.including_children)
+    if item is not None:
+        background_tasks.add_task(use_case.execute, admin, item,
+                                  job_id, target.including_children)
+        return {
+            'result': 'Rebuilding computed tags',
+            'target_user': owner.name or str(owner.uuid),
+            'target_item': item.name or str(item.uuid),
+            'job_id': job_id,
+        }
+
     return {
-        'result': 'Rebuilding computed tags',
+        'result': 'Nothing to rebuild',
         'target_user': owner.name or str(owner.uuid),
-        'target_item': item.name or str(item.uuid),
+        'target_item': None,
         'job_id': job_id,
     }
 

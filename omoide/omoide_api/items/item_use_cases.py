@@ -57,7 +57,7 @@ class DeleteItemUseCase(BaseAPIUseCase):
 
             affected_users = []
             if item.owner_uuid != user.uuid:
-                owner = await self.mediator.users_repo.read_user(
+                owner = await self.mediator.users_repo.get_user(
                     uuid=item.owner_uuid,
                 )
                 affected_users.append(owner)

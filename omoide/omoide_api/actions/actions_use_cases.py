@@ -2,6 +2,7 @@
 import abc
 import asyncio
 import time
+from typing import Any
 from uuid import UUID
 
 from omoide import const
@@ -96,6 +97,7 @@ class RebuildKnownTagsUseCase(BaseRebuildTagsUseCase):
     ) -> tuple[models.User | None, int]:
         """Prepare for execution."""
         self.ensure_admin(admin, subject=self.affected_target)
+        extras: dict[str, Any] = {}
 
         async with self.mediator.storage.transaction():
             if target is None:
@@ -106,7 +108,7 @@ class RebuildKnownTagsUseCase(BaseRebuildTagsUseCase):
                 )
                 target_user = None
                 user_uuid = None
-                extras = {'target_user_uuid': None}
+                extras.update({'target_user_uuid': None})
 
             else:
                 target_user = await self.mediator.users_repo.get_user(target)
@@ -117,7 +119,7 @@ class RebuildKnownTagsUseCase(BaseRebuildTagsUseCase):
                     target_user,
                 )
                 user_uuid = target_user.uuid
-                extras = {'target_user_uuid': str(target_user.uuid)}
+                extras.update({'target_user_uuid': str(target_user.uuid)})
 
             job_id = await self.mediator.misc_repo.start_long_job(
                 name='rebuilding-of-known-tags',
@@ -193,13 +195,16 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
         self,
         admin: models.User,
         user_uuid: UUID,
-    ) -> tuple[models.User, models.Item, int]:
+    ) -> tuple[models.User, models.Item | None, int]:
         """Prepare for execution."""
         self.ensure_admin(admin, subject=self.affected_target)
 
         async with self.mediator.storage.transaction():
             owner = await self.mediator.users_repo.get_user(user_uuid)
             item = await self.mediator.items_repo.read_root_item(owner)
+
+            if item is None:
+                return owner, None, -1
 
             LOG.info(
                 'User {} is rebuilding {} for item {} (owner is {})',

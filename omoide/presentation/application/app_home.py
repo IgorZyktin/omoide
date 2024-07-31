@@ -14,17 +14,17 @@ from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
-router = fastapi.APIRouter()
+app_home_router = fastapi.APIRouter()
 
 
-@router.get('/')
+@app_home_router.get('/')
 async def app_home(
-        request: Request,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: models.User = fastapi.Depends(dep.get_current_user),
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: Type[Response] = HTMLResponse,
 ):
     """Home endpoint for user."""
     context = {
@@ -33,6 +33,7 @@ async def app_home(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_paginated': True,
+        'block_nested': True,
         'api_url': request.url_for('api_home'),
     }
     return templates.TemplateResponse('home.html', context)
