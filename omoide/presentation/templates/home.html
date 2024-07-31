@@ -11,7 +11,7 @@
     <script>
         $(document).ready(function () {
             let container = document.querySelector('.envelope-container')
-            let endpoint = '{{ api_url }}'
+            let endpoint = '{{ endpoint }}'
             let scroller = new Scroller(container, endpoint)
             let callback = function () {
                 scroller.trigger()
