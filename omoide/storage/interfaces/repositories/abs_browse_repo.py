@@ -95,15 +95,6 @@ class AbsBrowseRepository(abc.ABC):
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
 
-    # FIXME - delete this method
-    @abc.abstractmethod
-    async def get_recent_items(
-        self,
-        user: models.User,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Return portion of recently loaded items."""
-
     @abc.abstractmethod
     async def get_recently_updated_items(
         self,

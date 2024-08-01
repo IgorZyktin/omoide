@@ -13,17 +13,10 @@ from typing import Optional
 from typing import TypeVar
 from uuid import UUID
 
-from uuid import uuid4
-
 
 def now() -> datetime.datetime:
     """Return current moment in time with timezone."""
     return datetime.datetime.now(tz=datetime.timezone.utc)
-
-
-def generate_uuid() -> UUID:
-    """Generate new UUID4."""
-    return uuid4()
 
 
 def get_bucket(uuid: UUID | str, length: int = 2) -> str:
@@ -187,35 +180,6 @@ def human_readable_time(seconds: int) -> str:
     return string
 
 
-def no_longer_than(string: str, max_len: int, fill: str = '...') -> str:
-    """Trim string if it is too long.
-
-    >>> no_longer_than('some long text', max_len=5)
-    'so...'
-
-    >>> no_longer_than('some long text', max_len=10)
-    'some lo...'
-
-    >>> no_longer_than('some long text', max_len=2)
-    'so'
-
-    >>> no_longer_than('short text', max_len=200)
-    'short text'
-    """
-    max_len = max(0, max_len)
-
-    if max_len > len(fill):
-        trim_to = max_len - len(fill)
-        fill_with = fill
-    else:
-        trim_to = max_len
-        fill_with = ''
-
-    if trim_to < len(string):
-        return string[:trim_to] + fill_with
-    return string
-
-
 def group_to_size(iterable: Iterable, group_size: int = 2,
                   default: Any = '?') -> Iterator[tuple]:
     """Return contents of the iterable grouped in blocks of given size.
@@ -228,21 +192,7 @@ def group_to_size(iterable: Iterable, group_size: int = 2,
     return zip_longest(*[iter(iterable)] * group_size, fillvalue=default)
 
 
-def maybe_str(string: Any | None) -> str:
-    """Type safe string operation."""
-    if string is None:
-        return ''
-    return str(string)
-
-
 T = TypeVar('T')
-
-
-def maybe_take(value_in: Optional[T], default: T) -> T:
-    """Safely exchange values."""
-    if value_in is None:
-        return default
-    return value_in
 
 
 def get_delta(

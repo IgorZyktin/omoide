@@ -167,16 +167,6 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             thumbnail_size=response['thumbnail_size'] or 0,
         )
 
-    async def user_is_public(self, uuid: UUID) -> bool:
-        """Return True if given user is public."""
-        stmt = sa.select(
-            db_models.PublicUsers.user_uuid
-        ).where(
-            db_models.PublicUsers.user_uuid == uuid
-        )
-        response = await self.db.fetch_one(stmt)
-        return response is not None
-
     async def get_public_users_uuids(self) -> set[UUID]:
         """Return set of UUIDs of public users."""
         stmt = sa.select(db_models.PublicUsers.user_uuid)

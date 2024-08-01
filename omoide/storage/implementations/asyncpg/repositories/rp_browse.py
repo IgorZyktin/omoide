@@ -433,63 +433,6 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**x) for x in response]
 
-    # FIXME - delete this method
-    async def get_recent_items(
-        self,
-        user: models.User,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Return portion of recently loaded items."""
-        # TODO - rewrite to sqlalchemy
-        stmt = """
-        WITH valid_items AS (
-            SELECT uuid,
-                   parent_uuid,
-                   owner_uuid,
-                   number,
-                   name,
-                   is_collection,
-                   content_ext,
-                   preview_ext,
-                   thumbnail_ext,
-                   tags,
-                   permissions,
-                   me.created_at
-            FROM items
-            LEFT JOIN metainfo me on uuid = me.item_uuid
-            WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
-                OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
-        )
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext,
-               tags,
-               permissions
-        FROM valid_items
-        WHERE
-            date(valid_items.created_at) = (
-                SELECT max(date(created_at)) FROM valid_items
-            )
-            AND number > :last_seen
-            ORDER BY number
-            OFFSET :offset
-            LIMIT :limit;
-        """
-        values = {
-            'user_uuid': str(user.uuid),
-            'last_seen': aim.last_seen,
-            'limit': aim.items_per_page,
-            'offset': aim.offset,
-        }
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
-
     async def get_recently_updated_items(
         self,
         user: models.User,
