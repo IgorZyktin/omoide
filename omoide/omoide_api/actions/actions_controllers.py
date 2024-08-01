@@ -13,10 +13,10 @@ from omoide.omoide_api.actions import actions_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-actions_router = APIRouter(prefix='/actions', tags=['Actions'])
+api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 
 
-@actions_router.post(
+@api_actions_router.post(
     '/rebuild_known_tags',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str | None],
@@ -47,7 +47,7 @@ async def api_action_rebuild_known_tags(
     }
 
 
-@actions_router.post(
+@api_actions_router.post(
     '/rebuild_computed_tags',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str | None],
@@ -91,7 +91,7 @@ async def api_action_rebuild_computed_tags(
     }
 
 
-@actions_router.post(
+@api_actions_router.post(
     '/copy_image',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],

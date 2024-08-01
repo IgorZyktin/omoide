@@ -6,15 +6,16 @@ import sqlalchemy as sa
 from sqlalchemy import cast
 from sqlalchemy.dialects import postgresql as pg
 
+from omoide import const
 from omoide import domain
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
 from omoide.storage.database import db_models
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 from omoide.storage.implementations.asyncpg.repositories import queries
 from omoide.storage.implementations.asyncpg.repositories.rp_items import (
     ItemsRepo
 )
+from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 
 
 class BrowseRepository(
@@ -24,10 +25,10 @@ class BrowseRepository(
     """Repository that performs all browse queries."""
 
     async def get_children(
-            self,
-            user: models.User,
-            uuid: UUID,
-            aim: domain.Aim,
+        self,
+        user: models.User,
+        uuid: UUID,
+        aim: domain.Aim,
     ) -> list[domain.Item]:
         """Load all children of an item with given UUID."""
         stmt = sa.select(
@@ -50,9 +51,9 @@ class BrowseRepository(
         return [domain.Item(**x) for x in response]
 
     async def count_children(
-            self,
-            user: models.User,
-            uuid: UUID,
+        self,
+        user: models.User,
+        uuid: UUID,
     ) -> int:
         """Count all children of an item with given UUID."""
         stmt = sa.select(
@@ -69,11 +70,11 @@ class BrowseRepository(
         return int(response['total_items'])
 
     async def get_location(
-            self,
-            user: models.User,
-            uuid: UUID,
-            aim: domain.Aim,
-            users_repo: AbsUsersRepo,
+        self,
+        user: models.User,
+        uuid: UUID,
+        aim: domain.Aim,
+        users_repo: AbsUsersRepo,
     ) -> Optional[domain.Location]:
         """Return Location of the item."""
         current_item = await self.read_item(uuid)
@@ -99,10 +100,10 @@ class BrowseRepository(
         )
 
     async def get_complex_ancestors(
-            self,
-            user: models.User,
-            item: domain.Item,
-            aim: domain.Aim,
+        self,
+        user: models.User,
+        item: domain.Item,
+        aim: domain.Aim,
     ) -> list[domain.PositionedItem]:
         """Return list of positioned ancestors of given item."""
         ancestors = []
@@ -132,11 +133,11 @@ class BrowseRepository(
         return ancestors
 
     async def get_item_with_position(
-            self,
-            user: models.User,
-            item_uuid: UUID,
-            child_uuid: UUID,
-            aim: domain.Aim,
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        child_uuid: UUID,
+        aim: domain.Aim,
     ) -> Optional[domain.PositionedItem]:
         """Return item with its position in siblings."""
         # TODO - rewrite to sqlalchemy
@@ -215,218 +216,222 @@ class BrowseRepository(
             item=domain.Item(**response),
         )
 
-    async def simple_find_items_to_browse(
-            self,
-            user: models.User,
-            uuid: Optional[UUID],
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items using simple request."""
+    async def browse_nested_anon(
+        self,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (only direct)."""
         stmt = sa.select(
             db_models.Item
+        ).where(
+            db_models.Item.owner_uuid.in_(  # noqa
+                sa.select(db_models.PublicUsers.user_uuid)
+            ),
+            db_models.Item.parent_uuid == item_uuid,
         )
 
-        stmt = queries.ensure_user_has_permissions(user, stmt)
+        if only_collections:
+            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
-        if aim.nested:
-            stmt = stmt.where(
-                db_models.Item.parent_uuid == uuid
-            )
-
-        if aim.only_collections:
-            stmt = stmt.where(
-                db_models.Item.is_collection == True  # noqa
-            )
-
-        if aim.order == 'asc':
-            stmt = stmt.where(
-                db_models.Item.number > aim.last_seen
-            ).order_by(
-                db_models.Item.number
-            )
-        elif aim.order == 'desc':
-            stmt = stmt.where(
-                db_models.Item.number < aim.last_seen
-            ).order_by(
-                db_models.Item.number
-            )
-        else:
-            stmt = stmt.order_by(sa.func.random())
-
-        stmt = stmt.limit(aim.items_per_page)
+        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
-    async def complex_find_items_to_browse(
-            self,
-            user: models.User,
-            uuid: Optional[UUID],
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items to browse depending on parent (including inheritance)."""
+    async def browse_nested_known(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (only direct)."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            ~db_models.Item.owner_uuid.in_(  # noqa
+                sa.select(db_models.PublicUsers.user_uuid)
+            ),
+            sa.or_(
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.permissions.any(str(user.uuid)),
+            ),
+            db_models.Item.parent_uuid == item_uuid,
+        )
+
+        if only_collections:
+            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+
+        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = stmt.limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**x) for x in response]
+
+    async def browse_all_anon(
+        self,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (all children)."""
+        stmt = """
+    WITH RECURSIVE nested_items AS
+           (SELECT items.uuid          AS uuid,
+                   items.parent_uuid   AS parent_uuid,
+                   items.owner_uuid    AS owner_uuid,
+                   items.number        AS number,
+                   items.name          AS name,
+                   items.is_collection AS is_collection,
+                   items.content_ext   AS content_ext,
+                   items.preview_ext   AS preview_ext,
+                   items.thumbnail_ext AS thumbnail_ext,
+                   items.tags          AS tags,
+                   items.permissions   AS permissions
+            FROM items
+            WHERE items.parent_uuid = CAST(:item_uuid AS uuid)
+            UNION
+            SELECT items.uuid          AS uuid,
+                   items.parent_uuid   AS parent_uuid,
+                   items.owner_uuid    AS owner_uuid,
+                   items.number        AS number,
+                   items.name          AS name,
+                   items.is_collection AS is_collection,
+                   items.content_ext   AS content_ext,
+                   items.preview_ext   AS preview_ext,
+                   items.thumbnail_ext AS thumbnail_ext,
+                   items.tags          AS tags,
+                   items.permissions   AS permissions
+            FROM items
+                     INNER JOIN nested_items
+                                ON items.parent_uuid = nested_items.uuid)
+    SELECT uuid,
+           parent_uuid,
+           owner_uuid,
+           number,
+           name,
+           is_collection,
+           content_ext,
+           preview_ext,
+           thumbnail_ext,
+           tags,
+           permissions
+    FROM nested_items
+    WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+                """
         values = {
-            'uuid': str(uuid),
-            'limit': aim.items_per_page,
+            'item_uuid': str(item_uuid),
+            'limit': limit,
         }
 
-        # TODO - rewrite to sqlalchemy
-        if user.is_anon:
-            stmt = """
-WITH RECURSIVE nested_items AS
-       (SELECT items.uuid          AS uuid,
-               items.parent_uuid   AS parent_uuid,
-               items.owner_uuid    AS owner_uuid,
-               items.number        AS number,
-               items.name          AS name,
-               items.is_collection AS is_collection,
-               items.content_ext   AS content_ext,
-               items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext
-        FROM items
-        WHERE items.parent_uuid = CAST(:uuid AS uuid)
-        UNION
-        SELECT items.uuid          AS uuid,
-               items.parent_uuid   AS parent_uuid,
-               items.owner_uuid    AS owner_uuid,
-               items.number        AS number,
-               items.name          AS name,
-               items.is_collection AS is_collection,
-               items.content_ext   AS content_ext,
-               items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext
-        FROM items
-                 INNER JOIN nested_items
-                            ON items.parent_uuid = nested_items.uuid)
-SELECT uuid,
-       parent_uuid,
-       owner_uuid,
-       number,
-       name,
-       is_collection,
-       content_ext,
-       preview_ext,
-       thumbnail_ext
-FROM nested_items
-WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-            """
-        else:
-            stmt = """
-WITH RECURSIVE nested_items AS
-       (SELECT items.uuid          AS uuid,
-               items.parent_uuid   AS parent_uuid,
-               items.owner_uuid    AS owner_uuid,
-               items.number        AS number,
-               items.name          AS name,
-               items.is_collection AS is_collection,
-               items.content_ext   AS content_ext,
-               items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext,
-               items.permissions   AS permissions
-        FROM items
-        WHERE items.parent_uuid = CAST(:uuid AS uuid)
-        UNION
-        SELECT items.uuid          AS uuid,
-               items.parent_uuid   AS parent_uuid,
-               items.owner_uuid    AS owner_uuid,
-               items.number        AS number,
-               items.name          AS name,
-               items.is_collection AS is_collection,
-               items.content_ext   AS content_ext,
-               items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext,
-               items.permissions   AS permissions
-        FROM items
-                 INNER JOIN nested_items
-                            ON items.parent_uuid = nested_items.uuid)
-SELECT uuid,
-       parent_uuid,
-       owner_uuid,
-       number,
-       name,
-       is_collection,
-       content_ext,
-       preview_ext,
-       thumbnail_ext,
-       permissions
-FROM nested_items
-WHERE (owner_uuid = CAST(:user_uuid AS uuid)
-    OR CAST(:user_uuid AS TEXT) = ANY(permissions))
-            """
-            values['user_uuid'] = str(user.uuid)
+        if only_collections:
+            stmt += ' AND is_collection = True'
 
-        if aim.order == 'asc':
+        if order == const.ASC:
             stmt += ' AND number > :last_seen'
             stmt += ' ORDER BY number'
-            values['last_seen'] = aim.last_seen
-        elif aim.order == 'desc':
+            values['last_seen'] = last_seen
+        elif order == const.DESC:
             stmt += ' AND number < :last_seen'
             stmt += ' ORDER BY number'
-            values['last_seen'] = aim.last_seen
+            values['last_seen'] = last_seen
         else:
             stmt += ' ORDER BY random()'
 
         stmt += ' LIMIT :limit;'
 
         response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
-    # FIXME - delete this method
-    async def get_recent_items(
-            self,
-            user: models.User,
-            aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Return portion of recently loaded items."""
-        # TODO - rewrite to sqlalchemy
+    async def browse_all_known(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (all children)."""
         stmt = """
-        WITH valid_items AS (
-            SELECT uuid,
-                   parent_uuid,
-                   owner_uuid,
-                   number,
-                   name,
-                   is_collection,
-                   content_ext,
-                   preview_ext,
-                   thumbnail_ext,
-                   tags,
-                   permissions,
-                   me.created_at
+    WITH RECURSIVE nested_items AS
+           (SELECT items.uuid          AS uuid,
+                   items.parent_uuid   AS parent_uuid,
+                   items.owner_uuid    AS owner_uuid,
+                   items.number        AS number,
+                   items.name          AS name,
+                   items.is_collection AS is_collection,
+                   items.content_ext   AS content_ext,
+                   items.preview_ext   AS preview_ext,
+                   items.thumbnail_ext AS thumbnail_ext,
+                   items.tags          AS tags,
+                   items.permissions   AS permissions
             FROM items
-            LEFT JOIN metainfo me on uuid = me.item_uuid
-            WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
-                OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
-        )
-        SELECT uuid,
-               parent_uuid,
-               owner_uuid,
-               number,
-               name,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext,
-               tags,
-               permissions
-        FROM valid_items
-        WHERE
-            date(valid_items.created_at) = (
-                SELECT max(date(created_at)) FROM valid_items
-            )
-            AND number > :last_seen
-            ORDER BY number
-            OFFSET :offset
-            LIMIT :limit;
-        """
+            WHERE items.parent_uuid = CAST(:item_uuid AS uuid)
+            UNION
+            SELECT items.uuid          AS uuid,
+                   items.parent_uuid   AS parent_uuid,
+                   items.owner_uuid    AS owner_uuid,
+                   items.number        AS number,
+                   items.name          AS name,
+                   items.is_collection AS is_collection,
+                   items.content_ext   AS content_ext,
+                   items.preview_ext   AS preview_ext,
+                   items.thumbnail_ext AS thumbnail_ext,
+                   items.tags          AS tags,
+                   items.permissions   AS permissions
+            FROM items
+                     INNER JOIN nested_items
+                                ON items.parent_uuid = nested_items.uuid)
+    SELECT uuid,
+           parent_uuid,
+           owner_uuid,
+           number,
+           name,
+           is_collection,
+           content_ext,
+           preview_ext,
+           thumbnail_ext,
+           tags,
+           permissions
+    FROM nested_items
+    WHERE owner_uuid NOT IN (SELECT user_uuid FROM public_users)
+        AND ((owner_uuid = CAST(:user_uuid AS uuid)
+              OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
+                """
         values = {
             'user_uuid': str(user.uuid),
-            'last_seen': aim.last_seen,
-            'limit': aim.items_per_page,
-            'offset': aim.offset,
+            'item_uuid': str(item_uuid),
+            'limit': limit,
         }
+
+        if only_collections:
+            stmt += ' AND is_collection = True'
+
+        if order == const.ASC:
+            stmt += ' AND number > :last_seen'
+            stmt += ' ORDER BY number'
+            values['last_seen'] = last_seen
+        elif order == const.DESC:
+            stmt += ' AND number < :last_seen'
+            stmt += ' ORDER BY number'
+            values['last_seen'] = last_seen
+        else:
+            stmt += ' ORDER BY random()'
+
+        stmt += ' LIMIT :limit;'
+
         response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def get_recently_updated_items(
         self,
@@ -484,8 +489,8 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
 
     # FIXME - delete this method
     async def get_parents_names(
-            self,
-            items: list[domain.Item],
+        self,
+        items: list[domain.Item],
     ) -> list[Optional[str]]:
         """Get names of parents of the given items."""
         uuids = [

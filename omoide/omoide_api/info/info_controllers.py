@@ -9,10 +9,10 @@ from omoide import const
 from omoide import models
 from omoide.presentation import dependencies as dep
 
-info_router = APIRouter(prefix='/info', tags=['Info'])
+api_info_router = APIRouter(prefix='/info', tags=['Info'])
 
 
-@info_router.get(
+@api_info_router.get(
     '/version',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, str],
@@ -22,7 +22,7 @@ async def api_get_version():
     return {'version': const.VERSION}
 
 
-@info_router.get(
+@api_info_router.get(
     '/whoami',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, str | None],

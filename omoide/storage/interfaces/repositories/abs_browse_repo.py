@@ -2,6 +2,7 @@
 import abc
 from uuid import UUID
 
+from omoide import const
 from omoide import domain
 from omoide import models
 from omoide.domain import common
@@ -49,31 +50,50 @@ class AbsBrowseRepository(abc.ABC):
         """Return item with its position in siblings."""
 
     @abc.abstractmethod
-    async def simple_find_items_to_browse(
+    async def browse_nested_anon(
         self,
-        user: models.User,
-        uuid: UUID | None,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items to browse depending on parent (simple)."""
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (only direct)."""
 
     @abc.abstractmethod
-    async def complex_find_items_to_browse(
+    async def browse_nested_known(
         self,
         user: models.User,
-        uuid: UUID | None,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Find items to browse depending on parent (including inheritance)."""
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (only direct)."""
 
-    # FIXME - delete this method
     @abc.abstractmethod
-    async def get_recent_items(
+    async def browse_all_anon(
+        self,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (all children)."""
+
+    @abc.abstractmethod
+    async def browse_all_known(
         self,
         user: models.User,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Return portion of recently loaded items."""
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (all children)."""
 
     @abc.abstractmethod
     async def get_recently_updated_items(

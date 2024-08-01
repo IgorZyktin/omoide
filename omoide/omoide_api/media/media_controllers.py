@@ -11,10 +11,10 @@ from omoide.omoide_api.media import media_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-media_router = APIRouter(prefix='/media', tags=['Media'])
+api_media_router = APIRouter(prefix='/media', tags=['Media'])
 
 
-@media_router.delete(
+@api_media_router.delete(
     '',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int],

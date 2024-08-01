@@ -21,11 +21,11 @@ from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
-auth_router = fastapi.APIRouter()
+app_auth_router = fastapi.APIRouter()
 security = HTTPBasic(realm='omoide')
 
 
-@auth_router.get('/login')
+@app_auth_router.get('/login')
 async def app_login(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
@@ -62,7 +62,7 @@ async def app_login(
     return RedirectResponse(url)
 
 
-@auth_router.get('/logout')
+@app_auth_router.get('/logout')
 async def app_logout(
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],

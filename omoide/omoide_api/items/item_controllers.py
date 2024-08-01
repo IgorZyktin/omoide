@@ -14,10 +14,10 @@ from omoide.omoide_api.items import item_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-items_router = APIRouter(prefix='/items', tags=['Items'])
+api_items_router = APIRouter(prefix='/items', tags=['Items'])
 
 
-@items_router.get(
+@api_items_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
     response_model=item_api_models.ItemOutput,
@@ -39,7 +39,7 @@ async def api_read_item(
     return item_api_models.ItemOutput(**item.model_dump())
 
 
-@items_router.delete(
+@api_items_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
@@ -67,7 +67,7 @@ async def api_delete_item(
     }
 
 
-@items_router.put(
+@api_items_router.put(
     '/{item_uuid}/content',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int],
@@ -102,7 +102,7 @@ async def api_upload_item_content(
     }
 
 
-@items_router.put(
+@api_items_router.put(
     '/{item_uuid}/preview',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int],
@@ -137,7 +137,7 @@ async def api_upload_item_preview(
     }
 
 
-@items_router.put(
+@api_items_router.put(
     '/{item_uuid}/thumbnail',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int],

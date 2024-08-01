@@ -484,17 +484,6 @@ def api_item_update_parent_use_case(
     )
 
 
-@utils.memorize
-def api_browse_use_case(
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-) -> use_cases.APIBrowseUseCase:
-    """Get use case instance."""
-    return use_cases.APIBrowseUseCase(
-        browse_repo=browse_repository,
-    )
-
-
 # app profile related use cases -----------------------------------------------
 
 

@@ -15,10 +15,10 @@ from omoide.omoide_api.exif import exif_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
+api_exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
 
 
-@exif_router.post(
+@api_exif_router.post(
     '/{item_uuid}',
     status_code=status.HTTP_201_CREATED,
     response_model=dict[str, str],
@@ -47,7 +47,7 @@ async def api_create_exif(
     return {'result': f'Created EXIF for the item {item_uuid}'}
 
 
-@exif_router.get(
+@api_exif_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
     response_model=exif_api_models.EXIFModel,
@@ -69,7 +69,7 @@ async def api_read_exif(
     return exif_api_models.EXIFModel(exif=exif)
 
 
-@exif_router.put(
+@api_exif_router.put(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
@@ -94,7 +94,7 @@ async def api_update_exif(
     return {'result': f'Updated EXIF for item {item_uuid}'}
 
 
-@exif_router.delete(
+@api_exif_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],

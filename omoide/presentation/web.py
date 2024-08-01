@@ -272,41 +272,6 @@ class AimWrapper:
         return self.to_url(**kwargs)
 
 
-def items_to_dict(
-    request: Request,
-    items: list[domain.Item],
-    names: list[Optional[str]],
-) -> list[domain.SimpleItem]:
-    """Convert items to JSON compatible dicts."""
-    empty_thumbnail = request.url_for('static', path='empty.png')
-
-    simple_items: list[domain.SimpleItem] = []
-
-    for name, item in zip(names, items):
-        if item.is_collection:
-            href = request.url_for('app_browse', uuid=item.uuid)
-        else:
-            href = request.url_for('app_preview', uuid=item.uuid)
-
-        if item.thumbnail_ext is None:
-            thumbnail = empty_thumbnail
-        else:
-            thumbnail = get_thumbnail_href(request, item)
-
-        simple_item = domain.SimpleItem(
-            uuid=str(item.uuid),
-            parent_name=name,
-            name=item.name,
-            is_collection=item.is_collection,
-            href=str(href),
-            number=item.number,
-            thumbnail=thumbnail,  # type: ignore
-        )
-        simple_items.append(simple_item)
-
-    return simple_items
-
-
 def _get_href(request: Request, item: domain.Item) -> str:
     """Return base for HREF formation."""
     base = request.scope.get('root_path')

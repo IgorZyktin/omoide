@@ -61,9 +61,5 @@ class AbsUsersRepo(abc.ABC):
         """Return total amount of used space for user."""
 
     @abc.abstractmethod
-    async def user_is_public(self, uuid: UUID) -> bool:
-        """Return True if given user is public."""
-
-    @abc.abstractmethod
     async def get_public_users_uuids(self) -> set[UUID]:
         """Return set of UUIDs for public users."""

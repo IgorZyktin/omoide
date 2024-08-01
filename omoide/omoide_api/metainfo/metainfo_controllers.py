@@ -13,10 +13,10 @@ from omoide.omoide_api.metainfo import metainfo_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
+api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 
 
-@metainfo_router.get(
+@api_metainfo_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
     response_model=metainfo_api_models.MetainfoOutput,
@@ -47,7 +47,7 @@ async def api_read_metainfo(
     )
 
 
-@metainfo_router.put(
+@api_metainfo_router.put(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],

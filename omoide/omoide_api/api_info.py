@@ -16,6 +16,10 @@ TAGS_METADATA = [
         'description': 'Operations with user search requests.',
     },
     {
+        'name': 'Browse',
+        'description': 'Requesting items in a tailored way.',
+    },
+    {
         'name': 'Users',
         'description': 'Operations with users.',
     },

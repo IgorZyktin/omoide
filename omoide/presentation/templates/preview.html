@@ -49,7 +49,7 @@
                         <p>{{ item.name }}</p>
                     {%- endif -%}
 
-                    <a href="{{ request.url_for('app_browse', uuid=item.uuid) }}?{{ aim_wrapper.to_url_no_q(page=1) }}">
+                    <a href="{{ request.url_for('app_browse', item_uuid=item.uuid) }}?{{ aim_wrapper.to_url_no_q(page=1) }}">
                         {%- if item.thumbnail_ext is none -%}
                             <img src="{{ request.url_for('static', path='empty.png') }}"
                                  alt="{{ item.name }}"/>

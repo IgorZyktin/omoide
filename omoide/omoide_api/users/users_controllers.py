@@ -14,10 +14,10 @@ from omoide.omoide_api.users import users_use_cases
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
-users_router = APIRouter(prefix='/users', tags=['Users'])
+api_users_router = APIRouter(prefix='/users', tags=['Users'])
 
 
-@users_router.post(
+@api_users_router.post(
     '',
     status_code=status.HTTP_201_CREATED,
     response_model=users_api_models.UserOutput,
@@ -45,7 +45,7 @@ async def api_create_user(
     )
 
 
-@users_router.get(
+@api_users_router.get(
     '',
     status_code=status.HTTP_200_OK,
     response_model=users_api_models.UserCollectionOutput,
@@ -79,7 +79,7 @@ async def api_get_all_users(
     }
 
 
-@users_router.get(
+@api_users_router.get(
     '/{uuid}/resource_usage',
     status_code=status.HTTP_200_OK,
     response_model=users_api_models.UserResourceUsageOutput,
@@ -111,7 +111,7 @@ async def api_get_user_resource_usage(
     )
 
 
-@users_router.get(
+@api_users_router.get(
     '/anon/known_tags',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
@@ -131,7 +131,7 @@ async def api_get_anon_tags(
     return tags
 
 
-@users_router.get(
+@api_users_router.get(
     '/{uuid}/known_tags',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
@@ -153,7 +153,7 @@ async def api_get_user_tags(
     return tags
 
 
-@users_router.get(
+@api_users_router.get(
     '/{uuid}',
     status_code=status.HTTP_200_OK,
     response_model=users_api_models.UserOutput,
@@ -178,7 +178,7 @@ async def api_get_user_by_uuid(
     )
 
 
-@users_router.put(
+@api_users_router.put(
     '/{uuid}/name',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=users_api_models.UserOutput,
@@ -204,7 +204,7 @@ async def api_change_user_name(
     )
 
 
-@users_router.put(
+@api_users_router.put(
     '/{uuid}/login',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=users_api_models.UserOutput,
@@ -230,7 +230,7 @@ async def api_change_user_login(
     )
 
 
-@users_router.put(
+@api_users_router.put(
     '/{uuid}/password',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=users_api_models.UserOutput,
