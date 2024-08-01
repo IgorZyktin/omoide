@@ -1,10 +1,12 @@
 """Browse repository."""
+from typing import Literal
 from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy import cast
 from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.sql import Select
 
 from omoide import domain
 from omoide import models
@@ -222,10 +224,7 @@ class BrowseRepository(
             aim: domain.Aim,
     ) -> list[domain.Item]:
         """Find items using simple request."""
-        stmt = sa.select(
-            db_models.Item
-        )
-
+        stmt = sa.select(db_models.Item)
         stmt = queries.ensure_user_has_permissions(user, stmt)
 
         if aim.nested:
@@ -253,21 +252,22 @@ class BrowseRepository(
         else:
             stmt = stmt.order_by(sa.func.random())
 
-        stmt = stmt.limit(aim.items_per_page)
+        stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def complex_find_items_to_browse(
             self,
             user: models.User,
-            uuid: Optional[UUID],
+            item_uuid: Optional[UUID],
             aim: domain.Aim,
+            limit: int,
     ) -> list[domain.Item]:
         """Find items to browse depending on parent (including inheritance)."""
         values = {
-            'uuid': str(uuid),
-            'limit': aim.items_per_page,
+            'uuid': str(item_uuid),
+            'limit': limit,
         }
 
         # TODO - rewrite to sqlalchemy
@@ -282,7 +282,9 @@ WITH RECURSIVE nested_items AS
                items.is_collection AS is_collection,
                items.content_ext   AS content_ext,
                items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext
+               items.thumbnail_ext AS thumbnail_ext,
+               items.tags          AS tags,
+               items.permissions   AS permissions
         FROM items
         WHERE items.parent_uuid = CAST(:uuid AS uuid)
         UNION
@@ -294,7 +296,9 @@ WITH RECURSIVE nested_items AS
                items.is_collection AS is_collection,
                items.content_ext   AS content_ext,
                items.preview_ext   AS preview_ext,
-               items.thumbnail_ext AS thumbnail_ext
+               items.thumbnail_ext AS thumbnail_ext,
+               items.tags          AS tags,
+               items.permissions   AS permissions
         FROM items
                  INNER JOIN nested_items
                             ON items.parent_uuid = nested_items.uuid)
@@ -306,7 +310,9 @@ SELECT uuid,
        is_collection,
        content_ext,
        preview_ext,
-       thumbnail_ext
+       thumbnail_ext,
+       tags,
+       permissions
 FROM nested_items
 WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
             """
@@ -322,6 +328,7 @@ WITH RECURSIVE nested_items AS
                items.content_ext   AS content_ext,
                items.preview_ext   AS preview_ext,
                items.thumbnail_ext AS thumbnail_ext,
+               items.tags          AS tags,
                items.permissions   AS permissions
         FROM items
         WHERE items.parent_uuid = CAST(:uuid AS uuid)
@@ -335,6 +342,7 @@ WITH RECURSIVE nested_items AS
                items.content_ext   AS content_ext,
                items.preview_ext   AS preview_ext,
                items.thumbnail_ext AS thumbnail_ext,
+               items.tags          AS tags,
                items.permissions   AS permissions
         FROM items
                  INNER JOIN nested_items
@@ -348,6 +356,7 @@ SELECT uuid,
        content_ext,
        preview_ext,
        thumbnail_ext,
+       tags,
        permissions
 FROM nested_items
 WHERE (owner_uuid = CAST(:user_uuid AS uuid)
@@ -369,7 +378,7 @@ WHERE (owner_uuid = CAST(:user_uuid AS uuid)
         stmt += ' LIMIT :limit;'
 
         response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     # FIXME - delete this method
     async def get_recent_items(

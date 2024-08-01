@@ -1,5 +1,6 @@
 """Repository that performs all browse queries."""
 import abc
+from typing import Literal
 from uuid import UUID
 
 from omoide import domain
@@ -49,21 +50,25 @@ class AbsBrowseRepository(abc.ABC):
         """Return item with its position in siblings."""
 
     @abc.abstractmethod
-    async def simple_find_items_to_browse(
+    async def simple_browse(
         self,
         user: models.User,
-        uuid: UUID | None,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
+        item_uuid: UUID,
+        ordering: Literal['asc', 'desc', 'random'],
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
         """Find items to browse depending on parent (simple)."""
 
     @abc.abstractmethod
-    async def complex_find_items_to_browse(
+    async def complex_browse(
         self,
         user: models.User,
-        uuid: UUID | None,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
+        item_uuid: UUID,
+        ordering: Literal['asc', 'desc', 'random'],
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
         """Find items to browse depending on parent (including inheritance)."""
 
     # FIXME - delete this method

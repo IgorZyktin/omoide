@@ -61,7 +61,7 @@ async def app_browse(
         'names': names,
         'aim_wrapper': aim_wrapper,
         'location': result.location,
-        'api_url': request.url_for('api_browse', uuid=uuid),
+        'api_url': request.url_for('api_browse', item_uuid=uuid),
         'result': result,
         'current_item': result.item,
         'metainfo': result.metainfo,

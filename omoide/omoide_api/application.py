@@ -9,6 +9,7 @@ from fastapi import Request
 from omoide import const
 from omoide.omoide_api import api_info
 from omoide.omoide_api.actions import actions_controllers
+from omoide.omoide_api.browse import browse_controllers
 from omoide.omoide_api.exif import exif_controllers
 from omoide.omoide_api.info import info_controllers
 from omoide.omoide_api.items import item_controllers
@@ -55,6 +56,7 @@ def apply_api_routes(current_api: FastAPI) -> None:
     """Register API routes."""
     api_router_v1 = APIRouter(prefix='/v1')
     api_router_v1.include_router(actions_controllers.actions_router)
+    api_router_v1.include_router(browse_controllers.browse_router)
     api_router_v1.include_router(exif_controllers.exif_router)
     api_router_v1.include_router(info_controllers.info_router)
     api_router_v1.include_router(item_controllers.items_router)
