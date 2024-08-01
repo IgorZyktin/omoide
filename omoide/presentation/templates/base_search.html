@@ -153,11 +153,11 @@
                 {% if aim_wrapper.nested %}
                     <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see items on any depth">Now nested</span>
+                    <span title="Change view mode to see items on any depth">Only direct</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see items only from top level">Now flat</span>
+                    <span title="Change view mode to see items only from top level">All dependant</span>
                 {% endif %}
             </span>
             {% else %}
@@ -168,7 +168,7 @@
                        class="button qc-nested">
                         <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
                              alt="Change view mode to see items on any depth"/>
-                        <span title="Change view mode to see items on any depth">Now nested</span>
+                        <span title="Change view mode to see items on any depth">Only direct</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -177,7 +177,7 @@
                        class="button qc-nested">
                         <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                              alt="Change view mode to see items only from top level"/>
-                        <span>Now flat</span>
+                        <span>All dependant</span>
                     </a>
                 {% endif %}
             {% endif %}

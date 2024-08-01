@@ -284,9 +284,9 @@ def items_to_dict(
 
     for name, item in zip(names, items):
         if item.is_collection:
-            href = request.url_for('app_browse', uuid=item.uuid)
+            href = request.url_for('app_browse', item_uuid=item.uuid)
         else:
-            href = request.url_for('app_preview', uuid=item.uuid)
+            href = request.url_for('app_preview', item_uuid=item.uuid)
 
         if item.thumbnail_ext is None:
             thumbnail = empty_thumbnail

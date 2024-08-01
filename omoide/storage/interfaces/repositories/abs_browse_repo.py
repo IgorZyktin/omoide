@@ -1,8 +1,8 @@
 """Repository that performs all browse queries."""
 import abc
-from typing import Literal
 from uuid import UUID
 
+from omoide import const
 from omoide import domain
 from omoide import models
 from omoide.domain import common
@@ -50,26 +50,50 @@ class AbsBrowseRepository(abc.ABC):
         """Return item with its position in siblings."""
 
     @abc.abstractmethod
-    async def simple_browse(
+    async def browse_nested_anon(
         self,
-        user: models.User,
         item_uuid: UUID,
-        ordering: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
+        only_collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
-        """Find items to browse depending on parent (simple)."""
+        """Find items to browse depending on parent (only direct)."""
 
     @abc.abstractmethod
-    async def complex_browse(
+    async def browse_nested_known(
         self,
         user: models.User,
         item_uuid: UUID,
-        ordering: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
+        only_collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
-        """Find items to browse depending on parent (including inheritance)."""
+        """Find items to browse depending on parent (only direct)."""
+
+    @abc.abstractmethod
+    async def browse_all_anon(
+        self,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (all children)."""
+
+    @abc.abstractmethod
+    async def browse_all_known(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        order: const.ORDER_TYPE,
+        only_collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Find items to browse depending on parent (all children)."""
 
     # FIXME - delete this method
     @abc.abstractmethod

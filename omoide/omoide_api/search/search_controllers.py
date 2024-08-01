@@ -18,10 +18,10 @@ from omoide.presentation import dependencies as dep
 
 LOG = custom_logging.get_logger(__name__)
 
-search_router = APIRouter(prefix='/search', tags=['Search'])
+api_search_router = APIRouter(prefix='/search', tags=['Search'])
 
 
-@search_router.get(
+@api_search_router.get(
     '/autocomplete',
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.AutocompleteOutput,
@@ -66,7 +66,7 @@ async def api_autocomplete(
     return search_api_models.AutocompleteOutput(variants=variants)
 
 
-@search_router.get(
+@api_search_router.get(
     '/recent_updates',
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.RecentUpdatesOutput,
@@ -107,7 +107,7 @@ async def api_get_recent_updates(
     )
 
 
-@search_router.get(
+@api_search_router.get(
     '/total',
     response_model=search_api_models.SearchTotalOutput,
 )
@@ -135,7 +135,7 @@ async def api_search_total(
     )
 
 
-@search_router.get(
+@api_search_router.get(
     '/home',
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -176,7 +176,7 @@ async def api_home(
     )
 
 
-@search_router.get(
+@api_search_router.get(
     '',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,

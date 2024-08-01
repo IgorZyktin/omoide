@@ -16,10 +16,10 @@ from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
 from omoide.presentation import dependencies as dep
 
-browse_router = APIRouter(prefix='/browse', tags=['Browse'])
+api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 
 
-@browse_router.get(
+@api_browse_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
@@ -28,8 +28,9 @@ async def api_browse(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_uuid: UUID,
-    only_collections: Annotated[bool, Query()] = False,
+    nested: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
+    only_collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = browse_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
         ge=browse_api_models.BROWSE_MIN_LIMIT,
@@ -46,6 +47,7 @@ async def api_browse(
         user=user,
         item_uuid=item_uuid,
         only_collections=only_collections,
+        nested=nested,
         order=order,
         last_seen=last_seen,
         limit=limit,

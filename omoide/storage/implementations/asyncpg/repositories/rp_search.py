@@ -1,10 +1,10 @@
 """Search repository."""
 import abc
-from typing import Literal
 
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 
+from omoide import const
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
 from omoide.storage.database import db_models
@@ -86,7 +86,7 @@ class SearchRepository(_SearchRepositoryBase):
         tags_include: set[str],
         tags_exclude: set[str],
         only_collections: bool,
-        order: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -117,7 +117,7 @@ class SearchRepository(_SearchRepositoryBase):
         self,
         user: models.User,
         only_collections: bool,
-        order: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -143,7 +143,7 @@ class SearchRepository(_SearchRepositoryBase):
         self,
         user: models.User,
         only_collections: bool,
-        order: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
