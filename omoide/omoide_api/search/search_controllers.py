@@ -178,6 +178,7 @@ async def api_home(
 
 @search_router.get(
     '',
+    status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
 async def api_search(

@@ -1,15 +1,12 @@
-"""Use cases that process commands from users."""
+"""Use cases that process search requests from users."""
 import re
 import time
 from typing import Any
-from typing import Literal
 
-from omoide import custom_logging
+from omoide import const
 from omoide import models
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
-
-LOG = custom_logging.get_logger(__name__)
 
 
 class AutocompleteUseCase(BaseAPIUseCase):
@@ -128,7 +125,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
     async def execute(
         self,
         user: models.User,
-        order: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
         only_collections: bool,
         last_seen: int,
         limit: int,
@@ -171,7 +168,7 @@ class ApiSearchUseCase(BaseSearchUseCase):
         user: models.User,
         query: str,
         minimal_length: int,
-        order: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
         only_collections: bool,
         last_seen: int,
         limit: int,
