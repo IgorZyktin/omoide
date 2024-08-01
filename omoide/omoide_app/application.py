@@ -79,7 +79,6 @@ def apply_app_routes(current_app: FastAPI) -> None:
     current_app.include_router(application.app_profile.router)
 
     # API routes
-    current_app.include_router(api_old.api_browse.router)
     current_app.include_router(api_old.api_items.router)
 
     # APP routes
