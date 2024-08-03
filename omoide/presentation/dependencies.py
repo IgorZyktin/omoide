@@ -24,9 +24,9 @@ from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 from omoide.storage import interfaces as storage_interfaces
-from omoide.storage.object_storage import interfaces as object_interfaces
+from omoide.object_storage import interfaces as object_interfaces
 from omoide.storage.implementations import asyncpg
-from omoide.storage.object_storage.implementations.file_server import (
+from omoide.object_storage.implementations.file_server import (
     FileObjectStorageServer,
 )
 

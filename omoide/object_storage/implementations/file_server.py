@@ -3,7 +3,7 @@ from omoide import const
 from omoide import models
 from omoide import utils
 from omoide.storage.interfaces.repositories.abs_media_repo import AbsMediaRepo
-from omoide.storage.object_storage.interfaces.abs_object_storage import (
+from omoide.object_storage.interfaces.abs_object_storage import (
     AbsObjectStorage
 )
 
