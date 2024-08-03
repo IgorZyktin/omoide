@@ -109,7 +109,7 @@ class Worker(interfaces.AbsWorker):
             item_id=media.item.id,
             signature=md5,
         )
-        self._database.session.add(signature)
+        self._database.session.merge(signature)
         self._database.session.commit()
 
     def _save_cr32_signature(self, media: db_models.Media) -> None:
@@ -117,9 +117,9 @@ class Worker(interfaces.AbsWorker):
         cr32 = zlib.crc32(media.content)
         signature = db_models.SignatureCRC32(
             item_id=media.item.id,
-            signature=hex(cr32)[:2],
+            signature=hex(cr32)[2:],
         )
-        self._database.session.add(signature)
+        self._database.session.merge(signature)
         self._database.session.commit()
 
     def drop_media(self) -> None:
