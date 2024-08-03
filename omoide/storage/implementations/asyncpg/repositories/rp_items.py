@@ -383,45 +383,36 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         self,
         user: models.User,
         item: domain.Item,
-    ) -> UUID:
+    ) -> domain.Item:
         """Create item and return UUID."""
-        if item.parent_uuid is None:
-            parent_uuid = None
-        else:
-            parent_uuid = str(item.parent_uuid)
-
-        def get_number():
-            if item.number == -1:
-                return sa.func.max(db_models.Item.number) + 1
-            return item.number
-
-        select_stmt = sa.select(
-            sa.literal(str(item.uuid)).label('uuid'),
-            sa.literal(parent_uuid).label('parent_uuid'),
-            sa.literal(str(user.uuid)).label('owner_uuid'),
-            (get_number()).label('number'),
-            sa.literal(item.name).label('name'),
-            sa.literal(item.is_collection).label('is_collection'),
-            sa.literal(item.content_ext).label('content_ext'),
-            sa.literal(item.preview_ext).label('preview_ext'),
-            sa.literal(item.thumbnail_ext).label('thumbnail_ext'),
-            sa.literal(item.tags).label('tags'),
-            sa.literal([str(x) for x in item.permissions]).label('permissions')
-        )
+        uuid = item.uuid
+        if uuid == const.DUMMY_UUID:
+            uuid = await self.get_free_uuid()
 
         stmt = sa.insert(
             db_models.Item
-        ).from_select(
-            [*select_stmt.columns],
-            select_stmt
-        ).returning(db_models.Item.uuid)
+        ).values(
+            uuid=uuid,
+            parent_uuid=item.parent_uuid,
+            owner_uuid=user.uuid,
+            name=item.name,
+            is_collection=item.is_collection,
+            content_ext=item.content_ext,
+            preview_ext=item.preview_ext,
+            thumbnail_ext=item.thumbnail_ext,
+            tags=tuple(item.tags),
+            permissions=tuple(str(x) for x in item.permissions),
+        ).returning(db_models.Item.number)
 
-        return await self.db.execute(stmt)
+        number = await self.db.execute(stmt)
+        item.number = number
+
+        return item
 
     async def update_item(
         self,
         item: domain.Item,
-    ) -> UUID:
+    ) -> None:
         """Update existing item."""
         stmt = sa.update(
             db_models.Item
@@ -433,12 +424,12 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             preview_ext=item.preview_ext,
             thumbnail_ext=item.thumbnail_ext,
             tags=item.tags,
-            permissions=[str(x) for x in item.permissions],
+            permissions=tuple(str(x) for x in item.permissions),
         ).where(
             db_models.Item.uuid == item.uuid,
         )
 
-        return await self.db.execute(stmt)
+        await self.db.execute(stmt)
 
     async def mark_files_as_orphans(
         self,

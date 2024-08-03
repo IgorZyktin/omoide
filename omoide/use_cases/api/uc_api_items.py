@@ -8,6 +8,7 @@ from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
 
+from omoide import const
 from omoide import domain
 from omoide import models
 from omoide import use_cases
@@ -227,10 +228,8 @@ class BaseItemModifyUseCase:
             payload: api_models.CreateItemIn | api_models.CreateItemsIn,
     ) -> UUID:
         """Helper functions that handles creation of an item."""
-        uuid = await self.items_repo.get_free_uuid()
-
         item = domain.Item(
-            uuid=uuid,
+            uuid=const.DUMMY_UUID,
             parent_uuid=payload.parent_uuid or user.root_item,
             owner_uuid=user.uuid,
             number=-1,
@@ -242,15 +241,15 @@ class BaseItemModifyUseCase:
             tags=payload.tags,
             permissions=payload.permissions,
         )
-        await self.items_repo.create_item(user, item)
-        await self.metainfo_repo.create_empty_metainfo(user, item.uuid)
-        await self.misc_repo.update_computed_tags(user, item)
+        item2 = await self.items_repo.create_item(user, item)
+        await self.metainfo_repo.create_empty_metainfo(user, item2.uuid)
+        await self.misc_repo.update_computed_tags(user, item2)
         users = await self.users_repo.read_filtered_users(
             *payload.permissions
         )
-        await self.misc_repo.update_known_tags(users, item.tags, [])
+        await self.misc_repo.update_known_tags(users, item2.tags, [])
 
-        return uuid
+        return item2.uuid
 
 
 class ApiItemCreateUseCase(BaseItemModifyUseCase):

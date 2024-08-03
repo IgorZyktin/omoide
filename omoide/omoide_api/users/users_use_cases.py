@@ -40,7 +40,7 @@ class CreateUserUseCase(BaseAPIUseCase):
 
             item_uuid = await self.mediator.items_repo.get_free_uuid()
             new_item = domain.Item(
-                uuid=item_uuid,
+                uuid=const.DUMMY_UUID,
                 parent_uuid=None,
                 owner_uuid=user_uuid,
                 name=new_user.name,
@@ -54,11 +54,12 @@ class CreateUserUseCase(BaseAPIUseCase):
                 auth_complexity=const.AUTH_COMPLEXITY,
             )
 
-            await self.mediator.items_repo.create_item(new_user, new_item)
+            item2 = await self.mediator.items_repo.create_item(new_user,
+                                                               new_item)
             # TODO - make normal CRUD for metainfo
             await self.mediator.meta_repo.create_empty_metainfo(
                 user=new_user,
-                item_uuid=item_uuid,
+                item_uuid=item2.uuid,
             )
 
             extras = {'root_item': item_uuid}

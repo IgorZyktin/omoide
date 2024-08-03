@@ -326,7 +326,7 @@ class Item(Base):
 
     # fields ------------------------------------------------------------------
 
-    number = sa.Column(sa.BigInteger, nullable=False)
+    number = sa.Column(sa.BigInteger,  autoincrement=True, nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
     is_collection = sa.Column(sa.Boolean, nullable=False)
     content_ext: str | None = sa.Column(sa.String(length=SMALL),
