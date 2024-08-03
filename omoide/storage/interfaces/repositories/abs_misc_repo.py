@@ -91,6 +91,20 @@ class AbsMiscRepo(abc.ABC):
     async def drop_known_tags_known(self, user: models.User) -> None:
         """Clean all known tags for known user."""
 
+    async def save_md5_signature(
+        self,
+        item: models.Item,
+        signature: str
+    ) -> None:
+        """Create signature record."""
+
+    async def save_cr32_signature(
+        self,
+        item: models.Item,
+        signature: str
+    ) -> None:
+        """Create signature record."""
+
     @abc.abstractmethod
     async def start_long_job(
         self,

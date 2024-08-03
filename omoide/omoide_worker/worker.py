@@ -1,6 +1,7 @@
 """Worker class."""
-
+import hashlib
 import traceback
+import zlib
 
 from omoide import const
 from omoide import utils
@@ -73,6 +74,8 @@ class Worker(interfaces.AbsWorker):
             ext=media.ext,
             content=media.content,
         )
+        self._save_md5_signature(media)
+        self._save_cr32_signature(media)
         self._alter_item_corresponding_to_media(media)
 
     @staticmethod
@@ -98,6 +101,26 @@ class Worker(interfaces.AbsWorker):
             raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()
+
+    def _save_md5_signature(self, media: db_models.Media) -> None:
+        """Save signature."""
+        md5 = hashlib.md5(media.content).hexdigest()
+        signature = db_models.SignatureMD5(
+            item_id=media.item.id,
+            signature=md5,
+        )
+        self._database.session.add(signature)
+        self._database.session.commit()
+
+    def _save_cr32_signature(self, media: db_models.Media) -> None:
+        """Save signature."""
+        cr32 = zlib.crc32(media.content)
+        signature = db_models.SignatureCRC32(
+            item_id=media.item.id,
+            signature=hex(cr32)[:2],
+        )
+        self._database.session.add(signature)
+        self._database.session.commit()
 
     def drop_media(self) -> None:
         """Delete media from the database."""
