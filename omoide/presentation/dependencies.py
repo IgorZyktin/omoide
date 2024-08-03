@@ -24,7 +24,11 @@ from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 from omoide.storage import interfaces as storage_interfaces
+from omoide.storage.object_storage import interfaces as object_interfaces
 from omoide.storage.implementations import asyncpg
+from omoide.storage.object_storage.implementations.file_server import (
+    FileObjectStorageServer,
+)
 
 
 @utils.memorize
@@ -97,9 +101,9 @@ def get_items_repo() -> storage_interfaces.AbsItemsRepo:
 
 # TODO - remove
 @utils.memorize
-def get_media_repo() -> storage_interfaces.AbsMediaRepository:
+def get_media_repo() -> storage_interfaces.AbsMediaRepo:
     """Get repo instance."""
-    return asyncpg.MediaRepository(get_db())
+    return asyncpg.MediaRepo(get_db())
 
 
 # TODO - remove
@@ -175,6 +179,19 @@ def get_policy(
 
 
 @utils.memorize
+def get_object_storage(
+    media_repo: Annotated[storage_interfaces.AbsMediaRepo,
+                          Depends(get_media_repo)]
+) -> object_interfaces.AbsObjectStorage:
+    """Get policy instance."""
+    config = get_config()
+    return FileObjectStorageServer(
+        media_repo=media_repo,
+        prefix_size=config.prefix_size,
+    )
+
+
+@utils.memorize
 def get_mediator(
     authenticator: Annotated[interfaces.AbsAuthenticator,
                              Depends(get_authenticator)],
@@ -184,8 +201,6 @@ def get_mediator(
                          Depends(get_exif_repo)],
     items_repo: Annotated[storage_interfaces.AbsItemsRepo,
                           Depends(get_items_repo)],
-    media_repo: Annotated[storage_interfaces.AbsMediaRepository,
-                          Depends(get_media_repo)],
     meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                          Depends(get_metainfo_repo)],
     misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
@@ -196,6 +211,8 @@ def get_mediator(
                        Depends(get_storage)],
     users_repo: Annotated[storage_interfaces.AbsUsersRepo,
                           Depends(get_users_repo)],
+    object_storage: Annotated[object_interfaces.AbsObjectStorage,
+                              Depends(get_object_storage)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
@@ -203,12 +220,12 @@ def get_mediator(
         browse_repo=browse_repo,  # FIXME - app-related dependency
         exif_repo=exif_repo,
         items_repo=items_repo,
-        media_repo=media_repo,
         meta_repo=meta_repo,
         misc_repo=misc_repo,
         search_repo=search_repo,
         storage=storage,
         users_repo=users_repo,
+        object_storage=object_storage,
     )
 
 
@@ -468,7 +485,7 @@ def api_item_update_parent_use_case(
                           Depends(get_items_repo)],
     metainfo_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
                              Depends(get_metainfo_repo)],
-    media_repository: Annotated[storage_interfaces.AbsMediaRepository,
+    media_repository: Annotated[storage_interfaces.AbsMediaRepo,
                                 Depends(get_media_repo)],
     misc_repo: Annotated[
         storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)],

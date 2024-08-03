@@ -5,7 +5,7 @@ from omoide.storage.interfaces.repositories.abs_exif_repo import \
 from omoide.storage.interfaces.repositories.abs_items_repo import \
     AbsItemsRepo  # noqa: F401,F403
 from omoide.storage.interfaces.repositories.abs_media_repo import \
-    AbsMediaRepository  # noqa: F401,F403
+    AbsMediaRepo  # noqa: F401,F403
 from omoide.storage.interfaces.repositories.abs_metainfo_repo import \
     AbsMetainfoRepo  # noqa: F401,F403
 from omoide.storage.interfaces.repositories.abs_misc_repo import \

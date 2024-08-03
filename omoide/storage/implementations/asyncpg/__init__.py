@@ -7,7 +7,7 @@ from omoide.storage.implementations.asyncpg.repositories.rp_exif import \
 from omoide.storage.implementations.asyncpg.repositories.rp_items import \
     ItemsRepo  # noqa: F401,F403
 from omoide.storage.implementations.asyncpg.repositories.rp_media import \
-    MediaRepository  # noqa: F401,F403
+    MediaRepo  # noqa: F401,F403
 from omoide.storage.implementations.asyncpg.repositories.rp_metainfo import \
     MetainfoRepo  # noqa: F401,F403
 from omoide.storage.implementations.asyncpg.repositories.rp_misc import \

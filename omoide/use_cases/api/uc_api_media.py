@@ -21,7 +21,7 @@ class ApiCopyImageUseCase:
             policy: interfaces.AbsPolicy,
             items_repo: storage_interfaces.AbsItemsRepo,
             metainfo_repo: storage_interfaces.AbsMetainfoRepo,
-            media_repo: storage_interfaces.AbsMediaRepository,
+            media_repo: storage_interfaces.AbsMediaRepo,
     ) -> None:
         """Initialize instance."""
         self.policy = policy

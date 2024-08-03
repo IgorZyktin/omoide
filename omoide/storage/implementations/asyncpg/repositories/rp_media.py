@@ -13,7 +13,7 @@ from omoide.storage.implementations import asyncpg
 LOG = custom_logging.get_logger(__name__)
 
 
-class MediaRepository(interfaces.AbsMediaRepository, asyncpg.AsyncpgStorage):
+class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(self, media: models.Media) -> int:
