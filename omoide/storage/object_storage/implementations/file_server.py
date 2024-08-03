@@ -51,5 +51,42 @@ class FileObjectStorageServer(AbsObjectStorage):
         # TODO - we're actually doing nothing here. Probably should
         #  rename original files, but not really delete them
 
-    async def copy_all_objects(self) -> None:
-        """Copy object."""
+    async def copy_all_objects(
+        self,
+        source_item: models.Item,
+        target_item: models.Item,
+    ) -> list[const.MEDIA_TYPE]:
+        """Copy all objects from one item to another."""
+        media_types: list[const.MEDIA_TYPE] = []
+
+        if source_item.content_ext is not None:
+            await self.media_repo.copy_image(
+                owner_uuid=source_item.owner_uuid,
+                source_uuid=source_item.uuid,
+                target_uuid=target_item.uuid,
+                media_type=const.CONTENT,
+                ext=source_item.content_ext,
+            )
+            media_types.append(const.CONTENT)
+
+        if source_item.preview_ext is not None:
+            await self.media_repo.copy_image(
+                owner_uuid=source_item.owner_uuid,
+                source_uuid=source_item.uuid,
+                target_uuid=target_item.uuid,
+                media_type=const.PREVIEW,
+                ext=source_item.preview_ext,
+            )
+            media_types.append(const.PREVIEW)
+
+        if source_item.thumbnail_ext is not None:
+            await self.media_repo.copy_image(
+                owner_uuid=source_item.owner_uuid,
+                source_uuid=source_item.uuid,
+                target_uuid=target_item.uuid,
+                media_type=const.THUMBNAIL,
+                ext=source_item.thumbnail_ext,
+            )
+            media_types.append(const.THUMBNAIL)
+
+        return media_types

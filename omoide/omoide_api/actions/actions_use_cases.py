@@ -291,52 +291,26 @@ class CopyImageUseCase(BaseAPIUseCase):
         user: models.User,
         source_uuid: UUID,
         target_uuid: UUID,
-    ) -> list[int]:
+    ) -> list[const.MEDIA_TYPE]:
         """Execute."""
-        self.ensure_not_anon(user, operation='copy content for items')
-        job_ids: list[int] = []
+        self.ensure_not_anon(user, operation='copy image for item')
 
         async with self.mediator.storage.transaction():
             source = await self.mediator.items_repo.get_item(source_uuid)
             target = await self.mediator.items_repo.get_item(target_uuid)
 
-            self.ensure_admin_or_owner(user, source, subject='item content')
-            self.ensure_admin_or_owner(user, target, subject='item content')
+            self.ensure_admin_or_owner(user, source, subject='item images')
+            self.ensure_admin_or_owner(user, target, subject='item images')
 
-            if source.content_ext is not None:
-                job_id = await self.mediator.media_repo.copy_image(
-                    owner_uuid=source.owner_uuid,
-                    source_uuid=source_uuid,
-                    target_uuid=target_uuid,
-                    media_type=const.CONTENT,
-                    ext=source.content_ext,
-                )
-                job_ids.append(job_id)
+            media_types = await self.mediator.object_storage.copy_all_objects(
+                source_item=source,
+                target_item=target,
+            )
 
-            if source.preview_ext is not None:
-                job_id = await self.mediator.media_repo.copy_image(
-                    owner_uuid=source.owner_uuid,
-                    source_uuid=source_uuid,
-                    target_uuid=target_uuid,
-                    media_type=const.PREVIEW,
-                    ext=source.preview_ext,
-                )
-                job_ids.append(job_id)
-
-            if source.thumbnail_ext is not None:
-                job_id = await self.mediator.media_repo.copy_image(
-                    owner_uuid=source.owner_uuid,
-                    source_uuid=source_uuid,
-                    target_uuid=target_uuid,
-                    media_type=const.THUMBNAIL,
-                    ext=source.thumbnail_ext,
-                )
-                job_ids.append(job_id)
-
-            if job_ids:
+            if media_types:
                 await self.mediator.meta_repo.update_metainfo_extras(
                     uuid=target_uuid,
                     new_extras={'copied_image_from': str(source_uuid)},
                 )
 
-        return job_ids
+        return media_types

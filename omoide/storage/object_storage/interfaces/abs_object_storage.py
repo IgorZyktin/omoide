@@ -23,5 +23,9 @@ class AbsObjectStorage(abc.ABC):
         """Delete all objects for given item."""
 
     @abc.abstractmethod
-    async def copy_all_objects(self) -> None:
-        """Copy object."""
+    async def copy_all_objects(
+        self,
+        source_item: models.Item,
+        target_item: models.Item,
+    ) -> list[const.MEDIA_TYPE]:
+        """Copy all objects from one item to another."""
