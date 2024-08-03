@@ -20,11 +20,8 @@ class AbsItemsRepo(abc.ABC):
         """Check access to the Item with given UUID for the given User."""
 
     @abc.abstractmethod
-    async def read_root_item(
-        self,
-        user: models.User,
-    ) -> models.Item | None:
-        """Return Item or None."""
+    async def get_root_item(self, user: models.User) -> models.Item:
+        """Return root Item for given user."""
 
     @abc.abstractmethod
     async def read_all_root_items(

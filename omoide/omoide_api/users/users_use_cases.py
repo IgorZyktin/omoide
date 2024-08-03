@@ -89,8 +89,8 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
             await self.mediator.users_repo.update_user(
                 user_uuid, name=new_name)
 
-            root = await self.mediator.items_repo.read_root_item(target_user)
-            extras = {'root_item': root.uuid if root else None}
+            root = await self.mediator.items_repo.get_root_item(target_user)
+            extras = {'root_item': root.uuid}
             # TODO - after renaming root item
             #  we need to recalculate tags in children
 
@@ -119,8 +119,8 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
             await self.mediator.users_repo.update_user(
                 user_uuid, login=new_login)
 
-            root = await self.mediator.items_repo.read_root_item(target_user)
-            extras = {'root_item': root.uuid if root else None}
+            root = await self.mediator.items_repo.get_root_item(target_user)
+            extras = {'root_item': root.uuid}
 
         return target_user, extras
 
@@ -150,8 +150,8 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
             await self.mediator.users_repo.update_user(
                 user_uuid, password=encoded_password)
 
-            root = await self.mediator.items_repo.read_root_item(target_user)
-            extras = {'root_item': root.uuid if root else None}
+            root = await self.mediator.items_repo.get_root_item(target_user)
+            extras = {'root_item': root.uuid}
 
         return target_user, extras
 
@@ -176,9 +176,9 @@ class GetAllUsersUseCase(BaseAPIUseCase):
                 extras = {root.owner_uuid: root.uuid for root in roots}
 
             else:
-                root = await self.mediator.items_repo.read_root_item(user)
+                root = await self.mediator.items_repo.get_root_item(user)
                 users = [user]
-                extras = {user.uuid: root.uuid if root else None}
+                extras = {user.uuid: root.uuid}
 
         return users, extras
 
@@ -197,8 +197,8 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         async with self.mediator.storage.transaction():
             target_user = await self.mediator.users_repo.get_user(user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
-            root = await self.mediator.items_repo.read_root_item(target_user)
-            extras = {'root_item': root.uuid if root else None}
+            root = await self.mediator.items_repo.get_root_item(target_user)
+            extras = {'root_item': root.uuid}
 
         return target_user, extras
 

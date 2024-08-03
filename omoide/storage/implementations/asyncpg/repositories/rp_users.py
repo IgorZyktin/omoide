@@ -66,8 +66,8 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         response = await self.db.fetch_one(stmt)
 
         if response is None:
-            msg = 'User with UUID {uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, uuid=uuid)
+            msg = 'User with UUID {user_uuid} does not exist'
+            raise exceptions.DoesNotExistError(msg, user_uuid=uuid)
 
         return models.User(**response, role=models.Role.user)
 

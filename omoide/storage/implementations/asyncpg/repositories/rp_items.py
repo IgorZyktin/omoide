@@ -81,11 +81,8 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         return response['total']
 
-    async def read_root_item(
-        self,
-        user: models.User,
-    ) -> models.Item | None:
-        """Return Item or None."""
+    async def get_root_item(self, user: models.User) -> models.Item:
+        """Return root Item for given user."""
         stmt = sa.select(
             db_models.Item
         ).where(
@@ -97,7 +94,11 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         response = await self.db.fetch_one(stmt)
 
-        return models.Item(**response) if response else None
+        if response is None:
+            msg = 'User {user_uuid} has no root item'
+            raise exceptions.DoesNotExistError(msg, user_uuid=user.uuid)
+
+        return models.Item(**response)
 
     async def read_all_root_items(
         self,

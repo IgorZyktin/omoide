@@ -195,16 +195,13 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
         self,
         admin: models.User,
         user_uuid: UUID,
-    ) -> tuple[models.User, models.Item | None, int]:
+    ) -> tuple[models.User, models.Item, int]:
         """Prepare for execution."""
         self.ensure_admin(admin, subject=self.affected_target)
 
         async with self.mediator.storage.transaction():
             owner = await self.mediator.users_repo.get_user(user_uuid)
-            item = await self.mediator.items_repo.read_root_item(owner)
-
-            if item is None:
-                return owner, None, -1
+            item = await self.mediator.items_repo.get_root_item(owner)
 
             LOG.info(
                 'User {} is rebuilding {} for item {} (owner is {})',
