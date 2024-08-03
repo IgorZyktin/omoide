@@ -406,6 +406,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         ).returning(db_models.Item.number)
 
         number = await self.db.execute(stmt)
+        item.uuid = uuid
         item.number = number
 
         return item
