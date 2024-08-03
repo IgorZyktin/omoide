@@ -15,7 +15,7 @@ DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
 CONTENT: Literal['content'] = 'content'
 PREVIEW: Literal['preview'] = 'preview'
 THUMBNAIL: Literal['thumbnail'] = 'thumbnail'
-MEDIA_TYPE = Literal['content', 'preview', 'thumbnail']
+MEDIA_TYPE: TypeAlias = Literal['content', 'preview', 'thumbnail']
 MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
 
 AUTH_COMPLEXITY = 4  # minimal

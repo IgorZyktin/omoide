@@ -218,14 +218,6 @@ class Metainfo(BaseModel):
 
 
 @dataclass
-class RawMedia(ModelMixin):
-    """Transient content fot the item (raw user input)."""
-    media_type: str
-    content: bytes
-    ext: str
-
-
-@dataclass
 class Media(ModelMixin):
     """Transient content fot the item."""
     id: int

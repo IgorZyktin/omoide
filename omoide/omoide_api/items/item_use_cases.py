@@ -1,9 +1,9 @@
 """Use cases for Item-related operations."""
 from uuid import UUID
 
+from omoide import const
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
@@ -64,6 +64,7 @@ class DeleteItemUseCase(BaseAPIUseCase):
             else:
                 affected_users.append(user)
 
+            # TODO - what about child items? They also can have lots of tags
             await self.mediator.misc_repo.update_known_tags(
                 users=affected_users,
                 tags_added=[],
@@ -78,6 +79,9 @@ class DeleteItemUseCase(BaseAPIUseCase):
                 public_users=public_users,
             )
 
+            # TODO - what about child items? They also can have lots of objects
+            await self.mediator.object_storage.delete_all_objects(item)
+
             parent_uuid = item.parent_uuid
             await self.mediator.items_repo.delete_item(item_uuid)
 
@@ -86,55 +90,48 @@ class DeleteItemUseCase(BaseAPIUseCase):
 
 class BaseUploadUseCase(BaseAPIUseCase):
     """Base class for uploading."""
-    target: str
+    media_type: const.MEDIA_TYPE
 
     async def execute(
         self,
         user: models.User,
         item_uuid: UUID,
-        raw_media: models.RawMedia,
-    ) -> int:
+        binary_content: bytes,
+        ext: str,
+    ) -> None:
         """Execute."""
-        self.ensure_not_anon(user, operation='upload item media data')
+        self.ensure_not_anon(user, operation=f'upload {self.media_type}')
 
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='item media data')
+            self.ensure_admin_or_owner(user, item,
+                                       subject=f'item {self.media_type} data')
 
             LOG.info(
                 'User {} is uploading {} for item {}',
                 user,
-                self.target,
+                self.media_type,
                 item,
             )
 
-            media = models.Media(
-                id=-1,
-                created_at=utils.now(),
-                processed_at=None,
-                error=None,
-                owner_uuid=user.uuid,
-                item_uuid=item_uuid,
-                media_type=raw_media.media_type,
-                content=raw_media.content,
-                ext=raw_media.ext,
+            await self.mediator.object_storage.save_object(
+                item=item,
+                media_type=self.media_type,
+                binary_content=binary_content,
+                ext=ext,
             )
-
-            media_id = await self.mediator.media_repo.create_media(media)
-
-        return media_id
 
 
 class UploadContentForItemUseCase(BaseUploadUseCase):
     """Use case for content uploading."""
-    target: str = 'content'
+    media_type: const.MEDIA_TYPE = const.CONTENT
 
 
 class UploadPreviewForItemUseCase(BaseUploadUseCase):
     """Use case for preview uploading."""
-    target: str = 'preview'
+    media_type: const.MEDIA_TYPE = const.PREVIEW
 
 
 class UploadThumbnailForItemUseCase(BaseUploadUseCase):
     """Use case for thumbnail uploading."""
-    target: str = 'thumbnail'
+    media_type: const.MEDIA_TYPE = const.THUMBNAIL

@@ -902,7 +902,6 @@ async function saveThumbnailForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                     content: proxy.thumbnail,
-                    media_type: 'thumbnail',
                     ext: proxy.thumbnailExt,
             }),
             success: function (response) {

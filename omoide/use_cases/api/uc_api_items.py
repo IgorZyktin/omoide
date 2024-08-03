@@ -196,7 +196,7 @@ class BaseItemMediaUseCase:
             policy: interfaces.AbsPolicy,
             items_repo: storage_interfaces.AbsItemsRepo,
             metainfo_repo: storage_interfaces.AbsMetainfoRepo,
-            media_repo: storage_interfaces.AbsMediaRepository,
+            media_repo: storage_interfaces.AbsMediaRepo,
     ) -> None:
         """Initialize instance."""
         self.policy = policy
@@ -631,7 +631,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             users_repo: storage_interfaces.AbsUsersRepo,
             items_repo: storage_interfaces.AbsItemsRepo,
             metainfo_repo: storage_interfaces.AbsMetainfoRepo,
-            media_repo: storage_interfaces.AbsMediaRepository,
+            media_repo: storage_interfaces.AbsMediaRepo,
             misc_repo: storage_interfaces.AbsMiscRepo,
     ) -> None:
         """Initialize instance."""

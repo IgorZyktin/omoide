@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from omoide import interfaces
 from omoide.storage import interfaces as storage_interfaces
+from omoide.object_storage import interfaces as object_interfaces
 
 
 @dataclass()
@@ -12,9 +13,9 @@ class Mediator:
     browse_repo: storage_interfaces.AbsBrowseRepository
     exif_repo: storage_interfaces.AbsEXIFRepository
     items_repo: storage_interfaces.AbsItemsRepo
-    media_repo: storage_interfaces.AbsMediaRepository
     meta_repo: storage_interfaces.AbsMetainfoRepo
     misc_repo: storage_interfaces.AbsMiscRepo
     search_repo: storage_interfaces.AbsSearchRepository
     storage: storage_interfaces.AbsStorage
     users_repo: storage_interfaces.AbsUsersRepo
+    object_storage: object_interfaces.AbsObjectStorage

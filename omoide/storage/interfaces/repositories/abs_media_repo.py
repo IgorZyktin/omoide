@@ -5,7 +5,7 @@ from uuid import UUID
 from omoide import models
 
 
-class AbsMediaRepository(abc.ABC):
+class AbsMediaRepo(abc.ABC):
     """Repository that perform CRUD operations on media records."""
 
     @abc.abstractmethod

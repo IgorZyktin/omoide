@@ -94,7 +94,7 @@ async def api_action_rebuild_computed_tags(
 @api_actions_router.post(
     '/copy_image',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str],
+    response_model=dict[str, str | list[str]],
 )
 async def api_action_copy_image(
     user: Annotated[models.User, Depends(dep.get_known_user)],
@@ -108,7 +108,7 @@ async def api_action_copy_image(
     use_case = actions_use_cases.CopyImageUseCase(mediator)
 
     try:
-        job_ids = await use_case.execute(
+        media_types = await use_case.execute(
             user=user,
             source_uuid=target.source_item_uuid,
             target_uuid=target.target_item_uuid,
@@ -118,6 +118,6 @@ async def api_action_copy_image(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Copying content',
-        'job_ids': job_ids,
+        'result': 'Copying image',
+        'will_copy': media_types,
     }
