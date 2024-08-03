@@ -4,6 +4,7 @@ import math
 from uuid import UUID
 
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import model_validator
 
 from omoide import utils
@@ -59,7 +60,7 @@ class ItemOutput(BaseModel):
 class MediaInput(BaseModel):
     """Input info for media creation."""
     content: str
-    ext: str
+    ext: str = Field(..., min_length=1)
 
     @model_validator(mode='after')
     def check_extension(self) -> 'MediaInput':

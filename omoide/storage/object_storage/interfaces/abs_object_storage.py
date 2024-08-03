@@ -1,18 +1,27 @@
 """Abstract base object storage."""
 import abc
 
+from omoide import const
+from omoide import models
+
 
 class AbsObjectStorage(abc.ABC):
     """Abstract base object storage."""
 
     @abc.abstractmethod
-    def save(self) -> int:
-        """Save object and return operation id."""
+    async def save(
+        self,
+        item: models.Item,
+        media_type: const.MEDIA_TYPE,
+        binary_content: bytes,
+        ext: str,
+    ) -> None:
+        """Save object."""
 
     @abc.abstractmethod
-    def delete(self) -> int:
-        """Delete object and return operation id."""
+    async def delete(self) -> None:
+        """Delete object."""
 
     @abc.abstractmethod
-    def copy(self) -> int:
-        """Copy object and return operation id."""
+    async def copy(self) -> None:
+        """Copy object."""

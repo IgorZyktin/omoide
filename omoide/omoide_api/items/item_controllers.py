@@ -6,7 +6,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
-from omoide import const
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.items import item_api_models
@@ -67,10 +66,12 @@ async def api_delete_item(
     }
 
 
+# TODO - instead of sending data as base64 encoded string
+#  we need to switch to file sending
 @api_items_router.put(
     '/{item_uuid}/content',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | int],
+    response_model=dict[str, str],
 )
 async def api_upload_item_content(
     item_uuid: UUID,
@@ -85,27 +86,28 @@ async def api_upload_item_content(
     use_case = item_use_cases.UploadContentForItemUseCase(mediator)
 
     try:
-        raw_media = models.RawMedia(
-            media_type=const.CONTENT,
-            content=media.binary_content,
+        await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            binary_content=media.binary_content,
             ext=media.ext,
         )
-        media_id = await use_case.execute(user, item_uuid, raw_media)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Created content media record',
+        'result': 'Enqueued content adding',
         'item_uuid': str(item_uuid),
-        'media_id': media_id,
     }
 
 
+# TODO - previews are not supposed to be sent.
+#  They must be generated on the backend
 @api_items_router.put(
     '/{item_uuid}/preview',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | int],
+    response_model=dict[str, str],
 )
 async def api_upload_item_preview(
     item_uuid: UUID,
@@ -120,27 +122,28 @@ async def api_upload_item_preview(
     use_case = item_use_cases.UploadPreviewForItemUseCase(mediator)
 
     try:
-        raw_media = models.RawMedia(
-            media_type=const.PREVIEW,
-            content=media.binary_content,
+        await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            binary_content=media.binary_content,
             ext=media.ext,
         )
-        media_id = await use_case.execute(user, item_uuid, raw_media)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Created preview media record',
+        'result': 'Enqueued preview adding',
         'item_uuid': str(item_uuid),
-        'media_id': media_id,
     }
 
 
+# TODO - previews are not supposed to be sent.
+#  They must be generated on the backend
 @api_items_router.put(
     '/{item_uuid}/thumbnail',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | int],
+    response_model=dict[str, str],
 )
 async def api_upload_item_thumbnail(
     item_uuid: UUID,
@@ -155,18 +158,17 @@ async def api_upload_item_thumbnail(
     use_case = item_use_cases.UploadThumbnailForItemUseCase(mediator)
 
     try:
-        raw_media = models.RawMedia(
-            media_type=const.THUMBNAIL,
-            content=media.binary_content,
+        await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            binary_content=media.binary_content,
             ext=media.ext,
         )
-        media_id = await use_case.execute(user, item_uuid, raw_media)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Created thumbnail media record',
+        'result': 'Enqueued thumbnail adding',
         'item_uuid': str(item_uuid),
-        'media_id': media_id,
     }
