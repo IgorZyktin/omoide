@@ -306,6 +306,14 @@ class Item(Base):
 
     # primary and foreign keys ------------------------------------------------
 
+    id: int = sa.Column(sa.BigInteger,
+                        # TODO - actually make it a primary key
+                        # primary_key=True,
+                        autoincrement=True,
+                        nullable=False,
+                        index=True,
+                        unique=True)
+
     uuid: UUID = sa.Column(pg.UUID(),
                            primary_key=True,
                            nullable=False,

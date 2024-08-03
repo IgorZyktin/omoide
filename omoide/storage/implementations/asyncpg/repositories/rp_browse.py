@@ -286,7 +286,8 @@ class BrowseRepository(
         """Find items to browse depending on parent (all children)."""
         stmt = """
     WITH RECURSIVE nested_items AS
-           (SELECT items.uuid          AS uuid,
+           (SELECT items.id            AS id,
+                   items.uuid          AS uuid,
                    items.parent_uuid   AS parent_uuid,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
@@ -300,7 +301,8 @@ class BrowseRepository(
             FROM items
             WHERE items.parent_uuid = CAST(:item_uuid AS uuid)
             UNION
-            SELECT items.uuid          AS uuid,
+            SELECT items.id            AS id,
+                   items.uuid          AS uuid,
                    items.parent_uuid   AS parent_uuid,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
@@ -314,7 +316,8 @@ class BrowseRepository(
             FROM items
                      INNER JOIN nested_items
                                 ON items.parent_uuid = nested_items.uuid)
-    SELECT uuid,
+    SELECT id,
+           uuid,
            parent_uuid,
            owner_uuid,
            number,
@@ -364,7 +367,8 @@ class BrowseRepository(
         """Find items to browse depending on parent (all children)."""
         stmt = """
     WITH RECURSIVE nested_items AS
-           (SELECT items.uuid          AS uuid,
+           (SELECT items.id            AS id, 
+                   items.uuid          AS uuid,
                    items.parent_uuid   AS parent_uuid,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
@@ -378,7 +382,8 @@ class BrowseRepository(
             FROM items
             WHERE items.parent_uuid = CAST(:item_uuid AS uuid)
             UNION
-            SELECT items.uuid          AS uuid,
+            SELECT items.id            AS id,
+                   items.uuid          AS uuid,
                    items.parent_uuid   AS parent_uuid,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
@@ -392,7 +397,8 @@ class BrowseRepository(
             FROM items
                      INNER JOIN nested_items
                                 ON items.parent_uuid = nested_items.uuid)
-    SELECT uuid,
+    SELECT id,
+           uuid,
            parent_uuid,
            owner_uuid,
            number,
@@ -442,7 +448,8 @@ class BrowseRepository(
         """Return recently updated items."""
         stmt = """
         WITH valid_items AS (
-            SELECT uuid,
+            SELECT id, 
+                   uuid,
                    parent_uuid,
                    owner_uuid,
                    number,
@@ -459,7 +466,8 @@ class BrowseRepository(
             WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
                 OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
         )
-        SELECT uuid,
+        SELECT id,
+               uuid,
                parent_uuid,
                owner_uuid,
                number,

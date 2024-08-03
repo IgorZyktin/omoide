@@ -153,6 +153,7 @@ class AccessStatus(ModelMixin):
 @dataclass
 class Item(ModelMixin):
     """Standard item."""
+    id: int
     uuid: UUID
     parent_uuid: UUID | None
     owner_uuid: UUID
