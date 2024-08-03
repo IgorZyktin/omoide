@@ -136,27 +136,6 @@ class ComputedTags(Base):
     )
 
 
-# This will allow us to distinguish same bad payloads and search for duplicates
-# Someday we could put ImageMatch here.
-class Signature(Base):
-    """EXIF information for items."""
-    __tablename__ = 'signatures'
-
-    # primary and foreign keys ------------------------------------------------
-
-    item_uuid: UUID = sa.Column(pg.UUID(),
-                                sa.ForeignKey('items.uuid',
-                                              ondelete='CASCADE'),
-                                nullable=False,
-                                index=True,
-                                primary_key=True)
-    type: str = sa.Column(sa.String(length=SMALL), nullable=False, index=True)
-
-    # fields ------------------------------------------------------------------
-
-    signature: str = sa.Column(sa.Text, nullable=False)
-
-
 class OrphanFiles(Base):
     """Model that tracks files of already deleted items.
 
@@ -334,7 +313,7 @@ class Item(Base):
 
     # fields ------------------------------------------------------------------
 
-    number = sa.Column(sa.BigInteger,  autoincrement=True, nullable=False)
+    number = sa.Column(sa.BigInteger, autoincrement=True, nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
     is_collection = sa.Column(sa.Boolean, nullable=False)
     content_ext: str | None = sa.Column(sa.String(length=SMALL),
@@ -573,3 +552,39 @@ class EXIF(Base):
                               passive_deletes=True,
                               back_populates='exif',
                               uselist=False)
+
+
+class SignatureMD5(Base):
+    """MD5 hash for item content."""
+    __tablename__ = 'signatures_md5'
+
+    # primary and foreign keys ------------------------------------------------
+
+    item_id: int = sa.Column(sa.BigInteger,
+                             sa.ForeignKey('items.id', ondelete='CASCADE'),
+                             nullable=False,
+                             index=True,
+                             unique=True,
+                             primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    signature: str = sa.Column(sa.CHAR(32), nullable=False)
+
+
+class SignatureCRC32(Base):
+    """CRC32 hash for item content."""
+    __tablename__ = 'signatures_crc32'
+
+    # primary and foreign keys ------------------------------------------------
+
+    item_id: int = sa.Column(sa.BigInteger,
+                             sa.ForeignKey('items.id', ondelete='CASCADE'),
+                             nullable=False,
+                             index=True,
+                             unique=True,
+                             primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    signature: str = sa.Column(sa.CHAR(8), nullable=False)
