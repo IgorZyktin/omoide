@@ -100,7 +100,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         return models.Item(**response)
 
-    async def read_all_root_items(
+    async def get_all_root_items(
         self,
         *users: models.User,
     ) -> list[domain.Item]:

@@ -24,7 +24,7 @@ class AbsItemsRepo(abc.ABC):
         """Return root Item for given user."""
 
     @abc.abstractmethod
-    async def read_all_root_items(
+    async def get_all_root_items(
         self,
         *users: models.User,
     ) -> list[domain.Item]:

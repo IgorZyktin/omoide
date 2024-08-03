@@ -170,7 +170,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         async with self.mediator.storage.transaction():
             if user.is_admin:
                 users = await self.mediator.users_repo.read_all_users()
-                roots = await self.mediator.items_repo.read_all_root_items(
+                roots = await self.mediator.items_repo.get_all_root_items(
                     *users,
                 )
                 extras = {root.owner_uuid: root.uuid for root in roots}
