@@ -4,7 +4,6 @@ from uuid import UUID
 from omoide import const
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
@@ -65,6 +64,7 @@ class DeleteItemUseCase(BaseAPIUseCase):
             else:
                 affected_users.append(user)
 
+            # TODO - what about child items? They also can have lots of tags
             await self.mediator.misc_repo.update_known_tags(
                 users=affected_users,
                 tags_added=[],
@@ -78,6 +78,9 @@ class DeleteItemUseCase(BaseAPIUseCase):
                 users=affected_users,
                 public_users=public_users,
             )
+
+            # TODO - what about child items? They also can have lots of objects
+            await self.mediator.object_storage.delete_all_objects(item)
 
             parent_uuid = item.parent_uuid
             await self.mediator.items_repo.delete_item(item_uuid)
@@ -111,7 +114,7 @@ class BaseUploadUseCase(BaseAPIUseCase):
                 item,
             )
 
-            await self.mediator.object_storage.save(
+            await self.mediator.object_storage.save_object(
                 item=item,
                 media_type=self.media_type,
                 binary_content=binary_content,

@@ -9,19 +9,19 @@ class AbsObjectStorage(abc.ABC):
     """Abstract base object storage."""
 
     @abc.abstractmethod
-    async def save(
+    async def save_object(
         self,
         item: models.Item,
         media_type: const.MEDIA_TYPE,
         binary_content: bytes,
         ext: str,
     ) -> None:
-        """Save object."""
+        """Save object of specific content type."""
 
     @abc.abstractmethod
-    async def delete(self) -> None:
-        """Delete object."""
+    async def delete_all_objects(self, item: models.Item) -> None:
+        """Delete all objects for given item."""
 
     @abc.abstractmethod
-    async def copy(self) -> None:
+    async def copy_all_objects(self) -> None:
         """Copy object."""

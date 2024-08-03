@@ -25,14 +25,14 @@ class FileObjectStorageServer(AbsObjectStorage):
         self.media_repo = media_repo
         self.prefix_size = prefix_size
 
-    async def save(
+    async def save_object(
         self,
         item: models.Item,
         media_type: const.MEDIA_TYPE,
         binary_content: bytes,
         ext: str,
     ) -> None:
-        """Save object and return operation id."""
+        """Save object of specific content type."""
         media = models.Media(
             id=-1,
             created_at=utils.now(),
@@ -46,8 +46,10 @@ class FileObjectStorageServer(AbsObjectStorage):
         )
         await self.media_repo.create_media(media)
 
-    async def delete(self) -> None:
-        """Delete object."""
+    async def delete_all_objects(self, item: models.Item) -> None:
+        """Delete all objects for given item."""
+        # TODO - we're actually doing nothing here. Probably should
+        #  rename original files, but not really delete them
 
-    async def copy(self) -> None:
+    async def copy_all_objects(self) -> None:
         """Copy object."""
