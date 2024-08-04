@@ -369,7 +369,7 @@ class BrowseRepository(
         """Find items to browse depending on parent (all children)."""
         stmt = """
     WITH RECURSIVE nested_items AS
-           (SELECT items.id            AS id, 
+           (SELECT items.id            AS id,
                    items.uuid          AS uuid,
                    items.parent_uuid   AS parent_uuid,
                    items.owner_uuid    AS owner_uuid,
@@ -451,7 +451,7 @@ class BrowseRepository(
         """Return recently updated items."""
         stmt = """
         WITH valid_items AS (
-            SELECT id, 
+            SELECT id,
                    uuid,
                    parent_uuid,
                    owner_uuid,

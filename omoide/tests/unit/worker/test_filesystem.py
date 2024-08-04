@@ -1,10 +1,10 @@
-"""Tests.
-"""
+"""Tests."""
 import os
 import tempfile
 from datetime import timedelta
 from pathlib import Path
 from unittest import mock
+from uuid import uuid4
 
 import pytest
 
@@ -82,8 +82,8 @@ def test_filesystem_load_binary(valid_worker_config):
     """Must load binary data."""
     config = valid_worker_config
     filesystem = Filesystem(config)
-    owner_uuid = utils.uuid4()
-    item_uuid = utils.uuid4()
+    owner_uuid = uuid4()
+    item_uuid = uuid4()
     bucket = utils.get_bucket(item_uuid, config.prefix_size)
     filename = f'{item_uuid}.jpg'
 
@@ -104,8 +104,8 @@ def test_filesystem_save_binary(valid_worker_config):
     """Must save binary data."""
     config = valid_worker_config
     filesystem = Filesystem(config)
-    owner_uuid = utils.uuid4()
-    item_uuid = utils.uuid4()
+    owner_uuid = uuid4()
+    item_uuid = uuid4()
     bucket = utils.get_bucket(item_uuid, config.prefix_size)
     filename = f'{item_uuid}.jpg'
 

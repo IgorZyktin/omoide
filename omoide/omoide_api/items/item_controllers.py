@@ -11,9 +11,9 @@ from fastapi import status
 
 from omoide import models
 from omoide.infra.mediator import Mediator
+from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
-from omoide.omoide_api.common import common_api_models
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
@@ -48,7 +48,7 @@ async def api_create_item(
     )
 
     return common_api_models.OneItemOutput(
-       item=common_api_models.ItemOutput(**item.model_dump())
+        item=common_api_models.ItemOutput(**item.model_dump())
     )
 
 
@@ -103,7 +103,7 @@ async def api_read_item(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return common_api_models.OneItemOutput(
-       item=common_api_models.ItemOutput(**item.model_dump())
+        item=common_api_models.ItemOutput(**item.model_dump())
     )
 
 

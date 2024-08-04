@@ -219,35 +219,6 @@ class BaseItemModifyUseCase:
         self.metainfo_repo = metainfo_repo
         self.misc_repo = misc_repo
 
-    async def _create_one_item(
-            self,
-            user: models.User,
-            payload: api_models.CreateItemIn | api_models.CreateItemsIn,
-    ) -> UUID:
-        """Helper functions that handles creation of an item."""
-        item = domain.Item(
-            uuid=const.DUMMY_UUID,
-            parent_uuid=payload.parent_uuid or user.root_item,
-            owner_uuid=user.uuid,
-            number=-1,
-            name=payload.name,
-            is_collection=payload.is_collection,
-            content_ext=None,
-            preview_ext=None,
-            thumbnail_ext=None,
-            tags=payload.tags,
-            permissions=payload.permissions,
-        )
-        item2 = await self.items_repo.create_item(user, item)
-        await self.metainfo_repo.create_empty_metainfo(user, item2.uuid)
-        await self.misc_repo.update_computed_tags(user, item2)
-        users = await self.users_repo.read_filtered_users(
-            *payload.permissions
-        )
-        await self.misc_repo.update_known_tags(users, item2.tags, [])
-
-        return item2.uuid
-
 
 class ApiItemUpdateUseCase:
     """Use case for updating an item."""

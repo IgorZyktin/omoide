@@ -22,6 +22,8 @@ SUPPORTED_EXTENSION = frozenset(
 )
 
 MAX_ITEM_FIELD_LENGTH = 256
+MAX_TAGS = 100
+MAX_PERMISSIONS = 100
 
 
 class ItemInput(BaseModel):
@@ -32,8 +34,8 @@ class ItemInput(BaseModel):
     name: str = Field(..., max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    tags: list[str] = []
-    permissions: list[UUID] = []
+    tags: list[str] = Field([], max_length=MAX_TAGS)
+    permissions: list[UUID] = Field([], max_length=MAX_PERMISSIONS)
 
     @model_validator(mode='after')
     def check_tags(self) -> 'ItemInput':
@@ -45,6 +47,14 @@ class ItemInput(BaseModel):
                     f'max allowed length is {MAX_ITEM_FIELD_LENGTH} symbols'
                 )
                 raise ValueError(msg)
+        return self
+
+    @model_validator(mode='after')
+    def ensure_collection_has_name(self) -> 'ItemInput':
+        """Raise if got nameless collection."""
+        if self.is_collection and not self.name:
+            msg = 'Collection must have a name'
+            raise ValueError(msg)
         return self
 
 

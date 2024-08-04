@@ -121,7 +121,7 @@ class Config(pydantic_settings.BaseSettings):
         """Check."""
         if not any((self.hot_folder, self.cold_folder)):
             msg = (
-                "At least one of hot-folder/cold-folder " 
+                "At least one of hot-folder/cold-folder "
                 "variables must be given"
             )
             raise ValueError(msg)
@@ -133,14 +133,14 @@ class Config(pydantic_settings.BaseSettings):
         """Check."""
         if self.save_hot and not self.hot_folder:
             msg = (
-                "You have to specify location " 
+                "You have to specify location "
                 "of the hot folder to save there"
             )
             raise ValueError(msg)
 
         if self.save_cold and not self.cold_folder:
             msg = (
-                "You have to specify location " 
+                "You have to specify location "
                 "of the cold folder to save there"
             )
             raise ValueError(msg)

@@ -12,7 +12,6 @@ from omoide import models
 
 __all__ = [
     'Item',
-    'SimpleItem',
     'PositionedItem',
     'Location',
     'Query',
@@ -79,17 +78,6 @@ class ItemGeneric(BaseModel):
         """Return extension of the file."""
         self.set_callback(new_ext)
         self.original_ext = new_ext
-
-
-class SimpleItem(TypedDict):
-    """JSON compatible item."""
-    uuid: str
-    parent_name: Optional[str]
-    number: int
-    name: str
-    href: str
-    is_collection: bool
-    thumbnail: str
 
 
 class PositionedItem(BaseModel):

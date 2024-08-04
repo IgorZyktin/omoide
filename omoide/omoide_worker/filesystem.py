@@ -41,7 +41,7 @@ class Filesystem:
                 / media_type  # noqa: W503
                 / str(owner_uuid)  # noqa: W503
                 / bucket  # noqa: W503
-                / f"{item_uuid}.{ext}"
+                / f"{item_uuid}.{ext}" # noqa: W503
             )  # noqa: W503
 
             if path.exists():
@@ -70,7 +70,7 @@ class Filesystem:
                 Path(folder)  # noqa: W503
                 / media_type  # noqa: W503
                 / str(owner_uuid)  # noqa: W503
-                / bucket
+                / bucket  # noqa: W503
             )  # noqa: W503
 
             self.ensure_folder_exists(path)

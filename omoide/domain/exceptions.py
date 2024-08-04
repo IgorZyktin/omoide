@@ -70,21 +70,3 @@ class ItemDoesNotExistError(DoesNotExistError):
     def __init__(self, item_uuid: UUID) -> None:
         """Initialize instance."""
         self.item_uuid = item_uuid
-
-
-class CircularReference(DoesNotExistError):
-    """Got circular reference between {uuid1} and {uuid2}."""
-
-    def __init__(self, uuid1: UUID, uuid2: UUID) -> None:
-        """Initialize instance."""
-        self.uuid1 = uuid1
-        self.uuid2 = uuid2
-
-
-class ItemHasNoFieldError(DoesNotExistError):
-    """Item with {uuid} has no field {field}."""
-
-    def __init__(self, item_uuid: UUID, field: str) -> None:
-        """Initialize instance."""
-        self.item_uuid = item_uuid
-        self.field = field

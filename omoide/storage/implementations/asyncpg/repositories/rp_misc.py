@@ -393,7 +393,7 @@ class MiscRepo(_MiscRepoBase):
     async def save_md5_signature(
         self,
         item: models.Item,
-        signature: str
+        signature: str,
     ) -> None:
         """Create signature record."""
         insert = pg_insert(
@@ -413,7 +413,7 @@ class MiscRepo(_MiscRepoBase):
     async def save_cr32_signature(
         self,
         item: models.Item,
-        signature: str
+        signature: str,
     ) -> None:
         """Create signature record."""
         insert = pg_insert(

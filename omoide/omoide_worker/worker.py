@@ -95,7 +95,7 @@ class Worker(interfaces.AbsWorker):
 
         else:
             msg = (
-                f'Got unknown media_type {media.media_type} ' 
+                f'Got unknown media_type {media.media_type} '
                 f'for media {media.id}'
             )
             raise ValueError(msg)

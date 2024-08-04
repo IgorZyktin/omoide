@@ -7,7 +7,9 @@ import sqlalchemy as sa
 from omoide import exceptions
 from omoide import models
 from omoide.storage import interfaces
-from omoide.storage.implementations.asyncpg.asyncpg_storage import AsyncpgStorage
+from omoide.storage.implementations.asyncpg.asyncpg_storage import (
+    AsyncpgStorage
+)
 from omoide.storage.database import db_models
 
 
