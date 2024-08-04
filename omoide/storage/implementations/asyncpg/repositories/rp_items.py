@@ -471,7 +471,8 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             db_models.Item.number,
         )
 
-        item_id, item_number = await self.db.execute(stmt)
+        await self.db.execute(stmt)
+        item_id, item_number = await self.db.fetch_one()
         item.id = item_id
         item.number = item_number
 

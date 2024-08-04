@@ -31,7 +31,7 @@ class ItemInput(BaseModel):
     uuid: UUID | None = None
     parent_uuid: UUID
     owner_uuid: UUID
-    name: str = Field(..., max_length=MAX_ITEM_FIELD_LENGTH)
+    name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
     tags: list[str] = Field([], max_length=MAX_TAGS)

@@ -1,4 +1,4 @@
-function gatherItemParameters() {
+function gatherItemParameters(owner_uuid) {
     // gather information for item creation
     let raw_uuid = $('#parent_uuid').val()
     let parent_uuid
@@ -10,6 +10,7 @@ function gatherItemParameters() {
     }
 
     return {
+        owner_uuid: owner_uuid,
         parent_uuid: parent_uuid,
         is_collection: $('#item_is_collection').is(':checked'),
         name: $('#item_name').val().trim(),
