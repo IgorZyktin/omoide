@@ -25,7 +25,7 @@ def api_application(fake_config):
         return_value=fake_config,
     ):
         app = application.get_api()
-        application.apply_api_routes(app)
+        application.apply_api_routes_v1(app)
         yield app
 
 

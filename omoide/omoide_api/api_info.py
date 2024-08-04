@@ -12,6 +12,10 @@ TAGS_METADATA = [
         'description': 'Technical information about the API.',
     },
     {
+        'name': 'Home',
+        'description': 'Endpoint for the starting page.',
+    },
+    {
         'name': 'Search',
         'description': 'Operations with user search requests.',
     },

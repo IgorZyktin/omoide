@@ -4,6 +4,16 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+QUERY_DEFAULT = ''
+LAST_SEEN_DEFAULT = -1
+MIN_LENGTH_DEFAULT = 2
+MAX_LENGTH_DEFAULT = 512
+MIN_LIMIT = 1
+MAX_LIMIT = 200
+DEFAULT_LIMIT = 30
+
+AUTOCOMPLETE_MIN_LENGTH = 2
+
 
 class ItemOutput(BaseModel):
     """Model of a standard item."""

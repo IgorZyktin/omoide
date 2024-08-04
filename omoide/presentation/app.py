@@ -11,6 +11,6 @@ api = api_application.get_api()
 # TODO - change mounting point after all endpoints will be migrated
 app.mount('/api-new', api)
 
-api_application.apply_api_routes(api)
+api_application.apply_api_routes_v1(api)
 app_application.apply_app_routes(app)
 app_application.apply_middlewares(app)
