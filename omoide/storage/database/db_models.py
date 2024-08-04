@@ -37,12 +37,8 @@ class User(Base):
     login = sa.Column(sa.String(length=MEDIUM), nullable=False, unique=True)
     password = sa.Column(sa.String(length=HUGE), nullable=False)
     name = sa.Column(sa.String(length=MEDIUM), nullable=False)
-    root_item: UUID | None = sa.Column(pg.UUID(),
-                                       sa.ForeignKey('items.uuid',
-                                                     ondelete='SET NULL'),
-                                       nullable=True,
-                                       index=True)
     auth_complexity = sa.Column(sa.Integer, nullable=False)
+
     # relations ---------------------------------------------------------------
 
     items: list['Item'] = relationship('Item',

@@ -1,6 +1,7 @@
 """Routes related to media upload."""
 from typing import Annotated
 from typing import Type
+from uuid import UUID
 
 import fastapi
 from fastapi import Depends

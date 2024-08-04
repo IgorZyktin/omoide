@@ -243,7 +243,7 @@
                 {% if current_item %}
                     {% set parent_hint = current_item.uuid | string %}
                 {% else %}
-                    {% set parent_hint = user.root_item | string %}
+                    {% set parent_hint = '00000000-0000-0000-0000-000000000000' %}
                 {% endif %}
 
                 <a href="{{ request.url_for('app_item_create', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"

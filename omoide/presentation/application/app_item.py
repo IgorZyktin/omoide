@@ -27,7 +27,7 @@ router = fastapi.APIRouter(prefix='/items')
 @router.get('/create/{uuid}')
 async def app_item_create(
         request: Request,
-        uuid: str,
+        uuid: str | UUID | None,
         templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
         user: models.User = Depends(dep.get_current_user),
         policy: interfaces.AbsPolicy = Depends(dep.get_policy),
@@ -38,7 +38,10 @@ async def app_item_create(
         response_class: Type[Response] = HTMLResponse,
 ):
     """Create item page."""
-    valid_uuid = utils.cast_uuid(uuid)
+    if not uuid:
+        valid_uuid = None
+    else:
+        valid_uuid = utils.cast_uuid(uuid)
 
     result = await use_case.execute(policy, user, valid_uuid)
 
