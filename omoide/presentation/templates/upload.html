@@ -17,6 +17,11 @@
         <h1>Upload media</h1>
         <label for="parent_uuid">Parent item:</label>
         <div style="display: flex; flex-direction: row; align-items: center">
+            <input id="owner_uuid"
+                   type="text"
+                   value="{{ item.owner_uuid }}"
+                   disabled
+                   class="height-auto"/>
             <input id="parent_uuid"
                    type="text"
                    value="{{ item.uuid }}"

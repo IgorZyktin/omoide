@@ -419,9 +419,11 @@ async function createItemsForProxy(targets, uploadState) {
         return
 
     let parent_uuid = targets[0].parent_uuid
+    let owner_uuid = $('#owner_uuid').val() || null
 
     const defaultItem = {
         uuid: null,
+        owner_uuid: owner_uuid,
         parent_uuid: parent_uuid,
         name: '',
         is_collection: false,
@@ -440,7 +442,8 @@ async function createItemsForProxy(targets, uploadState) {
             contentType: 'application/json',
             data: JSON.stringify(memberCardArray),
             success: function (response) {
-                if (response.length !== targets.length) {
+                let items = response['items']
+                if (items.length !== targets.length) {
                     targets.forEach((value, index) => {
                         targets[index].status = 'fail'
                     });
@@ -449,7 +452,7 @@ async function createItemsForProxy(targets, uploadState) {
                 }
 
                 for (let i = 0; i < targets.length; i++) {
-                    targets[i].uuid = response['items'][i].uuid
+                    targets[i].uuid = items[i].uuid
                     targets[i].actualSteps.add('createItemsForProxy')
                 }
             },
@@ -967,7 +970,7 @@ async function getItem(itemUUID) {
             url: `${ITEMS_ENDPOINT}/${itemUUID}`,
             contentType: 'application/json',
             success: function (response) {
-                resolve(response)
+                resolve(response['item'])
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 describeFail(XMLHttpRequest.responseJSON)

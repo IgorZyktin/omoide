@@ -308,7 +308,9 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
 
             await self.items_repo.update_item(item)
 
-            await self.misc_repo.update_computed_tags(user, item)
+            # FIXME
+            new_type_item = await self.items_repo.get_item(uuid)
+            await self.misc_repo.update_computed_tags(new_type_item)
             users = await self.users_repo.read_filtered_users(
                 *item.permissions
             )
@@ -465,7 +467,8 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                     await self.metainfo_repo \
                         .mark_metainfo_updated(parent.uuid)
 
-                await self.misc_repo.update_computed_tags(user, item)
+                new_type_item = models.Item(**item.model_dump())
+                await self.misc_repo.update_computed_tags(new_type_item)
 
     async def update_permissions_in_children(
             self,
