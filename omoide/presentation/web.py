@@ -12,6 +12,7 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
+from omoide import const
 from omoide import domain
 from omoide import exceptions as api_exceptions
 from omoide.domain import errors
@@ -208,11 +209,21 @@ class AimWrapper:
         ordering = params.get('ordering')
 
         order_final = order or ordering or 'random'
-        if order_final == 'on':
-            order_final = 'asc'
+        if order_final.lower() == 'on':
+            params['order'] = const.ASC
+        else:
+            params['order'] = const.RANDOM
 
-        params['order'] = order_final
-        params['collections'] = cls.extract_bool(params, 'collections', False)
+        # NOTE: backward compatibility for legacy endpoints
+        collections = params.get('collections')
+        only_collections = params.get('only_collections')
+        collections_final = collections or only_collections or 'off'
+
+        if collections_final.lower() == 'on':
+            params['collections'] = True
+        else:
+            params['collections'] = False
+
         params['nested'] = cls.extract_bool(params, 'nested', False)
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)
