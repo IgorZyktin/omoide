@@ -41,7 +41,7 @@ class Filesystem:
                 / media_type  # noqa: W503
                 / str(owner_uuid)  # noqa: W503
                 / bucket  # noqa: W503
-                / f"{item_uuid}.{ext}" # noqa: W503
+                / f"{item_uuid}.{ext}"  # noqa: W503
             )  # noqa: W503
 
             if path.exists():

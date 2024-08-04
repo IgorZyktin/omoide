@@ -300,8 +300,8 @@ def get_size(obj, seen: set[int] | None = None) -> int:
         size += get_size(obj.__dict__, seen)
 
     elif (
-        hasattr(obj, '__iter__')
-        and not isinstance(obj, (str, bytes, bytearray))
+        hasattr(obj, '__iter__') and
+        not isinstance(obj, (str, bytes, bytearray))
     ):
         size += sum([get_size(i, seen) for i in obj])
 

@@ -150,8 +150,10 @@ def redirect_from_error(
             str(request.url_for('not_found')) + f'?q={uuid}'
         )
 
-    if (code in (http.HTTPStatus.FORBIDDEN, http.HTTPStatus.UNAUTHORIZED)
-            and uuid is not None):
+    if (
+        code in (http.HTTPStatus.FORBIDDEN, http.HTTPStatus.UNAUTHORIZED) and
+        uuid is not None
+    ):
         response = RedirectResponse(
             str(request.url_for('unauthorized')) + f'?q={uuid}'
         )
