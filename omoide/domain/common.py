@@ -1,7 +1,6 @@
 """Models that used in more than one place."""
 from typing import Callable
 from typing import Iterator
-from typing import Literal
 from typing import Optional
 from typing import TypedDict
 from uuid import UUID
@@ -165,7 +164,7 @@ class Aim(BaseModel):
     query: Query
     order: const.ORDER_TYPE
     collections: bool
-    nested: bool
+    connected: bool
     paged: bool
     page: int
     last_seen: int

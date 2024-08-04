@@ -75,7 +75,7 @@ async def app_preview(
         'tags': sorted(tags),
         'block_collections': True,
         'block_ordered': True,
-        'block_nested': True,
+        'block_connected': True,
         'block_paginated': True,
     }
     return templates.TemplateResponse('preview.html', context)

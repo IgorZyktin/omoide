@@ -33,7 +33,7 @@ async def app_home(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_paginated': True,
-        'block_nested': False,
+        'block_connected': False,
         'endpoint': request.url_for('api_home'),
     }
     return templates.TemplateResponse('home.html', context)

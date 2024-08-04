@@ -121,14 +121,14 @@ function toggleOrder() {
     reloadSearchParams(searchParams)
 }
 
-function toggleNested() {
-    // toggle nested/flat search mode
+function toggleConnected() {
+    // toggle `connected/associated` search mode
     let searchParams = new URLSearchParams(window.location.search)
 
-    if (searchParams.get('nested') === 'on')
-        searchParams.set('nested', 'off')
+    if (searchParams.get('connected') === 'on')
+        searchParams.set('connected', 'off')
     else
-        searchParams.set('nested', 'on')
+        searchParams.set('connected', 'on')
 
     reloadSearchParams(searchParams)
 }

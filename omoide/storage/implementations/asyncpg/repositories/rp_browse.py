@@ -216,7 +216,7 @@ class BrowseRepository(
             item=domain.Item(**response),
         )
 
-    async def browse_nested_anon(
+    async def browse_connected_anon(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -243,7 +243,7 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt)
         return [models.Item(**x) for x in response]
 
-    async def browse_nested_known(
+    async def browse_connected_known(
         self,
         user: models.User,
         item_uuid: UUID,
@@ -275,7 +275,7 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt)
         return [models.Item(**x) for x in response]
 
-    async def browse_all_anon(
+    async def browse_associated_anon(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -355,7 +355,7 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**x) for x in response]
 
-    async def browse_all_known(
+    async def browse_associated_known(
         self,
         user: models.User,
         item_uuid: UUID,

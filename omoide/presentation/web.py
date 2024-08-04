@@ -224,7 +224,16 @@ class AimWrapper:
         else:
             params['collections'] = False
 
-        params['nested'] = cls.extract_bool(params, 'nested', False)
+        # NOTE: backward compatibility for legacy endpoints
+        connected = params.get('connected')
+        nested = params.get('nested')
+        connected_final = connected or nested or 'off'
+
+        if connected_final.lower() == 'on':
+            params['connected'] = True
+        else:
+            params['connected'] = False
+
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)
         params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
