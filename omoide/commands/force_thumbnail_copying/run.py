@@ -25,9 +25,6 @@ def run(config: Config, database: SyncDatabase) -> None:
     total_operations = 0
 
     for user in users:
-        if user.root_item is None:
-            continue
-
         LOG.info('Copying covers for user {} {}', user.uuid, user.name)
 
         with database.start_session() as session:

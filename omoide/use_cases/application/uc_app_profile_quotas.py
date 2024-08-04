@@ -34,14 +34,7 @@ class AppProfileQuotasUseCase:
         if user.is_anon or user.uuid is None:
             return Failure(errors.AuthenticationRequired())
 
-        if user.root_item is None:
-            return Success((models.SpaceUsage.empty(user.uuid), 0, 0))
-
         async with self.mediator.storage.transaction():
-            root = await self.items_repo.read_item(user.root_item)
-            if root is None:
-                return Success((models.SpaceUsage.empty(user.uuid), 0, 0))
-
             size = await self.users_repo.calc_total_space_used_by(user)
             total_items = await self.items_repo \
                 .count_items_by_owner(user)

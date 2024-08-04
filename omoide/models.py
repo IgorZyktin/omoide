@@ -67,7 +67,6 @@ class User(BaseModel):
     login: SecretStr
     password: SecretStr
     role: Role
-    root_item: UUID | None = None  # TODO - remove this field
 
     def __str__(self) -> str:
         """Return textual representation."""
@@ -103,7 +102,6 @@ class User(BaseModel):
             password=SecretStr(''),
             name=const.ANON,
             role=Role.anon,
-            root_item=None,  # TODO - remove this field
         )
 
 

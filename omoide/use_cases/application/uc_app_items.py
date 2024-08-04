@@ -40,7 +40,8 @@ class AppItemCreateUseCase:
         """Business logic."""
         async with self.items_repo.transaction():
             if parent_uuid is None:
-                parent_uuid = user.root_item
+                root_item = await self.items_repo.get_root_item(user)
+                parent_uuid = root_item.uuid
 
             if parent_uuid is None:
                 return Failure(errors.ItemDoesNotExist(uuid=parent_uuid))

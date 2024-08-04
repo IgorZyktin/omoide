@@ -44,7 +44,6 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             uuid=user.uuid,
             login=user.login,
             password=user.password,
-            root_item=user.root_item,
             auth_complexity=auth_complexity,
         )
 
