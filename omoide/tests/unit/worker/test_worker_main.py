@@ -1,5 +1,4 @@
-"""Tests.
-"""
+"""Tests."""
 from unittest import mock
 
 from click.testing import CliRunner
@@ -13,11 +12,11 @@ def test_worker_main_once(valid_worker_config):
     fake_worker = mock.Mock()
 
     with (
-        mock.patch('omoide.worker.__main__.worker_config.get_config',
+        mock.patch('omoide.omoide_worker.__main__.worker_config.get_config',
                    return_value=valid_worker_config),
-        mock.patch('omoide.worker.__main__.WorkerDatabase'),
-        mock.patch('omoide.worker.__main__.Filesystem'),
-        mock.patch('omoide.worker.__main__.Worker',
+        mock.patch('omoide.omoide_worker.__main__.WorkerDatabase'),
+        mock.patch('omoide.omoide_worker.__main__.Filesystem'),
+        mock.patch('omoide.omoide_worker.__main__.Worker',
                    return_value=fake_worker),
     ):
         result = CliRunner().invoke(main, ['--once'])  # type: ignore
@@ -35,13 +34,13 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
     fake_worker = mock.Mock()
 
     with (
-        mock.patch('omoide.worker.__main__.worker_config.get_config',
+        mock.patch('omoide.omoide_worker.__main__.worker_config.get_config',
                    return_value=valid_worker_config),
-        mock.patch('omoide.worker.runtime.get_strategy',
+        mock.patch('omoide.omoide_worker.runtime.get_strategy',
                    return_value=dummy_worker_strategy),
-        mock.patch('omoide.worker.__main__.WorkerDatabase'),
-        mock.patch('omoide.worker.__main__.Filesystem'),
-        mock.patch('omoide.worker.__main__.Worker',
+        mock.patch('omoide.omoide_worker.__main__.WorkerDatabase'),
+        mock.patch('omoide.omoide_worker.__main__.Filesystem'),
+        mock.patch('omoide.omoide_worker.__main__.Worker',
                    return_value=fake_worker),
     ):
         fake_worker.counter = 0
@@ -60,7 +59,7 @@ def test_worker_get_strategy_windows(valid_worker_config):
     config = valid_worker_config
     config.strategy = 'SignalStrategy'
 
-    with mock.patch('omoide.worker.runtime.sys') as fake_sys:
+    with mock.patch('omoide.omoide_worker.runtime.sys') as fake_sys:
         fake_sys.platform = 'win32'
         result = runtime.get_strategy(config)
 
@@ -72,7 +71,7 @@ def test_worker_get_strategy_normal_signal(valid_worker_config):
     config = valid_worker_config
     config.strategy = 'SignalStrategy'
 
-    with mock.patch('omoide.worker.runtime.sys') as fake_sys:
+    with mock.patch('omoide.omoide_worker.runtime.sys') as fake_sys:
         fake_sys.platform = 'linux'
         result = runtime.get_strategy(config)
 
@@ -84,7 +83,7 @@ def test_worker_get_strategy_normal_timer(valid_worker_config):
     config = valid_worker_config
     config.strategy = 'TimerStrategy'
 
-    with mock.patch('omoide.worker.runtime.sys') as fake_sys:
+    with mock.patch('omoide.omoide_worker.runtime.sys') as fake_sys:
         fake_sys.platform = 'linux'
         result = runtime.get_strategy(config)
 

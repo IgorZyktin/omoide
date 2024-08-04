@@ -1,5 +1,4 @@
-"""Tests.
-"""
+"""Tests."""
 import pytest
 from pydantic import ValidationError
 

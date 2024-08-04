@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Paginator that works with arbitrary items as pages.
-"""
+"""Paginator that works with arbitrary items as pages."""
 from typing import TypeVar, Sequence, Iterator, Generic, Optional
 
 from pydantic import BaseModel
@@ -8,7 +6,7 @@ from pydantic import BaseModel
 T = TypeVar('T')
 
 
-class PageVal(Generic[T], BaseModel):
+class PageVal(BaseModel, Generic[T]):
     """Single page representation."""
     number: int
     value: Optional[T] = None
