@@ -212,9 +212,7 @@ class AimWrapper:
             order_final = 'asc'
 
         params['order'] = order_final
-        params['only_collections'] = cls.extract_bool(params,
-                                                      'only_collections',
-                                                      False)
+        params['collections'] = cls.extract_bool(params, 'collections', False)
         params['nested'] = cls.extract_bool(params, 'nested', False)
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)

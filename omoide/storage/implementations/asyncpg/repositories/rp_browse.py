@@ -220,7 +220,7 @@ class BrowseRepository(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -234,7 +234,7 @@ class BrowseRepository(
             db_models.Item.parent_uuid == item_uuid,
         )
 
-        if only_collections:
+        if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         stmt = queries.apply_ordering(stmt, order, last_seen)
@@ -248,7 +248,7 @@ class BrowseRepository(
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -266,7 +266,7 @@ class BrowseRepository(
             db_models.Item.parent_uuid == item_uuid,
         )
 
-        if only_collections:
+        if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         stmt = queries.apply_ordering(stmt, order, last_seen)
@@ -279,7 +279,7 @@ class BrowseRepository(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -336,7 +336,7 @@ class BrowseRepository(
             'limit': limit,
         }
 
-        if only_collections:
+        if collections:
             stmt += ' AND is_collection = True'
 
         if order == const.ASC:
@@ -360,7 +360,7 @@ class BrowseRepository(
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -420,7 +420,7 @@ class BrowseRepository(
             'limit': limit,
         }
 
-        if only_collections:
+        if collections:
             stmt += ' AND is_collection = True'
 
         if order == const.ASC:

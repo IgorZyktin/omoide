@@ -236,7 +236,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     async def count_items_by_owner(
         self,
         user: models.User,
-        only_collections: bool = False,
+        collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
         assert user.is_not_anon
@@ -248,7 +248,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             db_models.Item.owner_uuid == user.uuid
         )
 
-        if only_collections:
+        if collections:
             stmt = stmt.where(
                 db_models.Item.is_collection
             )

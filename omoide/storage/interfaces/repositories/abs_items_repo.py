@@ -72,7 +72,7 @@ class AbsItemsRepo(abc.ABC):
     async def count_items_by_owner(
         self,
         user: models.User,
-        only_collections: bool = False,
+        collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
 

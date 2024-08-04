@@ -14,7 +14,7 @@ class AbsSearchRepository(abc.ABC):
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
-        only_collections: bool,
+        collections: bool,
     ) -> int:
         """Return total amount of items relevant to this search query."""
 
@@ -24,7 +24,7 @@ class AbsSearchRepository(abc.ABC):
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
-        only_collections: bool,
+        collections: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
@@ -35,7 +35,7 @@ class AbsSearchRepository(abc.ABC):
     async def get_home_items_for_anon(
         self,
         user: models.User,
-        only_collections: bool,
+        collections: bool,
         nested: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
@@ -47,7 +47,7 @@ class AbsSearchRepository(abc.ABC):
     async def get_home_items_for_known(
         self,
         user: models.User,
-        only_collections: bool,
+        collections: bool,
         nested: bool,
         order: const.ORDER_TYPE,
         last_seen: int,

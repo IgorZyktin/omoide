@@ -23,7 +23,7 @@ api_home_router = APIRouter(prefix='/home', tags=['Home'])
 async def api_home(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    only_collections: Annotated[bool, Query()] = False,
+    collections: Annotated[bool, Query()] = False,
     nested: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
@@ -40,7 +40,7 @@ async def api_home(
 
     duration, items, extras = await use_case.execute(
         user=user,
-        only_collections=only_collections,
+        collections=collections,
         nested=nested,
         order=order,
         last_seen=last_seen,

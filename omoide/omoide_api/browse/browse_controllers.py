@@ -30,7 +30,7 @@ async def api_browse(
     item_uuid: UUID,
     nested: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
-    only_collections: Annotated[bool, Query()] = False,
+    collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = browse_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
         ge=browse_api_models.BROWSE_MIN_LIMIT,
@@ -46,7 +46,7 @@ async def api_browse(
     duration, items, extras = await use_case.execute(
         user=user,
         item_uuid=item_uuid,
-        only_collections=only_collections,
+        collections=collections,
         nested=nested,
         order=order,
         last_seen=last_seen,

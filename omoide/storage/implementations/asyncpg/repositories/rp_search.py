@@ -25,7 +25,7 @@ class _SearchRepositoryBase(
         stmt: Select,
         tags_include: set[str],
         tags_exclude: set[str],
-        only_collections: bool,
+        collections: bool,
     ) -> Select:
         """Add access control and filtering."""
         stmt = stmt.join(
@@ -45,7 +45,7 @@ class _SearchRepositoryBase(
                 ~db_models.ComputedTags.tags.overlap(tuple(tags_exclude)),
             )
 
-        if only_collections:
+        if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         return stmt
@@ -59,7 +59,7 @@ class SearchRepository(_SearchRepositoryBase):
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
-        only_collections: bool,
+        collections: bool,
     ) -> int:
         """Return total amount of items relevant to this search query."""
         stmt = sa.select(
@@ -73,7 +73,7 @@ class SearchRepository(_SearchRepositoryBase):
             stmt=stmt,
             tags_include=tags_include,
             tags_exclude=tags_exclude,
-            only_collections=only_collections,
+            collections=collections,
         )
 
         response = await self.db.fetch_one(stmt)
@@ -85,7 +85,7 @@ class SearchRepository(_SearchRepositoryBase):
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
-        only_collections: bool,
+        collections: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
@@ -98,7 +98,7 @@ class SearchRepository(_SearchRepositoryBase):
             stmt=stmt,
             tags_include=tags_include,
             tags_exclude=tags_exclude,
-            only_collections=only_collections,
+            collections=collections,
         )
 
         stmt = queries.apply_ordering(
@@ -116,7 +116,7 @@ class SearchRepository(_SearchRepositoryBase):
     async def get_home_items_for_anon(
         self,
         user: models.User,
-        only_collections: bool,
+        collections: bool,
         nested: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
@@ -131,7 +131,7 @@ class SearchRepository(_SearchRepositoryBase):
             )
         )
 
-        if only_collections:
+        if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         if nested:
@@ -146,7 +146,7 @@ class SearchRepository(_SearchRepositoryBase):
     async def get_home_items_for_known(
         self,
         user: models.User,
-        only_collections: bool,
+        collections: bool,
         nested: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
@@ -162,7 +162,7 @@ class SearchRepository(_SearchRepositoryBase):
             )
         )
 
-        if only_collections:
+        if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         if nested:

@@ -229,7 +229,7 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
             total_collections = await (
                 self.mediator.items_repo.count_items_by_owner(
                     target_user,
-                    only_collections=True,
+                    collections=True,
                 )
             )
 

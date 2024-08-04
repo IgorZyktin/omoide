@@ -46,6 +46,6 @@ class AppProfileQuotasUseCase:
             total_items = await self.items_repo \
                 .count_items_by_owner(user)
             total_collections = await self.items_repo \
-                .count_items_by_owner(user, only_collections=True)
+                .count_items_by_owner(user, collections=True)
 
         return Success((size, total_items, total_collections))

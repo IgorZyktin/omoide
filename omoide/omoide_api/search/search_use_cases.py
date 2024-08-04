@@ -94,7 +94,7 @@ class ApiSearchTotalUseCase(BaseSearchUseCase):
         user: models.User,
         query: str,
         minimal_length: int,
-        only_collections: bool,
+        collections: bool,
     ) -> tuple[int, float]:
         """Execute."""
         total = 0
@@ -111,7 +111,7 @@ class ApiSearchTotalUseCase(BaseSearchUseCase):
                 user=user,
                 tags_include=tags_include,
                 tags_exclude=tags_exclude,
-                only_collections=only_collections,
+                collections=collections,
             )
 
         duration = time.perf_counter() - start
@@ -128,7 +128,7 @@ class ApiSearchUseCase(BaseSearchUseCase):
         query: str,
         minimal_length: int,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
@@ -149,7 +149,7 @@ class ApiSearchUseCase(BaseSearchUseCase):
                 tags_include=tags_include,
                 tags_exclude=tags_exclude,
                 order=order,
-                only_collections=only_collections,
+                collections=collections,
                 last_seen=last_seen,
                 limit=limit,
             )

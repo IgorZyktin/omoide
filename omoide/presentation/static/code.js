@@ -137,10 +137,10 @@ function toggleCollections() {
     // toggle only_collections/all browse mode
     let searchParams = new URLSearchParams(window.location.search)
 
-    if (searchParams.get('only_collections') === 'on')
-        searchParams.set('only_collections', 'off')
+    if (searchParams.get('collections') === 'on')
+        searchParams.set('collections', 'off')
     else
-        searchParams.set('only_collections', 'on')
+        searchParams.set('collections', 'on')
 
     reloadSearchParams(searchParams)
 }

@@ -114,25 +114,25 @@
             {# Collections button ------------------------------------------ #}
             {% if block_collections %}
                 <span class="button-disabled qc-collections">
-                {% if aim_wrapper.only_collections %}
+                {% if aim_wrapper.collections %}
                     <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see all items">Now collections</span>
+                    <span title="Change view mode to see all items">Collections</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see only collections">Now all</span>
+                    <span title="Change view mode to see only collections">All items</span>
                 {% endif %}
             </span>
             {% else %}
-                {% if aim_wrapper.only_collections %}
+                {% if aim_wrapper.collections %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see all items"
                        onclick="toggleCollections()"
                        class="button qc-collections">
                         <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
                              alt="Change view mode to see all items"/>
-                        <span title="Change view mode to see all items">Only collections</span>
+                        <span title="Change view mode to see all items">Collections</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -141,7 +141,7 @@
                        class="button qc-collections">
                         <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                              alt="Change view mode to see only collections"/>
-                        <span>Any item</span>
+                        <span title="Change view mode to see only collections">All items</span>
                     </a>
                 {% endif %}
             {% endif %}

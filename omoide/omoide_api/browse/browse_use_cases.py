@@ -17,7 +17,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         item_uuid: UUID,
         order: const.ORDER_TYPE,
         nested: bool,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
@@ -32,7 +32,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     items = await repo.browse_nested_anon(
                         item_uuid=item_uuid,
                         order=order,
-                        only_collections=only_collections,
+                        collections=collections,
                         last_seen=last_seen,
                         limit=limit,
                     )
@@ -41,7 +41,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                         user=user,
                         item_uuid=item_uuid,
                         order=order,
-                        only_collections=only_collections,
+                        collections=collections,
                         last_seen=last_seen,
                         limit=limit,
                     )
@@ -50,7 +50,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     items = await repo.browse_all_anon(
                         item_uuid=item_uuid,
                         order=order,
-                        only_collections=only_collections,
+                        collections=collections,
                         last_seen=last_seen,
                         limit=limit,
                     )
@@ -59,7 +59,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                         user=user,
                         item_uuid=item_uuid,
                         order=order,
-                        only_collections=only_collections,
+                        collections=collections,
                         last_seen=last_seen,
                         limit=limit,
                     )

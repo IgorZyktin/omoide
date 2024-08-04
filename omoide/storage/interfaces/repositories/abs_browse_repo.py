@@ -54,7 +54,7 @@ class AbsBrowseRepository(abc.ABC):
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -66,7 +66,7 @@ class AbsBrowseRepository(abc.ABC):
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -77,7 +77,7 @@ class AbsBrowseRepository(abc.ABC):
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -89,7 +89,7 @@ class AbsBrowseRepository(abc.ABC):
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:

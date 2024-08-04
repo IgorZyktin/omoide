@@ -14,7 +14,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         order: const.ORDER_TYPE,
-        only_collections: bool,
+        collections: bool,
         nested: bool,
         last_seen: int,
         limit: int,
@@ -28,7 +28,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
                 items = await repo.get_home_items_for_anon(
                     user,
                     order=order,
-                    only_collections=only_collections,
+                    collections=collections,
                     nested=nested,
                     last_seen=last_seen,
                     limit=limit,
@@ -38,7 +38,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
                 items = await repo.get_home_items_for_known(
                     user,
                     order=order,
-                    only_collections=only_collections,
+                    collections=collections,
                     nested=nested,
                     last_seen=last_seen,
                     limit=limit,

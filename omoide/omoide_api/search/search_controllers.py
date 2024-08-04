@@ -117,7 +117,7 @@ async def api_search_total(
     q: Annotated[str, Query(
         max_length=common_api_models.MAX_LENGTH_DEFAULT,
     )] = common_api_models.QUERY_DEFAULT,
-    only_collections: Annotated[bool, Query()] = False,
+    collections: Annotated[bool, Query()] = False,
 ):
     """Return total amount of items that correspond to search query."""
     use_case = search_use_cases.ApiSearchTotalUseCase(mediator)
@@ -126,7 +126,7 @@ async def api_search_total(
         user=user,
         query=q,
         minimal_length=common_api_models.MIN_LENGTH_DEFAULT,
-        only_collections=only_collections,
+        collections=collections,
     )
 
     return search_api_models.SearchTotalOutput(
@@ -146,7 +146,7 @@ async def api_search(
     q: Annotated[str, Query(
         max_length=common_api_models.MAX_LENGTH_DEFAULT,
     )] = common_api_models.QUERY_DEFAULT,
-    only_collections: Annotated[bool, Query()] = False,
+    collections: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
@@ -166,7 +166,7 @@ async def api_search(
         user=user,
         query=q,
         minimal_length=common_api_models.MIN_LENGTH_DEFAULT,
-        only_collections=only_collections,
+        collections=collections,
         order=order,
         last_seen=last_seen,
         limit=limit,
