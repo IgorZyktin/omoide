@@ -121,14 +121,14 @@ function toggleOrder() {
     reloadSearchParams(searchParams)
 }
 
-function toggleConnected() {
-    // toggle `connected/associated` search mode
+function toggleDirect() {
+    // toggle `direct/related` search mode
     let searchParams = new URLSearchParams(window.location.search)
 
-    if (searchParams.get('connected') === 'on')
-        searchParams.set('connected', 'off')
+    if (searchParams.get('direct') === 'on')
+        searchParams.set('direct', 'off')
     else
-        searchParams.set('connected', 'on')
+        searchParams.set('direct', 'on')
 
     reloadSearchParams(searchParams)
 }

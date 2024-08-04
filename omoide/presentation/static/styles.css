@@ -20,7 +20,7 @@
     .query-container {
         margin: 1px 0;
         grid-column-gap: 0.1em;
-        grid-template: "order collections nested paged login"
+        grid-template: "order collections direct paged login"
         "home input input input search";
     }
 
@@ -45,7 +45,7 @@
         margin: 5px 0;
         grid-column-gap: 0.5em;
         grid-row-gap: 0.5em;
-        grid-template: "home input input input search order collections nested paged login";
+        grid-template: "home input input input search order collections direct paged login";
     }
 
     .menu-container {
@@ -84,8 +84,8 @@
     grid-area: order;
 }
 
-.qc-connected {
-    grid-area: nested;
+.qc-direct {
+    grid-area: direct;
 }
 
 .qc-collections {

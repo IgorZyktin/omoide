@@ -117,7 +117,7 @@ class SearchRepository(_SearchRepositoryBase):
         self,
         user: models.User,
         collections: bool,
-        connected: bool,
+        direct: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
@@ -134,7 +134,7 @@ class SearchRepository(_SearchRepositoryBase):
         if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
-        if connected:
+        if direct:
             stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
 
         stmt = queries.apply_order(stmt, order, last_seen)
@@ -147,7 +147,7 @@ class SearchRepository(_SearchRepositoryBase):
         self,
         user: models.User,
         collections: bool,
-        connected: bool,
+        direct: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
@@ -165,7 +165,7 @@ class SearchRepository(_SearchRepositoryBase):
         if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
-        if connected:
+        if direct:
             stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
 
         stmt = queries.apply_order(stmt, order, last_seen)

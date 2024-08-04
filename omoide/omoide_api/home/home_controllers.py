@@ -24,7 +24,7 @@ async def api_home(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     collections: Annotated[bool, Query()] = False,
-    connected: Annotated[bool, Query()] = False,
+    direct: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
@@ -41,7 +41,7 @@ async def api_home(
     duration, items, extras = await use_case.execute(
         user=user,
         collections=collections,
-        connected=connected,
+        direct=direct,
         order=order,
         last_seen=last_seen,
         limit=limit,

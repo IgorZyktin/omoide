@@ -164,7 +164,7 @@ class Aim(BaseModel):
     query: Query
     order: const.ORDER_TYPE
     collections: bool
-    connected: bool
+    direct: bool
     paged: bool
     page: int
     last_seen: int

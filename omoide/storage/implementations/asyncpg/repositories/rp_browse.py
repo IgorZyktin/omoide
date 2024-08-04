@@ -216,7 +216,7 @@ class BrowseRepository(
             item=domain.Item(**response),
         )
 
-    async def browse_connected_anon(
+    async def browse_direct_anon(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -243,7 +243,7 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
 
-    async def browse_connected_known(
+    async def browse_direct_known(
         self,
         user: models.User,
         item_uuid: UUID,

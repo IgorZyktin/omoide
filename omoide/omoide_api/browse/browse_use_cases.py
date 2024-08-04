@@ -16,7 +16,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
-        connected: bool,
+        direct: bool,
         collections: bool,
         last_seen: int,
         limit: int,
@@ -27,9 +27,9 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         async with self.mediator.storage.transaction():
             repo = self.mediator.browse_repo
 
-            if connected:
+            if direct:
                 if user.is_anon:
-                    items = await repo.browse_connected_anon(
+                    items = await repo.browse_direct_anon(
                         item_uuid=item_uuid,
                         order=order,
                         collections=collections,
@@ -37,7 +37,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                         limit=limit,
                     )
                 else:
-                    items = await repo.browse_connected_known(
+                    items = await repo.browse_direct_known(
                         user=user,
                         item_uuid=item_uuid,
                         order=order,

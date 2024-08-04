@@ -50,7 +50,7 @@ class AbsBrowseRepository(abc.ABC):
         """Return item with its position in siblings."""
 
     @abc.abstractmethod
-    async def browse_connected_anon(
+    async def browse_direct_anon(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -61,7 +61,7 @@ class AbsBrowseRepository(abc.ABC):
         """Find items to browse depending on parent (only direct)."""
 
     @abc.abstractmethod
-    async def browse_connected_known(
+    async def browse_direct_known(
         self,
         user: models.User,
         item_uuid: UUID,

@@ -148,36 +148,36 @@
             {# ------------------------------------------------------------- #}
 
             {# Item connection button -------------------------------------- #}
-            {% if block_connected %}
-                <span class="button-disabled qc-connected">
-                {% if aim_wrapper.connected %}
+            {% if block_direct %}
+                <span class="button-disabled qc-direct">
+                {% if aim_wrapper.direct %}
                     <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see all associated items">Connected</span>
+                    <span title="Change view mode to see all related items">Direct</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see only directly connected items">Associated</span>
+                    <span title="Change view mode to see only directly connected items">Related</span>
                 {% endif %}
             </span>
             {% else %}
-                {% if aim_wrapper.connected %}
+                {% if aim_wrapper.direct %}
                     <a href="javascript:void(0)"
-                       title="Change view mode to see all associated items"
-                       onclick="toggleConnected()"
-                       class="button qc-connected">
+                       title="Change view mode to see all related items"
+                       onclick="toggleDirect()"
+                       class="button qc-toggleDirect">
                         <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
-                             alt="Change view mode to see all associated items"/>
-                        <span title="Change view mode to see items on any depth">Connected</span>
+                             alt="Change view mode to see all related items"/>
+                        <span title="Change view mode to see all related items">Direct</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see only directly connected items"
-                       onclick="toggleConnected()"
-                       class="button qc-connected">
+                       onclick="toggleDirect()"
+                       class="button qc-toggleDirect">
                         <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
                              alt="Change view mode to see only directly connected items"/>
-                        <span>Associated</span>
+                        <span>Related</span>
                     </a>
                 {% endif %}
             {% endif %}

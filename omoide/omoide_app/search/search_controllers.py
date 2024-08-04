@@ -33,7 +33,7 @@ async def app_search(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_paginated': True,
-        'block_connected': True,
+        'block_direct': True,
         'endpoint': request.url_for('api_search'),
         'total_endpoint': request.url_for('api_search_total'),
     }
@@ -56,7 +56,7 @@ async def app_home(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_paginated': True,
-        'block_connected': True,
+        'block_direct': True,
         'endpoint': request.url_for('api_home'),
     }
     return templates.TemplateResponse('home.html', context)
