@@ -240,6 +240,12 @@ class AimWrapper:
         params['items_per_page'] = cls.extract_int(params, 'items_per_page',
                                                    constants.ITEMS_PER_PAGE)
 
+        if params['page'] < 1:
+            params['page'] = 1
+
+        if params['items_per_page'] < 1:
+            params['items_per_page'] = constants.ITEMS_PER_PAGE
+
     @staticmethod
     def extract_bool(
         params: dict,

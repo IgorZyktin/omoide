@@ -43,9 +43,10 @@ class BrowseRepository(
             db_models.Item.number
         ).limit(
             aim.items_per_page
-        ).offset(
-            aim.offset
         )
+
+        if aim.offset > 0:
+            stmt = stmt.offset(aim.offset)
 
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**x) for x in response]
