@@ -47,7 +47,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     )
             else:
                 if user.is_anon:
-                    items = await repo.browse_associated_anon(
+                    items = await repo.browse_related_anon(
                         item_uuid=item_uuid,
                         order=order,
                         collections=collections,
@@ -55,7 +55,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                         limit=limit,
                     )
                 else:
-                    items = await repo.browse_associated_known(
+                    items = await repo.browse_related_known(
                         user=user,
                         item_uuid=item_uuid,
                         order=order,

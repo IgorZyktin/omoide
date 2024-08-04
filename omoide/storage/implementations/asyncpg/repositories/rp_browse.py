@@ -275,7 +275,7 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
 
-    async def browse_associated_anon(
+    async def browse_related_anon(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -356,7 +356,7 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**x) for x in response]
 
-    async def browse_associated_known(
+    async def browse_related_known(
         self,
         user: models.User,
         item_uuid: UUID,

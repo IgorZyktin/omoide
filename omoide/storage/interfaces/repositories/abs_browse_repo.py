@@ -73,7 +73,7 @@ class AbsBrowseRepository(abc.ABC):
         """Find items to browse depending on parent (only direct)."""
 
     @abc.abstractmethod
-    async def browse_associated_anon(
+    async def browse_related_anon(
         self,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -84,7 +84,7 @@ class AbsBrowseRepository(abc.ABC):
         """Find items to browse depending on parent (all children)."""
 
     @abc.abstractmethod
-    async def browse_associated_known(
+    async def browse_related_known(
         self,
         user: models.User,
         item_uuid: UUID,
