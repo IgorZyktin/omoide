@@ -150,6 +150,71 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         return models.Item(**response)
 
+    async def get_items_anon(
+        self,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            db_models.Item.owner_uuid.in_(  # noqa
+                sa.select(db_models.PublicUsers.user_uuid)
+            )
+        )
+
+        if parent_uuid:
+            stmt = stmt.where(db_models.Item.parent_uuid == parent_uuid)
+
+        if owner_uuid:
+            stmt = stmt.where(db_models.Item.owner_uuid == owner_uuid)
+
+        if name:
+            stmt = stmt.where(db_models.Item.name == name)
+
+        stmt = stmt.limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**row) for row in response]
+
+    async def get_items_known(
+        self,
+        user: models.User,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            sa.or_(
+                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.owner_uuid.in_(  # noqa
+                    sa.select(db_models.PublicUsers.user_uuid)
+                )
+            )
+        )
+
+        if parent_uuid:
+            stmt = stmt.where(db_models.Item.parent_uuid == parent_uuid)
+
+        if owner_uuid:
+            stmt = stmt.where(db_models.Item.owner_uuid == owner_uuid)
+
+        if name:
+            stmt = stmt.where(db_models.Item.name == name)
+
+        stmt = stmt.limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**row) for row in response]
+
     # TODO - fix naming
     async def get_children_(
         self,

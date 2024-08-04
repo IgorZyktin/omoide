@@ -63,6 +63,31 @@ class ReadItemUseCase(BaseAPIUseCase):
         raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
 
+class ReadManyItemsUseCase(BaseAPIUseCase):
+    """Use case for item getting."""
+
+    async def execute(
+        self,
+        user: models.User,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        limit: int,
+    ) -> tuple[float, list[models.Item]]:
+        """Execute."""
+        start = time.perf_counter()
+        async with self.mediator.storage.transaction():
+            if user.is_anon:
+                items = await self.mediator.items_repo.get_items_anon(
+                    owner_uuid, parent_uuid, name, limit)
+            else:
+                items = await self.mediator.items_repo.get_items_known(
+                    user, owner_uuid, parent_uuid, name, limit)
+
+        duration = time.perf_counter() - start
+        return duration, items
+
+
 class DeleteItemUseCase(BaseAPIUseCase):
     """Use case for item deletion."""
 

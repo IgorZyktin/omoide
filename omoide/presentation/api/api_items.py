@@ -21,23 +21,6 @@ from omoide.presentation.app_config import Config
 router = APIRouter(prefix='/api/items')
 
 
-@router.get('/by-name')
-async def api_read_item_by_name(
-        payload: api_models.ItemByName,
-        user: models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemReadByNameUseCase = Depends(
-            dep.api_item_read_by_name_use_case),
-):
-    """Get item."""
-    result = await use_case.execute(policy, user, payload.name)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return result.value
-
-
 @router.patch('/{uuid}')
 async def api_partial_update_item(
         uuid: UUID,

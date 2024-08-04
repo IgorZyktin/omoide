@@ -42,6 +42,27 @@ class AbsItemsRepo(abc.ABC):
     async def get_item(self, uuid: UUID) -> models.Item:
         """Return Item."""
 
+    @abc.abstractmethod
+    async def get_items_anon(
+        self,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+
+    @abc.abstractmethod
+    async def get_items_known(
+        self,
+        user: models.User,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+
     # TODO - change naming
     @abc.abstractmethod
     async def get_children_(

@@ -375,16 +375,6 @@ def api_items_download_use_case(
 
 
 @utils.memorize
-def api_item_read_by_name_use_case(
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-) -> use_cases.ApiItemReadByNameUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemReadByNameUseCase(
-        items_repo=items_repo,
-    )
-
-
-@utils.memorize
 def api_item_update_use_case(
     items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
     meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),

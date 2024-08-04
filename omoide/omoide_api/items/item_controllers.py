@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
@@ -103,6 +104,48 @@ async def api_read_item(
 
     return common_api_models.OneItemOutput(
        item=common_api_models.ItemOutput(**item.model_dump())
+    )
+
+
+@api_items_router.get(
+    '',
+    status_code=status.HTTP_200_OK,
+    response_model=common_api_models.ManyItemsOutput,
+)
+async def api_read_many_items(
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    owner_uuid: Annotated[UUID | None, Query()] = None,
+    parent_uuid: Annotated[UUID | None, Query()] = None,
+    name: Annotated[str, Query(
+        max_length=common_api_models.MAX_LENGTH_DEFAULT,
+    )] = common_api_models.QUERY_DEFAULT,
+    limit: Annotated[int, Query(
+        ge=common_api_models.MIN_LIMIT,
+        lt=common_api_models.MAX_LIMIT,
+    )] = common_api_models.DEFAULT_LIMIT,
+):
+    """Get exising items."""
+    use_case = item_use_cases.ReadManyItemsUseCase(mediator)
+
+    try:
+        duration, items = await use_case.execute(
+            user=user,
+            owner_uuid=owner_uuid,
+            parent_uuid=parent_uuid,
+            name=name,
+            limit=limit,
+        )
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return common_api_models.ManyItemsOutput(
+        duration=duration,
+        items=[
+            common_api_models.ItemOutput(**item.model_dump())
+            for item in items
+        ]
     )
 
 
