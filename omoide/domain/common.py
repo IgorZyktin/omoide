@@ -2,7 +2,6 @@
 from typing import Callable
 from typing import Iterator
 from typing import Optional
-from typing import TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel

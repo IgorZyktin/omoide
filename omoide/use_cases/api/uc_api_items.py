@@ -1,5 +1,4 @@
-"""Use case for items.
-"""
+"""Use case for items."""
 import asyncio
 import time
 import traceback
@@ -8,7 +7,6 @@ from typing import AsyncIterator
 from typing import Collection
 from uuid import UUID
 
-from omoide import const
 from omoide import domain
 from omoide import models
 from omoide import utils
