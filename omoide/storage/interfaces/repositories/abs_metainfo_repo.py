@@ -10,15 +10,11 @@ class AbsMetainfoRepo(abc.ABC):
     """Repository that perform CRUD operations on metainfo records."""
 
     @abc.abstractmethod
-    async def create_empty_metainfo(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> None:
-        """Create metainfo with blank fields."""
+    async def create_metainfo(self, metainfo: models.Metainfo) -> None:
+        """Create metainfo."""
 
     @abc.abstractmethod
-    async def read_metainfo(self, item_uuid: UUID) -> models.Metainfo:
+    async def read_metainfo(self, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
 
     @abc.abstractmethod

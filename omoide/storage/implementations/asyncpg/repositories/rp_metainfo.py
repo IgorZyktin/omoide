@@ -15,36 +15,24 @@ from omoide.storage.database import db_models
 class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
     """Repository that perform CRUD operations on metainfo."""
 
-    async def create_empty_metainfo(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> None:
-        """Create metainfo with blank fields."""
-        stmt = sa.insert(
-            db_models.Metainfo
-        ).values(
-            item_uuid=item_uuid,
-            created_at=utils.now(),
-            updated_at=utils.now(),
-            extras={},
-        )
-
+    async def create_metainfo(self, metainfo: models.Metainfo) -> None:
+        """Create metainfo."""
+        stmt = sa.insert(db_models.Metainfo).values(**metainfo.model_dump())
         await self.db.execute(stmt)
 
-    async def read_metainfo(self, item_uuid: UUID) -> models.Metainfo:
+    async def read_metainfo(self, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
         stmt = sa.select(
             db_models.Metainfo
         ).where(
-            db_models.Metainfo.item_uuid == item_uuid
+            db_models.Metainfo.item_uuid == item.uuid
         )
 
         response = await self.db.fetch_one(stmt)
 
         if response is None:
             msg = 'Metainfo for item {item_uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
+            raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
 
         return models.Metainfo(**response)
 

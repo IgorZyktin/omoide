@@ -25,7 +25,7 @@ class ReadMetainfoUseCase(BaseAPIUseCase):
             self.ensure_admin_or_owner_or_allowed_to(user, item,
                                                      subject='item metadata')
 
-            metainfo = await self.mediator.meta_repo.read_metainfo(item_uuid)
+            metainfo = await self.mediator.meta_repo.read_metainfo(item)
 
         return metainfo
 
@@ -37,7 +37,7 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-        metainfo: models.Metainfo,
+        metainfo: models.MetainfoOld,
     ) -> None:
         """Execute."""
         self.ensure_not_anon(user, operation='update metainfo records')
@@ -49,7 +49,7 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
             LOG.info('Updating metainfo for {}, command by {}', item, user)
 
             current_metainfo = await self.mediator.meta_repo.read_metainfo(
-                item_uuid
+                item
             )
 
             current_metainfo.updated_at = utils.now()

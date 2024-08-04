@@ -4,22 +4,88 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Request
+from fastapi import Response
 from fastapi import status
 
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
+from omoide.omoide_api.common import common_api_models
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
 api_items_router = APIRouter(prefix='/items', tags=['Items'])
 
 
+@api_items_router.post(
+    '',
+    status_code=status.HTTP_201_CREATED,
+    response_model=common_api_models.OneItemOutput,
+)
+async def api_create_item(
+    request: Request,
+    response: Response,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    item_in: item_api_models.ItemInput,
+):
+    """Get exising item."""
+    use_case = item_use_cases.CreateItemsUseCase(mediator)
+
+    try:
+        _, items = await use_case.execute(user, [item_in.model_dump()])
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    item = items[0]
+
+    response.headers['Location'] = str(
+        request.url_for('api_read_item', item_uuid=item.uuid)
+    )
+
+    return common_api_models.OneItemOutput(
+       item=common_api_models.ItemOutput(**item.model_dump())
+    )
+
+
+@api_items_router.post(
+    '/bulk',
+    status_code=status.HTTP_201_CREATED,
+    response_model=common_api_models.ManyItemsOutput,
+)
+async def api_create_many_items(
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    items_in: list[item_api_models.ItemInput],
+):
+    """Get exising item."""
+    use_case = item_use_cases.CreateItemsUseCase(mediator)
+
+    try:
+        duration, items = await use_case.execute(
+            user=user,
+            items_in=[item_in.model_dump() for item_in in items_in],
+        )
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return common_api_models.ManyItemsOutput(
+        duration=duration,
+        items=[
+            common_api_models.ItemOutput(**item.model_dump(exclude={'id'}))
+            for item in items
+        ]
+    )
+
+
 @api_items_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
-    response_model=item_api_models.ItemOutput,
+    response_model=common_api_models.OneItemOutput,
 )
 async def api_read_item(
     item_uuid: UUID,
@@ -35,7 +101,9 @@ async def api_read_item(
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    return item_api_models.ItemOutput(**item.model_dump())
+    return common_api_models.OneItemOutput(
+       item=common_api_models.ItemOutput(**item.model_dump())
+    )
 
 
 @api_items_router.delete(

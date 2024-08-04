@@ -1,8 +1,10 @@
 """Common use case elements."""
 import abc
+from uuid import UUID
 
 from omoide import exceptions
 from omoide import models
+from omoide import utils
 from omoide.infra.mediator import Mediator
 
 
@@ -141,3 +143,80 @@ class BaseAPIUseCase(abc.ABC):
             msg = 'You are not allowed to perform such operations'
 
         raise exceptions.AccessDeniedError(msg)
+
+
+class BaseItemCreatorUseCase(BaseAPIUseCase):
+    """Base class for use cases that create items."""
+
+    async def create_one_item(
+        self,
+        uuid: UUID | None,
+        parent_uuid: UUID | None,
+        owner_uuid: UUID,
+        name: str,
+        number: int | None,
+        is_collection: bool,
+        content_ext: str | None,
+        preview_ext: str | None,
+        thumbnail_ext: str | None,
+        tags: list[str],
+        permissions: list[UUID],
+    ) -> models.Item:
+        """Create single item."""
+        if uuid is None:
+            valid_uuid = await self.mediator.items_repo.get_free_uuid()
+        else:
+            valid_uuid = uuid
+
+        item = models.Item(
+            id=-1,
+            uuid=valid_uuid,
+            parent_uuid=parent_uuid,
+            owner_uuid=owner_uuid,
+            name=name,
+            number=number or -1,
+            is_collection=is_collection,
+            content_ext=content_ext,
+            preview_ext=preview_ext,
+            thumbnail_ext=thumbnail_ext,
+            tags=tags,
+            permissions=permissions,
+        )
+
+        await self.mediator.items_repo.create_item(item)
+
+        metainfo = models.Metainfo(
+            item_uuid=item.uuid,
+            created_at=utils.now(),
+            updated_at=utils.now(),
+            deleted_at=None,
+            user_time=None,
+            content_type=None,
+            extras={},
+            content_size=None,
+            preview_size=None,
+            thumbnail_size=None,
+            content_width=None,
+            content_height=None,
+            preview_width=None,
+            preview_height=None,
+            thumbnail_width=None,
+            thumbnail_height=None,
+        )
+
+        await self.mediator.meta_repo.create_metainfo(metainfo)
+
+        if item.tags:
+            await self.mediator.misc_repo.update_computed_tags(item)
+
+        if item.permissions:
+            users = await self.mediator.users_repo.read_filtered_users(
+                *item.permissions
+            )
+            await self.mediator.misc_repo.update_known_tags(
+                users=users,
+                tags_added=item.tags,
+                tags_deleted=[],
+            )
+
+        return item

@@ -11,7 +11,6 @@ from uuid import UUID
 from omoide import const
 from omoide import domain
 from omoide import models
-from omoide import use_cases
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
@@ -384,7 +383,7 @@ class ApiItemUpdateUseCase:
                     if operation.value \
                             and utils.is_valid_uuid(str(operation.value)):
                         uuid = UUID(str(operation.value))
-                        metainfo = await self.metainfo_repo.read_metainfo(uuid)
+                        metainfo = await self.metainfo_repo.read_metainfo(item)
                         metainfo.extras['copied_image_from'] \
                             = str(operation.value)
                         await self.metainfo_repo.update_metainfo(user,

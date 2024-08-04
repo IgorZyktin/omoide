@@ -1,5 +1,6 @@
 """Repository that performs operations on items."""
 import datetime
+from typing import Any
 from typing import Collection
 from typing import Optional
 from uuid import UUID
@@ -380,36 +381,34 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             if not exists:
                 return uuid
 
-    async def create_item(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> domain.Item:
-        """Create item and return UUID."""
-        uuid = item.uuid
-        if uuid == const.DUMMY_UUID:
-            uuid = await self.get_free_uuid()
+    async def create_item(self, item: models.Item) -> None:
+        """Return id for created item."""
+        values: dict[str, Any] = {
+            'uuid': item.uuid,
+            'parent_uuid': item.parent_uuid,
+            'owner_uuid': item.owner_uuid,
+            'name': item.name,
+            'is_collection': item.is_collection,
+            'content_ext': item.content_ext,
+            'preview_ext': item.preview_ext,
+            'thumbnail_ext': item.thumbnail_ext,
+            'tags': tuple(item.tags),
+            'permissions': tuple(str(x) for x in item.permissions),
+        }
+
+        if item.number > 0:
+            values['number'] = item.number
 
         stmt = sa.insert(
             db_models.Item
-        ).values(
-            uuid=uuid,
-            parent_uuid=item.parent_uuid,
-            owner_uuid=user.uuid,
-            name=item.name,
-            is_collection=item.is_collection,
-            content_ext=item.content_ext,
-            preview_ext=item.preview_ext,
-            thumbnail_ext=item.thumbnail_ext,
-            tags=tuple(item.tags),
-            permissions=tuple(str(x) for x in item.permissions),
-        ).returning(db_models.Item.number)
+        ).values(**values).returning(
+            db_models.Item.id,
+            db_models.Item.number,
+        )
 
-        number = await self.db.execute(stmt)
-        item.uuid = uuid
-        item.number = number
-
-        return item
+        item_id, item_number = await self.db.execute(stmt)
+        item.id = item_id
+        item.number = item_number
 
     async def update_item(
         self,

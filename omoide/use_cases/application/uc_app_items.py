@@ -86,7 +86,7 @@ class AppItemUpdateUseCase:
                       int,
                       list[models.User],
                       list[str],
-                      Optional[models.Metainfo]]]:
+                      Optional[models.MetainfoOld]]]:
         """Business logic."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -104,7 +104,7 @@ class AppItemUpdateUseCase:
                 *item.permissions
             )
             computed_tags = await self.items_repo.read_computed_tags(uuid)
-            metainfo = await self.metainfo_repo.read_metainfo(uuid)
+            metainfo = await self.metainfo_repo.read_metainfo(item)
 
         return Success((item, total, can_see, computed_tags, metainfo))
 

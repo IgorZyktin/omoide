@@ -27,9 +27,9 @@ class ItemOutput(BaseModel):
     content_ext: str | None
     preview_ext: str | None
     thumbnail_ext: str | None
-    tags: list[str]
-    permissions: list[UUID]
-    extras: dict[str, Any]
+    tags: list[str] = []
+    permissions: list[UUID] = []
+    extras: dict[str, Any] = {}
 
 
 DEFAULT_ITEM_EXAMPLE = {
@@ -50,8 +50,19 @@ DEFAULT_ITEM_EXAMPLE = {
 }
 
 
+class OneItemOutput(BaseModel):
+    """Response with one item."""
+    item: ItemOutput
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [{'item': DEFAULT_ITEM_EXAMPLE}],
+        }
+    }
+
+
 class ManyItemsOutput(BaseModel):
-    """Search result."""
+    """Response with many items."""
     duration: float
     items: list[ItemOutput]
 

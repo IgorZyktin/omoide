@@ -172,13 +172,9 @@ class MiscRepo(_MiscRepoBase):
 
         return tuple(all_tags)
 
-    async def update_computed_tags(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> None:
+    async def update_computed_tags(self, item: models.Item) -> None:
         """Update computed tags for this item."""
-        parent_tags = []
+        parent_tags: set[str] = set()
 
         if item.parent_uuid is not None:
             parent_tags_stmt = sa.select(
@@ -189,20 +185,15 @@ class MiscRepo(_MiscRepoBase):
             parent_tags_response = await self.db.execute(parent_tags_stmt)
 
             if parent_tags_response:
-                parent_tags = parent_tags_response
+                parent_tags = set(parent_tags_response)
 
-        all_tags = self.gather_tags(
-            parent_uuid=item.parent_uuid,
-            parent_tags=parent_tags,
-            item_uuid=item.uuid,
-            item_tags=item.tags,
-        )
+        computed_tags = item.get_computed_tags(parent_tags)
 
         insert = pg_insert(
             db_models.ComputedTags
         ).values(
             item_uuid=item.uuid,
-            tags=tuple(all_tags),
+            tags=tuple(computed_tags),
         )
 
         stmt = insert.on_conflict_do_update(

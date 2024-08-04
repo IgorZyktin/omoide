@@ -119,12 +119,8 @@ class AbsItemsRepo(abc.ABC):
         """Generate new UUID for the item."""
 
     @abc.abstractmethod
-    async def create_item(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> domain.Item:
-        """Return UUID for created item."""
+    async def create_item(self, item: models.Item) -> None:
+        """Return id for created item."""
 
     @abc.abstractmethod
     async def update_item(

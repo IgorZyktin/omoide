@@ -3,68 +3,82 @@ from typing import Any
 from uuid import UUID
 
 from omoide import const
-from omoide import domain
 from omoide import models
 from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
+from omoide.omoide_api.common.common_use_cases import BaseItemCreatorUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class CreateUserUseCase(BaseAPIUseCase):
+class CreateUserUseCase(BaseItemCreatorUseCase):
     """Use case for creating a new user."""
+
+    async def _create_one_user(
+        self,
+        uuid: UUID | None,
+        name: str,
+        login: str,
+        password: str,
+    ) -> models.User:
+        """Create single user."""
+        if uuid is None:
+            valid_uuid = await self.mediator.users_repo.get_free_uuid()
+        else:
+            valid_uuid = uuid
+
+        user = models.User(
+            uuid=valid_uuid,
+            name=name,
+            login=login,
+            password=self.mediator.authenticator.encode_password(
+                given_password=password,
+            ),
+            role=models.Role.user,  # TODO - actually use this field
+        )
+
+        await self.mediator.users_repo.create_user(
+            user,
+            auth_complexity=const.AUTH_COMPLEXITY,
+        )
+
+        return user
 
     async def execute(
         self,
-        user: models.User,
+        admin: models.User,
         user_in: dict[str, Any],
     ) -> tuple[models.User, dict[str, Any]]:
         """Execute."""
-        self.ensure_admin(user, subject='users')
+        self.ensure_admin(admin, subject='users')
 
-        LOG.info('Admin {} is creating new user {}', user, user_in.get('name'))
+        LOG.info(
+            'Admin {} is creating new user {}',
+            admin,
+            user_in.get('name'),
+        )
 
-        # TODO - make user and items tables less tied
         async with self.mediator.storage.transaction():
-            user_uuid = await self.mediator.users_repo.get_free_uuid()
-            new_user = models.User(
-                uuid=user_uuid,
-                name=user_in['name'],
-                login=user_in['login'],
-                password=self.mediator.authenticator.encode_password(
-                    given_password=user_in['password'],
-                ),
-                role=models.Role.user,
-                root_item=None,  # TODO - remove this field
-            )
+            user = await self._create_one_user(**user_in)
 
-            item_uuid = await self.mediator.items_repo.get_free_uuid()
-            new_item = domain.Item(
-                uuid=const.DUMMY_UUID,
+        async with self.mediator.storage.transaction():
+            item = await self.create_one_item(
+                uuid=None,
                 parent_uuid=None,
-                owner_uuid=user_uuid,
-                name=new_user.name,
+                owner_uuid=user.uuid,
+                name=user.name,
                 is_collection=True,
-                number=-1,
-            )
-            user.root_item = new_item.uuid
-
-            await self.mediator.users_repo.create_user(
-                user,
-                auth_complexity=const.AUTH_COMPLEXITY,
-            )
-
-            item2 = await self.mediator.items_repo.create_item(new_user,
-                                                               new_item)
-            # TODO - make normal CRUD for metainfo
-            await self.mediator.meta_repo.create_empty_metainfo(
-                user=new_user,
-                item_uuid=item2.uuid,
+                number=None,
+                content_ext=None,
+                preview_ext=None,
+                thumbnail_ext=None,
+                tags=[user.name],
+                permissions=[],
             )
 
-            extras = {'root_item': item_uuid}
+            extras = {'root_item': item.uuid}
 
-        return user, extras
+        return admin, extras
 
 
 class ChangeUserNameUseCase(BaseAPIUseCase):

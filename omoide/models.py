@@ -196,7 +196,7 @@ class Item(ModelMixin):
         return computed_tags
 
 
-class Metainfo(BaseModel):
+class MetainfoOld(BaseModel):
     """Metainfo for item."""
     created_at: datetime = const.DUMMY_TIME
     updated_at: datetime = const.DUMMY_TIME
@@ -216,6 +216,31 @@ class Metainfo(BaseModel):
     preview_height: int | None = None
     thumbnail_width: int | None = None
     thumbnail_height: int | None = None
+
+
+@dataclass
+class Metainfo(ModelMixin):
+    """Metainfo for item."""
+    item_uuid: UUID
+
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None
+    user_time: datetime | None
+
+    content_type: str | None
+    extras: dict[str, Any]
+
+    content_size: int | None
+    preview_size: int | None
+    thumbnail_size: int | None
+
+    content_width: int | None
+    content_height: int | None
+    preview_width: int | None
+    preview_height: int | None
+    thumbnail_width: int | None
+    thumbnail_height: int | None
 
 
 @dataclass

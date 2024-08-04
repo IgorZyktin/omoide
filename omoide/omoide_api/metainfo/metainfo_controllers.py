@@ -62,7 +62,7 @@ async def api_update_metainfo(
     use_case = metainfo_use_cases.UpdateMetainfoUseCase(mediator)
 
     try:
-        metainfo = models.Metainfo(**metainfo_input.model_dump())
+        metainfo = models.MetainfoOld(**metainfo_input.model_dump())
         await use_case.execute(user, item_uuid, metainfo)
     except Exception as exc:
         web.raise_from_exc(exc)

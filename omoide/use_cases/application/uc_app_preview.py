@@ -58,7 +58,7 @@ class AppPreviewUseCase:
             if item is None:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
-            metainfo = await self.meta_repo.read_metainfo(uuid)
+            metainfo = await self.meta_repo.read_metainfo(item)
 
             neighbours = await self.preview_repo.get_neighbours(
                 user=user,

@@ -199,7 +199,7 @@ class Aim(BaseModel):
 class SingleResult(BaseModel):
     """Result of a request for a single item."""
     item: Item
-    metainfo: models.Metainfo
+    metainfo: models.MetainfoOld
     aim: Aim
     location: Location
     neighbours: list[UUID]

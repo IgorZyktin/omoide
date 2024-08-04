@@ -1,4 +1,6 @@
 """Use cases for Item-related operations."""
+import time
+from typing import Any
 from uuid import UUID
 
 from omoide import const
@@ -6,8 +8,32 @@ from omoide import exceptions
 from omoide import models
 from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
+from omoide.omoide_api.common.common_use_cases import BaseItemCreatorUseCase
 
 LOG = custom_logging.get_logger(__name__)
+
+
+class CreateItemsUseCase(BaseItemCreatorUseCase):
+    """Use case for item creation."""
+
+    async def execute(
+        self,
+        user: models.User,
+        items_in: list[dict[str, Any]],
+    ) -> tuple[float, list[models.Item]]:
+        """Execute."""
+        self.ensure_not_anon(user, operation='create items')
+        start = time.perf_counter()
+        items: list[models.Item] = []
+
+        async with self.mediator.storage.transaction():
+
+            for raw_item in items_in:
+                item = await self.create_one_item(**raw_item)
+                items.append(item)
+
+        duration = time.perf_counter() - start
+        return duration, items
 
 
 class ReadItemUseCase(BaseAPIUseCase):

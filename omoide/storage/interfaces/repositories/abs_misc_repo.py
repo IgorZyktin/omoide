@@ -21,11 +21,7 @@ class AbsMiscRepo(abc.ABC):
         """Return some components of the given item children with metainfo."""
 
     @abc.abstractmethod
-    async def update_computed_tags(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> None:
+    async def update_computed_tags(self, item: models.Item) -> None:
         """Update computed tags for this item."""
 
     @abc.abstractmethod

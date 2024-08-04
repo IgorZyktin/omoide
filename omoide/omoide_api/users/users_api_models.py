@@ -1,5 +1,6 @@
 """Web level API models."""
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -9,6 +10,7 @@ MAX_LENGTH_FOR_USER_FILED = 1024
 
 class UserInput(BaseModel):
     """Simple user format."""
+    uuid: UUID | None = None
     name: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
     login: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
     password: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
@@ -20,6 +22,12 @@ class UserInput(BaseModel):
                     'name': 'John Smith',
                     'login': 'john',
                     'password': 'qwerty',
+                },
+                {
+                    'uuid': '7c228c86-5539-456b-9280-c149aaa104ca',
+                    'name': 'Samantha Smith',
+                    'login': 'sammy',
+                    'password': 'qwerty1',
                 }
             ]
         }

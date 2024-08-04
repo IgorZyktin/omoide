@@ -22,7 +22,7 @@ __all__ = [
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
     item: domain.Item
-    metainfo: models.Metainfo
+    metainfo: models.MetainfoOld
     location: domain.SimpleLocation | domain.Location | None
     total_items: int
     total_pages: int
@@ -111,7 +111,7 @@ class AppBrowseUseCase:
             uuid=item.uuid,
         )
 
-        metainfo = await self.meta_repo.read_metainfo(item.uuid)
+        metainfo = await self.meta_repo.read_metainfo(item)
 
         if metainfo is None:
             return Failure(errors.ItemDoesNotExist(uuid=item.uuid))
@@ -142,7 +142,7 @@ class AppBrowseUseCase:
             item=item,
         )
 
-        metainfo = await self.meta_repo.read_metainfo(item.uuid)
+        metainfo = await self.meta_repo.read_metainfo(item)
 
         return BrowseResult(
             item=item,
