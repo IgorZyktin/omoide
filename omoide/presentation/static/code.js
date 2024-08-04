@@ -278,8 +278,8 @@ function clearAutocompletion(element) {
     }
 }
 
-function addActiveGuess(items, currentFocus) {
-    // Mark guess item as active
+function highlightActiveVariant(items, currentFocus) {
+    // Mark autocompletion variant item as active
     if (!items)
         return -1
 
@@ -315,6 +315,13 @@ async function getAutocompletionVariants(tag, endpoint) {
     })
 }
 
+function strongByTemplate(text, template){
+    // Surround given text template in <strong> tags
+    let reg = new RegExp(template, 'gi');
+    return text.replace(reg, function (str) {
+        return '<strong>' + str + '</strong>'
+    })
+}
 
 function splitLastTag(text) {
     // Extract last tag from user input
@@ -369,8 +376,7 @@ async function autocompleteTag(element, endpoint) {
     for (const variant of variants) {
         let item = document.createElement('div');
         item.innerHTML = body + separator
-        item.innerHTML += '<strong>' + variant.substring(0, tag.length) + '</strong>';
-        item.innerHTML += variant.substring(tag.length);
+        item.innerHTML += strongByTemplate(variant, tag)
         item.innerHTML += "<input type='hidden' value='" + variant + "'>";
         item.addEventListener('click', function (e) {
             let ending = this.getElementsByTagName('input')[0].value;

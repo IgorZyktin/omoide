@@ -35,7 +35,7 @@ async def api_autocomplete(
     limit: Annotated[int, Query(
         ge=common_api_models.MIN_LIMIT,
         lt=common_api_models.MAX_LIMIT,
-    )] = common_api_models.DEFAULT_LIMIT,
+    )] = common_api_models.AUTOCOMPLETE_LIMIT,
 ):
     """Return tags that match supplied string.
 

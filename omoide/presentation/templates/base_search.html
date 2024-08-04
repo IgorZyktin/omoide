@@ -329,10 +329,10 @@
             if (cont) items = cont.getElementsByTagName('div');
             if (e.key === 'ArrowDown') {
                 currentFocus++;
-                currentFocus = addActiveGuess(items, currentFocus);
+                currentFocus = highlightActiveVariant(items, currentFocus);
             } else if (e.key === 'ArrowUp') {
                 currentFocus--;
-                currentFocus = addActiveGuess(items, currentFocus);
+                currentFocus = highlightActiveVariant(items, currentFocus);
             } else if (e.key === 'Enter') {
                 e.preventDefault();
                 if (currentFocus > -1 && items && currentFocus < items.length) {

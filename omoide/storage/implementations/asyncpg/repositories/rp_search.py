@@ -184,8 +184,7 @@ class SearchRepository(_SearchRepositoryBase):
         )
 
         response = await self.db.fetch_all(stmt)
-
-        return {x['tag']: x['counter'] for x in response}
+        return {row['tag']: row['counter'] for row in response}
 
     async def count_all_tags_known(self, user: models.User) -> dict[str, int]:
         """Return counters for known tags (known user)."""
@@ -199,15 +198,14 @@ class SearchRepository(_SearchRepositoryBase):
         )
 
         response = await self.db.fetch_all(stmt)
-
-        return {x['tag']: x['counter'] for x in response}
+        return {row['tag']: row['counter'] for row in response}
 
     async def autocomplete_tag_anon(self, tag: str, limit: int) -> list[str]:
         """Autocomplete tag for anon user."""
         stmt = sa.select(
             db_models.KnownTagsAnon.tag
         ).where(
-            db_models.KnownTagsAnon.tag.ilike(tag + '%'),  # type: ignore
+            db_models.KnownTagsAnon.tag.ilike('%' + tag + '%'),  # type: ignore
             db_models.KnownTagsAnon.counter > 0,
         ).order_by(
             sa.desc(db_models.KnownTagsAnon.counter),
@@ -215,8 +213,7 @@ class SearchRepository(_SearchRepositoryBase):
         ).limit(limit)
 
         response = await self.db.fetch_all(stmt)
-
-        return [x.tag for x in response]
+        return [row.tag for row in response]
 
     async def autocomplete_tag_known(
         self,
@@ -228,7 +225,7 @@ class SearchRepository(_SearchRepositoryBase):
         stmt = sa.select(
             db_models.KnownTags.tag,
         ).where(
-            db_models.KnownTags.tag.ilike(tag + '%'),  # type: ignore
+            db_models.KnownTags.tag.ilike('%' + tag + '%'),  # type: ignore
             db_models.KnownTags.user_uuid == user.uuid,
             db_models.KnownTags.counter > 0,
         ).order_by(
@@ -237,5 +234,4 @@ class SearchRepository(_SearchRepositoryBase):
         ).limit(limit)
 
         response = await self.db.fetch_all(stmt)
-
-        return [x.tag for x in response]
+        return [row.tag for row in response]
