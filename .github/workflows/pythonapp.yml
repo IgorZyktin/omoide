@@ -23,7 +23,7 @@ jobs:
                 uses: py-actions/flake8@v1
                 with:
                     path: "omoide"
-                    ignore: "F401,F403,W504"
+                    ignore: "F401,F403,W503,W504"
 
             -   name: Test with pytest
                 run: |
