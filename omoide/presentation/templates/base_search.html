@@ -115,11 +115,11 @@
             {% if block_collections %}
                 <span class="button-disabled qc-collections">
                 {% if aim_wrapper.collections %}
-                    <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                    <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
                     <span title="Change view mode to see all items">Collections</span>
                 {% else %}
-                    <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                    <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
                     <span title="Change view mode to see only collections">All items</span>
                 {% endif %}
@@ -130,7 +130,7 @@
                        title="Change view mode to see all items"
                        onclick="toggleCollections()"
                        class="button qc-collections">
-                        <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                        <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                              alt="Change view mode to see all items"/>
                         <span title="Change view mode to see all items">Collections</span>
                     </a>
@@ -139,7 +139,7 @@
                        title="Change view mode to see only collections"
                        onclick="toggleCollections()"
                        class="button qc-collections">
-                        <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                        <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                              alt="Change view mode to see only collections"/>
                         <span title="Change view mode to see only collections">All items</span>
                     </a>
@@ -151,11 +151,11 @@
             {% if block_direct %}
                 <span class="button-disabled qc-direct">
                 {% if aim_wrapper.direct %}
-                    <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                    <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                          alt="Nesting is not supported in this section"/>
                     <span title="Change view mode to see all related items">Direct</span>
                 {% else %}
-                    <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                    <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                          alt="Nesting is not supported in this section"/>
                     <span title="Change view mode to see only directly connected items">Related</span>
                 {% endif %}
@@ -166,7 +166,7 @@
                        title="Change view mode to see all related items"
                        onclick="toggleDirect()"
                        class="button qc-toggleDirect">
-                        <img src="{{ request.url_for('static', path='ic_nested_on.svg') }}"
+                        <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                              alt="Change view mode to see all related items"/>
                         <span title="Change view mode to see all related items">Direct</span>
                     </a>
@@ -175,7 +175,7 @@
                        title="Change view mode to see only directly connected items"
                        onclick="toggleDirect()"
                        class="button qc-toggleDirect">
-                        <img src="{{ request.url_for('static', path='ic_nested_off.svg') }}"
+                        <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                              alt="Change view mode to see only directly connected items"/>
                         <span>Related</span>
                     </a>
