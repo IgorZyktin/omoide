@@ -1,4 +1,5 @@
 """Repository that perform CRUD operations on metainfo."""
+from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -86,15 +87,18 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
 
     async def update_metainfo_extras(
         self,
-        uuid: UUID,
-        new_extras: dict[str, None | int | float | str | bool],
+        item_uuid: UUID,
+        new_extras: dict[str, Any],
     ) -> None:
         """Add new data to extras."""
+        if not new_extras:
+            return
+
         for key, value in new_extras.items():
             stmt = sa.update(
                 db_models.Metainfo
             ).where(
-                db_models.Metainfo.item_uuid == uuid
+                db_models.Metainfo.item_uuid == item_uuid
             ).values(
                 extras=sa.func.jsonb_set(
                     db_models.Metainfo.extras,
@@ -103,6 +107,8 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
                 )
             )
             await self.db.execute(stmt)
+
+        await self.mark_metainfo_updated(item_uuid)
 
     async def get_total_disk_usage(
         self,

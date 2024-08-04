@@ -1,5 +1,6 @@
 """Repository that perform CRUD operations on metainfo records."""
 import abc
+from typing import Any
 from uuid import UUID
 
 from omoide import models
@@ -36,8 +37,8 @@ class AbsMetainfoRepo(abc.ABC):
     @abc.abstractmethod
     async def update_metainfo_extras(
         self,
-        uuid: UUID,
-        new_extras: dict[str, None | int | float | str | bool],
+        item_uuid: UUID,
+        new_extras: dict[str, Any],
     ) -> None:
         """Add new data to extras."""
 

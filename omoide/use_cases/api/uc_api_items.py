@@ -23,6 +23,7 @@ from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 from omoide.presentation import api_models
 
+
 __all__ = [
     'ApiItemCreateUseCase',
     'ApiItemCreateBulkUseCase',
@@ -689,19 +690,23 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 return Failure(errors.ItemDoesNotExist(uuid=new_parent_uuid))
 
             if not new_parent.thumbnail_ext and item.thumbnail_ext:
-                nested_use_case = use_cases.ApiCopyImageUseCase(
-                    policy,
-                    self.items_repo,
-                    self.metainfo_repo,
-                    self.media_repo,
+                LOG.warning(
+                    'Supposed to copy image from {} to {}',
+                    item,
+                    new_parent,
                 )
-                await nested_use_case.execute(
-                    user=user,
-                    source_uuid=item.uuid,
-                    target_uuid=new_parent.uuid,
-                )
+                # nested_use_case = use_cases.ApiCopyImageUseCase(
+                #     policy,
+                #     self.items_repo,
+                #     self.metainfo_repo,
+                #     self.media_repo,
+                # )
+                # await nested_use_case.execute(
+                #     user=user,
+                #     source_uuid=item.uuid,
+                #     target_uuid=new_parent.uuid,
+                # )
 
-            await self.metainfo_repo.mark_metainfo_updated(new_parent.uuid)
             if old_parent:
                 added, deleted = utils.get_delta(old_parent.tags,
                                                  new_parent.tags)
