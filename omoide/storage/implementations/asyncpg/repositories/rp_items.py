@@ -467,13 +467,10 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         stmt = sa.insert(
             db_models.Item
         ).values(**values).returning(
-            db_models.Item.id,
-            db_models.Item.number,
+            db_models.Item.number,  # TODO - find way to return id
         )
 
-        await self.db.execute(stmt)
-        item_id, item_number = await self.db.fetch_one()
-        item.id = item_id
+        item_number = await self.db.execute(stmt)
         item.number = item_number
 
     async def update_item(
