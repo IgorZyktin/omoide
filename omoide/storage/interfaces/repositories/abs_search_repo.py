@@ -1,7 +1,7 @@
 """Repository that performs all search queries."""
 import abc
-from typing import Literal
 
+from omoide import const
 from omoide import models
 
 
@@ -25,7 +25,7 @@ class AbsSearchRepository(abc.ABC):
         tags_include: set[str],
         tags_exclude: set[str],
         only_collections: bool,
-        order: Literal['asc', 'desc', 'random'],
+        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -36,7 +36,8 @@ class AbsSearchRepository(abc.ABC):
         self,
         user: models.User,
         only_collections: bool,
-        order: Literal['asc', 'desc', 'random'],
+        nested: bool,
+        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -47,7 +48,8 @@ class AbsSearchRepository(abc.ABC):
         self,
         user: models.User,
         only_collections: bool,
-        order: Literal['asc', 'desc', 'random'],
+        nested: bool,
+        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:

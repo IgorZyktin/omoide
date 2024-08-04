@@ -15,6 +15,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
         user: models.User,
         order: const.ORDER_TYPE,
         only_collections: bool,
+        nested: bool,
         last_seen: int,
         limit: int,
     ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
@@ -28,6 +29,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
                     user,
                     order=order,
                     only_collections=only_collections,
+                    nested=nested,
                     last_seen=last_seen,
                     limit=limit,
                 )
@@ -37,6 +39,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
                     user,
                     order=order,
                     only_collections=only_collections,
+                    nested=nested,
                     last_seen=last_seen,
                     limit=limit,
                 )

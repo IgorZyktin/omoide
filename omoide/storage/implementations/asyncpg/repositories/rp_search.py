@@ -117,6 +117,7 @@ class SearchRepository(_SearchRepositoryBase):
         self,
         user: models.User,
         only_collections: bool,
+        nested: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
@@ -133,6 +134,9 @@ class SearchRepository(_SearchRepositoryBase):
         if only_collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
+        if nested:
+            stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
+
         stmt = queries.apply_ordering(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
@@ -143,6 +147,7 @@ class SearchRepository(_SearchRepositoryBase):
         self,
         user: models.User,
         only_collections: bool,
+        nested: bool,
         order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
@@ -151,9 +156,6 @@ class SearchRepository(_SearchRepositoryBase):
         stmt = sa.select(
             db_models.Item
         ).where(
-            ~db_models.Item.owner_uuid.in_(  # noqa
-                sa.select(db_models.PublicUsers.user_uuid)
-            ),
             sa.or_(
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.permissions.any(str(user.uuid)),
@@ -162,6 +164,9 @@ class SearchRepository(_SearchRepositoryBase):
 
         if only_collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+
+        if nested:
+            stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
 
         stmt = queries.apply_ordering(stmt, order, last_seen)
         stmt = stmt.limit(limit)
