@@ -237,7 +237,7 @@ class BrowseRepository(
         if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
-        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
@@ -269,7 +269,7 @@ class BrowseRepository(
         if collections:
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
-        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)

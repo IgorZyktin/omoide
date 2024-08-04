@@ -74,38 +74,38 @@
             </a>
             {# ------------------------------------------------------------- #}
 
-            {# Ordering button --------------------------------------------- #}
+            {# Order button ------------------------------------------------ #}
             {% if block_ordered %}
                 <span class="button-disabled qc-order">
 
                 {% if request.query_params.get('order') == 'random' %}
                     <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
-                         alt="Ordering is not supported in this section"/>
-                    <span title="Change view mode to see items ordered">Now random</span>
+                         alt="Order is not supported in this section"/>
+                    <span title="Change view mode to see items ordered">Random</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
-                         alt="Ordering is not supported in this section"/>
-                    <span title="Change view mode to see items in random order">Now ordered</span>
+                         alt="Order is not supported in this section"/>
+                    <span title="Change view mode to see items in random order">Ordered</span>
                 {% endif %}
             </span>
             {% else %}
                 {% if request.query_params.get('order') == 'random' %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see items ordered"
-                       onclick="toggleOrdered()"
+                       onclick="toggleOrder()"
                        class="button qc-order">
                         <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
                              alt="Change view mode to see items ordered"/>
-                        <span title="Change view mode to see items ordered">Now random</span>
+                        <span title="Change view mode to see items ordered">Random</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see items in random order"
-                       onclick="toggleOrdered()"
+                       onclick="toggleOrder()"
                        class="button qc-order">
                         <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
                              alt="Change view mode to see items ordered"/>
-                        <span>Now ordered</span>
+                        <span>Ordered</span>
                     </a>
                 {% endif %}
             {% endif %}

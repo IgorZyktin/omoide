@@ -107,8 +107,8 @@ function reloadSearchParams(newSearchParams) {
         + window.location.pathname + '?' + newSearchParams.toString();
 }
 
-function toggleOrdered() {
-    // toggle random/ordered search mode
+function toggleOrder() {
+    // toggle `random/order` search mode
     let searchParams = new URLSearchParams(window.location.search)
 
     if (searchParams.get('order') === 'asc') {
@@ -134,7 +134,7 @@ function toggleNested() {
 }
 
 function toggleCollections() {
-    // toggle only_collections/all browse mode
+    // toggle `collections/all items` browse mode
     let searchParams = new URLSearchParams(window.location.search)
 
     if (searchParams.get('collections') === 'on')

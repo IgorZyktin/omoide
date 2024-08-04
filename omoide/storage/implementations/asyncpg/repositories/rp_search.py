@@ -101,7 +101,7 @@ class SearchRepository(_SearchRepositoryBase):
             collections=collections,
         )
 
-        stmt = queries.apply_ordering(
+        stmt = queries.apply_order(
             stmt=stmt,
             order=order,
             last_seen=last_seen,
@@ -137,7 +137,7 @@ class SearchRepository(_SearchRepositoryBase):
         if nested:
             stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
 
-        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
@@ -168,7 +168,7 @@ class SearchRepository(_SearchRepositoryBase):
         if nested:
             stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
 
-        stmt = queries.apply_ordering(stmt, order, last_seen)
+        stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)

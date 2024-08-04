@@ -44,7 +44,7 @@ def ensure_user_has_permissions(
     return ensure_registered_user_has_permissions(user, stmt)
 
 
-def apply_ordering(
+def apply_order(
     stmt: Select,
     order: const.ORDER_TYPE,
     last_seen: int,
