@@ -4,6 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Request
+from fastapi import Response
 from fastapi import status
 
 from omoide import models
@@ -23,6 +25,8 @@ api_users_router = APIRouter(prefix='/users', tags=['Users'])
     response_model=users_api_models.UserOutput,
 )
 async def api_create_user(
+    request: Request,
+    response: Response,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_in: users_api_models.UserInput,
@@ -38,6 +42,10 @@ async def api_create_user(
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    response.headers['Location'] = str(
+        request.url_for('api_get_user_by_uuid', user_uuid=user.uuid)
+    )
 
     return users_api_models.UserOutput(
         **utils.serialize(user.model_dump()),
@@ -85,7 +93,7 @@ async def api_get_all_users(
     response_model=users_api_models.UserResourceUsageOutput,
 )
 async def api_get_user_resource_usage(
-    uuid: UUID,
+    user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
@@ -93,7 +101,7 @@ async def api_get_user_resource_usage(
     use_case = users_use_cases.GetUserResourceUsageUseCase(mediator)
 
     try:
-        output = await use_case.execute(user, uuid)
+        output = await use_case.execute(user, user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -137,7 +145,7 @@ async def api_get_anon_tags(
     response_model=dict[str, int],
 )
 async def api_get_user_tags(
-    uuid: UUID,
+    user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
@@ -145,7 +153,7 @@ async def api_get_user_tags(
     use_case = users_use_cases.GetKnownUserTagsUseCase(mediator)
 
     try:
-        tags = await use_case.execute(user, uuid)
+        tags = await use_case.execute(user, user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -159,7 +167,7 @@ async def api_get_user_tags(
     response_model=users_api_models.UserOutput,
 )
 async def api_get_user_by_uuid(
-    uuid: UUID,
+    user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
@@ -167,7 +175,7 @@ async def api_get_user_by_uuid(
     use_case = users_use_cases.GetUserByUUIDUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, uuid)
+        user, extras = await use_case.execute(user, user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -184,7 +192,7 @@ async def api_get_user_by_uuid(
     response_model=users_api_models.UserOutput,
 )
 async def api_change_user_name(
-    uuid: UUID,
+    user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     payload: users_api_models.UserValueInput,
@@ -193,7 +201,7 @@ async def api_change_user_name(
     use_case = users_use_cases.ChangeUserNameUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, uuid, payload.value)
+        user, extras = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -210,7 +218,7 @@ async def api_change_user_name(
     response_model=users_api_models.UserOutput,
 )
 async def api_change_user_login(
-    uuid: UUID,
+    user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     payload: users_api_models.UserValueInput,
@@ -219,7 +227,7 @@ async def api_change_user_login(
     use_case = users_use_cases.ChangeUserLoginUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, uuid, payload.value)
+        user, extras = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
@@ -236,7 +244,7 @@ async def api_change_user_login(
     response_model=users_api_models.UserOutput,
 )
 async def api_change_user_password(
-    uuid: UUID,
+    user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     payload: users_api_models.UserValueInput,
@@ -245,7 +253,7 @@ async def api_change_user_password(
     use_case = users_use_cases.ChangeUserPasswordUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, uuid, payload.value)
+        user, extras = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
