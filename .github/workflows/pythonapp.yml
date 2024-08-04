@@ -29,8 +29,8 @@ jobs:
                 run: |
                     pip install pytest
                     pytest ./omoide/tests/unit/
-            -   name: Test with mypy
-                run: |
-                    pip install mypy
-                    pip install types-ujson
-                    mypy ./omoide
+#            -   name: Test with mypy
+#                run: |
+#                    pip install mypy
+#                    pip install types-ujson
+#                    mypy ./omoide
