@@ -411,9 +411,9 @@ class BrowseRepository(
            tags,
            permissions
     FROM nested_items
-    WHERE (owner_uuid IN (SELECT user_uuid FROM public_users))
+    WHERE ((owner_uuid IN (SELECT user_uuid FROM public_users))
         OR (owner_uuid = CAST(:user_uuid AS uuid))
-        OR CAST(:user_uuid AS TEXT) = ANY(permissions)
+        OR CAST(:user_uuid AS TEXT) = ANY(permissions))
         """
 
         values = {
