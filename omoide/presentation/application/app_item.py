@@ -53,6 +53,7 @@ async def app_item_create(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
+        'endpoint': request.url_for('api_create_item'),
         'parent': parent,
         'permissions': permissions,
     }

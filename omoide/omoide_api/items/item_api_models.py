@@ -21,20 +21,31 @@ SUPPORTED_EXTENSION = frozenset(
     )
 )
 
+MAX_ITEM_FIELD_LENGTH = 256
+
 
 class ItemInput(BaseModel):
     """Input info for item creation."""
     uuid: UUID | None = None
     parent_uuid: UUID
     owner_uuid: UUID
-    name: str = ''
+    name: str = Field(..., max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    content_ext: str | None = None
-    preview_ext: str | None = None
-    thumbnail_ext: str | None = None
     tags: list[str] = []
     permissions: list[UUID] = []
+
+    @model_validator(mode='after')
+    def check_tags(self) -> 'ItemInput':
+        """Raise if tag is too big."""
+        for tag in self.tags:
+            if len(tag) > MAX_ITEM_FIELD_LENGTH:
+                msg = (
+                    f'Tag is too long ({len(tag)} symbols), '
+                    f'max allowed length is {MAX_ITEM_FIELD_LENGTH} symbols'
+                )
+                raise ValueError(msg)
+        return self
 
 
 class MediaInput(BaseModel):

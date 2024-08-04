@@ -24,8 +24,6 @@ from omoide.presentation import api_models
 
 
 __all__ = [
-    'ApiItemCreateUseCase',
-    'ApiItemCreateBulkUseCase',
     'ApiItemReadByNameUseCase',
     'ApiItemUpdateUseCase',
     'ApiItemsDownloadUseCase',
@@ -250,53 +248,6 @@ class BaseItemModifyUseCase:
         await self.misc_repo.update_known_tags(users, item2.tags, [])
 
         return item2.uuid
-
-
-class ApiItemCreateUseCase(BaseItemModifyUseCase):
-    """Use case for creating an item."""
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            payload: api_models.CreateItemIn,
-    ) -> Result[errors.Error, UUID]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            parent_uuid = payload.parent_uuid or user.root_item
-            error = await policy.is_restricted(user, parent_uuid,
-                                               actions.Item.CREATE)
-            if error:
-                return Failure(error)
-
-            uuid = await self._create_one_item(user, payload)
-
-        return Success(uuid)
-
-
-class ApiItemCreateBulkUseCase(BaseItemModifyUseCase):
-    """Use case for creating many items at once."""
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            payload: api_models.CreateItemsIn,
-    ) -> Result[errors.Error, list[UUID]]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            parent_uuid = payload.parent_uuid or user.root_item
-            error = await policy.is_restricted(user, parent_uuid,
-                                               actions.Item.CREATE)
-            if error:
-                return Failure(error)
-
-            uuids: list[UUID] = []
-            for _ in range(payload.total):
-                uuid = await self._create_one_item(user, payload)
-                uuids.append(uuid)
-
-        return Success(uuids)
 
 
 class ApiItemReadByNameUseCase:

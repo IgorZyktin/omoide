@@ -27,7 +27,6 @@ class CreateItemsUseCase(BaseItemCreatorUseCase):
         items: list[models.Item] = []
 
         async with self.mediator.storage.transaction():
-
             for raw_item in items_in:
                 item = await self.create_one_item(**raw_item)
                 items.append(item)

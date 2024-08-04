@@ -156,11 +156,11 @@ class BaseItemCreatorUseCase(BaseAPIUseCase):
         name: str,
         number: int | None,
         is_collection: bool,
-        content_ext: str | None,
-        preview_ext: str | None,
-        thumbnail_ext: str | None,
         tags: list[str],
         permissions: list[UUID],
+        content_ext: str | None = None,
+        preview_ext: str | None = None,
+        thumbnail_ext: str | None = None,
     ) -> models.Item:
         """Create single item."""
         if uuid is None:

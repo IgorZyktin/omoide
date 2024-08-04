@@ -375,46 +375,6 @@ def api_items_download_use_case(
 
 
 @utils.memorize
-def api_item_create_use_case(
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                         Depends(get_metainfo_repo)],
-    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
-                         Depends(get_misc_repo)],
-) -> use_cases.ApiItemCreateUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemCreateUseCase(
-        users_repo=users_repo,
-        items_repo=items_repo,
-        metainfo_repo=meta_repo,
-        misc_repo=misc_repo,
-    )
-
-
-@utils.memorize
-def api_item_create_bulk_use_case(
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                         Depends(get_metainfo_repo)],
-    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
-                         Depends(get_misc_repo)],
-) -> use_cases.ApiItemCreateBulkUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemCreateBulkUseCase(
-        users_repo=users_repo,
-        items_repo=items_repo,
-        metainfo_repo=meta_repo,
-        misc_repo=misc_repo,
-    )
-
-
-@utils.memorize
 def api_item_read_by_name_use_case(
     items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
 ) -> use_cases.ApiItemReadByNameUseCase:

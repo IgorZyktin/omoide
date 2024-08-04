@@ -420,21 +420,25 @@ async function createItemsForProxy(targets, uploadState) {
 
     let parent_uuid = targets[0].parent_uuid
 
+    const defaultItem = {
+        uuid: null,
+        parent_uuid: parent_uuid,
+        name: '',
+        is_collection: false,
+        tags: [],
+        permissions: [],
+    }
+
+    const memberCardArray = Array.from(
+        {length: targets.length}).map(() => defaultItem);
+
     return new Promise(function (resolve, reject) {
         $.ajax({
             timeout: 10000, // 10 seconds
             type: 'POST',
-            url: '/api/items/bulk',
+            url: `${ITEMS_ENDPOINT}/bulk`,
             contentType: 'application/json',
-            data: JSON.stringify({
-                uuid: null,
-                parent_uuid: parent_uuid,
-                name: '',
-                is_collection: false,
-                tags: [],
-                permissions: [],
-                total: targets.length,
-            }),
+            data: JSON.stringify(memberCardArray),
             success: function (response) {
                 if (response.length !== targets.length) {
                     targets.forEach((value, index) => {
@@ -445,7 +449,7 @@ async function createItemsForProxy(targets, uploadState) {
                 }
 
                 for (let i = 0; i < targets.length; i++) {
-                    targets[i].uuid = response[i].uuid
+                    targets[i].uuid = response['items'][i].uuid
                     targets[i].actualSteps.add('createItemsForProxy')
                 }
             },

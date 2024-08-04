@@ -35,11 +35,11 @@ function describeFail(response, alertsElementId) {
 }
 
 
-async function createItem(button, parameters) {
+async function createItem(button, endpoint, parameters) {
     // send command for item creation
     $.ajax({
         type: 'POST',
-        url: '/api/items',
+        url: endpoint,
         contentType: 'application/json',
         data: JSON.stringify(parameters),
         beforeSend: function () {
@@ -47,7 +47,7 @@ async function createItem(button, parameters) {
         },
         success: function (response) {
             let action = $('#action_after_creation').val()
-            let uuid = response['uuid']
+            let uuid = response['item']['uuid']
             if (action === 'upload') {
                 relocateWithAim(`/upload/${uuid}`)
             } else if (action === 'nothing') {

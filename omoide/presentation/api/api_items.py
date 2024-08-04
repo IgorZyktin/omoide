@@ -1,5 +1,4 @@
 """Item related API operations."""
-import http
 import urllib.parse
 from typing import Type
 from uuid import UUID
@@ -20,57 +19,6 @@ from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
 router = APIRouter(prefix='/api/items')
-
-
-@router.post(
-    '',
-    status_code=http.HTTPStatus.CREATED,
-    response_model=api_models.OnlyUUID,
-)
-async def api_create_item(
-        request: Request,
-        response: Response,
-        payload: api_models.CreateItemIn,
-        user: models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemCreateUseCase = Depends(
-            dep.api_item_create_use_case),
-):
-    """Create item."""
-    result = await use_case.execute(policy, user, payload)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    response.headers['Location'] = str(
-        request.url_for('api_read_item', item_uuid=result.value)
-    )
-
-    return api_models.OnlyUUID(uuid=result.value)
-
-
-@router.post(
-    '/bulk',
-    status_code=http.HTTPStatus.OK,
-    response_model=list[api_models.OnlyUUID],
-)
-async def api_create_item_bulk(
-        payload: api_models.CreateItemsIn,
-        user: models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.ApiItemCreateBulkUseCase = Depends(
-            dep.api_item_create_bulk_use_case),
-):
-    """Create many items at once."""
-    result = await use_case.execute(policy, user, payload)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return [
-        api_models.OnlyUUID(uuid=uuid)
-        for uuid in result.value
-    ]
 
 
 @router.get('/by-name')
