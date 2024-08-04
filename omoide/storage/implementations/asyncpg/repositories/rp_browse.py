@@ -241,7 +241,7 @@ class BrowseRepository(
         stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [models.Item(**x) for x in response]
+        return [models.Item(**row) for row in response]
 
     async def browse_connected_known(
         self,
@@ -256,10 +256,10 @@ class BrowseRepository(
         stmt = sa.select(
             db_models.Item
         ).where(
-            ~db_models.Item.owner_uuid.in_(  # noqa
-                sa.select(db_models.PublicUsers.user_uuid)
-            ),
             sa.or_(
+                db_models.Item.owner_uuid.in_(  # noqa
+                    sa.select(db_models.PublicUsers.user_uuid)
+                ),
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.permissions.any(str(user.uuid)),
             ),
@@ -273,7 +273,7 @@ class BrowseRepository(
         stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [models.Item(**x) for x in response]
+        return [models.Item(**row) for row in response]
 
     async def browse_associated_anon(
         self,
@@ -330,7 +330,8 @@ class BrowseRepository(
            permissions
     FROM nested_items
     WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
-                """
+        """
+
         values = {
             'item_uuid': str(item_uuid),
             'limit': limit,
@@ -410,10 +411,11 @@ class BrowseRepository(
            tags,
            permissions
     FROM nested_items
-    WHERE owner_uuid NOT IN (SELECT user_uuid FROM public_users)
-        AND ((owner_uuid = CAST(:user_uuid AS uuid)
-              OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
-                """
+    WHERE (owner_uuid IN (SELECT user_uuid FROM public_users))
+        OR (owner_uuid = CAST(:user_uuid AS uuid))
+        OR CAST(:user_uuid AS TEXT) = ANY(permissions)
+        """
+
         values = {
             'user_uuid': str(user.uuid),
             'item_uuid': str(item_uuid),
@@ -437,7 +439,7 @@ class BrowseRepository(
         stmt += ' LIMIT :limit;'
 
         response = await self.db.fetch_all(stmt, values)
-        return [models.Item(**x) for x in response]
+        return [models.Item(**row) for row in response]
 
     async def get_recently_updated_items(
         self,
