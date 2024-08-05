@@ -47,7 +47,7 @@ class AbsItemsRepo(abc.ABC):
         self,
         owner_uuid: UUID | None,
         parent_uuid: UUID | None,
-        name: str,
+        name: str | None,
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
@@ -58,7 +58,7 @@ class AbsItemsRepo(abc.ABC):
         user: models.User,
         owner_uuid: UUID | None,
         parent_uuid: UUID | None,
-        name: str,
+        name: str | None,
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""

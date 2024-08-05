@@ -117,9 +117,9 @@ async def api_read_many_items(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     owner_uuid: Annotated[UUID | None, Query()] = None,
     parent_uuid: Annotated[UUID | None, Query()] = None,
-    name: Annotated[str, Query(
+    name: Annotated[str | None, Query(
         max_length=common_api_models.MAX_LENGTH_DEFAULT,
-    )] = common_api_models.QUERY_DEFAULT,
+    )] = None,
     limit: Annotated[int, Query(
         ge=common_api_models.MIN_LIMIT,
         lt=common_api_models.MAX_LIMIT,

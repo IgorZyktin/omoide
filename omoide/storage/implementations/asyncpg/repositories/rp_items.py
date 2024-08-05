@@ -154,7 +154,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         self,
         owner_uuid: UUID | None,
         parent_uuid: UUID | None,
-        name: str,
+        name: str | None,
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
@@ -166,13 +166,13 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             )
         )
 
-        if parent_uuid:
+        if parent_uuid is not None:
             stmt = stmt.where(db_models.Item.parent_uuid == parent_uuid)
 
-        if owner_uuid:
+        if owner_uuid is not None:
             stmt = stmt.where(db_models.Item.owner_uuid == owner_uuid)
 
-        if name:
+        if name is not None:
             stmt = stmt.where(db_models.Item.name == name)
 
         stmt = stmt.limit(limit)
@@ -185,7 +185,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         user: models.User,
         owner_uuid: UUID | None,
         parent_uuid: UUID | None,
-        name: str,
+        name: str | None,
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
@@ -201,13 +201,13 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             )
         )
 
-        if parent_uuid:
+        if parent_uuid is not None:
             stmt = stmt.where(db_models.Item.parent_uuid == parent_uuid)
 
-        if owner_uuid:
+        if owner_uuid is not None:
             stmt = stmt.where(db_models.Item.owner_uuid == owner_uuid)
 
-        if name:
+        if name is not None:
             stmt = stmt.where(db_models.Item.name == name)
 
         stmt = stmt.limit(limit)

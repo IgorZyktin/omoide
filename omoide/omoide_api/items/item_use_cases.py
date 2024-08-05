@@ -71,7 +71,7 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
         user: models.User,
         owner_uuid: UUID | None,
         parent_uuid: UUID | None,
-        name: str,
+        name: str | None,
         limit: int,
     ) -> tuple[float, list[models.Item]]:
         """Execute."""
