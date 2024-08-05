@@ -29,11 +29,14 @@ MAX_PERMISSIONS = 100
 class ItemInput(BaseModel):
     """Input info for item creation."""
     uuid: UUID | None = None
-    parent_uuid: UUID
-    owner_uuid: UUID
+    parent_uuid: UUID | None = None
+    owner_uuid: UUID | None = None
     name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
+    content_ext: str | None = None,
+    preview_ext: str | None = None,
+    thumbnail_ext: str | None = None,
     tags: list[str] = Field([], max_length=MAX_TAGS)
     permissions: list[UUID] = Field([], max_length=MAX_PERMISSIONS)
 

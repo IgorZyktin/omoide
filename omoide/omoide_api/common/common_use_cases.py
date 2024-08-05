@@ -150,9 +150,10 @@ class BaseItemCreatorUseCase(BaseAPIUseCase):
 
     async def create_one_item(
         self,
+        user: models.User,
         uuid: UUID | None,
         parent_uuid: UUID | None,
-        owner_uuid: UUID,
+        owner_uuid: UUID | None,
         name: str,
         number: int | None,
         is_collection: bool,
@@ -167,6 +168,22 @@ class BaseItemCreatorUseCase(BaseAPIUseCase):
             valid_uuid = await self.mediator.items_repo.get_free_uuid()
         else:
             valid_uuid = uuid
+
+        msg = 'You are not allowed to create items for other users'
+
+        if owner_uuid is not None and owner_uuid != user.uuid:
+            raise exceptions.NotAllowedError(msg)
+
+        if parent_uuid is None:
+            root = await self.mediator.items_repo.get_root_item(user)
+            owner_uuid = root.owner_uuid
+            parent_uuid = root.uuid
+
+        else:
+            parent = await self.mediator.items_repo.get_item(parent_uuid)
+            if parent.owner_uuid != user.uuid:
+                raise exceptions.NotAllowedError(msg)
+            owner_uuid = parent.owner_uuid
 
         item = models.Item(
             id=-1,

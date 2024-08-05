@@ -28,7 +28,7 @@ class CreateItemsUseCase(BaseItemCreatorUseCase):
 
         async with self.mediator.storage.transaction():
             for raw_item in items_in:
-                item = await self.create_one_item(**raw_item)
+                item = await self.create_one_item(user, **raw_item)
                 items.append(item)
 
         duration = time.perf_counter() - start

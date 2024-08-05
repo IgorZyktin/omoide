@@ -315,7 +315,7 @@ async function getAutocompletionVariants(tag, endpoint) {
     })
 }
 
-function strongByTemplate(text, template){
+function strongByTemplate(text, template) {
     // Surround given text template in <strong> tags
     let reg = new RegExp(template, 'gi');
     return text.replace(reg, function (str) {

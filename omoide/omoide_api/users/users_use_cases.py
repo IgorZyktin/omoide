@@ -63,15 +63,13 @@ class CreateUserUseCase(BaseItemCreatorUseCase):
 
         async with self.mediator.storage.transaction():
             item = await self.create_one_item(
+                user=user,
                 uuid=None,
                 parent_uuid=None,
                 owner_uuid=user.uuid,
                 name=user.name,
                 is_collection=True,
                 number=None,
-                content_ext=None,
-                preview_ext=None,
-                thumbnail_ext=None,
                 tags=[user.name],
                 permissions=[],
             )
