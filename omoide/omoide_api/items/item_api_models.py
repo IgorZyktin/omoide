@@ -34,9 +34,9 @@ class ItemInput(BaseModel):
     name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    content_ext: str | None = None,
-    preview_ext: str | None = None,
-    thumbnail_ext: str | None = None,
+    content_ext: str | None = None
+    preview_ext: str | None = None
+    thumbnail_ext: str | None = None
     tags: list[str] = Field([], max_length=MAX_TAGS)
     permissions: list[UUID] = Field([], max_length=MAX_PERMISSIONS)
 
