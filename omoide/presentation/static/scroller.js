@@ -103,7 +103,7 @@ class Scroller {
                 // FIXME - remove this check
                 link.href = item['href'] + '?' + searchParams.toString()
             } else {
-                link.href = getPreviewUrl(item) + '?' + searchParams.toString()
+                link.href = getPreviewUrl(item)
             }
             let parent_name = ''
 
