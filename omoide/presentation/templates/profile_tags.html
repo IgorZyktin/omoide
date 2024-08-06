@@ -10,7 +10,7 @@
                 <th>Tag</th>
                 <th>Times used</th>
             </tr>
-            {% for tag, counter in known_tags %}
+            {% for tag, counter in known_tags.items() %}
                 <tr>
                     <td>
                         <a href="{{ request.url_for('app_search')|string + '?' + aim_wrapper.to_url(q=tag) }}" class="to-top-link">{{ tag }}</a>

@@ -13,6 +13,7 @@ from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.domain import errors
+from omoide.infra.mediator import Mediator
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
@@ -23,12 +24,12 @@ router = fastapi.APIRouter()
 
 @router.get('/profile')
 async def app_profile(
-        request: Request,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: models.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: models.User = Depends(dep.get_current_user),
+    config: Config = Depends(dep.get_config),
+    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    response_class: Type[Response] = HTMLResponse,
 ):
     """Show user home page."""
     if user.is_anon or user.uuid is None:
@@ -47,14 +48,14 @@ async def app_profile(
 
 @router.get('/profile/quotas')
 async def app_profile_quotas(
-        request: Request,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: models.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        use_case: use_cases.AppProfileQuotasUseCase = Depends(
-            dep.profile_quotas_use_case),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: models.User = Depends(dep.get_current_user),
+    config: Config = Depends(dep.get_config),
+    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    use_case: use_cases.AppProfileQuotasUseCase = Depends(
+        dep.profile_quotas_use_case),
+    response_class: Type[Response] = HTMLResponse,
 ):
     """Show space usage stats."""
     result = await use_case.execute(user)
@@ -81,12 +82,12 @@ async def app_profile_quotas(
 
 @router.get('/profile/new')
 async def app_profile_new(
-        request: Request,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: models.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: models.User = Depends(dep.get_current_user),
+    config: Config = Depends(dep.get_config),
+    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    response_class: Type[Response] = HTMLResponse,
 ):
     """Show recent updates."""
     if user.is_anon or user.uuid is None:
@@ -105,26 +106,25 @@ async def app_profile_new(
 
 @router.get('/profile/tags')
 async def app_profile_tags(
-        request: Request,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: models.User = Depends(dep.get_current_user),
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        use_case: use_cases.AppProfileTagsUseCase = Depends(
-            dep.profile_tags_use_case),
-        response_class: Type[Response] = HTMLResponse,
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    config: Config = Depends(dep.get_config),
+    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    response_class: Type[Response] = HTMLResponse,
 ):
     """Show know tags."""
     if user.is_anon or user.uuid is None:
         error = errors.AuthenticationRequired()
         return web.redirect_from_error(request, error)
 
-    result = await use_case.execute(user)
+    use_case = use_cases.AppProfileTagsUseCase(mediator)
 
-    if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error)
-
-    known_tags = result.value
+    try:
+        known_tags = await use_case.execute(user)
+    except Exception as exc:
+        return web.raise_from_exc(exc)
 
     context = {
         'request': request,

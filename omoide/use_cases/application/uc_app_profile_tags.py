@@ -1,9 +1,6 @@
 """Use case for user profile tags."""
 from omoide import models
-from omoide.domain import errors
-from omoide.infra.special_types import Result
-from omoide.infra.special_types import Success
-from omoide.storage import interfaces as storage_interfaces
+from omoide.infra.mediator import Mediator
 
 __all__ = [
     'AppProfileTagsUseCase',
@@ -13,18 +10,14 @@ __all__ = [
 class AppProfileTagsUseCase:
     """Use case for user profile tags."""
 
-    def __init__(
-            self,
-            search_repo: storage_interfaces.AbsSearchRepository,
-    ) -> None:
+    def __init__(self, mediator: Mediator) -> None:
         """Initialize instance."""
-        self.search_repo = search_repo
+        self.mediator = mediator
 
-    async def execute(
-            self,
-            user: models.User,
-    ) -> Result[errors.Error, list[tuple[str, int]]]:
+    async def execute(self, user: models.User) -> dict[str, int]:
         """Return tags with their counters."""
-        async with self.search_repo.transaction():
-            known_tags = await self.search_repo.count_all_tags_known(user)
-        return Success(known_tags)
+        async with self.mediator.storage.transaction():
+            known_tags = await self.mediator.search_repo.count_all_tags_known(
+                user=user,
+            )
+        return known_tags
