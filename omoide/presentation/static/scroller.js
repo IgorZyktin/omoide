@@ -22,6 +22,7 @@ class Scroller {
         this.alreadySeen = new Set()
         this.totalEmptyRequests = 0
         this.intervalId = null
+        this.tryNotOnlyCollections = false
     }
 
     trigger() {
@@ -71,6 +72,13 @@ class Scroller {
             items = response
         } else {
             items = response['items']
+        }
+
+        let switchedMode = false
+        if (items.length === 0 && !this.tryNotOnlyCollections && searchParams.get('collections') === 'on') {
+            switchedMode = true
+            this.tryNotOnlyCollections = true
+            console.log('Seems that user got no results because "only collections" is active')
         }
 
         console.log(`Loading ${items.length} items`)
@@ -146,7 +154,7 @@ class Scroller {
         }
 
         let expectedToLoad = Number.parseInt(searchParams.get('items_per_page'))
-        if (items.length < (expectedToLoad || DEFAULT_LOAD_AMOUNT)) {
+        if (items.length < (expectedToLoad || DEFAULT_LOAD_AMOUNT) && !switchedMode) {
             console.log('Loaded everything from server')
             this.stop()
         }
@@ -158,6 +166,10 @@ class Scroller {
         let self = this
         searchParams.set('items_per_page', searchParams.get('items_per_page') || DEFAULT_LOAD_AMOUNT)
         searchParams.set('last_seen', this.lastSeen)
+
+        if (this.tryNotOnlyCollections) {
+            searchParams.set('collections', 'off')
+        }
 
         $.ajax({
             url: this.endpoint + '?' + searchParams.toString(),
