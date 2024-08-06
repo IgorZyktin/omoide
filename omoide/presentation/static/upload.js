@@ -609,7 +609,7 @@ async function uploadMetainfoForProxy(proxy) {
         $.ajax({
             timeout: 10000, // 10 seconds
             type: 'PUT',
-            url: METAINFO_ENDPOINT + `/${proxy.uuid}`,
+            url: `${METAINFO_ENDPOINT}/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 user_time: proxy.metainfo.user_time,
@@ -816,7 +816,7 @@ async function uploadEXIFProxy(proxy) {
         $.ajax({
             timeout: 10000, // 10 seconds
             type: 'POST',
-            url: EXIF_ENDPOINT + `/${proxy.uuid}`,
+            url: `${EXIF_ENDPOINT}/${proxy.uuid}`,
             contentType: 'application/json',
             data: JSON.stringify({
                 exif: exif,
@@ -1001,13 +1001,12 @@ async function copyContent(parent, firstChild) {
     // copy content from given child
     return new Promise(function (resolve, reject) {
         $.ajax({
-            timeout: 5000, // 5 seconds
-            type: 'POST',
-            url: `${MEDIA_ENDPOINT}/${parent.uuid}`,
+            timeout: 100000, // 5 seconds
+            type: 'PUT',
+            url: `${ITEMS_ENDPOINT}/${parent.uuid}/content`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: firstChild.content,
-                media_type: 'content',
                 ext: firstChild.contentExt,
             }),
             success: async function (response) {
@@ -1025,13 +1024,12 @@ async function copyPreview(parent, firstChild) {
     // copy preview from given child
     return new Promise(function (resolve, reject) {
         $.ajax({
-            timeout: 5000, // 5 seconds
-            type: 'POST',
-            url: `${MEDIA_ENDPOINT}/${parent.uuid}`,
+            timeout: 100000, // 5 seconds
+            type: 'PUT',
+            url: `${ITEMS_ENDPOINT}/${parent.uuid}/preview`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: firstChild.preview,
-                media_type: 'preview',
                 ext: firstChild.previewExt,
             }),
             success: async function (response) {
@@ -1049,13 +1047,12 @@ async function copyThumbnail(parent, firstChild) {
     // copy thumbnail from given child
     return new Promise(function (resolve, reject) {
         $.ajax({
-            timeout: 5000, // 5 seconds
-            type: 'POST',
-            url: `${MEDIA_ENDPOINT}/${parent.uuid}`,
+            timeout: 100000, // 5 seconds
+            type: 'PUT',
+            url: `${ITEMS_ENDPOINT}/${parent.uuid}/thumbnail`,
             contentType: 'application/json',
             data: JSON.stringify({
                 content: firstChild.thumbnail,
-                media_type: 'thumbnail',
                 ext: firstChild.thumbnailExt,
             }),
             success: async function (response) {
