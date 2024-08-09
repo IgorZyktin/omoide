@@ -140,7 +140,9 @@ function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
         url: `${ITEMS_ENDPOINT}/${uuid}`,
         contentType: 'application/json',
         success: function (response) {
-            renderThumbnailDynamic(thumbnailElement, response)
+            if (response['item'] !== undefined) {
+                renderThumbnailDynamic(thumbnailElement, response['item'])
+            }
 
             if (callback !== undefined)
                 callback(response)
