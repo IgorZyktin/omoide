@@ -287,23 +287,6 @@ def app_preview_use_case(
 
 
 @utils.memorize
-def app_browse_use_case(
-    browse_repository:
-    storage_interfaces.AbsBrowseRepository = Depends(get_browse_repo),
-    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
-) -> use_cases.AppBrowseUseCase:
-    """Get use case instance."""
-    return use_cases.AppBrowseUseCase(
-        browse_repo=browse_repository,
-        users_repo=users_repo,
-        items_repo=items_repo,
-        meta_repo=meta_repo
-    )
-
-
-@utils.memorize
 def app_upload_use_case(
     users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
     items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
