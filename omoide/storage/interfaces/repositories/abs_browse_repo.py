@@ -22,11 +22,7 @@ class AbsBrowseRepository(abc.ABC):
         """Load all children of an item with given UUID."""
 
     @abc.abstractmethod
-    async def count_children(
-        self,
-        user: models.User,
-        uuid: UUID,
-    ) -> int:
+    async def count_children(self, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
 
     @abc.abstractmethod

@@ -1,7 +1,6 @@
 """Use cases for browse page."""
 
 from typing import NamedTuple
-from typing import Optional
 from uuid import UUID
 
 from omoide import custom_logging
@@ -67,15 +66,14 @@ class AppBrowseDynamicUseCase(BaseBrowseUseCase):
 
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
-    item: domain.Item
+    item: models.Item
+    parents: list[models.Item]
     metainfo: models.Metainfo
-    location: domain.SimpleLocation | domain.Location | None
     total_items: int
     total_pages: int
-    items: list[domain.Item]
-    names: list[Optional[str]]
+    items: list[models.Item]
+    names: list[str | None]
     aim: domain.Aim
-    paginated: bool = True
 
 
 class AppBrowsePagedUseCase(BaseBrowseUseCase):
@@ -93,36 +91,24 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
 
             await self._ensure_allowed_to(user, item)
 
-            location = await self.mediator.browse_repo.get_location(
-                user=user,
-                uuid=item.uuid,
-                aim=aim,
-                users_repo=self.mediator.users_repo,
-            )
-
-            items = await self.mediator.browse_repo.get_children(
+            parents = await self.mediator.items_repo.get_parents(item)
+            children = await self.mediator.browse_repo.get_children(
                 user=user,
                 uuid=item.uuid,
                 aim=aim,
             )
 
-            names = await self.mediator.browse_repo.get_parents_names(items)
-
-            total_items = await self.mediator.browse_repo.count_children(
-                user=user,
-                uuid=item.uuid,
-            )
-
+            names = await self.mediator.browse_repo.get_parent_names(children)
+            total_items = await self.mediator.browse_repo.count_children(item)
             metainfo = await self.mediator.meta_repo.read_metainfo(item)
 
         return BrowseResult(
             item=item,
+            parents=parents,
             metainfo=metainfo,
             total_items=total_items,
             total_pages=aim.calc_total_pages(total_items),
-            items=items,
+            items=children,
             names=names,
             aim=aim,
-            location=location,
-            paginated=True,
         )

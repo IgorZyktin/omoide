@@ -108,7 +108,7 @@ class AppBrowseUseCase:
 
         total_items = await self.browse_repo.count_children(
             user=user,
-            uuid=item.uuid,
+            item_uuid=item.uuid,
         )
 
         metainfo = await self.meta_repo.read_metainfo(item)

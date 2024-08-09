@@ -1,13 +1,13 @@
 {% extends "browse_base.html" %}
-{% from "macros.html" import render_paginator_by_item, render_location, render_thumbnail_for_item %}
+{% from "macros.html" import render_paginator_by_item, render_lineage, render_thumbnail_for_item %}
 
 {% block header_top %}
     {{ super() }}
-    {{ render_location(request, result.location, aim_wrapper) }}
+    {{ render_lineage(request, parents, current_item, aim_wrapper) }}
 {% endblock %}
 
 {% block body %}
-    {{ render_paginator_by_item(request, paginator, uuid, aim_wrapper) }}
+    {{ render_paginator_by_item(request, paginator, current_item.uuid, aim_wrapper) }}
 
     <div class="envelope-container">
         {% for item, name in zip(result.items, names) %}
@@ -15,7 +15,7 @@
         {% endfor %}
     </div>
 
-    {{ render_paginator_by_item(request, paginator, uuid, aim_wrapper) }}
+    {{ render_paginator_by_item(request, paginator, current_item.uuid, aim_wrapper) }}
     <script>
         $(document).ready(function () {
             activateFloatingHeader()

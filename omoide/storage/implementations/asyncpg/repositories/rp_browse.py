@@ -51,21 +51,15 @@ class BrowseRepository(
         response = await self.db.fetch_all(stmt)
         return [domain.Item(**x) for x in response]
 
-    async def count_children(
-        self,
-        user: models.User,
-        uuid: UUID,
-    ) -> int:
+    async def count_children(self, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
             db_models.Item
         ).where(
-            db_models.Item.parent_uuid == uuid
+            db_models.Item.parent_uuid == item.uuid
         )
-
-        stmt = queries.ensure_user_has_permissions(user, stmt)
 
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
