@@ -29,3 +29,15 @@ class AppProfileUsageUseCase(BaseAPPUseCase):
             )
 
         return size, total_items, total_collections
+
+
+class AppProfileTagsUseCase(BaseAPPUseCase):
+    """Use case for user profile tags."""
+
+    async def execute(self, user: models.User) -> dict[str, int]:
+        """Return tags with their counters."""
+        async with self.mediator.storage.transaction():
+            known_tags = await self.mediator.search_repo.count_all_tags_known(
+                user=user,
+            )
+        return known_tags

@@ -59,3 +59,36 @@ async def app_profile_usage(
     }
 
     return templates.TemplateResponse('profile_usage.html', context)
+
+
+@app_profile_router.get('/profile/tags')
+async def app_profile_tags(
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: Type[Response] = HTMLResponse,
+):
+    """Show know tags."""
+    use_case = profile_use_cases.AppProfileTagsUseCase(mediator)
+
+    try:
+        known_tags = await use_case.execute(user)
+    # TODO - manage redirects automatically
+    except exceptions.NotAllowedError:
+        LOG.exception('Access denied')
+        return RedirectResponse(request.url_for('forbidden'))
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'known_tags': known_tags,
+        'aim_wrapper': aim_wrapper,
+    }
+
+    return templates.TemplateResponse('profile_tags.html', context)
