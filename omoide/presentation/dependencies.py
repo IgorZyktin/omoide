@@ -449,14 +449,3 @@ def profile_quotas_use_case(
         users_repo=users_repo,
         items_repo=items_repo,
     )
-
-
-@utils.memorize
-def profile_tags_use_case(
-    search_repository:
-    storage_interfaces.AbsSearchRepository = Depends(get_search_repo),
-) -> use_cases.AppProfileTagsUseCase:
-    """Get use case instance."""
-    return use_cases.AppProfileTagsUseCase(
-        search_repo=search_repository,
-    )
