@@ -83,7 +83,6 @@ def apply_app_routes(current_app: FastAPI) -> None:
 
     # Special application routes
     current_app.include_router(application.app_special.router)
-    current_app.include_router(application.app_profile.router)
 
     # API routes
     current_app.include_router(api_old.api_items.router)

@@ -25,10 +25,33 @@ LOG = custom_logging.get_logger(__name__)
 app_profile_router = fastapi.APIRouter()
 
 
+@app_profile_router.get('/profile')
+async def app_profile(
+    request: Request,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: Type[Response] = HTMLResponse,
+):
+    """Show user profile page."""
+    if user.is_anon:
+        return RedirectResponse(request.url_for('forbidden'))
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim_wrapper': aim_wrapper,
+        'url': request.url_for('app_search'),
+    }
+    return templates.TemplateResponse('profile.html', context)
+
+
 @app_profile_router.get('/profile/usage')
 async def app_profile_usage(
     request: Request,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
