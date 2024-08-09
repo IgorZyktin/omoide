@@ -105,6 +105,10 @@ class AbsItemsRepo(abc.ABC):
         """Count dependant items."""
 
     @abc.abstractmethod
+    async def get_parents(self, item: models.Item) -> list[models.Item]:
+        """Return lineage of all parents for the given item."""
+
+    @abc.abstractmethod
     async def get_all_parents(
         self,
         user: models.User,

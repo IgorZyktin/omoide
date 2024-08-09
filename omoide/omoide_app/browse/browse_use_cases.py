@@ -1,0 +1,128 @@
+"""Use cases for browse page."""
+
+from typing import NamedTuple
+from typing import Optional
+from uuid import UUID
+
+from omoide import custom_logging
+from omoide import domain
+from omoide import exceptions
+from omoide import models
+from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
+
+LOG = custom_logging.get_logger(__name__)
+
+
+class BaseBrowseUseCase(BaseAPPUseCase):
+    """Base class."""
+
+    async def _ensure_allowed_to(
+        self,
+        user: models.User,
+        item: models.Item,
+    ) -> None:
+        """Raise if user has no access to this item."""
+        # TODO - too many sub requests
+        owner = await self.mediator.users_repo.get_user(item.owner_uuid)
+        public_users = (
+            await self.mediator.users_repo.get_public_users_uuids()
+        )
+
+        allowed_to = any(
+            (
+                user.is_admin,
+                owner.uuid in public_users,
+                owner.uuid == user.uuid,
+                str(user.uuid) in item.permissions,
+            )
+        )
+
+        if not allowed_to:
+            msg = (
+                f'User {user} is trying to browse {item}, '
+                'but is not allowed to'
+            )
+            raise exceptions.NotAllowedError(msg)
+
+
+class AppBrowseDynamicUseCase(BaseBrowseUseCase):
+    """Use case for browse (application)."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+    ) -> tuple[list[models.Item], models.Item, models.Metainfo]:
+        """Return browse model suitable for rendering."""
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+
+            await self._ensure_allowed_to(user, item)
+
+            parents = await self.mediator.items_repo.get_parents(item)
+            metainfo = await self.mediator.meta_repo.read_metainfo(item)
+
+        return parents, item, metainfo
+
+
+class BrowseResult(NamedTuple):
+    """DTO for current use case."""
+    item: domain.Item
+    metainfo: models.Metainfo
+    location: domain.SimpleLocation | domain.Location | None
+    total_items: int
+    total_pages: int
+    items: list[domain.Item]
+    names: list[Optional[str]]
+    aim: domain.Aim
+    paginated: bool = True
+
+
+class AppBrowsePagedUseCase(BaseBrowseUseCase):
+    """Use case for browse (application)."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        aim: domain.Aim,
+    ) -> BrowseResult:
+        """Return browse model suitable for rendering."""
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+
+            await self._ensure_allowed_to(user, item)
+
+            location = await self.mediator.browse_repo.get_location(
+                user=user,
+                uuid=item.uuid,
+                aim=aim,
+                users_repo=self.mediator.users_repo,
+            )
+
+            items = await self.mediator.browse_repo.get_children(
+                user=user,
+                uuid=item.uuid,
+                aim=aim,
+            )
+
+            names = await self.mediator.browse_repo.get_parents_names(items)
+
+            total_items = await self.mediator.browse_repo.count_children(
+                user=user,
+                uuid=item.uuid,
+            )
+
+            metainfo = await self.mediator.meta_repo.read_metainfo(item)
+
+        return BrowseResult(
+            item=item,
+            metainfo=metainfo,
+            total_items=total_items,
+            total_pages=aim.calc_total_pages(total_items),
+            items=items,
+            names=names,
+            aim=aim,
+            location=location,
+            paginated=True,
+        )

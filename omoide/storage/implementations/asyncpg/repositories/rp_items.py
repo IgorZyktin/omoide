@@ -322,6 +322,50 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
 
+    async def get_parents(self, item: models.Item) -> list[models.Item]:
+        """Return lineage of all parents for the given item."""
+        stmt = """
+        WITH RECURSIVE parents AS (
+           SELECT id, 
+                  uuid,
+                  parent_uuid,
+                  owner_uuid,
+                  number,
+                  name,
+                  is_collection,
+                  content_ext,
+                  preview_ext,
+                  thumbnail_ext,
+                  tags,
+                  permissions
+           FROM items
+           WHERE uuid = :uuid
+           UNION
+           SELECT i.id,
+                  i.uuid,
+                  i.parent_uuid,
+                  i.owner_uuid,
+                  i.number,
+                  i.name,
+                  i.is_collection,
+                  i.content_ext,
+                  i.preview_ext,
+                  i.thumbnail_ext,
+                  i.tags,
+                  i.permissions
+            FROM items i
+                     INNER JOIN parents ON i.uuid = parents.parent_uuid
+        )
+        SELECT * FROM parents 
+            WHERE parent_uuid IS NOT NULL AND parents.uuid <> :uuid;
+        """
+
+        values = {'uuid': str(item.uuid)}
+
+        response = await self.db.fetch_all(stmt, values)
+        return [models.Item(**row) for row in reversed(response)]
+
+    # TODO - delete this method
     async def get_all_parents(
         self,
         user: models.User,

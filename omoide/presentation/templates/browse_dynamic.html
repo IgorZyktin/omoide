@@ -1,16 +1,18 @@
 {% extends "browse_base.html" %}
-{% from "macros.html" import render_simple_location %}
-
-{% block header_top %}
-    {{ super() }}
-    {{ render_simple_location(request, location, aim_wrapper) }}
-{% endblock %}
+{% from "macros.html" import render_lineage %}
 
 {% block head %}
     {{ super() }}
     <script type="text/javascript"
             src="{{ request.url_for('static', path='scroller.js?' + version) }}"></script>
 {% endblock %}
+
+
+{% block header_top %}
+    {{ super() }}
+    {{ render_lineage(request, parents, current_item, aim_wrapper) }}
+{% endblock %}
+
 
 {% block body %}
     <div class="envelope-container"></div>

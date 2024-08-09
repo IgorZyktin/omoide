@@ -339,6 +339,67 @@
     {% endif %}
 {% endmacro %}
 
+
+{% macro render_link(request, item, aim_wrapper) %}
+    {% if item.is_collection %}
+        <a href="{{ request.url_for('app_browse', item_uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
+            {{ item.name or '???' }}
+        </a>
+    {% else %}
+        <a href="{{ request.url_for('app_preview', uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
+            {{ item.name or '???' }}
+        </a>
+    {% endif %}
+{% endmacro %}
+
+
+{% macro render_lineage(request, parents, item, aim_wrapper) %}
+    <div class="location">
+        <h3>
+            {% if parents %}
+                {% for parent in parents %}
+                    {{ render_link(request, parent, aim_wrapper) }}
+                    <span>&nbsp;/&nbsp;</span>
+                {% endfor %}
+            {% endif %}
+
+            {{ item.name }}
+
+            <a href="{{ request.url_for('api_items_download', uuid=item.uuid) }}">
+                <img class="icon"
+                     src="{{ request.url_for('static', path='download_48.svg') }}"
+                     alt="Download button"
+                     title="Download all"/></a>
+
+            <a href="javascript:void(0)"
+               onclick="copyText('{{ item.uuid }}', 'ID')">
+                <img class="icon"
+                     src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
+                     alt="Copy ID"
+                     title="Copy ID"/></a>
+
+            {% if item.is_collection %}
+                <a href="javascript:void(0)"
+                   onclick="copyText('{{ request.url_for('app_browse', item_uuid=item.uuid) }}', 'Link')">
+                    <img class="icon"
+                         src="{{ request.url_for('static', path='ic_link.svg') }}"
+                         alt="Copy link"
+                         title="Copy link"/></a>
+            {% else %}
+                <a href="javascript:void(0)"
+                   onclick="copyText('{{ request.url_for('app_preview', uuid=item.uuid) }}', 'Link')">
+                    <img class="icon"
+                         src="{{ request.url_for('static', path='ic_link.svg') }}"
+                         alt="Copy link"
+                         title="Copy link"/></a>
+            {% endif %}
+
+            <div id="copy-alerts"></div>
+        </h3>
+    </div>
+{% endmacro %}
+
+
 {% macro render_thumbnail_for_item(request, item, name, aim_wrapper) %}
     {% if item.is_collection %}
         {% set additional_style = ' env-collection' %}

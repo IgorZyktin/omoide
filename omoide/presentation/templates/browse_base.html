@@ -3,8 +3,13 @@
 {% block head %}
     {{ super() }}
 
-    <meta property="og:url"
-          content="{{ request.url_for('app_browse', item_uuid=current_item.uuid) }}"/>
+    {% if current_item.is_collection %}
+        <meta property="og:url"
+              content="{{ request.url_for('app_browse', item_uuid=current_item.uuid) }}"/>
+    {% else %}
+            <meta property="og:url"
+              content="{{ request.url_for('app_preview', uuid=current_item.uuid) }}"/>
+    {% endif %}
 
     {% if current_item.preview_ext %}
         <meta property="og:image"
