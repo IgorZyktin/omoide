@@ -46,10 +46,11 @@ class BaseAPIUseCase(abc.ABC):
         """Raise if one user tries to manage object of some other user."""
         if any(
             (
+                user.is_admin,
                 item.owner_uuid == user.uuid,
                 str(user.uuid) in item.permissions,
             )
-        ) or user.is_admin:
+        ):
             return
 
         if error_message:
