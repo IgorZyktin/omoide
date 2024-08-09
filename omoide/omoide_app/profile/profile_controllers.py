@@ -36,6 +36,9 @@ async def app_profile_usage(
     response_class: Type[Response] = HTMLResponse,
 ):
     """Show space usage stats."""
+    if user.is_anon:
+        return RedirectResponse(request.url_for('forbidden'))
+
     use_case = profile_use_cases.AppProfileUsageUseCase(mediator)
 
     try:
@@ -65,13 +68,16 @@ async def app_profile_usage(
 async def app_profile_tags(
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: Type[Response] = HTMLResponse,
 ):
     """Show know tags."""
+    if user.is_anon:
+        return RedirectResponse(request.url_for('forbidden'))
+
     use_case = profile_use_cases.AppProfileTagsUseCase(mediator)
 
     try:
@@ -92,3 +98,26 @@ async def app_profile_tags(
     }
 
     return templates.TemplateResponse('profile_tags.html', context)
+
+
+@app_profile_router.get('/profile/new')
+async def app_profile_new(
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: Type[Response] = HTMLResponse,
+):
+    """Show recent updates."""
+    if user.is_anon:
+        return RedirectResponse(request.url_for('forbidden'))
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim_wrapper': aim_wrapper,
+        'endpoint': request.url_for('api_get_recent_updates'),
+    }
+    return templates.TemplateResponse('profile_new.html', context)

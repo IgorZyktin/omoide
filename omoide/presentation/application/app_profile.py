@@ -40,27 +40,3 @@ async def app_profile(
         'url': request.url_for('app_search'),
     }
     return templates.TemplateResponse('profile.html', context)
-
-
-@router.get('/profile/new')
-async def app_profile_new(
-    request: Request,
-    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: models.User = Depends(dep.get_current_user),
-    config: Config = Depends(dep.get_config),
-    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-    response_class: Type[Response] = HTMLResponse,
-):
-    """Show recent updates."""
-    if user.is_anon or user.uuid is None:
-        error = errors.AuthenticationRequired()
-        return web.redirect_from_error(request, error)
-
-    context = {
-        'request': request,
-        'config': config,
-        'user': user,
-        'aim_wrapper': aim_wrapper,
-        'endpoint': request.url_for('api_get_recent_updates'),
-    }
-    return templates.TemplateResponse('profile_new.html', context)
