@@ -35,8 +35,8 @@ async def app_browse(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    config: Config = Depends(dep.get_config),
-    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: Type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item."""

@@ -46,6 +46,8 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals['get_content_href'] = web.get_content_href
     templates.env.globals['get_preview_href'] = web.get_preview_href
     templates.env.globals['get_thumbnail_href'] = web.get_thumbnail_href
+    templates.env.globals['human_readable_size'] = utils.human_readable_size
+    templates.env.globals['sep_digits'] = utils.sep_digits
     return templates
 
 
@@ -431,21 +433,4 @@ def api_item_update_parent_use_case(
         metainfo_repo=metainfo_repo,
         media_repo=media_repository,
         misc_repo=misc_repo,
-    )
-
-
-# app profile related use cases -----------------------------------------------
-
-
-@utils.memorize
-def profile_quotas_use_case(
-    mediator: Mediator = Depends(get_mediator),
-    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-) -> use_cases.AppProfileQuotasUseCase:
-    """Get use case instance."""
-    return use_cases.AppProfileQuotasUseCase(
-        mediator=mediator,
-        users_repo=users_repo,
-        items_repo=items_repo,
     )

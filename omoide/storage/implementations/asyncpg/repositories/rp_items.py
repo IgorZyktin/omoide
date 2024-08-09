@@ -305,7 +305,6 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
-        assert user.is_not_anon
         stmt = sa.select(
             sa.func.count().label('total_items')
         ).select_from(
@@ -315,9 +314,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         )
 
         if collections:
-            stmt = stmt.where(
-                db_models.Item.is_collection
-            )
+            stmt = stmt.where(db_models.Item.is_collection)
 
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])

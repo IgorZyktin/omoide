@@ -19,20 +19,20 @@
             </tr>
             <tr>
                 <td>Content</td>
-                <td>{{ byte_count_to_text(items_size.content_size) }}</td>
+                <td>{{ human_readable_size(size.content_size) }}</td>
             </tr>
             <tr>
                 <td>Previews</td>
-                <td>{{ byte_count_to_text(items_size.preview_size) }}</td>
+                <td>{{ human_readable_size(size.preview_size) }}</td>
             </tr>
             <tr>
                 <td>Thumbnails</td>
-                <td>{{ byte_count_to_text(items_size.thumbnail_size) }}</td>
+                <td>{{ human_readable_size(size.thumbnail_size) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td>
-                    <strong>{{ byte_count_to_text(items_size.content_size + items_size.preview_size + items_size.thumbnail_size) }}</strong>
+                    <strong>{{ human_readable_size(size.content_size + size.preview_size + size.thumbnail_size) }}</strong>
                 </td>
             </tr>
         </table>
