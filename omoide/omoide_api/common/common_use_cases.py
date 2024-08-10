@@ -2,10 +2,13 @@
 import abc
 from uuid import UUID
 
+from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class BaseAPIUseCase(abc.ABC):
@@ -146,7 +149,7 @@ class BaseAPIUseCase(abc.ABC):
         raise exceptions.AccessDeniedError(msg)
 
 
-class BaseItemCreatorUseCase(BaseAPIUseCase):
+class BaseItemUseCase(BaseAPIUseCase):
     """Base class for use cases that create items."""
 
     async def create_one_item(
@@ -238,3 +241,14 @@ class BaseItemCreatorUseCase(BaseAPIUseCase):
             )
 
         return item
+
+    async def delete_one_item(self, item: models.Item) -> None:
+        """Delete item with all corresponding media."""
+        children = await self.mediator.items_repo.get_children(item)
+
+        for child in children:
+            await self.delete_one_item(child)
+
+        await self.mediator.object_storage.delete_all_objects(item)
+        LOG.warning('Deleting item {}', item)
+        await self.mediator.items_repo.delete_item(item)

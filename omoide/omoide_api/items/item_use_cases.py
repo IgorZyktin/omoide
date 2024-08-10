@@ -8,12 +8,12 @@ from omoide import exceptions
 from omoide import models
 from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
-from omoide.omoide_api.common.common_use_cases import BaseItemCreatorUseCase
+from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class CreateItemsUseCase(BaseItemCreatorUseCase):
+class CreateItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
 
     async def execute(
@@ -88,7 +88,7 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
         return duration, items
 
 
-class DeleteItemUseCase(BaseAPIUseCase):
+class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 
     async def execute(self, user: models.User, item_uuid: UUID) -> UUID:
@@ -105,37 +105,59 @@ class DeleteItemUseCase(BaseAPIUseCase):
 
             LOG.info('User {} is deleting item {}', user, item)
 
+            siblings = await self.mediator.items_repo.get_siblings(item)
+
+            if len(siblings) > 1:
+                sibling_uuids = [sibling.uuid for sibling in siblings]
+                index = sibling_uuids.index(item.uuid)
+                last = len(sibling_uuids) - 1
+
+                if index == len(sibling_uuids) - 1:
+                    switch_to_uuid = sibling_uuids[last - 1]
+                else:
+                    switch_to_uuid = sibling_uuids[index + 1]
+
+            else:
+                switch_to_uuid = item.parent_uuid
+
             affected_users = []
             if item.owner_uuid != user.uuid:
                 owner = await self.mediator.users_repo.get_user(
                     uuid=item.owner_uuid,
                 )
                 affected_users.append(owner)
-            else:
-                affected_users.append(user)
 
-            # TODO - what about child items? They also can have lots of tags
-            await self.mediator.misc_repo.update_known_tags(
-                users=affected_users,
-                tags_added=[],
-                tags_deleted=item.tags,
-            )
+        # TODO - put it into long job
+        async with self.mediator.storage.transaction():
+            # heavy recursive call
+            await self.delete_one_item(item)
 
+        async with self.mediator.storage.transaction():
             public_users = (
                 await self.mediator.users_repo.get_public_user_uuids()
             )
-            await self.mediator.misc_repo.drop_unused_known_tags(
-                users=affected_users,
-                public_users=public_users,
-            )
 
-            # TODO - what about child items? They also can have lots of objects
-            await self.mediator.object_storage.delete_all_objects(item)
+            if owner.uuid in public_users:
+                tags = await self.mediator.misc_repo.calculate_known_tags_anon(
+                    batch_size=const.DB_BATCH_SIZE,
+                )
+                await self.mediator.misc_repo.drop_known_tags_anon()
+                await self.mediator.misc_repo.insert_known_tags_anon(tags)
 
-            parent_uuid = item.parent_uuid
-            await self.mediator.items_repo.delete_item(item)
+            for affected_user in affected_users:
+                tgs = await self.mediator.misc_repo.calculate_known_tags_known(
+                    user=affected_user,
+                    batch_size=const.DB_BATCH_SIZE,
+                )
+                await self.mediator.misc_repo.drop_known_tags_known(
+                    user=affected_user,
+                )
+                await self.mediator.misc_repo.insert_known_tags_known(
+                    user=affected_user,
+                    known_tags=tgs,
+                )
 
-        return parent_uuid
+        return switch_to_uuid
 
 
 class BaseUploadUseCase(BaseAPIUseCase):

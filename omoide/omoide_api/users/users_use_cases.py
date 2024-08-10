@@ -6,12 +6,12 @@ from omoide import const
 from omoide import models
 from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
-from omoide.omoide_api.common.common_use_cases import BaseItemCreatorUseCase
+from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class CreateUserUseCase(BaseItemCreatorUseCase):
+class CreateUserUseCase(BaseItemUseCase):
     """Use case for creating a new user."""
 
     async def _create_one_user(

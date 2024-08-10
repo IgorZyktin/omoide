@@ -1,6 +1,5 @@
 """Repository that performs operations on items."""
 
-import datetime
 from typing import Any
 from typing import Collection
 from typing import Optional
@@ -9,7 +8,6 @@ from uuid import uuid4
 
 import sqlalchemy as sa
 
-from omoide import const
 from omoide import domain
 from omoide import exceptions
 from omoide import models
@@ -295,11 +293,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         stmt = sa.select(db_models.Item)
 
         stmt = stmt.where(
-            db_models.Item.parent_uuid == sa.select(
-                db_models.Item.parent_uuid
-            ).where(
-                db_models.Item.uuid == item.uuid
-            ).scalar_subquery()
+            db_models.Item.parent_uuid == item.parent_uuid
         ).order_by(
             db_models.Item.number
         )

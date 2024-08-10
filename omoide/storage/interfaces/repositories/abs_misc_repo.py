@@ -43,10 +43,16 @@ class AbsMiscRepo(abc.ABC):
         """Update counters for known tags."""
 
     @abc.abstractmethod
-    async def drop_unused_known_tags(
+    async def drop_unused_known_tags_anon(
         self,
-        users: Collection[models.User],
         public_users: set[UUID],
+    ) -> None:
+        """Drop tags with counter less of equal to 0."""
+
+    @abc.abstractmethod
+    async def drop_unused_known_tags_known(
+        self,
+        user: models.User,
     ) -> None:
         """Drop tags with counter less of equal to 0."""
 

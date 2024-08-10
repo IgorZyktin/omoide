@@ -54,7 +54,7 @@ async def app_preview(
         'metainfo': result.metainfo,
         'all_tags': result.all_tags,
         'album': infra.Album(
-            sequence=result.neighbours,
+            sequence=result.siblings,
             position=result.item,
             items_on_page=const.PAGES_IN_ALBUM_AT_ONCE,
         ),
