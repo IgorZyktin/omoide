@@ -19,7 +19,10 @@ class AbsObjectStorage(abc.ABC):
         """Save object of specific content type."""
 
     @abc.abstractmethod
-    async def delete_all_objects(self, item: models.Item) -> None:
+    async def delete_all_objects(
+        self,
+        item: models.Item,
+    ) -> list[const.MEDIA_TYPE]:
         """Delete all objects for given item."""
 
     @abc.abstractmethod

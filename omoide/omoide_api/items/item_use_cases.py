@@ -133,7 +133,7 @@ class DeleteItemUseCase(BaseAPIUseCase):
             await self.mediator.object_storage.delete_all_objects(item)
 
             parent_uuid = item.parent_uuid
-            await self.mediator.items_repo.delete_item(item_uuid)
+            await self.mediator.items_repo.delete_item(item)
 
         return parent_uuid
 

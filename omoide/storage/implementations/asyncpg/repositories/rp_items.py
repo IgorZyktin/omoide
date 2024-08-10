@@ -290,8 +290,8 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**row) for row in reversed(response)]
 
-    async def get_neighbours(self, item: models) -> list[models.Item]:
-        """Return all neighbours for the given item."""
+    async def get_siblings(self, item: models) -> list[models.Item]:
+        """Return all siblings for the given item."""
         stmt = sa.select(db_models.Item)
 
         stmt = stmt.where(
@@ -434,35 +434,12 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         await self.db.execute(stmt)
 
-    async def mark_files_as_orphans(
-        self,
-        item: domain.Item,
-        moment: datetime.datetime,
-    ) -> None:
-        """Mark corresponding files as useless."""
-        for each in const.MEDIA_TYPES:
-            generic = item.get_generic()[each]
-            if generic.ext is not None:
-                stmt = sa.insert(
-                    db_models.OrphanFiles
-                ).values(
-                    media_type=each,
-                    owner_uuid=item.owner_uuid,
-                    item_uuid=item.uuid,
-                    ext=generic.ext,
-                    moment=moment,
-                )
-                await self.db.execute(stmt)
-
-    async def delete_item(
-        self,
-        item_uuid: UUID,
-    ) -> None:
-        """Delete item with given UUID."""
+    async def delete_item(self, item: models.Item) -> None:
+        """Delete item."""
         stmt = sa.delete(
             db_models.Item
         ).where(
-            db_models.Item.uuid == item_uuid
+            db_models.Item.uuid == item.uuid
         )
         await self.db.execute(stmt)
 

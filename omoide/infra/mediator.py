@@ -11,7 +11,6 @@ class Mediator:
     """Class that ties all components together."""
     authenticator: interfaces.AbsAuthenticator
     browse_repo: storage_interfaces.AbsBrowseRepository
-    preview_repo: storage_interfaces.AbsPreviewRepository
     exif_repo: storage_interfaces.AbsEXIFRepository
     items_repo: storage_interfaces.AbsItemsRepo
     meta_repo: storage_interfaces.AbsMetainfoRepo

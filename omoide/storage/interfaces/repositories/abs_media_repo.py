@@ -1,7 +1,8 @@
 """Repository that perform CRUD operations on media records."""
 import abc
-from uuid import UUID
+from datetime import datetime
 
+from omoide import const
 from omoide import models
 
 
@@ -23,10 +24,20 @@ class AbsMediaRepo(abc.ABC):
     @abc.abstractmethod
     async def copy_image(
         self,
-        owner_uuid: UUID,
-        source_uuid: UUID,
-        target_uuid: UUID,
-        media_type: str,
+        source_item: models.Item,
+        target_item: models.Item,
+        media_type: const.MEDIA_TYPE,
         ext: str,
+        moment: datetime,
     ) -> int:
         """Save intention to copy data between items."""
+
+    @abc.abstractmethod
+    async def mark_file_as_orphan(
+        self,
+        item: models.Item,
+        media_type: const.MEDIA_TYPE,
+        ext: str,
+        moment: datetime,
+    ) -> None:
+        """Mark corresponding files as useless."""

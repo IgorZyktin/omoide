@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from omoide import const
 from omoide import domain  # FIXME - use models instead
 from omoide import models
 

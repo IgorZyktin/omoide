@@ -1,11 +1,11 @@
 """Repository that perform CRUD operations on media."""
-from uuid import UUID
+from datetime import datetime
 
 import sqlalchemy as sa
 
-from omoide import models
-from omoide import utils
+from omoide import const
 from omoide import custom_logging
+from omoide import models
 from omoide.storage import interfaces
 from omoide.storage.database import db_models
 from omoide.storage.implementations import asyncpg
@@ -50,25 +50,44 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
 
     async def copy_image(
         self,
-        owner_uuid: UUID,
-        source_uuid: UUID,
-        target_uuid: UUID,
-        media_type: str,
+        source_item: models.Item,
+        target_item: models.Item,
+        media_type: const.MEDIA_TYPE,
         ext: str,
+        moment: datetime,
     ) -> int:
         """Save intention to copy data between items."""
         stmt = sa.insert(
             db_models.CommandCopy
         ).values(
-            created_at=utils.now(),
+            created_at=moment,
             processed_at=None,
             error=None,
-            owner_uuid=str(owner_uuid),
-            source_uuid=str(source_uuid),
-            target_uuid=str(target_uuid),
+            owner_uuid=str(source_item.owner_uuid),
+            source_uuid=str(source_item.uuid),
+            target_uuid=str(target_item.uuid),
             media_type=media_type,
             ext=ext,
         ).returning(db_models.CommandCopy.id)
 
         copy_id = await self.db.execute(stmt)
         return copy_id
+
+    async def mark_file_as_orphan(
+        self,
+        item: models.Item,
+        media_type: const.MEDIA_TYPE,
+        ext: str,
+        moment: datetime,
+    ) -> None:
+        """Mark corresponding files as useless."""
+        stmt = sa.insert(
+            db_models.OrphanFiles
+        ).values(
+            media_type=media_type,
+            owner_uuid=item.owner_uuid,
+            item_uuid=item.uuid,
+            ext=ext,
+            moment=moment,
+        )
+        await self.db.execute(stmt)

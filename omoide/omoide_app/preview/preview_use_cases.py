@@ -47,7 +47,7 @@ class AppPreviewUseCase(BaseAPPUseCase):
 
             metainfo = await self.mediator.meta_repo.read_metainfo(item)
             parents = await self.mediator.items_repo.get_parents(item)
-            neighbours = await self.mediator.preview_repo.get_neighbours(item)
+            neighbours = await self.mediator.items_repo.get_siblings(item)
 
             all_tags = sorted(
                 itertools.chain.from_iterable(

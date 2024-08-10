@@ -28,7 +28,7 @@ from omoide.storage import interfaces as storage_interfaces
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.storage.implementations import asyncpg
 from omoide.object_storage.implementations.file_server import (
-    FileObjectStorageServer,
+    FileObjectStorage,
 )
 
 
@@ -177,11 +177,11 @@ def get_policy(
 @utils.memorize
 def get_object_storage(
     media_repo: Annotated[storage_interfaces.AbsMediaRepo,
-                          Depends(get_media_repo)]
+                          Depends(get_media_repo)],
 ) -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
-    return FileObjectStorageServer(
+    return FileObjectStorage(
         media_repo=media_repo,
         prefix_size=config.prefix_size,
     )

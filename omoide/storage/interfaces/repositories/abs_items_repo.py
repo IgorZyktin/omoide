@@ -1,6 +1,5 @@
 """Repository that performs operations on items."""
 import abc
-import datetime
 from typing import Collection
 from uuid import UUID
 
@@ -79,7 +78,7 @@ class AbsItemsRepo(abc.ABC):
         """Count dependant items."""
 
     @abc.abstractmethod
-    async def get_children(self, item: models.Item,) -> list[models.Item]:
+    async def get_children(self, item: models.Item, ) -> list[models.Item]:
         """Return all direct descendants of the given item."""
 
     @abc.abstractmethod
@@ -87,8 +86,8 @@ class AbsItemsRepo(abc.ABC):
         """Return lineage of all parents for the given item."""
 
     @abc.abstractmethod
-    async def get_neighbours(self, item: models) -> list[models.Item]:
-        """Return all neighbours for the given item."""
+    async def get_siblings(self, item: models) -> list[models.Item]:
+        """Return all siblings for the given item."""
 
     @abc.abstractmethod
     async def get_direct_children_uuids_of(
@@ -129,19 +128,8 @@ class AbsItemsRepo(abc.ABC):
         """Update existing item."""
 
     @abc.abstractmethod
-    async def mark_files_as_orphans(
-        self,
-        item: domain.Item,
-        moment: datetime.datetime,
-    ) -> None:
-        """Mark corresponding files as useless."""
-
-    @abc.abstractmethod
-    async def delete_item(
-        self,
-        item_uuid: UUID,
-    ) -> None:
-        """Delete item with given UUID."""
+    async def delete_item(self, item: models.Item) -> None:
+        """Delete item."""
 
     @abc.abstractmethod
     async def check_child(
