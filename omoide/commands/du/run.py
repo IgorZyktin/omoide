@@ -181,10 +181,10 @@ def describe_result(
             utils.sep_digits(stat.preview_total),
             utils.sep_digits(stat.thumbnail_total),
             utils.sep_digits(stat.total_files),
-            utils.byte_count_to_text(stat.content_size),
-            utils.byte_count_to_text(stat.preview_size),
-            utils.byte_count_to_text(stat.thumbnail_size),
-            utils.byte_count_to_text(stat.total_size),
+            utils.human_readable_size(stat.content_size),
+            utils.human_readable_size(stat.preview_size),
+            utils.human_readable_size(stat.thumbnail_size),
+            utils.human_readable_size(stat.total_size),
             f'{round(stat.calc_percent_of_files(total_files), 2)} %',
             f'{round(stat.calc_percent_of_size(total_size), 2)} %',
         ])
@@ -192,4 +192,4 @@ def describe_result(
     print(table.get_string())
     print(f'Total items: {utils.sep_digits(total_items)}')
     print(f'Total files: {utils.sep_digits(total_files)}')
-    print(f'Total size: {utils.byte_count_to_text(total_size)}')
+    print(f'Total size: {utils.human_readable_size(total_size)}')

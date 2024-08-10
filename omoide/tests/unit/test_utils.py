@@ -1,4 +1,5 @@
 """Tests."""
+
 from uuid import UUID
 
 import pytest
@@ -25,21 +26,6 @@ def test_is_valid_uuid(uuid, result):
     assert utils.is_valid_uuid(uuid) is result
 
 
-@pytest.mark.parametrize('uuid,result', [
-    (None,
-     None),
-    ('something',
-     None),
-    (UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717'),
-     UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717')),
-    ('fb6a8840-d6a8-4ab4-9555-be67917c8717',
-     UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717')),
-])
-def test_cast_uuid(uuid, result):
-    """Must convert to UUID or None."""
-    assert utils.cast_uuid(uuid) == result
-
-
 @pytest.mark.parametrize('size, reference', [
     (-2_000, '-2.0 КиБ'),
     (-2_048, '-2.0 КиБ'),
@@ -59,9 +45,9 @@ def test_cast_uuid(uuid, result):
     (1_855_425_871_872, '1.7 ТиБ'),
     (9_223_372_036_854_775_807, '8.0 ЭиБ'),
 ])
-def test_byte_count_to_text_ru(size, reference):
+def test_human_readable_size_ru(size, reference):
     """Must convert to readable size in russian."""
-    assert utils.byte_count_to_text(size, language='RU') == reference
+    assert utils.human_readable_size(size, language='RU') == reference
 
 
 @pytest.mark.parametrize('size, reference', [
@@ -83,9 +69,9 @@ def test_byte_count_to_text_ru(size, reference):
     (1_855_425_871_872, '1.7 TiB'),
     (9_223_372_036_854_775_807, '8.0 EiB'),
 ])
-def test_byte_count_to_text_en(size, reference):
+def test_human_readable_size_en(size, reference):
     """Must convert to readable size in english."""
-    assert utils.byte_count_to_text(size, language='EN') == reference
+    assert utils.human_readable_size(size, language='EN') == reference
 
 
 @pytest.mark.parametrize('seconds, reference', [
@@ -98,7 +84,7 @@ def test_byte_count_to_text_en(size, reference):
     (86_400, '1d'),
     (99_658, '1d 3h 40m 58s'),
 ])
-def test_format_as_human_readable_time(seconds, reference):
+def test_human_readable_time(seconds, reference):
     """Must convert seconds into human-readable time."""
     assert utils.human_readable_time(seconds) == reference
 
@@ -109,3 +95,13 @@ def test_split():
     result = utils.split(',a,b,,c,')
 
     assert result == reference
+
+
+def test_sep_digits():
+    """Must separate digits on 1000s."""
+    assert utils.sep_digits('12345678') == '12345678'
+    assert utils.sep_digits(12345678) == '12 345 678'
+    assert utils.sep_digits(1234.5678) == '1 234.57'
+    assert utils.sep_digits(1234.5678, precision=4) == '1 234.5678'
+    assert utils.sep_digits(1234.0, precision=4) == '1 234.0000'
+    assert utils.sep_digits(1234.0, precision=0) == '1 234'

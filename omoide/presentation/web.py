@@ -31,16 +31,13 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
 
     http.HTTPStatus.BAD_REQUEST: [
         errors.NoUUID,
-        errors.InvalidUUID,
     ],
 
     http.HTTPStatus.NOT_FOUND: [
         errors.ItemDoesNotExist,
-        errors.UserDoesNotExist,
     ],
 
     http.HTTPStatus.FORBIDDEN: [
-        errors.AuthenticationRequired,
         errors.ItemRequiresAccess,
         errors.ItemModificationByAnon,
     ]

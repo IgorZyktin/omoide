@@ -1,4 +1,5 @@
 """Common utils."""
+
 import datetime
 import functools
 import re
@@ -9,7 +10,6 @@ from typing import Callable
 from typing import Collection
 from typing import Iterable
 from typing import Iterator
-from typing import Optional
 from typing import TypeVar
 from uuid import UUID
 
@@ -40,20 +40,6 @@ def is_valid_uuid(uuid: UUID | str) -> bool:
     if isinstance(uuid, UUID):
         return True
     return UUID_TEMPLATE.match(uuid) is not None
-
-
-def cast_uuid(uuid: str | UUID | None) -> Optional[UUID]:
-    """Return UUID or None."""
-    if isinstance(uuid, UUID):
-        return uuid
-
-    if not uuid:
-        return None
-
-    if is_valid_uuid(uuid):
-        return UUID(uuid)
-
-    return None
 
 
 def sep_digits(number: int | float | str, precision: int = 2) -> str:
@@ -101,9 +87,9 @@ SUFFIXES = {
 }
 
 
-def byte_count_to_text(total_bytes: int | float, language: str = 'EN') -> str:
+def human_readable_size(total_bytes: int | float, language: str = 'EN') -> str:
     """Convert amount of bytes into human-readable format.
-    >>> byte_count_to_text(1023)
+    >>> human_readable_size(1023)
     '1023 B'
     """
     total_bytes = int(total_bytes)
@@ -143,10 +129,6 @@ def byte_count_to_text(total_bytes: int | float, language: str = 'EN') -> str:
 
     suffix = SUFFIXES[language]['EiB']
     return f'{total_bytes / 1024 / 1024 :0.1f} {suffix}'
-
-
-# TODO - use only this name in future
-human_readable_size = byte_count_to_text
 
 
 def human_readable_time(seconds: int) -> str:

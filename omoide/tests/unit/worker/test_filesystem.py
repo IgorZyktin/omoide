@@ -1,4 +1,5 @@
 """Tests."""
+
 import os
 import tempfile
 from datetime import timedelta
@@ -61,10 +62,10 @@ def test_filesystem_safely_save(valid_worker_config, worker_dt):
 
 
 @pytest.mark.parametrize('filename, reference', [
-    ('test', 'test___2022-12-02T20:10:15.000128+00:00'),
-    ('test.txt', 'test___2022-12-02T20:10:15.000128+00:00.txt'),
-    ('test___.txt', 'test___2022-12-02T20:10:15.000128+00:00.txt'),
-    ('test___wtf.txt', 'test___2022-12-02T20:10:15.000128+00:00.txt'),
+    ('test', 'test___2022-12-02_20-10-15.000128+00-00'),
+    ('test.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
+    ('test___.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
+    ('test___wtf.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
 ])
 def test_filesystem_make_new_filename(filename, reference, worker_dt,
                                       valid_worker_config):

@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-"""Tests.
-"""
+"""Tests."""
+
 import os
 from unittest import mock
 

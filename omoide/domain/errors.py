@@ -5,9 +5,6 @@ from typing import Any
 from typing import Optional
 
 
-# TODO - find a way to make formatting attributes required
-
-
 class Error:
     """Custom DTO that holds errors."""
     template: str = ''
@@ -47,11 +44,6 @@ class NoUUID(Error):
     template = 'No UUID specified for the action {name}'
 
 
-class InvalidUUID(Error):
-    """User gave us bad UUID."""
-    template = 'Invalid UUID: {uuid!r}'
-
-
 class UnexpectedAction(Error):
     """Policy was not programmed for this."""
     template = 'No rule for {action}'
@@ -75,13 +67,3 @@ class ItemModificationByAnon(Error):
 class ItemWrongParent(Error):
     """User tries to set item as a parent to itself or something like that."""
     template = 'Item {new_parent_uuid} cannot be used as a parent for {uuid}'
-
-
-class UserDoesNotExist(Error):
-    """User with uuid does not exist."""
-    template = 'User {uuid} does not exist'
-
-
-class AuthenticationRequired(Error):
-    """User must log in."""
-    template = 'You must be logged in to do this'

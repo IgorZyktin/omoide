@@ -12,6 +12,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
@@ -95,7 +96,7 @@ async def app_browse(
         page=aim_wrapper.aim.page,
         items_per_page=aim_wrapper.aim.items_per_page,
         total_items=result.total_items,
-        pages_in_block=constants.PAGES_IN_BLOCK,
+        pages_in_block=const.PAGES_IN_ALBUM_AT_ONCE,
     )
 
     context = {

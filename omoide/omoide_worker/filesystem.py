@@ -119,5 +119,5 @@ class Filesystem:
         """Generate new name using old name."""
         name, ext = os.path.splitext(filename)
         left_segment, *_ = name.split(separator)
-        moment = utils.now().isoformat()
+        moment = utils.now().isoformat().replace(':', '-').replace('T', '_')
         return f"{left_segment}{separator}{moment}{ext}"

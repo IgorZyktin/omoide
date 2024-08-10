@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-"""Tests.
-"""
+"""Tests."""
+
 from omoide.presentation import infra
 
 

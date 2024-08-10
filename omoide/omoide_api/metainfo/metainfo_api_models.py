@@ -1,4 +1,5 @@
 """Web level API models."""
+
 from datetime import datetime
 from typing import Any
 
@@ -68,14 +69,7 @@ class MetainfoOutput(BaseModel):
     updated_at: str
     deleted_at: str | None = None
     user_time: str | None = None
-
     content_type: str | None = None
-
-    author: str | None = None
-    author_url: str | None = None
-    saved_from_url: str | None = None
-    description: str | None = None
-
     extras: dict[str, Any] = Field(default_factory=dict)
 
     content_size: int | None = None

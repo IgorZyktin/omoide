@@ -17,8 +17,6 @@ READ_ONLY = frozenset((
     actions.Item.READ,
 ))
 
-CHANGING_ITEM_RELATED = frozenset(())
-
 
 class Policy(interfaces.AbsPolicy):
     """Policy checker."""
@@ -96,12 +94,12 @@ class Policy(interfaces.AbsPolicy):
         access = await self.items_repo.check_access(user, uuid)
 
         if isinstance(action, actions.Item):
-            self._check_item_related(uuid, action, access)
+            self._check_item_related(uuid, access)
             self._check_for_item(uuid, access)
             return
 
         if action in ITEM_RELATED and uuid is not None:
-            self._check_item_related(uuid, action, access)
+            self._check_item_related(uuid, access)
             return
 
         raise exceptions.UnexpectedActionError(action=action)
@@ -118,7 +116,6 @@ class Policy(interfaces.AbsPolicy):
     @staticmethod
     def _check_item_related(
         item_uuid: UUID,
-        action: actions.Action,
         access: models.AccessStatus,
     ) -> None:
         """Raise if action is not permitted."""
@@ -127,8 +124,3 @@ class Policy(interfaces.AbsPolicy):
 
         if access.does_not_exist:
             raise exceptions.ItemDoesNotExistError(item_uuid=item_uuid)
-
-        if action in CHANGING_ITEM_RELATED and access.is_not_owner:
-            raise exceptions.CannotModifyItemComponentError(
-                item_uuid=item_uuid,
-            )
