@@ -311,8 +311,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             # FIXME
             new_type_item = await self.items_repo.get_item(uuid)
             await self.misc_repo.update_computed_tags(new_type_item)
-            users = await self.users_repo.read_filtered_users(
-                *item.permissions
+            users = await self.users_repo.get_users(
+                uuids=item.permissions,
             )
             users += [user]
             await self.misc_repo.update_known_tags(
@@ -352,8 +352,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             await self.items_repo.delete_tags(item.uuid, deleted)
             operations += 1
 
-        users = await self.users_repo.read_filtered_users(
-            *item.permissions
+        users = await self.users_repo.get_users(
+            uuids=item.permissions,
         )
         users += [user]
         await self.misc_repo.update_known_tags(

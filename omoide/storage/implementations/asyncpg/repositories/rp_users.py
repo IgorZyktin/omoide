@@ -105,24 +105,6 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             for row in response
         ]
 
-    async def get_user_by_login(
-        self,
-        login: str,
-        allow_absence: bool = False,
-    ) -> models.User | None:
-        """Return User or None."""
-        stmt = sa.select(db_models.User).where(db_models.User.login == login)
-        response = await self.db.fetch_one(stmt)
-
-        if response is None:
-            if allow_absence:
-                return None
-
-            msg = 'User with given login does not exist'
-            raise exceptions.DoesNotExistError(msg)
-
-        return models.User(**response, role=models.Role.user)
-
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""
         stmt = sa.update(
@@ -133,33 +115,6 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             **kwargs
         )
         await self.db.execute(stmt)
-
-    async def read_filtered_users(
-        self,
-        *uuids: UUID,
-        login: str | None = None,
-    ) -> list[models.User]:
-        """Return list of users with given uuids or filters."""
-        if not any((bool(uuids), bool(login))):
-            return []
-
-        stmt = sa.select(db_models.User)
-
-        if login:
-            stmt = stmt.where(db_models.User.login == login)
-
-        if uuids:
-            stmt = stmt.where(
-                db_models.User.uuid.in_(tuple(str(x) for x in uuids))  # noqa
-            )
-
-        stmt = stmt.order_by(db_models.User.name)
-
-        response = await self.db.fetch_all(stmt)
-        return [
-            models.User(**record, role=models.Role.user)
-            for record in response
-        ]
 
     async def read_all_users(self) -> list[models.User]:
         """Return list of users with given uuids (or all users)."""

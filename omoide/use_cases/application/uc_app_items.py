@@ -56,8 +56,8 @@ class AppItemCreateUseCase:
             if parent is None:
                 return Failure(errors.ItemDoesNotExist(uuid=parent_uuid))
 
-            can_see = await self.users_repo.read_filtered_users(
-                *parent.permissions
+            can_see = await self.users_repo.get_users(
+                uuids=parent.permissions,
             )
 
         return Success((parent, can_see))
@@ -101,8 +101,8 @@ class AppItemUpdateUseCase:
                 return Failure(errors.ItemDoesNotExist(uuid=uuid))
 
             total = await self.items_repo.count_all_children_of(item)
-            can_see = await self.users_repo.read_filtered_users(
-                *item.permissions
+            can_see = await self.users_repo.get_users(
+                uuids=item.permissions,
             )
             computed_tags = await self.items_repo.read_computed_tags(uuid)
             metainfo = await self.metainfo_repo.read_metainfo(item)

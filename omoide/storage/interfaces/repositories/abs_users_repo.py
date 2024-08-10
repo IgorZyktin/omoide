@@ -42,24 +42,8 @@ class AbsUsersRepo(abc.ABC):
         """Return filtered list of users."""
 
     @abc.abstractmethod
-    async def get_user_by_login(
-        self,
-        login: str,
-        allow_absence: bool = False,
-    ) -> models.User | None:
-        """Return User or None."""
-
-    @abc.abstractmethod
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""
-
-    @abc.abstractmethod
-    async def read_filtered_users(
-        self,
-        *uuids: UUID,
-        login: str | None = None,
-    ) -> list[models.User]:
-        """Return list of users with given uuids or filters."""
 
     @abc.abstractmethod
     async def read_all_users(self) -> list[models.User]:

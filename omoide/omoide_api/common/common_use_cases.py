@@ -228,8 +228,8 @@ class BaseItemCreatorUseCase(BaseAPIUseCase):
             await self.mediator.misc_repo.update_computed_tags(item)
 
         if item.permissions:
-            users = await self.mediator.users_repo.read_filtered_users(
-                *item.permissions
+            users = await self.mediator.users_repo.get_users(
+                uuids=item.permissions,
             )
             await self.mediator.misc_repo.update_known_tags(
                 users=users,
