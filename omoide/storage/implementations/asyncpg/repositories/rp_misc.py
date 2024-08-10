@@ -172,7 +172,17 @@ class MiscRepo(_MiscRepoBase):
 
         return tuple(all_tags)
 
-    async def update_computed_tags(self, item: models.Item) -> None:
+    async def get_computed_tags(self, item: models.Item) -> set[str]:
+        """Get computed tags for this item."""
+        stmt = sa.select(
+            db_models.ComputedTags.tags
+        ).where(
+            db_models.ComputedTags.item_uuid == item.uuid
+        )
+        response = await self.db.fetch_all(stmt)
+        return {str(row) for row in response}
+
+    async def update_computed_tags(self, item: models.Item) -> set[str]:
         """Update computed tags for this item."""
         parent_tags: set[str] = set()
 
@@ -202,6 +212,7 @@ class MiscRepo(_MiscRepoBase):
         )
 
         await self.db.execute(stmt)
+        return computed_tags
 
     async def replace_computed_tags(
         self,
@@ -227,15 +238,15 @@ class MiscRepo(_MiscRepoBase):
         """Update counters for known tags."""
         for user in users:
             if user.is_anon:
-                await self._increment_known_tags_for_anon_user(tags_added)
-                await self._decrement_known_tags_for_anon_user(tags_deleted)
+                await self.increment_known_tags_for_anon_user(tags_added)
+                await self.decrement_known_tags_for_anon_user(tags_deleted)
             else:
-                await self._increment_known_tags_for_known_user(user,
-                                                                tags_added)
-                await self._decrement_known_tags_for_known_user(user,
-                                                                tags_deleted)
+                await self.increment_known_tags_for_known_user(user,
+                                                               tags_added)
+                await self.decrement_known_tags_for_known_user(user,
+                                                               tags_deleted)
 
-    async def _increment_known_tags_for_anon_user(
+    async def increment_known_tags_for_anon_user(
         self,
         tags: Collection[str],
     ) -> None:
@@ -257,7 +268,7 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def _decrement_known_tags_for_anon_user(
+    async def decrement_known_tags_for_anon_user(
         self,
         tags: Collection[str],
     ) -> None:
@@ -273,7 +284,7 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def _increment_known_tags_for_known_user(
+    async def increment_known_tags_for_known_user(
         self,
         user: models.User,
         tags: Collection[str],
@@ -298,7 +309,7 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def _decrement_known_tags_for_known_user(
+    async def decrement_known_tags_for_known_user(
         self,
         user: models.User,
         tags: Collection[str],
@@ -316,29 +327,24 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def drop_unused_known_tags(
-        self,
-        users: Collection[models.User],
-        public_users: set[UUID],
-    ) -> None:
+    async def drop_unused_known_tags_anon(self) -> None:
         """Drop tags with counter less of equal to 0."""
-        for user in users:
-            if user.is_not_anon:
-                stmt = sa.delete(
-                    db_models.KnownTags
-                ).where(
-                    db_models.KnownTags.user_uuid == user.uuid,
-                    db_models.KnownTags.counter <= 0,
-                )
-                await self.db.execute(stmt)
+        stmt = sa.delete(
+            db_models.KnownTagsAnon
+        ).where(
+            db_models.KnownTagsAnon.counter <= 0,
+        )
+        await self.db.execute(stmt)
 
-            elif user.is_anon or user.uuid in public_users:
-                stmt = sa.delete(
-                    db_models.KnownTagsAnon
-                ).where(
-                    db_models.KnownTagsAnon.counter <= 0,
-                )
-                await self.db.execute(stmt)
+    async def drop_unused_known_tags_known(self, user: models.User) -> None:
+        """Drop tags with counter less of equal to 0."""
+        stmt = sa.delete(
+            db_models.KnownTags
+        ).where(
+            db_models.KnownTags.user_uuid == user.uuid,
+            db_models.KnownTags.counter <= 0,
+        )
+        await self.db.execute(stmt)
 
     async def calculate_known_tags_anon(
         self,

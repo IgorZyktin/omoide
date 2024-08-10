@@ -1,12 +1,13 @@
 """Use cases for Item-related operations."""
+
 import time
 from typing import Any
 from uuid import UUID
 
 from omoide import const
+from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
@@ -91,9 +92,10 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 
-    async def execute(self, user: models.User, item_uuid: UUID) -> UUID:
+    async def execute(self, user: models.User, item_uuid: UUID) -> models.Item:
         """Execute."""
         self.ensure_not_anon(user, operation='delete items')
+        repo = self.mediator.misc_repo
 
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
@@ -108,24 +110,29 @@ class DeleteItemUseCase(BaseItemUseCase):
             siblings = await self.mediator.items_repo.get_siblings(item)
 
             if len(siblings) > 1:
-                sibling_uuids = [sibling.uuid for sibling in siblings]
-                index = sibling_uuids.index(item.uuid)
-                last = len(sibling_uuids) - 1
+                index = siblings.index(item)
+                last = len(siblings) - 1
 
-                if index == len(sibling_uuids) - 1:
-                    switch_to_uuid = sibling_uuids[last - 1]
+                if index == len(siblings) - 1:
+                    switch_to = siblings[last - 1]
                 else:
-                    switch_to_uuid = sibling_uuids[index + 1]
+                    switch_to = siblings[index + 1]
 
             else:
-                switch_to_uuid = item.parent_uuid
+                switch_to = await self.mediator.items_repo.get_item(
+                    uuid=item.parent_uuid,
+                )
 
             affected_users = []
+            owner = await self.mediator.users_repo.get_user(
+                uuid=item.owner_uuid,
+            )
             if item.owner_uuid != user.uuid:
-                owner = await self.mediator.users_repo.get_user(
-                    uuid=item.owner_uuid,
-                )
                 affected_users.append(owner)
+            else:
+                affected_users.append(user)
+
+            computed_tags = await repo.get_computed_tags(item)
 
         # TODO - put it into long job
         async with self.mediator.storage.transaction():
@@ -138,26 +145,17 @@ class DeleteItemUseCase(BaseItemUseCase):
             )
 
             if owner.uuid in public_users:
-                tags = await self.mediator.misc_repo.calculate_known_tags_anon(
-                    batch_size=const.DB_BATCH_SIZE,
-                )
-                await self.mediator.misc_repo.drop_known_tags_anon()
-                await self.mediator.misc_repo.insert_known_tags_anon(tags)
+                await repo.decrement_known_tags_for_anon_user(computed_tags)
+                await repo.drop_unused_known_tags_anon()
 
             for affected_user in affected_users:
-                tgs = await self.mediator.misc_repo.calculate_known_tags_known(
+                await repo.decrement_known_tags_for_known_user(
                     user=affected_user,
-                    batch_size=const.DB_BATCH_SIZE,
+                    tags=computed_tags,
                 )
-                await self.mediator.misc_repo.drop_known_tags_known(
-                    user=affected_user,
-                )
-                await self.mediator.misc_repo.insert_known_tags_known(
-                    user=affected_user,
-                    known_tags=tgs,
-                )
+                await repo.drop_unused_known_tags_known(affected_user)
 
-        return switch_to_uuid
+        return switch_to
 
 
 class BaseUploadUseCase(BaseAPIUseCase):

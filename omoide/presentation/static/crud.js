@@ -71,6 +71,8 @@ async function createItem(button, endpoint, parameters) {
 
 async function deleteItem(button, uuid) {
     // send command for item deletion
+    let searchParams = new URLSearchParams(window.location.search)
+
     $.ajax({
         type: 'DELETE',
         url: `${ITEMS_ENDPOINT}/${uuid}`,
@@ -79,10 +81,13 @@ async function deleteItem(button, uuid) {
             $(button).addClass('button-disabled')
         },
         success: function (response) {
-            let uuid = response['parent_uuid']
+            let switch_to = response['switch_to']
 
-            if (uuid)
-                relocateWithAim(`/browse/${uuid}`)
+            if (switch_to.is_collection){
+                relocateWithAim(`/browse/${switch_to.uuid}` + '?' + searchParams.toString())
+            } else {
+                relocateWithAim(`/preview/${switch_to.uuid}` + '?' + searchParams.toString())
+            }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             describeFail(XMLHttpRequest.responseJSON)

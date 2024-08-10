@@ -1,4 +1,5 @@
 """Web level API models."""
+
 from typing import Any
 from uuid import UUID
 
@@ -76,3 +77,10 @@ class ManyItemsOutput(BaseModel):
             ],
         }
     }
+
+
+class ItemDeleteOutput(BaseModel):
+    """Output info after item deletion."""
+    result: str
+    item_uuid: str
+    switch_to: ItemOutput

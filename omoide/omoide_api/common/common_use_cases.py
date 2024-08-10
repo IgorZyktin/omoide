@@ -1,4 +1,5 @@
 """Common use case elements."""
+
 import abc
 from uuid import UUID
 
@@ -179,9 +180,8 @@ class BaseItemUseCase(BaseAPIUseCase):
             raise exceptions.NotAllowedError(msg)
 
         if parent_uuid is None:
-            root = await self.mediator.items_repo.get_root_item(user)
-            owner_uuid = root.owner_uuid
-            parent_uuid = root.uuid
+            parent = await self.mediator.items_repo.get_root_item(user)
+            owner_uuid = parent.owner_uuid
 
         else:
             parent = await self.mediator.items_repo.get_item(parent_uuid)
@@ -192,7 +192,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         item = models.Item(
             id=-1,
             uuid=valid_uuid,
-            parent_uuid=parent_uuid,
+            parent_uuid=parent.uuid,
             owner_uuid=owner_uuid,
             name=name,
             number=number or -1,
@@ -203,8 +203,6 @@ class BaseItemUseCase(BaseAPIUseCase):
             tags=tags,
             permissions=permissions,
         )
-
-        await self.mediator.items_repo.create_item(item)
 
         metainfo = models.Metainfo(
             item_uuid=item.uuid,
@@ -225,20 +223,21 @@ class BaseItemUseCase(BaseAPIUseCase):
             thumbnail_height=None,
         )
 
-        await self.mediator.meta_repo.create_metainfo(metainfo)
-
-        if item.tags:
-            await self.mediator.misc_repo.update_computed_tags(item)
+        comp_tags = await self.mediator.misc_repo.update_computed_tags(item)
+        repo = self.mediator.misc_repo
 
         if item.permissions:
-            users = await self.mediator.users_repo.get_users(
+            affected_users = await self.mediator.users_repo.get_users(
                 uuids=item.permissions,
             )
-            await self.mediator.misc_repo.update_known_tags(
-                users=users,
-                tags_added=item.tags,
-                tags_deleted=[],
-            )
+            for affected_user in affected_users:
+                await repo.increment_known_tags_for_known_user(
+                    user=affected_user,
+                    tags=comp_tags,
+                )
+
+        await self.mediator.items_repo.create_item(item)
+        await self.mediator.meta_repo.create_metainfo(metainfo)
 
         return item
 

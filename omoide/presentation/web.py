@@ -1,4 +1,5 @@
 """Internet related tools."""
+
 import copy
 import http
 from typing import Any
@@ -161,11 +162,11 @@ def redirect_from_error(
     response = None
 
     if code == http.HTTPStatus.BAD_REQUEST:
-        response = RedirectResponse(request.url_for('bad_request'))
+        response = RedirectResponse(request.url_for('app_bad_request'))
 
     elif code == http.HTTPStatus.NOT_FOUND and uuid is not None:
         response = RedirectResponse(
-            str(request.url_for('not_found')) + f'?q={uuid}'
+            str(request.url_for('app_not_found')) + f'?q={uuid}'
         )
 
     if (
@@ -173,11 +174,11 @@ def redirect_from_error(
         and uuid is not None
     ):
         response = RedirectResponse(
-            str(request.url_for('unauthorized')) + f'?q={uuid}'
+            str(request.url_for('app_forbidden')) + f'?q={uuid}'
         )
 
     if response is None:
-        response = RedirectResponse(request.url_for('bad_request'))
+        response = RedirectResponse(request.url_for('app_bad_request'))
 
     return response
 

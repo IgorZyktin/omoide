@@ -1,11 +1,11 @@
 """Repository that performs various operations on different objects."""
+
 import abc
 from collections.abc import Collection
 from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from omoide import const
 from omoide import domain  # FIXME - use models instead
 from omoide import models
 
@@ -22,7 +22,11 @@ class AbsMiscRepo(abc.ABC):
         """Return some components of the given item children with metainfo."""
 
     @abc.abstractmethod
-    async def update_computed_tags(self, item: models.Item) -> None:
+    async def get_computed_tags(self, item: models.Item) -> set[str]:
+        """Get computed tags for this item."""
+
+    @abc.abstractmethod
+    async def update_computed_tags(self, item: models.Item) -> set[str]:
         """Update computed tags for this item."""
 
     @abc.abstractmethod
@@ -43,17 +47,40 @@ class AbsMiscRepo(abc.ABC):
         """Update counters for known tags."""
 
     @abc.abstractmethod
-    async def drop_unused_known_tags_anon(
+    async def increment_known_tags_for_anon_user(
         self,
-        public_users: set[UUID],
+        tags: Collection[str],
     ) -> None:
+        """Increment tag counter."""
+
+    @abc.abstractmethod
+    async def increment_known_tags_for_known_user(
+        self,
+        user: models.User,
+        tags: Collection[str],
+    ) -> None:
+        """Increment tag counter."""
+
+    @abc.abstractmethod
+    async def decrement_known_tags_for_anon_user(
+        self,
+        tags: Collection[str],
+    ) -> None:
+        """Decrement tag counter."""
+
+    async def decrement_known_tags_for_known_user(
+        self,
+        user: models.User,
+        tags: Collection[str],
+    ) -> None:
+        """Decrement tag counter."""
+
+    @abc.abstractmethod
+    async def drop_unused_known_tags_anon(self) -> None:
         """Drop tags with counter less of equal to 0."""
 
     @abc.abstractmethod
-    async def drop_unused_known_tags_known(
-        self,
-        user: models.User,
-    ) -> None:
+    async def drop_unused_known_tags_known(self, user: models.User) -> None:
         """Drop tags with counter less of equal to 0."""
 
     @abc.abstractmethod

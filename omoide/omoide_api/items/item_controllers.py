@@ -1,4 +1,5 @@
 """Item related API operations."""
+
 from typing import Annotated
 from uuid import UUID
 
@@ -152,7 +153,7 @@ async def api_read_many_items(
 @api_items_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str],
+    response_model=common_api_models.ItemDeleteOutput,
 )
 async def api_delete_item(
     item_uuid: UUID,
@@ -163,18 +164,16 @@ async def api_delete_item(
     use_case = item_use_cases.DeleteItemUseCase(mediator)
 
     try:
-        parent_uuid = await use_case.execute(user, item_uuid)
+        parent = await use_case.execute(user, item_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    # TODO - actually we can return not only
-    #  parent but also next item in collection
-    return {
-        'result': f'Deleted item {item_uuid}',
-        'item_uuid': str(item_uuid),
-        'parent_uuid': str(parent_uuid),
-    }
+    return common_api_models.ItemDeleteOutput(
+        result=f'Deleted item {item_uuid}',
+        item_uuid=str(item_uuid),
+        switch_to=common_api_models.ItemOutput(**parent.model_dump()),
+    )
 
 
 # TODO - instead of sending data as base64 encoded string
