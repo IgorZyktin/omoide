@@ -1,9 +1,9 @@
 {% extends "base_search.html" %}
-{% from "macros.html" import render_album, render_location %}
+{% from "macros.html" import render_album, render_lineage %}
 
 {% block head %}
     {{ super() }}
-    {% if item.preview_ext %}
+    {% if current_item.preview_ext %}
         <meta property="og:image"
               content="{{ get_preview_href(request, current_item) }}"/>
     {% endif %}
@@ -23,8 +23,9 @@
 
 {% block header_top %}
     {{ super() }}
-    {{ render_location(request, result.location, aim_wrapper) }}
+    {{ render_lineage(request, parents, current_item, aim_wrapper) }}
 {% endblock %}
+
 
 {% block body %}
     <div class="preview">
@@ -35,7 +36,7 @@
 
             {% if album.has_previous %}
                 <a class="preview-swipe"
-                   href="{{ request.url_for('app_preview', uuid=album.previous_item) }}?{{ aim_wrapper.to_url_no_q() }}">
+                   href="{{ request.url_for('app_preview', item_uuid=album.previous_item.uuid) }}?{{ aim_wrapper.to_url_no_q() }}">
                     <img src="{{ request.url_for('static', path='ic_arrow_back_24px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -43,37 +44,37 @@
                 <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
             {% endif %}
 
-            {% if item.is_collection %}
+            {% if current_item.is_collection %}
                 <div class="envelope env-collection">
-                    {%- if item.is_collection and item.name -%}
-                        <p>{{ item.name }}</p>
+                    {%- if current_item.is_collection and current_item.name -%}
+                        <p>{{ current_item.name }}</p>
                     {%- endif -%}
 
-                    <a href="{{ request.url_for('app_browse', item_uuid=item.uuid) }}?{{ aim_wrapper.to_url_no_q(page=1) }}">
-                        {%- if item.thumbnail_ext is none -%}
+                    <a href="{{ request.url_for('app_browse', item_uuid=current_item.uuid) }}?{{ aim_wrapper.to_url_no_q(page=1) }}">
+                        {%- if current_item.thumbnail_ext is none -%}
                             <img src="{{ request.url_for('static', path='empty.png') }}"
-                                 alt="{{ item.name }}"/>
+                                 alt="{{ current_item.name }}"/>
                         {%- else -%}
-                            <img src="{{ get_thumbnail_href(request, item) }}"
-                                 alt="{{ item.name }}"/>
+                            <img src="{{ get_thumbnail_href(request, current_item) }}"
+                                 alt="{{ current_item.name }}"/>
                         {%- endif -%}
                     </a>
                 </div>
             {% else %}
-                <a href="{{ get_content_href(request, item) }}">
-                    {%- if item.preview_ext is none -%}
+                <a href="{{ get_content_href(request, current_item) }}">
+                    {%- if current_item.preview_ext is none -%}
                         <img src="{{ request.url_for('static', path='empty.png') }}"
-                             alt="{{ item.name }}"/>
+                             alt="{{ current_item.name }}"/>
                     {%- else -%}
-                        <img src="{{ get_preview_href(request, item) }}"
-                             alt="{{ item.name }}"/>
+                        <img src="{{ get_preview_href(request, current_item) }}"
+                             alt="{{ current_item.name }}"/>
                     {%- endif -%}
                 </a>
             {% endif %}
 
             {% if album.has_next %}
                 <a class="preview-swipe"
-                   href="{{ request.url_for('app_preview', uuid=album.next_item)}}?{{ aim_wrapper.to_url_no_q() }}">
+                   href="{{ request.url_for('app_preview', item_uuid=album.next_item.uuid)}}?{{ aim_wrapper.to_url_no_q() }}">
                     <img src="{{ request.url_for('static', path='ic_arrow_forward_24px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -84,7 +85,7 @@
         </div>
 
         <div class="preview-tags">
-            {% for tag in tags %}
+            {% for tag in all_tags %}
                 <a href="{{ request.url_for('app_search') }}?q={{ tag | urlencode }}"
                    class="tag-box">{{ tag }}</a>
             {% endfor %}

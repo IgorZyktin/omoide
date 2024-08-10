@@ -6,11 +6,12 @@ from omoide.storage import interfaces as storage_interfaces
 from omoide.object_storage import interfaces as object_interfaces
 
 
-@dataclass()
+@dataclass
 class Mediator:
     """Class that ties all components together."""
     authenticator: interfaces.AbsAuthenticator
     browse_repo: storage_interfaces.AbsBrowseRepository
+    preview_repo: storage_interfaces.AbsPreviewRepository
     exif_repo: storage_interfaces.AbsEXIFRepository
     items_repo: storage_interfaces.AbsItemsRepo
     meta_repo: storage_interfaces.AbsMetainfoRepo

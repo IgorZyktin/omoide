@@ -1,4 +1,5 @@
 """Repository that performs operations on items."""
+
 import datetime
 from typing import Any
 from typing import Collection
@@ -104,7 +105,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     async def get_all_root_items(
         self,
         *users: models.User,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Return list of root items."""
         stmt = sa.select(
             db_models.Item
@@ -120,25 +121,23 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             )
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**each) for each in response]
+        return [models.Item(**each) for each in response]
 
     async def read_item(
         self,
-        uuid: UUID,
+        item_uuid: UUID,
     ) -> Optional[domain.Item]:
         """Return item or None."""
         stmt = sa.select(
             db_models.Item
         ).where(
-            db_models.Item.uuid == uuid
+            db_models.Item.uuid == item_uuid
         )
 
         response = await self.db.fetch_one(stmt)
 
-        return domain.Item(**response) if response else None
+        return models.Item(**response) if response else None
 
-    # TODO - fix naming
-    # TODO - import from models
     async def get_item(self, uuid: UUID) -> models.Item:
         """Return Item."""
         stmt = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
@@ -215,90 +214,6 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
 
-    # TODO - fix naming
-    async def get_children_(
-        self,
-        item: domain.Item,
-    ) -> list[models.Item]:
-        """Return all direct descendants of the given item."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
-            db_models.Item.parent_uuid == item.uuid,
-        )
-
-        stmt = stmt.order_by(
-            db_models.Item.number
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
-
-    async def read_children_of(
-        self,
-        user: models.User,
-        item: domain.Item,
-        ignore_collections: bool,
-    ) -> list[domain.Item]:
-        """Return all direct descendants of the given item."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
-            db_models.Item.parent_uuid == item.uuid,
-        )
-
-        stmt = queries.ensure_user_has_permissions(user, stmt)
-
-        if ignore_collections:
-            stmt = stmt.where(
-                db_models.Item.is_collection == False,  # noqa
-            )
-
-        stmt = stmt.order_by(
-            db_models.Item.number
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [domain.Item(**each) for each in response]
-
-    async def get_simple_location(
-        self,
-        user: models.User,
-        owner: models.User,
-        item: domain.Item,
-    ) -> Optional[domain.SimpleLocation]:
-        """Return Location of the item (without pagination)."""
-        ancestors = await self.get_simple_ancestors(user, item)
-        return domain.SimpleLocation(items=ancestors + [item])
-
-    async def get_simple_ancestors(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> list[domain.Item]:
-        """Return list of ancestors for given item."""
-        assert user
-        # TODO(i.zyktin): what if user has no access
-        #  to the item in the middle of dependence chain?
-
-        ancestors = []
-        item_uuid = item.parent_uuid
-
-        while True:
-            if item_uuid is None:
-                break
-
-            ancestor = await self.read_item(item_uuid)
-
-            if ancestor is None:
-                break
-
-            ancestors.append(ancestor)
-            item_uuid = ancestor.parent_uuid
-
-        ancestors.reverse()
-        return ancestors
-
     async def count_items_by_owner(
         self,
         user: models.User,
@@ -318,6 +233,19 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
+
+    async def get_children(self, item: models.Item) -> list[models.Item]:
+        """Return all direct descendants of the given item."""
+        stmt = sa.select(
+            db_models.Item
+        ).where(
+            db_models.Item.parent_uuid == item.uuid
+        ).order_by(
+            db_models.Item.number
+        )
+
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**row) for row in response]
 
     async def get_parents(self, item: models.Item) -> list[models.Item]:
         """Return lineage of all parents for the given item."""
@@ -362,52 +290,22 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**row) for row in reversed(response)]
 
-    # TODO - delete this method
-    async def get_all_parents(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> list[domain.Item]:
-        """Return all parents of the given item."""
-        stmt = """
-        WITH RECURSIVE parents AS (
-           SELECT uuid,
-                  parent_uuid,
-                  owner_uuid,
-                  number,
-                  name,
-                  is_collection,
-                  content_ext,
-                  preview_ext,
-                  thumbnail_ext,
-                  tags,
-                  permissions
-           FROM items
-           WHERE uuid = :uuid
-           UNION
-           SELECT i.uuid,
-                  i.parent_uuid,
-                  i.owner_uuid,
-                  i.number,
-                  i.name,
-                  i.is_collection,
-                  i.content_ext,
-                  i.preview_ext,
-                  i.thumbnail_ext,
-                  i.tags,
-                  i.permissions
-            FROM items i
-                     INNER JOIN parents ON i.uuid = parents.parent_uuid
+    async def get_neighbours(self, item: models) -> list[models.Item]:
+        """Return all neighbours for the given item."""
+        stmt = sa.select(db_models.Item)
+
+        stmt = stmt.where(
+            db_models.Item.parent_uuid == sa.select(
+                db_models.Item.parent_uuid
+            ).where(
+                db_models.Item.uuid == item.uuid
+            ).scalar_subquery()
+        ).order_by(
+            db_models.Item.number
         )
-        SELECT * FROM parents WHERE parent_uuid IS NOT NULL;
-        """
 
-        values = {
-            'uuid': str(item.uuid),
-        }
-
-        response = await self.db.fetch_all(stmt, values)
-        return [domain.Item(**x) for x in response]
+        response = await self.db.fetch_all(stmt)
+        return [models.Item(**row) for row in response]
 
     async def get_direct_children_uuids_of(
         self,

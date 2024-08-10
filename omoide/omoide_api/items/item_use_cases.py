@@ -52,7 +52,7 @@ class ReadItemUseCase(BaseAPIUseCase):
                 return item
 
             public_users = (
-                await self.mediator.users_repo.get_public_users_uuids()
+                await self.mediator.users_repo.get_public_user_uuids()
             )
 
             if item.owner_uuid in public_users:
@@ -122,7 +122,7 @@ class DeleteItemUseCase(BaseAPIUseCase):
             )
 
             public_users = (
-                await self.mediator.users_repo.get_public_users_uuids()
+                await self.mediator.users_repo.get_public_user_uuids()
             )
             await self.mediator.misc_repo.drop_unused_known_tags(
                 users=affected_users,

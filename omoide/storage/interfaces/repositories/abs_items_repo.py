@@ -27,7 +27,7 @@ class AbsItemsRepo(abc.ABC):
     async def get_all_root_items(
         self,
         *users: models.User,
-    ) -> list[domain.Item]:
+    ) -> list[models.Item]:
         """Return list of root items."""
 
     # TODO - remove this method
@@ -63,32 +63,6 @@ class AbsItemsRepo(abc.ABC):
     ) -> list[models.Item]:
         """Return Items."""
 
-    # TODO - change naming
-    @abc.abstractmethod
-    async def get_children_(
-        self,
-        item: domain.Item,
-    ) -> list[models.Item]:
-        """Return all direct descendants of the given item."""
-
-    @abc.abstractmethod
-    async def read_children_of(
-        self,
-        user: models.User,
-        item: domain.Item,
-        ignore_collections: bool,
-    ) -> list[domain.Item]:
-        """Return all direct descendants of the given item."""
-
-    @abc.abstractmethod
-    async def get_simple_location(
-        self,
-        user: models.User,
-        owner: models.User,
-        item: domain.Item,
-    ) -> domain.SimpleLocation | None:
-        """Return Location of the item (without pagination)."""
-
     @abc.abstractmethod
     async def count_items_by_owner(
         self,
@@ -105,16 +79,16 @@ class AbsItemsRepo(abc.ABC):
         """Count dependant items."""
 
     @abc.abstractmethod
+    async def get_children(self, item: models.Item,) -> list[models.Item]:
+        """Return all direct descendants of the given item."""
+
+    @abc.abstractmethod
     async def get_parents(self, item: models.Item) -> list[models.Item]:
         """Return lineage of all parents for the given item."""
 
     @abc.abstractmethod
-    async def get_all_parents(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> list[domain.Item]:
-        """Return all parents of the given item."""
+    async def get_neighbours(self, item: models) -> list[models.Item]:
+        """Return all neighbours for the given item."""
 
     @abc.abstractmethod
     async def get_direct_children_uuids_of(

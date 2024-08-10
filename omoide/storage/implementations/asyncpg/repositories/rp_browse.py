@@ -1,5 +1,5 @@
 """Browse repository."""
-from typing import Optional
+
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -7,7 +7,6 @@ from sqlalchemy import cast
 from sqlalchemy.dialects import postgresql as pg
 
 from omoide import const
-from omoide import domain
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
 from omoide.storage.database import db_models
@@ -15,7 +14,6 @@ from omoide.storage.implementations.asyncpg.repositories import queries
 from omoide.storage.implementations.asyncpg.repositories.rp_items import (
     ItemsRepo
 )
-from omoide.storage.interfaces.repositories.abs_users_repo import AbsUsersRepo
 
 
 class BrowseRepository(
@@ -26,30 +24,27 @@ class BrowseRepository(
 
     async def get_children(
         self,
-        user: models.User,
-        uuid: UUID,
-        aim: domain.Aim,
-    ) -> list[domain.Item]:
-        """Load all children of an item with given UUID."""
+        item: models.Item,
+        offset: int | None,
+        limit: int | None,
+    ) -> list[models.Item]:
+        """Load all children of given item."""
         stmt = sa.select(
             db_models.Item
         ).where(
-            db_models.Item.parent_uuid == uuid,
-        )
-
-        stmt = queries.ensure_user_has_permissions(user, stmt)
-
-        stmt = stmt.order_by(
+            db_models.Item.parent_uuid == item.uuid,
+        ).order_by(
             db_models.Item.number
-        ).limit(
-            aim.items_per_page
         )
 
-        if aim.offset > 0:
-            stmt = stmt.offset(aim.offset)
+        if offset:
+            stmt = stmt.offset(offset)
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [domain.Item(**x) for x in response]
+        return [models.Item(**x) for x in response]
 
     async def count_children(self, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
@@ -63,153 +58,6 @@ class BrowseRepository(
 
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
-
-    async def get_location(
-        self,
-        user: models.User,
-        uuid: UUID,
-        aim: domain.Aim,
-        users_repo: AbsUsersRepo,
-    ) -> Optional[domain.Location]:
-        """Return Location of the item."""
-        current_item = await self.read_item(uuid)
-
-        if current_item is None:
-            return None
-
-        owner = await users_repo.read_user(current_item.owner_uuid)
-
-        if owner is None:
-            return None
-
-        ancestors = await self.get_complex_ancestors(
-            user=user,
-            item=current_item,
-            aim=aim,
-        )
-
-        return domain.Location(
-            owner=owner,
-            items=ancestors,
-            current_item=current_item,
-        )
-
-    async def get_complex_ancestors(
-        self,
-        user: models.User,
-        item: domain.Item,
-        aim: domain.Aim,
-    ) -> list[domain.PositionedItem]:
-        """Return list of positioned ancestors of given item."""
-        ancestors = []
-
-        item_uuid = item.parent_uuid
-        child_uuid = item.uuid
-
-        while True:
-            if item_uuid is None:
-                break
-
-            ancestor = await self.get_item_with_position(
-                user=user,
-                item_uuid=item_uuid,
-                child_uuid=child_uuid,
-                aim=aim,
-            )
-
-            if ancestor is None:
-                break
-
-            ancestors.append(ancestor)
-            item_uuid = ancestor.item.parent_uuid
-            child_uuid = ancestor.item.uuid
-
-        ancestors.reverse()
-        return ancestors
-
-    async def get_item_with_position(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        child_uuid: UUID,
-        aim: domain.Aim,
-    ) -> Optional[domain.PositionedItem]:
-        """Return item with its position in siblings."""
-        # TODO - rewrite to sqlalchemy
-        if user.is_anon:
-            query = """
-            WITH children AS (
-                SELECT uuid
-                FROM items
-                WHERE parent_uuid = :item_uuid
-                ORDER BY number
-            )
-            SELECT uuid,
-                   parent_uuid,
-                   owner_uuid,
-                   number,
-                   name,
-                   is_collection,
-                   content_ext,
-                   preview_ext,
-                   thumbnail_ext,
-                   tags,
-                   (select array_position(array(select uuid from children),
-                                          :child_uuid)) as position,
-                   (select count(*) from children) as total_items
-            FROM items
-            WHERE uuid = :item_uuid;
-            """
-            values = {
-                'item_uuid': str(item_uuid),
-                'child_uuid': str(child_uuid),
-            }
-        else:
-            query = """
-            WITH children AS (
-                SELECT uuid
-                FROM items
-                WHERE parent_uuid = :item_uuid
-                AND (:user_uuid = ANY(permissions)
-                 OR owner_uuid::text = :user_uuid)
-                ORDER BY number
-            )
-            SELECT uuid,
-                   parent_uuid,
-                   owner_uuid,
-                   number,
-                   name,
-                   is_collection,
-                   content_ext,
-                   preview_ext,
-                   thumbnail_ext,
-                   tags,
-                   (select array_position(array(select uuid from children),
-                                          :child_uuid)) as position,
-                   (select count(*) from children) as total_items
-            FROM items
-            WHERE uuid = :item_uuid;
-            """
-
-            values = {
-                'user_uuid': str(user.uuid),
-                'item_uuid': str(item_uuid),
-                'child_uuid': str(child_uuid),
-            }
-
-        response = await self.db.fetch_one(query, values)
-
-        if response is None:
-            return None
-
-        mapping = dict(response)
-
-        return domain.PositionedItem(
-            position=mapping.pop('position') or 1,
-            total_items=mapping.pop('total_items') or 1,
-            items_per_page=aim.items_per_page,
-            item=domain.Item(**response),
-        )
 
     async def browse_direct_anon(
         self,
@@ -491,35 +339,6 @@ class BrowseRepository(
         }
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**x) for x in response]
-
-    # FIXME - delete this method
-    async def get_parents_names(
-        self,
-        items: list[domain.Item],
-    ) -> list[Optional[str]]:
-        """Get names of parents of the given items."""
-        uuids = [
-            str(x.parent_uuid)
-            if x.parent_uuid else None
-            for x in items
-        ]
-
-        subquery = sa.select(
-            sa.func.unnest(
-                cast(uuids, pg.ARRAY(sa.Text))  # type: ignore
-            ).label('uuid')
-        ).subquery('given_uuid')
-
-        stmt = sa.select(
-            subquery.c.uuid, db_models.Item.name
-        ).join(
-            db_models.Item,
-            db_models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
-            isouter=True,
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [record['name'] for record in response]
 
     async def get_parent_names(
         self,

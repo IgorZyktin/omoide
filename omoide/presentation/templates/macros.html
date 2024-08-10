@@ -55,63 +55,6 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_paginator_search(request, paginator, aim) %}
-    {% if paginator %}
-        <div class="pages">
-            {% if paginator.has_previous %}
-                <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=paginator.previous_page) }}">
-                    <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
-                         alt="Previous"/>
-                </a>
-            {% else %}
-                <a class="inactive-page page-separate">
-                    <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
-                         alt="Previous"/>
-                </a>
-            {% endif %}
-            <span>&nbsp;</span>
-
-            {% for page in paginator %}
-
-
-                {% if paginator.total_pages == 1 %}
-                    {% set corner_style = 'page-separate' %}
-                {% elif page.number == 1 %}
-                    {% set corner_style = 'page-left' %}
-                {% elif page.number == paginator.total_pages %}
-                    {% set corner_style = 'page-right' %}
-                {% else %}
-                    {% set corner_style = '' %}
-                {% endif %}
-
-                {% if page.is_dummy %}
-                    <a class="inactive-page {{ corner_style }}">...</a>
-                {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=page.number) }}"
-                       class="active-page {{ corner_style }}">{{ page.number }}</a>
-                {% else %}
-                    <a href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=page.number) }}"
-                       class="{{ corner_style }}">{{ page.number }}</a>
-                {% endif %}
-            {% endfor %}
-
-            <span>&nbsp;</span>
-            {% if paginator.has_next %}
-                <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search')|string + '?' + aim.to_url(page=paginator.next_page) }}">
-                    <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
-                         alt="Next"/>
-                </a>
-            {% else %}
-                <a class="inactive-page page-separate">
-                    <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
-                         alt="Next"/>
-                </a>
-            {% endif %}
-        </div>
-    {% endif %}
-{% endmacro %}
 
 {% macro render_paginator_by_item(request, paginator, uuid, aim_wrapper) %}
     {% if paginator %}
@@ -173,9 +116,10 @@
 {% macro render_album(request, album, aim_wrapper) %}
     {% if album %}
         <div class="pages">
+
             {% if album.has_previous %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_preview', uuid=album.previous_item)|string + '?' + aim_wrapper.to_url_no_q() }}">
+                   href="{{ request.url_for('app_preview', item_uuid=album.previous_item.uuid) | string + '?' + aim_wrapper.to_url_no_q() }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
                          alt="Previous"/>
                 </a>
@@ -185,6 +129,7 @@
                          alt="Previous"/>
                 </a>
             {% endif %}
+
             <span>&nbsp;</span>
 
             {% for page in album %}
@@ -201,18 +146,19 @@
                 {% if page.is_dummy %}
                     <a class="inactive-page {{ corner_style }}">...</a>
                 {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_preview', uuid=page.value)|string  + '?' + aim_wrapper.to_url_no_q() }}"
+                    <a href="{{ request.url_for('app_preview', item_uuid=page.value.uuid) | string  + '?' + aim_wrapper.to_url_no_q() }}"
                        class="active-page{{ corner_style }}">{{ page.number }}</a>
                 {% else %}
-                    <a href="{{ request.url_for('app_preview', uuid=page.value)|string + '?' + aim_wrapper.to_url_no_q() }}"
+                    <a href="{{ request.url_for('app_preview', item_uuid=page.value.uuid) | string + '?' + aim_wrapper.to_url_no_q() }}"
                        class="{{ corner_style }}">{{ page.number }}</a>
                 {% endif %}
             {% endfor %}
 
             <span>&nbsp;</span>
+
             {% if album.has_next %}
                 <a class="active-page page-separate"
-                   href="{{ request.url_for('app_preview', uuid=album.next_item)|string + '?' + aim_wrapper.to_url_no_q() }}">
+                   href="{{ request.url_for('app_preview', item_uuid=album.next_item.uuid) | string + '?' + aim_wrapper.to_url_no_q() }}">
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
@@ -222,119 +168,7 @@
                          alt="Next"/>
                 </a>
             {% endif %}
-        </div>
-    {% endif %}
-{% endmacro %}
 
-{% macro render_location(request, location, aim_wrapper) %}
-    {% if location is not none %}
-        <div class="location">
-            <h3>
-                {% for pos in location %}
-                    {% if not loop.first %}
-                        <span>&nbsp;/&nbsp;</span>
-                    {% endif %}
-
-                    {% if pos.item.is_collection %}
-                        <a href="{{ request.url_for('app_browse', item_uuid=pos.item.uuid)|string + '?' + aim_wrapper.to_url_no_q(page=pos.page) }}">
-                            {{ pos.item.name or '???' }}
-                        </a>
-                    {% else %}
-                        <a href="{{ request.url_for('app_preview', uuid=pos.item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
-                            {{ pos.item.name or '???' }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if location.current_item and location.current_item.is_collection %}
-                    {% if location.items | length != 0 %}
-                        <span>&nbsp;/&nbsp;</span>
-                    {% endif %}
-                    {{ location.current_item.name }}
-                    <a href="{{ request.url_for('api_items_download', uuid=location.current_item.uuid) }}">
-                        <img class="icon"
-                             src="{{ request.url_for('static', path='download_48.svg') }}"
-                             alt="Download button"
-                             title="Download all"/></a>
-                    <a href="javascript:void(0)"
-                       onclick="copyText('{{ location.current_item.uuid }}', 'ID')">
-                        <img class="icon"
-                             src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
-                             alt="Copy ID"
-                             title="Copy ID"/></a>
-                    {% if location.current_item.is_collection %}
-                        <a href="javascript:void(0)"
-                           onclick="copyText('{{ request.url_for('app_browse', item_uuid=location.current_item.uuid) }}', 'Link')">
-                            <img class="icon"
-                                 src="{{ request.url_for('static', path='ic_link.svg') }}"
-                                 alt="Copy link"
-                                 title="Copy link"/></a>
-                    {% else %}
-                        <a href="javascript:void(0)"
-                           onclick="copyText('{{ request.url_for('app_preview', uuid=location.current_item.uuid) }}', 'Link')">
-                            <img class="icon"
-                                 src="{{ request.url_for('static', path='ic_link.svg') }}"
-                                 alt="Copy link"
-                                 title="Copy link"/></a>
-                    {% endif %}
-                    <div id="copy-alerts"></div>
-                {% endif %}
-            </h3>
-        </div>
-    {% endif %}
-{% endmacro %}
-
-{% macro render_simple_location(request, location, aim_wrapper) %}
-    {% if location is not none %}
-        <div class="location">
-            <h3>
-                {% for item in location %}
-                    {% if not loop.first %}
-                        <span>&nbsp;/&nbsp;</span>
-                    {% endif %}
-
-                    {% if loop.last %}
-                        {{ item.name }}
-                        <a href="{{ request.url_for('api_items_download', uuid=item.uuid) }}">
-                            <img class="icon"
-                                 src="{{ request.url_for('static', path='download_48.svg') }}"
-                                 alt="Download button"
-                                 title="Download all"/></a>
-                        <a href="javascript:void(0)"
-                           onclick="copyText('{{ item.uuid }}', 'ID')">
-                            <img class="icon"
-                                 src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
-                                 alt="Copy ID"
-                                 title="Copy ID"/></a>
-                        {% if item.is_collection %}
-                            <a href="javascript:void(0)"
-                               onclick="copyText('{{ request.url_for('app_browse', item_uuid=item.uuid) }}', 'Link')">
-                                <img class="icon"
-                                     src="{{ request.url_for('static', path='ic_link.svg') }}"
-                                     alt="Copy link"
-                                     title="Copy link"/></a>
-                        {% else %}
-                            <a href="javascript:void(0)"
-                               onclick="copyText('{{ request.url_for('app_preview', uuid=item.uuid) }}', 'Link')">
-                                <img class="icon"
-                                     src="{{ request.url_for('static', path='ic_link.svg') }}"
-                                     alt="Copy link"
-                                     title="Copy link"/></a>
-                        {% endif %}
-                        <div id="copy-alerts"></div>
-                    {% else %}
-                        {% if item.is_collection %}
-                            <a href="{{ request.url_for('app_browse', item_uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
-                                {{ item.name or '???' }}
-                            </a>
-                        {% else %}
-                            <a href="{{ request.url_for('app_preview', uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
-                                {{ item.name or '???' }}
-                            </a>
-                        {% endif %}
-                    {% endif %}
-                {% endfor %}
-            </h3>
         </div>
     {% endif %}
 {% endmacro %}
@@ -346,7 +180,7 @@
             {{ item.name or '???' }}
         </a>
     {% else %}
-        <a href="{{ request.url_for('app_preview', uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
+        <a href="{{ request.url_for('app_preview', item_uuid=item.uuid)|string + '?' + aim_wrapper.to_url_no_q() }}">
             {{ item.name or '???' }}
         </a>
     {% endif %}
@@ -363,20 +197,21 @@
                 {% endfor %}
             {% endif %}
 
-            {{ item.name }}
+            {% if item.name %}
+                {{ item.name }}
+            {% else %}
+                Current item
+            {% endif %}
 
-            <a href="{{ request.url_for('api_items_download', uuid=item.uuid) }}">
-                <img class="icon"
-                     src="{{ request.url_for('static', path='download_48.svg') }}"
-                     alt="Download button"
-                     title="Download all"/></a>
+            <span>&nbsp;</span>
 
             <a href="javascript:void(0)"
                onclick="copyText('{{ item.uuid }}', 'ID')">
                 <img class="icon"
                      src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
                      alt="Copy ID"
-                     title="Copy ID"/></a>
+                     title="Copy ID"/>
+            </a>
 
             {% if item.is_collection %}
                 <a href="javascript:void(0)"
@@ -385,13 +220,20 @@
                          src="{{ request.url_for('static', path='ic_link.svg') }}"
                          alt="Copy link"
                          title="Copy link"/></a>
+                <a href="{{ request.url_for('api_items_download', uuid=item.uuid) }}">
+                    <img class="icon"
+                         src="{{ request.url_for('static', path='download_48.svg') }}"
+                         alt="Download button"
+                         title="Download all"/>
+                </a>
             {% else %}
                 <a href="javascript:void(0)"
-                   onclick="copyText('{{ request.url_for('app_preview', uuid=item.uuid) }}', 'Link')">
+                   onclick="copyText('{{ request.url_for('app_preview', item_uuid=item.uuid) }}', 'Link')">
                     <img class="icon"
                          src="{{ request.url_for('static', path='ic_link.svg') }}"
                          alt="Copy link"
-                         title="Copy link"/></a>
+                         title="Copy link"/>
+                </a>
             {% endif %}
 
             <div id="copy-alerts"></div>
@@ -413,7 +255,7 @@
             <a href="{{ request.url_for('app_browse', item_uuid=item.uuid)|string + '?' + aim_wrapper.to_url(page=1) }}"
                title="{{ name }}">
         {% else %}
-            <a href="{{ request.url_for('app_preview', uuid=item.uuid)|string + '?' + aim_wrapper.to_url(page=1) }}"
+            <a href="{{ request.url_for('app_preview', item_uuid=item.uuid)|string + '?' + aim_wrapper.to_url(page=1) }}"
                title="{{ name }}">
         {% endif -%}
 

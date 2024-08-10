@@ -1,12 +1,10 @@
 """Repository that performs all browse queries."""
+
 import abc
 from uuid import UUID
 
 from omoide import const
-from omoide import domain
 from omoide import models
-from omoide.domain import common
-from omoide.storage import interfaces as storage_interfaces
 
 
 class AbsBrowseRepository(abc.ABC):
@@ -15,35 +13,15 @@ class AbsBrowseRepository(abc.ABC):
     @abc.abstractmethod
     async def get_children(
         self,
-        user: models.User,
-        uuid: UUID,
-        aim: common.Aim,
-    ) -> list[common.Item]:
-        """Load all children of an item with given UUID."""
+        item: models.Item,
+        offset: int | None,
+        limit: int | None,
+    ) -> list[models.Item]:
+        """Load all children of given item."""
 
     @abc.abstractmethod
     async def count_children(self, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
-
-    @abc.abstractmethod
-    async def get_location(
-        self,
-        user: models.User,
-        uuid: UUID,
-        aim: common.Aim,
-        users_repo: storage_interfaces.AbsUsersRepo,
-    ) -> common.Location | None:
-        """Return Location of the item."""
-
-    @abc.abstractmethod
-    async def get_item_with_position(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        child_uuid: UUID,
-        aim: common.Aim,
-    ) -> common.PositionedItem | None:
-        """Return item with its position in siblings."""
 
     @abc.abstractmethod
     async def browse_direct_anon(
@@ -99,14 +77,6 @@ class AbsBrowseRepository(abc.ABC):
         limit: int,
     ) -> list[models.Item]:
         """Return recently updated items."""
-
-    # FIXME - delete this method
-    @abc.abstractmethod
-    async def get_parents_names(
-        self,
-        items: list[domain.Item],
-    ) -> list[str | None]:
-        """Get names of parents of the given items."""
 
     @abc.abstractmethod
     async def get_parent_names(

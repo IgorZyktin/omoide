@@ -1,4 +1,5 @@
 """Dependencies."""
+
 import binascii
 from base64 import b64decode
 from typing import Annotated
@@ -71,13 +72,6 @@ def get_storage() -> storage_interfaces.AbsStorage:
 def get_search_repo() -> storage_interfaces.AbsSearchRepository:
     """Get repo instance."""
     return asyncpg.SearchRepository(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_preview_repo() -> storage_interfaces.AbsPreviewRepository:
-    """Get repo instance."""
-    return asyncpg.PreviewRepository(get_db())
 
 
 # TODO - remove
@@ -265,26 +259,6 @@ async def get_admin_user(
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail='You are not allowed to perform this operation',
-    )
-
-
-# application related use cases -----------------------------------------------
-
-
-@utils.memorize
-def app_preview_use_case(
-    preview_repository:
-    storage_interfaces.AbsPreviewRepository = Depends(get_preview_repo),
-    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
-) -> use_cases.AppPreviewUseCase:
-    """Get use case instance."""
-    return use_cases.AppPreviewUseCase(
-        preview_repo=preview_repository,
-        users_repo=users_repo,
-        items_repo=items_repo,
-        meta_repo=meta_repo,
     )
 
 

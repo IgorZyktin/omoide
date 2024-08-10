@@ -28,3 +28,5 @@ ASC: Literal['asc'] = 'asc'
 DESC: Literal['desc'] = 'desc'
 RANDOM: Literal['random'] = 'random'
 ORDER_TYPE: TypeAlias = Literal['asc', 'desc', 'random']
+
+PAGES_IN_ALBUM_AT_ONCE = 10

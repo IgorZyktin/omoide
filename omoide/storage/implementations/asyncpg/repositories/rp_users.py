@@ -147,7 +147,7 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             thumbnail_size=response['thumbnail_size'] or 0,
         )
 
-    async def get_public_users_uuids(self) -> set[UUID]:
+    async def get_public_user_uuids(self) -> set[UUID]:
         """Return set of UUIDs of public users."""
         stmt = sa.select(db_models.PublicUsers.user_uuid)
 

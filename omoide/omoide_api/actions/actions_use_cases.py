@@ -238,7 +238,7 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
             await self.mediator.misc_repo.replace_computed_tags(item,
                                                                 computed_tags)
             if including_children:
-                children = await self.mediator.items_repo.get_children_(item)
+                children = await self.mediator.items_repo.get_children(item)
 
                 for child in children:
                     child_tags = child.get_computed_tags(computed_tags)

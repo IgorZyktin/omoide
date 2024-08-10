@@ -451,7 +451,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
     ) -> None:
         """Apply permissions change to all parents."""
         async with self.items_repo.transaction():
-            parents = await self.items_repo.get_all_parents(user, item)
+            parents = await self.items_repo.get_parents(item)
 
             if not parents:
                 return

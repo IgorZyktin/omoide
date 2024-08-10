@@ -12,8 +12,6 @@ from omoide.storage.implementations.asyncpg.repositories.rp_metainfo import \
     MetainfoRepo  # noqa: F401,F403
 from omoide.storage.implementations.asyncpg.repositories.rp_misc import \
     MiscRepo  # noqa: F401,F403
-from omoide.storage.implementations.asyncpg.repositories.rp_preview import \
-    PreviewRepository  # noqa: F401,F403
 from omoide.storage.implementations.asyncpg.repositories.rp_search import \
     SearchRepository  # noqa: F401,F403
 from omoide.storage.implementations.asyncpg.repositories.rp_users import \

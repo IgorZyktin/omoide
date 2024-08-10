@@ -21,26 +21,21 @@ class BaseBrowseUseCase(BaseAPPUseCase):
         item: models.Item,
     ) -> None:
         """Raise if user has no access to this item."""
-        # TODO - too many sub requests
-        owner = await self.mediator.users_repo.get_user(item.owner_uuid)
         public_users = (
-            await self.mediator.users_repo.get_public_users_uuids()
+            await self.mediator.users_repo.get_public_user_uuids()
         )
 
         allowed_to = any(
             (
                 user.is_admin,
-                owner.uuid in public_users,
-                owner.uuid == user.uuid,
+                item.owner_uuid in public_users,
+                item.owner_uuid == user.uuid,
                 str(user.uuid) in item.permissions,
             )
         )
 
         if not allowed_to:
-            msg = (
-                f'User {user} is trying to browse {item}, '
-                'but is not allowed to'
-            )
+            msg = 'You are not allowed to browse this'
             raise exceptions.NotAllowedError(msg)
 
 
@@ -93,9 +88,9 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
 
             parents = await self.mediator.items_repo.get_parents(item)
             children = await self.mediator.browse_repo.get_children(
-                user=user,
-                uuid=item.uuid,
-                aim=aim,
+                item=item,
+                offset=aim.offset,
+                limit=aim.items_per_page,
             )
 
             names = await self.mediator.browse_repo.get_parent_names(children)

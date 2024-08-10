@@ -12,8 +12,6 @@ from omoide.storage.interfaces.repositories.abs_misc_repo import \
     AbsMiscRepo  # noqa: F401,F403
 from omoide.storage.interfaces.repositories.abs_users_repo import \
     AbsUsersRepo  # noqa: F401,F403
-from omoide.storage.interfaces.repositories.abs_preview_repo import \
-    AbsPreviewRepository  # noqa: F401,F403
 from omoide.storage.interfaces.repositories.abs_search_repo import \
     AbsSearchRepository  # noqa: F401,F403
 # FIXME - load this last

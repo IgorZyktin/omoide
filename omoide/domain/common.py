@@ -1,22 +1,16 @@
 """Models that used in more than one place."""
+
 from typing import Callable
-from typing import Iterator
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from omoide import const
-from omoide import models
 
 __all__ = [
     'Item',
-    'PositionedItem',
-    'Location',
     'Query',
-    'SingleResult',
-    'SimpleLocation',
-    'ComplexLocation',
     'Aim',
 ]
 
@@ -79,62 +73,6 @@ class ItemGeneric(BaseModel):
         self.original_ext = new_ext
 
 
-class PositionedItem(BaseModel):
-    """Primitive version of an item with position information."""
-    position: int
-    total_items: int
-    items_per_page: int
-    item: Item
-
-    @property
-    def page(self) -> int:
-        """Return page number for this item in parent's collection."""
-        return self.position // self.items_per_page + 1
-
-
-class Location(BaseModel):
-    """Path-like sequence of parents for specific item."""
-    owner: models.User
-    items: list[PositionedItem]
-    current_item: Optional[Item] = None
-
-    def __bool__(self) -> bool:
-        """Return True if location is not empty."""
-        return (self.owner is not None) and bool(self.items)
-
-    def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
-        """Iterate over items."""
-        return iter(self.items)
-
-
-class SimpleLocation(BaseModel):
-    """Path-like sequence of parents for specific item."""
-    items: list[Item]
-
-    def __bool__(self) -> bool:
-        """Return True if location is not empty."""
-        return bool(self.items)
-
-    def __iter__(self) -> Iterator[Item]:  # type: ignore
-        """Iterate over items."""
-        return iter(self.items)
-
-
-class ComplexLocation(BaseModel):
-    """Path-like sequence of parents for specific item."""
-    owner: models.User
-    items: list[PositionedItem]
-    current_item: Optional[Item] = None
-
-    def __bool__(self) -> bool:
-        """Return True if location is not empty."""
-        return (self.owner is not None) and bool(self.items)
-
-    def __iter__(self) -> Iterator[PositionedItem]:  # type: ignore
-        """Iterate over items."""
-        return iter(self.items)
-
-
 class Query(BaseModel):
     """User search query."""
     raw_query: str
@@ -167,8 +105,8 @@ class Aim(BaseModel):
         return int(total_items / (self.items_per_page or 1))
 
     def using(
-            self,
-            **kwargs,
+        self,
+        **kwargs,
     ) -> 'Aim':
         """Create new instance with given params."""
         values = self.model_dump()
@@ -181,12 +119,3 @@ class Aim(BaseModel):
         params['q'] = self.query.raw_query
         params.pop('query', None)
         return params
-
-
-class SingleResult(BaseModel):
-    """Result of a request for a single item."""
-    item: Item
-    metainfo: models.Metainfo
-    aim: Aim
-    location: Location
-    neighbours: list[UUID]
