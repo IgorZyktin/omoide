@@ -12,7 +12,6 @@ from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
 from omoide import custom_logging
-from omoide import exceptions
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.profile import profile_use_cases
@@ -66,12 +65,8 @@ async def app_profile_usage(
 
     try:
         size, total_items, total_collections = await use_case.execute(user)
-    # TODO - manage redirects automatically
-    except exceptions.NotAllowedError:
-        LOG.exception('Access denied')
-        return RedirectResponse(request.url_for('forbidden'))
     except Exception as exc:
-        web.raise_from_exc(exc)
+        web.redirect_from_exc(request, exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     context = {
@@ -105,12 +100,9 @@ async def app_profile_tags(
 
     try:
         known_tags = await use_case.execute(user)
-    # TODO - manage redirects automatically
-    except exceptions.NotAllowedError:
-        LOG.exception('Access denied')
-        return RedirectResponse(request.url_for('forbidden'))
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        web.redirect_from_exc(request, exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     context = {
         'request': request,

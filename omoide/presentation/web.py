@@ -9,14 +9,15 @@ from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException
+from fastapi import status
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import const
+from omoide import custom_logging
 from omoide import domain
 from omoide import exceptions as api_exceptions
 from omoide.domain import errors
-from omoide import custom_logging
 from omoide.presentation import constants
 
 LOG = custom_logging.get_logger(__name__)
@@ -52,16 +53,21 @@ ERROR_TO_CODE_MAP: dict[Type[errors.Error], int] = {
 }
 
 CODES_TO_EXCEPTIONS: dict[int, list[Type[Exception]]] = {
-    http.HTTPStatus.BAD_REQUEST: [
+    status.HTTP_400_BAD_REQUEST: [
         api_exceptions.InvalidInputError,
     ],
 
-    http.HTTPStatus.NOT_FOUND: [
+    status.HTTP_404_NOT_FOUND: [
         api_exceptions.DoesNotExistError,
     ],
 
-    http.HTTPStatus.FORBIDDEN: [
+    status.HTTP_409_CONFLICT: [
+        api_exceptions.AlreadyExistsError,
+    ],
+
+    status.HTTP_403_FORBIDDEN: [
         api_exceptions.AccessDeniedError,
+        api_exceptions.NotAllowedError,
     ]
 }
 
@@ -112,6 +118,21 @@ def raise_from_exc(
         detail = str(exc)
 
     raise HTTPException(status_code=code, detail=detail)
+
+
+def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
+    """Return redirection from exception (do not raise)."""
+    code = get_corresponding_exception_code(exc)
+
+    match code:
+        case status.HTTP_404_NOT_FOUND:
+            response = RedirectResponse(request.url_for('not_found'))
+        case status.HTTP_403_FORBIDDEN:
+            response = RedirectResponse(request.url_for('unauthorized'))
+        case _:
+            response = RedirectResponse(request.url_for('bad_request'))
+
+    return response
 
 
 def raise_from_error(
