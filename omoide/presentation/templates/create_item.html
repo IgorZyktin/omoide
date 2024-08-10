@@ -1,0 +1,77 @@
+{% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="narrow-block">
+        <h1>Creating item</h1>
+
+        <label for="parent_uuid">Parent item:</label>
+        <div style="display: flex; flex-direction: row; align-items: center">
+            <input id="parent_uuid"
+                   type="text"
+                   value="{{ parent_item.uuid }}"
+                   disabled
+                   class="height-auto"/>
+            <a href="javascript:void(0)"
+               onclick="copyText('{{ parent_item.uuid }}', 'parent ID', 'copy-alerts-parent')"
+               style="height: 100%">
+                <img class="icon-big"
+                     src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
+                     alt="Copy ID"
+                     title="Copy ID"/></a>
+        </div>
+        <div id="copy-alerts-parent"></div>
+        <div id="parent_thumbnail" class="parent_thumbnail">
+            {{ render_thumbnail_for_item(request, parent_item, parent_item.name, aim_wrapper) }}
+        </div>
+
+        <h2>New item parameters</h2>
+        <label for="item_name">Item name:
+            <input id="item_name"
+                   type="text"
+                   value=""
+                   class="height-auto"/>
+        </label>
+
+        <div>
+            <input type="checkbox"
+                   id="item_is_collection"
+                   checked>
+            <label for="item_is_collection">New item is a collection</label>
+        </div>
+
+        <label for="item_tags">Tags (one tag per line):<br>
+            <textarea id="item_tags" rows="10"></textarea>
+        </label>
+
+        <label for="item_permissions">Permissions (one user per line):<br>
+            <textarea id="item_permissions" rows="10">
+                {%- for user in users_with_permission -%}
+                    {{ user.uuid }} {{ user.name + '\n' }}{% endfor -%}</textarea>
+        </label>
+
+        <label for="action_after_creation">What to do after creation:</label>
+        <select id="action_after_creation">
+            <option value="upload">Upload content</option>
+            <option value="browse">Browse result</option>
+            <option value="nothing">Do nothing (stay here)</option>
+        </select>
+
+
+        <div id="alerts"></div>
+        <br>
+        <a id="create_item_button"
+           href="javascript:void(0)"
+           title="Create item"
+           onclick="createItem(this, '{{ endpoint }}', gatherItemParameters('{{ parent_item.owner_uuid | string }}'))"
+           class="button">Create</a>
+        <br>
+    </div>
+    <br>
+
+{% endblock %}

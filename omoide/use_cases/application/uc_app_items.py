@@ -13,54 +13,9 @@ from omoide.infra.special_types import Success
 from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
-    'AppItemCreateUseCase',
     'AppItemUpdateUseCase',
     'AppItemDeleteUseCase',
 ]
-
-
-class AppItemCreateUseCase:
-    """Use case for item creation page."""
-
-    def __init__(
-            self,
-            users_repo: storage_interfaces.AbsUsersRepo,
-            items_repo: storage_interfaces.AbsItemsRepo,
-    ) -> None:
-        """Initialize instance."""
-        self.users_repo = users_repo
-        self.items_repo = items_repo
-
-    async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            parent_uuid: Optional[UUID],
-    ) -> Result[errors.Error, tuple[domain.Item, list[models.User]]]:
-        """Business logic."""
-        async with self.items_repo.transaction():
-            if parent_uuid is None:
-                root_item = await self.items_repo.get_root_item(user)
-                parent_uuid = root_item.uuid
-
-            if parent_uuid is None:
-                return Failure(errors.ItemDoesNotExist(uuid=parent_uuid))
-
-            error = await policy.is_restricted(user, parent_uuid,
-                                               actions.Item.CREATE)
-            if error:
-                return Failure(error)
-
-            parent = await self.items_repo.read_item(parent_uuid)
-
-            if parent is None:
-                return Failure(errors.ItemDoesNotExist(uuid=parent_uuid))
-
-            can_see = await self.users_repo.get_users(
-                uuids=parent.permissions,
-            )
-
-        return Success((parent, can_see))
 
 
 class AppItemUpdateUseCase:

@@ -24,46 +24,6 @@ from omoide.presentation.app_config import Config
 router = fastapi.APIRouter(prefix='/items')
 
 
-@router.get('/create/{uuid}')
-async def app_item_create(
-        request: Request,
-        uuid: str | UUID | None,
-        templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-        user: models.User = Depends(dep.get_current_user),
-        policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-        use_case: use_cases.AppItemCreateUseCase = Depends(
-            dep.app_item_create_use_case),
-        config: Config = Depends(dep.get_config),
-        aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
-):
-    """Create item page."""
-    if not uuid:
-        valid_uuid = None
-    else:
-        valid_uuid = utils.cast_uuid(uuid)
-
-    result = await use_case.execute(policy, user, valid_uuid)
-
-    if isinstance(result, Failure):
-        return web.redirect_from_error(request, result.error, valid_uuid)
-
-    parent, permissions = result.value
-
-    context = {
-        'request': request,
-        'config': config,
-        'user': user,
-        'aim_wrapper': aim_wrapper,
-        'url': request.url_for('app_search'),
-        'endpoint': request.url_for('api_create_item'),
-        'parent': parent,
-        'permissions': permissions,
-    }
-
-    return templates.TemplateResponse('item_create.html', context)
-
-
 def serialize_item(
         item: domain.Item,
 ) -> dict[str, int | str | None | list[str]]:
