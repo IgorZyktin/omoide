@@ -126,11 +126,11 @@ def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
 
     match code:
         case status.HTTP_404_NOT_FOUND:
-            response = RedirectResponse(request.url_for('not_found'))
+            response = RedirectResponse(request.url_for('app_not_found'))
         case status.HTTP_403_FORBIDDEN:
-            response = RedirectResponse(request.url_for('unauthorized'))
+            response = RedirectResponse(request.url_for('app_unauthorized'))
         case _:
-            response = RedirectResponse(request.url_for('bad_request'))
+            response = RedirectResponse(request.url_for('app_bad_request'))
 
     return response
 

@@ -17,6 +17,7 @@ from omoide.omoide_app.browse import browse_controller
 from omoide.omoide_app.home import home_controllers
 from omoide.omoide_app.profile import profile_controllers
 from omoide.omoide_app.search import search_controllers
+from omoide.omoide_app.special import special_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -80,9 +81,7 @@ def apply_app_routes(current_app: FastAPI) -> None:
     current_app.include_router(home_controllers.app_home_router)
     current_app.include_router(profile_controllers.app_profile_router)
     current_app.include_router(search_controllers.app_search_router)
-
-    # Special application routes
-    current_app.include_router(application.app_special.router)
+    current_app.include_router(special_controllers.app_special_router)
 
     # API routes
     current_app.include_router(api_old.api_items.router)
