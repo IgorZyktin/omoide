@@ -1,4 +1,5 @@
 """Repository that performs read operations on users."""
+from typing import Collection
 from uuid import UUID
 from uuid import uuid4
 
@@ -71,6 +72,38 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             raise exceptions.DoesNotExistError(msg, user_uuid=uuid)
 
         return models.User(**response, role=models.Role.user)
+
+    async def get_users(
+        self,
+        uuid: UUID | None = None,
+        login: str | None = None,
+        uuids: Collection[UUID] | None = None,
+        logins: Collection[str] | None = None,
+        limit: int | None = None,
+    ) -> list[models.User]:
+        """Return filtered list of users."""
+        stmt = sa.select(db_models.User)
+
+        if uuid is not None:
+            stmt = stmt.where(db_models.User.uuid == uuid)
+
+        if login is not None:
+            stmt = stmt.where(db_models.User.login == login)
+
+        if uuids is not None:
+            stmt = stmt.where(db_models.User.uuid.in_(tuple(uuids)))  # noqa
+
+        if logins is not None:
+            stmt = stmt.where(db_models.User.login.in_(tuple(logins)))  # noqa
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        response = await self.db.fetch_all(stmt)
+        return [
+            models.User(**row, role=models.Role.user)
+            for row in response
+        ]
 
     async def get_user_by_login(
         self,

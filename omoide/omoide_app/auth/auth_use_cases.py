@@ -13,13 +13,15 @@ class LoginUserUseCase(BaseAPIUseCase):
     ) -> models.User:
         """Execute."""
         async with self.mediator.storage.transaction():
-            user = await self.mediator.users_repo.get_user_by_login(
+            users = await self.mediator.users_repo.get_users(
                 login=login,
-                allow_absence=True,
+                limit=1,
             )
 
-            if user is None:
+            if not users:
                 return models.User.new_anon()
+
+            user = users[0]
 
             if self.mediator.authenticator.password_is_correct(
                 given_password=password,

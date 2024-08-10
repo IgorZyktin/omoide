@@ -1,5 +1,6 @@
 """Repository that performs operations on users."""
 import abc
+from typing import Collection
 from uuid import UUID
 
 from omoide import models
@@ -28,6 +29,17 @@ class AbsUsersRepo(abc.ABC):
     @abc.abstractmethod
     async def get_user(self, uuid: UUID) -> models.User:
         """Return User."""
+
+    @abc.abstractmethod
+    async def get_users(
+        self,
+        uuid: UUID | None = None,
+        login: str | None = None,
+        uuids: Collection[UUID] | None = None,
+        logins: Collection[str] | None = None,
+        limit: int | None = None,
+    ) -> list[models.User]:
+        """Return filtered list of users."""
 
     @abc.abstractmethod
     async def get_user_by_login(
