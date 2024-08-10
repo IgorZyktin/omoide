@@ -46,10 +46,6 @@ class AbsUsersRepo(abc.ABC):
         """Update User."""
 
     @abc.abstractmethod
-    async def read_all_users(self) -> list[models.User]:
-        """Return all users."""
-
-    @abc.abstractmethod
     async def calc_total_space_used_by(
         self,
         user: models.User,

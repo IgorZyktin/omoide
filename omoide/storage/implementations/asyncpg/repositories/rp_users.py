@@ -116,15 +116,6 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         )
         await self.db.execute(stmt)
 
-    async def read_all_users(self) -> list[models.User]:
-        """Return list of users with given uuids (or all users)."""
-        stmt = sa.select(db_models.User).order_by(db_models.User.name)
-        response = await self.db.fetch_all(stmt)
-        return [
-            models.User(**record, role=models.Role.user)
-            for record in response
-        ]
-
     async def calc_total_space_used_by(
         self,
         user: models.User,
