@@ -15,30 +15,43 @@
 {% block body %}
     <div class="narrow-block">
         <h1>Upload media</h1>
-        <label for="parent_uuid">Parent item:</label>
+
+        <label for="parent_uuid">Owner of the item:</label>
         <div style="display: flex; flex-direction: row; align-items: center">
             <input id="owner_uuid"
                    type="text"
-                   value="{{ item.owner_uuid }}"
-                   disabled
-                   class="height-auto"/>
-            <input id="parent_uuid"
-                   type="text"
-                   value="{{ item.uuid }}"
+                   value="{{ current_item.owner_uuid }}"
                    disabled
                    class="height-auto"/>
             <a href="javascript:void(0)"
-               onclick="copyText('{{ item.uuid }}', 'ID')"
+               onclick="copyText('{{ current_item.owner_uuid }}', 'owner ID', 'copy-alerts-owner')"
                style="height: 100%">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
                      alt="Copy ID"
                      title="Copy ID"/></a>
         </div>
-        <div id="copy-alerts"></div>
+        <div id="copy-alerts-owner"></div>
+
+        <label for="parent_uuid">Parent item:</label>
+        <div style="display: flex; flex-direction: row; align-items: center">
+            <input id="parent_uuid"
+                   type="text"
+                   value="{{ current_item.uuid }}"
+                   disabled
+                   class="height-auto"/>
+            <a href="javascript:void(0)"
+               onclick="copyText('{{ current_item.uuid }}', 'parent ID', 'copy-alerts-parent')"
+               style="height: 100%">
+                <img class="icon-big"
+                     src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
+                     alt="Copy ID"
+                     title="Copy ID"/></a>
+        </div>
+        <div id="copy-alerts-parent"></div>
 
         <div id="parent_thumbnail" class="parent_thumbnail">
-            {{ render_thumbnail_for_item(request, item, "", aim_wrapper) }}
+            {{ render_thumbnail_for_item(request, current_item, "", aim_wrapper) }}
         </div>
 
         <label for="upload_as">Upload media in a way that:</label>
@@ -60,8 +73,8 @@
 
         <label for="item_permissions">Permissions (one user per line):<br>
             <textarea id="item_permissions" rows="10">
-                {%- for user in permissions -%}
-                    {{ user.uuid|string + ' ' + user.name + '\n' }}{% endfor -%}</textarea>
+                {%- for user in users_with_permission -%}
+                    {{ user.uuid | string + ' ' + user.name + '\n' }}{% endfor -%}</textarea>
         </label>
 
         <div>

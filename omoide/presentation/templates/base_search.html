@@ -246,7 +246,7 @@
                     {% set parent_hint = '00000000-0000-0000-0000-000000000000' %}
                 {% endif %}
 
-                <a href="{{ request.url_for('app_item_create', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                <a href="{{ request.url_for('app_item_create', uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                    title="Create new item"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
@@ -254,7 +254,7 @@
                     <span>Create</span>
                 </a>
 
-                <a href="{{ request.url_for('app_upload', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                <a href="{{ request.url_for('app_upload', item_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                    title="Upload media"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"
@@ -262,7 +262,7 @@
                     <span>Upload</span>
                 </a>
 
-                {% if current_item and current_item.owner_uuid|string == user.uuid|string %}
+                {% if current_item and current_item.owner_uuid | string == user.uuid | string %}
                     <a href="{{ request.url_for('app_item_update', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Edit current item"
                        class="button">

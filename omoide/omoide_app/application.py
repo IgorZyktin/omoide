@@ -18,6 +18,7 @@ from omoide.omoide_app.home import home_controllers
 from omoide.omoide_app.profile import profile_controllers
 from omoide.omoide_app.search import search_controllers
 from omoide.omoide_app.special import special_controllers
+from omoide.omoide_app.upload import upload_controllers
 from omoide.presentation import api as api_old
 from omoide.presentation import app_config
 from omoide.presentation import application
@@ -82,6 +83,7 @@ def apply_app_routes(current_app: FastAPI) -> None:
     current_app.include_router(profile_controllers.app_profile_router)
     current_app.include_router(search_controllers.app_search_router)
     current_app.include_router(special_controllers.app_special_router)
+    current_app.include_router(upload_controllers.app_upload_router)
 
     # API routes
     current_app.include_router(api_old.api_items.router)
@@ -89,7 +91,6 @@ def apply_app_routes(current_app: FastAPI) -> None:
     # APP routes
     current_app.include_router(application.app_item.router)
     current_app.include_router(application.app_preview.router)
-    current_app.include_router(application.app_upload.router)
 
 
 def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:

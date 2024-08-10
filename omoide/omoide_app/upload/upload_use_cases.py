@@ -22,8 +22,8 @@ class AppUploadUseCase(BaseAPPUseCase):
                 msg = 'You are not allowed to upload for different user'
                 raise exceptions.NotAllowedError(msg)
 
-            allowed_users = await self.mediator.users_repo.get_users(
+            users_with_permission = await self.mediator.users_repo.get_users(
                 uuids=item.permissions,
             )
 
-        return item, allowed_users
+        return item, users_with_permission
