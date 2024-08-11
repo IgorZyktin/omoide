@@ -3,8 +3,8 @@
 import sqlalchemy as sa
 
 from omoide import const
-from omoide import utils
 from omoide import custom_logging
+from omoide import utils
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 
@@ -21,8 +21,8 @@ class WorkerDatabase(SyncDatabase):
     ) -> list[db_models.CommandCopy]:
         """Return list of images to copy."""
         query = self.session.query(db_models.CommandCopy).filter(
-            db_models.CommandCopy.processed_at == None,  # noqa
-            db_models.CommandCopy.error == None,  # noqa
+            db_models.CommandCopy.processed_at == None,  # noqa: E711
+            db_models.CommandCopy.error == None,  # noqa: E711
         )
 
         if last_seen is not None:
@@ -41,8 +41,8 @@ class WorkerDatabase(SyncDatabase):
     ) -> list[db_models.Media]:
         """Return list of media records to download."""
         query = self.session.query(db_models.Media).filter(
-            db_models.Media.processed_at == None,  # noqa
-            db_models.Media.error == None,  # noqa
+            db_models.Media.processed_at == None,  # noqa: E711
+            db_models.Media.error == None,  # noqa: E711
         )
 
         if last_seen is not None:
@@ -78,7 +78,7 @@ class WorkerDatabase(SyncDatabase):
             .values(
                 extras=sa.func.jsonb_set(
                     db_models.Metainfo.extras,
-                    ["copied_image_from"],
+                    ['copied_image_from'],
                     f'"{command.source_uuid}"',
                 )
             )
@@ -95,8 +95,8 @@ class WorkerDatabase(SyncDatabase):
 
         if not source:
             msg = (
-                f"Source item {command.source_uuid} does not exist, "
-                f"cannot copy image for {command.id}"
+                f'Source item {command.source_uuid} does not exist, '
+                f'cannot copy image for {command.id}'
             )
             raise RuntimeError(msg)
 
@@ -104,8 +104,8 @@ class WorkerDatabase(SyncDatabase):
 
         if not target:
             msg = (
-                f"Target item {command.source_uuid} does not exist, "
-                f"cannot copy image for {command.id}"
+                f'Target item {command.source_uuid} does not exist, '
+                f'cannot copy image for {command.id}'
             )
             raise RuntimeError(msg)
 
@@ -130,8 +130,8 @@ class WorkerDatabase(SyncDatabase):
 
         else:
             msg = (
-                f"Got unknown media_type {command.media_type} "
-                f"for copy command {command.id}"
+                f'Got unknown media_type {command.media_type} '
+                f'for copy command {command.id}'
             )
             raise ValueError(msg)
 
@@ -150,8 +150,8 @@ class WorkerDatabase(SyncDatabase):
     def drop_copies(self) -> int:
         """Delete complete copy operations, return total deleted amount."""
         stmt = sa.delete(db_models.CommandCopy).where(
-            db_models.CommandCopy.processed_at != None,  # noqa
-            db_models.CommandCopy.error == None,  # noqa
+            db_models.CommandCopy.processed_at != None,  # noqa: E711
+            db_models.CommandCopy.error == None,  # noqa: E711
         )
 
         with self._engine.begin() as conn:

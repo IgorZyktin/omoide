@@ -19,7 +19,7 @@ class AbsStrategy(abc.ABC):
         """Block until got command, return True for stop."""
 
     @abc.abstractmethod
-    def adjust(self, done_something: bool) -> None:
+    def adjust(self, *, done_something: bool) -> None:
         """Adjust behaviour according to result."""
 
 

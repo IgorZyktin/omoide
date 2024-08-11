@@ -133,6 +133,7 @@ def human_readable_size(total_bytes: int | float, language: str = 'EN') -> str:
 
 def human_readable_time(seconds: int) -> str:
     """Format interval as human readable description.
+
     >>> human_readable_time(46551387)
     '76w 6d 18h 56m 27s'
     >>> human_readable_time(600)

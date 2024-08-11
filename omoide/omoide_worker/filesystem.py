@@ -1,12 +1,12 @@
 """Special class that works with filesystem."""
 
+from collections.abc import Iterator
 import os.path
 from pathlib import Path
-from typing import Iterator
 from uuid import UUID
 
-from omoide import utils
 from omoide import custom_logging
+from omoide import utils
 from omoide.omoide_worker.worker_config import Config
 
 LOG = custom_logging.get_logger(__name__)
@@ -41,7 +41,7 @@ class Filesystem:
                 / media_type  # noqa: W503
                 / str(owner_uuid)  # noqa: W503
                 / bucket  # noqa: W503
-                / f"{item_uuid}.{ext}"  # noqa: W503
+                / f'{item_uuid}.{ext}'  # noqa: W503
             )  # noqa: W503
 
             if path.exists():
@@ -49,8 +49,8 @@ class Filesystem:
                 return content
 
         msg = (
-            f"There is no corresponding file in folder {media_type} "
-            f"for {owner_uuid=}, {item_uuid=} and {ext=}"
+            f'There is no corresponding file in folder {media_type} '
+            f'for {owner_uuid=}, {item_uuid=} and {ext=}'
         )
         raise FileNotFoundError(msg)
 
@@ -64,7 +64,7 @@ class Filesystem:
     ) -> None:
         """Save binary data to filesystem."""
         bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
-        filename = f"{item_uuid}.{ext}"
+        filename = f'{item_uuid}.{ext}'
         for folder in self._get_folders():
             path = (
                 Path(folder)  # noqa: W503
@@ -82,7 +82,7 @@ class Filesystem:
         created = False
 
         if not path.exists():
-            LOG.debug("Creating path {}", path)
+            LOG.debug('Creating path {}', path)
             created = True
 
         path.mkdir(parents=True, exist_ok=True)
@@ -103,21 +103,21 @@ class Filesystem:
             new_path = path / new_filename
 
             if new_path.exists():
-                LOG.debug("New name is already taken: {}", new_path)
+                LOG.debug('New name is already taken: {}', new_path)
                 continue
 
-            LOG.debug("Renaming {} to {}", old_path, new_filename)
+            LOG.debug('Renaming {} to {}', old_path, new_filename)
             old_path.replace(new_path)
             break
 
-        LOG.debug("Saving {}", target_path)
+        LOG.debug('Saving {}', target_path)
         target_path.write_bytes(content)
         return target_path
 
     @staticmethod
-    def make_new_filename(filename: str, separator: str = "___") -> str:
+    def make_new_filename(filename: str, separator: str = '___') -> str:
         """Generate new name using old name."""
         name, ext = os.path.splitext(filename)
         left_segment, *_ = name.split(separator)
         moment = utils.now().isoformat().replace(':', '-').replace('T', '_')
-        return f"{left_segment}{separator}{moment}{ext}"
+        return f'{left_segment}{separator}{moment}{ext}'

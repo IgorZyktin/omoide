@@ -1,4 +1,5 @@
 """Worker runtime."""
+
 import sys
 import threading
 
@@ -59,7 +60,7 @@ def execute(
             LOG.exception('Failed to execute worker cycle')
 
         done_something = worker.counter > operations_before
-        strategy.adjust(done_something)
+        strategy.adjust(done_something=done_something)
         should_stop = strategy.wait()
 
 
@@ -97,10 +98,12 @@ def get_strategy(config: worker_config.Config) -> interfaces.AbsStrategy:
     match strategy_name:
         case 'SignalStrategy':
             from omoide.omoide_worker.strategies import by_signal
+
             strategy = by_signal.SignalStrategy()
 
         case 'TimerStrategy':
             from omoide.omoide_worker.strategies import by_timer
+
             strategy = by_timer.TimerStrategy(
                 min_interval=config.timer_strategy.min_interval,
                 max_interval=config.timer_strategy.max_interval,

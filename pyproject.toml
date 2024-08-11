@@ -46,6 +46,7 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 line-length = 79
+target-version = "py310"
 
 lint.select = [
     "A",     # flake8-builtins
@@ -97,20 +98,22 @@ lint.select = [
 ]
 
 lint.ignore = [
-    "COM812", # Checks for the absence of trailing commas
-    "D104",   # Missing docstring in public package
-    "D203",   # 1 blank line required before class docstring
-    "D204",   # 1 blank line required after class docstring
-    "D213",   # Multi-line docstring summary should start at the second line
-    "ISC001", # Checks for implicitly concatenated strings on a single line
-    "RUF100", # Unused noqa directive (non-enabled: F401, `F403`)
-    "S101",   # Use of assert detected
-    "S104",   # Possible binding to all interfaces
-    "S105",   # Possible hardcoded password assigned
-    "S106",   # Possible hardcoded password assigned
-    "S311",   # Standard pseudo-random generators for cryptographic purposes
-    "SIM108", # Use ternary operator instead of `if`-`else`-block
-    "TRY401", # Redundant exception object included in logging.exception call
+    "COM812",  # Checks for the absence of trailing commas
+    "D104",    # Missing docstring in public package
+    "D203",    # 1 blank line required before class docstring
+    "D204",    # 1 blank line required after class docstring
+    "D213",    # Multi-line docstring summary should start at the second line
+    "ISC001",  # Checks for implicitly concatenated strings on a single line
+    "RUF100",  # Unused noqa directive (non-enabled: F401, `F403`)
+    "S101",    # Use of assert detected
+    "S104",    # Possible binding to all interfaces
+    "S105",    # Possible hardcoded password assigned
+    "S106",    # Possible hardcoded password assigned
+    "S311",    # Standard pseudo-random generators for cryptographic purposes
+    "SIM108",  # Use ternary operator instead of `if`-`else`-block
+    "TRY401",  # Redundant exception object included in logging.exception call
+    "S324",    # Probable use of insecure hash functions
+    "PLE1205", # Too many arguments for `logging` format string
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -137,7 +140,7 @@ multiline-quotes = "double"
 docstring-quotes = "double"
 
 [tool.ruff.lint.pylint]
-max-args = 5
+max-args = 6
 
 [tool.mypy]
 disallow_untyped_defs = true

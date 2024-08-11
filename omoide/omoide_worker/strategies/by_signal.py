@@ -35,7 +35,7 @@ class SignalStrategy(interfaces.AbsStrategy):
         self._event.clear()
         return self._stopping
 
-    def adjust(self, done_something: bool) -> None:
+    def adjust(self, *, done_something: bool) -> None:
         """Adjust behaviour according to result."""
 
     def _handle(self, signum: int, frame) -> None:

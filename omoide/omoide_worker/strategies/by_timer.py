@@ -33,7 +33,7 @@ class TimerStrategy(interfaces.AbsStrategy):
         time.sleep(self._sleep_interval)
         return self._stopping
 
-    def adjust(self, done_something: bool) -> None:
+    def adjust(self, *, done_something: bool) -> None:
         """Adjust behaviour according to result."""
         if done_something:
             self._sleep_interval = self._min_interval
