@@ -1,6 +1,5 @@
 """Use cases for preview."""
 
-import itertools
 from typing import NamedTuple
 from uuid import UUID
 
@@ -15,7 +14,7 @@ class PreviewResult(NamedTuple):
     parents: list[models.Item]
     metainfo: models.Metainfo
     siblings: list[models.Item]
-    all_tags: list[str]
+    all_tags: set[str]
 
 
 class AppPreviewUseCase(BaseAPPUseCase):
@@ -50,14 +49,10 @@ class AppPreviewUseCase(BaseAPPUseCase):
             parents = await self.mediator.items_repo.get_parents(item)
             siblings = await self.mediator.items_repo.get_siblings(item)
 
-            all_tags = sorted(
-                itertools.chain.from_iterable(
-                    (
-                        *(parent.tags for parent in parents),
-                        *item.tags,
-                    )
-                )
-            )
+            all_tags: set[str] = set()
+            all_tags.update(item.tags)
+            for parent in parents:
+                all_tags.update(parent.tags)
 
         result = PreviewResult(
             item=item,

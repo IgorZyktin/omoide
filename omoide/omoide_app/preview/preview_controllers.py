@@ -52,7 +52,7 @@ async def app_preview(
         'current_item': result.item,
         'parents': result.parents,
         'metainfo': result.metainfo,
-        'all_tags': result.all_tags,
+        'all_tags': sorted(result.all_tags),
         'album': infra.Album(
             sequence=result.siblings,
             position=result.item,
