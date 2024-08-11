@@ -15,8 +15,7 @@ jobs:
         run: |
           pip install -U pip
           pip install poetry
-          poetry install
-          poetry install --dev
+          poetry install --with dev
         env:
           POETRY_VIRTUALENVS_CREATE: false
 
