@@ -148,30 +148,6 @@ class MiscRepo(_MiscRepoBase):
         response = await self.db.fetch_all(stmt)
         return [dict(x) for x in response]  # type: ignore
 
-    @staticmethod
-    def gather_tags(
-        parent_uuid: UUID | None,
-        parent_tags: list[str],
-        item_uuid: UUID,
-        item_tags: list[str],
-    ) -> tuple[str, ...]:
-        """Combine parent tags with item tags."""
-        all_tags = {
-            *(x.lower() for x in item_tags),
-            str(item_uuid),
-        }
-
-        if parent_uuid is not None:
-            clean_parent_uuid = str(parent_uuid).lower()
-            clean_tags = (
-                lower
-                for x in parent_tags
-                if (lower := x.lower()) != clean_parent_uuid
-            )
-            all_tags.update(clean_tags)
-
-        return tuple(all_tags)
-
     async def get_computed_tags(self, item: models.Item) -> set[str]:
         """Get computed tags for this item."""
         stmt = sa.select(
@@ -182,22 +158,13 @@ class MiscRepo(_MiscRepoBase):
         response = await self.db.fetch_all(stmt)
         return {str(row) for row in response}
 
-    async def update_computed_tags(self, item: models.Item) -> set[str]:
+    async def update_computed_tags(
+        self,
+        item: models.Item,
+        parent_computed_tags: set[str],
+    ) -> set[str]:
         """Update computed tags for this item."""
-        parent_tags: set[str] = set()
-
-        if item.parent_uuid is not None:
-            parent_tags_stmt = sa.select(
-                db_models.ComputedTags.tags
-            ).where(
-                db_models.ComputedTags.item_uuid == item.parent_uuid
-            )
-            parent_tags_response = await self.db.execute(parent_tags_stmt)
-
-            if parent_tags_response:
-                parent_tags = set(parent_tags_response)
-
-        computed_tags = item.get_computed_tags(parent_tags)
+        computed_tags = item.get_computed_tags(parent_computed_tags)
 
         insert = pg_insert(
             db_models.ComputedTags
@@ -214,21 +181,6 @@ class MiscRepo(_MiscRepoBase):
         await self.db.execute(stmt)
         return computed_tags
 
-    async def replace_computed_tags(
-        self,
-        item: models.Item,
-        tags: set[str]
-    ) -> None:
-        """Replace all computed tags for this item."""
-        stmt = sa.update(
-            db_models.ComputedTags
-        ).where(
-            db_models.ComputedTags.item_uuid == item.uuid
-        ).values(
-            tags=tuple(tags)
-        )
-        await self.db.execute(stmt)
-
     async def update_known_tags(
         self,
         users: Collection[models.User],
@@ -238,15 +190,15 @@ class MiscRepo(_MiscRepoBase):
         """Update counters for known tags."""
         for user in users:
             if user.is_anon:
-                await self.increment_known_tags_for_anon_user(tags_added)
-                await self.decrement_known_tags_for_anon_user(tags_deleted)
+                await self.incr_known_tags_anon(tags_added)
+                await self.decr_known_tags_anon(tags_deleted)
             else:
-                await self.increment_known_tags_for_known_user(user,
-                                                               tags_added)
-                await self.decrement_known_tags_for_known_user(user,
-                                                               tags_deleted)
+                await self.incr_known_tags_known(user,
+                                                 tags_added)
+                await self.decr_known_tags_known(user,
+                                                 tags_deleted)
 
-    async def increment_known_tags_for_anon_user(
+    async def incr_known_tags_anon(
         self,
         tags: Collection[str],
     ) -> None:
@@ -268,7 +220,7 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def decrement_known_tags_for_anon_user(
+    async def decr_known_tags_anon(
         self,
         tags: Collection[str],
     ) -> None:
@@ -284,7 +236,7 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def increment_known_tags_for_known_user(
+    async def incr_known_tags_known(
         self,
         user: models.User,
         tags: Collection[str],
@@ -309,7 +261,7 @@ class MiscRepo(_MiscRepoBase):
 
             await self.db.execute(stmt)
 
-    async def decrement_known_tags_for_known_user(
+    async def decr_known_tags_known(
         self,
         user: models.User,
         tags: Collection[str],

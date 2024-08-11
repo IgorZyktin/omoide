@@ -26,16 +26,12 @@ class AbsMiscRepo(abc.ABC):
         """Get computed tags for this item."""
 
     @abc.abstractmethod
-    async def update_computed_tags(self, item: models.Item) -> set[str]:
-        """Update computed tags for this item."""
-
-    @abc.abstractmethod
-    async def replace_computed_tags(
+    async def update_computed_tags(
         self,
         item: models.Item,
-        tags: set[str]
-    ) -> None:
-        """Replace all computed tags for this item."""
+        parent_computed_tags: set[str],
+    ) -> set[str]:
+        """Update computed tags for this item."""
 
     @abc.abstractmethod
     async def update_known_tags(
@@ -47,14 +43,14 @@ class AbsMiscRepo(abc.ABC):
         """Update counters for known tags."""
 
     @abc.abstractmethod
-    async def increment_known_tags_for_anon_user(
+    async def incr_known_tags_anon(
         self,
         tags: Collection[str],
     ) -> None:
         """Increment tag counter."""
 
     @abc.abstractmethod
-    async def increment_known_tags_for_known_user(
+    async def incr_known_tags_known(
         self,
         user: models.User,
         tags: Collection[str],
@@ -62,13 +58,13 @@ class AbsMiscRepo(abc.ABC):
         """Increment tag counter."""
 
     @abc.abstractmethod
-    async def decrement_known_tags_for_anon_user(
+    async def decr_known_tags_anon(
         self,
         tags: Collection[str],
     ) -> None:
         """Decrement tag counter."""
 
-    async def decrement_known_tags_for_known_user(
+    async def decr_known_tags_known(
         self,
         user: models.User,
         tags: Collection[str],

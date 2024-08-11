@@ -164,9 +164,6 @@ class BaseItemUseCase(BaseAPIUseCase):
         is_collection: bool,
         tags: list[str],
         permissions: list[UUID],
-        content_ext: str | None = None,
-        preview_ext: str | None = None,
-        thumbnail_ext: str | None = None,
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -181,25 +178,22 @@ class BaseItemUseCase(BaseAPIUseCase):
 
         if parent_uuid is None:
             parent = await self.mediator.items_repo.get_root_item(user)
-            owner_uuid = parent.owner_uuid
-
         else:
             parent = await self.mediator.items_repo.get_item(parent_uuid)
             if parent.owner_uuid != user.uuid:
                 raise exceptions.NotAllowedError(msg)
-            owner_uuid = parent.owner_uuid
 
         item = models.Item(
             id=-1,
             uuid=valid_uuid,
             parent_uuid=parent.uuid,
-            owner_uuid=owner_uuid,
+            owner_uuid=parent.owner_uuid,
             name=name,
             number=number or -1,
             is_collection=is_collection,
-            content_ext=content_ext,
-            preview_ext=preview_ext,
-            thumbnail_ext=thumbnail_ext,
+            content_ext=None,
+            preview_ext=None,
+            thumbnail_ext=None,
             tags=tags,
             permissions=permissions,
         )
@@ -223,30 +217,50 @@ class BaseItemUseCase(BaseAPIUseCase):
             thumbnail_height=None,
         )
 
-        comp_tags = await self.mediator.misc_repo.update_computed_tags(item)
-        repo = self.mediator.misc_repo
-
-        if item.permissions:
-            affected_users = await self.mediator.users_repo.get_users(
-                uuids=item.permissions,
-            )
-            for affected_user in affected_users:
-                await repo.increment_known_tags_for_known_user(
-                    user=affected_user,
-                    tags=comp_tags,
-                )
-
         await self.mediator.items_repo.create_item(item)
         await self.mediator.meta_repo.create_metainfo(metainfo)
 
         return item
 
-    async def delete_one_item(self, item: models.Item) -> None:
+    async def post_item_creation(
+        self,
+        item: models.Item,
+        parent_computed_tags: dict[UUID, set[str]],
+    ) -> tuple[set[models.User], set[str]]:
+        """Update computed values after operation."""
+        affected_users: list[models.User] = []
+
+        if item.permissions:
+            affected_users = await self.mediator.users_repo.get_users(
+                uuids=item.permissions,
+            )
+
+        computed_tags = await self.mediator.misc_repo.update_computed_tags(
+            item=item,
+            parent_computed_tags=parent_computed_tags.get(item.uuid, set()),
+        )
+
+        return set(affected_users), computed_tags
+
+    async def delete_one_item(
+        self,
+        item: models.Item,
+        affected_users: dict[UUID, models.User],
+        computed_tags: set[str],
+    ) -> None:
         """Delete item with all corresponding media."""
+        if item.owner_uuid not in affected_users:
+            owner = await self.mediator.users_repo.get_user(
+                uuid=item.owner_uuid,
+            )
+            affected_users[owner.uuid] = owner
+
         children = await self.mediator.items_repo.get_children(item)
+        tags = await self.mediator.misc_repo.get_computed_tags(item)
+        computed_tags.update(tags)
 
         for child in children:
-            await self.delete_one_item(child)
+            await self.delete_one_item(child, affected_users, computed_tags)
 
         await self.mediator.object_storage.delete_all_objects(item)
         LOG.warning('Deleting item {}', item)

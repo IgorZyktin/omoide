@@ -1,4 +1,5 @@
 """Use cases for heavy operations."""
+
 import abc
 import asyncio
 import time
@@ -226,26 +227,51 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
     async def _compute_tags_for_one_item(
         self,
         item: models.Item,
-        parent_tags: set[str],
+        parents: dict[UUID, models.ParentTags],
         total: int,
         including_children: bool,
     ) -> int:
         """Compute tags for given item."""
         total += 1
-        computed_tags = item.get_computed_tags(parent_tags)
 
         async with self.mediator.storage.transaction():
-            await self.mediator.misc_repo.replace_computed_tags(item,
-                                                                computed_tags)
+            if (
+                item.parent_uuid is not None
+                and item.parent_uuid not in parents
+            ):
+                parent = await self.mediator.items_repo.get_item(
+                    uuid=item.parent_uuid,
+                )
+
+                tags = await self.mediator.misc_repo.get_computed_tags(parent)
+
+                parents[parent.uuid] = models.ParentTags(
+                    parent=parent,
+                    computed_tags=tags,
+                )
+
+            parent_entry = parents.get(item.parent_uuid)
+            parent_tags = parent_entry.computed_tags if parent_entry else set()
+            new_tags = await self.mediator.misc_repo.update_computed_tags(
+                item=item,
+                parent_computed_tags=parent_tags,
+            )
+
+            parents[item.uuid] = models.ParentTags(
+                parent=item,
+                computed_tags=new_tags,
+            )
+
             if including_children:
                 children = await self.mediator.items_repo.get_children(item)
 
                 for child in children:
-                    child_tags = child.get_computed_tags(computed_tags)
-                    await self.mediator.misc_repo.replace_computed_tags(
-                        child, computed_tags)
                     total = await self._compute_tags_for_one_item(
-                        child, child_tags, total, including_children)
+                        item=child,
+                        parents=parents,
+                        total=total,
+                        including_children=including_children,
+                    )
 
         return total
 
@@ -263,9 +289,19 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
             user,
         )
 
+        parents: dict[UUID, models.ParentTags] = {}
+
+        if item.parent_uuid is not None:
+            parent = await self.mediator.items_repo.get_item(item.parent_uuid)
+            tags = await self.mediator.misc_repo.get_computed_tags(parent)
+            parents[parent.uuid] = models.ParentTags(
+                parent=parent,
+                computed_tags=tags,
+            )
+
         total = await self._compute_tags_for_one_item(
             item,
-            set(),
+            parents,
             0,
             *args,
         )

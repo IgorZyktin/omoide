@@ -25,12 +25,65 @@ class CreateItemsUseCase(BaseItemUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='create items')
         start = time.perf_counter()
+
         items: list[models.Item] = []
+        all_computed_tags: set[str] = set()
+        all_affected_users: set[models.User] = set()
 
         async with self.mediator.storage.transaction():
             for raw_item in items_in:
                 item = await self.create_one_item(user, **raw_item)
                 items.append(item)
+
+        LOG.info(
+            'User {} created {} items: {}',
+            user,
+            len(items),
+            [str(item.uuid) for item in items]
+        )
+
+        async with self.mediator.storage.transaction():
+            parents: dict[UUID, models.Item] = {}
+            for item in items:
+                if (
+                    item.parent_uuid is not None
+                    and item.parent_uuid not in parents
+                ):
+                    parent = await self.mediator.items_repo.get_item(
+                        uuid=item.parent_uuid,
+                    )
+                    parents[parent.uuid] = parent
+
+            parent_computed_tags: dict[UUID, set[str]] = {}
+            for parent in parents.values():
+                parent_tags = await self.mediator.misc_repo.get_computed_tags(
+                    item=parent,
+                )
+                parent_computed_tags[parent.uuid] = parent_tags
+
+            for item in items:
+                new_users, new_tags = await self.post_item_creation(
+                    item=item,
+                    parent_computed_tags=parent_computed_tags,
+                )
+                all_computed_tags.update(new_tags)
+                all_affected_users.update(new_users)
+
+        async with self.mediator.storage.transaction():
+            for affected_user in all_affected_users:
+                await self.mediator.misc_repo.incr_known_tags_known(
+                    user=affected_user,
+                    tags=all_computed_tags,
+                )
+
+            public = await self.mediator.users_repo.get_public_user_uuids()
+            users_uuids = {user.uuid for user in all_affected_users}
+            anon_affected = users_uuids.intersection(public)
+
+            if anon_affected:
+                await self.mediator.misc_repo.incr_known_tags_anon(
+                    tags=all_computed_tags,
+                )
 
         duration = time.perf_counter() - start
         return duration, items
@@ -123,33 +176,24 @@ class DeleteItemUseCase(BaseItemUseCase):
                     uuid=item.parent_uuid,
                 )
 
-            affected_users = []
-            owner = await self.mediator.users_repo.get_user(
-                uuid=item.owner_uuid,
-            )
-            if item.owner_uuid != user.uuid:
-                affected_users.append(owner)
-            else:
-                affected_users.append(user)
-
-            computed_tags = await repo.get_computed_tags(item)
-
         # TODO - put it into long job
+        affected_users: dict[UUID, models.User] = {user.uuid: user}
+        computed_tags: set[str] = set()
         async with self.mediator.storage.transaction():
             # heavy recursive call
-            await self.delete_one_item(item)
+            await self.delete_one_item(item, affected_users, computed_tags)
 
         async with self.mediator.storage.transaction():
-            public_users = (
-                await self.mediator.users_repo.get_public_user_uuids()
-            )
+            public = await self.mediator.users_repo.get_public_user_uuids()
+            users_uuids = set(affected_users.keys())
+            anon_affected = users_uuids.intersection(public)
 
-            if owner.uuid in public_users:
-                await repo.decrement_known_tags_for_anon_user(computed_tags)
+            if anon_affected:
+                await repo.decr_known_tags_anon(computed_tags)
                 await repo.drop_unused_known_tags_anon()
 
-            for affected_user in affected_users:
-                await repo.decrement_known_tags_for_known_user(
+            for affected_user in affected_users.values():
+                await repo.decr_known_tags_known(
                     user=affected_user,
                     tags=computed_tags,
                 )

@@ -6,6 +6,7 @@ from dataclasses import asdict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+from typing import NamedTuple
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -183,8 +184,8 @@ class Item(ModelMixin):
 
         computed_tags.add(str(self.uuid).casefold())
 
-        if self.name:
-            computed_tags.add(self.name)
+        if self.name.strip():
+            computed_tags.add(self.name.strip().casefold())
 
         computed_tags.update(parent_tags)
 
@@ -339,3 +340,9 @@ class ResourceUsage(ModelMixin):
     total_items: int
     total_collections: int
     disk_usage: DiskUsage
+
+
+class ParentTags(NamedTuple):
+    """DTO for parent computed tags."""
+    parent: Item
+    computed_tags: set[str]
