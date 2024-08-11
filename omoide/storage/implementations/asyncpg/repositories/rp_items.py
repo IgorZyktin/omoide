@@ -279,8 +279,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             FROM items i
                      INNER JOIN parents ON i.uuid = parents.parent_uuid
         )
-        SELECT * FROM parents 
-            WHERE parent_uuid IS NOT NULL AND parents.uuid <> :uuid;
+        SELECT * FROM parents WHERE parents.uuid <> :uuid;
         """
 
         values = {'uuid': str(item.uuid)}
