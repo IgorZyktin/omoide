@@ -1,36 +1,30 @@
 name: Omoide
-on: [ push ]
+on: [ push, pull_request ]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v1
-            -   name: Set up Python 3.10
-                uses: actions/setup-python@v1
-                with:
-                    python-version: '3.10'
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-            -   name: Install dependencies
-                run: |
-                    pip install -U pip
-                    pip install poetry
-                    poetry install
-                env:
-                  POETRY_VIRTUALENVS_CREATE: false
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install poetry
+          poetry install
+          poetry install --dev
+        env:
+          POETRY_VIRTUALENVS_CREATE: false
 
-            -   name: Lint with flake8
-                uses: py-actions/flake8@v1
-                with:
-                    path: "omoide"
-                    ignore: "F401,F403,W503,W504"
+      - name: Lint with Ruff
+        run: ruff check --output-format=github .
 
-            -   name: Test with pytest
-                run: |
-                    pip install pytest
-                    pytest ./omoide/tests/unit/
-#            -   name: Test with mypy
-#                run: |
-#                    pip install mypy
-#                    pip install types-ujson
-#                    mypy ./omoide
+      - name: Test with mypy
+        run: mypy ./omoide
+
+      - name: Test with pytest
+        run: pytest ./omoide/tests/

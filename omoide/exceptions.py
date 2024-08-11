@@ -21,7 +21,7 @@ class BaseOmoideApiError(Exception):
             self.rendered_text = self._render_text(msg, **kwargs)
 
     @staticmethod
-    def _render_text(template: str, **kwargs) -> str:
+    def _render_text(template: str, **kwargs: str) -> str:
         """Safely convert error to text message."""
         try:
             rendered_text = template.format(**kwargs)
