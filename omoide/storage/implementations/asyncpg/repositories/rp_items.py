@@ -300,6 +300,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
 
+    # TODO - remove this method
     async def get_direct_children_uuids_of(
         self,
         user: models.User,
@@ -321,6 +322,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_all(stmt)
         return list(x['uuid'] for x in response)
 
+    # TODO - remove this method
     async def read_computed_tags(
         self,
         uuid: UUID,
