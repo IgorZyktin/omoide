@@ -1,6 +1,6 @@
 """Repository that performs operations on users."""
 import abc
-from typing import Collection
+from collections.abc import Collection
 from uuid import UUID
 
 from omoide import models

@@ -1,5 +1,4 @@
-"""All possible user actions.
-"""
+"""All possible user actions."""
 import enum
 
 

@@ -1,8 +1,7 @@
 """Repository that performs operations on items."""
 
+from collections.abc import Collection
 from typing import Any
-from typing import Collection
-from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 
@@ -124,7 +123,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     async def read_item(
         self,
         item_uuid: UUID,
-    ) -> Optional[domain.Item]:
+    ) -> domain.Item | None:
         """Return item or None."""
         stmt = sa.select(
             db_models.Item

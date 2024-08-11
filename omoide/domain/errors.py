@@ -1,8 +1,6 @@
-"""Custom errors (an alternative to exceptions).
-"""
+"""Custom errors (an alternative to exceptions)."""
 from functools import cached_property
 from typing import Any
-from typing import Optional
 
 
 class Error:
@@ -12,8 +10,8 @@ class Error:
     def __init__(
             self,
             *,
-            template: Optional[str] = None,
-            exception: Optional[Exception] = None,
+            template: str | None = None,
+            exception: Exception | None = None,
             **kwargs: Any,
     ) -> None:
         """Initialize instance."""

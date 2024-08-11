@@ -1,21 +1,20 @@
 """Routes related to item operations."""
 from typing import Annotated
-from typing import Type
 from uuid import UUID
 
 import fastapi
-import ujson
 from fastapi import Depends
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from starlette.responses import HTMLResponse
 from starlette.responses import Response
+import ujson
 
 from omoide import domain
+from omoide import interfaces
 from omoide import models
 from omoide import use_cases
 from omoide import utils
-from omoide import interfaces
 from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
 from omoide.presentation import web
@@ -52,7 +51,7 @@ async def app_item_update(
             dep.app_item_update_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
+        response_class: type[Response] = HTMLResponse,
 ):
     """Edit item page."""
     result = await use_case.execute(policy, user, uuid)
@@ -109,7 +108,7 @@ async def app_item_delete(
             dep.app_item_delete_use_case),
         config: Config = Depends(dep.get_config),
         aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-        response_class: Type[Response] = HTMLResponse,
+        response_class: type[Response] = HTMLResponse,
 ):
     """Delete item page."""
     result = await use_case.execute(policy, user, uuid)

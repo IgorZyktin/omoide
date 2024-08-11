@@ -1,9 +1,9 @@
-"""Output all descendants of given item.
-"""
+"""Output all descendants of given item."""
+
+from omoide import custom_logging
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.tree.cfg import Config
-from omoide import custom_logging
 from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)

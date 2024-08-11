@@ -52,7 +52,7 @@ class CopyContentInput(BaseModel):
         }
     }
 
-    @pydantic.model_validator(mode="after")
+    @pydantic.model_validator(mode='after')
     def check_not_the_same(self) -> 'CopyContentInput':
         """Check items are not the same."""
         if self.source_item_uuid == self.target_item_uuid:

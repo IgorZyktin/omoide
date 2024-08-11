@@ -8,7 +8,7 @@ import pytest
 from omoide.presentation import app_config
 
 
-@pytest.fixture
+@pytest.fixture()
 def ref_config():
     config = mock.Mock()
     config.env = 'test'
@@ -16,7 +16,7 @@ def ref_config():
     return config
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_env_for_config(ref_config):
     return {
         'OMOIDE_ENV': ref_config.env,

@@ -1,6 +1,5 @@
 """Access policy.
 """
-from typing import Optional
 from uuid import UUID
 
 from omoide import interfaces
@@ -28,7 +27,7 @@ class Policy(interfaces.AbsPolicy):
         action: actions.Action,
     ) -> errors.Error | None:
         """Return Error if action is not permitted."""
-        error: Optional[errors.Error] = None
+        error: errors.Error | None = None
 
         if isinstance(action, actions.Item) or uuid is None:
             if uuid is None:
@@ -60,7 +59,7 @@ class Policy(interfaces.AbsPolicy):
         action: actions.Action,
     ) -> errors.Error | None:
         """Check specifically for item related actions."""
-        error: Optional[errors.Error] = None
+        error: errors.Error | None = None
 
         access = await self.items_repo.check_access(user, uuid)
 

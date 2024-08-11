@@ -1,7 +1,6 @@
 """User profile page related routes."""
 
 from typing import Annotated
-from typing import Type
 
 import fastapi
 from fastapi import Depends
@@ -31,7 +30,7 @@ async def app_profile(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show user profile page."""
     if user.is_anon:
@@ -55,7 +54,7 @@ async def app_profile_usage(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show space usage stats."""
     if user.is_anon:
@@ -90,7 +89,7 @@ async def app_profile_tags(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show know tags."""
     if user.is_anon:
@@ -122,7 +121,7 @@ async def app_profile_new(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show recent updates."""
     if user.is_anon:

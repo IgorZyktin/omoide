@@ -1,15 +1,15 @@
 """Common utils."""
 
+from collections.abc import Callable
+from collections.abc import Collection
+from collections.abc import Iterable
+from collections.abc import Iterator
 import datetime
 import functools
+from itertools import zip_longest
 import re
 import sys
-from itertools import zip_longest
 from typing import Any
-from typing import Callable
-from typing import Collection
-from typing import Iterable
-from typing import Iterator
 from typing import TypeVar
 from uuid import UUID
 
@@ -42,7 +42,7 @@ def is_valid_uuid(uuid: UUID | str) -> bool:
     return UUID_TEMPLATE.match(uuid) is not None
 
 
-def sep_digits(number: int | float | str, precision: int = 2) -> str:
+def sep_digits(number: float | str, precision: int = 2) -> str:
     """Return number as a string with separated thousands.
 
     >>> sep_digits('12345678')
@@ -55,16 +55,16 @@ def sep_digits(number: int | float | str, precision: int = 2) -> str:
     '1 234.5678'
     """
     if isinstance(number, int):
-        result = '{:,}'.format(number).replace(',', ' ')
+        result = f'{number:,}'.replace(',', ' ')
 
     elif isinstance(number, float):
         if precision == 0:
             int_value = int(round(number, precision))
-            result = '{:,}'.format(int_value).replace(',', ' ')
+            result = f'{int_value:,}'.replace(',', ' ')
 
         else:
             float_value = round(number, precision)
-            result = '{:,}'.format(float_value).replace(',', ' ')
+            result = f'{float_value:,}'.replace(',', ' ')
 
         if '.' in result:
             tail = result.rsplit('.', maxsplit=1)[-1]
@@ -87,8 +87,9 @@ SUFFIXES = {
 }
 
 
-def human_readable_size(total_bytes: int | float, language: str = 'EN') -> str:
+def human_readable_size(total_bytes: float, language: str = 'EN') -> str:
     """Convert amount of bytes into human-readable format.
+
     >>> human_readable_size(1023)
     '1023 B'
     """
@@ -99,31 +100,31 @@ def human_readable_size(total_bytes: int | float, language: str = 'EN') -> str:
         prefix = '-'
         total_bytes = abs(total_bytes)
 
-    if total_bytes < 1024:
+    if total_bytes < 1024:  # noqa: PLR2004
         suffix = SUFFIXES[language]['B']
         return f'{prefix}{int(total_bytes)} {suffix}'
 
-    total_bytes /= 1024
+    total_bytes /= 1024  # noqa: PLR2004
 
-    if total_bytes < 1024:
+    if total_bytes < 1024:  # noqa: PLR2004
         suffix = SUFFIXES[language]['KiB']
         return f'{prefix}{total_bytes:0.1f} {suffix}'
 
-    total_bytes /= 1024
+    total_bytes /= 1024  # noqa: PLR2004
 
-    if total_bytes < 1024:
+    if total_bytes < 1024:  # noqa: PLR2004
         suffix = SUFFIXES[language]['MiB']
         return f'{prefix}{total_bytes:0.1f} {suffix}'
 
-    total_bytes /= 1024
+    total_bytes /= 1024  # noqa: PLR2004
 
-    if total_bytes < 1024:
+    if total_bytes < 1024:  # noqa: PLR2004
         suffix = SUFFIXES[language]['GiB']
         return f'{prefix}{total_bytes:0.1f} {suffix}'
 
-    total_bytes /= 1024
+    total_bytes /= 1024  # noqa: PLR2004
 
-    if total_bytes < 1024:
+    if total_bytes < 1024:  # noqa: PLR2004
         suffix = SUFFIXES[language]['TiB']
         return f'{prefix}{total_bytes:0.1f} {suffix}'
 
@@ -238,8 +239,7 @@ def model_to_list(
     if isinstance(model, dict):
         payload = model
     else:
-        method = getattr(model, 'model_dump')
-        payload = method()
+        payload = model.model_dump()
 
     prefix = '    ' * depth
     for key, value in payload.items():
@@ -277,14 +277,14 @@ def get_size(obj, seen: set[int] | None = None) -> int:
 
     if isinstance(obj, dict):
         size += sum([get_size(v, seen) for v in obj.values()])
-        size += sum([get_size(k, seen) for k in obj.keys()])
+        size += sum([get_size(k, seen) for k in obj])
 
     elif hasattr(obj, '__dict__'):
         size += get_size(obj.__dict__, seen)
 
     elif (
         hasattr(obj, '__iter__')
-        and not isinstance(obj, (str, bytes, bytearray))
+        and not isinstance(obj, (str | bytes | bytearray))
     ):
         size += sum([get_size(i, seen) for i in obj])
 

@@ -1,7 +1,6 @@
 """Routes related to item preview."""
 
 from typing import Annotated
-from typing import Type
 from uuid import UUID
 
 import fastapi
@@ -32,7 +31,7 @@ async def app_preview(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item as one object."""
     use_case = preview_use_cases.AppPreviewUseCase(mediator)

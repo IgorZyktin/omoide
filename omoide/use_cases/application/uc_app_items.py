@@ -1,12 +1,11 @@
 """Use case for items."""
-from typing import Optional
 from uuid import UUID
 
 from omoide import domain
+from omoide import interfaces
 from omoide import models
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide import interfaces
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
@@ -42,8 +41,8 @@ class AppItemUpdateUseCase:
                       int,
                       list[models.User],
                       list[str],
-                      Optional[models.MetainfoOld]]]:
-        """Business logic."""
+                      models.MetainfoOld | None]]:
+        """Execute."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
 
@@ -81,7 +80,7 @@ class AppItemDeleteUseCase:
             user: models.User,
             uuid: UUID,
     ) -> Result[errors.Error, tuple[domain.Item, int]]:
-        """Business logic."""
+        """Execute."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.DELETE)
 

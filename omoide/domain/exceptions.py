@@ -1,5 +1,4 @@
-"""Domain-level exceptions.
-"""
+"""Domain-level exceptions."""
 from uuid import UUID
 
 from omoide.domain import actions

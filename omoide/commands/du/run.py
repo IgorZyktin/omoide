@@ -1,16 +1,16 @@
-"""Disk Usage command.
-"""
+"""Disk Usage command."""
+
 import dataclasses
 import functools
 
-import sqlalchemy as sa
 from prettytable import PrettyTable
+import sqlalchemy as sa
 from sqlalchemy.engine import Connection
 
+from omoide import custom_logging
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.du.cfg import Config
-from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 

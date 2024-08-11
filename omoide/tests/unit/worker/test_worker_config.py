@@ -1,6 +1,6 @@
 """Tests."""
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from omoide.omoide_worker.worker_config import Config
 
@@ -11,11 +11,11 @@ def test_worker_config_correct(valid_worker_config_dict):
     assert config is not None
 
 
-@pytest.mark.parametrize('hot_folder,cold_folder,save_hot,save_cold', [
+@pytest.mark.parametrize('hot_folder,cold_folder,save_hot,save_cold', (
     (None, None, False, False),
     ('/', None, False, True),
     (None, '/', True, False),
-])
+))
 def test_worker_config_folders(
         valid_worker_config_dict,
         hot_folder,
@@ -33,7 +33,7 @@ def test_worker_config_folders(
         Config(**valid_worker_config_dict)
 
 
-@pytest.mark.parametrize('min_interval', [0, 9999999999999])
+@pytest.mark.parametrize('min_interval', (0, 9999999999999))
 def test_worker_config_min_interval(valid_worker_config_dict, min_interval):
     """Must raise on inadequate min intervals."""
     valid_worker_config_dict['timer_strategy']['min_interval'] = min_interval
@@ -42,10 +42,10 @@ def test_worker_config_min_interval(valid_worker_config_dict, min_interval):
         Config(**valid_worker_config_dict)
 
 
-@pytest.mark.parametrize('min_interval, max_interval', [
+@pytest.mark.parametrize('min_interval, max_interval', (
     (100, 5),
     (100, 9999999999999),
-])
+))
 def test_worker_config_max_interval(
         valid_worker_config_dict,
         min_interval,
@@ -59,7 +59,7 @@ def test_worker_config_max_interval(
         Config(**valid_worker_config_dict)
 
 
-@pytest.mark.parametrize('warm_up_coefficient', [0.0, 9999999999999.0])
+@pytest.mark.parametrize('warm_up_coefficient', (0.0, 9999999999999.0))
 def test_worker_config_warm_up_coefficient(
         valid_worker_config_dict,
         warm_up_coefficient,
@@ -72,7 +72,7 @@ def test_worker_config_warm_up_coefficient(
         Config(**valid_worker_config_dict)
 
 
-@pytest.mark.parametrize('batch_size', [0, 9999999999999])
+@pytest.mark.parametrize('batch_size', (0, 9999999999999))
 def test_worker_config_batch_size(valid_worker_config_dict, batch_size):
     """Must raise on inadequate batch sizes."""
     valid_worker_config_dict['batch_size'] = batch_size

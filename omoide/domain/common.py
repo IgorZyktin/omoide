@@ -1,7 +1,6 @@
 """Models that used in more than one place."""
 
-from typing import Callable
-from typing import Optional
+from collections.abc import Callable
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -18,14 +17,14 @@ __all__ = [
 class Item(BaseModel):
     """Model of a standard item."""
     uuid: UUID
-    parent_uuid: Optional[UUID] = None
+    parent_uuid: UUID | None = None
     owner_uuid: UUID
     number: int
     name: str
     is_collection: bool
-    content_ext: Optional[str] = None
-    preview_ext: Optional[str] = None
-    thumbnail_ext: Optional[str] = None
+    content_ext: str | None = None
+    preview_ext: str | None = None
+    thumbnail_ext: str | None = None
     tags: list[str] = []
     permissions: list[UUID] = []
 
@@ -58,16 +57,16 @@ class Item(BaseModel):
 class ItemGeneric(BaseModel):
     """Wrapper that helps with different item fields."""
     media_type: const.MEDIA_TYPE
-    original_ext: Optional[str] = None
-    set_callback: Callable[[Optional[str]], None]
+    original_ext: str | None = None
+    set_callback: Callable[[str | None], None]
 
     @property
-    def ext(self) -> Optional[str]:
+    def ext(self) -> str | None:
         """Return extension of the file."""
         return self.original_ext
 
     @ext.setter
-    def ext(self, new_ext: Optional[str]) -> None:
+    def ext(self, new_ext: str | None) -> None:
         """Return extension of the file."""
         self.set_callback(new_ext)
         self.original_ext = new_ext

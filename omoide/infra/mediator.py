@@ -2,8 +2,8 @@
 from dataclasses import dataclass
 
 from omoide import interfaces
-from omoide.storage import interfaces as storage_interfaces
 from omoide.object_storage import interfaces as object_interfaces
+from omoide.storage import interfaces as storage_interfaces
 
 
 @dataclass

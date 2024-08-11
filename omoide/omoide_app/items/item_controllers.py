@@ -1,7 +1,6 @@
 """Routes for item-related pages."""
 
 from typing import Annotated
-from typing import Type
 from uuid import UUID
 
 import fastapi
@@ -34,7 +33,7 @@ async def app_create_item(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Create item page."""
     if user.is_anon:

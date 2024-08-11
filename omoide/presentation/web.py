@@ -4,8 +4,6 @@ import copy
 import http
 from typing import Any
 from typing import NoReturn
-from typing import Optional
-from typing import Type
 from urllib.parse import urlencode
 from uuid import UUID
 
@@ -24,7 +22,7 @@ from omoide.presentation import constants
 LOG = custom_logging.get_logger(__name__)
 
 # TODO - rewrite to base classes
-CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
+CODES_TO_ERRORS: dict[int, list[type[errors.Error]]] = {
     # not supposed to be used, but just in case
     http.HTTPStatus.INTERNAL_SERVER_ERROR: [
         errors.Error,
@@ -44,13 +42,13 @@ CODES_TO_ERRORS: dict[int, list[Type[errors.Error]]] = {
     ]
 }
 
-ERROR_TO_CODE_MAP: dict[Type[errors.Error], int] = {
+ERROR_TO_CODE_MAP: dict[type[errors.Error], int] = {
     error: code
     for code, errors in CODES_TO_ERRORS.items()
     for error in errors
 }
 
-CODES_TO_EXCEPTIONS: dict[int, list[Type[Exception]]] = {
+CODES_TO_EXCEPTIONS: dict[int, list[type[Exception]]] = {
     status.HTTP_400_BAD_REQUEST: [
         api_exceptions.InvalidInputError,
     ],
@@ -69,7 +67,7 @@ CODES_TO_EXCEPTIONS: dict[int, list[Type[Exception]]] = {
     ]
 }
 
-EXCEPTION_TO_CODE_MAP: dict[Type[Exception], int] = {
+EXCEPTION_TO_CODE_MAP: dict[type[Exception], int] = {
     error: code
     for code, errors in CODES_TO_EXCEPTIONS.items()
     for error in errors
@@ -135,7 +133,7 @@ def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
 
 def raise_from_error(
     error: errors.Error,
-    language: Optional[str] = None,
+    language: str | None = None,
 ) -> NoReturn:
     """Cast domain level Error into HTTP response."""
     code = get_corresponding_error_code(error)
@@ -155,7 +153,7 @@ def raise_from_error(
 def redirect_from_error(
     request: Request,
     error: errors.Error,
-    uuid: Optional[UUID] = None,
+    uuid: UUID | None = None,
 ) -> RedirectResponse:
     """Return appropriate response."""
     code = get_corresponding_error_code(error)

@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """Paginator that works with page numbers.
 """
+from collections.abc import Iterator
 import math
-from typing import Iterator, Optional
 
 from pydantic import BaseModel
 
@@ -90,14 +89,14 @@ class Paginator:
         return self.page < self.total_pages
 
     @property
-    def previous_page(self) -> Optional[int]:
+    def previous_page(self) -> int | None:
         """Return previous page number."""
         if self.page > 1:
             return self.page - 1
         return None
 
     @property
-    def next_page(self) -> Optional[int]:
+    def next_page(self) -> int | None:
         """Return next page number."""
         if self.page < self.last_page:
             return self.page + 1

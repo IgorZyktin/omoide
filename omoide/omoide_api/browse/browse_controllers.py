@@ -60,6 +60,6 @@ async def api_browse(
                 **utils.serialize(item.model_dump()),
                 extras=utils.serialize(item_extras),
             )
-            for item, item_extras in zip(items, extras)
+            for item, item_extras in zip(items, extras, strict=False)
         ]
     )

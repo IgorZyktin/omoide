@@ -1,25 +1,24 @@
 """Use case for items."""
 import asyncio
+from collections.abc import AsyncIterator
+from collections.abc import Collection
+from contextlib import asynccontextmanager
 import time
 import traceback
-from contextlib import asynccontextmanager
-from typing import AsyncIterator
-from typing import Collection
 from uuid import UUID
 
+from omoide import custom_logging
 from omoide import domain
+from omoide import interfaces
 from omoide import models
 from omoide import utils
 from omoide.domain import actions
 from omoide.domain import errors
-from omoide import interfaces
-from omoide.storage import interfaces as storage_interfaces
-from omoide import custom_logging
 from omoide.infra.special_types import Failure
 from omoide.infra.special_types import Result
 from omoide.infra.special_types import Success
 from omoide.presentation import api_models
-
+from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'ApiItemUpdateUseCase',
@@ -463,7 +462,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                     self.misc_repo, user,
                     item, added, deleted) as writeback:
                 writeback.operations = len(parents)
-                for i, parent in enumerate(parents, start=1):
+                for _, parent in enumerate(parents, start=1):
                     await self.items_repo \
                         .update_permissions(parent.uuid, False, added,
                                             deleted, item.permissions)
@@ -538,7 +537,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             uuid: UUID,
             new_parent_uuid: UUID,
     ) -> Result[errors.Error, UUID]:
-        """Business logic."""
+        """Execute."""
         bad_parent_error = errors.ItemWrongParent(
             uuid=uuid,
             new_parent_uuid=new_parent_uuid,

@@ -102,7 +102,7 @@ async def api_get_recent_updates(
                 **item.model_dump(),
                 extras={'parent_name': parent_name}
             )
-            for item, parent_name in zip(items, parent_names)
+            for item, parent_name in zip(items, parent_names, strict=False)
         ],
     )
 
@@ -179,6 +179,6 @@ async def api_search(
                 **utils.serialize(item.model_dump()),
                 extras=utils.serialize(item_extras),
             )
-            for item, item_extras in zip(items, extras)
+            for item, item_extras in zip(items, extras, strict=False)
         ]
     )

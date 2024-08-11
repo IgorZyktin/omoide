@@ -1,6 +1,5 @@
 """Search page."""
 from typing import Annotated
-from typing import Type
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -24,7 +23,7 @@ async def app_search(
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Main page of the application."""
     context = {
@@ -47,7 +46,7 @@ async def app_home(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Home endpoint for user."""
     context = {

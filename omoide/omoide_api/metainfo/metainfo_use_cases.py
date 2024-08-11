@@ -1,9 +1,9 @@
 """Use cases for Metainfo-related operations."""
 from uuid import UUID
 
+from omoide import custom_logging
 from omoide import models
 from omoide import utils
-from omoide import custom_logging
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)

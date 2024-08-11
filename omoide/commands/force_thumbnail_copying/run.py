@@ -5,10 +5,10 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from omoide import const
+from omoide import custom_logging
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.force_thumbnail_copying.cfg import Config
-from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 

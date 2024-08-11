@@ -2,17 +2,17 @@
 """
 import time
 
-import sqlalchemy as sa
 from pydantic import BaseModel
+import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from omoide import domain
 from omoide import const
+from omoide import custom_logging
+from omoide import domain
 from omoide import infra
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.rebuild_image_sizes.cfg import Config
-from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 

@@ -64,6 +64,7 @@ class AbsMiscRepo(abc.ABC):
     ) -> None:
         """Decrement tag counter."""
 
+    @abc.abstractmethod
     async def decr_known_tags_known(
         self,
         user: models.User,

@@ -45,24 +45,23 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                         last_seen=last_seen,
                         limit=limit,
                     )
+            elif user.is_anon:
+                items = await repo.browse_related_anon(
+                    item_uuid=item_uuid,
+                    order=order,
+                    collections=collections,
+                    last_seen=last_seen,
+                    limit=limit,
+                )
             else:
-                if user.is_anon:
-                    items = await repo.browse_related_anon(
-                        item_uuid=item_uuid,
-                        order=order,
-                        collections=collections,
-                        last_seen=last_seen,
-                        limit=limit,
-                    )
-                else:
-                    items = await repo.browse_related_known(
-                        user=user,
-                        item_uuid=item_uuid,
-                        order=order,
-                        collections=collections,
-                        last_seen=last_seen,
-                        limit=limit,
-                    )
+                items = await repo.browse_related_known(
+                    user=user,
+                    item_uuid=item_uuid,
+                    order=order,
+                    collections=collections,
+                    last_seen=last_seen,
+                    limit=limit,
+                )
 
             names = await self.mediator.browse_repo.get_parent_names(items)
 

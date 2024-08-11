@@ -1,10 +1,10 @@
 """Logic models."""
 import abc
-import enum
 from collections import UserString
 from dataclasses import asdict
 from dataclasses import dataclass
 from datetime import datetime
+import enum
 from typing import Any
 from typing import NamedTuple
 from uuid import UUID

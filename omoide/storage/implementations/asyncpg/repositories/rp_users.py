@@ -1,5 +1,5 @@
 """Repository that performs read operations on users."""
-from typing import Collection
+from collections.abc import Collection
 from uuid import UUID
 from uuid import uuid4
 
@@ -8,10 +8,10 @@ import sqlalchemy as sa
 from omoide import exceptions
 from omoide import models
 from omoide.storage import interfaces
-from omoide.storage.implementations.asyncpg.asyncpg_storage import (
-    AsyncpgStorage
-)
 from omoide.storage.database import db_models
+from omoide.storage.implementations.asyncpg.asyncpg_storage import (
+    AsyncpgStorage,
+)
 
 
 class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):

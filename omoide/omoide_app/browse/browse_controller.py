@@ -1,7 +1,6 @@
 """Browse related routes."""
 
 from typing import Annotated
-from typing import Type
 from uuid import UUID
 
 import fastapi
@@ -18,7 +17,6 @@ from omoide import exceptions
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.browse import browse_use_cases
-from omoide.presentation import constants
 from omoide.presentation import dependencies as dep
 from omoide.presentation import infra
 from omoide.presentation import web
@@ -38,7 +36,7 @@ async def app_browse(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Browse contents of a single item."""
     if not aim_wrapper.aim.paged:

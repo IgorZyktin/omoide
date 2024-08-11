@@ -1,6 +1,6 @@
 """Common synchronous database connector."""
+from collections.abc import Generator
 import contextlib
-from typing import Generator
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Connection

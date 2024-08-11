@@ -26,7 +26,6 @@ class ApiHomeUseCase(BaseAPIUseCase):
         async with self.mediator.storage.transaction():
             if user.is_anon:
                 items = await repo.get_home_items_for_anon(
-                    user,
                     order=order,
                     collections=collections,
                     direct=direct,

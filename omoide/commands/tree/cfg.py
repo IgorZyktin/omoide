@@ -1,5 +1,4 @@
-"""Command configuration.
-"""
+"""Command configuration."""
 from uuid import UUID
 
 from pydantic import BaseModel

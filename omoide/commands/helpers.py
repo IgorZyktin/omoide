@@ -1,11 +1,10 @@
 """Utils for commands."""
+from collections.abc import Callable
+from collections.abc import Iterator
 import contextlib
-import time
 from pathlib import Path
+import time
 from typing import Any
-from typing import Callable
-from typing import Iterator
-from typing import Optional
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -82,8 +81,8 @@ def get_all_corresponding_users(
 
 def get_file_size(
         path: str | Path,
-        default: Optional[int] = None,
-) -> Optional[int]:
+        default: int | None = None,
+) -> int | None:
     """Get size of the file in bytes."""
     if isinstance(path, str):
         _path = Path(path)

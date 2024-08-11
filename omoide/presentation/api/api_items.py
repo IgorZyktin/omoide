@@ -1,6 +1,5 @@
 """Item related API operations."""
 import urllib.parse
-from typing import Type
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -9,9 +8,9 @@ from fastapi import Request
 from fastapi import Response
 from starlette.responses import PlainTextResponse
 
+from omoide import interfaces
 from omoide import models
 from omoide import use_cases
-from omoide import interfaces
 from omoide.infra.special_types import Failure
 from omoide.presentation import api_models
 from omoide.presentation import dependencies as dep
@@ -142,7 +141,7 @@ async def api_items_download(
         use_case: use_cases.ApiItemsDownloadUseCase = Depends(
             dep.api_items_download_use_case),
         config: Config = Depends(dep.get_config),
-        response_class: Type[Response] = PlainTextResponse,
+        response_class: type[Response] = PlainTextResponse,
 ):
     """Return all children as zip archive.
 

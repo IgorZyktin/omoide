@@ -12,7 +12,7 @@ from omoide.storage import interfaces as storage_interfaces
 from omoide.storage.database import db_models
 from omoide.storage.implementations.asyncpg.repositories import queries
 from omoide.storage.implementations.asyncpg.repositories.rp_items import (
-    ItemsRepo
+    ItemsRepo,
 )
 
 

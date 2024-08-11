@@ -115,7 +115,6 @@ class SearchRepository(_SearchRepositoryBase):
 
     async def get_home_items_for_anon(
         self,
-        user: models.User,
         collections: bool,
         direct: bool,
         order: const.ORDER_TYPE,

@@ -1,7 +1,6 @@
 """Auth related routes."""
 import asyncio
 from typing import Annotated
-from typing import Type
 
 import fastapi
 from fastapi import Depends
@@ -32,7 +31,7 @@ async def app_login(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     config: Annotated[Config, Depends(dep.get_config)],
-    response_class: Type[Response] = RedirectResponse,
+    response_class: type[Response] = RedirectResponse,
 ):
     """Ask user for login and password."""
     url = request.url_for('app_home')
@@ -68,7 +67,7 @@ async def app_logout(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Clear authorization."""
     context = {

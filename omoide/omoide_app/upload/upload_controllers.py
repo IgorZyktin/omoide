@@ -1,7 +1,6 @@
 """Routes related to media upload."""
 
 from typing import Annotated
-from typing import Type
 from uuid import UUID
 
 import fastapi
@@ -31,7 +30,7 @@ async def app_upload(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Upload media page."""
     if user.is_anon:

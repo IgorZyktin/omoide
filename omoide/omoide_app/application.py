@@ -3,10 +3,10 @@
 All interaction with user goes here.
 """
 
-import os
+from collections.abc import Iterator
 from contextlib import asynccontextmanager
+import os
 from typing import Any
-from typing import Iterator
 
 from fastapi import FastAPI
 from fastapi import Request

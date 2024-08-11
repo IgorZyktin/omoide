@@ -1,7 +1,6 @@
 """Special pages for error descriptions."""
 
 from typing import Annotated
-from typing import Type
 
 import fastapi
 from fastapi import Depends
@@ -29,7 +28,7 @@ async def app_not_found(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show <not found> page."""
     context = {
@@ -51,7 +50,7 @@ async def app_forbidden(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show <forbidden> page."""
     context = {
@@ -73,7 +72,7 @@ async def app_bad_request(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: Type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,
 ):
     """Show <bad request> page."""
     context = {

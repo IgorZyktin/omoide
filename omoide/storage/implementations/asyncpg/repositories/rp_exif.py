@@ -2,8 +2,8 @@
 from typing import Any
 from uuid import UUID
 
-import sqlalchemy as sa
 from asyncpg import exceptions as asyncpg_exceptions
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import exceptions

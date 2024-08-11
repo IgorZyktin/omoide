@@ -1,15 +1,14 @@
-"""Tests.
-"""
+"""Tests."""
 import datetime
 import tempfile
 
 import pytest
 
-from omoide.omoide_worker import worker_config
 from omoide.omoide_worker import interfaces
+from omoide.omoide_worker import worker_config
 
 
-@pytest.fixture
+@pytest.fixture()
 def valid_worker_config_dict():
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield dict(
@@ -39,12 +38,12 @@ def valid_worker_config_dict():
         )
 
 
-@pytest.fixture
+@pytest.fixture()
 def valid_worker_config(valid_worker_config_dict):
     return worker_config.Config(**valid_worker_config_dict)
 
 
-@pytest.fixture
+@pytest.fixture()
 def dummy_worker_strategy():
     class DummyStrategy(interfaces.AbsStrategy):
         def init(self) -> None:
@@ -62,7 +61,7 @@ def dummy_worker_strategy():
     return DummyStrategy()
 
 
-@pytest.fixture
+@pytest.fixture()
 def worker_dt():
     return datetime.datetime(
         2022, 12, 2, 20, 10, 15, 128, tzinfo=datetime.timezone.utc)

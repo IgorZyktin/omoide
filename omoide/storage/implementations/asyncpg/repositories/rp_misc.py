@@ -1,11 +1,11 @@
 """Repository that performs various operations on different objects."""
 import abc
 from collections import defaultdict
+from collections.abc import Awaitable
+from collections.abc import Callable
 from collections.abc import Collection
 from datetime import datetime
 from typing import Any
-from typing import Awaitable
-from typing import Callable
 from uuid import UUID
 
 import sqlalchemy as sa

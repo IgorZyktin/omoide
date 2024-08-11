@@ -1,8 +1,8 @@
 """Tests."""
 from unittest import mock
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from omoide.omoide_api import application
 

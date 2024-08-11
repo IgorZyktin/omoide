@@ -1,9 +1,8 @@
 """Dependencies."""
 
-import binascii
 from base64 import b64decode
+import binascii
 from typing import Annotated
-from typing import Optional
 
 from databases import Database
 from fastapi import Depends
@@ -20,16 +19,14 @@ from omoide import models
 from omoide import use_cases
 from omoide import utils
 from omoide.infra.mediator import Mediator
+from omoide.object_storage import interfaces as object_interfaces
+from omoide.object_storage.implementations.file_server import FileObjectStorage
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 from omoide.storage import interfaces as storage_interfaces
-from omoide.object_storage import interfaces as object_interfaces
 from omoide.storage.implementations import asyncpg
-from omoide.object_storage.implementations.file_server import (
-    FileObjectStorage,
-)
 
 
 @utils.memorize
@@ -138,7 +135,7 @@ def get_aim(request: Request) -> web.AimWrapper:
 
 def get_credentials(request: Request) -> HTTPBasicCredentials:
     """Extract credentials from user request, but do not trigger login."""
-    authorization: Optional[str] = request.headers.get('Authorization')
+    authorization: str | None = request.headers.get('Authorization')
     anon = HTTPBasicCredentials(username='', password='')
 
     if authorization:
