@@ -69,6 +69,14 @@ class User(BaseModel):
     password: SecretStr
     role: Role
 
+    def __eq__(self, other: 'User') -> bool:
+        """Return True if other has the same UUID."""
+        return self.uuid == other.uuid
+
+    def __hash__(self) -> int:
+        """Return hash of UUID."""
+        return hash(self.uuid)
+
     def __str__(self) -> str:
         """Return textual representation."""
         name = type(self).__name__
@@ -164,6 +172,14 @@ class Item(ModelMixin):
     thumbnail_ext: str | None
     tags: list[str] = Field(default_factory=list)
     permissions: list[UUID] = Field(default_factory=list)
+
+    def __eq__(self, other: 'Item') -> bool:
+        """Return True if other has the same UUID."""
+        return self.uuid == other.uuid
+
+    def __hash__(self) -> int:
+        """Return hash of UUID."""
+        return hash(self.uuid)
 
     def __str__(self) -> str:
         """Return textual representation."""
