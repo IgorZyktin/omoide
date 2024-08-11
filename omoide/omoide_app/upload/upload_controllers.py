@@ -34,7 +34,7 @@ async def app_upload(
 ):
     """Upload media page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('forbidden'))
+        return RedirectResponse(request.url_for('app_forbidden'))
 
     use_case = upload_use_cases.AppUploadUseCase(mediator)
 

@@ -37,7 +37,7 @@ async def app_create_item(
 ):
     """Create item page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('forbidden'))
+        return RedirectResponse(request.url_for('app_forbidden'))
 
     use_case = item_use_cases.AppCreateItemUseCase(mediator)
 

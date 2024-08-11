@@ -7,13 +7,11 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
 from omoide import const
 from omoide import custom_logging
-from omoide import exceptions
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.browse import browse_use_cases
@@ -48,14 +46,8 @@ async def app_browse(
                 item_uuid=item_uuid,
             )
         # TODO - manage redirects automatically
-        except exceptions.DoesNotExistError:
-            LOG.exception('Not found')
-            return RedirectResponse(request.url_for('not_found'))
-        except exceptions.NotAllowedError:
-            LOG.exception('Access denied')
-            return RedirectResponse(request.url_for('forbidden'))
         except Exception as exc:
-            web.raise_from_exc(exc)
+            web.redirect_from_exc(request, exc)
             raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
         context = {
@@ -79,15 +71,8 @@ async def app_browse(
             item_uuid=item_uuid,
             aim=aim_wrapper.aim,
         )
-    # TODO - manage redirects automatically
-    except exceptions.DoesNotExistError:
-        LOG.exception('Not found')
-        return RedirectResponse(request.url_for('not_found'))
-    except exceptions.NotAllowedError:
-        LOG.exception('Access denied')
-        return RedirectResponse(request.url_for('forbidden'))
     except Exception as exc:
-        web.raise_from_exc(exc)
+        web.redirect_from_exc(request, exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     paginator = infra.Paginator(

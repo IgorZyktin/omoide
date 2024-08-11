@@ -34,7 +34,7 @@ async def app_profile(
 ):
     """Show user profile page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('forbidden'))
+        return RedirectResponse(request.url_for('app_forbidden'))
 
     context = {
         'request': request,
@@ -58,7 +58,7 @@ async def app_profile_usage(
 ):
     """Show space usage stats."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('forbidden'))
+        return RedirectResponse(request.url_for('app_forbidden'))
 
     use_case = profile_use_cases.AppProfileUsageUseCase(mediator)
 
@@ -93,7 +93,7 @@ async def app_profile_tags(
 ):
     """Show know tags."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('forbidden'))
+        return RedirectResponse(request.url_for('app_forbidden'))
 
     use_case = profile_use_cases.AppProfileTagsUseCase(mediator)
 
@@ -125,7 +125,7 @@ async def app_profile_new(
 ):
     """Show recent updates."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('forbidden'))
+        return RedirectResponse(request.url_for('app_forbidden'))
 
     context = {
         'request': request,
