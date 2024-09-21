@@ -24,8 +24,8 @@ class AbsSearchRepository(abc.ABC):
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
-        collections: bool,
         order: const.ORDER_TYPE,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -34,9 +34,9 @@ class AbsSearchRepository(abc.ABC):
     @abc.abstractmethod
     async def get_home_items_for_anon(
         self,
+        order: const.ORDER_TYPE,
         collections: bool,
         direct: bool,
-        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -46,9 +46,9 @@ class AbsSearchRepository(abc.ABC):
     async def get_home_items_for_known(
         self,
         user: models.User,
+        order: const.ORDER_TYPE,
         collections: bool,
         direct: bool,
-        order: const.ORDER_TYPE,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:

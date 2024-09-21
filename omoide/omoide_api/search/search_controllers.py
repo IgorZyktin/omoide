@@ -150,8 +150,8 @@ async def api_search(
     q: Annotated[str, Query(
         max_length=common_api_models.MAX_LENGTH_DEFAULT,
     )] = common_api_models.QUERY_DEFAULT,
-    collections: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
+    collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
         ge=common_api_models.MIN_LIMIT,
