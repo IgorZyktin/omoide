@@ -74,6 +74,8 @@ async def api_autocomplete(
 async def api_get_recent_updates(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
+    collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
     limit: Annotated[int, Query(
         ge=common_api_models.MIN_LIMIT,
@@ -92,6 +94,8 @@ async def api_get_recent_updates(
 
     items, parent_names = await use_case.execute(
         user=user,
+        order=order,
+        collections=collections,
         last_seen=last_seen,
         limit=limit,
     )

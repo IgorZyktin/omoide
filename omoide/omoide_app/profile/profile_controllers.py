@@ -41,6 +41,10 @@ async def app_profile(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
+        'block_direct': True,
+        'block_ordered': True,
+        'block_collections': True,
+        'block_paginated': True,
         'url': request.url_for('app_search'),
     }
     return templates.TemplateResponse('profile.html', context)
@@ -75,6 +79,10 @@ async def app_profile_usage(
         'size': size,
         'total_items': total_items,
         'total_collections': total_collections,
+        'block_direct': True,
+        'block_ordered': True,
+        'block_collections': True,
+        'block_paginated': True,
         'aim_wrapper': aim_wrapper,
     }
 
@@ -109,6 +117,10 @@ async def app_profile_tags(
         'user': user,
         'known_tags': known_tags,
         'aim_wrapper': aim_wrapper,
+        'block_direct': True,
+        'block_ordered': True,
+        'block_collections': True,
+        'block_paginated': True,
     }
 
     return templates.TemplateResponse('profile_tags.html', context)
@@ -132,6 +144,10 @@ async def app_profile_new(
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
+        'block_direct': True,
+        'block_ordered': False,
+        'block_collections': False,
+        'block_paginated': True,
         'endpoint': request.url_for('api_get_recent_updates'),
     }
     return templates.TemplateResponse('profile_new.html', context)

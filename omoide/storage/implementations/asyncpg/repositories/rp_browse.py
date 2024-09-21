@@ -287,6 +287,8 @@ class BrowseRepository(
     async def get_recently_updated_items(
         self,
         user: models.User,
+        order: const.ORDER_TYPE,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:
@@ -328,17 +330,31 @@ class BrowseRepository(
             date(valid_items.updated_at) = (
                 SELECT max(date(updated_at)) FROM valid_items
             )
-            AND number > :last_seen
-            ORDER BY number
-            LIMIT :limit;
         """
+
         values = {
             'user_uuid': str(user.uuid),
-            'last_seen': last_seen,
             'limit': limit,
         }
+
+        if collections:
+            stmt += ' AND is_collection = True'
+
+        if order == const.ASC:
+            stmt += ' AND number > :last_seen'
+            stmt += ' ORDER BY number'
+            values['last_seen'] = last_seen
+        elif order == const.DESC:
+            stmt += ' AND number < :last_seen'
+            stmt += ' ORDER BY number'
+            values['last_seen'] = last_seen
+        else:
+            stmt += ' ORDER BY random()'
+
+        stmt += ' LIMIT :limit;'
+
         response = await self.db.fetch_all(stmt, values)
-        return [models.Item(**x) for x in response]
+        return [models.Item(**row) for row in response]
 
     async def get_parent_names(
         self,

@@ -73,6 +73,8 @@ class AbsBrowseRepository(abc.ABC):
     async def get_recently_updated_items(
         self,
         user: models.User,
+        order: const.ORDER_TYPE,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> list[models.Item]:

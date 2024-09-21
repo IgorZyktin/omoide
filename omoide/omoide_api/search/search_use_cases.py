@@ -41,6 +41,8 @@ class RecentUpdatesUseCase(BaseAPIUseCase):
     async def execute(
         self,
         user: models.User,
+        order: const.ORDER_TYPE,
+        collections: bool,
         last_seen: int,
         limit: int,
     ) -> tuple[list[models.Item], list[str | None]]:
@@ -50,6 +52,8 @@ class RecentUpdatesUseCase(BaseAPIUseCase):
         async with self.mediator.storage.transaction():
             items = await self.mediator.browse_repo.get_recently_updated_items(
                 user=user,
+                order=order,
+                collections=collections,
                 last_seen=last_seen,
                 limit=limit,
             )
