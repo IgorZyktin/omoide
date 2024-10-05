@@ -30,3 +30,7 @@ RANDOM: Literal['random'] = 'random'
 ORDER_TYPE: TypeAlias = Literal['asc', 'desc', 'random']
 
 PAGES_IN_ALBUM_AT_ONCE = 10
+
+# for path generation i.e.
+# /home/storage/<owner uuid>/00/109a6c44-c75f-4c71-aada-b22f15aa9a02.jpg
+STORAGE_PREFIX_SIZE = 2

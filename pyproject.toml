@@ -26,6 +26,7 @@ pydantic-core = "^2.20.1"
 starlette = "^0.27.0"
 pydantic-settings = "^2.4.0"
 httpx = "^0.27.0"
+typer = "^0.12.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
@@ -109,6 +110,8 @@ lint.ignore = [
     "TRY401",  # Redundant exception object included in logging.exception call
     "S324",    # Probable use of insecure hash functions
     "PLE1205", # Too many arguments for `logging` format string
+    "FBT001",  # Boolean-typed positional argument in function definition
+    "FBT002",  # Boolean default positional argument in function definition
 ]
 
 [tool.ruff.lint.per-file-ignores]
