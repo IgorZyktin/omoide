@@ -17,6 +17,12 @@ class AbsMetainfoRepo(abc.ABC):
     async def read_metainfo(self, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
 
+    async def get_metainfos(
+        self,
+        items: list[models.Item],
+    ) -> dict[UUID, models.Metainfo | None]:  # TODO use item_id, not UUID
+        """Return many metainfo records."""
+
     @abc.abstractmethod
     async def update_metainfo(
         self,

@@ -1,4 +1,5 @@
 """Repository that perform CRUD operations on metainfo."""
+
 from typing import Any
 from uuid import UUID
 
@@ -35,6 +36,29 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
             raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
 
         return models.Metainfo(**response)
+
+    async def get_metainfos(
+        self,
+        items: list[models.Item],
+    ) -> dict[UUID, models.Metainfo | None]:  # TODO use item_id, not UUID
+        """Return many metainfo records."""
+        uuids = [item.uuid for item in items]
+        metainfos: dict[UUID, models.Metainfo | None] = dict.fromkeys(uuids)
+
+        query = sa.select(
+            db_models.Metainfo
+        ).where(
+            db_models.Metainfo.item_uuid.in_(  # noqa
+                tuple(str(uuid) for uuid in uuids)
+            )
+        )
+
+        response = await self.db.fetch_all(query)
+        for row in response:
+            model = models.Metainfo(**row)
+            metainfos[model.item_uuid] = model
+
+        return metainfos
 
     async def update_metainfo(
         self,
