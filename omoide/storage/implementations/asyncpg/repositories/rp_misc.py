@@ -118,36 +118,6 @@ class _MiscRepoBase(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage, abc.ABC):
 class MiscRepo(_MiscRepoBase):
     """Repository that performs various operations on different objects."""
 
-    async def read_children_to_download(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> list[dict[str, UUID | str | int]]:
-        """Return some components of the given item children with metainfo."""
-        stmt = sa.select(
-            db_models.Item.uuid,
-            db_models.Metainfo.content_size,
-            db_models.Item.content_ext,
-        ).join(
-            db_models.Metainfo,
-            db_models.Metainfo.item_uuid == db_models.Item.uuid,
-            isouter=True,
-        )
-
-        stmt = queries.ensure_user_has_permissions(user, stmt)
-
-        stmt = stmt.where(
-            db_models.Item.parent_uuid == item.uuid,
-            db_models.Item.is_collection == False,  # noqa
-            db_models.Item.content_ext != None,  # noqa
-            db_models.Metainfo.content_size != None,  # noqa
-        ).order_by(
-            db_models.Item.number,
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [dict(x) for x in response]  # type: ignore
-
     async def get_computed_tags(self, item: models.Item) -> set[str]:
         """Get computed tags for this item."""
         stmt = sa.select(

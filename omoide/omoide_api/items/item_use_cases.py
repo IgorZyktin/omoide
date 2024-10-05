@@ -346,7 +346,9 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             f'{template.format(current)}___{item_uuid}.{content_ext}'
         )
 
-        checksum = signature if signature is not None else '-'
+        # FIXME - temporary disable
+        # checksum = signature if signature is not None else '-'
+        checksum = '-'
         size = metainfo.content_size or 0
 
         mod_zip_line = (

@@ -6,20 +6,11 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from omoide import domain  # FIXME - use models instead
 from omoide import models
 
 
 class AbsMiscRepo(abc.ABC):
     """Repository that performs various operations on different objects."""
-
-    @abc.abstractmethod
-    async def read_children_to_download(
-        self,
-        user: models.User,
-        item: domain.Item,
-    ) -> list[dict[str, UUID | str | int]]:
-        """Return some components of the given item children with metainfo."""
 
     @abc.abstractmethod
     async def get_computed_tags(self, item: models.Item) -> set[str]:
