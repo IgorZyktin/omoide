@@ -193,14 +193,14 @@
             {% if parents %}
                 {% for parent in parents %}
                     {{ render_link(request, parent, aim_wrapper) }}
-                    <span>&nbsp;/&nbsp;</span>
+                    {% if loop.last %}
+                        {% if item.name and item.is_collection %}
+                            <span>&nbsp;/&nbsp; {{ item.name }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span>&nbsp;/&nbsp;</span>
+                    {% endif %}
                 {% endfor %}
-            {% endif %}
-
-            {% if item.name %}
-                {{ item.name }}
-            {% else %}
-                Current item
             {% endif %}
 
             <span>&nbsp;</span>
