@@ -220,7 +220,7 @@
                          src="{{ request.url_for('static', path='ic_link.svg') }}"
                          alt="Copy link"
                          title="Copy link"/></a>
-                <a href="{{ request.url_for('api_items_download', uuid=item.uuid) }}">
+                <a href="{{ request.url_for('api_download_collection', item_uuid=item.uuid) }}">
                     <img class="icon"
                          src="{{ request.url_for('static', path='download_48.svg') }}"
                          alt="Download button"

@@ -73,6 +73,13 @@ def get_search_repo() -> storage_interfaces.AbsSearchRepository:
 
 # TODO - remove
 @utils.memorize
+def get_signatures_repo() -> storage_interfaces.AbsSignaturesRepo:
+    """Get repo instance."""
+    return asyncpg.SignaturesRepo(get_db())
+
+
+# TODO - remove
+@utils.memorize
 def get_browse_repo() -> storage_interfaces.AbsBrowseRepository:
     """Get repo instance."""
     return asyncpg.BrowseRepository(get_db())
@@ -200,6 +207,8 @@ def get_mediator(
                          Depends(get_misc_repo)],
     search_repo: Annotated[storage_interfaces.AbsSearchRepository,
                            Depends(get_search_repo)],
+    signatures_repo: Annotated[storage_interfaces.AbsSignaturesRepo,
+                               Depends(get_signatures_repo)],
     storage: Annotated[storage_interfaces.AbsStorage,
                        Depends(get_storage)],
     users_repo: Annotated[storage_interfaces.AbsUsersRepo,
@@ -217,6 +226,7 @@ def get_mediator(
         misc_repo=misc_repo,
         search_repo=search_repo,
         storage=storage,
+        signatures_repo=signatures_repo,
         users_repo=users_repo,
         object_storage=object_storage,
     )
@@ -283,23 +293,6 @@ def app_item_delete_use_case(
     """Get use case instance."""
     return use_cases.AppItemDeleteUseCase(
         items_repo=items_repo,
-    )
-
-
-@utils.memorize
-def api_items_download_use_case(
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                         Depends(get_metainfo_repo)],
-    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
-                         Depends(get_misc_repo)],
-) -> use_cases.ApiItemsDownloadUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemsDownloadUseCase(
-        items_repo=items_repo,
-        metainfo_repo=meta_repo,
-        misc_repo=misc_repo,
     )
 
 

@@ -249,3 +249,108 @@ class UploadPreviewForItemUseCase(BaseUploadUseCase):
 class UploadThumbnailForItemUseCase(BaseUploadUseCase):
     """Use case for thumbnail uploading."""
     media_type: const.MEDIA_TYPE = const.THUMBNAIL
+
+
+class DownloadCollectionUseCase(BaseItemUseCase):
+    """Use case for downloading whole group of items as zip archive."""
+
+    async def execute(
+            self,
+            user: models.User,
+            item_uuid: UUID,
+    ) -> tuple[list[str], models.User, models.Item | None]:
+        """Business logic."""
+        lines: list[str] = []
+
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            owner = await self.mediator.users_repo.get_user(item.owner_uuid)
+            public_users = (
+                await self.mediator.users_repo.get_public_user_uuids()
+            )
+
+            if all(
+                (
+                    owner.uuid not in public_users,
+                    user.uuid != owner.uuid,
+                    user.uuid not in item.permissions,
+                )
+            ):
+                msg = 'Item {item_uuid} does not exist'
+                raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
+
+            children = await self.mediator.items_repo.get_children(item)
+            signatures = (
+                await self.mediator.signatures_repo.get_cr32_signatures(
+                    items=children,
+                )
+            )
+
+            valid_children = [
+                child for child in children
+                if child.content_ext is not None and not child.is_collection
+            ]
+
+            total = len(valid_children)
+
+            for i, child in enumerate(valid_children, start=1):
+                signature = signatures.get(child.id)
+
+                if signature is None:
+                    LOG.warning(
+                        'User {} requested download '
+                        'for item {}, but is has no signature',
+                        user,
+                        item,
+                    )
+
+                # TODO - make it a bulk operation
+                metainfo = await self.mediator.meta_repo.read_metainfo(
+                    item=child,
+                )
+
+                lines.append(
+                    self.form_signature_line(
+                        item=child,
+                        metainfo=metainfo,
+                        signature=signature,
+                        current=i,
+                        total=total,
+                    )
+                )
+
+        return lines, owner, item
+
+    @staticmethod
+    def form_signature_line(
+        item: models.Item,
+        metainfo: models.Metainfo,
+        signature: int | None,
+        current: int,
+        total: int,
+    ) -> str:
+        """Generate signature line for NGINX."""
+        digits = len(str(total))
+        template = f'{{:0{digits}d}}'
+        owner_uuid = str(item.owner_uuid)
+        item_uuid = str(item.uuid)
+        base = '/content/content'  # TODO - ensure it is correct path
+        prefix = item_uuid[:const.STORAGE_PREFIX_SIZE]
+        content_ext = str(item.content_ext)
+
+        fs_path = (
+            f'{base}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
+        )
+
+        user_visible_filename = (
+            f'{template.format(current)}___{item_uuid}.{content_ext}'
+        )
+
+        checksum = signature if signature is not None else '-'
+        size = metainfo.content_size or 0
+
+        mod_zip_line = (
+            f'{checksum} {size} {fs_path} {user_visible_filename}'
+        )
+
+        return mod_zip_line

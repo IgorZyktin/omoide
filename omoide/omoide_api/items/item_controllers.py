@@ -1,6 +1,7 @@
 """Item related API operations."""
 
 from typing import Annotated
+import urllib.parse
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -9,6 +10,7 @@ from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from fastapi.responses import PlainTextResponse
 
 from omoide import models
 from omoide.infra.mediator import Mediator
@@ -282,3 +284,37 @@ async def api_upload_item_thumbnail(
         'result': 'Enqueued thumbnail adding',
         'item_uuid': str(item_uuid),
     }
+
+
+@api_items_router.get('/download/{item_uuid}')
+async def api_download_collection(
+        item_uuid: UUID,
+        user: Annotated[models.User, Depends(dep.get_current_user)],
+        mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+        response_class: type[Response] = PlainTextResponse,
+):
+    """Return all children as a zip archive.
+
+    WARNING - this endpoint works only behind NGINX with mod_zip installed.
+    """
+    use_case = item_use_cases.DownloadCollectionUseCase(mediator)
+
+    try:
+        lines, owner, item = await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+        )
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    filename = urllib.parse.quote(item.name or 'unnamed collection')
+    filename = f'Omoide - {filename}'
+
+    return PlainTextResponse(
+        content='\n'.join(lines),
+        headers={
+            'X-Archive-Files': 'zip',
+            'Content-Disposition': f'attachment; filename="{filename}.zip"',
+        }
+    )

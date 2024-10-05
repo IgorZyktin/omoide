@@ -16,6 +16,8 @@ class Mediator:
     meta_repo: storage_interfaces.AbsMetainfoRepo
     misc_repo: storage_interfaces.AbsMiscRepo
     search_repo: storage_interfaces.AbsSearchRepository
+    signatures_repo: storage_interfaces.AbsSignaturesRepo
     storage: storage_interfaces.AbsStorage
     users_repo: storage_interfaces.AbsUsersRepo
+
     object_storage: object_interfaces.AbsObjectStorage
