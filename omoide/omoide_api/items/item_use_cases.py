@@ -346,13 +346,11 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             f'{template.format(current)}___{item_uuid}.{content_ext}'
         )
 
-        # FIXME - temporary disable
-        # checksum = hex(signature) if signature is not None else '-'
-        checksum = '-'
+        checksum = hex(signature) if signature is not None else '-'
         size = metainfo.content_size or 0
 
         mod_zip_line = (
-            f'{checksum} {size} {fs_path} {user_visible_filename}'
+            f'{checksum[2:]} {size} {fs_path} {user_visible_filename}'
         )
 
         return mod_zip_line
