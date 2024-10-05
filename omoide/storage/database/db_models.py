@@ -583,4 +583,4 @@ class SignatureCRC32(Base):
 
     # fields ------------------------------------------------------------------
 
-    signature: str = sa.Column(sa.CHAR(8), nullable=False)
+    signature: int = sa.Column(sa.BigInteger, nullable=False)

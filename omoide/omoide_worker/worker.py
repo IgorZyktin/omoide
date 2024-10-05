@@ -105,20 +105,18 @@ class Worker(interfaces.AbsWorker):
 
     def _save_md5_signature(self, media: db_models.Media) -> None:
         """Save signature."""
-        md5 = hashlib.md5(media.content).hexdigest()
         signature = db_models.SignatureMD5(
             item_id=media.item.id,
-            signature=md5,
+            signature=hashlib.md5(media.content).hexdigest(),
         )
         self._database.session.merge(signature)
         self._database.session.commit()
 
     def _save_cr32_signature(self, media: db_models.Media) -> None:
         """Save signature."""
-        cr32 = zlib.crc32(media.content)
         signature = db_models.SignatureCRC32(
             item_id=media.item.id,
-            signature=hex(cr32)[2:],
+            signature=zlib.crc32(media.content),
         )
         self._database.session.merge(signature)
         self._database.session.commit()
