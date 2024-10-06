@@ -197,6 +197,18 @@ wheels = [
 ]
 
 [[package]]
+name = "gunicorn"
+version = "23.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d", size = 85029 },
+]
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -316,7 +328,7 @@ wheels = [
 
 [[package]]
 name = "omoide"
-version = "0.3.8"
+version = "0.3.9"
 source = { virtual = "." }
 dependencies = [
     { name = "loguru" },
@@ -337,6 +349,7 @@ web = [
     { name = "bcrypt" },
     { name = "databases", extra = ["asyncpg"] },
     { name = "fastapi" },
+    { name = "gunicorn" },
     { name = "jinja2" },
     { name = "python-multipart" },
     { name = "uvicorn" },
@@ -357,6 +370,7 @@ requires-dist = [
     { name = "colorama", marker = "extra == 'cli'", specifier = ">=0.4.6" },
     { name = "databases", extras = ["asyncpg"], marker = "extra == 'web'", specifier = ">=0.9.0" },
     { name = "fastapi", marker = "extra == 'web'", specifier = ">=0.115.0" },
+    { name = "gunicorn", marker = "extra == 'web'", specifier = ">=23.0.0" },
     { name = "jinja2", marker = "extra == 'web'", specifier = ">=3.1.4" },
     { name = "loguru", specifier = ">=0.7.2" },
     { name = "prettytable", marker = "extra == 'cli'", specifier = ">=3.11.0" },

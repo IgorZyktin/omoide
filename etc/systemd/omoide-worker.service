@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=omoide-user
 WorkingDirectory=/home/omoide-user/omoide
-ExecStart=/home/omoide-user/omoide/run_worker.sh
+ExecStart="<путь до интерпретатора> -m omoide.omoide_worker"
 EnvironmentFile=/etc/omoide/env
 CPUAccounting=true
 MemoryAccounting=true
