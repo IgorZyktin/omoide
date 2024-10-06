@@ -5,7 +5,7 @@ from typing import Literal
 from typing import TypeAlias
 from uuid import UUID
 
-VERSION = '0.3.8'
+VERSION = '0.3.9'
 
 FRONTEND_VERSION = 9
 
