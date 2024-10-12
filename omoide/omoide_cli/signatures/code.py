@@ -149,7 +149,7 @@ def get_items(
                 isouter=True,
             )
             .where(
-                db_models.SignatureMD5.signature == None,  # noqa: E711
+                db_models.SignatureMD5.signature == sa.null(),
             )
         )
     else:
@@ -164,7 +164,7 @@ def get_items(
                 isouter=True,
             )
             .where(
-                db_models.SignatureCRC32.signature == None,  # noqa: E711
+                db_models.SignatureCRC32.signature == sa.null(),
             )
         )
 

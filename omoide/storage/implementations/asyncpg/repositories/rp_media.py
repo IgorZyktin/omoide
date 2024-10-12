@@ -30,8 +30,8 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
     async def delete_processed_media(self, user: models.User) -> int:
         """Delete fully downloaded media rows."""
         stmt = sa.delete(db_models.Media).where(
-            db_models.Media.processed_at != None,  # noqa: E711
-            db_models.Media.error == None,  # noqa: E711
+            db_models.Media.processed_at != sa.null(),
+            db_models.Media.error == sa.null(),
             db_models.Media.owner_uuid == user.uuid,
         )
 
@@ -41,8 +41,8 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
     async def delete_all_processed_media(self) -> int:
         """Delete fully downloaded media rows."""
         stmt = sa.delete(db_models.Media).where(
-            db_models.Media.processed_at != None,  # noqa: E711
-            db_models.Media.error == None,  # noqa: E711
+            db_models.Media.processed_at != sa.null(),
+            db_models.Media.error == sa.null(),
         )
 
         response = await self.db.execute(stmt)

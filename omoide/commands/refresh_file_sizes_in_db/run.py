@@ -142,9 +142,9 @@ def get_models(
     ).filter(
         db_models.Item.owner_uuid == user.uuid,
         sa.or_(
-            db_models.Metainfo.content_size == None,  # noqa
-            db_models.Metainfo.preview_size == None,  # noqa
-            db_models.Metainfo.thumbnail_size == None,  # noqa
+            db_models.Metainfo.content_size == sa.null(),
+            db_models.Metainfo.preview_size == sa.null(),
+            db_models.Metainfo.thumbnail_size == sa.null(),
         ),
     )
 

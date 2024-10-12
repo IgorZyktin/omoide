@@ -87,7 +87,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         ).where(
             sa.and_(
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.parent_uuid == None,  # noqa
+                db_models.Item.parent_uuid == sa.null(),
             )
         )
 
@@ -107,7 +107,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         stmt = sa.select(
             db_models.Item
         ).where(
-            db_models.Item.parent_uuid == None  # noqa
+            db_models.Item.parent_uuid == sa.null()
         )
 
         if users:

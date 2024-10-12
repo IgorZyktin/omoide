@@ -134,7 +134,7 @@ class SearchRepository(_SearchRepositoryBase):
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         if direct:
-            stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
+            stmt = stmt.where(db_models.Item.parent_uuid == sa.null())
 
         stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
@@ -165,7 +165,7 @@ class SearchRepository(_SearchRepositoryBase):
             stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
 
         if direct:
-            stmt = stmt.where(db_models.Item.parent_uuid == None)  # noqa
+            stmt = stmt.where(db_models.Item.parent_uuid == sa.null())
 
         stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)

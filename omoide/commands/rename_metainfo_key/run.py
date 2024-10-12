@@ -23,7 +23,7 @@ def run(database: SyncDatabase, key: str, new: str,
             query = session.query(
                 db_models.Metainfo,
             ).filter(
-                db_models.Metainfo.extras[key] != None  # noqa
+                db_models.Metainfo.extras[key] != sa.null()
             ).order_by(
                 db_models.Metainfo.item_uuid
             )

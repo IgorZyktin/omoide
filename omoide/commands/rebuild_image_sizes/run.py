@@ -70,21 +70,21 @@ def get_all_metainfo_records(
     ).filter(
         db_models.Item.owner_uuid == user.uuid,
         ~sa.and_(
-            db_models.Item.content_ext == None,  # noqa
-            db_models.Item.preview_ext == None,  # noqa
-            db_models.Item.thumbnail_ext == None,  # noqa
+            db_models.Item.content_ext == sa.null(),
+            db_models.Item.preview_ext == sa.null(),
+            db_models.Item.thumbnail_ext == sa.null(),
         ),
     )
 
     if config.only_corrupted:
         query = query.filter(
             sa.or_(
-                db_models.Metainfo.content_width == None,  # noqa
-                db_models.Metainfo.content_height == None,  # noqa
-                db_models.Metainfo.preview_width == None,  # noqa
-                db_models.Metainfo.preview_height == None,  # noqa
-                db_models.Metainfo.thumbnail_width == None,  # noqa
-                db_models.Metainfo.thumbnail_height == None,  # noqa
+                db_models.Metainfo.content_width == sa.null(),
+                db_models.Metainfo.content_height == sa.null(),
+                db_models.Metainfo.preview_width == sa.null(),
+                db_models.Metainfo.preview_height == sa.null(),
+                db_models.Metainfo.thumbnail_width == sa.null(),
+                db_models.Metainfo.thumbnail_height == sa.null(),
             )
         )
 

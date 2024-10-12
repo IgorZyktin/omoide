@@ -21,8 +21,8 @@ class WorkerDatabase(SyncDatabase):
     ) -> list[db_models.CommandCopy]:
         """Return list of images to copy."""
         query = self.session.query(db_models.CommandCopy).filter(
-            db_models.CommandCopy.processed_at == None,  # noqa: E711
-            db_models.CommandCopy.error == None,  # noqa: E711
+            db_models.CommandCopy.processed_at == sa.null(),
+            db_models.CommandCopy.error == sa.null(),
         )
 
         if last_seen is not None:
@@ -41,8 +41,8 @@ class WorkerDatabase(SyncDatabase):
     ) -> list[db_models.Media]:
         """Return list of media records to download."""
         query = self.session.query(db_models.Media).filter(
-            db_models.Media.processed_at == None,  # noqa: E711
-            db_models.Media.error == None,  # noqa: E711
+            db_models.Media.processed_at == sa.null(),
+            db_models.Media.error == sa.null(),
         )
 
         if last_seen is not None:
@@ -138,8 +138,8 @@ class WorkerDatabase(SyncDatabase):
     def drop_media(self) -> int:
         """Delete fully downloaded media rows, return total amount."""
         stmt = sa.delete(db_models.Media).where(
-            db_models.Media.processed_at != None,  # noqa: E711
-            db_models.Media.error == None,  # noqa: E711
+            db_models.Media.processed_at != sa.null(),
+            db_models.Media.error == sa.null(),
         )
 
         with self._engine.begin() as conn:
@@ -150,8 +150,8 @@ class WorkerDatabase(SyncDatabase):
     def drop_copies(self) -> int:
         """Delete complete copy operations, return total deleted amount."""
         stmt = sa.delete(db_models.CommandCopy).where(
-            db_models.CommandCopy.processed_at != None,  # noqa: E711
-            db_models.CommandCopy.error == None,  # noqa: E711
+            db_models.CommandCopy.processed_at != sa.null(),
+            db_models.CommandCopy.error == sa.null(),
         )
 
         with self._engine.begin() as conn:
