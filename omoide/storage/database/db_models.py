@@ -646,3 +646,62 @@ class RegisteredWorkers(Base):
     last_restart: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True),
                                                    nullable=False,
                                                    index=True)
+
+
+class SerialLock(Base):
+    """Lock for serial workers."""
+    __tablename__ = 'serial_lock'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(sa.Integer,
+                                    autoincrement=True,
+                                    nullable=False,
+                                    index=True,
+                                    primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    worker_name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=True)
+
+    last_update: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True),
+                                                  nullable=False,
+                                                  index=True)
+
+
+class SerialOperation(Base):
+    """Global operations that run in serial."""
+    __tablename__ = 'serial_operations'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(sa.Integer,
+                                    autoincrement=True,
+                                    nullable=False,
+                                    index=True,
+                                    primary_key=True)
+
+    # fields ------------------------------------------------------------------
+
+    operation: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=False)
+    worker_name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=True)
+
+    status: Mapped[str] = mapped_column(
+        sa.Enum('created', 'processing', 'done', 'failed',
+                name='serial_operation_status'))
+
+    expected: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+    affected: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), nullable=True)
+    ended_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), nullable=True)
+
+    log: Mapped[str] = mapped_column(sa.Text, nullable=True)

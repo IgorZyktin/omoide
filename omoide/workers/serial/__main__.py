@@ -3,7 +3,7 @@
 import asyncio
 
 from omoide import custom_logging
-from omoide.workers.serial.cfg import get_config
+from omoide.workers.serial import cfg
 from omoide.workers.serial.database import SerialDatabase
 from omoide.workers.serial.worker import SerialWorker
 
@@ -12,7 +12,7 @@ LOG = custom_logging.get_logger(__name__)
 
 async def main():
     """Entry point."""
-    config = get_config()
+    config = cfg.Config()
     database = SerialDatabase(config)
     worker = SerialWorker(config, database)
 

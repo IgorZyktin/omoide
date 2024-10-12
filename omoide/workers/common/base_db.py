@@ -33,12 +33,10 @@ class BaseWorkerDatabase(Generic[ConfigT], abc.ABC):
 
     async def register_worker(self) -> None:
         """Ensure we're allowed to run."""
-        query = sa.update(
-            db_models.RegisteredWorkers
-        ).values(
-            last_restart=utils.now()
-        ).where(
-            db_models.RegisteredWorkers.worker_name == self.config.name
+        query = (
+            sa.update(db_models.RegisteredWorkers)
+            .values(last_restart=utils.now())
+            .where(db_models.RegisteredWorkers.worker_name == self.config.name)
         )
 
         async with self._engine.begin() as conn:
