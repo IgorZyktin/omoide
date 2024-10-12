@@ -1,5 +1,4 @@
-"""Access policy.
-"""
+"""Access policy."""
 from uuid import UUID
 
 from omoide import interfaces

@@ -1,5 +1,4 @@
-"""Command configuration.
-"""
+"""Command configuration."""
 from pydantic import BaseModel
 from pydantic import SecretStr
 

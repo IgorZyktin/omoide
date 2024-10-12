@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+import sqlalchemy as sa
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import custom_logging

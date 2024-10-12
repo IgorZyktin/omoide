@@ -81,11 +81,11 @@ class BaseSearchUseCase(BaseAPIUseCase):
             clean_parts.insert(0, '+')
 
         for operator, tag in utils.group_to_size(clean_parts):
-            tag = str(tag).lower()
+            _tag = str(tag).lower()
             if operator == '+':
-                tags_include.add(tag)
+                tags_include.add(_tag)
             else:
-                tags_exclude.add(tag)
+                tags_exclude.add(_tag)
 
         return tags_include, tags_exclude
 

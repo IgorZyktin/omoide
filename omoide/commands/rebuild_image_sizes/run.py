@@ -1,5 +1,5 @@
-"""Rebuild all content/preview/thumbnail sizes.
-"""
+"""Rebuild all content/preview/thumbnail sizes."""
+import sys
 import time
 
 from pydantic import BaseModel
@@ -121,7 +121,7 @@ def rebuild_sizes(
     except ImportError:
         Image = exit  # noqa
         LOG.error('You have to install "pillow" package to run this command')
-        exit(1)
+        sys.exit(1)
 
     for metainfo, item in all_metainfo:
         if metainfo is None or item is None:

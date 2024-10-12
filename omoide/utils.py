@@ -204,7 +204,7 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
 
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> RT:
-        """Wrapper."""
+        """Wrap original function."""
         result = objects.get(func.__name__, sentinel)
         if result is sentinel:
             result = func(*args, **kwargs)

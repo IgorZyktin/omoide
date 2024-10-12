@@ -1,5 +1,4 @@
-"""Refresh size command.
-"""
+"""Refresh size command."""
 from pathlib import Path
 from uuid import UUID
 

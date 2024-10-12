@@ -124,6 +124,7 @@ lint.ignore = [
     "D103",    # Missing docstring in public function
     "EM101",   # Exception must not use a string literal
     "PLR2004", # Magic value used in comparison
+    "PT001",   # Use `@pytest.fixture` over `@pytest.fixture()`
 ]
 
 [tool.ruff.format]
