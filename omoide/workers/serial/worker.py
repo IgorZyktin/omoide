@@ -37,10 +37,7 @@ class SerialWorker(BaseWorker[Config]):
             self.has_lock = True
 
         async with self.database.transaction() as conn:
-            operation = await self.repo.get_next_serial_operation(
-                conn=conn,
-                worker_name=self.config.name,
-            )
+            operation = await self.repo.get_next_serial_operation(conn)
 
         if not operation:
             return False

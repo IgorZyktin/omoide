@@ -2,7 +2,7 @@
 
 import abc
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 from typing import Generic
 from typing import TypeVar
 

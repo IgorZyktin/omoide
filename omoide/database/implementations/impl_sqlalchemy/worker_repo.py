@@ -62,7 +62,6 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
     async def get_next_serial_operation(
         self,
         conn: AsyncConnection,
-        worker_name: str,
     ) -> SerialOperation | None:
         """Try locking next serial operation."""
         select_query = (

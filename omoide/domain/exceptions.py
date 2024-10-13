@@ -1,10 +1,11 @@
 """Domain-level exceptions."""
+
 from uuid import UUID
 
 from omoide.domain import actions
 
 
-class BaseOmoideException(Exception):
+class BaseOmoideError(Exception):
     """Root-level exception."""
 
     def __str__(self) -> str:
@@ -23,11 +24,11 @@ class BaseOmoideException(Exception):
         return f'{name}({pairs})'
 
 
-class DoesNotExistError(BaseOmoideException):
+class DoesNotExistError(BaseOmoideError):
     """Target resource does not exist."""
 
 
-class ForbiddenError(BaseOmoideException):
+class ForbiddenError(BaseOmoideError):
     """User has no rights to do this."""
 
 

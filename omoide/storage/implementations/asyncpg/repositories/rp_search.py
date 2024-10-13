@@ -46,7 +46,7 @@ class _SearchRepositoryBase(
             )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+            stmt = stmt.where(db_models.Item.is_collection == sa.true())
 
         return stmt
 
@@ -131,7 +131,7 @@ class SearchRepository(_SearchRepositoryBase):
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+            stmt = stmt.where(db_models.Item.is_collection == sa.true())
 
         if direct:
             stmt = stmt.where(db_models.Item.parent_uuid == sa.null())
@@ -162,7 +162,7 @@ class SearchRepository(_SearchRepositoryBase):
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+            stmt = stmt.where(db_models.Item.is_collection == sa.true())
 
         if direct:
             stmt = stmt.where(db_models.Item.parent_uuid == sa.null())

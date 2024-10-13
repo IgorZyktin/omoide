@@ -585,17 +585,6 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     item,
                     new_parent,
                 )
-                # nested_use_case = use_cases.ApiCopyImageUseCase(
-                #     policy,
-                #     self.items_repo,
-                #     self.metainfo_repo,
-                #     self.media_repo,
-                # )
-                # await nested_use_case.execute(
-                #     user=user,
-                #     source_uuid=item.uuid,
-                #     target_uuid=new_parent.uuid,
-                # )
 
             if old_parent:
                 added, deleted = utils.get_delta(old_parent.tags,

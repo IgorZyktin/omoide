@@ -1,6 +1,5 @@
 """Common use case elements."""
 
-import abc
 from uuid import UUID
 
 from omoide import custom_logging
@@ -12,7 +11,7 @@ from omoide.infra.mediator import Mediator
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseAPIUseCase(abc.ABC):
+class BaseAPIUseCase:
     """Base use case class for API."""
 
     def __init__(self, mediator: Mediator) -> None:

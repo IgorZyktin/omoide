@@ -40,7 +40,6 @@ class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
     async def get_next_serial_operation(
         self,
         conn: ConnectionT,
-        worker_name: str,
     ) -> SerialOperation | None:
         """Return next serial operation."""
 

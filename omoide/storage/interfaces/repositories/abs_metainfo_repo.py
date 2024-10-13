@@ -17,6 +17,7 @@ class AbsMetainfoRepo(abc.ABC):
     async def read_metainfo(self, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
 
+    @abc.abstractmethod
     async def get_metainfos(
         self,
         items: list[models.Item],

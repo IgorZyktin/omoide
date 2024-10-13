@@ -1,5 +1,5 @@
-"""Paginator that works with page numbers.
-"""
+"""Paginator that works with page numbers."""
+
 from collections.abc import Iterator
 import math
 

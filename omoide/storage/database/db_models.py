@@ -265,9 +265,9 @@ class LongJob(Base):
                                                      nullable=True,
                                                      index=True)
 
-    added: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), 
+    added: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text),
                                              nullable=False)
-    deleted: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), 
+    deleted: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text),
                                                nullable=False)
     status: Mapped[str] = mapped_column(sa.String(length=SMALL),
                                         index=True,

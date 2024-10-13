@@ -1,9 +1,10 @@
 """Sqlalchemy database."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncConnection
+from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from omoide.database.interfaces.abs_database import AbsDatabase
 

@@ -248,7 +248,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         """Return lineage of all parents for the given item."""
         stmt = """
         WITH RECURSIVE parents AS (
-           SELECT id, 
+           SELECT id,
                   uuid,
                   parent_uuid,
                   owner_uuid,
@@ -319,7 +319,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             )
         )
         response = await self.db.fetch_all(stmt)
-        return list(x['uuid'] for x in response)
+        return [x['uuid'] for x in response]
 
     # TODO - remove this method
     async def read_computed_tags(

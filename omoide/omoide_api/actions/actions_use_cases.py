@@ -91,7 +91,7 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Prepare for execution."""
-        self.ensure_admin(admin, subject=f'known tags for anon')
+        self.ensure_admin(admin, subject='known tags for anon')
 
         async with self.mediator.storage.transaction():
             LOG.info('User {} is rebuilding known tags for anon user', admin)

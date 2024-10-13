@@ -1,5 +1,5 @@
 """Logic models."""
-import abc
+
 from collections import UserString
 from dataclasses import asdict
 from dataclasses import dataclass
@@ -18,7 +18,7 @@ from omoide import utils
 
 
 @dataclass
-class ModelMixin(abc.ABC):
+class ModelMixin:
     """Mixin that adds functionality similar to pydantic."""
 
     def model_dump(self, exclude: set[str] | None = None) -> dict[str, Any]:

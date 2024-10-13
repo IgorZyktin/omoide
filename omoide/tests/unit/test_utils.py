@@ -7,7 +7,7 @@ import pytest
 from omoide import utils
 
 
-@pytest.mark.parametrize('uuid,length,result', [
+@pytest.mark.parametrize(('uuid', 'length', 'result'), [
     ('fb6a8840-d6a8-4ab4-9555-be67917c8717', 2, 'fb'),
     (UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717'), 3, 'fb6'),
 ])
@@ -16,7 +16,7 @@ def test_get_bucket(uuid, length, result):
     assert utils.get_bucket(uuid, length) == result
 
 
-@pytest.mark.parametrize('uuid,result', [
+@pytest.mark.parametrize(('uuid', 'result'), [
     ('something', False),
     (UUID('fb6a8840-d6a8-4ab4-9555-be67917c8717'), True),
     ('fb6a8840-d6a8-4ab4-9555-be67917c8717', True),
@@ -26,7 +26,7 @@ def test_is_valid_uuid(uuid, result):
     assert utils.is_valid_uuid(uuid) is result
 
 
-@pytest.mark.parametrize('size, reference', [
+@pytest.mark.parametrize(('size', 'reference'), [
     (-2_000, '-2.0 КиБ'),
     (-2_048, '-2.0 КиБ'),
     (0, '0 Б'),
@@ -50,7 +50,7 @@ def test_human_readable_size_ru(size, reference):
     assert utils.human_readable_size(size, language='RU') == reference
 
 
-@pytest.mark.parametrize('size, reference', [
+@pytest.mark.parametrize(('size', 'reference'), [
     (-2_000, '-2.0 KiB'),
     (-2_048, '-2.0 KiB'),
     (0, '0 B'),
@@ -74,7 +74,7 @@ def test_human_readable_size_en(size, reference):
     assert utils.human_readable_size(size, language='EN') == reference
 
 
-@pytest.mark.parametrize('seconds, reference', [
+@pytest.mark.parametrize(('seconds', 'reference'), [
     (0, '0s'),
     (1, '1s'),
     (60, '1m'),

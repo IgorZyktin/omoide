@@ -156,4 +156,4 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         if response is None:
             return set()
 
-        return set(x['user_uuid'] for x in response)
+        return {x['user_uuid'] for x in response}

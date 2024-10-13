@@ -1,4 +1,5 @@
 """Tests."""
+import contextlib
 
 from omoide.presentation import infra
 
@@ -171,14 +172,12 @@ def test_album_transitions():
         """Stringify and increment page."""
         nonlocal album
         result = _str(alb)
-        try:
+        with contextlib.suppress(IndexError):
             album = infra.Album(
                 sequence=album.sequence,
                 position=alb.sequence[alb.sequence.index(alb.position) + 1],
                 items_on_page=10,
             )
-        except IndexError:
-            pass
         return result
 
     assert _ch(album) == '[a] b c d e f g h ... z'

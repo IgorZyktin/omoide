@@ -334,6 +334,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             + '/content/content/92b0f.../14/14e0bc....jpg '
             + '7___14e0bc49-8561-4667-8210-202e1965b499.jpg'
         )
+
         """
         digits = len(str(total))
         template = f'{{:0{digits}d}}'

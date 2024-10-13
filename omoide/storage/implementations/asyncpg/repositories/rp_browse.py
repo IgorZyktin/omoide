@@ -78,7 +78,7 @@ class BrowseRepository(
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+            stmt = stmt.where(db_models.Item.is_collection == sa.true())
 
         stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
@@ -110,7 +110,7 @@ class BrowseRepository(
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == True)  # noqa
+            stmt = stmt.where(db_models.Item.is_collection == sa.true())
 
         stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
