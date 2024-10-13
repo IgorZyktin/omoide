@@ -87,105 +87,45 @@ class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
             )
 
 
-class RebuildKnownTagsUseCase(BaseRebuildTagsUseCase):
+class RebuildKnownTagsUseCase(BaseAPIUseCase):
     """Use case for rebuilding known tags."""
-    affected_target = 'known tags'
 
-    async def pre_execute(
+    async def execute(
         self,
         admin: models.User,
-        target: UUID | None,
-    ) -> tuple[models.User | None, int]:
+        user_uuid: UUID | None,
+    ) -> int:
         """Prepare for execution."""
-        self.ensure_admin(admin, subject=self.affected_target)
+        self.ensure_admin(
+            admin,
+            subject=f'known tags of {user_uuid or "anon"}',
+        )
         extras: dict[str, Any] = {}
 
         async with self.mediator.storage.transaction():
-            if target is None:
+            if user_uuid is None:
                 LOG.info(
-                    'User {} is rebuilding {} for anon user',
+                    'User {} is rebuilding known tags for anon user',
                     admin,
-                    self.affected_target,
                 )
-                target_user = None
-                user_uuid = None
-                extras.update({'target_user_uuid': None})
-
+                operation_name = 'rebuild_known_tags_anon'
             else:
-                target_user = await self.mediator.users_repo.get_user(target)
+                user = await self.mediator.users_repo.get_user(user_uuid)
                 LOG.info(
-                    'User {} is rebuilding {} for user {}',
+                    'User {} is rebuilding known tags for user {}',
                     admin,
-                    self.affected_target,
-                    target_user,
+                    user,
                 )
-                user_uuid = target_user.uuid
-                extras.update({'target_user_uuid': str(target_user.uuid)})
+                extras.update({'user_uuid': str(user_uuid)})
+                operation_name = 'rebuild_known_tags_known'
 
-            job_id = await self.mediator.misc_repo.start_long_job(
-                name='rebuilding-of-known-tags',
-                user_uuid=user_uuid or admin.uuid,
-                target_uuid=None,
-                added=[],
-                deleted=[],
-                started=utils.now(),
+            repo = self.mediator.misc_repo
+            operation_id = await repo.create_serial_operation(
+                name=operation_name,
                 extras=extras,
             )
 
-        return target_user, job_id
-
-    async def _execute(
-        self,
-        user: models.User,
-        target_user: models.User | None,
-        job_id: int,
-        *args: bool,
-    ) -> int:
-        """Execute."""
-        repo = self.mediator.misc_repo
-
-        async with self.mediator.storage.transaction():
-            if target_user is None:
-                LOG.info(
-                    'Known tags rebuilding for '
-                    'anon has started (command by {})',
-                    user,
-                )
-                known_tags = await repo.calculate_known_tags_anon(
-                    batch_size=const.DB_BATCH_SIZE,
-                )
-            else:
-                LOG.info(
-                    'Known tags rebuilding for '
-                    '{} has started (command by {})',
-                    target_user,
-                    user,
-                )
-                known_tags = await repo.calculate_known_tags_known(
-                    user=target_user,
-                    batch_size=const.DB_BATCH_SIZE,
-                )
-
-        async with self.mediator.storage.transaction():
-            if target_user is None:
-                await repo.drop_known_tags_anon()
-                await repo.insert_known_tags_anon(known_tags)
-                LOG.info(
-                    'Known tags rebuilding for '
-                    'anon has finished (command by {})',
-                    user,
-                )
-            else:
-                await repo.drop_known_tags_known(target_user)
-                await repo.insert_known_tags_known(target_user, known_tags)
-                LOG.info(
-                    'Known tags rebuilding for '
-                    '{} has finished (command by {})',
-                    target_user,
-                    user,
-                )
-
-        return len(known_tags)
+        return operation_id
 
 
 class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):

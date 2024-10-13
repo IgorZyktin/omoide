@@ -1,4 +1,5 @@
 """Computationally heavy operations."""
+
 from typing import Annotated
 
 from fastapi import APIRouter
@@ -25,7 +26,6 @@ async def api_action_rebuild_known_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     target: actions_api_models.RebuildKnownTagsInput,
-    background_tasks: BackgroundTasks,
 ):
     """Recalculate all known tags for user.
 
@@ -34,16 +34,14 @@ async def api_action_rebuild_known_tags(
     use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
 
     try:
-        user, job_id = await use_case.pre_execute(admin, target.user_uuid)
+        operation_id = await use_case.execute(admin, target.user_uuid)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
-    background_tasks.add_task(use_case.execute, admin, user, job_id)
     return {
         'result': 'Rebuilding known tags',
-        'target_user': user.name if user else 'anon',
-        'job_id': job_id,
+        'operation_id': operation_id,
     }
 
 
