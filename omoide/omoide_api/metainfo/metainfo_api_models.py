@@ -15,9 +15,7 @@ MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
 _BASE_EXAMPLE = {
     'user_time': '2022-02-16 19:51:14.321331+00:00',
     'content_type': 'image/jpeg',
-    'extras': {
-        'original_file_name': 'IMG_6607.jpg'
-    },
+    'extras': {'original_file_name': 'IMG_6607.jpg'},
     'content_width': 2104,
     'content_height': 1480,
     'preview_width': 1456,
@@ -29,6 +27,7 @@ _BASE_EXAMPLE = {
 
 class MetainfoInput(BaseModel):
     """Metainfo for item."""
+
     user_time: datetime | None = None
     content_type: str | None = None
     extras: dict[str, Any] = Field(default_factory=dict)
@@ -42,11 +41,7 @@ class MetainfoInput(BaseModel):
     thumbnail_width: NonNegativeInt | None = None
     thumbnail_height: NonNegativeInt | None = None
 
-    model_config = {
-        'json_schema_extra': {
-            'examples': [_BASE_EXAMPLE]
-        }
-    }
+    model_config = {'json_schema_extra': {'examples': [_BASE_EXAMPLE]}}
 
     @model_validator(mode='after')
     def ensure_extras_are_not_too_big(self) -> 'MetainfoInput':  # TODO - Self
@@ -65,6 +60,7 @@ class MetainfoInput(BaseModel):
 
 class MetainfoOutput(BaseModel):
     """Metainfo for item."""
+
     created_at: str
     updated_at: str
     deleted_at: str | None = None

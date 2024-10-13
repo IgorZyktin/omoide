@@ -1,4 +1,5 @@
 """API operations that process textual requests from users."""
+
 from typing import Annotated
 
 from fastapi import APIRouter
@@ -29,13 +30,19 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
 async def api_autocomplete(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    tag: Annotated[str, Query(
-        max_length=common_api_models.MAX_LENGTH_DEFAULT,
-    )] = common_api_models.QUERY_DEFAULT,
-    limit: Annotated[int, Query(
-        ge=common_api_models.MIN_LIMIT,
-        lt=common_api_models.MAX_LIMIT,
-    )] = common_api_models.AUTOCOMPLETE_LIMIT,
+    tag: Annotated[
+        str,
+        Query(
+            max_length=common_api_models.MAX_LENGTH_DEFAULT,
+        ),
+    ] = common_api_models.QUERY_DEFAULT,
+    limit: Annotated[
+        int,
+        Query(
+            ge=common_api_models.MIN_LIMIT,
+            lt=common_api_models.MAX_LIMIT,
+        ),
+    ] = common_api_models.AUTOCOMPLETE_LIMIT,
 ):
     """Return tags that match supplied string.
 
@@ -59,7 +66,7 @@ async def api_autocomplete(
         LOG.exception(
             'Failed to perform autocompletion for user {} and input {!r}',
             user,
-            tag
+            tag,
         )
         variants = []
 
@@ -77,10 +84,13 @@ async def api_get_recent_updates(
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[int, Query(
-        ge=common_api_models.MIN_LIMIT,
-        lt=common_api_models.MAX_LIMIT,
-    )] = common_api_models.DEFAULT_LIMIT,
+    limit: Annotated[
+        int,
+        Query(
+            ge=common_api_models.MIN_LIMIT,
+            lt=common_api_models.MAX_LIMIT,
+        ),
+    ] = common_api_models.DEFAULT_LIMIT,
 ):
     """Return recently updated items.
 
@@ -103,8 +113,7 @@ async def api_get_recent_updates(
     return search_api_models.RecentUpdatesOutput(
         items=[
             common_api_models.ItemOutput(
-                **item.model_dump(),
-                extras={'parent_name': parent_name}
+                **item.model_dump(), extras={'parent_name': parent_name}
             )
             for item, parent_name in zip(items, parent_names, strict=False)
         ],
@@ -118,9 +127,12 @@ async def api_get_recent_updates(
 async def api_search_total(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    q: Annotated[str, Query(
-        max_length=common_api_models.MAX_LENGTH_DEFAULT,
-    )] = common_api_models.QUERY_DEFAULT,
+    q: Annotated[
+        str,
+        Query(
+            max_length=common_api_models.MAX_LENGTH_DEFAULT,
+        ),
+    ] = common_api_models.QUERY_DEFAULT,
     collections: Annotated[bool, Query()] = False,
 ):
     """Return total amount of items that correspond to search query."""
@@ -147,16 +159,22 @@ async def api_search_total(
 async def api_search(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    q: Annotated[str, Query(
-        max_length=common_api_models.MAX_LENGTH_DEFAULT,
-    )] = common_api_models.QUERY_DEFAULT,
+    q: Annotated[
+        str,
+        Query(
+            max_length=common_api_models.MAX_LENGTH_DEFAULT,
+        ),
+    ] = common_api_models.QUERY_DEFAULT,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[int, Query(
-        ge=common_api_models.MIN_LIMIT,
-        lt=common_api_models.MAX_LIMIT,
-    )] = common_api_models.DEFAULT_LIMIT,
+    limit: Annotated[
+        int,
+        Query(
+            ge=common_api_models.MIN_LIMIT,
+            lt=common_api_models.MAX_LIMIT,
+        ),
+    ] = common_api_models.DEFAULT_LIMIT,
 ):
     """Perform search request.
 
@@ -184,5 +202,5 @@ async def api_search(
                 extras=utils.serialize(item_extras),
             )
             for item, item_extras in zip(items, extras, strict=False)
-        ]
+        ],
     )

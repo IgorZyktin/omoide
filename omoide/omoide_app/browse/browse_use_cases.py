@@ -21,9 +21,7 @@ class BaseBrowseUseCase(BaseAPPUseCase):
         item: models.Item,
     ) -> None:
         """Raise if user has no access to this item."""
-        public_users = (
-            await self.mediator.users_repo.get_public_user_uuids()
-        )
+        public_users = await self.mediator.users_repo.get_public_user_uuids()
 
         allowed_to = any(
             (
@@ -61,6 +59,7 @@ class AppBrowseDynamicUseCase(BaseBrowseUseCase):
 
 class BrowseResult(NamedTuple):
     """DTO for current use case."""
+
     item: models.Item
     parents: list[models.Item]
     metainfo: models.Metainfo

@@ -1,4 +1,5 @@
 """Use cases that process requests for home pages."""
+
 import time
 from typing import Any
 

@@ -1,4 +1,5 @@
 """API operations that return detailed info on specific item groups."""
+
 from typing import Annotated
 
 from fastapi import APIRouter
@@ -27,10 +28,13 @@ async def api_home(
     collections: Annotated[bool, Query()] = False,
     direct: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[int, Query(
-        ge=common_api_models.MIN_LIMIT,
-        lt=common_api_models.MAX_LIMIT,
-    )] = common_api_models.DEFAULT_LIMIT,
+    limit: Annotated[
+        int,
+        Query(
+            ge=common_api_models.MIN_LIMIT,
+            lt=common_api_models.MAX_LIMIT,
+        ),
+    ] = common_api_models.DEFAULT_LIMIT,
 ):
     """Return items for user home page.
 
@@ -55,5 +59,5 @@ async def api_home(
                 extras=utils.serialize(item_extras),
             )
             for item, item_extras in zip(items, extras, strict=False)
-        ]
+        ],
     )

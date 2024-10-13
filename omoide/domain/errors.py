@@ -1,18 +1,20 @@
 """Custom errors (an alternative to exceptions)."""
+
 from functools import cached_property
 from typing import Any
 
 
 class Error:
     """Custom DTO that holds errors."""
+
     template: str = ''
 
     def __init__(
-            self,
-            *,
-            template: str | None = None,
-            exception: Exception | None = None,
-            **kwargs: Any,
+        self,
+        *,
+        template: str | None = None,
+        exception: Exception | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance."""
         self.template = template or self.template
@@ -39,29 +41,35 @@ class Error:
 
 class NoUUID(Error):
     """User has to give UUID but opted out it."""
+
     template = 'No UUID specified for the action {name}'
 
 
 class UnexpectedAction(Error):
     """Policy was not programmed for this."""
+
     template = 'No rule for {action}'
 
 
 class ItemDoesNotExist(Error):
     """Item does not exist or hidden from the user."""
+
     template = 'Item {uuid} does not exist'
 
 
 class ItemRequiresAccess(Error):
     """Item exists but user has no permission to modify it."""
+
     template = 'You are not allowed to interact with item {uuid}'
 
 
 class ItemModificationByAnon(Error):
     """Anon user tries to modify item."""
+
     template = 'Anonymous users are not allowed to modify items'
 
 
 class ItemWrongParent(Error):
     """User tries to set item as a parent to itself or something like that."""
+
     template = 'Item {new_parent_uuid} cannot be used as a parent for {uuid}'

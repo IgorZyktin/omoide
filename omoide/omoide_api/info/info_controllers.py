@@ -1,4 +1,5 @@
 """Technical information about the API."""
+
 from typing import Annotated
 
 from fastapi import APIRouter

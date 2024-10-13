@@ -1,4 +1,5 @@
 """Repository that performs CRUD operations on EXIF records."""
+
 import abc
 from typing import Any
 from uuid import UUID

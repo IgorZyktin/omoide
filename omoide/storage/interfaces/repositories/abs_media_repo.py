@@ -1,4 +1,5 @@
 """Repository that perform CRUD operations on media records."""
+
 import abc
 from datetime import datetime
 

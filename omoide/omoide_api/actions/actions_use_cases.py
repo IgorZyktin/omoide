@@ -16,6 +16,7 @@ LOG = custom_logging.get_logger(__name__)
 
 class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
     """Base class for tag rebuilds."""
+
     affected_target: str
 
     @abc.abstractmethod
@@ -44,8 +45,9 @@ class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
 
         try:
             loop = asyncio.get_running_loop()
-            coro = await loop.run_in_executor(None, self._execute, user,
-                                              target, job_id, *args)
+            coro = await loop.run_in_executor(
+                None, self._execute, user, target, job_id, *args
+            )
             total = await coro
         except Exception as exc:
             duration = time.perf_counter() - start
@@ -128,6 +130,7 @@ class RebuildKnownTagsKnownUseCase(BaseAPIUseCase):
 
 class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
     """Use case for rebuilding computed tags."""
+
     affected_target = 'computed tags'
 
     async def pre_execute(
@@ -245,8 +248,7 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
         )
 
         LOG.info(
-            'Recompute of tags for {} has finished '
-            '(command by {})',
+            'Recompute of tags for {} has finished ' '(command by {})',
             item,
             user,
         )

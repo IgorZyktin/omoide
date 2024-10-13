@@ -1,4 +1,5 @@
 """Abstract base object storage."""
+
 import abc
 
 from omoide import const

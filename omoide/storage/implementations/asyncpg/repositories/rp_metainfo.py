@@ -23,9 +23,7 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
 
     async def read_metainfo(self, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
-        stmt = sa.select(
-            db_models.Metainfo
-        ).where(
+        stmt = sa.select(db_models.Metainfo).where(
             db_models.Metainfo.item_uuid == item.uuid
         )
 
@@ -45,9 +43,7 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
         uuids = [item.uuid for item in items]
         metainfos: dict[UUID, models.Metainfo | None] = dict.fromkeys(uuids)
 
-        query = sa.select(
-            db_models.Metainfo
-        ).where(
+        query = sa.select(db_models.Metainfo).where(
             db_models.Metainfo.item_uuid.in_(  # noqa
                 tuple(str(uuid) for uuid in uuids)
             )
@@ -67,13 +63,12 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
         metainfo: models.Metainfo,
     ) -> None:
         """Update metainfo."""
-        stmt = sa.update(
-            db_models.Metainfo
-        ).where(
-            db_models.Metainfo.item_uuid == item_uuid
-        ).values(
-            **metainfo.model_dump(exclude={'item_uuid', 'created_at'})
-        ).returning(1)
+        stmt = (
+            sa.update(db_models.Metainfo)
+            .where(db_models.Metainfo.item_uuid == item_uuid)
+            .values(**metainfo.model_dump(exclude={'item_uuid', 'created_at'}))
+            .returning(1)
+        )
 
         response = await self.db.execute(stmt)
 
@@ -83,13 +78,12 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
 
     async def mark_metainfo_updated(self, item_uuid: UUID) -> None:
         """Set last updated to current datetime."""
-        stmt = sa.update(
-            db_models.Metainfo
-        ).values(
-            updated_at=utils.now()
-        ).where(
-            db_models.Metainfo.item_uuid == item_uuid
-        ).returning(1)
+        stmt = (
+            sa.update(db_models.Metainfo)
+            .values(updated_at=utils.now())
+            .where(db_models.Metainfo.item_uuid == item_uuid)
+            .returning(1)
+        )
 
         response = await self.db.execute(stmt)
 
@@ -107,15 +101,15 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
             return
 
         for key, value in new_extras.items():
-            stmt = sa.update(
-                db_models.Metainfo
-            ).where(
-                db_models.Metainfo.item_uuid == item_uuid
-            ).values(
-                extras=sa.func.jsonb_set(
-                    db_models.Metainfo.extras,
-                    [key],
-                    f'"{value}"' if isinstance(value, str) else value,
+            stmt = (
+                sa.update(db_models.Metainfo)
+                .where(db_models.Metainfo.item_uuid == item_uuid)
+                .values(
+                    extras=sa.func.jsonb_set(
+                        db_models.Metainfo.extras,
+                        [key],
+                        f'"{value}"' if isinstance(value, str) else value,
+                    )
                 )
             )
             await self.db.execute(stmt)
@@ -127,27 +121,23 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
         user: models.User,
     ) -> models.DiskUsage:
         """Return total disk usage for specified user."""
-        stmt = sa.select(
-            sa.func.sum(
-                sa.func.coalesce(db_models.Metainfo.content_size, 0)
-            ).label(
-                'content_bytes'
-            ),
-            sa.func.sum(
-                sa.func.coalesce(db_models.Metainfo.preview_size, 0)
-            ).label(
-                'preview_bytes'
-            ),
-            sa.func.sum(
-                sa.func.coalesce(db_models.Metainfo.thumbnail_size, 0)
-            ).label(
-                'thumbnail_bytes'
+        stmt = (
+            sa.select(
+                sa.func.sum(
+                    sa.func.coalesce(db_models.Metainfo.content_size, 0)
+                ).label('content_bytes'),
+                sa.func.sum(
+                    sa.func.coalesce(db_models.Metainfo.preview_size, 0)
+                ).label('preview_bytes'),
+                sa.func.sum(
+                    sa.func.coalesce(db_models.Metainfo.thumbnail_size, 0)
+                ).label('thumbnail_bytes'),
             )
-        ).join(
-            db_models.Item,
-            db_models.Item.uuid == db_models.Metainfo.item_uuid,
-        ).where(
-            db_models.Item.owner_uuid == user.uuid
+            .join(
+                db_models.Item,
+                db_models.Item.uuid == db_models.Metainfo.item_uuid,
+            )
+            .where(db_models.Item.owner_uuid == user.uuid)
         )
 
         response = await self.db.fetch_one(stmt)

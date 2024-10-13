@@ -1,4 +1,5 @@
 """Rebuild all content/preview/thumbnail sizes."""
+
 import sys
 import time
 
@@ -38,8 +39,9 @@ def run(config: Config, database: SyncDatabase) -> None:
             if not all_metainfo:
                 continue
 
-            LOG.info('Refreshing image sizes for user {} {}',
-                     user.uuid, user.name)
+            LOG.info(
+                'Refreshing image sizes for user {} {}', user.uuid, user.name
+            )
 
             rebuild_sizes(config, user, all_metainfo)
             spent = time.perf_counter() - start
@@ -56,24 +58,28 @@ def run(config: Config, database: SyncDatabase) -> None:
 
 
 def get_all_metainfo_records(
-        session: Session,
-        config: Config,
-        user: db_models.User,
+    session: Session,
+    config: Config,
+    user: db_models.User,
 ) -> list[tuple[db_models.Metainfo, db_models.Item]]:
     """Rebuild computed tags for specific user."""
-    query = session.query(
-        db_models.Metainfo,
-        db_models.Item,
-    ).join(
-        db_models.Item,
-        db_models.Item.uuid == db_models.Metainfo.item_uuid,
-    ).filter(
-        db_models.Item.owner_uuid == user.uuid,
-        ~sa.and_(
-            db_models.Item.content_ext == sa.null(),
-            db_models.Item.preview_ext == sa.null(),
-            db_models.Item.thumbnail_ext == sa.null(),
-        ),
+    query = (
+        session.query(
+            db_models.Metainfo,
+            db_models.Item,
+        )
+        .join(
+            db_models.Item,
+            db_models.Item.uuid == db_models.Metainfo.item_uuid,
+        )
+        .filter(
+            db_models.Item.owner_uuid == user.uuid,
+            ~sa.and_(
+                db_models.Item.content_ext == sa.null(),
+                db_models.Item.preview_ext == sa.null(),
+                db_models.Item.thumbnail_ext == sa.null(),
+            ),
+        )
     )
 
     if config.only_corrupted:
@@ -88,9 +94,7 @@ def get_all_metainfo_records(
             )
         )
 
-    query = query.order_by(
-        db_models.Item.number
-    )
+    query = query.order_by(db_models.Item.number)
 
     if config.limit > 0:
         query = query.limit(config.limit)
@@ -102,6 +106,7 @@ def get_all_metainfo_records(
 
 class Sizes(BaseModel):
     """DTO for image sizes."""
+
     content_width: int = -1
     content_height: int = -1
     preview_width: int = -1
@@ -111,9 +116,9 @@ class Sizes(BaseModel):
 
 
 def rebuild_sizes(
-        config: Config,
-        user: db_models.User,
-        all_metainfo: list[tuple[db_models.Metainfo, db_models.Item]],
+    config: Config,
+    user: db_models.User,
+    all_metainfo: list[tuple[db_models.Metainfo, db_models.Item]],
 ) -> None:
     """Refresh computed tags for given child."""
     try:
@@ -125,8 +130,9 @@ def rebuild_sizes(
 
     for metainfo, item in all_metainfo:
         if metainfo is None or item is None:
-            LOG.error('Failed to get data, metainfo={}, item={}',
-                      metainfo, item)
+            LOG.error(
+                'Failed to get data, metainfo={}, item={}', metainfo, item
+            )
             continue
 
         locator = make_locator(config, user, item)
@@ -136,18 +142,19 @@ def rebuild_sizes(
             x_width = f'{media_type}_width'
             x_height = f'{media_type}_height'
 
-            if all((
+            if all(
+                (
                     config.only_corrupted,
                     getattr(metainfo, x_width),
                     getattr(metainfo, x_height),
-            )):
+                )
+            ):
                 continue
 
             ext = getattr(item, f'{media_type}_ext', None)
 
             if not ext:
-                LOG.error('No {} extension for {}, skipping',
-                          media_type, item)
+                LOG.error('No {} extension for {}, skipping', media_type, item)
                 continue
 
             path = getattr(locator, media_type)
@@ -157,8 +164,7 @@ def rebuild_sizes(
                 size = None
 
             if not size:
-                LOG.error('File does not exist for {}: {}',
-                          item.uuid, path)
+                LOG.error('File does not exist for {}: {}', item.uuid, path)
                 continue
 
             width, height = size
@@ -174,9 +180,9 @@ def rebuild_sizes(
 
 
 def make_locator(
-        config: Config,
-        user: db_models.User,
-        item: db_models.Item,
+    config: Config,
+    user: db_models.User,
+    item: db_models.Item,
 ) -> infra.FilesystemLocator:
     """Make locator from pieces of item data."""
     dom_item = domain.Item(

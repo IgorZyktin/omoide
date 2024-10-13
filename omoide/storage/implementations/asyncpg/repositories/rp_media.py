@@ -1,4 +1,5 @@
 """Repository that perform CRUD operations on media."""
+
 from datetime import datetime
 
 import sqlalchemy as sa
@@ -18,11 +19,11 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
 
     async def create_media(self, media: models.Media) -> int:
         """Create Media, return media id."""
-        stmt = sa.insert(
-            db_models.Media
-        ).values(
-            **media.model_dump(exclude={'id'})
-        ).returning(db_models.Media.id)
+        stmt = (
+            sa.insert(db_models.Media)
+            .values(**media.model_dump(exclude={'id'}))
+            .returning(db_models.Media.id)
+        )
 
         media_id = await self.db.execute(stmt)
         return media_id
@@ -57,18 +58,20 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
         moment: datetime,
     ) -> int:
         """Save intention to copy data between items."""
-        stmt = sa.insert(
-            db_models.CommandCopy
-        ).values(
-            created_at=moment,
-            processed_at=None,
-            error=None,
-            owner_uuid=str(source_item.owner_uuid),
-            source_uuid=str(source_item.uuid),
-            target_uuid=str(target_item.uuid),
-            media_type=media_type,
-            ext=ext,
-        ).returning(db_models.CommandCopy.id)
+        stmt = (
+            sa.insert(db_models.CommandCopy)
+            .values(
+                created_at=moment,
+                processed_at=None,
+                error=None,
+                owner_uuid=str(source_item.owner_uuid),
+                source_uuid=str(source_item.uuid),
+                target_uuid=str(target_item.uuid),
+                media_type=media_type,
+                ext=ext,
+            )
+            .returning(db_models.CommandCopy.id)
+        )
 
         copy_id = await self.db.execute(stmt)
         return copy_id
@@ -81,9 +84,7 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
         moment: datetime,
     ) -> None:
         """Mark corresponding files as useless."""
-        stmt = sa.insert(
-            db_models.OrphanFiles
-        ).values(
+        stmt = sa.insert(db_models.OrphanFiles).values(
             media_type=media_type,
             owner_uuid=item.owner_uuid,
             item_uuid=item.uuid,

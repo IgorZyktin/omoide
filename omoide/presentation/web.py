@@ -27,44 +27,36 @@ CODES_TO_ERRORS: dict[int, list[type[errors.Error]]] = {
     http.HTTPStatus.INTERNAL_SERVER_ERROR: [
         errors.Error,
     ],
-
     http.HTTPStatus.BAD_REQUEST: [
         errors.NoUUID,
     ],
-
     http.HTTPStatus.NOT_FOUND: [
         errors.ItemDoesNotExist,
     ],
-
     http.HTTPStatus.FORBIDDEN: [
         errors.ItemRequiresAccess,
         errors.ItemModificationByAnon,
-    ]
+    ],
 }
 
 ERROR_TO_CODE_MAP: dict[type[errors.Error], int] = {
-    error: code
-    for code, errors in CODES_TO_ERRORS.items()
-    for error in errors
+    error: code for code, errors in CODES_TO_ERRORS.items() for error in errors
 }
 
 CODES_TO_EXCEPTIONS: dict[int, list[type[Exception]]] = {
     status.HTTP_400_BAD_REQUEST: [
         api_exceptions.InvalidInputError,
     ],
-
     status.HTTP_404_NOT_FOUND: [
         api_exceptions.DoesNotExistError,
     ],
-
     status.HTTP_409_CONFLICT: [
         api_exceptions.AlreadyExistsError,
     ],
-
     status.HTTP_403_FORBIDDEN: [
         api_exceptions.AccessDeniedError,
         api_exceptions.NotAllowedError,
-    ]
+    ],
 }
 
 EXCEPTION_TO_CODE_MAP: dict[type[Exception], int] = {
@@ -256,8 +248,9 @@ class AimWrapper:
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)
         params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
-        params['items_per_page'] = cls.extract_int(params, 'items_per_page',
-                                                   constants.ITEMS_PER_PAGE)
+        params['items_per_page'] = cls.extract_int(
+            params, 'items_per_page', constants.ITEMS_PER_PAGE
+        )
 
         params['page'] = max(params['page'], 1)
 

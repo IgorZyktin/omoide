@@ -1,4 +1,5 @@
 """Tests."""
+
 from pydantic import ValidationError
 import pytest
 
@@ -11,17 +12,20 @@ def test_worker_config_correct(valid_worker_config_dict):
     assert config is not None
 
 
-@pytest.mark.parametrize('hot_folder,cold_folder,save_hot,save_cold', [
-    (None, None, False, False),
-    ('/', None, False, True),
-    (None, '/', True, False),
-])
+@pytest.mark.parametrize(
+    'hot_folder,cold_folder,save_hot,save_cold',
+    [
+        (None, None, False, False),
+        ('/', None, False, True),
+        (None, '/', True, False),
+    ],
+)
 def test_worker_config_folders(
-        valid_worker_config_dict,
-        hot_folder,
-        cold_folder,
-        save_hot,
-        save_cold,
+    valid_worker_config_dict,
+    hot_folder,
+    cold_folder,
+    save_hot,
+    save_cold,
 ):
     """Must raise on inadequate combinations."""
     valid_worker_config_dict['hot_folder'] = hot_folder
@@ -42,14 +46,17 @@ def test_worker_config_min_interval(valid_worker_config_dict, min_interval):
         Config(**valid_worker_config_dict)
 
 
-@pytest.mark.parametrize('min_interval, max_interval', [
-    (100, 5),
-    (100, 9999999999999),
-])
+@pytest.mark.parametrize(
+    'min_interval, max_interval',
+    [
+        (100, 5),
+        (100, 9999999999999),
+    ],
+)
 def test_worker_config_max_interval(
-        valid_worker_config_dict,
-        min_interval,
-        max_interval,
+    valid_worker_config_dict,
+    min_interval,
+    max_interval,
 ):
     """Must raise on inadequate max intervals."""
     valid_worker_config_dict['timer_strategy']['min_interval'] = min_interval
@@ -61,12 +68,13 @@ def test_worker_config_max_interval(
 
 @pytest.mark.parametrize('warm_up_coefficient', [(0.0, 9999999999999.0)])
 def test_worker_config_warm_up_coefficient(
-        valid_worker_config_dict,
-        warm_up_coefficient,
+    valid_worker_config_dict,
+    warm_up_coefficient,
 ):
     """Must raise on inadequate warm up coefficient."""
-    valid_worker_config_dict['timer_strategy']['warm_up_coefficient'] \
-        = warm_up_coefficient
+    valid_worker_config_dict['timer_strategy']['warm_up_coefficient'] = (
+        warm_up_coefficient
+    )
 
     with pytest.raises(ValidationError):
         Config(**valid_worker_config_dict)
@@ -95,8 +103,9 @@ def test_worker_config_hot_does_not_exist(valid_worker_config_dict):
     valid_worker_config_dict['save_hot'] = True
     valid_worker_config_dict['save_cold'] = False
 
-    valid_worker_config_dict['cold_folder'] \
-        = valid_worker_config_dict['hot_folder']
+    valid_worker_config_dict['cold_folder'] = valid_worker_config_dict[
+        'hot_folder'
+    ]
     valid_worker_config_dict['hot_folder'] = '/nonexistent'
 
     with pytest.raises(ValidationError, match='Hot folder does not exist*'):

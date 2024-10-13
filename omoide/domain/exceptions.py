@@ -18,8 +18,7 @@ class BaseOmoideError(Exception):
         """Return textual representation."""
         name = type(self).__name__
         pairs = ', '.join(
-            f'{key}={value!r}'
-            for key, value in self.__dict__.items()
+            f'{key}={value!r}' for key, value in self.__dict__.items()
         )
         return f'{name}({pairs})'
 

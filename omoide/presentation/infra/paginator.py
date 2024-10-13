@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 class PageNum(BaseModel):
     """Single page representation."""
+
     number: int
     is_dummy: bool
     is_current: bool
@@ -17,11 +18,11 @@ class Paginator:
     """Paginator that works with page numbers."""
 
     def __init__(
-            self,
-            page: int,
-            total_items: int,
-            items_per_page: int,
-            pages_in_block: int,
+        self,
+        page: int,
+        total_items: int,
+        items_per_page: int,
+        pages_in_block: int,
     ) -> None:
         """Initialize instance."""
         assert page >= 1

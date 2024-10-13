@@ -1,4 +1,5 @@
 """Authentication variants."""
+
 import bcrypt
 
 from omoide import interfaces

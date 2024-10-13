@@ -1,4 +1,5 @@
 """Use cases for Metainfo-related operations."""
+
 from uuid import UUID
 
 from omoide import custom_logging
@@ -22,8 +23,9 @@ class ReadMetainfoUseCase(BaseAPIUseCase):
 
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner_or_allowed_to(user, item,
-                                                     subject='item metadata')
+            self.ensure_admin_or_owner_or_allowed_to(
+                user, item, subject='item metadata'
+            )
 
             metainfo = await self.mediator.meta_repo.read_metainfo(item)
 
@@ -67,6 +69,6 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
             current_metainfo.thumbnail_width = metainfo.thumbnail_width
             current_metainfo.thumbnail_height = metainfo.thumbnail_height
 
-            await self.mediator.meta_repo.update_metainfo(user,
-                                                          item_uuid,
-                                                          current_metainfo)
+            await self.mediator.meta_repo.update_metainfo(
+                user, item_uuid, current_metainfo
+            )

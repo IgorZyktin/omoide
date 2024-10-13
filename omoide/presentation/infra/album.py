@@ -1,4 +1,5 @@
 """Paginator that works with arbitrary items as pages."""
+
 from collections.abc import Iterator
 from collections.abc import Sequence
 from typing import Generic
@@ -11,6 +12,7 @@ T = TypeVar('T')
 
 class PageVal(BaseModel, Generic[T]):
     """Single page representation."""
+
     number: int
     value: T | None = None
     is_dummy: bool
@@ -21,10 +23,10 @@ class Album(Generic[T]):
     """Paginator that works with arbitrary items as pages."""
 
     def __init__(
-            self,
-            sequence: Sequence[T],
-            position: T | None,
-            items_on_page: int,
+        self,
+        sequence: Sequence[T],
+        position: T | None,
+        items_on_page: int,
     ) -> None:
         """Initialize instance."""
         try:
@@ -135,7 +137,7 @@ class Album(Generic[T]):
 
     def _left_leaning_design(self) -> Iterator[PageVal]:
         """Render like [1][2][3][4][...][9]."""
-        section = self.sequence[:self.items_on_page - 2]
+        section = self.sequence[: self.items_on_page - 2]
         for number, value in enumerate(section, start=1):
             yield PageVal(
                 value=value,

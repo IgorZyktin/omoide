@@ -1,4 +1,5 @@
 """Class that ties all components together."""
+
 from dataclasses import dataclass
 
 from omoide import interfaces
@@ -9,6 +10,7 @@ from omoide.storage import interfaces as storage_interfaces
 @dataclass
 class Mediator:
     """Class that ties all components together."""
+
     authenticator: interfaces.AbsAuthenticator
     browse_repo: storage_interfaces.AbsBrowseRepository
     exif_repo: storage_interfaces.AbsEXIFRepository

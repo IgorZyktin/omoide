@@ -1,4 +1,5 @@
 """Common database queries."""
+
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 

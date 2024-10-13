@@ -1,4 +1,5 @@
 """Web level API models."""
+
 LAST_SEEN_DEFAULT = -1
 
 BROWSE_MIN_LIMIT = 1

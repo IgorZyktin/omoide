@@ -1,4 +1,5 @@
 """Use cases for uploading."""
+
 from uuid import UUID
 
 from omoide import exceptions

@@ -14,9 +14,7 @@ class SignaturesRepo(interfaces.AbsSignaturesRepo, asyncpg.AsyncpgStorage):
 
     async def get_md5_signature(self, item: models.Item) -> str | None:
         """Get signature record."""
-        query = sa.select(
-            db_models.SignatureMD5.signature
-        ).where(
+        query = sa.select(db_models.SignatureMD5.signature).where(
             db_models.SignatureMD5.item_id == item.id
         )
 
@@ -54,25 +52,21 @@ class SignaturesRepo(interfaces.AbsSignaturesRepo, asyncpg.AsyncpgStorage):
         signature: str,
     ) -> None:
         """Create signature record."""
-        insert = pg_insert(
-            db_models.SignatureMD5
-        ).values(
+        insert = pg_insert(db_models.SignatureMD5).values(
             item_id=item.id,
             signature=signature,
         )
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.SignatureMD5.item_id],
-            set_={'signature': insert.excluded.signature}
+            set_={'signature': insert.excluded.signature},
         )
 
         await self.db.execute(stmt)
 
     async def get_cr32_signature(self, item: models.Item) -> int | None:
         """Get signature record."""
-        query = sa.select(
-            db_models.SignatureCRC32.signature
-        ).where(
+        query = sa.select(db_models.SignatureCRC32.signature).where(
             db_models.SignatureCRC32.item_id == item.id
         )
 
@@ -110,16 +104,14 @@ class SignaturesRepo(interfaces.AbsSignaturesRepo, asyncpg.AsyncpgStorage):
         signature: str,
     ) -> None:
         """Create signature record."""
-        insert = pg_insert(
-            db_models.SignatureCRC32
-        ).values(
+        insert = pg_insert(db_models.SignatureCRC32).values(
             item_id=item.id,
             signature=signature,
         )
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.SignatureCRC32.item_id],
-            set_={'signature': insert.excluded.signature}
+            set_={'signature': insert.excluded.signature},
         )
 
         await self.db.execute(stmt)

@@ -1,4 +1,5 @@
 """Utils for commands."""
+
 from collections.abc import Callable
 from collections.abc import Iterator
 import contextlib
@@ -20,9 +21,9 @@ TPL = str | None | Callable[[], str | None]
 
 @contextlib.contextmanager
 def timing(
-        callback: Callable = print,
-        start_template: TPL = lambda: None,
-        end_template: TPL = 'Finished in {delta:0.2f} seconds',
+    callback: Callable = print,
+    start_template: TPL = lambda: None,
+    end_template: TPL = 'Finished in {delta:0.2f} seconds',
 ) -> Iterator[None]:
     """Create engine and dispose it after completion."""
 
@@ -53,8 +54,8 @@ def timing(
 
 
 def get_all_corresponding_users(
-        session: Session,
-        only_users: list[str],
+    session: Session,
+    only_users: list[str],
 ) -> list[db_models.User]:
     """Get all users according to config."""
     query = session.query(db_models.User)
@@ -80,8 +81,8 @@ def get_all_corresponding_users(
 
 
 def get_file_size(
-        path: str | Path,
-        default: int | None = None,
+    path: str | Path,
+    default: int | None = None,
 ) -> int | None:
     """Get size of the file in bytes."""
     if isinstance(path, str):
@@ -96,28 +97,28 @@ def get_file_size(
 
 
 def get_children(
-        session: Session,
-        item: domain.Item,
+    session: Session,
+    item: domain.Item,
 ) -> list[db_models.Item]:
     """Get child items."""
-    query = session.query(
-        db_models.Item
-    ).where(
-        db_models.Item.parent_uuid == item.uuid,
-    ).order_by(
-        db_models.Item.number
+    query = (
+        session.query(db_models.Item)
+        .where(
+            db_models.Item.parent_uuid == item.uuid,
+        )
+        .order_by(db_models.Item.number)
     )
 
     return query.all()
 
 
 def output_tree(
-        session: Session,
-        item: domain.Item,
-        show_uuids: bool = False,
-        position: str = 'last',
-        depth: int = 0,
-        callback: Callable = print,
+    session: Session,
+    item: domain.Item,
+    show_uuids: bool = False,
+    position: str = 'last',
+    depth: int = 0,
+    callback: Callable = print,
 ) -> None:
     """Debug tool that show whole tree stating from some item."""
     if position == 'middle':
@@ -157,15 +158,15 @@ def output_tree(
 
 
 def get_metainfo(
-        session: Session,
-        item: db_models.Item,
+    session: Session,
+    item: db_models.Item,
 ) -> db_models.Metainfo:
     """Get metainfo for given item."""
-    metainfo = session.query(
-        db_models.Metainfo
-    ).where(
-        db_models.Metainfo.item_uuid == str(item.uuid)
-    ).first()
+    metainfo = (
+        session.query(db_models.Metainfo)
+        .where(db_models.Metainfo.item_uuid == str(item.uuid))
+        .first()
+    )
 
     if metainfo is None:
         raise RuntimeError(f'No metainfo for item {item.uuid}')
@@ -174,15 +175,17 @@ def get_metainfo(
 
 
 def get_item(
-        session: Session,
-        item_uuid: UUID,
+    session: Session,
+    item_uuid: UUID,
 ) -> db_models.Item:
     """Get item but only if it is collection."""
-    item = session.query(
-        db_models.Item
-    ).where(
-        db_models.Item.uuid == str(item_uuid),
-    ).first()
+    item = (
+        session.query(db_models.Item)
+        .where(
+            db_models.Item.uuid == str(item_uuid),
+        )
+        .first()
+    )
 
     if item is None:
         raise RuntimeError(f'Item {item_uuid} does not exist')
@@ -191,21 +194,21 @@ def get_item(
 
 
 def insert_into_metainfo_extras(
-        session: Session,
-        metainfo: db_models.Metainfo,
-        new_data: dict[str, Any],
+    session: Session,
+    metainfo: db_models.Metainfo,
+    new_data: dict[str, Any],
 ) -> None:
     """Insert new keys and values to JSONB field in metainfo."""
     for key, value in new_data.items():
-        stmt = sa.update(
-            db_models.Metainfo
-        ).where(
-            db_models.Metainfo.item_uuid == metainfo.item_uuid
-        ).values(
-            extras=sa.func.jsonb_set(
-                db_models.Metainfo.extras,
-                [key],
-                f'"{value}"' if isinstance(value, str) else value,
+        stmt = (
+            sa.update(db_models.Metainfo)
+            .where(db_models.Metainfo.item_uuid == metainfo.item_uuid)
+            .values(
+                extras=sa.func.jsonb_set(
+                    db_models.Metainfo.extras,
+                    [key],
+                    f'"{value}"' if isinstance(value, str) else value,
+                )
             )
         )
         flag_modified(metainfo, 'extras')

@@ -1,4 +1,5 @@
 """Use case for items."""
+
 import asyncio
 from collections.abc import AsyncIterator
 from collections.abc import Collection
@@ -40,14 +41,14 @@ class Writeback:
 
 @asynccontextmanager
 async def _generic_call(
-        misc_repo: storage_interfaces.AbsMiscRepo,
-        job_name: str,
-        job_description: str,
-        user_uuid: UUID,
-        item_uuid: UUID,
-        added: Collection[str],
-        deleted: Collection[str],
-        extras: dict[str, int | float | bool | str | None],
+    misc_repo: storage_interfaces.AbsMiscRepo,
+    job_name: str,
+    job_description: str,
+    user_uuid: UUID,
+    item_uuid: UUID,
+    added: Collection[str],
+    deleted: Collection[str],
+    extras: dict[str, int | float | bool | str | None],
 ) -> AsyncIterator[Writeback]:
     """Generic call used in context managers."""
     start = time.perf_counter()
@@ -103,11 +104,11 @@ async def _generic_call(
 
 @asynccontextmanager
 async def track_update_permissions_in_parents(
-        misc_repo: storage_interfaces.AbsMiscRepo,
-        user: models.User,
-        item: domain.Item,
-        added: Collection[UUID],
-        deleted: Collection[UUID],
+    misc_repo: storage_interfaces.AbsMiscRepo,
+    user: models.User,
+    item: domain.Item,
+    added: Collection[UUID],
+    deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
     """Helper that tracks updates in parents."""
     if user.uuid is not None:
@@ -128,12 +129,12 @@ async def track_update_permissions_in_parents(
 
 @asynccontextmanager
 async def track_update_permissions_in_children(
-        misc_repo: storage_interfaces.AbsMiscRepo,
-        user: models.User,
-        item: domain.Item,
-        override: bool,
-        added: Collection[UUID],
-        deleted: Collection[UUID],
+    misc_repo: storage_interfaces.AbsMiscRepo,
+    user: models.User,
+    item: domain.Item,
+    override: bool,
+    added: Collection[UUID],
+    deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
     """Helper that tracks updates in children."""
     if user.uuid is not None:
@@ -159,11 +160,11 @@ async def track_update_permissions_in_children(
 
 @asynccontextmanager
 async def track_update_tags_in_children(
-        misc_repo: storage_interfaces.AbsMiscRepo,
-        user: models.User,
-        item: domain.Item,
-        added: Collection[str],
-        deleted: Collection[str],
+    misc_repo: storage_interfaces.AbsMiscRepo,
+    user: models.User,
+    item: domain.Item,
+    added: Collection[str],
+    deleted: Collection[str],
 ) -> AsyncIterator[Writeback]:
     """Helper that tracks updates in children."""
     if user.uuid is not None:
@@ -186,11 +187,11 @@ class BaseItemMediaUseCase:
     """Base use case."""
 
     def __init__(
-            self,
-            policy: interfaces.AbsPolicy,
-            items_repo: storage_interfaces.AbsItemsRepo,
-            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
-            media_repo: storage_interfaces.AbsMediaRepo,
+        self,
+        policy: interfaces.AbsPolicy,
+        items_repo: storage_interfaces.AbsItemsRepo,
+        metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+        media_repo: storage_interfaces.AbsMediaRepo,
     ) -> None:
         """Initialize instance."""
         self.policy = policy
@@ -203,11 +204,11 @@ class BaseItemModifyUseCase:
     """Base use case."""
 
     def __init__(
-            self,
-            users_repo: storage_interfaces.AbsUsersRepo,
-            items_repo: storage_interfaces.AbsItemsRepo,
-            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
-            misc_repo: storage_interfaces.AbsMiscRepo,
+        self,
+        users_repo: storage_interfaces.AbsUsersRepo,
+        items_repo: storage_interfaces.AbsItemsRepo,
+        metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+        misc_repo: storage_interfaces.AbsMiscRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -220,20 +221,20 @@ class ApiItemUpdateUseCase:
     """Use case for updating an item."""
 
     def __init__(
-            self,
-            items_repo: storage_interfaces.AbsItemsRepo,
-            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+        self,
+        items_repo: storage_interfaces.AbsItemsRepo,
+        metainfo_repo: storage_interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
         self.metainfo_repo = metainfo_repo
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-            operations: list[api_models.PatchOperation],
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
+        operations: list[api_models.PatchOperation],
     ) -> Result[errors.Error, bool]:
         """Business logic."""
         async with self.items_repo.transaction():
@@ -253,24 +254,29 @@ class ApiItemUpdateUseCase:
                 elif operation.path == '/is_collection':
                     item.is_collection = str(operation.value).lower() == 'true'
                 elif operation.path == '/content_ext':
-                    item.content_ext \
-                        = (str(operation.value) if operation.value else None)
+                    item.content_ext = (
+                        str(operation.value) if operation.value else None
+                    )
                 elif operation.path == '/preview_ext':
-                    item.preview_ext \
-                        = (str(operation.value) if operation.value else None)
+                    item.preview_ext = (
+                        str(operation.value) if operation.value else None
+                    )
                 elif operation.path == '/thumbnail_ext':
-                    item.thumbnail_ext = \
-                        (str(operation.value) if operation.value else None)
+                    item.thumbnail_ext = (
+                        str(operation.value) if operation.value else None
+                    )
                 elif operation.path == '/copied_image_from':
-                    if operation.value \
-                            and utils.is_valid_uuid(str(operation.value)):
+                    if operation.value and utils.is_valid_uuid(
+                        str(operation.value)
+                    ):
                         uuid = UUID(str(operation.value))
                         metainfo = await self.metainfo_repo.read_metainfo(item)
-                        metainfo.extras['copied_image_from'] \
-                            = str(operation.value)
-                        await self.metainfo_repo.update_metainfo(user,
-                                                                 item.uuid,
-                                                                 metainfo)
+                        metainfo.extras['copied_image_from'] = str(
+                            operation.value
+                        )
+                        await self.metainfo_repo.update_metainfo(
+                            user, item.uuid, metainfo
+                        )
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid)
         return Success(True)
@@ -280,11 +286,11 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
     """Set new tags for the item + all children."""
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-            new_tags: list[str],
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
+        new_tags: list[str],
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
         async with self.items_repo.transaction():
@@ -316,18 +322,18 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
                 uuids=item.permissions,
             )
             users += [user]
-            await self.misc_repo.update_known_tags(
-                users, added, deleted)
+            await self.misc_repo.update_known_tags(users, added, deleted)
 
             await self.metainfo_repo.mark_metainfo_updated(item.uuid)
 
         async def update():
             async with self.items_repo.transaction():
                 async with track_update_tags_in_children(
-                        self.misc_repo, user, item, added, deleted
+                    self.misc_repo, user, item, added, deleted
                 ) as writeback:
                     operations = await self.update_tags_in_children_of(
-                        user, item, added, deleted)
+                        user, item, added, deleted
+                    )
                     writeback.operations = operations
 
         if added or deleted:
@@ -336,11 +342,11 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
         return Success(uuid)
 
     async def update_tags_in_children_of(
-            self,
-            user: models.User,
-            item: domain.Item,
-            added: Collection[str],
-            deleted: Collection[str],
+        self,
+        user: models.User,
+        item: domain.Item,
+        added: Collection[str],
+        deleted: Collection[str],
     ) -> int:
         """Apply tags change to all children."""
         operations = 0
@@ -357,23 +363,21 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
             uuids=item.permissions,
         )
         users += [user]
-        await self.misc_repo.update_known_tags(
-            users, added, deleted)
+        await self.misc_repo.update_known_tags(users, added, deleted)
 
         async def recursive(item_uuid: UUID) -> None:
             nonlocal operations
-            children = await self.items_repo \
-                .get_direct_children_uuids_of(user, item_uuid)
+            children = await self.items_repo.get_direct_children_uuids_of(
+                user, item_uuid
+            )
 
             for child_uuid in children:
                 if added:
-                    await self.items_repo.add_tags(child_uuid,
-                                                   added)
+                    await self.items_repo.add_tags(child_uuid, added)
                     operations += 1
 
                 if deleted:
-                    await self.items_repo.delete_tags(child_uuid,
-                                                      deleted)
+                    await self.items_repo.delete_tags(child_uuid, deleted)
                     operations += 1
 
                 await recursive(child_uuid)
@@ -390,11 +394,11 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
     """
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-            new_permissions: api_models.NewPermissionsIn,
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
+        new_permissions: api_models.NewPermissionsIn,
     ) -> Result[errors.Error, UUID]:
         """Business logic."""
         added: set[UUID] = set()
@@ -431,24 +435,30 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
             if new_permissions.apply_to_parents:
                 asyncio.create_task(
                     self.update_permissions_in_parents(
-                        user, item, added, deleted)
+                        user, item, added, deleted
+                    )
                 )
 
         if new_permissions.apply_to_children:
             asyncio.create_task(
                 self.update_permissions_in_children(
-                    user, item, new_permissions.override,
-                    added, deleted, new_permissions.permissions_after)
+                    user,
+                    item,
+                    new_permissions.override,
+                    added,
+                    deleted,
+                    new_permissions.permissions_after,
+                )
             )
 
         return Success(uuid)
 
     async def update_permissions_in_parents(
-            self,
-            user: models.User,
-            item: domain.Item,
-            added: Collection[UUID],
-            deleted: Collection[UUID],
+        self,
+        user: models.User,
+        item: domain.Item,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
     ) -> None:
         """Apply permissions change to all parents."""
         async with self.items_repo.transaction():
@@ -458,40 +468,42 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                 return
 
             async with track_update_permissions_in_parents(
-                    self.misc_repo, user,
-                    item, added, deleted) as writeback:
+                self.misc_repo, user, item, added, deleted
+            ) as writeback:
                 writeback.operations = len(parents)
                 for _, parent in enumerate(parents, start=1):
-                    await self.items_repo \
-                        .update_permissions(parent.uuid, False, added,
-                                            deleted, item.permissions)
-                    await self.metainfo_repo \
-                        .mark_metainfo_updated(parent.uuid)
+                    await self.items_repo.update_permissions(
+                        parent.uuid, False, added, deleted, item.permissions
+                    )
+                    await self.metainfo_repo.mark_metainfo_updated(parent.uuid)
 
                 new_type_item = models.Item(**item.model_dump())
                 await self.misc_repo.update_computed_tags(
                     item=new_type_item,
-                    parent_computed_tags=set(), # FIXME
+                    parent_computed_tags=set(),  # FIXME
                 )
 
     async def update_permissions_in_children(
-            self,
-            user: models.User,
-            item: domain.Item,
-            override: bool,
-            added: Collection[UUID],
-            deleted: Collection[UUID],
-            all_permissions: Collection[UUID],
+        self,
+        user: models.User,
+        item: domain.Item,
+        override: bool,
+        added: Collection[UUID],
+        deleted: Collection[UUID],
+        all_permissions: Collection[UUID],
     ) -> None:
         """Apply permissions change to all children."""
         async with self.items_repo.transaction():
             async with track_update_permissions_in_children(
-                    self.misc_repo, user, item, override, added, deleted
+                self.misc_repo, user, item, override, added, deleted
             ) as writeback:
 
                 async def recursive(item_uuid: UUID) -> None:
-                    children = await self.items_repo \
-                        .get_direct_children_uuids_of(user, item_uuid)
+                    children = (
+                        await self.items_repo.get_direct_children_uuids_of(
+                            user, item_uuid
+                        )
+                    )
 
                     for child_uuid in children:
                         await self.items_repo.update_permissions(
@@ -504,8 +516,9 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
                         writeback.operations += 1
 
                         if added or deleted or override:
-                            await self.metainfo_repo \
-                                .mark_metainfo_updated(child_uuid)
+                            await self.metainfo_repo.mark_metainfo_updated(
+                                child_uuid
+                            )
 
                         await recursive(child_uuid)
 
@@ -516,13 +529,13 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
     """Use case for changing parent item."""
 
     def __init__(
-            self,
-            policy: interfaces.AbsPolicy,
-            users_repo: storage_interfaces.AbsUsersRepo,
-            items_repo: storage_interfaces.AbsItemsRepo,
-            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
-            media_repo: storage_interfaces.AbsMediaRepo,
-            misc_repo: storage_interfaces.AbsMiscRepo,
+        self,
+        policy: interfaces.AbsPolicy,
+        users_repo: storage_interfaces.AbsUsersRepo,
+        items_repo: storage_interfaces.AbsItemsRepo,
+        metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+        media_repo: storage_interfaces.AbsMediaRepo,
+        misc_repo: storage_interfaces.AbsMiscRepo,
     ) -> None:
         """Initialize instance."""
         super().__init__(policy, items_repo, metainfo_repo, media_repo)
@@ -530,11 +543,11 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
         self.misc_repo = misc_repo
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-            new_parent_uuid: UUID,
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
+        new_parent_uuid: UUID,
     ) -> Result[errors.Error, UUID]:
         """Execute."""
         bad_parent_error = errors.ItemWrongParent(
@@ -546,13 +559,13 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             return Failure(bad_parent_error)
 
         async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid,
-                                               actions.Item.UPDATE)
+            error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
             if error:
                 return Failure(error)
 
-            error = await policy.is_restricted(user, new_parent_uuid,
-                                               actions.Item.UPDATE)
+            error = await policy.is_restricted(
+                user, new_parent_uuid, actions.Item.UPDATE
+            )
             if error:
                 return Failure(error)
 
@@ -568,9 +581,9 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
             if item.parent_uuid is not None:
                 old_parent = await self.items_repo.read_item(item.parent_uuid)
                 if old_parent is None:
-                    return Failure(errors.ItemDoesNotExist(
-                        uuid=item.parent_uuid
-                    ))
+                    return Failure(
+                        errors.ItemDoesNotExist(uuid=item.parent_uuid)
+                    )
 
             item.parent_uuid = new_parent_uuid
             await self.items_repo.update_item(item)
@@ -587,8 +600,9 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 )
 
             if old_parent:
-                added, deleted = utils.get_delta(old_parent.tags,
-                                                 new_parent.tags)
+                added, deleted = utils.get_delta(
+                    old_parent.tags, new_parent.tags
+                )
             else:
                 added = set(new_parent.tags)
                 deleted = set()
@@ -600,16 +614,16 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
         return Success(new_parent_uuid)
 
     async def update_tags_in_children_of(
-            self,
-            user: models.User,
-            item: domain.Item,
-            added: Collection[str],
-            deleted: Collection[str],
+        self,
+        user: models.User,
+        item: domain.Item,
+        added: Collection[str],
+        deleted: Collection[str],
     ) -> None:
         """Apply tags change to all children."""
         async with self.items_repo.transaction():
             async with track_update_tags_in_children(
-                    self.misc_repo, user, item, added, deleted
+                self.misc_repo, user, item, added, deleted
             ) as writeback:
                 nested_use_case = ApiItemUpdateTagsUseCase(
                     items_repo=self.items_repo,
@@ -618,6 +632,7 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     misc_repo=self.misc_repo,
                 )
                 total = await nested_use_case.update_tags_in_children_of(
-                    user, item, added, deleted)
+                    user, item, added, deleted
+                )
 
                 writeback.operations = total

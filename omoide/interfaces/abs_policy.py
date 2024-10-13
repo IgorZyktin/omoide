@@ -1,4 +1,5 @@
 """Interface for access policy."""
+
 import abc
 from uuid import UUID
 

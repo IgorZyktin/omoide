@@ -50,11 +50,15 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
         worker_name: str,
     ) -> bool:
         """Try releasing the lock, return True on success."""
-        query = sa.update(db_models.SerialLock).values(
-            worker_name=None,
-            last_update=utils.now(),
-        ).where(
-            db_models.SerialLock.worker_name == worker_name,
+        query = (
+            sa.update(db_models.SerialLock)
+            .values(
+                worker_name=None,
+                last_update=utils.now(),
+            )
+            .where(
+                db_models.SerialLock.worker_name == worker_name,
+            )
         )
         response = await conn.execute(query)
         return bool(response.rowcount)

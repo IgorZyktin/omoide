@@ -39,7 +39,7 @@ class CreateItemsUseCase(BaseItemUseCase):
             'User {} created {} items: {}',
             user,
             len(items),
-            [str(item.uuid) for item in items]
+            [str(item.uuid) for item in items],
         )
 
         async with self.mediator.storage.transaction():
@@ -133,10 +133,12 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
         async with self.mediator.storage.transaction():
             if user.is_anon:
                 items = await self.mediator.items_repo.get_items_anon(
-                    owner_uuid, parent_uuid, name, limit)
+                    owner_uuid, parent_uuid, name, limit
+                )
             else:
                 items = await self.mediator.items_repo.get_items_known(
-                    user, owner_uuid, parent_uuid, name, limit)
+                    user, owner_uuid, parent_uuid, name, limit
+                )
 
         duration = time.perf_counter() - start
         return duration, items
@@ -204,6 +206,7 @@ class DeleteItemUseCase(BaseItemUseCase):
 
 class BaseUploadUseCase(BaseAPIUseCase):
     """Base class for uploading."""
+
     media_type: const.MEDIA_TYPE
 
     async def execute(
@@ -218,8 +221,9 @@ class BaseUploadUseCase(BaseAPIUseCase):
 
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item,
-                                       subject=f'item {self.media_type} data')
+            self.ensure_admin_or_owner(
+                user, item, subject=f'item {self.media_type} data'
+            )
 
             LOG.info(
                 'User {} is uploading {} for item {}',
@@ -238,16 +242,19 @@ class BaseUploadUseCase(BaseAPIUseCase):
 
 class UploadContentForItemUseCase(BaseUploadUseCase):
     """Use case for content uploading."""
+
     media_type: const.MEDIA_TYPE = const.CONTENT
 
 
 class UploadPreviewForItemUseCase(BaseUploadUseCase):
     """Use case for preview uploading."""
+
     media_type: const.MEDIA_TYPE = const.PREVIEW
 
 
 class UploadThumbnailForItemUseCase(BaseUploadUseCase):
     """Use case for thumbnail uploading."""
+
     media_type: const.MEDIA_TYPE = const.THUMBNAIL
 
 
@@ -255,9 +262,9 @@ class DownloadCollectionUseCase(BaseItemUseCase):
     """Use case for downloading whole group of items as zip archive."""
 
     async def execute(
-            self,
-            user: models.User,
-            item_uuid: UUID,
+        self,
+        user: models.User,
+        item_uuid: UUID,
     ) -> tuple[list[str], models.User, models.Item | None]:
         """Business logic."""
         lines: list[str] = []
@@ -288,7 +295,8 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             )
             metainfos = await self.mediator.meta_repo.get_metainfos(children)
             valid_children = [
-                child for child in children
+                child
+                for child in children
                 if child.content_ext is not None and not child.is_collection
             ]
 
@@ -341,12 +349,10 @@ class DownloadCollectionUseCase(BaseItemUseCase):
         owner_uuid = str(item.owner_uuid)
         item_uuid = str(item.uuid)
         base = '/content/content'  # TODO - ensure it is correct path
-        prefix = item_uuid[:const.STORAGE_PREFIX_SIZE]
+        prefix = item_uuid[: const.STORAGE_PREFIX_SIZE]
         content_ext = str(item.content_ext)
 
-        fs_path = (
-            f'{base}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
-        )
+        fs_path = f'{base}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
 
         user_visible_filename = (
             f'{template.format(current)}___{item_uuid}.{content_ext}'

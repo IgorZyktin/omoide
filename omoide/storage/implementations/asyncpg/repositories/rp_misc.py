@@ -20,9 +20,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
 
     async def get_computed_tags(self, item: models.Item) -> set[str]:
         """Get computed tags for this item."""
-        stmt = sa.select(
-            db_models.ComputedTags.tags
-        ).where(
+        stmt = sa.select(db_models.ComputedTags.tags).where(
             db_models.ComputedTags.item_uuid == item.uuid
         )
         response = await self.db.fetch_all(stmt)
@@ -36,16 +34,14 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         """Update computed tags for this item."""
         computed_tags = item.get_computed_tags(parent_computed_tags)
 
-        insert = pg_insert(
-            db_models.ComputedTags
-        ).values(
+        insert = pg_insert(db_models.ComputedTags).values(
             item_uuid=item.uuid,
             tags=tuple(computed_tags),
         )
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.ComputedTags.item_uuid],
-            set_={'tags': insert.excluded.tags}
+            set_={'tags': insert.excluded.tags},
         )
 
         await self.db.execute(stmt)
@@ -63,10 +59,8 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
                 await self.incr_known_tags_anon(tags_added)
                 await self.decr_known_tags_anon(tags_deleted)
             else:
-                await self.incr_known_tags_known(user,
-                                                 tags_added)
-                await self.decr_known_tags_known(user,
-                                                 tags_deleted)
+                await self.incr_known_tags_known(user, tags_added)
+                await self.decr_known_tags_known(user, tags_deleted)
 
     async def incr_known_tags_anon(
         self,
@@ -74,9 +68,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Increment tag counter."""
         for tag in tags:
-            insert = pg_insert(
-                db_models.KnownTagsAnon
-            ).values(
+            insert = pg_insert(db_models.KnownTagsAnon).values(
                 tag=tag.casefold(),
                 counter=1,
             )
@@ -85,7 +77,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
                 index_elements=[
                     db_models.KnownTagsAnon.tag,
                 ],
-                set_={'counter': insert.excluded.counter + 1}
+                set_={'counter': insert.excluded.counter + 1},
             )
 
             await self.db.execute(stmt)
@@ -96,12 +88,14 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Decrement tag counter."""
         for tag in tags:
-            stmt = sa.update(
-                db_models.KnownTagsAnon
-            ).where(
-                db_models.KnownTagsAnon.tag == tag.casefold(),
-            ).values(
-                counter=db_models.KnownTagsAnon.counter - 1,
+            stmt = (
+                sa.update(db_models.KnownTagsAnon)
+                .where(
+                    db_models.KnownTagsAnon.tag == tag.casefold(),
+                )
+                .values(
+                    counter=db_models.KnownTagsAnon.counter - 1,
+                )
             )
 
             await self.db.execute(stmt)
@@ -113,9 +107,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Increment tag counter."""
         for tag in tags:
-            insert = pg_insert(
-                db_models.KnownTags
-            ).values(
+            insert = pg_insert(db_models.KnownTags).values(
                 user_uuid=user.uuid,
                 tag=tag.casefold(),
                 counter=1,
@@ -126,7 +118,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
                     db_models.KnownTags.user_uuid,
                     db_models.KnownTags.tag,
                 ],
-                set_={'counter': insert.excluded.counter + 1}
+                set_={'counter': insert.excluded.counter + 1},
             )
 
             await self.db.execute(stmt)
@@ -138,31 +130,29 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Decrement tag counter."""
         for tag in tags:
-            stmt = sa.update(
-                db_models.KnownTags
-            ).where(
-                db_models.KnownTags.user_uuid == user.uuid,
-                db_models.KnownTags.tag == tag.casefold(),
-            ).values(
-                counter=db_models.KnownTags.counter - 1,
+            stmt = (
+                sa.update(db_models.KnownTags)
+                .where(
+                    db_models.KnownTags.user_uuid == user.uuid,
+                    db_models.KnownTags.tag == tag.casefold(),
+                )
+                .values(
+                    counter=db_models.KnownTags.counter - 1,
+                )
             )
 
             await self.db.execute(stmt)
 
     async def drop_unused_known_tags_anon(self) -> None:
         """Drop tags with counter less of equal to 0."""
-        stmt = sa.delete(
-            db_models.KnownTagsAnon
-        ).where(
+        stmt = sa.delete(db_models.KnownTagsAnon).where(
             db_models.KnownTagsAnon.counter <= 0,
         )
         await self.db.execute(stmt)
 
     async def drop_unused_known_tags_known(self, user: models.User) -> None:
         """Drop tags with counter less of equal to 0."""
-        stmt = sa.delete(
-            db_models.KnownTags
-        ).where(
+        stmt = sa.delete(db_models.KnownTags).where(
             db_models.KnownTags.user_uuid == user.uuid,
             db_models.KnownTags.counter <= 0,
         )
@@ -174,16 +164,14 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         signature: str,
     ) -> None:
         """Create signature record."""
-        insert = pg_insert(
-            db_models.SignatureMD5
-        ).values(
+        insert = pg_insert(db_models.SignatureMD5).values(
             item_id=item.id,
             signature=signature,
         )
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.SignatureMD5.item_id],
-            set_={'signature': insert.excluded.signature}
+            set_={'signature': insert.excluded.signature},
         )
 
         await self.db.execute(stmt)
@@ -194,16 +182,14 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         signature: str,
     ) -> None:
         """Create signature record."""
-        insert = pg_insert(
-            db_models.SignatureCRC32
-        ).values(
+        insert = pg_insert(db_models.SignatureCRC32).values(
             item_id=item.id,
             signature=signature,
         )
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.SignatureCRC32.item_id],
-            set_={'signature': insert.excluded.signature}
+            set_={'signature': insert.excluded.signature},
         )
 
         await self.db.execute(stmt)
@@ -219,22 +205,22 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         extras: dict[str, Any],
     ) -> int:
         """Start long job."""
-        stmt = sa.insert(
-            db_models.LongJob
-        ).values(
-            name=name,
-            user_uuid=user_uuid,
-            target_uuid=target_uuid,
-            added=list(added),
-            deleted=list(deleted),
-            status='started',
-            started=started,
-            duration=None,
-            operations=None,
-            extras=extras,
-            error='',
-        ).returning(
-            db_models.LongJob.id
+        stmt = (
+            sa.insert(db_models.LongJob)
+            .values(
+                name=name,
+                user_uuid=user_uuid,
+                target_uuid=target_uuid,
+                added=list(added),
+                deleted=list(deleted),
+                status='started',
+                started=started,
+                duration=None,
+                operations=None,
+                extras=extras,
+                error='',
+            )
+            .returning(db_models.LongJob.id)
         )
 
         return int(await self.db.execute(stmt))
@@ -248,15 +234,15 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         error: str,
     ) -> None:
         """Finish long job."""
-        stmt = sa.update(
-            db_models.LongJob
-        ).values(
-            status=status,
-            duration=duration,
-            operations=operations,
-            error=error,
-        ).where(
-            db_models.LongJob.id == id
+        stmt = (
+            sa.update(db_models.LongJob)
+            .values(
+                status=status,
+                duration=duration,
+                operations=operations,
+                error=error,
+            )
+            .where(db_models.LongJob.id == id)
         )
 
         await self.db.execute(stmt)
@@ -269,20 +255,20 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         """Create serial operation."""
         now = utils.now()
 
-        stmt = sa.insert(
-            db_models.SerialOperation
-        ).values(
-            name=name,
-            worker_name=None,
-            status='created',
-            extras=extras or {},
-            created_at=now,
-            updated_at=now,
-            started_at=None,
-            ended_at=None,
-            log=None,
-        ).returning(
-            db_models.SerialOperation.id
+        stmt = (
+            sa.insert(db_models.SerialOperation)
+            .values(
+                name=name,
+                worker_name=None,
+                status='created',
+                extras=extras or {},
+                created_at=now,
+                updated_at=now,
+                started_at=None,
+                ended_at=None,
+                log=None,
+            )
+            .returning(db_models.SerialOperation.id)
         )
 
         return int(await self.db.execute(stmt))

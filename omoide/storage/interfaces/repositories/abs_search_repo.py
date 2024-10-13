@@ -1,4 +1,5 @@
 """Repository that performs all search queries."""
+
 import abc
 
 from omoide import const

@@ -12,8 +12,9 @@ from omoide.storage.database.sync_db import SyncDatabase
 LOG = custom_logging.get_logger(__name__)
 
 
-def run(database: SyncDatabase, key: str, new: str,
-        batch_size: int, limit: int) -> None:
+def run(
+    database: SyncDatabase, key: str, new: str, batch_size: int, limit: int
+) -> None:
     """Change metainfo key without changing its value."""
     last_seen: UUID | None = None
     processed = 0
@@ -21,18 +22,16 @@ def run(database: SyncDatabase, key: str, new: str,
 
     with database.start_session() as session:
         while running:
-            query = session.query(
-                db_models.Metainfo,
-            ).filter(
-                db_models.Metainfo.extras[key] != sa.null()
-            ).order_by(
-                db_models.Metainfo.item_uuid
+            query = (
+                session.query(
+                    db_models.Metainfo,
+                )
+                .filter(db_models.Metainfo.extras[key] != sa.null())
+                .order_by(db_models.Metainfo.item_uuid)
             )
 
             if last_seen is not None:
-                query = query.filter(
-                    db_models.Metainfo.item_uuid > last_seen
-                )
+                query = query.filter(db_models.Metainfo.item_uuid > last_seen)
 
             models = query.limit(batch_size).all()
 

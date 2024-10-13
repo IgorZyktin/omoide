@@ -1,4 +1,5 @@
 """API operations that return detailed info on specific item groups."""
+
 from typing import Annotated
 from uuid import UUID
 
@@ -32,10 +33,13 @@ async def api_browse(
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
     last_seen: Annotated[int, Query()] = browse_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[int, Query(
-        ge=browse_api_models.BROWSE_MIN_LIMIT,
-        lt=browse_api_models.BROWSE_MAX_LIMIT,
-    )] = browse_api_models.BROWSE_DEFAULT_LIMIT,
+    limit: Annotated[
+        int,
+        Query(
+            ge=browse_api_models.BROWSE_MIN_LIMIT,
+            lt=browse_api_models.BROWSE_MAX_LIMIT,
+        ),
+    ] = browse_api_models.BROWSE_DEFAULT_LIMIT,
 ):
     """Perform browse request.
 
@@ -61,5 +65,5 @@ async def api_browse(
                 extras=utils.serialize(item_extras),
             )
             for item, item_extras in zip(items, extras, strict=False)
-        ]
+        ],
     )

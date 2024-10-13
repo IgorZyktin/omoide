@@ -1,4 +1,5 @@
 """Web level API models."""
+
 from typing import Any
 
 from pydantic import BaseModel
@@ -11,6 +12,7 @@ MAXIMUM_EXIF_SIZE = 1024 * 1024 * 5  # MiB
 
 class EXIFModel(BaseModel):
     """Input info for EXIF creation."""
+
     exif: dict[str, Any]
 
     model_config = {
@@ -26,7 +28,7 @@ class EXIFModel(BaseModel):
                     'thumbnail': {
                         'ImageWidth': 512,
                         'ImageHeight': 384,
-                    }
+                    },
                 }
             ]
         }

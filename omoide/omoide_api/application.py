@@ -2,6 +2,7 @@
 
 All backend stuff is here.
 """
+
 from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
@@ -35,6 +36,7 @@ def get_api() -> FastAPI:
     )
 
     if app_config.Config().env != 'prod':
+
         @new_api.get('/all_routes')
         def get_all_urls_from_request(request: Request):
             """List all URLs for this Fastapi instance.
@@ -42,10 +44,8 @@ def get_api() -> FastAPI:
             Supposed to be used only for debugging!
             """
             url_list = [
-                {
-                    'path': route.path,
-                    'name': route.name
-                } for route in request.app.routes
+                {'path': route.path, 'name': route.name}
+                for route in request.app.routes
             ]
             return url_list
 

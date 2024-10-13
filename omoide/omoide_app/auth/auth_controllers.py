@@ -1,4 +1,5 @@
 """Auth related routes."""
+
 import asyncio
 from typing import Annotated
 

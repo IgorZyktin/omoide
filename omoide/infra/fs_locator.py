@@ -1,4 +1,5 @@
 """Filesystem implementation for locator object."""
+
 import functools
 import os.path
 
@@ -35,7 +36,7 @@ class FilesystemLocator(interfaces.AbsLocator):
         """Return middle common part of the path."""
         return os.path.join(
             str(self.item.owner_uuid),
-            str(self.item.uuid)[:self.prefix_size],
+            str(self.item.uuid)[: self.prefix_size],
         )
 
     @functools.cached_property

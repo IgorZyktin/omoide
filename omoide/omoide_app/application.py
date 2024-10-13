@@ -67,10 +67,8 @@ def get_app() -> FastAPI:
             Supposed to be used only for debugging!
             """
             url_list = [
-                {
-                    'path': route.path,
-                    'name': route.name
-                } for route in request.app.routes
+                {'path': route.path, 'name': route.name}
+                for route in request.app.routes
             ]
             return url_list
 
@@ -101,6 +99,7 @@ def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:
     for description in app_config.Config().middlewares:
         if description.name.casefold() == 'CORSMiddleware'.casefold():
             from fastapi.middleware.cors import CORSMiddleware
+
             yield CORSMiddleware, description.config
 
 

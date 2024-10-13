@@ -29,12 +29,12 @@ class BrowseRepository(
         limit: int | None,
     ) -> list[models.Item]:
         """Load all children of given item."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
-            db_models.Item.parent_uuid == item.uuid,
-        ).order_by(
-            db_models.Item.number
+        stmt = (
+            sa.select(db_models.Item)
+            .where(
+                db_models.Item.parent_uuid == item.uuid,
+            )
+            .order_by(db_models.Item.number)
         )
 
         if offset:
@@ -48,12 +48,10 @@ class BrowseRepository(
 
     async def count_children(self, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
-        stmt = sa.select(
-            sa.func.count().label('total_items')
-        ).select_from(
-            db_models.Item
-        ).where(
-            db_models.Item.parent_uuid == item.uuid
+        stmt = (
+            sa.select(sa.func.count().label('total_items'))
+            .select_from(db_models.Item)
+            .where(db_models.Item.parent_uuid == item.uuid)
         )
 
         response = await self.db.fetch_one(stmt)
@@ -68,9 +66,7 @@ class BrowseRepository(
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             db_models.Item.owner_uuid.in_(  # noqa
                 sa.select(db_models.PublicUsers.user_uuid)
             ),
@@ -96,9 +92,7 @@ class BrowseRepository(
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.owner_uuid.in_(  # noqa
                     sa.select(db_models.PublicUsers.user_uuid)
@@ -361,11 +355,7 @@ class BrowseRepository(
         items: list[models.Item],
     ) -> list[str | None]:
         """Get names of parents of the given items."""
-        uuids = [
-            str(x.parent_uuid)
-            if x.parent_uuid else None
-            for x in items
-        ]
+        uuids = [str(x.parent_uuid) if x.parent_uuid else None for x in items]
 
         subquery = sa.select(
             sa.func.unnest(
@@ -373,9 +363,7 @@ class BrowseRepository(
             ).label('uuid')
         ).subquery('given_uuid')
 
-        stmt = sa.select(
-            subquery.c.uuid, db_models.Item.name
-        ).join(
+        stmt = sa.select(subquery.c.uuid, db_models.Item.name).join(
             db_models.Item,
             db_models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
             isouter=True,

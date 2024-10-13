@@ -1,4 +1,5 @@
 """Base storage class."""
+
 from typing import Any
 
 from omoide.storage.interfaces.abs_storage import AbsStorage

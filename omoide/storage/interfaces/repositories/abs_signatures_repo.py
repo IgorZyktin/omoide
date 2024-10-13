@@ -21,9 +21,7 @@ class AbsSignaturesRepo(abc.ABC):
 
     @abc.abstractmethod
     async def save_md5_signature(
-        self,
-        item: models.Item,
-        signature: str
+        self, item: models.Item, signature: str
     ) -> None:
         """Create signature record."""
 

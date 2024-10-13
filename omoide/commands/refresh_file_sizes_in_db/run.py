@@ -1,4 +1,5 @@
 """Refresh size command."""
+
 from pathlib import Path
 from uuid import UUID
 
@@ -42,13 +43,15 @@ def run(config: Config, database: SyncDatabase) -> None:
 
     for user in users:
         with database.start_session() as session:
-            LOG.info('Refreshing file sizes for user {} {}',
-                     user.uuid, user.name)
+            LOG.info(
+                'Refreshing file sizes for user {} {}', user.uuid, user.name
+            )
 
             models_for_user = get_models(session, config, user)
 
-            LOG.info('Checking {} models',
-                     utils.sep_digits(len(models_for_user)))
+            LOG.info(
+                'Checking {} models', utils.sep_digits(len(models_for_user))
+            )
 
             for i, (metainfo, item) in enumerate(models_for_user, start=1):
                 operations = update_size(config, metainfo, item, path)
@@ -58,15 +61,23 @@ def run(config: Config, database: SyncDatabase) -> None:
 
                 if config.log_every_item:
                     if operations:
-                        LOG.info('\t\tChanged item {} {} ({} operations)',
-                                 item.uuid, item.name, operations)
+                        LOG.info(
+                            '\t\tChanged item {} {} ({} operations)',
+                            item.uuid,
+                            item.name,
+                            operations,
+                        )
 
                 if operations:
                     session.commit()
 
             if local_changed:
-                LOG.info('\tChanged {} items for user {} ({} operations)',
-                         i, user.name, local_changed)
+                LOG.info(
+                    '\tChanged {} items for user {} ({} operations)',
+                    i,
+                    user.name,
+                    local_changed,
+                )
 
             local_changed = 0
 
@@ -75,10 +86,10 @@ def run(config: Config, database: SyncDatabase) -> None:
 
 
 def update_size(
-        config: Config,
-        metainfo: db_models.Metainfo,
-        item: db_models.Item,
-        base_folder: str,
+    config: Config,
+    metainfo: db_models.Metainfo,
+    item: db_models.Item,
+    base_folder: str,
 ) -> int:
     """Get actual file size."""
     dom_item = domain.Item(
@@ -127,24 +138,28 @@ def update_size(
 
 
 def get_models(
-        session: Session,
-        config: Config,
-        user: db_models.User,
+    session: Session,
+    config: Config,
+    user: db_models.User,
 ) -> list[tuple[db_models.Metainfo, db_models.Item]]:
     """Get every item with some content."""
-    query = session.query(
-        db_models.Metainfo,
-        db_models.Item,
-    ).join(
-        db_models.Item,
-        db_models.Item.uuid == db_models.Metainfo.item_uuid,
-    ).filter(
-        db_models.Item.owner_uuid == user.uuid,
-        sa.or_(
-            db_models.Metainfo.content_size == sa.null(),
-            db_models.Metainfo.preview_size == sa.null(),
-            db_models.Metainfo.thumbnail_size == sa.null(),
-        ),
+    query = (
+        session.query(
+            db_models.Metainfo,
+            db_models.Item,
+        )
+        .join(
+            db_models.Item,
+            db_models.Item.uuid == db_models.Metainfo.item_uuid,
+        )
+        .filter(
+            db_models.Item.owner_uuid == user.uuid,
+            sa.or_(
+                db_models.Metainfo.content_size == sa.null(),
+                db_models.Metainfo.preview_size == sa.null(),
+                db_models.Metainfo.thumbnail_size == sa.null(),
+            ),
+        )
     )
 
     if config.marker:

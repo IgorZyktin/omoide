@@ -1,4 +1,5 @@
 """Use case for items."""
+
 from uuid import UUID
 
 from omoide import domain
@@ -21,10 +22,10 @@ class AppItemUpdateUseCase:
     """Use case for item modification page."""
 
     def __init__(
-            self,
-            users_repo: storage_interfaces.AbsUsersRepo,
-            items_repo: storage_interfaces.AbsItemsRepo,
-            metainfo_repo: storage_interfaces.AbsMetainfoRepo,
+        self,
+        users_repo: storage_interfaces.AbsUsersRepo,
+        items_repo: storage_interfaces.AbsItemsRepo,
+        metainfo_repo: storage_interfaces.AbsMetainfoRepo,
     ) -> None:
         """Initialize instance."""
         self.users_repo = users_repo
@@ -32,16 +33,20 @@ class AppItemUpdateUseCase:
         self.metainfo_repo = metainfo_repo
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
-    ) -> Result[errors.Error,
-                tuple[domain.Item,
-                      int,
-                      list[models.User],
-                      list[str],
-                      models.MetainfoOld | None]]:
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
+    ) -> Result[
+        errors.Error,
+        tuple[
+            domain.Item,
+            int,
+            list[models.User],
+            list[str],
+            models.MetainfoOld | None,
+        ],
+    ]:
         """Execute."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
@@ -68,17 +73,17 @@ class AppItemDeleteUseCase:
     """Use case for item deletion page."""
 
     def __init__(
-            self,
-            items_repo: storage_interfaces.AbsItemsRepo,
+        self,
+        items_repo: storage_interfaces.AbsItemsRepo,
     ) -> None:
         """Initialize instance."""
         self.items_repo = items_repo
 
     async def execute(
-            self,
-            policy: interfaces.AbsPolicy,
-            user: models.User,
-            uuid: UUID,
+        self,
+        policy: interfaces.AbsPolicy,
+        user: models.User,
+        uuid: UUID,
     ) -> Result[errors.Error, tuple[domain.Item, int]]:
         """Execute."""
         async with self.items_repo.transaction():

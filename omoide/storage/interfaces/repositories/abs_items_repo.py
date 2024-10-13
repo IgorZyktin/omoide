@@ -1,4 +1,5 @@
 """Repository that performs operations on items."""
+
 import abc
 from collections.abc import Collection
 from uuid import UUID
@@ -78,7 +79,7 @@ class AbsItemsRepo(abc.ABC):
         """Count dependant items."""
 
     @abc.abstractmethod
-    async def get_children(self, item: models.Item ) -> list[models.Item]:
+    async def get_children(self, item: models.Item) -> list[models.Item]:
         """Return all direct descendants of the given item."""
 
     @abc.abstractmethod

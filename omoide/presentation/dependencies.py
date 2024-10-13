@@ -135,8 +135,9 @@ def get_aim(request: Request) -> web.AimWrapper:
     params = dict(request.query_params)
     return web.AimWrapper.from_params(
         params=params,
-        items_per_page=min(app_constants.ITEMS_PER_PAGE,
-                           app_constants.MAX_ITEMS_PER_PAGE),
+        items_per_page=min(
+            app_constants.ITEMS_PER_PAGE, app_constants.MAX_ITEMS_PER_PAGE
+        ),
     )
 
 
@@ -180,8 +181,9 @@ def get_policy(
 
 @utils.memorize
 def get_object_storage(
-    media_repo: Annotated[storage_interfaces.AbsMediaRepo,
-                          Depends(get_media_repo)],
+    media_repo: Annotated[
+        storage_interfaces.AbsMediaRepo, Depends(get_media_repo)
+    ],
 ) -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
@@ -193,28 +195,37 @@ def get_object_storage(
 
 @utils.memorize
 def get_mediator(
-    authenticator: Annotated[interfaces.AbsAuthenticator,
-                             Depends(get_authenticator)],
-    browse_repo: Annotated[storage_interfaces.AbsBrowseRepository,
-                           Depends(get_browse_repo)],
-    exif_repo: Annotated[storage_interfaces.AbsEXIFRepository,
-                         Depends(get_exif_repo)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                         Depends(get_metainfo_repo)],
-    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
-                         Depends(get_misc_repo)],
-    search_repo: Annotated[storage_interfaces.AbsSearchRepository,
-                           Depends(get_search_repo)],
-    signatures_repo: Annotated[storage_interfaces.AbsSignaturesRepo,
-                               Depends(get_signatures_repo)],
-    storage: Annotated[storage_interfaces.AbsStorage,
-                       Depends(get_storage)],
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-    object_storage: Annotated[object_interfaces.AbsObjectStorage,
-                              Depends(get_object_storage)],
+    authenticator: Annotated[
+        interfaces.AbsAuthenticator, Depends(get_authenticator)
+    ],
+    browse_repo: Annotated[
+        storage_interfaces.AbsBrowseRepository, Depends(get_browse_repo)
+    ],
+    exif_repo: Annotated[
+        storage_interfaces.AbsEXIFRepository, Depends(get_exif_repo)
+    ],
+    items_repo: Annotated[
+        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
+    ],
+    meta_repo: Annotated[
+        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
+    ],
+    misc_repo: Annotated[
+        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
+    ],
+    search_repo: Annotated[
+        storage_interfaces.AbsSearchRepository, Depends(get_search_repo)
+    ],
+    signatures_repo: Annotated[
+        storage_interfaces.AbsSignaturesRepo, Depends(get_signatures_repo)
+    ],
+    storage: Annotated[storage_interfaces.AbsStorage, Depends(get_storage)],
+    users_repo: Annotated[
+        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
+    ],
+    object_storage: Annotated[
+        object_interfaces.AbsObjectStorage, Depends(get_object_storage)
+    ],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
@@ -313,14 +324,18 @@ def api_item_update_use_case(
 
 @utils.memorize
 def api_item_update_tags_use_case(
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                         Depends(get_metainfo_repo)],
-    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
-                         Depends(get_misc_repo)],
+    users_repo: Annotated[
+        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
+    ],
+    items_repo: Annotated[
+        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
+    ],
+    meta_repo: Annotated[
+        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
+    ],
+    misc_repo: Annotated[
+        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
+    ],
 ) -> use_cases.ApiItemUpdateTagsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateTagsUseCase(
@@ -333,14 +348,18 @@ def api_item_update_tags_use_case(
 
 @utils.memorize
 def api_item_update_permissions_use_case(
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                         Depends(get_metainfo_repo)],
-    misc_repo: Annotated[storage_interfaces.AbsMiscRepo,
-                         Depends(get_misc_repo)],
+    users_repo: Annotated[
+        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
+    ],
+    items_repo: Annotated[
+        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
+    ],
+    meta_repo: Annotated[
+        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
+    ],
+    misc_repo: Annotated[
+        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
+    ],
 ) -> use_cases.ApiItemUpdatePermissionsUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdatePermissionsUseCase(
@@ -354,16 +373,21 @@ def api_item_update_permissions_use_case(
 @utils.memorize
 def api_item_update_parent_use_case(
     policy: Annotated[interfaces.AbsPolicy, Depends(get_policy)],
-    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
-                          Depends(get_users_repo)],
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
-    metainfo_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
-                             Depends(get_metainfo_repo)],
-    media_repository: Annotated[storage_interfaces.AbsMediaRepo,
-                                Depends(get_media_repo)],
+    users_repo: Annotated[
+        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
+    ],
+    items_repo: Annotated[
+        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
+    ],
+    metainfo_repo: Annotated[
+        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
+    ],
+    media_repository: Annotated[
+        storage_interfaces.AbsMediaRepo, Depends(get_media_repo)
+    ],
     misc_repo: Annotated[
-        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)],
+        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
+    ],
 ) -> use_cases.ApiItemUpdateParentUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateParentUseCase(

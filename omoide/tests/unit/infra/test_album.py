@@ -1,4 +1,5 @@
 """Tests."""
+
 import contextlib
 
 from omoide.presentation import infra

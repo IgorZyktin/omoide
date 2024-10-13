@@ -1,4 +1,5 @@
 """Web level API models."""
+
 from uuid import UUID
 
 import pydantic
@@ -7,6 +8,7 @@ from pydantic import BaseModel
 
 class RebuildComputedTagsInput(BaseModel):
     """Info about target user for tag rebuilding."""
+
     user_uuid: UUID
     including_children: bool = True
 
@@ -24,6 +26,7 @@ class RebuildComputedTagsInput(BaseModel):
 
 class CopyContentInput(BaseModel):
     """Info about affected items."""
+
     source_item_uuid: UUID
     target_item_uuid: UUID
 

@@ -1,4 +1,5 @@
 """Base storage classes."""
+
 import abc
 from typing import Any
 

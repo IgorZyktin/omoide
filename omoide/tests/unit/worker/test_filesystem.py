@@ -61,14 +61,18 @@ def test_filesystem_safely_save(valid_worker_config, worker_dt):
             assert file.read() == b'c'
 
 
-@pytest.mark.parametrize('filename, reference', [
-    ('test', 'test___2022-12-02_20-10-15.000128+00-00'),
-    ('test.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
-    ('test___.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
-    ('test___wtf.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
-])
-def test_filesystem_make_new_filename(filename, reference, worker_dt,
-                                      valid_worker_config):
+@pytest.mark.parametrize(
+    'filename, reference',
+    [
+        ('test', 'test___2022-12-02_20-10-15.000128+00-00'),
+        ('test.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
+        ('test___.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
+        ('test___wtf.txt', 'test___2022-12-02_20-10-15.000128+00-00.txt'),
+    ],
+)
+def test_filesystem_make_new_filename(
+    filename, reference, worker_dt, valid_worker_config
+):
     """Must alter filename without overwriting it."""
     filesystem = Filesystem(valid_worker_config)
 

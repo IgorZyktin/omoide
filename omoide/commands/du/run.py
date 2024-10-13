@@ -36,6 +36,7 @@ def run(config: Config, database: SyncDatabase) -> None:
 @dataclasses.dataclass
 class Stats:
     """Helper class that stores stats for a user."""
+
     user: db_models.User
     content_size: int
     preview_size: int
@@ -48,20 +49,24 @@ class Stats:
     @functools.cached_property
     def total_files(self) -> int:
         """Return summary of files count."""
-        return sum((
-            self.content_total,
-            self.preview_total,
-            self.thumbnail_total,
-        ))
+        return sum(
+            (
+                self.content_total,
+                self.preview_total,
+                self.thumbnail_total,
+            )
+        )
 
     @functools.cached_property
     def total_size(self) -> int:
         """Return summary of size count."""
-        return sum((
-            self.content_size,
-            self.preview_size,
-            self.thumbnail_size,
-        ))
+        return sum(
+            (
+                self.content_size,
+                self.preview_size,
+                self.thumbnail_size,
+            )
+        )
 
     def calc_percent_of_files(self, total_files: int) -> float:
         """Return part that user takes in all files."""
@@ -78,25 +83,29 @@ class Stats:
 
 def scan_for_user(conn: Connection, user: db_models.User) -> Stats:
     """Calculate sizes for specific user."""
-    stmt = sa.select(
-        sa.func.coalesce(
-            sa.func.sum(db_models.Metainfo.content_size), 0
-        ).label('content_size'),
-        sa.func.coalesce(
-            sa.func.sum(db_models.Metainfo.preview_size), 0
-        ).label('preview_size'),
-        sa.func.coalesce(
-            sa.func.sum(db_models.Metainfo.thumbnail_size), 0
-        ).label('thumbnail_size'),
-        sa.func.count(db_models.Item.content_ext).label('content_total'),
-        sa.func.count(db_models.Item.preview_ext).label('preview_total'),
-        sa.func.count(db_models.Item.thumbnail_ext).label('thumbnail_total'),
-        sa.func.count(db_models.Item.uuid).label('total_items'),
-    ).join(
-        db_models.Item,
-        db_models.Metainfo.item_uuid == db_models.Item.uuid,
-    ).where(
-        db_models.Item.owner_uuid == user.uuid
+    stmt = (
+        sa.select(
+            sa.func.coalesce(
+                sa.func.sum(db_models.Metainfo.content_size), 0
+            ).label('content_size'),
+            sa.func.coalesce(
+                sa.func.sum(db_models.Metainfo.preview_size), 0
+            ).label('preview_size'),
+            sa.func.coalesce(
+                sa.func.sum(db_models.Metainfo.thumbnail_size), 0
+            ).label('thumbnail_size'),
+            sa.func.count(db_models.Item.content_ext).label('content_total'),
+            sa.func.count(db_models.Item.preview_ext).label('preview_total'),
+            sa.func.count(db_models.Item.thumbnail_ext).label(
+                'thumbnail_total'
+            ),
+            sa.func.count(db_models.Item.uuid).label('total_items'),
+        )
+        .join(
+            db_models.Item,
+            db_models.Metainfo.item_uuid == db_models.Item.uuid,
+        )
+        .where(db_models.Item.owner_uuid == user.uuid)
     )
 
     response = conn.execute(stmt).fetchone()
@@ -126,7 +135,7 @@ def scan_for_user(conn: Connection, user: db_models.User) -> Stats:
 
 
 def describe_result(
-        stats: list[Stats],
+    stats: list[Stats],
 ) -> None:
     """Print result."""
     table = PrettyTable()
@@ -172,22 +181,24 @@ def describe_result(
 
         i += 1
         number = template.format(i)
-        table.add_row([
-            number,
-            stat.user.uuid,
-            stat.user.name,
-            utils.sep_digits(stat.total_items),
-            utils.sep_digits(stat.content_total),
-            utils.sep_digits(stat.preview_total),
-            utils.sep_digits(stat.thumbnail_total),
-            utils.sep_digits(stat.total_files),
-            utils.human_readable_size(stat.content_size),
-            utils.human_readable_size(stat.preview_size),
-            utils.human_readable_size(stat.thumbnail_size),
-            utils.human_readable_size(stat.total_size),
-            f'{round(stat.calc_percent_of_files(total_files), 2)} %',
-            f'{round(stat.calc_percent_of_size(total_size), 2)} %',
-        ])
+        table.add_row(
+            [
+                number,
+                stat.user.uuid,
+                stat.user.name,
+                utils.sep_digits(stat.total_items),
+                utils.sep_digits(stat.content_total),
+                utils.sep_digits(stat.preview_total),
+                utils.sep_digits(stat.thumbnail_total),
+                utils.sep_digits(stat.total_files),
+                utils.human_readable_size(stat.content_size),
+                utils.human_readable_size(stat.preview_size),
+                utils.human_readable_size(stat.thumbnail_size),
+                utils.human_readable_size(stat.total_size),
+                f'{round(stat.calc_percent_of_files(total_files), 2)} %',
+                f'{round(stat.calc_percent_of_size(total_size), 2)} %',
+            ]
+        )
 
     print(table.get_string())
     print(f'Total items: {utils.sep_digits(total_items)}')

@@ -1,4 +1,5 @@
 """Collection to force copying of thumbnails."""
+
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -33,7 +34,8 @@ def run(config: Config, database: SyncDatabase) -> None:
             changed = 0
             for item in leaf_items:
                 changed += force_copy_to_all_parents(
-                    session, item, already_handled)
+                    session, item, already_handled
+                )
                 total_operations += changed
             LOG.info('Changed {} items', changed)
             session.commit()
@@ -42,8 +44,8 @@ def run(config: Config, database: SyncDatabase) -> None:
 
 
 def get_leaf_items(
-        session: Session,
-        user: db_models.User,
+    session: Session,
+    user: db_models.User,
 ) -> list[db_models.Item]:
     """Get all items without children."""
     stmt = """
@@ -82,9 +84,9 @@ def get_leaf_items(
 
 
 def force_copy_to_all_parents(
-        session: Session,
-        item: db_models.Item,
-        already_handled: set[UUID],
+    session: Session,
+    item: db_models.Item,
+    already_handled: set[UUID],
 ) -> int:
     """Copy data from given item to all parents."""
     changed = 0
@@ -97,9 +99,9 @@ def force_copy_to_all_parents(
 
         if parent.uuid not in already_handled:
             copy_properties(
-                session, parent, parent_metainfo, item, leaf_metainfo)
-            invoke_worker_to_copy(
-                session, parent, item)
+                session, parent, parent_metainfo, item, leaf_metainfo
+            )
+            invoke_worker_to_copy(session, parent, item)
             already_handled.add(parent.uuid)
             changed += 1
 
@@ -109,11 +111,11 @@ def force_copy_to_all_parents(
 
 
 def copy_properties(
-        session: Session,
-        parent: db_models.Item,
-        parent_metainfo: db_models.Metainfo,
-        child: db_models.Item,
-        child_metainfo: db_models.Metainfo,
+    session: Session,
+    parent: db_models.Item,
+    parent_metainfo: db_models.Metainfo,
+    child: db_models.Item,
+    child_metainfo: db_models.Metainfo,
 ) -> None:
     """Copy basic parameters."""
     parent.thumbnail_ext = child.thumbnail_ext
@@ -125,16 +127,16 @@ def copy_properties(
     helpers.insert_into_metainfo_extras(
         session=session,
         metainfo=parent_metainfo,
-        new_data={'copied_image_from': str(child.uuid)}
+        new_data={'copied_image_from': str(child.uuid)},
     )
 
     parent_metainfo.updated_at = utils.now()
 
 
 def invoke_worker_to_copy(
-        session: Session,
-        parent: db_models.Item,
-        child: db_models.Item,
+    session: Session,
+    parent: db_models.Item,
+    child: db_models.Item,
 ) -> None:
     """Write info in the db so worker could complete the job."""
     copy = db_models.CommandCopy(

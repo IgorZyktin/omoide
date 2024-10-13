@@ -77,13 +77,36 @@ def sep_digits(number: float | str, precision: int = 2) -> str:
 
 
 SUFFIXES = {
-    'RU': {'B': 'Б', 'kB': 'кБ', 'MB': 'МБ', 'GB': 'ГБ', 'TB': 'ТБ',
-           'PB': 'ПБ', 'EB': 'ЭБ', 'KiB': 'КиБ', 'MiB': 'МиБ',
-           'GiB': 'ГиБ', 'TiB': 'ТиБ', 'PiB': 'ПиБ', 'EiB': 'ЭиБ'},
-
-    'EN': {'B': 'B', 'kB': 'kB', 'MB': 'MB', 'GB': 'GB', 'TB': 'TB',
-           'PB': 'PB', 'EB': 'EB', 'KiB': 'KiB', 'MiB': 'MiB',
-           'GiB': 'GiB', 'TiB': 'TiB', 'PiB': 'PiB', 'EiB': 'EiB'},
+    'RU': {
+        'B': 'Б',
+        'kB': 'кБ',
+        'MB': 'МБ',
+        'GB': 'ГБ',
+        'TB': 'ТБ',
+        'PB': 'ПБ',
+        'EB': 'ЭБ',
+        'KiB': 'КиБ',
+        'MiB': 'МиБ',
+        'GiB': 'ГиБ',
+        'TiB': 'ТиБ',
+        'PiB': 'ПиБ',
+        'EiB': 'ЭиБ',
+    },
+    'EN': {
+        'B': 'B',
+        'kB': 'kB',
+        'MB': 'MB',
+        'GB': 'GB',
+        'TB': 'TB',
+        'PB': 'PB',
+        'EB': 'EB',
+        'KiB': 'KiB',
+        'MiB': 'MiB',
+        'GiB': 'GiB',
+        'TiB': 'TiB',
+        'PiB': 'PiB',
+        'EiB': 'EiB',
+    },
 }
 
 
@@ -157,15 +180,14 @@ def human_readable_time(seconds: int) -> str:
         _weeks, _days = divmod(_days, 7)
 
     values = [_weeks, _days, _hours, _minutes, _seconds]
-    string = ' '.join(
-        f'{x}{_suffixes[i]}' for i, x in enumerate(values) if x
-    )
+    string = ' '.join(f'{x}{_suffixes[i]}' for i, x in enumerate(values) if x)
 
     return string
 
 
-def group_to_size(iterable: Iterable, group_size: int = 2,
-                  default: Any = '?') -> Iterator[tuple]:
+def group_to_size(
+    iterable: Iterable, group_size: int = 2, default: Any = '?'
+) -> Iterator[tuple]:
     """Return contents of the iterable grouped in blocks of given size.
 
     >>> list(group_to_size([1, 2, 3, 4, 5, 6, 7], 2, '?'))
@@ -215,8 +237,7 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
 
 
 def serialize_model(
-    model: Any,
-    do_not_serialize: Collection[str] = frozenset()
+    model: Any, do_not_serialize: Collection[str] = frozenset()
 ) -> str:
     """Convert model to human-readable string."""
     attributes: list[str] = []
@@ -254,11 +275,7 @@ def model_to_list(
 
 def split(string: str, separator: str = ',') -> list[str]:
     """Split comma separated list."""
-    return [
-        clear
-        for raw in string.split(separator)
-        if (clear := raw.strip())
-    ]
+    return [clear for raw in string.split(separator) if (clear := raw.strip())]
 
 
 def get_size(obj: Any, seen: set[int] | None = None) -> int:
@@ -282,9 +299,8 @@ def get_size(obj: Any, seen: set[int] | None = None) -> int:
     elif hasattr(obj, '__dict__'):
         size += get_size(obj.__dict__, seen)
 
-    elif (
-        hasattr(obj, '__iter__')
-        and not isinstance(obj, (str | bytes | bytearray))
+    elif hasattr(obj, '__iter__') and not isinstance(
+        obj, (str | bytes | bytearray)
     ):
         size += sum([get_size(i, seen) for i in obj])
 
@@ -310,10 +326,7 @@ def to_simple_type(something: Any) -> Any:
 
 def serialize(payload: dict[str, Any]) -> dict[str, str | None]:
     """Convert dictionary to a web-compatible format."""
-    return {
-        str(key): to_simple_type(value)
-        for key, value in payload.items()
-    }
+    return {str(key): to_simple_type(value) for key, value in payload.items()}
 
 
 def exc_to_str(exc: Exception) -> str:

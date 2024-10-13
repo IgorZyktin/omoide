@@ -1,4 +1,5 @@
 """Web level API models."""
+
 import base64
 import math
 from uuid import UUID
@@ -28,6 +29,7 @@ MAX_PERMISSIONS = 100
 
 class ItemInput(BaseModel):
     """Input info for item creation."""
+
     uuid: UUID | None = None
     parent_uuid: UUID | None = None
     owner_uuid: UUID | None = None
@@ -60,6 +62,7 @@ class ItemInput(BaseModel):
 
 class MediaInput(BaseModel):
     """Input info for media creation."""
+
     content: str
     ext: str = Field(..., min_length=1)
 
@@ -94,5 +97,5 @@ class MediaInput(BaseModel):
     def binary_content(self) -> bytes:
         """Convert from base64 into bytes."""
         sep = self.content.index(',')
-        body = self.content[sep + 1:]
+        body = self.content[sep + 1 :]
         return base64.decodebytes(body.encode('utf-8'))

@@ -1,4 +1,5 @@
 """Development runner, do not use in production."""
+
 import uvicorn
 
 from omoide.presentation import app_config

@@ -1,4 +1,5 @@
 """Use cases for auth-related APP operations."""
+
 from omoide import models
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 

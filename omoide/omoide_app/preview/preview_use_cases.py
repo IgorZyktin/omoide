@@ -10,6 +10,7 @@ from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
 
 class PreviewResult(NamedTuple):
     """Result of a request for a single item."""
+
     item: models.Item
     parents: list[models.Item]
     metainfo: models.Metainfo

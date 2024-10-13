@@ -1,4 +1,5 @@
 """Interface for locator object."""
+
 import abc
 import functools
 

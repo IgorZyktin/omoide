@@ -24,6 +24,7 @@ __all__ = [
 
 class Item(BaseModel):
     """Model of a standard item."""
+
     uuid: UUID
     parent_uuid: UUID | None = None
     owner_uuid: UUID
@@ -64,6 +65,7 @@ class Item(BaseModel):
 
 class ItemGeneric(BaseModel):
     """Wrapper that helps with different item fields."""
+
     media_type: const.MEDIA_TYPE
     original_ext: str | None = None
     set_callback: Callable[[str | None], None]
@@ -82,6 +84,7 @@ class ItemGeneric(BaseModel):
 
 class Query(BaseModel):
     """User search query."""
+
     raw_query: str
     tags_include: list[str]
     tags_exclude: list[str]
@@ -93,6 +96,7 @@ class Query(BaseModel):
 
 class Aim(BaseModel):
     """Object that describes user's desired output."""
+
     query: Query
     order: const.ORDER_TYPE
     collections: bool

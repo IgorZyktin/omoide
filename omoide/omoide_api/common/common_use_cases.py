@@ -33,9 +33,7 @@ class BaseAPIUseCase:
         elif operation:
             msg = f'Anonymous users are not allowed to {operation}'
         else:
-            msg = (
-                'Anonymous users are not allowed to perform such requests'
-            )
+            msg = 'Anonymous users are not allowed to perform such requests'
 
         raise exceptions.AccessDeniedError(msg)
 
@@ -106,12 +104,15 @@ class BaseAPIUseCase:
         error_message: str = '',
     ) -> None:
         """Raise if one user tries to manage object of some other user."""
-        if all(
-            (
-                item.owner_uuid == user.uuid,
-                str(user.uuid) in item.permissions
+        if (
+            all(
+                (
+                    item.owner_uuid == user.uuid,
+                    str(user.uuid) in item.permissions,
+                )
             )
-        ) or user.is_admin:
+            or user.is_admin
+        ):
             return
 
         if error_message:

@@ -1,4 +1,5 @@
 """Search repository."""
+
 import abc
 
 import sqlalchemy as sa
@@ -62,9 +63,7 @@ class SearchRepository(_SearchRepositoryBase):
         collections: bool,
     ) -> int:
         """Return total amount of items relevant to this search query."""
-        stmt = sa.select(
-            sa.func.count().label('total_items')
-        ).select_from(
+        stmt = sa.select(sa.func.count().label('total_items')).select_from(
             db_models.Item
         )
 
@@ -122,9 +121,7 @@ class SearchRepository(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for anon."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             db_models.Item.owner_uuid.in_(  # noqa
                 sa.select(db_models.PublicUsers.user_uuid)
             )
@@ -152,9 +149,7 @@ class SearchRepository(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for known user."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.permissions.any(str(user.uuid)),
@@ -187,13 +182,17 @@ class SearchRepository(_SearchRepositoryBase):
 
     async def count_all_tags_known(self, user: models.User) -> dict[str, int]:
         """Return counters for known tags (known user)."""
-        stmt = sa.select(
-            db_models.KnownTags.tag,
-            db_models.KnownTags.counter,
-        ).where(
-            db_models.KnownTags.user_uuid == user.uuid,
-        ).order_by(
-            sa.desc(db_models.KnownTags.counter),
+        stmt = (
+            sa.select(
+                db_models.KnownTags.tag,
+                db_models.KnownTags.counter,
+            )
+            .where(
+                db_models.KnownTags.user_uuid == user.uuid,
+            )
+            .order_by(
+                sa.desc(db_models.KnownTags.counter),
+            )
         )
 
         response = await self.db.fetch_all(stmt)
@@ -201,15 +200,18 @@ class SearchRepository(_SearchRepositoryBase):
 
     async def autocomplete_tag_anon(self, tag: str, limit: int) -> list[str]:
         """Autocomplete tag for anon user."""
-        stmt = sa.select(
-            db_models.KnownTagsAnon.tag
-        ).where(
-            db_models.KnownTagsAnon.tag.ilike('%' + tag + '%'),  # type: ignore
-            db_models.KnownTagsAnon.counter > 0,
-        ).order_by(
-            sa.desc(db_models.KnownTagsAnon.counter),
-            sa.asc(db_models.KnownTagsAnon.tag),
-        ).limit(limit)
+        stmt = (
+            sa.select(db_models.KnownTagsAnon.tag)
+            .where(
+                db_models.KnownTagsAnon.tag.ilike('%' + tag + '%'),  # type: ignore
+                db_models.KnownTagsAnon.counter > 0,
+            )
+            .order_by(
+                sa.desc(db_models.KnownTagsAnon.counter),
+                sa.asc(db_models.KnownTagsAnon.tag),
+            )
+            .limit(limit)
+        )
 
         response = await self.db.fetch_all(stmt)
         return [row.tag for row in response]
@@ -221,16 +223,21 @@ class SearchRepository(_SearchRepositoryBase):
         limit: int,
     ) -> list[str]:
         """Autocomplete tag for known user."""
-        stmt = sa.select(
-            db_models.KnownTags.tag,
-        ).where(
-            db_models.KnownTags.tag.ilike('%' + tag + '%'),  # type: ignore
-            db_models.KnownTags.user_uuid == user.uuid,
-            db_models.KnownTags.counter > 0,
-        ).order_by(
-            sa.desc(db_models.KnownTags.counter),
-            sa.asc(db_models.KnownTags.tag),
-        ).limit(limit)
+        stmt = (
+            sa.select(
+                db_models.KnownTags.tag,
+            )
+            .where(
+                db_models.KnownTags.tag.ilike('%' + tag + '%'),  # type: ignore
+                db_models.KnownTags.user_uuid == user.uuid,
+                db_models.KnownTags.counter > 0,
+            )
+            .order_by(
+                sa.desc(db_models.KnownTags.counter),
+                sa.asc(db_models.KnownTags.tag),
+            )
+            .limit(limit)
+        )
 
         response = await self.db.fetch_all(stmt)
         return [row.tag for row in response]

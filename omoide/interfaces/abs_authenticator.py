@@ -1,4 +1,5 @@
 """Interface for authentication policy."""
+
 import abc
 
 

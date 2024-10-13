@@ -1,4 +1,5 @@
 """Access policy."""
+
 from uuid import UUID
 
 from omoide import interfaces
@@ -7,13 +8,9 @@ from omoide.domain import actions
 from omoide.domain import errors
 from omoide.domain import exceptions
 
-ITEM_RELATED = frozenset((
-    actions.Media.CREATE,
-))
+ITEM_RELATED = frozenset((actions.Media.CREATE,))
 
-READ_ONLY = frozenset((
-    actions.Item.READ,
-))
+READ_ONLY = frozenset((actions.Item.READ,))
 
 
 class Policy(interfaces.AbsPolicy):
@@ -65,9 +62,11 @@ class Policy(interfaces.AbsPolicy):
         if access.does_not_exist:
             return errors.ItemDoesNotExist(uuid=uuid)
 
-        if action in (actions.Item.CREATE,
-                      actions.Item.UPDATE,
-                      actions.Item.DELETE):
+        if action in (
+            actions.Item.CREATE,
+            actions.Item.UPDATE,
+            actions.Item.DELETE,
+        ):
             # on create we're using uuid of the parent, not the item itself
             if user.is_anon:
                 error = errors.ItemModificationByAnon()

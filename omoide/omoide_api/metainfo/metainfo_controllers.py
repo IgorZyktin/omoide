@@ -1,4 +1,5 @@
 """API operations that process item metainfo."""
+
 from typing import Annotated
 from uuid import UUID
 
@@ -42,8 +43,7 @@ async def api_read_metainfo(
         user_time=str(metainfo.user_time) if metainfo.user_time else None,
         **metainfo.model_dump(
             exclude={'created_at', 'updated_at', 'deleted_at', 'user_time'},
-        )
-
+        ),
     )
 
 

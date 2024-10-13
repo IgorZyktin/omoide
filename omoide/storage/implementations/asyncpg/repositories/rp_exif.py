@@ -1,4 +1,5 @@
 """Repository that performs CRUD operations on EXIF."""
+
 from typing import Any
 from uuid import UUID
 
@@ -17,9 +18,7 @@ class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
 
     async def create_exif(self, item_uuid: UUID, exif: dict[str, Any]) -> None:
         """Create EXIF."""
-        stmt = sa.insert(
-            db_models.EXIF
-        ).values(
+        stmt = sa.insert(db_models.EXIF).values(
             item_uuid=item_uuid,
             exif=exif,
         )
@@ -35,9 +34,7 @@ class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
 
     async def read_exif(self, item_uuid: UUID) -> dict[str, Any]:
         """Return EXIF."""
-        stmt = sa.select(
-            db_models.EXIF
-        ).where(
+        stmt = sa.select(db_models.EXIF).where(
             db_models.EXIF.item_uuid == item_uuid
         )
 
@@ -51,28 +48,28 @@ class EXIFRepository(interfaces.AbsEXIFRepository, asyncpg.AsyncpgStorage):
 
     async def update_exif(self, item_uuid: UUID, exif: dict[str, Any]) -> None:
         """Update EXIF."""
-        insert = pg_insert(
-            db_models.EXIF
-        ).where(
-            db_models.EXIF.item_uuid == item_uuid
-        ).values(
-            exif=exif,
+        insert = (
+            pg_insert(db_models.EXIF)
+            .where(db_models.EXIF.item_uuid == item_uuid)
+            .values(
+                exif=exif,
+            )
         )
 
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.EXIF.item_uuid],
-            set_={'exif': insert.excluded.exif}
+            set_={'exif': insert.excluded.exif},
         )
 
         await self.db.execute(stmt)
 
     async def delete_exif(self, item_uuid: UUID) -> None:
         """Delete EXIF."""
-        stmt = sa.delete(
-            db_models.EXIF
-        ).where(
-            db_models.EXIF.item_uuid == item_uuid
-        ).returning(1)
+        stmt = (
+            sa.delete(db_models.EXIF)
+            .where(db_models.EXIF.item_uuid == item_uuid)
+            .returning(1)
+        )
 
         response = await self.db.fetch_one(stmt)
 

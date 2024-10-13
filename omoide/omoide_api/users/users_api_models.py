@@ -1,4 +1,5 @@
 """Web level API models."""
+
 from typing import Any
 from uuid import UUID
 
@@ -10,6 +11,7 @@ MAX_LENGTH_FOR_USER_FILED = 1024
 
 class UserInput(BaseModel):
     """Simple user format."""
+
     uuid: UUID | None = None
     name: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
     login: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
@@ -28,7 +30,7 @@ class UserInput(BaseModel):
                     'name': 'Samantha Smith',
                     'login': 'sammy',
                     'password': 'qwerty1',
-                }
+                },
             ]
         }
     }
@@ -36,11 +38,13 @@ class UserInput(BaseModel):
 
 class UserValueInput(BaseModel):
     """New name/login/password."""
+
     value: str = Field(..., max_length=MAX_LENGTH_FOR_USER_FILED)
 
 
 class UserOutput(BaseModel):
     """Simple user format."""
+
     uuid: str
     name: str
     extras: dict[str, Any]
@@ -61,7 +65,7 @@ class UserOutput(BaseModel):
                     'extras': {
                         'root_item': None,
                     },
-                }
+                },
             ]
         }
     }
@@ -69,11 +73,13 @@ class UserOutput(BaseModel):
 
 class UserCollectionOutput(BaseModel):
     """Collection of users."""
+
     users: list[UserOutput]
 
 
 class UserResourceUsageOutput(BaseModel):
     """Total resource usage for specific user."""
+
     user_uuid: str
     total_items: int
     total_collections: int

@@ -1,4 +1,5 @@
 """Hope page related routes."""
+
 from typing import Annotated
 
 import fastapi

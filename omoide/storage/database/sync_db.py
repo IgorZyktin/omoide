@@ -1,4 +1,5 @@
 """Common synchronous database connector."""
+
 from collections.abc import Generator
 import contextlib
 

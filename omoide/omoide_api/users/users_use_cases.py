@@ -1,4 +1,5 @@
 """Use cases for User-related operations."""
+
 from typing import Any
 from uuid import UUID
 
@@ -95,11 +96,16 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
             target_user = await self.mediator.users_repo.get_user(user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
-            LOG.info('User {} is updating user {} name to {}',
-                     user, target_user, new_name)
+            LOG.info(
+                'User {} is updating user {} name to {}',
+                user,
+                target_user,
+                new_name,
+            )
 
             await self.mediator.users_repo.update_user(
-                user_uuid, name=new_name)
+                user_uuid, name=new_name
+            )
 
             root = await self.mediator.items_repo.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -125,11 +131,16 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
             target_user = await self.mediator.users_repo.get_user(user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
-            LOG.info('User {} is updating user {} login to {!r}',
-                     user, target_user, new_login)
+            LOG.info(
+                'User {} is updating user {} login to {!r}',
+                user,
+                target_user,
+                new_login,
+            )
 
             await self.mediator.users_repo.update_user(
-                user_uuid, login=new_login)
+                user_uuid, login=new_login
+            )
 
             root = await self.mediator.items_repo.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -155,12 +166,13 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
 
             LOG.info('User {} is updating user {} password', user, target_user)
 
-            encoded_password = (
-                self.mediator.authenticator.encode_password(new_password)
+            encoded_password = self.mediator.authenticator.encode_password(
+                new_password
             )
 
             await self.mediator.users_repo.update_user(
-                user_uuid, password=encoded_password)
+                user_uuid, password=encoded_password
+            )
 
             root = await self.mediator.items_repo.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -230,12 +242,12 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
             target_user = await self.mediator.users_repo.get_user(user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
-            disk_usage = await (
-                self.mediator.meta_repo.get_total_disk_usage(target_user)
+            disk_usage = await self.mediator.meta_repo.get_total_disk_usage(
+                target_user
             )
 
-            total_items = await (
-                self.mediator.items_repo.count_items_by_owner(target_user)
+            total_items = await self.mediator.items_repo.count_items_by_owner(
+                target_user
             )
 
             total_collections = await (

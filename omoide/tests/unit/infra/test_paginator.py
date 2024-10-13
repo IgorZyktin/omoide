@@ -1,4 +1,5 @@
 """Tests."""
+
 from omoide.presentation import infra
 
 
@@ -23,8 +24,10 @@ def test_paginator_str():
         pages_in_block=5,
     )
 
-    assert str(paginator) == ('Paginator(page=3, total_items=25, '
-                              'items_per_page=5, pages_in_block=5)')
+    assert str(paginator) == (
+        'Paginator(page=3, total_items=25, '
+        'items_per_page=5, pages_in_block=5)'
+    )
 
 
 def test_paginator_neighbours():

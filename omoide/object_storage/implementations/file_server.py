@@ -1,4 +1,5 @@
 """Object storage that saves data into files."""
+
 from omoide import const
 from omoide import models
 from omoide import utils

@@ -82,9 +82,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
     async def get_root_item(self, user: models.User) -> models.Item:
         """Return root Item for given user."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             sa.and_(
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.parent_uuid == sa.null(),
@@ -104,9 +102,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         *users: models.User,
     ) -> list[models.Item]:
         """Return list of root items."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             db_models.Item.parent_uuid == sa.null()
         )
 
@@ -125,9 +121,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         item_uuid: UUID,
     ) -> domain.Item | None:
         """Return item or None."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             db_models.Item.uuid == item_uuid
         )
 
@@ -154,9 +148,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             db_models.Item.owner_uuid.in_(  # noqa
                 sa.select(db_models.PublicUsers.user_uuid)
             )
@@ -185,15 +177,13 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
+        stmt = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.permissions.any(str(user.uuid)),
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.owner_uuid.in_(  # noqa
                     sa.select(db_models.PublicUsers.user_uuid)
-                )
+                ),
             )
         )
 
@@ -217,12 +207,10 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
-        stmt = sa.select(
-            sa.func.count().label('total_items')
-        ).select_from(
-            db_models.Item
-        ).where(
-            db_models.Item.owner_uuid == user.uuid
+        stmt = (
+            sa.select(sa.func.count().label('total_items'))
+            .select_from(db_models.Item)
+            .where(db_models.Item.owner_uuid == user.uuid)
         )
 
         if collections:
@@ -233,12 +221,10 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
     async def get_children(self, item: models.Item) -> list[models.Item]:
         """Return all direct descendants of the given item."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
-            db_models.Item.parent_uuid == item.uuid
-        ).order_by(
-            db_models.Item.number
+        stmt = (
+            sa.select(db_models.Item)
+            .where(db_models.Item.parent_uuid == item.uuid)
+            .order_by(db_models.Item.number)
         )
 
         response = await self.db.fetch_all(stmt)
@@ -292,9 +278,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         stmt = stmt.where(
             db_models.Item.parent_uuid == item.parent_uuid
-        ).order_by(
-            db_models.Item.number
-        )
+        ).order_by(db_models.Item.number)
 
         response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
@@ -306,17 +290,15 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         item_uuid: UUID,
     ) -> list[UUID]:
         """Return all direct items of th given item."""
-        stmt = sa.select(
-            db_models.Item.uuid
-        ).where(
+        stmt = sa.select(db_models.Item.uuid).where(
             db_models.Item.parent_uuid == item_uuid,
             sa.or_(
                 db_models.Item.permissions.any(str(user.uuid)),
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.owner_uuid.in_(  # noqa
                     sa.select(db_models.PublicUsers.user_uuid)
-                )
-            )
+                ),
+            ),
         )
         response = await self.db.fetch_all(stmt)
         return [x['uuid'] for x in response]
@@ -327,9 +309,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         uuid: UUID,
     ) -> list[str]:
         """Return all computed tags for the item."""
-        stmt = sa.select(
-            db_models.ComputedTags.tags
-        ).where(
+        stmt = sa.select(db_models.ComputedTags.tags).where(
             db_models.ComputedTags.item_uuid == uuid,
         )
         response = await self.db.execute(stmt)
@@ -397,10 +377,12 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         if item.number > 0:
             values['number'] = item.number
 
-        stmt = sa.insert(
-            db_models.Item
-        ).values(**values).returning(
-            db_models.Item.number,  # TODO - find way to return id
+        stmt = (
+            sa.insert(db_models.Item)
+            .values(**values)
+            .returning(
+                db_models.Item.number,  # TODO - find way to return id
+            )
         )
 
         item_number = await self.db.execute(stmt)
@@ -411,28 +393,28 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         item: domain.Item,
     ) -> None:
         """Update existing item."""
-        stmt = sa.update(
-            db_models.Item
-        ).values(
-            parent_uuid=item.parent_uuid,
-            name=item.name,
-            is_collection=item.is_collection,
-            content_ext=item.content_ext,
-            preview_ext=item.preview_ext,
-            thumbnail_ext=item.thumbnail_ext,
-            tags=item.tags,
-            permissions=tuple(str(x) for x in item.permissions),
-        ).where(
-            db_models.Item.uuid == item.uuid,
+        stmt = (
+            sa.update(db_models.Item)
+            .values(
+                parent_uuid=item.parent_uuid,
+                name=item.name,
+                is_collection=item.is_collection,
+                content_ext=item.content_ext,
+                preview_ext=item.preview_ext,
+                thumbnail_ext=item.thumbnail_ext,
+                tags=item.tags,
+                permissions=tuple(str(x) for x in item.permissions),
+            )
+            .where(
+                db_models.Item.uuid == item.uuid,
+            )
         )
 
         await self.db.execute(stmt)
 
     async def delete_item(self, item: models.Item) -> None:
         """Delete item."""
-        stmt = sa.delete(
-            db_models.Item
-        ).where(
+        stmt = sa.delete(db_models.Item).where(
             db_models.Item.uuid == item.uuid
         )
         await self.db.execute(stmt)
@@ -490,40 +472,40 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Apply new permissions for given item UUID."""
         if override:
-            stmt = sa.update(
-                db_models.Item
-            ).where(
-                db_models.Item.uuid == uuid
-            ).values(
-                permissions=tuple(str(x) for x in all_permissions),
+            stmt = (
+                sa.update(db_models.Item)
+                .where(db_models.Item.uuid == uuid)
+                .values(
+                    permissions=tuple(str(x) for x in all_permissions),
+                )
             )
             await self.db.execute(stmt)
 
         else:
             if deleted:
                 for user in deleted:
-                    stmt = sa.update(
-                        db_models.Item
-                    ).where(
-                        db_models.Item.uuid == uuid
-                    ).values(
-                        permissions=sa.func.array_remove(
-                            db_models.Item.permissions,
-                            str(user),
+                    stmt = (
+                        sa.update(db_models.Item)
+                        .where(db_models.Item.uuid == uuid)
+                        .values(
+                            permissions=sa.func.array_remove(
+                                db_models.Item.permissions,
+                                str(user),
+                            )
                         )
                     )
                     await self.db.execute(stmt)
 
             if added:
                 for user in added:
-                    stmt = sa.update(
-                        db_models.Item
-                    ).where(
-                        db_models.Item.uuid == uuid
-                    ).values(
-                        permissions=sa.func.array_append(
-                            db_models.Item.permissions,
-                            str(user),
+                    stmt = (
+                        sa.update(db_models.Item)
+                        .where(db_models.Item.uuid == uuid)
+                        .values(
+                            permissions=sa.func.array_append(
+                                db_models.Item.permissions,
+                                str(user),
+                            )
                         )
                     )
                     await self.db.execute(stmt)
@@ -535,14 +517,14 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Add new tags to computed tags of the item."""
         for tag in tags:
-            stmt = sa.update(
-                db_models.ComputedTags
-            ).where(
-                db_models.ComputedTags.item_uuid == uuid
-            ).values(
-                tags=sa.func.array_append(
-                    db_models.ComputedTags.tags,
-                    tag,
+            stmt = (
+                sa.update(db_models.ComputedTags)
+                .where(db_models.ComputedTags.item_uuid == uuid)
+                .values(
+                    tags=sa.func.array_append(
+                        db_models.ComputedTags.tags,
+                        tag,
+                    )
                 )
             )
             await self.db.execute(stmt)
@@ -554,14 +536,14 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Remove tags from computed tags of the item."""
         for tag in tags:
-            stmt = sa.update(
-                db_models.ComputedTags
-            ).where(
-                db_models.ComputedTags.item_uuid == uuid
-            ).values(
-                tags=sa.func.array_remove(
-                    db_models.ComputedTags.tags,
-                    tag,
+            stmt = (
+                sa.update(db_models.ComputedTags)
+                .where(db_models.ComputedTags.item_uuid == uuid)
+                .values(
+                    tags=sa.func.array_remove(
+                        db_models.ComputedTags.tags,
+                        tag,
+                    )
                 )
             )
             await self.db.execute(stmt)
@@ -573,14 +555,14 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Add new users to computed permissions of the item."""
         for user_uuid in permissions:
-            stmt = sa.update(
-                db_models.Item
-            ).where(
-                db_models.Item.uuid == uuid
-            ).values(
-                permissions=sa.func.array_append(
-                    db_models.Item.permissions,
-                    str(user_uuid),
+            stmt = (
+                sa.update(db_models.Item)
+                .where(db_models.Item.uuid == uuid)
+                .values(
+                    permissions=sa.func.array_append(
+                        db_models.Item.permissions,
+                        str(user_uuid),
+                    )
                 )
             )
             await self.db.execute(stmt)
@@ -592,14 +574,14 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     ) -> None:
         """Remove users from computed permissions of the item."""
         for user_uuid in permissions:
-            stmt = sa.update(
-                db_models.Item
-            ).where(
-                db_models.Item.uuid == uuid
-            ).values(
-                permissions=sa.func.array_remove(
-                    db_models.Item.permissions,
-                    str(user_uuid),
+            stmt = (
+                sa.update(db_models.Item)
+                .where(db_models.Item.uuid == uuid)
+                .values(
+                    permissions=sa.func.array_remove(
+                        db_models.Item.permissions,
+                        str(user_uuid),
+                    )
                 )
             )
             await self.db.execute(stmt)

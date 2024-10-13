@@ -29,9 +29,7 @@ class ModelMixin:
             return dump
 
         return {
-            key: value
-            for key, value in dump.items()
-            if key not in exclude
+            key: value for key, value in dump.items() if key not in exclude
         }
 
 
@@ -55,6 +53,7 @@ class SecretStrCustom(UserString):
 
 class Role(enum.Enum):
     """User role."""
+
     # TODO - change to StrEnum in Python 3.11
     anon = enum.auto()
     user = enum.auto()
@@ -63,6 +62,7 @@ class Role(enum.Enum):
 
 class User(BaseModel):
     """User model."""
+
     uuid: UUID
     name: str
     login: SecretStr
@@ -117,6 +117,7 @@ class User(BaseModel):
 @dataclass
 class AccessStatus(ModelMixin):
     """Status of an access and existence check."""
+
     exists: bool
     is_public: bool
     is_permitted: bool
@@ -130,11 +131,13 @@ class AccessStatus(ModelMixin):
     @property
     def is_given(self) -> bool:
         """Return True if user can access this item."""
-        return any([
-            self.is_public,
-            self.is_owner,
-            self.is_permitted,
-        ])
+        return any(
+            [
+                self.is_public,
+                self.is_owner,
+                self.is_permitted,
+            ]
+        )
 
     @property
     def is_not_given(self) -> bool:
@@ -160,6 +163,7 @@ class AccessStatus(ModelMixin):
 @dataclass
 class Item(ModelMixin):
     """Standard item."""
+
     id: int
     uuid: UUID
     parent_uuid: UUID | None
@@ -194,9 +198,7 @@ class Item(ModelMixin):
         Resulting collection is not visible for users and includes
         technical information.
         """
-        computed_tags: set[str] = {
-            tag.casefold() for tag in self.tags
-        }
+        computed_tags: set[str] = {tag.casefold() for tag in self.tags}
 
         computed_tags.add(str(self.uuid).casefold())
 
@@ -213,6 +215,7 @@ class Item(ModelMixin):
 
 class MetainfoOld(BaseModel):
     """Metainfo for item."""
+
     created_at: datetime = const.DUMMY_TIME
     updated_at: datetime = const.DUMMY_TIME
     deleted_at: datetime | None = None
@@ -236,6 +239,7 @@ class MetainfoOld(BaseModel):
 @dataclass
 class Metainfo(ModelMixin):
     """Metainfo for item."""
+
     item_uuid: UUID
 
     created_at: datetime
@@ -261,6 +265,7 @@ class Metainfo(ModelMixin):
 @dataclass
 class Media(ModelMixin):
     """Transient content fot the item."""
+
     id: int
     created_at: datetime
     processed_at: datetime | None
@@ -275,6 +280,7 @@ class Media(ModelMixin):
 @dataclass
 class SpaceUsage(ModelMixin):
     """Total size of user data for specific user."""
+
     uuid: UUID
     content_size: int
     preview_size: int
@@ -329,6 +335,7 @@ class SpaceUsage(ModelMixin):
 @dataclass
 class DiskUsage(ModelMixin):
     """Total disk usage of a specific user."""
+
     content_bytes: int
     preview_bytes: int
     thumbnail_bytes: int
@@ -352,6 +359,7 @@ class DiskUsage(ModelMixin):
 @dataclass
 class ResourceUsage(ModelMixin):
     """Total resource usage for specific user."""
+
     user_uuid: UUID
     total_items: int
     total_collections: int
@@ -360,5 +368,6 @@ class ResourceUsage(ModelMixin):
 
 class ParentTags(NamedTuple):
     """DTO for parent computed tags."""
+
     parent: Item
     computed_tags: set[str]

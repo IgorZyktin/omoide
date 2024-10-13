@@ -1,4 +1,5 @@
 """Logging tools."""
+
 import sys
 from typing import TypeAlias
 

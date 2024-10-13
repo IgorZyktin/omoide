@@ -1,4 +1,5 @@
 """Use cases that process browse requests from users."""
+
 import time
 from typing import Any
 from uuid import UUID

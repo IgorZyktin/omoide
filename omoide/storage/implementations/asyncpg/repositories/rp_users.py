@@ -1,4 +1,5 @@
 """Repository that performs read operations on users."""
+
 from collections.abc import Collection
 from uuid import UUID
 from uuid import uuid4
@@ -22,11 +23,11 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         while True:
             uuid = uuid4()
 
-            stmt = sa.select(
-                db_models.User.uuid
-            ).where(
-                db_models.User.uuid == uuid
-            ).exists()
+            stmt = (
+                sa.select(db_models.User.uuid)
+                .where(db_models.User.uuid == uuid)
+                .exists()
+            )
 
             exists = await self.db.fetch_one(stmt, {'uuid': uuid})
 
@@ -39,9 +40,7 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         auth_complexity: int,
     ) -> None:
         """Create new user."""
-        stmt = sa.insert(
-            db_models.User
-        ).values(
+        stmt = sa.insert(db_models.User).values(
             uuid=user.uuid,
             login=user.login,
             password=user.password,
@@ -100,19 +99,14 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [
-            models.User(**row, role=models.Role.user)
-            for row in response
-        ]
+        return [models.User(**row, role=models.Role.user) for row in response]
 
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""
-        stmt = sa.update(
-            db_models.User
-        ).where(
-            db_models.User.uuid == uuid
-        ).values(
-            **kwargs
+        stmt = (
+            sa.update(db_models.User)
+            .where(db_models.User.uuid == uuid)
+            .values(**kwargs)
         )
         await self.db.execute(stmt)
 
@@ -121,21 +115,23 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         user: models.User,
     ) -> models.SpaceUsage:
         """Return total amount of used space for user."""
-        stmt = sa.select(
-            sa.func.sum(db_models.Metainfo.content_size).label(
-                'content_size'
-            ),
-            sa.func.sum(db_models.Metainfo.preview_size).label(
-                'preview_size'
-            ),
-            sa.func.sum(db_models.Metainfo.thumbnail_size).label(
-                'thumbnail_size'
+        stmt = (
+            sa.select(
+                sa.func.sum(db_models.Metainfo.content_size).label(
+                    'content_size'
+                ),
+                sa.func.sum(db_models.Metainfo.preview_size).label(
+                    'preview_size'
+                ),
+                sa.func.sum(db_models.Metainfo.thumbnail_size).label(
+                    'thumbnail_size'
+                ),
             )
-        ).join(
-            db_models.Item,
-            db_models.Item.uuid == db_models.Metainfo.item_uuid,
-        ).where(
-            db_models.Item.owner_uuid == str(user.uuid)
+            .join(
+                db_models.Item,
+                db_models.Item.uuid == db_models.Metainfo.item_uuid,
+            )
+            .where(db_models.Item.owner_uuid == str(user.uuid))
         )
 
         response = await self.db.fetch_one(stmt)

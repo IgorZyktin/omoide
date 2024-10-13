@@ -1,4 +1,5 @@
 """Use cases for EXIF-related operations."""
+
 from typing import Any
 from uuid import UUID
 

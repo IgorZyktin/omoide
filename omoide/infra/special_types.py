@@ -1,4 +1,5 @@
 """Custom types used to tie the infrastructure together."""
+
 from typing import Generic
 from typing import TypeVar
 

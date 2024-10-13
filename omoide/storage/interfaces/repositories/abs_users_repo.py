@@ -1,4 +1,5 @@
 """Repository that performs operations on users."""
+
 import abc
 from collections.abc import Collection
 from uuid import UUID

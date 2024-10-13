@@ -19,6 +19,7 @@ AUTOCOMPLETE_LIMIT = 10
 
 class ItemOutput(BaseModel):
     """Model of a standard item."""
+
     uuid: UUID
     parent_uuid: UUID | None
     owner_uuid: UUID
@@ -47,12 +48,13 @@ DEFAULT_ITEM_EXAMPLE = {
     'permissions': ['2e81dc5a-fdc9-45ee-bd78-f276328a14bf'],
     'extras': {
         'parent_name': 'Cool cats',
-    }
+    },
 }
 
 
 class OneItemOutput(BaseModel):
     """Response with one item."""
+
     item: ItemOutput
 
     model_config = {
@@ -64,6 +66,7 @@ class OneItemOutput(BaseModel):
 
 class ManyItemsOutput(BaseModel):
     """Response with many items."""
+
     duration: float
     items: list[ItemOutput]
 
@@ -81,6 +84,7 @@ class ManyItemsOutput(BaseModel):
 
 class ItemDeleteOutput(BaseModel):
     """Output info after item deletion."""
+
     result: str
     item_uuid: str
     switch_to: ItemOutput

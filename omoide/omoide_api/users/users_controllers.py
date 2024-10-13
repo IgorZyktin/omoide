@@ -1,4 +1,5 @@
 """User related API operations."""
+
 from typing import Annotated
 from uuid import UUID
 

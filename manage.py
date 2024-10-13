@@ -1,4 +1,5 @@
 """Manual CLI operations."""
+
 from uuid import UUID
 
 import click
@@ -42,8 +43,9 @@ def command_du(**kwargs) -> None:
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Calculating total disk usage...'):
+        with helpers.timing(
+            callback=LOG.info, start_template='Calculating total disk usage...'
+        ):
             run.run(config, database)
 
 
@@ -195,8 +197,9 @@ def command_rebuild_image_sizes(**kwargs) -> None:
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Rebuilding all image sizes...'):
+        with helpers.timing(
+            callback=LOG.info, start_template='Rebuilding all image sizes...'
+        ):
             run.run(config, database)
 
 
@@ -226,8 +229,9 @@ def command_tree(**kwargs) -> None:
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Showing all descendants...'):
+        with helpers.timing(
+            callback=LOG.info, start_template='Showing all descendants...'
+        ):
             run.run(config, database)
 
 
@@ -259,16 +263,18 @@ def command_tree(**kwargs) -> None:
     default=-1,
     help='Maximum amount of items to process (-1 for infinity)',
 )
-def command_rename_metainfo_key(db_url: str, key: str,
-                                new: str, batch_size: int, limit: int) -> None:
+def command_rename_metainfo_key(
+    db_url: str, key: str, new: str, batch_size: int, limit: int
+) -> None:
     """Change metainfo key without changing its value."""
     from omoide.commands.rename_metainfo_key import run
 
     database = sync_db.SyncDatabase(db_url)
 
     with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template='Changing metainfo key...'):
+        with helpers.timing(
+            callback=LOG.info, start_template='Changing metainfo key...'
+        ):
             run.run(database, key, new, batch_size, limit)
 
 
@@ -295,16 +301,18 @@ def command_rename_metainfo_key(db_url: str, key: str,
     default=-1,
     help='Maximum amount of items to process (-1 for infinity)',
 )
-def command_move_metainfo_key(db_url: str, key: str,
-                              batch_size: int, limit: int) -> None:
+def command_move_metainfo_key(
+    db_url: str, key: str, batch_size: int, limit: int
+) -> None:
     """Move metainfo key to extras."""
     from omoide.commands.move_metainfo_key import run
 
     database = sync_db.SyncDatabase(db_url)
 
     with database.life_cycle():
-        with helpers.timing(callback=LOG.info,
-                            start_template=f'Moving metainfo key {key}'):
+        with helpers.timing(
+            callback=LOG.info, start_template=f'Moving metainfo key {key}'
+        ):
             run.run(database, key, batch_size, limit)
 
 
