@@ -9,32 +9,42 @@ from typing import Generic
 from typing import TypeVar
 
 from omoide import custom_logging
+from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.database.interfaces.abs_worker_repo import AbsWorkerRepo
 
 LOG = custom_logging.get_logger(__name__)
 
 ConfigT = TypeVar('ConfigT')
-DbT = TypeVar('DbT')
 
 
-class BaseWorker(Generic[ConfigT, DbT], abc.ABC):
+class BaseWorker(Generic[ConfigT], abc.ABC):
     """General worker class for all workers."""
 
-    def __init__(self, config: ConfigT, db: DbT) -> None:
+    def __init__(
+        self,
+        config: ConfigT,
+        database: AbsDatabase,
+        repo: AbsWorkerRepo,
+    ) -> None:
         """Initialize instance."""
         self.config = config
-        self.db = db
+        self.database = database
+        self.repo = repo
         self.stopping = False
 
-    async def start(self) -> None:
+    async def start(self, worker_name: str) -> None:
         """Start worker."""
-        await self.db.connect()
-        await self.db.register_worker()
-        LOG.info('Worker {} started', self.config.name)
+        await self.database.connect()
 
-    async def stop(self) -> None:
+        async with self.database.transaction() as conn:
+            await self.repo.register_worker(conn, worker_name)
+
+        LOG.info('Worker {} started', worker_name)
+
+    async def stop(self, worker_name: str) -> None:
         """Start worker."""
-        await self.db.disconnect()
-        LOG.info('Worker {} stopped', self.config.name)
+        await self.database.disconnect()
+        LOG.info('Worker {} stopped', worker_name)
 
     def register_signals(self, loop: asyncio.AbstractEventLoop) -> None:
         """Decide how we will stop."""
@@ -45,7 +55,7 @@ class BaseWorker(Generic[ConfigT, DbT], abc.ABC):
         def signal_handler(sig: int) -> None:
             """Handle signal."""
             string = signal.strsignal(sig)
-            LOG.info('Caught signal {}, stopping', string)
+            LOG.info('Worker caught signal {}, stopping', string)
             loop.remove_signal_handler(sig)
             self.stopping = True
 

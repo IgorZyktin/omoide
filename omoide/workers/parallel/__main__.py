@@ -1,7 +1,7 @@
 """Worker that performs operations in parallel."""
 
 
-def main():
+def main() -> None:
     """Entry point."""
 
 

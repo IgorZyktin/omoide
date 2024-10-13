@@ -3,20 +3,26 @@
 import asyncio
 
 from omoide import custom_logging
+from omoide.database.implementations.impl_sqlalchemy.database import (
+    SqlalchemyDatabase,
+)
+from omoide.database.implementations.impl_sqlalchemy.worker_repo import (
+    WorkerRepo,
+)
 from omoide.workers.serial import cfg
-from omoide.workers.serial.database import SerialDatabase
 from omoide.workers.serial.worker import SerialWorker
 
 LOG = custom_logging.get_logger(__name__)
 
 
-async def main():
+async def main() -> None:
     """Entry point."""
     config = cfg.Config()
-    database = SerialDatabase(config)
-    worker = SerialWorker(config, database)
+    database = SqlalchemyDatabase(config.db_admin_url.get_secret_value())
+    repo = WorkerRepo()
+    worker = SerialWorker(config, database, repo)
 
-    await worker.start()
+    await worker.start(config.name)
     loop = asyncio.get_event_loop()
     worker.register_signals(loop)
 
@@ -34,7 +40,7 @@ async def main():
     except (KeyboardInterrupt, asyncio.CancelledError):
         LOG.warning('Stopped manually')
     finally:
-        await worker.stop()
+        await worker.stop(config.name)
 
 
 if __name__ == '__main__':

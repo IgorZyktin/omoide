@@ -1,27 +1,30 @@
 """Project exceptions."""
+
 from typing import Any
 
 
-class BaseOmoideApiError(Exception):
+class BaseOmoideError(Exception):
     """Base class for all API exception."""
 
     def __init__(
         self,
-        msg: str,
+        msg: str = '',
         **kwargs: Any,
     ) -> None:
         """Initialize instance."""
-        super().__init__(msg)
-        self.msg = msg
-        self.kwargs = kwargs
-        self.rendered_text = msg
-        self.name = type(self).__name__
+        class_ = type(self)
+        self.__msg = (msg or class_.__doc__ or '').rstrip('.').strip()
+        self.__kwargs = kwargs
+        self.__rendered_text = msg
+        self.__name = class_.__name__
 
         if kwargs:
-            self.rendered_text = self._render_text(msg, **kwargs)
+            self.__rendered_text = self.__render_text(self.__msg, **kwargs)
+
+        super().__init__(self.__rendered_text)
 
     @staticmethod
-    def _render_text(template: str, **kwargs: str) -> str:
+    def __render_text(template: str, **kwargs: str) -> str:
         """Safely convert error to text message."""
         try:
             rendered_text = template.format(**kwargs)
@@ -31,29 +34,36 @@ class BaseOmoideApiError(Exception):
 
     def __str__(self) -> str:
         """Return textual representation."""
-        return self.rendered_text
+        return self.__rendered_text
 
     def __repr__(self) -> str:
         """Return textual representation."""
-        name = type(self).__name__
-        return f'{name}({self.msg!r}, {self.kwargs})'
+        return f'{self.__name}({self.__msg!r}, {self.__kwargs})'
 
 
-class DoesNotExistError(BaseOmoideApiError):
+class DoesNotExistError(BaseOmoideError):
     """Target resource does not exist."""
 
 
-class AlreadyExistsError(BaseOmoideApiError):
+class AlreadyExistsError(BaseOmoideError):
     """Target resource already exists."""
 
 
-class AccessDeniedError(BaseOmoideApiError):
+class AccessDeniedError(BaseOmoideError):
     """User has no rights to do this."""
 
 
-class InvalidInputError(BaseOmoideApiError):
+class InvalidInputError(BaseOmoideError):
     """User sent us something strange."""
 
 
-class NotAllowedError(BaseOmoideApiError):
+class NotAllowedError(BaseOmoideError):
     """User has access to the object, but cannot perform specific operation."""
+
+
+class UnknownWorkerError(BaseOmoideError):
+    """Worker {worker_name} is not in list of registered workers."""
+
+
+class UnknownSerialOperationError(BaseOmoideError):
+    """There is no operation of type {name!r}."""

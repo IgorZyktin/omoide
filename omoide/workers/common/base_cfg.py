@@ -11,3 +11,4 @@ class BaseWorkerConfig(BaseSettings):
     name: str = 'dev'
     short_delay: float = 1.0
     long_delay: float = 2.0
+    batch_size: int = 100

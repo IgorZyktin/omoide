@@ -683,15 +683,12 @@ class SerialOperation(Base):
 
     # fields ------------------------------------------------------------------
 
-    operation: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=False)
+    name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=False)
     worker_name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=True)
 
     status: Mapped[str] = mapped_column(
         sa.Enum('created', 'processing', 'done', 'failed',
                 name='serial_operation_status'))
-
-    expected: Mapped[int] = mapped_column(sa.Integer, nullable=False)
-    affected: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
 
