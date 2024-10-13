@@ -6,24 +6,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.10
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           pip install -U pip
-          pip install poetry
-          poetry install --with dev
-        env:
-          POETRY_VIRTUALENVS_CREATE: false
+          pip install uv
+          uv sync --all-extras
 
       - name: Lint with Ruff
-        run: ruff check --output-format=github .
+        run: uv run ruff check --output-format=github .
 
       - name: Test with mypy
-        run: mypy ./omoide
+        run: uv run mypy ./omoide
 
       - name: Test with pytest
-        run: pytest ./omoide/tests/
+        run: uv run pytest ./omoide/tests/
