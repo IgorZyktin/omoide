@@ -335,7 +335,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "sqlalchemy" },
+    { name = "sqlalchemy", extra = ["asyncio", "mypy"] },
     { name = "ujson" },
 ]
 
@@ -378,7 +378,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.9.2" },
     { name = "pydantic-settings", specifier = ">=2.5.2" },
     { name = "python-multipart", marker = "extra == 'web'", specifier = ">=0.0.12" },
-    { name = "sqlalchemy", specifier = ">=2.0.35" },
+    { name = "sqlalchemy", extras = ["asyncio", "mypy"], specifier = ">=2.0.35" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.12.5" },
     { name = "ujson", specifier = ">=5.10.0" },
     { name = "uvicorn", marker = "extra == 'web'", specifier = ">=0.31.0" },
@@ -622,6 +622,14 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f0/f3/ee1e62fabdc10910b5ef720ae08e59bc785f26652876af3a50b89b97b412/SQLAlchemy-2.0.35-cp312-cp312-win32.whl", hash = "sha256:0f9f3f9a3763b9c4deb8c5d09c4cc52ffe49f9876af41cc1b2ad0138878453cf", size = 2060113 },
     { url = "https://files.pythonhosted.org/packages/60/63/a3cef44a52979169d884f3583d0640e64b3c28122c096474a1d7cfcaf1f3/SQLAlchemy-2.0.35-cp312-cp312-win_amd64.whl", hash = "sha256:25b0f63e7fcc2a6290cb5f7f5b4fc4047843504983a28856ce9b35d8f7de03cc", size = 2085839 },
     { url = "https://files.pythonhosted.org/packages/0e/c6/33c706449cdd92b1b6d756b247761e27d32230fd6b2de5f44c4c3e5632b2/SQLAlchemy-2.0.35-py3-none-any.whl", hash = "sha256:2ab3f0336c0387662ce6221ad30ab3a5e6499aab01b9790879b6578fd9b8faa1", size = 1881276 },
+]
+
+[package.optional-dependencies]
+asyncio = [
+    { name = "greenlet" },
+]
+mypy = [
+    { name = "mypy" },
 ]
 
 [[package]]

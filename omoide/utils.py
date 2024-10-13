@@ -261,7 +261,7 @@ def split(string: str, separator: str = ',') -> list[str]:
     ]
 
 
-def get_size(obj, seen: set[int] | None = None) -> int:
+def get_size(obj: Any, seen: set[int] | None = None) -> int:
     """Recursively finds size of objects."""
     size = sys.getsizeof(obj)
 
@@ -314,3 +314,8 @@ def serialize(payload: dict[str, Any]) -> dict[str, str | None]:
         str(key): to_simple_type(value)
         for key, value in payload.items()
     }
+
+
+def exc_to_str(exc: Exception) -> str:
+    """Convert exception into readable string."""
+    return f'{type(exc).__name__}: {exc}'

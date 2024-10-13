@@ -13,7 +13,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "pydantic-settings>=2.5.2",
     "pydantic>=2.9.2",
-    "sqlalchemy>=2.0.35",
+    "sqlalchemy[asyncio,mypy]>=2.0.35",
     "ujson>=5.10.0",
 ]
 
@@ -151,7 +151,7 @@ warn_unused_configs = true
 exclude = ["^venv"]
 plugins = [
     "pydantic.mypy",
-    "sqlalchemy.ext.mypy.plugin"
+    "sqlalchemy.ext.mypy.plugin",
 ]
 
 [[tool.mypy.overrides]]
