@@ -2,19 +2,22 @@
 
 import abc
 from collections import defaultdict
+from collections.abc import Awaitable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 from typing import Any
-from typing import Awaitable
-from typing import Callable
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import custom_logging
-from omoide.database.implementations.impl_sqlalchemy.database import (
-    SqlalchemyDatabase,
-)
 from omoide.domain import SerialOperation
 from omoide.storage.database import db_models
+
+if TYPE_CHECKING:
+    from omoide.database.implementations.impl_sqlalchemy.database import (
+        SqlalchemyDatabase,
+    )
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -66,15 +69,19 @@ class RebuildKnownTagsAnon(BaseRebuildKnownTagsOperation):
         """Return known tags for anon."""
         sub_query = sa.select(db_models.PublicUsers.user_uuid)
 
-        stmt = sa.select(
-            db_models.Item.id,
-            db_models.Item.uuid,
-            db_models.ComputedTags.tags,
-        ).join(
-            db_models.ComputedTags,
-            db_models.ComputedTags.item_uuid == db_models.Item.uuid,
-        ).where(
-            db_models.Item.owner_uuid.in_(sub_query),  # noqa
+        stmt = (
+            sa.select(
+                db_models.Item.id,
+                db_models.Item.uuid,
+                db_models.ComputedTags.tags,
+            )
+            .join(
+                db_models.ComputedTags,
+                db_models.ComputedTags.item_uuid == db_models.Item.uuid,
+            )
+            .where(
+                db_models.Item.owner_uuid.in_(sub_query),
+            )
         )
 
         if marker is not None:
@@ -112,7 +119,8 @@ class RebuildKnownTagsAnon(BaseRebuildKnownTagsOperation):
 
         async with database.transaction() as conn:
             tags = await self._get_tags_batched(
-                self._get_available_tags_anon, conn, batch_size)
+                self._get_available_tags_anon, conn, batch_size
+            )
             await self._drop_known_tags_anon(conn)
             await self._insert_known_tags_anon(conn, tags)
 
@@ -137,18 +145,22 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
         user_uuid: str,
     ) -> list[tuple[int, list[str]]]:
         """Return known tags for known user."""
-        stmt = sa.select(
-            db_models.Item.id,
-            db_models.Item.uuid,
-            db_models.ComputedTags.tags,
-            db_models.Item.permissions,
-        ).join(
-            db_models.ComputedTags,
-            db_models.ComputedTags.item_uuid == db_models.Item.uuid,
-        ).where(
-            sa.or_(
-                db_models.Item.owner_uuid == user_uuid,
-                db_models.Item.permissions.any(user_uuid),
+        stmt = (
+            sa.select(
+                db_models.Item.id,
+                db_models.Item.uuid,
+                db_models.ComputedTags.tags,
+                db_models.Item.permissions,
+            )
+            .join(
+                db_models.ComputedTags,
+                db_models.ComputedTags.item_uuid == db_models.Item.uuid,
+            )
+            .where(
+                sa.or_(
+                    db_models.Item.owner_uuid == user_uuid,
+                    db_models.Item.permissions.any(user_uuid),
+                )
             )
         )
 
@@ -166,9 +178,7 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
         user_uuid: str,
     ) -> None:
         """Drop all known tags for known user."""
-        stmt = sa.delete(
-            db_models.KnownTags
-        ).where(
+        stmt = sa.delete(db_models.KnownTags).where(
             db_models.KnownTags.user_uuid == user_uuid
         )
         await conn.execute(stmt)
@@ -196,7 +206,8 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
 
         async with database.transaction() as conn:
             tags = await self._get_tags_batched(
-                self._get_available_tags_known, conn, batch_size, user_uuid)
+                self._get_available_tags_known, conn, batch_size, user_uuid
+            )
             await self._drop_known_tags_known(conn, user_uuid)
             await self._insert_known_tags_known(conn, user_uuid, tags)
 

@@ -60,7 +60,7 @@ class SerialWorker(BaseWorker[Config]):
     async def execute_operation(self, operation: SerialOperation) -> bool:
         """Perform workload."""
         done_something = False
-        LOG.info('Executing operation {} {}', operation.id, operation.name)
+        LOG.info('Executing operation {}', operation)
         try:
             done_something = await operation.execute(
                 database=self.database,
@@ -74,18 +74,16 @@ class SerialWorker(BaseWorker[Config]):
                     conn, operation, error
                 )
             LOG.exception(
-                'Operation {id} {name!r} failed because of {error}',
-                id=operation.id,
-                name=operation.name,
+                'Operation {operation} failed because of {error}',
+                operation=operation,
                 error=error,
             )
         else:
             async with self.database.transaction() as conn:
                 await self.repo.mark_serial_operation_done(conn, operation)
             LOG.info(
-                'Operation {id} {name!r} complete in {duration:0.3f} sec.',
-                id=operation.id,
-                name=operation.name,
+                'Operation {operation} complete in {duration:0.3f} sec.',
+                operation=operation,
                 duration=operation.duration,
             )
 
