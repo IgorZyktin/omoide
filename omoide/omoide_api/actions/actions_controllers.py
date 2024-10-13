@@ -1,6 +1,7 @@
 """Computationally heavy operations."""
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -18,29 +19,51 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 
 
 @api_actions_router.post(
-    '/rebuild_known_tags',
+    '/rebuild_known_tags_anon',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, int | str | None],
+    response_model=dict[str, int | str],
 )
-async def api_action_rebuild_known_tags(
+async def api_action_rebuild_known_tags_anon(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.RebuildKnownTagsInput,
 ):
-    """Recalculate all known tags for user.
-
-    If given user UUID is null, recalculation will be done for anon user.
-    """
-    use_case = actions_use_cases.RebuildKnownTagsUseCase(mediator)
+    """Recalculate all known tags for anon user."""
+    use_case = actions_use_cases.RebuildKnownTagsAnonUseCase(mediator)
 
     try:
-        operation_id = await use_case.execute(admin, target.user_uuid)
+        operation_id = await use_case.execute(admin)
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Rebuilding known tags',
+        'result': 'Rebuilding known tags for anon',
+        'operation_id': operation_id,
+    }
+
+
+@api_actions_router.post(
+    '/rebuild_known_tags_known/{user_uuid}',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, int | str],
+)
+async def api_action_rebuild_known_tags_known(
+    admin: Annotated[models.User, Depends(dep.get_admin_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user_uuid: UUID,
+):
+    """Recalculate all known tags for known user."""
+    use_case = actions_use_cases.RebuildKnownTagsKnownUseCase(mediator)
+
+    try:
+        operation_id = await use_case.execute(admin, user_uuid)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return {
+        'result': 'Rebuilding known tags for known user',
+        'user_uuid': str(user_uuid),
         'operation_id': operation_id,
     }
 

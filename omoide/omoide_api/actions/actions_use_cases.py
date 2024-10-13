@@ -3,7 +3,6 @@
 import abc
 import asyncio
 import time
-from typing import Any
 from uuid import UUID
 
 from omoide import const
@@ -87,42 +86,41 @@ class BaseRebuildTagsUseCase(BaseAPIUseCase, abc.ABC):
             )
 
 
-class RebuildKnownTagsUseCase(BaseAPIUseCase):
-    """Use case for rebuilding known tags."""
+class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
+    """Use case for rebuilding known tags for anon."""
 
-    async def execute(
-        self,
-        admin: models.User,
-        user_uuid: UUID | None,
-    ) -> int:
+    async def execute(self, admin: models.User) -> int:
         """Prepare for execution."""
-        self.ensure_admin(
-            admin,
-            subject=f'known tags of {user_uuid or "anon"}',
-        )
-        extras: dict[str, Any] = {}
+        self.ensure_admin(admin, subject=f'known tags for anon')
 
         async with self.mediator.storage.transaction():
-            if user_uuid is None:
-                LOG.info(
-                    'User {} is rebuilding known tags for anon user',
-                    admin,
-                )
-                operation_name = 'rebuild_known_tags_anon'
-            else:
-                user = await self.mediator.users_repo.get_user(user_uuid)
-                LOG.info(
-                    'User {} is rebuilding known tags for user {}',
-                    admin,
-                    user,
-                )
-                extras.update({'user_uuid': str(user_uuid)})
-                operation_name = 'rebuild_known_tags_known'
-
+            LOG.info('User {} is rebuilding known tags for anon user', admin)
             repo = self.mediator.misc_repo
             operation_id = await repo.create_serial_operation(
-                name=operation_name,
-                extras=extras,
+                name='rebuild_known_tags_anon',
+            )
+
+        return operation_id
+
+
+class RebuildKnownTagsKnownUseCase(BaseAPIUseCase):
+    """Use case for rebuilding known tags for known user."""
+
+    async def execute(self, admin: models.User, user_uuid: UUID) -> int:
+        """Prepare for execution."""
+        self.ensure_admin(admin, subject=f'known tags for user {user_uuid}')
+
+        async with self.mediator.storage.transaction():
+            user = await self.mediator.users_repo.get_user(user_uuid)
+            LOG.info(
+                'User {} is rebuilding known tags for user {}',
+                admin,
+                user,
+            )
+            repo = self.mediator.misc_repo
+            operation_id = await repo.create_serial_operation(
+                name='rebuild_known_tags_known',
+                extras={'user_uuid': str(user_uuid)},
             )
 
         return operation_id

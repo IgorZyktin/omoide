@@ -99,6 +99,6 @@ class AbsMiscRepo(abc.ABC):
     async def create_serial_operation(
         self,
         name: str,
-        extras: dict[str, Any],
+        extras: dict[str, Any] | None = None,
     ) -> int:
         """Create serial operation."""

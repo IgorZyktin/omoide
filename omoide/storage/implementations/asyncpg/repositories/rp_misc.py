@@ -264,7 +264,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     async def create_serial_operation(
         self,
         name: str,
-        extras: dict[str, Any],
+        extras: dict[str, Any] | None = None,
     ) -> int:
         """Create serial operation."""
         now = utils.now()
@@ -275,7 +275,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
             name=name,
             worker_name=None,
             status='created',
-            extras=extras,
+            extras=extras or {},
             created_at=now,
             updated_at=now,
             started_at=None,
