@@ -16,40 +16,6 @@ def cli():
     """Manual CLI operations."""
 
 
-@cli.command(name='du')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--only-users',
-    help='Apply to one or more specially listed users (comma separated)',
-)
-def command_du(**kwargs) -> None:
-    """Show disk usage for every user."""
-    from omoide.commands.du import cfg
-    from omoide.commands.du import run
-
-    db_url = SecretStr(kwargs.pop('db_url'))
-
-    only_users = []
-    if kwargs.pop('only_users', ''):
-        only_users = utils.split(str(kwargs.pop('only_users', '')))
-
-    config = cfg.Config(db_url=db_url, only_users=only_users)
-    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
-
-    with (
-        database.life_cycle(),
-        helpers.timing(
-            callback=LOG.info,
-            start_template='Calculating total disk usage...',
-        ),
-    ):
-        run.run(config, database)
-
-
 @cli.command(name='force_thumbnail_copying')
 @click.option(
     '--db-url',
