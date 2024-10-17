@@ -48,8 +48,7 @@ async def app_login(
             password=credentials.password,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     if new_user.is_anon:
         await asyncio.sleep(config.penalty_wrong_password)
