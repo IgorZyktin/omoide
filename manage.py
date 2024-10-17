@@ -42,11 +42,14 @@ def command_du(**kwargs) -> None:
     config = cfg.Config(db_url=db_url, only_users=only_users)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
-    with database.life_cycle():
-        with helpers.timing(
-            callback=LOG.info, start_template='Calculating total disk usage...'
-        ):
-            run.run(config, database)
+    with (
+        database.life_cycle(),
+        helpers.timing(
+            callback=LOG.info,
+            start_template='Calculating total disk usage...',
+        ),
+    ):
+        run.run(config, database)
 
 
 @cli.command(name='force_thumbnail_copying')
@@ -76,12 +79,14 @@ def command_force_cover_copying(**kwargs) -> None:
     config = cfg.Config(db_url=db_url, only_users=only_users)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
-    with database.life_cycle():
-        with helpers.timing(
+    with (
+        database.life_cycle(),
+        helpers.timing(
             callback=LOG.info,
             start_template='Forcing items to copy thumbnails...',
-        ):
-            run.run(config, database)
+        )
+    ):
+        run.run(config, database)
 
 
 @cli.command(name='refresh_file_sizes_in_db')
@@ -136,12 +141,14 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     config = cfg.Config(db_url=db_url, only_users=only_users, **kwargs)
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
-    with database.life_cycle():
-        with helpers.timing(
+    with (
+        database.life_cycle(),
+        helpers.timing(
             callback=LOG.info,
             start_template='Refreshing file sizes for every item...',
-        ):
-            run.run(config, database)
+        )
+    ):
+        run.run(config, database)
 
 
 @cli.command(name='rebuild_image_sizes')

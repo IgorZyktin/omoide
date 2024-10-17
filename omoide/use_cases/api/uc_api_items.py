@@ -50,7 +50,7 @@ async def _generic_call(
     deleted: Collection[str],
     extras: dict[str, int | float | bool | str | None],
 ) -> AsyncIterator[Writeback]:
-    """Generic call used in context managers."""
+    """Calculate additional parameters."""
     start = time.perf_counter()
     LOG.info(
         'Started {} of: {} (added {}, deleted {})',
@@ -110,7 +110,7 @@ async def track_update_permissions_in_parents(
     added: Collection[UUID],
     deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
-    """Helper that tracks updates in parents."""
+    """Track updates in parents."""
     if user.uuid is not None:
         call = _generic_call(
             misc_repo=misc_repo,
@@ -136,7 +136,7 @@ async def track_update_permissions_in_children(
     added: Collection[UUID],
     deleted: Collection[UUID],
 ) -> AsyncIterator[Writeback]:
-    """Helper that tracks updates in children."""
+    """Track updates in children."""
     if user.uuid is not None:
         extras: dict[str, int | float | bool | str | None] = {}
 
@@ -166,7 +166,7 @@ async def track_update_tags_in_children(
     added: Collection[str],
     deleted: Collection[str],
 ) -> AsyncIterator[Writeback]:
-    """Helper that tracks updates in children."""
+    """Track updates in children."""
     if user.uuid is not None:
         call = _generic_call(
             misc_repo=misc_repo,
@@ -236,7 +236,7 @@ class ApiItemUpdateUseCase:
         uuid: UUID,
         operations: list[api_models.PatchOperation],
     ) -> Result[errors.Error, bool]:
-        """Business logic."""
+        """Execute."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
 
@@ -292,7 +292,7 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
         uuid: UUID,
         new_tags: list[str],
     ) -> Result[errors.Error, UUID]:
-        """Business logic."""
+        """Execute."""
         async with self.items_repo.transaction():
             error = await policy.is_restricted(user, uuid, actions.Item.UPDATE)
 
@@ -326,6 +326,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
 
             await self.metainfo_repo.mark_metainfo_updated(item.uuid)
 
+        tasks = []
+
         async def update():
             async with self.items_repo.transaction():
                 async with track_update_tags_in_children(
@@ -337,7 +339,8 @@ class ApiItemUpdateTagsUseCase(BaseItemModifyUseCase):
                     writeback.operations = operations
 
         if added or deleted:
-            asyncio.create_task(update())
+            task = asyncio.create_task(update())
+            tasks.append(task)
 
         return Success(uuid)
 
@@ -400,7 +403,7 @@ class ApiItemUpdatePermissionsUseCase(BaseItemModifyUseCase):
         uuid: UUID,
         new_permissions: api_models.NewPermissionsIn,
     ) -> Result[errors.Error, UUID]:
-        """Business logic."""
+        """Execute."""
         added: set[UUID] = set()
         deleted: set[UUID] = set()
 

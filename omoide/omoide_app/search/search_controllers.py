@@ -24,9 +24,9 @@ async def app_search(
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    response_class: type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
-    """Main page of the application."""
+    """Show the main page of the application."""
     context = {
         'request': request,
         'config': config,
@@ -47,7 +47,7 @@ async def app_home(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Home endpoint for user."""
     context = {

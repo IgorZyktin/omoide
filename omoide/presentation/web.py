@@ -302,7 +302,7 @@ class AimWrapper:
         return urlencode(local_params)
 
     def to_url_no_q(self, **kwargs) -> str:
-        """Same as to url but without query."""
+        """Create same url but without query."""
         kwargs['q'] = ''
         return self.to_url(**kwargs)
 

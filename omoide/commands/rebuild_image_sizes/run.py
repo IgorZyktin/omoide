@@ -124,8 +124,9 @@ def rebuild_sizes(
     try:
         from PIL import Image
     except ImportError:
-        Image = exit  # noqa
-        LOG.error('You have to install "pillow" package to run this command')
+        LOG.exception(
+            'You have to install "pillow" package to run this command'
+        )
         sys.exit(1)
 
     for metainfo, item in all_metainfo:

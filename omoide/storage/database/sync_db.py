@@ -36,7 +36,7 @@ class SyncDatabase:
 
     @contextlib.contextmanager
     def start_session(self) -> Generator[Session, None, None]:
-        """Wrapper around SA session."""
+        """Wrap SA session."""
         with Session(self._engine) as session:
             self._session = session
             yield session
@@ -52,6 +52,6 @@ class SyncDatabase:
 
     @contextlib.contextmanager
     def start_transaction(self) -> Generator[Connection, None, None]:
-        """Wrapper around SA connection."""
+        """Wrap SA connection."""
         with self._engine.begin() as conn:
             yield conn

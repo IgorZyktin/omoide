@@ -1,6 +1,6 @@
 """Change metainfo key without changing its value."""
 
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlalchemy.orm.attributes import flag_modified
@@ -8,6 +8,9 @@ from sqlalchemy.orm.attributes import flag_modified
 from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 LOG = custom_logging.get_logger(__name__)
 

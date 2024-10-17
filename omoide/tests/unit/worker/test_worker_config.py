@@ -13,7 +13,7 @@ def test_worker_config_correct(valid_worker_config_dict):
 
 
 @pytest.mark.parametrize(
-    'hot_folder,cold_folder,save_hot,save_cold',
+    ('hot_folder', 'cold_folder', 'save_hot', 'save_cold'),
     [
         (None, None, False, False),
         ('/', None, False, True),
@@ -47,7 +47,7 @@ def test_worker_config_min_interval(valid_worker_config_dict, min_interval):
 
 
 @pytest.mark.parametrize(
-    'min_interval, max_interval',
+    ('min_interval', 'max_interval'),
     [
         (100, 5),
         (100, 9999999999999),

@@ -24,7 +24,7 @@ async def app_home(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Home endpoint for user."""
     context = {

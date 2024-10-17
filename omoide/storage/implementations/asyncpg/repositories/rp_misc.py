@@ -227,7 +227,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
 
     async def finish_long_job(
         self,
-        id: int,
+        id: int,  # noqa: A002
         status: str,
         duration: float,
         operations: int,

@@ -1,6 +1,6 @@
 """Move metainfo key to extras."""
 
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlalchemy.orm.attributes import flag_modified
@@ -8,6 +8,9 @@ from sqlalchemy.orm.attributes import flag_modified
 from omoide import custom_logging
 from omoide.storage.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -37,7 +40,8 @@ def run(database: SyncDatabase, key: str, batch_size: int, limit: int) -> None:
                 break
 
             for metainfo in models:
-                LOG.info(f'Altered `{key}` for {metainfo.item_uuid}')
+                LOG.info('Altered `{key}` for {item_uuid}',
+                         key=key, item_uuid=metainfo.item_uuid)
                 metainfo.extras[key] = getattr(metainfo, key)
                 setattr(metainfo, key, None)
                 flag_modified(metainfo, 'extras')

@@ -296,7 +296,7 @@ async def api_download_collection(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    response_class: type[Response] = PlainTextResponse,
+    response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
 ):
     """Return all children as a zip archive.
 

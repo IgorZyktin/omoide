@@ -53,7 +53,7 @@ async def app_item_update(
     ),
     config: Config = Depends(dep.get_config),
     aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-    response_class: type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Edit item page."""
     result = await use_case.execute(policy, user, uuid)
@@ -112,7 +112,7 @@ async def app_item_delete(
     ),
     config: Config = Depends(dep.get_config),
     aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
-    response_class: type[Response] = HTMLResponse,
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Delete item page."""
     result = await use_case.execute(policy, user, uuid)

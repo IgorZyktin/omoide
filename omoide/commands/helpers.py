@@ -169,7 +169,8 @@ def get_metainfo(
     )
 
     if metainfo is None:
-        raise RuntimeError(f'No metainfo for item {item.uuid}')
+        msg = f'No metainfo for item {item.uuid}'
+        raise RuntimeError(msg)
 
     return metainfo
 
@@ -188,7 +189,8 @@ def get_item(
     )
 
     if item is None:
-        raise RuntimeError(f'Item {item_uuid} does not exist')
+        msg = f'Item {item_uuid} does not exist'
+        raise RuntimeError(msg)
 
     return item
 

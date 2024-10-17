@@ -3,6 +3,7 @@
 from collections import UserString
 from dataclasses import asdict
 from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
@@ -174,8 +175,8 @@ class Item(ModelMixin):
     content_ext: str | None
     preview_ext: str | None
     thumbnail_ext: str | None
-    tags: list[str] = Field(default_factory=list)
-    permissions: list[UUID] = Field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    permissions: list[UUID] = field(default_factory=list)
 
     def __eq__(self, other: 'Item') -> bool:
         """Return True if other has the same UUID."""

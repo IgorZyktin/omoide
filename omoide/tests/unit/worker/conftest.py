@@ -22,19 +22,19 @@ def valid_worker_config_dict():
             log_level='INFO',
             batch_size=5,
             prefix_size=3,
-            media=dict(
-                should_process=True,
-                drop_after=True,
-            ),
-            copy_commands=dict(
-                should_process=True,
-                drop_after=True,
-            ),
-            timer_strategy=dict(
-                min_interval=5,
-                max_interval=300,
-                warm_up_coefficient=25.4,
-            ),
+            media={
+                'should_process': True,
+                'drop_after': True,
+            },
+            copy_commands={
+                'should_process': True,
+                'drop_after': True,
+            },
+            timer_strategy={
+                'min_interval': 5,
+                'max_interval': 300,
+                'warm_up_coefficient': 25.4,
+            },
             strategy='TimerStrategy',
         )
 

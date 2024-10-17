@@ -314,7 +314,7 @@ class Item(Base):
     id: Mapped[int] = mapped_column(
         sa.BigInteger,
         # TODO - actually make it a primary key
-        # primary_key=True,
+        # primary_key=True,  noqa: ERA001
         autoincrement=True,
         nullable=False,
         index=True,

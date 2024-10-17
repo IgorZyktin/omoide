@@ -285,9 +285,12 @@ async def get_admin_user(
 
 @utils.memorize
 def app_item_update_use_case(
-    users_repo: storage_interfaces.AbsUsersRepo = Depends(get_users_repo),
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    users_repo: Annotated[storage_interfaces.AbsUsersRepo,
+                          Depends(get_users_repo)],
+    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
 ) -> use_cases.AppItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.AppItemUpdateUseCase(
@@ -299,7 +302,8 @@ def app_item_update_use_case(
 
 @utils.memorize
 def app_item_delete_use_case(
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
+    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
 ) -> use_cases.AppItemDeleteUseCase:
     """Get use case instance."""
     return use_cases.AppItemDeleteUseCase(
@@ -312,8 +316,10 @@ def app_item_delete_use_case(
 
 @utils.memorize
 def api_item_update_use_case(
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
-    meta_repo: storage_interfaces.AbsMetainfoRepo = Depends(get_metainfo_repo),
+    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
+    meta_repo: Annotated[storage_interfaces.AbsMetainfoRepo,
+                         Depends(get_metainfo_repo)],
 ) -> use_cases.ApiItemUpdateUseCase:
     """Get use case instance."""
     return use_cases.ApiItemUpdateUseCase(

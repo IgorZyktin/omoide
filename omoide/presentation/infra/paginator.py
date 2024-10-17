@@ -54,10 +54,10 @@ class Paginator:
     def __iter__(self) -> Iterator[PageNum]:
         """Iterate over current page."""
         if self.is_fitting:
-            # [1][2][3][4][5]
+            # [1][2][3][4][5]  noqa: ERA001
             yield from self._iterate_short()
         else:
-            # [1][...][55][56][57][...][70]
+            # [1][...][55][56][57][...][70]  noqa: ERA001
             yield from self._iterate_long()
 
     def __len__(self) -> int:

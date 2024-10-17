@@ -266,7 +266,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
         user: models.User,
         item_uuid: UUID,
     ) -> tuple[list[str], models.User, models.Item | None]:
-        """Business logic."""
+        """Execute."""
         lines: list[str] = []
 
         async with self.mediator.storage.transaction():
