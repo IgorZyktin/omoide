@@ -33,7 +33,7 @@ def output_tree(
 
     children = _get_children(session, item)
     key = _serialize_item(item, show_uuids, len(children))
-    sub_graph = {}
+    sub_graph: dict[str, Any] = {}
     graph[key] = sub_graph
 
     for child in children:
