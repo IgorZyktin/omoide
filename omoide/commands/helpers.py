@@ -12,7 +12,6 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from omoide import domain
 from omoide import utils
 from omoide.storage.database import db_models
 
@@ -94,67 +93,6 @@ def get_file_size(
         return _path.stat().st_size
     except FileNotFoundError:
         return default
-
-
-def get_children(
-    session: Session,
-    item: domain.Item,
-) -> list[db_models.Item]:
-    """Get child items."""
-    query = (
-        session.query(db_models.Item)
-        .where(
-            db_models.Item.parent_uuid == item.uuid,
-        )
-        .order_by(db_models.Item.number)
-    )
-
-    return query.all()
-
-
-def output_tree(
-    session: Session,
-    item: domain.Item,
-    show_uuids: bool = False,
-    position: str = 'last',
-    depth: int = 0,
-    callback: Callable = print,
-) -> None:
-    """Debug tool that show whole tree stating from some item."""
-    if position == 'middle':
-        prefix = '┣━ '
-    else:
-        prefix = '┗━ '
-
-    if depth:
-        tab = '\t' * depth + prefix
-    else:
-        tab = ''
-
-    children = get_children(session, item)
-
-    if children or item.is_collection:
-        if show_uuids:
-            label = f'{item.uuid} {item.name or "???"}'
-        else:
-            label = f'{item.name or "???"}'
-
-        callback(f'{tab}{label} -> {len(children)} children')
-
-    for i, child in enumerate(children, start=1):
-        if i < len(children):
-            position = 'middle'
-        else:
-            position = 'last'
-
-        output_tree(
-            session,
-            child,
-            show_uuids=show_uuids,
-            position=position,
-            depth=depth + 1,
-            callback=callback,
-        )
 
 
 def get_metainfo(
