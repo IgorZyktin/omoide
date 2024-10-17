@@ -32,14 +32,15 @@ class CreateUserUseCase(BaseItemUseCase):
             uuid=valid_uuid,
             name=name,
             login=login,
-            password=self.mediator.authenticator.encode_password(
-                given_password=password,
-            ),
             role=models.Role.user,  # TODO - actually use this field
         )
 
         await self.mediator.users_repo.create_user(
             user,
+            password=self.mediator.authenticator.encode_password(
+                given_password=password,
+                auth_complexity=const.AUTH_COMPLEXITY,
+            ),
             auth_complexity=const.AUTH_COMPLEXITY,
         )
 

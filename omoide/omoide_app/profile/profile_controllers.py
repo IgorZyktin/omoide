@@ -69,8 +69,7 @@ async def app_profile_usage(
     try:
         size, total_items, total_collections = await use_case.execute(user)
     except Exception as exc:
-        web.redirect_from_exc(request, exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     context = {
         'request': request,
@@ -108,8 +107,7 @@ async def app_profile_tags(
     try:
         known_tags = await use_case.execute(user)
     except Exception as exc:
-        web.redirect_from_exc(request, exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     context = {
         'request': request,

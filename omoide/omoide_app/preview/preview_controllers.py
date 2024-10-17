@@ -39,8 +39,7 @@ async def app_preview(
     try:
         result = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        web.redirect_from_exc(request, exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     context = {
         'request': request,

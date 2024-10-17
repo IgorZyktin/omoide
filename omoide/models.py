@@ -8,11 +8,11 @@ from datetime import datetime
 import enum
 from typing import Any
 from typing import NamedTuple
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import SecretStr
 
 from omoide import const
 from omoide import utils
@@ -52,22 +52,21 @@ class SecretStrCustom(UserString):
         return f'{name}(***)'
 
 
-class Role(enum.Enum):
+class Role(enum.IntEnum):
     """User role."""
 
-    # TODO - change to StrEnum in Python 3.11
-    anon = enum.auto()
-    user = enum.auto()
-    admin = enum.auto()
+    user = 0
+    anon = 1
+    admin = 2
 
 
-class User(BaseModel):
+@dataclass
+class User(ModelMixin):
     """User model."""
 
     uuid: UUID
     name: str
-    login: SecretStr
-    password: SecretStr
+    login: str
     role: Role
 
     def __eq__(self, other: 'User') -> bool:
@@ -104,13 +103,12 @@ class User(BaseModel):
         return self.role is not Role.anon
 
     @classmethod
-    def new_anon(cls) -> 'User':  # TODO - replace with Self
+    def new_anon(cls) -> Self:
         """Return new anon user."""
         return cls(
             uuid=const.DUMMY_UUID,
-            login=SecretStr(''),
-            password=SecretStr(''),
             name=const.ANON,
+            login='',
             role=Role.anon,
         )
 

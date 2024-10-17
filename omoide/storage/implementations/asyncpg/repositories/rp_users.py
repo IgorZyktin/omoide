@@ -37,13 +37,14 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
     async def create_user(
         self,
         user: models.User,
+        password: str,
         auth_complexity: int,
     ) -> None:
         """Create new user."""
         stmt = sa.insert(db_models.User).values(
             uuid=user.uuid,
             login=user.login,
-            password=user.password,
+            password=password,
             auth_complexity=auth_complexity,
         )
 
@@ -99,7 +100,43 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
-        return [models.User(**row, role=models.Role.user) for row in response]
+
+        return [
+            models.User(
+                uuid=row.uuid,
+                name=row.name,
+                login=row.login,
+                role=models.Role.user,
+            )
+            for row in response
+        ]
+
+    async def get_user_for_login(
+        self,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
+        stmt = sa.select(
+            db_models.User
+        ).where(
+            db_models.User.login == login
+        ).limit(1)
+
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            return None
+
+        password = response.password
+        auth_complexity = response.auth_complexity
+        user = models.User(
+            uuid=response.uuid,
+            name=response.name,
+            login=response.login,
+            role=models.Role.user,
+        )
+
+        return user, password, auth_complexity
 
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""

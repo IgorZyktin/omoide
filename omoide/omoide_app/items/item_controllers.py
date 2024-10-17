@@ -47,8 +47,7 @@ async def app_create_item(
             parent_uuid=parent_uuid,
         )
     except Exception as exc:
-        web.redirect_from_exc(request, exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     context = {
         'request': request,

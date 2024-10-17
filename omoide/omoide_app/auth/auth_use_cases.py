@@ -7,26 +7,22 @@ from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 class LoginUserUseCase(BaseAPIUseCase):
     """Login user on the site."""
 
-    async def execute(
-        self,
-        login: str,
-        password: str,
-    ) -> models.User:
+    async def execute(self, login: str, password: str) -> models.User:
         """Execute."""
         async with self.mediator.storage.transaction():
-            users = await self.mediator.users_repo.get_users(
+            response = await self.mediator.users_repo.get_user_for_login(
                 login=login,
-                limit=1,
             )
 
-            if not users:
+            if not response:
                 return models.User.new_anon()
 
-            user = users[0]
+            user, reference_password, auth_complexity = response
 
             if self.mediator.authenticator.password_is_correct(
                 given_password=password,
-                reference=user.password.get_secret_value(),
+                reference=reference_password,
+                auth_complexity=auth_complexity,
             ):
                 return user
 

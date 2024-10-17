@@ -45,10 +45,8 @@ async def app_browse(
                 user=user,
                 item_uuid=item_uuid,
             )
-        # TODO - manage redirects automatically
         except Exception as exc:
-            web.redirect_from_exc(request, exc)
-            raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+            return web.redirect_from_exc(request, exc)
 
         context = {
             'request': request,
@@ -72,8 +70,7 @@ async def app_browse(
             aim=aim_wrapper.aim,
         )
     except Exception as exc:
-        web.redirect_from_exc(request, exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     paginator = infra.Paginator(
         page=aim_wrapper.aim.page,

@@ -8,15 +8,15 @@ from omoide import interfaces
 class BcryptAuthenticator(interfaces.AbsAuthenticator):
     """Authenticator that uses bcrypt algorithm."""
 
-    def __init__(self, complexity: int) -> None:
-        """Initialize instance."""
-        self.complexity = complexity
-
-    def encode_password(self, given_password: str) -> str:
+    def encode_password(
+        self,
+        given_password: str,
+        auth_complexity: int,
+    ) -> str:
         """Encode user password with chosen algorithm."""
         result = bcrypt.hashpw(
             password=given_password.encode('utf-8'),
-            salt=bcrypt.gensalt(self.complexity),
+            salt=bcrypt.gensalt(auth_complexity),
         )
         return result.decode('utf-8')
 
@@ -24,6 +24,7 @@ class BcryptAuthenticator(interfaces.AbsAuthenticator):
         self,
         given_password: str,
         reference: str,
+        auth_complexity: int,
     ) -> bool:
         """Return True if user password is correct."""
         return bcrypt.checkpw(

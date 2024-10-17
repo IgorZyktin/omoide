@@ -18,6 +18,7 @@ class AbsUsersRepo(abc.ABC):
     async def create_user(
         self,
         user: models.User,
+        password: str,
         auth_complexity: int,
     ) -> None:
         """Create new user."""
@@ -41,6 +42,13 @@ class AbsUsersRepo(abc.ABC):
         limit: int | None = None,
     ) -> list[models.User]:
         """Return filtered list of users."""
+
+    @abc.abstractmethod
+    async def get_user_for_login(
+        self,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
 
     @abc.abstractmethod
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:

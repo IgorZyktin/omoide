@@ -168,7 +168,7 @@ def get_credentials(request: Request) -> HTTPBasicCredentials:
 @utils.memorize
 def get_authenticator() -> interfaces.AbsAuthenticator:
     """Get authenticator instance."""
-    return infra.BcryptAuthenticator(complexity=const.AUTH_COMPLEXITY)
+    return infra.BcryptAuthenticator()
 
 
 @utils.memorize

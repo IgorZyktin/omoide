@@ -116,7 +116,7 @@ def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
         case status.HTTP_404_NOT_FOUND:
             response = RedirectResponse(request.url_for('app_not_found'))
         case status.HTTP_403_FORBIDDEN:
-            response = RedirectResponse(request.url_for('app_unauthorized'))
+            response = RedirectResponse(request.url_for('app_forbidden'))
         case _:
             response = RedirectResponse(request.url_for('app_bad_request'))
 

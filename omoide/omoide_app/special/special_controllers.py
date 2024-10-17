@@ -59,7 +59,7 @@ async def app_forbidden(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return templates.TemplateResponse('exc_forbidden.html', context)
+    return templates.TemplateResponse('special_forbidden.html', context)
 
 
 @app_special_router.get(

@@ -41,8 +41,7 @@ async def app_upload(
     try:
         item, users_with_permission = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        web.redirect_from_exc(request, exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.redirect_from_exc(request, exc)
 
     context = {
         'request': request,

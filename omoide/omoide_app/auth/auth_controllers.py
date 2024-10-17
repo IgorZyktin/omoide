@@ -32,7 +32,7 @@ async def app_login(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     config: Annotated[Config, Depends(dep.get_config)],
-    response_class: type[Response] = RedirectResponse,
+    response_class: type[Response] = RedirectResponse,  # noqa: ARG001
 ):
     """Ask user for login and password."""
     url = request.url_for('app_home')
