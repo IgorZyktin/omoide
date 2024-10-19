@@ -188,7 +188,7 @@ class SearchRepository(_SearchRepositoryBase):
                 db_models.KnownTags.counter,
             )
             .where(
-                db_models.KnownTags.user_uuid == user.uuid,
+                db_models.KnownTags.user_id == user.id,
             )
             .order_by(
                 sa.desc(db_models.KnownTags.counter),
@@ -229,7 +229,7 @@ class SearchRepository(_SearchRepositoryBase):
             )
             .where(
                 db_models.KnownTags.tag.ilike('%' + tag + '%'),  # type: ignore
-                db_models.KnownTags.user_uuid == user.uuid,
+                db_models.KnownTags.user_id == user.id,
                 db_models.KnownTags.counter > 0,
             )
             .order_by(

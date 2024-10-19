@@ -108,14 +108,14 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         """Increment tag counter."""
         for tag in tags:
             insert = pg_insert(db_models.KnownTags).values(
-                user_uuid=user.uuid,
+                user_id=user.id,
                 tag=tag.casefold(),
                 counter=1,
             )
 
             stmt = insert.on_conflict_do_update(
                 index_elements=[
-                    db_models.KnownTags.user_uuid,
+                    db_models.KnownTags.user_id,
                     db_models.KnownTags.tag,
                 ],
                 set_={'counter': insert.excluded.counter + 1},
@@ -133,7 +133,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
             stmt = (
                 sa.update(db_models.KnownTags)
                 .where(
-                    db_models.KnownTags.user_uuid == user.uuid,
+                    db_models.KnownTags.user_id == user.id,
                     db_models.KnownTags.tag == tag.casefold(),
                 )
                 .values(
@@ -153,7 +153,7 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
     async def drop_unused_known_tags_known(self, user: models.User) -> None:
         """Drop tags with counter less of equal to 0."""
         stmt = sa.delete(db_models.KnownTags).where(
-            db_models.KnownTags.user_uuid == user.uuid,
+            db_models.KnownTags.user_id == user.id,
             db_models.KnownTags.counter <= 0,
         )
         await self.db.execute(stmt)

@@ -113,7 +113,6 @@ class RebuildKnownTagsAnon(BaseRebuildKnownTagsOperation):
 
     async def execute(self, **kwargs: Any) -> bool:
         """Perform workload."""
-        # TODO - user id instead of uuid
         database: SqlalchemyDatabase = kwargs['database']
         batch_size: int = kwargs['batch_size']
 
@@ -142,9 +141,15 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
         conn: AsyncConnection,
         marker: int | None,
         limit: int,
-        user_uuid: str,
+        user_id: int,
     ) -> list[tuple[int, list[str]]]:
         """Return known tags for known user."""
+        subquery = (
+            sa.select(db_models.User.uuid)
+            .where(db_models.User.id == user_id)
+            .subquery('uuid_conversion')
+        )
+
         stmt = (
             sa.select(
                 db_models.Item.id,
@@ -158,8 +163,8 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
             )
             .where(
                 sa.or_(
-                    db_models.Item.owner_uuid == user_uuid,
-                    db_models.Item.permissions.any(user_uuid),
+                    db_models.Item.owner_uuid == subquery,
+                    db_models.Item.permissions.any(subquery),
                 )
             )
         )
@@ -175,23 +180,23 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
     @staticmethod
     async def _drop_known_tags_known(
         conn: AsyncConnection,
-        user_uuid: str,
+        user_id: int,
     ) -> None:
         """Drop all known tags for known user."""
         stmt = sa.delete(db_models.KnownTags).where(
-            db_models.KnownTags.user_uuid == user_uuid
+            db_models.KnownTags.user_id == user_id
         )
         await conn.execute(stmt)
 
     @staticmethod
     async def _insert_known_tags_known(
         conn: AsyncConnection,
-        user_uuid: str,
+        user_id: int,
         tags: dict[str, int],
     ) -> None:
         """Drop all known tags for known user."""
         payload = [
-            {'user_uuid': user_uuid, 'tag': tag, 'counter': counter}
+            {'user_id': user_id, 'tag': tag, 'counter': counter}
             for tag, counter in tags.items()
         ]
         stmt = sa.insert(db_models.KnownTags).values(payload)
@@ -199,16 +204,15 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
 
     async def execute(self, **kwargs: Any) -> bool:
         """Perform workload."""
-        # TODO - user id instead of uuid
         database: SqlalchemyDatabase = kwargs['database']
         batch_size: int = kwargs['batch_size']
-        user_uuid: str = self.extras['user_uuid']
+        user_id: id = self.extras['user_id']
 
         async with database.transaction() as conn:
             tags = await self._get_tags_batched(
-                self._get_available_tags_known, conn, batch_size, user_uuid
+                self._get_available_tags_known, conn, batch_size, user_id
             )
-            await self._drop_known_tags_known(conn, user_uuid)
-            await self._insert_known_tags_known(conn, user_uuid, tags)
+            await self._drop_known_tags_known(conn, user_id)
+            await self._insert_known_tags_known(conn, user_id, tags)
 
         return bool(tags)

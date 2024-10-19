@@ -237,9 +237,9 @@ class KnownTags(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    user_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+    user_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('users.id', ondelete='CASCADE'),
         index=True,
         primary_key=True,
     )
