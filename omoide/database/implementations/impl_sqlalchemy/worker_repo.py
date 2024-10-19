@@ -7,7 +7,7 @@ from omoide import utils
 from omoide.database.interfaces.abs_worker_repo import AbsWorkerRepo
 from omoide.domain import OperationStatus
 from omoide.domain import SerialOperation
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 

@@ -8,7 +8,7 @@ from sqlalchemy.sql import Select
 from omoide import const
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from omoide.storage.implementations import asyncpg
 from omoide.storage.implementations.asyncpg.repositories import queries
 
@@ -203,7 +203,7 @@ class SearchRepository(_SearchRepositoryBase):
         stmt = (
             sa.select(db_models.KnownTagsAnon.tag)
             .where(
-                db_models.KnownTagsAnon.tag.ilike('%' + tag + '%'),  # type: ignore
+                db_models.KnownTagsAnon.tag.ilike(f'%{tag}%'),
                 db_models.KnownTagsAnon.counter > 0,
             )
             .order_by(

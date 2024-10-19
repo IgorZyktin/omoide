@@ -11,7 +11,7 @@ from omoide.omoide_worker import interfaces
 from omoide.omoide_worker.database import WorkerDatabase
 from omoide.omoide_worker.filesystem import Filesystem
 from omoide.omoide_worker.worker_config import Config
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 LOG = custom_logging.get_logger(__name__)
 

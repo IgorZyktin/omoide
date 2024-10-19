@@ -5,7 +5,7 @@ from sqlalchemy.sql import Select
 
 from omoide import const
 from omoide import models
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 
 def public_user_uuids() -> Select:

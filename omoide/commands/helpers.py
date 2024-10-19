@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 TPL = str | None | Callable[[], str | None]
 

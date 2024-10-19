@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import custom_logging
 from omoide.domain import SerialOperation
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 if TYPE_CHECKING:
     from omoide.database.implementations.impl_sqlalchemy.database import (
@@ -24,6 +24,20 @@ LOG = custom_logging.get_logger(__name__)
 
 class BaseRebuildKnownTagsOperation(SerialOperation, abc.ABC):
     """Base class for known tags operations."""
+
+    @staticmethod
+    async def _get_user_id(
+        conn: AsyncConnection,
+        user_uuid: str,
+    ) -> int | None:
+        """Return user id."""
+        query = (
+            sa.select(db_models.User.id)
+            .where(db_models.User.uuid == user_uuid)
+        )
+
+        response = (await conn.execute(query)).scalar()
+        return response
 
     @staticmethod
     async def _get_tags_batched(
@@ -141,15 +155,9 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
         conn: AsyncConnection,
         marker: int | None,
         limit: int,
-        user_id: int,
+        user_uuid: str,
     ) -> list[tuple[int, list[str]]]:
         """Return known tags for known user."""
-        subquery = (
-            sa.select(db_models.User.uuid)
-            .where(db_models.User.id == user_id)
-            .subquery('uuid_conversion')
-        )
-
         stmt = (
             sa.select(
                 db_models.Item.id,
@@ -163,8 +171,8 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
             )
             .where(
                 sa.or_(
-                    db_models.Item.owner_uuid == subquery,
-                    db_models.Item.permissions.any(subquery),
+                    db_models.Item.owner_uuid == user_uuid,
+                    db_models.Item.permissions.any(user_uuid),
                 )
             )
         )
@@ -206,11 +214,12 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
         """Perform workload."""
         database: SqlalchemyDatabase = kwargs['database']
         batch_size: int = kwargs['batch_size']
-        user_id: id = self.extras['user_id']
+        user_uuid: id = self.extras['user_uuid']
 
         async with database.transaction() as conn:
+            user_id = await self._get_user_id(conn, user_uuid)
             tags = await self._get_tags_batched(
-                self._get_available_tags_known, conn, batch_size, user_id
+                self._get_available_tags_known, conn, batch_size, user_uuid
             )
             await self._drop_known_tags_known(conn, user_id)
             await self._insert_known_tags_known(conn, user_id, tags)

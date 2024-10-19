@@ -13,7 +13,7 @@ from omoide import infra
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.refresh_file_sizes_in_db.cfg import Config
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 
 LOG = custom_logging.get_logger(__name__)

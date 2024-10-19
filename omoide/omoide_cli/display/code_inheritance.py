@@ -6,7 +6,7 @@ from uuid import UUID
 import colorama
 from sqlalchemy.orm import Session
 
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 
 def get_item(session: Session, item_uuid: UUID) -> db_models.Item:

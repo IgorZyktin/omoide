@@ -8,7 +8,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import models
 from omoide.storage import interfaces
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from omoide.storage.implementations import asyncpg
 
 LOG = custom_logging.get_logger(__name__)

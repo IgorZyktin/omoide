@@ -14,7 +14,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
 from omoide import utils
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 
 def get_all_corresponding_users(

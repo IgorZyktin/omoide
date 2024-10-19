@@ -16,7 +16,7 @@ from sqlalchemy.engine import Connection
 from omoide import const
 from omoide import custom_logging
 from omoide.omoide_cli import common
-from omoide.storage.database import db_models
+from omoide.database import db_models
 
 LOG = custom_logging.get_logger(__name__)
 

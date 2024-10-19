@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import exceptions
 from omoide.storage import interfaces
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from omoide.storage.implementations import asyncpg
 
 

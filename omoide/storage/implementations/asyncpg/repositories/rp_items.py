@@ -11,7 +11,7 @@ from omoide import domain
 from omoide import exceptions
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from omoide.storage.implementations import asyncpg
 from omoide.storage.implementations.asyncpg.repositories import queries
 

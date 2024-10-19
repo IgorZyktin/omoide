@@ -6,7 +6,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import custom_logging
-from omoide.storage.database import db_models
+from omoide.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 
 if TYPE_CHECKING:
