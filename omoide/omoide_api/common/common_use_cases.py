@@ -250,7 +250,7 @@ class BaseItemUseCase(BaseAPIUseCase):
     ) -> None:
         """Delete item with all corresponding media."""
         if item.owner_uuid not in affected_users:
-            owner = await self.mediator.users_repo.get_user(
+            owner = await self.mediator.users_repo.get_user_by_uuid(
                 uuid=item.owner_uuid,
             )
             affected_users[owner.uuid] = owner

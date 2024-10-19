@@ -11,26 +11,28 @@ class AbsUsersRepo(abc.ABC):
     """Repository that performs read operations on users."""
 
     @abc.abstractmethod
-    async def get_free_uuid(self) -> UUID:
-        """Generate new unused UUID."""
-
-    @abc.abstractmethod
     async def create_user(
         self,
         user: models.User,
-        password: str,
+        encoded_password: str,
         auth_complexity: int,
     ) -> None:
         """Create new user."""
 
-    # TODO - remove this method
     @abc.abstractmethod
-    async def read_user(self, uuid: UUID) -> models.User | None:
-        """Return User or None."""
+    async def get_user_by_id(self, user_id: int) -> models.User:
+        """Return User."""
 
     @abc.abstractmethod
-    async def get_user(self, uuid: UUID) -> models.User:
+    async def get_user_by_uuid(self, uuid: UUID) -> models.User:
         """Return User."""
+
+    @abc.abstractmethod
+    async def get_user_by_login(
+        self,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
 
     @abc.abstractmethod
     async def get_users(
@@ -42,13 +44,6 @@ class AbsUsersRepo(abc.ABC):
         limit: int | None = None,
     ) -> list[models.User]:
         """Return filtered list of users."""
-
-    @abc.abstractmethod
-    async def get_user_for_login(
-        self,
-        login: str,
-    ) -> tuple[models.User, str, int] | None:
-        """Return user+password for given login."""
 
     @abc.abstractmethod
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:

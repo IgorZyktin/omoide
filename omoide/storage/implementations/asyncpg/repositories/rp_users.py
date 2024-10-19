@@ -1,8 +1,8 @@
 """Repository that performs read operations on users."""
 
 from collections.abc import Collection
+from typing import Any
 from uuid import UUID
-from uuid import uuid4
 
 import sqlalchemy as sa
 
@@ -18,65 +18,80 @@ from omoide.storage.implementations.asyncpg.asyncpg_storage import (
 class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
     """Repository that performs read operations on users."""
 
-    async def get_free_uuid(self) -> UUID:
-        """Generate new unused UUID4."""
-        while True:
-            uuid = uuid4()
-
-            stmt = (
-                sa.select(db_models.User.uuid)
-                .where(db_models.User.uuid == uuid)
-                .exists()
-            )
-
-            exists = await self.db.fetch_one(stmt, {'uuid': uuid})
-
-            if not exists:
-                return uuid
+    @staticmethod
+    def _user_from_response(response: Any) -> models.User:
+        """Convert DB response to user model."""
+        return models.User(
+            id=response.id,
+            uuid=response.uuid,
+            name=response.name,
+            login=response.login,
+            role=response.role,
+            is_public=response.is_public,
+        )
 
     async def create_user(
         self,
         user: models.User,
-        password: str,
+        encoded_password: str,
         auth_complexity: int,
     ) -> None:
         """Create new user."""
         stmt = sa.insert(db_models.User).values(
             uuid=user.uuid,
             login=user.login,
-            password=password,
+            password=encoded_password,
             auth_complexity=auth_complexity,
+            role_id=user.role,
+            is_public=user.is_public,
         )
 
         await self.db.execute(stmt)
 
-    async def read_user(self, uuid: UUID) -> models.User | None:
-        """Return User or None."""
-        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
-
+    async def get_user_by_id(self, user_id: int) -> models.User:
+        """Return User."""
+        stmt = sa.select(db_models.User).where(db_models.User.id == user_id)
         response = await self.db.fetch_one(stmt)
 
-        if response:
-            user = models.User(**response, role=models.Role.user)
-            return user
+        if response is None:
+            msg = 'User with ID {user_id} does not exist'
+            raise exceptions.DoesNotExistError(msg, user_id=user_id)
 
-        return None
+        return self._user_from_response(response)
 
-    async def get_user(self, uuid: UUID) -> models.User:
+    async def get_user_by_uuid(self, uuid: UUID) -> models.User:
         """Return User."""
-        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
+        stmt = sa.select(db_models.User).where(
+            db_models.User.uuid == uuid
+        )
         response = await self.db.fetch_one(stmt)
 
         if response is None:
             msg = 'User with UUID {user_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, user_uuid=uuid)
 
-        return models.User(**response, role=models.Role.user)
+        return self._user_from_response(response)
+
+    async def get_user_by_login(
+        self,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
+        stmt = sa.select(db_models.User).where(db_models.User.login == login)
+        response = await self.db.fetch_one(stmt)
+
+        if response is None:
+            return None
+
+        user = self._user_from_response(response)
+        return user, response.password, response.auth_complexity
 
     async def get_users(
         self,
+        user_id: int | None = None,
         uuid: UUID | None = None,
         login: str | None = None,
+        ids: Collection[int] | None = None,
         uuids: Collection[UUID] | None = None,
         logins: Collection[str] | None = None,
         limit: int | None = None,
@@ -84,59 +99,30 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         """Return filtered list of users."""
         stmt = sa.select(db_models.User)
 
+        if user_id is not None:
+            stmt = stmt.where(db_models.User.id == user_id)
+
         if uuid is not None:
             stmt = stmt.where(db_models.User.uuid == uuid)
 
         if login is not None:
             stmt = stmt.where(db_models.User.login == login)
 
+        if ids is not None:
+            stmt = stmt.where(db_models.User.id.in_(tuple(ids)))
+
         if uuids is not None:
-            stmt = stmt.where(db_models.User.uuid.in_(tuple(uuids)))  # noqa
+            stmt = stmt.where(db_models.User.uuid.in_(tuple(uuids)))
 
         if logins is not None:
-            stmt = stmt.where(db_models.User.login.in_(tuple(logins)))  # noqa
+            stmt = stmt.where(db_models.User.login.in_(tuple(logins)))
 
         if limit is not None:
             stmt = stmt.limit(limit)
 
         response = await self.db.fetch_all(stmt)
 
-        return [
-            models.User(
-                uuid=row.uuid,
-                name=row.name,
-                login=row.login,
-                role=models.Role.user,
-            )
-            for row in response
-        ]
-
-    async def get_user_for_login(
-        self,
-        login: str,
-    ) -> tuple[models.User, str, int] | None:
-        """Return user+password for given login."""
-        stmt = (
-            sa.select(db_models.User)
-            .where(db_models.User.login == login)
-            .limit(1)
-        )
-
-        response = await self.db.fetch_one(stmt)
-
-        if response is None:
-            return None
-
-        password = response.password
-        auth_complexity = response.auth_complexity
-        user = models.User(
-            uuid=response.uuid,
-            name=response.name,
-            login=response.login,
-            role=models.Role.user,
-        )
-
-        return user, password, auth_complexity
+        return [self._user_from_response(row) for row in response]
 
     async def update_user(self, uuid: UUID, **kwargs: str) -> None:
         """Update User."""

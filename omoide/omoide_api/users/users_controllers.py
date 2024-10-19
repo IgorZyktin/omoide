@@ -28,7 +28,7 @@ api_users_router = APIRouter(prefix='/users', tags=['Users'])
 async def api_create_user(
     request: Request,
     response: Response,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_in: users_api_models.UserInput,
 ):
@@ -39,17 +39,22 @@ async def api_create_user(
     use_case = users_use_cases.CreateUserUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, user_in.model_dump())
+        user_out, extras = await use_case.execute(
+            admin=admin,
+            name=user_in.name,
+            login=user_in.login,
+            password=user_in.password,
+        )
     except Exception as exc:
         web.raise_from_exc(exc)
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     response.headers['Location'] = str(
-        request.url_for('api_get_user_by_uuid', user_uuid=user.uuid)
+        request.url_for('api_get_user_by_uuid', user_uuid=user_out.uuid)
     )
 
     return users_api_models.UserOutput(
-        **utils.serialize(user.model_dump()),
+        **utils.serialize(user_out.model_dump()),
         extras=utils.serialize(extras),
     )
 

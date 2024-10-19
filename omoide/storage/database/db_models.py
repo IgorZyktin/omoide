@@ -14,7 +14,9 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
+
 from omoide import const
+from omoide import models
 
 metadata = sa.MetaData()
 Base = declarative_base(metadata=metadata)
@@ -24,6 +26,22 @@ MEDIUM = 256
 SMALL = 64
 
 
+class Role(Base):
+    """User role model."""
+
+    __tablename__ = 'user_roles'
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+    )
+
+    description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
+
+
 class User(Base):
     """User model."""
 
@@ -31,8 +49,27 @@ class User(Base):
 
     # primary and foreign keys ------------------------------------------------
 
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        # TODO - actually make it a primary key
+        # primary_key=True,  noqa: ERA001
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        unique=True,
+    )
+
     uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(), primary_key=True, nullable=False, index=True, unique=True
+        # TODO - remove from primary keys
+        pg.UUID(),
+        primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
+    )
+
+    role: Mapped[models.Role] = mapped_column(
+        sa.Integer, sa.ForeignKey('user_roles.id'), nullable=False
     )
 
     # fields ------------------------------------------------------------------
@@ -45,6 +82,10 @@ class User(Base):
     )
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
     auth_complexity: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+
+    is_public: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, index=True
+    )
 
     # relations ---------------------------------------------------------------
 
@@ -79,8 +120,6 @@ class User(Base):
 
     # Feature: Add is_confirmed field to switch between demo and active users.
     # Activation links can be sent via emails
-
-    # Feature: Add field is_admin to be able to create superusers
 
 
 class PublicUsers(Base):
@@ -323,7 +362,12 @@ class Item(Base):
     )
 
     uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(), primary_key=True, nullable=False, index=True, unique=True
+        # TODO - remove from primary keys
+        pg.UUID(),
+        primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     parent_uuid: Mapped[UUID | None] = mapped_column(
@@ -382,7 +426,7 @@ class Item(Base):
         'User',
         passive_deletes=True,
         back_populates='items',
-        primaryjoin=('Item.owner_uuid==User.uuid'),
+        primaryjoin='Item.owner_uuid==User.uuid',
         uselist=False,
     )
 
@@ -541,7 +585,7 @@ class Media(Base):
         'User',
         passive_deletes=True,
         back_populates='media',
-        primaryjoin=('Media.owner_uuid==User.uuid'),
+        primaryjoin='Media.owner_uuid==User.uuid',
         uselist=False,
     )
 

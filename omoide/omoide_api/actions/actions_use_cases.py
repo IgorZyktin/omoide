@@ -113,7 +113,7 @@ class RebuildKnownTagsKnownUseCase(BaseAPIUseCase):
         self.ensure_admin(admin, subject=f'known tags for user {user_uuid}')
 
         async with self.mediator.storage.transaction():
-            user = await self.mediator.users_repo.get_user(user_uuid)
+            user = await self.mediator.users_repo.get_user_by_uuid(user_uuid)
             LOG.info(
                 'User {} is rebuilding known tags for user {}',
                 admin,
@@ -142,7 +142,7 @@ class RebuildComputedTagsUseCase(BaseRebuildTagsUseCase):
         self.ensure_admin(admin, subject=self.affected_target)
 
         async with self.mediator.storage.transaction():
-            owner = await self.mediator.users_repo.get_user(user_uuid)
+            owner = await self.mediator.users_repo.get_user_by_uuid(user_uuid)
             item = await self.mediator.items_repo.get_root_item(owner)
 
             LOG.info(

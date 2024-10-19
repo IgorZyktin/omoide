@@ -2,6 +2,7 @@
 
 from typing import Any
 from uuid import UUID
+from uuid import uuid4
 
 from omoide import const
 from omoide import custom_logging
@@ -15,53 +16,38 @@ LOG = custom_logging.get_logger(__name__)
 class CreateUserUseCase(BaseItemUseCase):
     """Use case for creating a new user."""
 
-    async def _create_one_user(
-        self,
-        uuid: UUID | None,
-        name: str,
-        login: str,
-        password: str,
-    ) -> models.User:
-        """Create single user."""
-        if uuid is None:
-            valid_uuid = await self.mediator.users_repo.get_free_uuid()
-        else:
-            valid_uuid = uuid
-
-        user = models.User(
-            uuid=valid_uuid,
-            name=name,
-            login=login,
-            role=models.Role.user,  # TODO - actually use this field
-        )
-
-        await self.mediator.users_repo.create_user(
-            user,
-            password=self.mediator.authenticator.encode_password(
-                given_password=password,
-                auth_complexity=const.AUTH_COMPLEXITY,
-            ),
-            auth_complexity=const.AUTH_COMPLEXITY,
-        )
-
-        return user
-
     async def execute(
         self,
         admin: models.User,
-        user_in: dict[str, Any],
+        name: str,
+        login: str,
+        password: str,
     ) -> tuple[models.User, dict[str, Any]]:
         """Execute."""
         self.ensure_admin(admin, subject='users')
 
-        LOG.info(
-            'Admin {} is creating new user {}',
-            admin,
-            user_in.get('name'),
+        LOG.info('Admin {} is creating new user {}', admin, name)
+
+        user = models.User(
+            id=-1,
+            uuid=uuid4(),
+            name=name,
+            login=login,
+            role=models.Role.user,
+            is_public=False,
+        )
+
+        encoded_password = self.mediator.authenticator.encode_password(
+            given_password=password,
+            auth_complexity=const.AUTH_COMPLEXITY,
         )
 
         async with self.mediator.storage.transaction():
-            user = await self._create_one_user(**user_in)
+            await self.mediator.users_repo.create_user(
+                user,
+                encoded_password=encoded_password,
+                auth_complexity=const.AUTH_COMPLEXITY,
+            )
 
         async with self.mediator.storage.transaction():
             item = await self.create_one_item(
@@ -94,7 +80,9 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='update user name')
 
         async with self.mediator.storage.transaction():
-            target_user = await self.mediator.users_repo.get_user(user_uuid)
+            target_user = await self.mediator.users_repo.get_user_by_uuid(
+                uuid=user_uuid,
+            )
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info(
@@ -129,7 +117,9 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='update user login')
 
         async with self.mediator.storage.transaction():
-            target_user = await self.mediator.users_repo.get_user(user_uuid)
+            target_user = await self.mediator.users_repo.get_user_by_uuid(
+                uuid=user_uuid,
+            )
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info(
@@ -162,13 +152,22 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='update user login')
 
         async with self.mediator.storage.transaction():
-            target_user = await self.mediator.users_repo.get_user(user_uuid)
+            target_user = await self.mediator.users_repo.get_user_by_uuid(
+                uuid=user_uuid,
+            )
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info('User {} is updating user {} password', user, target_user)
 
+            pack = await self.mediator.users_repo.get_user_by_login(
+                login=target_user.login,
+            )
+            _, password, auth_complexity = pack
+
+            # TODO - what if new password is the same as previous one?
+
             encoded_password = self.mediator.authenticator.encode_password(
-                new_password
+                given_password=new_password, auth_complexity=auth_complexity
             )
 
             await self.mediator.users_repo.update_user(
@@ -220,7 +219,9 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='get user info')
 
         async with self.mediator.storage.transaction():
-            target_user = await self.mediator.users_repo.get_user(user_uuid)
+            target_user = await self.mediator.users_repo.get_user_by_uuid(
+                uuid=user_uuid,
+            )
             self.ensure_admin_or_owner(user, target_user, 'users')
             root = await self.mediator.items_repo.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -240,7 +241,9 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='get user stats')
 
         async with self.mediator.storage.transaction():
-            target_user = await self.mediator.users_repo.get_user(user_uuid)
+            target_user = await self.mediator.users_repo.get_user_by_uuid(
+                uuid=user_uuid,
+            )
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             disk_usage = await self.mediator.meta_repo.get_total_disk_usage(
@@ -286,7 +289,9 @@ class GetKnownUserTagsUseCase(BaseAPIUseCase):
     ) -> dict[str, int]:
         """Execute."""
         async with self.mediator.storage.transaction():
-            target_user = await self.mediator.users_repo.get_user(user_uuid)
+            target_user = await self.mediator.users_repo.get_user_by_uuid(
+                uuid=user_uuid,
+            )
             self.ensure_admin_or_owner(user, target_user, 'user tags')
             tags = await self.mediator.search_repo.count_all_tags_known(
                 user=target_user,

@@ -64,23 +64,25 @@ class Role(enum.IntEnum):
 class User(ModelMixin):
     """User model."""
 
+    id: int
     uuid: UUID
     name: str
     login: str
     role: Role
+    is_public: bool
 
     def __eq__(self, other: 'User') -> bool:
         """Return True if other has the same UUID."""
-        return self.uuid == other.uuid
+        return self.id == other.id
 
     def __hash__(self) -> int:
         """Return hash of UUID."""
-        return hash(self.uuid)
+        return hash(self.id)
 
     def __str__(self) -> str:
         """Return textual representation."""
         name = type(self).__name__
-        return f'<{name} {self.uuid} {self.name}>'
+        return f'<{name} {self.id} {self.uuid} {self.name}>'
 
     @property
     def is_admin(self) -> bool:
@@ -106,10 +108,12 @@ class User(ModelMixin):
     def new_anon(cls) -> Self:
         """Return new anon user."""
         return cls(
+            id=-1,
             uuid=const.DUMMY_UUID,
             name=const.ANON,
             login='',
             role=Role.anon,
+            is_public=False,
         )
 
 

@@ -271,7 +271,9 @@ class DownloadCollectionUseCase(BaseItemUseCase):
 
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
-            owner = await self.mediator.users_repo.get_user(item.owner_uuid)
+            owner = await self.mediator.users_repo.get_user_by_uuid(
+                item.owner_uuid
+            )
             public_users = (
                 await self.mediator.users_repo.get_public_user_uuids()
             )
