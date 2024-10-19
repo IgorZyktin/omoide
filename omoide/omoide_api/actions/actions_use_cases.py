@@ -136,8 +136,9 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.ensure_admin(admin,
-                          subject=f'known tags for all registered users')
+        self.ensure_admin(
+            admin, subject=f'known tags for all registered users'
+        )
 
         async with self.mediator.storage.transaction():
             LOG.info(

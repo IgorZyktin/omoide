@@ -4,40 +4,25 @@ import abc
 from collections import defaultdict
 from collections.abc import Awaitable
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from omoide import const
 from omoide import custom_logging
-from omoide.domain import SerialOperation
+from omoide import exceptions
+from omoide import models
+from omoide import utils
 from omoide.database import db_models
-
-if TYPE_CHECKING:
-    from omoide.database.implementations.impl_sqlalchemy.database import (
-        SqlalchemyDatabase,
-    )
+from omoide.workers.serial.worker import SerialWorker
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseRebuildKnownTagsOperation(SerialOperation, abc.ABC):
+class BaseRebuildKnownTagsOperation(models.SerialOperation, abc.ABC):
     """Base class for known tags operations."""
-
-    @staticmethod
-    async def _get_user_id(
-        conn: AsyncConnection,
-        user_uuid: str,
-    ) -> int | None:
-        """Return user id."""
-        query = (
-            sa.select(db_models.User.id)
-            .where(db_models.User.uuid == user_uuid)
-        )
-
-        response = (await conn.execute(query)).scalar()
-        return response
 
     @staticmethod
     async def _get_tags_batched(
@@ -65,14 +50,11 @@ class BaseRebuildKnownTagsOperation(SerialOperation, abc.ABC):
         return dict(known_tags)
 
 
+@dataclass
 class RebuildKnownTagsAnon(BaseRebuildKnownTagsOperation):
     """Rebuild known tags for anon."""
 
-    name: str = 'rebuild_known_tags_anon'
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return f'<{self.id}, {self.name!r}>'
+    name: str = const.SERIAL_REBUILD_KNOWN_TAGS_ANON
 
     @staticmethod
     async def _get_available_tags_anon(
@@ -127,35 +109,33 @@ class RebuildKnownTagsAnon(BaseRebuildKnownTagsOperation):
 
     async def execute(self, **kwargs: Any) -> bool:
         """Perform workload."""
-        database: SqlalchemyDatabase = kwargs['database']
-        batch_size: int = kwargs['batch_size']
+        LOG.info('Updating known tags for anon, operation_id={}', self.id)
+        worker: SerialWorker = kwargs['worker']
 
-        async with database.transaction() as conn:
+        async with worker.database.transaction() as conn:
             tags = await self._get_tags_batched(
-                self._get_available_tags_anon, conn, batch_size
+                self._get_available_tags_anon,
+                conn,
+                worker.config.batch_size,
             )
             await self._drop_known_tags_anon(conn)
             await self._insert_known_tags_anon(conn, tags)
 
-        return bool(tags)
+        return True
 
 
-class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
+@dataclass
+class RebuildKnownTagsUser(BaseRebuildKnownTagsOperation):
     """Rebuild known tags for specific user."""
 
-    name: str = 'rebuild_known_tags_known'
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        user_uuid = self.extras['user_uuid']
-        return f'<{self.id}, {self.name!r} for user {user_uuid}>'
+    name: str = const.SERIAL_REBUILD_KNOWN_TAGS_USER
 
     @staticmethod
     async def _get_available_tags_known(
         conn: AsyncConnection,
         marker: int | None,
         limit: int,
-        user_uuid: str,
+        user: models.User,
     ) -> list[tuple[int, list[str]]]:
         """Return known tags for known user."""
         stmt = (
@@ -171,8 +151,8 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
             )
             .where(
                 sa.or_(
-                    db_models.Item.owner_uuid == user_uuid,
-                    db_models.Item.permissions.any(user_uuid),
+                    db_models.Item.owner_uuid == user.uuid,
+                    db_models.Item.permissions.any(str(user.uuid)),
                 )
             )
         )
@@ -188,40 +168,101 @@ class RebuildKnownTagsKnow(BaseRebuildKnownTagsOperation):
     @staticmethod
     async def _drop_known_tags_known(
         conn: AsyncConnection,
-        user_id: int,
+        user: models.User,
     ) -> None:
         """Drop all known tags for known user."""
         stmt = sa.delete(db_models.KnownTags).where(
-            db_models.KnownTags.user_id == user_id
+            db_models.KnownTags.user_id == user.id
         )
         await conn.execute(stmt)
 
     @staticmethod
     async def _insert_known_tags_known(
         conn: AsyncConnection,
-        user_id: int,
+        user: models.User,
         tags: dict[str, int],
+        batch_size: int,
     ) -> None:
         """Drop all known tags for known user."""
         payload = [
-            {'user_id': user_id, 'tag': tag, 'counter': counter}
+            {'user_id': user.id, 'tag': str(tag), 'counter': counter}
             for tag, counter in tags.items()
         ]
-        stmt = sa.insert(db_models.KnownTags).values(payload)
-        await conn.execute(stmt)
+
+        for section in utils.group_to_size(payload, batch_size, default=None):
+            clean_section = [x for x in section if x is not None]
+            stmt = sa.insert(db_models.KnownTags).values(clean_section)
+            await conn.execute(stmt)
 
     async def execute(self, **kwargs: Any) -> bool:
         """Perform workload."""
-        database: SqlalchemyDatabase = kwargs['database']
-        batch_size: int = kwargs['batch_size']
-        user_uuid: id = self.extras['user_uuid']
+        worker = kwargs['worker']
+        user_id: int = self.extras.get('user_id')
+        user_uuid: str = self.extras.get('user_uuid')
 
-        async with database.transaction() as conn:
-            user_id = await self._get_user_id(conn, user_uuid)
-            tags = await self._get_tags_batched(
-                self._get_available_tags_known, conn, batch_size, user_uuid
+        async with worker.database.transaction() as conn:
+            users = await worker.users.select(
+                conn,
+                user_id=user_id,
+                uuid=user_uuid,
+                limit=1,
             )
-            await self._drop_known_tags_known(conn, user_id)
-            await self._insert_known_tags_known(conn, user_id, tags)
 
-        return bool(tags)
+            if users:
+                LOG.info(
+                    'Updating known tags for user {}, operation_id={}',
+                    users[0],
+                    self.id,
+                )
+            else:
+                problem = (
+                    f'User with uuid={user_uuid!r} '
+                    f'or id={user_id!r} does not exist'
+                )
+                raise exceptions.BadSerialOperationError(problem=problem)
+
+            user = users[0]
+            batch_size: int = worker.config.batch_size
+            tags = await self._get_tags_batched(
+                self._get_available_tags_known, conn, batch_size, user
+            )
+
+            await self._drop_known_tags_known(conn, user)
+            await self._insert_known_tags_known(conn, user, tags, batch_size)
+
+        return True
+
+
+class RebuildKnownTagsAll(RebuildKnownTagsUser):
+    """Rebuild known tags for all registered users."""
+
+    name: str = const.SERIAL_REBUILD_KNOWN_TAGS_ALL
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return f'<{self.id}, {self.name!r}>'
+
+    async def execute(self, **kwargs: Any) -> bool:
+        """Perform workload."""
+        worker = kwargs['worker']
+        batch_size = worker.config.batch_size
+
+        async with worker.database.transaction() as conn:
+            users = await worker.users.select(conn)
+
+            for step, user in enumerate(users, start=1):
+                LOG.info(
+                    'Updating known tags for user {}, '
+                    'operation_id={}, step {}',
+                    user,
+                    self.id,
+                    step,
+                )
+                tags = await self._get_tags_batched(
+                    self._get_available_tags_known,
+                    conn, batch_size, user
+                )
+                await self._drop_known_tags_known(conn, user)
+                await self._insert_known_tags_known(conn, user, tags,
+                                                    batch_size)
+        return True

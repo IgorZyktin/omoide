@@ -1,24 +1,16 @@
 """Models that used in more than one place."""
 
-import abc
-import enum
 from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from omoide import const
-from omoide import exceptions
 
 __all__ = [
     'Item',
     'Query',
     'Aim',
-    'OperationStatus',
-    'SerialOperation',
 ]
 
 
@@ -130,66 +122,3 @@ class Aim(BaseModel):
         params['q'] = self.query.raw_query
         params.pop('query', None)
         return params
-
-
-ALL_OPERATIONS: dict[str, type['SerialOperation']] = {}
-
-
-class OperationStatus(enum.StrEnum):
-    """Possible statuses for operation."""
-
-    CREATED = 'created'
-    PROCESSING = 'processing'
-    DONE = 'done'
-    FAILED = 'failed'
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return f'<{self.name.lower()}>'
-
-
-@dataclass
-class SerialOperation(abc.ABC):
-    """Base class for all serial operations."""
-
-    id: int
-    worker_name: str
-    status: OperationStatus
-    extras: dict[str, Any]
-    created_at: datetime
-    updated_at: datetime
-    started_at: datetime | None
-    ended_at: datetime | None
-    log: str | None
-    name: str = 'operation'
-
-    def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
-        """Store descendant."""
-        super().__init_subclass__(*args, **kwargs)
-        ALL_OPERATIONS[cls.name] = cls
-
-    @staticmethod
-    def from_name(**kwargs: Any) -> 'SerialOperation':
-        """Create specific instance type."""
-        name = kwargs['name']
-        class_ = ALL_OPERATIONS.get(name)
-        if class_ is None:
-            raise exceptions.UnknownSerialOperationError(name=name)
-
-        return class_(**kwargs)
-
-    @staticmethod
-    def get_all_possible_operations() -> set[str]:
-        """Return set of names for all descendants."""
-        return set(ALL_OPERATIONS.keys())
-
-    @abc.abstractmethod
-    async def execute(self, **kwargs: Any) -> bool:
-        """Perform workload."""
-
-    @property
-    def duration(self) -> float:
-        """Get execution duration."""
-        if self.started_at is None or self.ended_at is None:
-            return 0.0
-        return (self.ended_at - self.started_at).total_seconds()

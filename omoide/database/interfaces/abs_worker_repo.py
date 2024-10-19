@@ -4,7 +4,7 @@ import abc
 from typing import Generic
 from typing import TypeVar
 
-from omoide.domain.common import SerialOperation
+from omoide.models import SerialOperation
 
 ConnectionT = TypeVar('ConnectionT')
 

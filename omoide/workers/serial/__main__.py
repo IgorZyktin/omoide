@@ -9,6 +9,9 @@ from omoide.database.implementations.impl_sqlalchemy.database import (
 from omoide.database.implementations.impl_sqlalchemy.worker_repo import (
     WorkerRepo,
 )
+from omoide.database.implementations.impl_sqlalchemy.users_repo import (
+    UsersRepo,
+)
 from omoide.workers.serial import cfg
 from omoide.workers.serial.worker import SerialWorker
 
@@ -19,8 +22,9 @@ async def main() -> None:
     """Entry point."""
     config = cfg.Config()
     database = SqlalchemyDatabase(config.db_admin_url.get_secret_value())
-    repo = WorkerRepo()
-    worker = SerialWorker(config, database, repo)
+    worker_repo = WorkerRepo()
+    users_repo = UsersRepo()
+    worker = SerialWorker(config, database, worker_repo, users_repo)
 
     await worker.start(config.name)
     loop = asyncio.get_event_loop()

@@ -11,6 +11,7 @@ from typing import TypeVar
 from omoide import custom_logging
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.database.interfaces.abs_worker_repo import AbsWorkerRepo
+from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -25,11 +26,13 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
         config: ConfigT,
         database: AbsDatabase,
         repo: AbsWorkerRepo,
+        users: AbsUsersRepo,
     ) -> None:
         """Initialize instance."""
         self.config = config
         self.database = database
         self.repo = repo
+        self.users = users
         self.stopping = False
 
     async def start(self, worker_name: str) -> None:

@@ -4,7 +4,8 @@ from omoide import custom_logging
 from omoide import utils
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.database.interfaces.abs_worker_repo import AbsWorkerRepo
-from omoide.domain import SerialOperation
+from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
+from omoide.models import SerialOperation
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.serial.cfg import Config
 
@@ -19,9 +20,10 @@ class SerialWorker(BaseWorker[Config]):
         config: Config,
         database: AbsDatabase,
         repo: AbsWorkerRepo,
+        users: AbsUsersRepo,
     ) -> None:
         """Initialize instance."""
-        super().__init__(config, database, repo)
+        super().__init__(config, database, repo, users)
         self.has_lock = False
 
     async def execute(self) -> bool:
@@ -57,13 +59,9 @@ class SerialWorker(BaseWorker[Config]):
     async def execute_operation(self, operation: SerialOperation) -> bool:
         """Perform workload."""
         done_something = False
-        LOG.info('Executing operation {}', operation)
+
         try:
-            done_something = await operation.execute(
-                database=self.database,
-                worker_repo=self.repo,
-                batch_size=self.config.batch_size,
-            )
+            done_something = await operation.execute(worker=self)
         except Exception as exc:
             error = utils.exc_to_str(exc)
             async with self.database.transaction() as conn:
@@ -79,7 +77,7 @@ class SerialWorker(BaseWorker[Config]):
             async with self.database.transaction() as conn:
                 await self.repo.mark_serial_operation_done(conn, operation)
             LOG.info(
-                'Operation {operation} complete in {duration:0.3f} sec.',
+                'Operation {operation} completed in {duration:0.3f} sec.',
                 operation=operation,
                 duration=operation.duration,
             )

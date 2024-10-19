@@ -1,4 +1,4 @@
-"""Repository that performs read operations on users."""
+"""Repository that performs operations on users."""
 
 from collections.abc import Collection
 from typing import Any
@@ -16,7 +16,7 @@ from omoide.storage.implementations.asyncpg.asyncpg_storage import (
 
 
 class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
-    """Repository that performs read operations on users."""
+    """Repository that performs operations on users."""
 
     @staticmethod
     def _user_from_response(response: Any) -> models.User:
@@ -61,9 +61,7 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
 
     async def get_user_by_uuid(self, uuid: UUID) -> models.User:
         """Return User."""
-        stmt = sa.select(db_models.User).where(
-            db_models.User.uuid == uuid
-        )
+        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
         response = await self.db.fetch_one(stmt)
 
         if response is None:
