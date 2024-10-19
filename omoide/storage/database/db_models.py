@@ -3,6 +3,7 @@
 PostgreSQL specific because application needs arrays.
 """
 
+import os
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -50,7 +51,7 @@ class User(Base):
     items: Mapped[list['Item']] = relationship(
         'Item',
         passive_deletes=True,
-        primaryjoin=('Item.owner_uuid==User.uuid'),
+        primaryjoin='Item.owner_uuid==User.uuid',
         back_populates='owner',
         uselist=True,
     )
@@ -58,7 +59,7 @@ class User(Base):
     media: Mapped['Media'] = relationship(
         'Media',
         passive_deletes=True,
-        primaryjoin=('Media.owner_uuid==User.uuid'),
+        primaryjoin='Media.owner_uuid==User.uuid',
         back_populates='owner',
         uselist=True,
     )
@@ -780,3 +781,9 @@ class SerialOperation(Base):
     )
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
+
+
+if __name__ == '__main__':
+    db_url = os.environ[const.ENV_DB_URL_ADMIN]
+    engine = sa.create_engine(db_url, echo=True)
+    metadata.create_all(engine, checkfirst=True)

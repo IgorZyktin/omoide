@@ -4,6 +4,7 @@ from uuid import UUID
 
 import typer
 
+from omoide import const
 from omoide import custom_logging
 from omoide.omoide_cli import common
 from omoide.omoide_cli.display import code
@@ -23,7 +24,7 @@ def inheritance(
     db_url = common.extract_env(
         what='Database URL',
         variable=db_url,
-        env_variable='OMOIDE__DB_URL_ADMIN',
+        env_variable=const.ENV_DB_URL_ADMIN,
     )
     code.inheritance(item_uuid, db_url, show_uuids)
 
@@ -37,7 +38,7 @@ def du(
     db_url = common.extract_env(
         what='Database URL',
         variable=db_url,
-        env_variable='OMOIDE__DB_URL_ADMIN',
+        env_variable=const.ENV_DB_URL_ADMIN,
     )
     code.du(only_users, db_url)
 

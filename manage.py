@@ -48,7 +48,7 @@ def command_force_cover_copying(**kwargs) -> None:
         helpers.timing(
             callback=LOG.info,
             start_template='Forcing items to copy thumbnails...',
-        )
+        ),
     ):
         run.run(config, database)
 
@@ -110,7 +110,7 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
         helpers.timing(
             callback=LOG.info,
             start_template='Refreshing file sizes for every item...',
-        )
+        ),
     ):
         run.run(config, database)
 

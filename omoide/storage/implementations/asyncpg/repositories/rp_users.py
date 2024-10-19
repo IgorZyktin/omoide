@@ -116,11 +116,11 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
         login: str,
     ) -> tuple[models.User, str, int] | None:
         """Return user+password for given login."""
-        stmt = sa.select(
-            db_models.User
-        ).where(
-            db_models.User.login == login
-        ).limit(1)
+        stmt = (
+            sa.select(db_models.User)
+            .where(db_models.User.login == login)
+            .limit(1)
+        )
 
         response = await self.db.fetch_one(stmt)
 

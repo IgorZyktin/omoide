@@ -40,8 +40,11 @@ def run(database: SyncDatabase, key: str, batch_size: int, limit: int) -> None:
                 break
 
             for metainfo in models:
-                LOG.info('Altered `{key}` for {item_uuid}',
-                         key=key, item_uuid=metainfo.item_uuid)
+                LOG.info(
+                    'Altered `{key}` for {item_uuid}',
+                    key=key,
+                    item_uuid=metainfo.item_uuid,
+                )
                 metainfo.extras[key] = getattr(metainfo, key)
                 setattr(metainfo, key, None)
                 flag_modified(metainfo, 'extras')

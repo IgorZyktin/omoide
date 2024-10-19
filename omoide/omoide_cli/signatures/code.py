@@ -36,7 +36,7 @@ def init(
     folder = common.extract_env(
         what='File storage path',
         variable=folder,
-        env_variable='OMOIDE__FOLDER',
+        env_variable=const.ENV_FOLDER,
     )
 
     folder_path = Path(folder)
@@ -48,7 +48,7 @@ def init(
     db_url = common.extract_env(
         what='Database URL',
         variable=db_url,
-        env_variable='OMOIDE__DB_URL_ADMIN',
+        env_variable=const.ENV_DB_URL_ADMIN,
     )
 
     return folder_path, db_url
@@ -70,7 +70,7 @@ class Item:
             root
             / 'content'
             / self.owner_uuid
-            / self.uuid[:2]
+            / self.uuid[: self.prefix_size]
             / f'{self.uuid}.{self.content_ext}'
         )
 
@@ -169,8 +169,9 @@ def get_items(
         )
 
     # skip items without content
-    query = query.where(db_models.Item.content_ext != None)  # noqa: E711
-    query = query.order_by(db_models.Item.id)
+    query = query.where(db_models.Item.content_ext != sa.null()).order_by(
+        db_models.Item.id
+    )
 
     if limit is not None:
         query = query.limit(min(batch_size, limit))
