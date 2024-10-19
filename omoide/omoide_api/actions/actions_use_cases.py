@@ -92,37 +92,63 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
     """Use case for rebuilding known tags for anon."""
 
     async def execute(self, admin: models.User) -> int:
-        """Prepare for execution."""
+        """Initiate serial operation execution."""
         self.ensure_admin(admin, subject='known tags for anon')
 
         async with self.mediator.storage.transaction():
-            LOG.info('User {} is rebuilding known tags for anon user', admin)
+            LOG.info(
+                'User {} requested rebuilding of known tags for anon user',
+                admin,
+            )
             repo = self.mediator.misc_repo
             operation_id = await repo.create_serial_operation(
-                name='rebuild_known_tags_anon',
+                name=const.SERIAL_REBUILD_KNOWN_TAGS_ANON,
             )
 
         return operation_id
 
 
-class RebuildKnownTagsKnownUseCase(BaseAPIUseCase):
+class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
     """Use case for rebuilding known tags for known user."""
 
     async def execute(self, admin: models.User, user_uuid: UUID) -> int:
-        """Prepare for execution."""
+        """Initiate serial operation execution."""
         self.ensure_admin(admin, subject=f'known tags for user {user_uuid}')
 
         async with self.mediator.storage.transaction():
             user = await self.mediator.users_repo.get_user_by_uuid(user_uuid)
             LOG.info(
-                'User {} is rebuilding known tags for user {}',
+                'User {} requested rebuilding of known tags for user {}',
                 admin,
                 user,
             )
             repo = self.mediator.misc_repo
             operation_id = await repo.create_serial_operation(
-                name='rebuild_known_tags_known',
+                name=const.SERIAL_REBUILD_KNOWN_TAGS_USER,
                 extras={'user_uuid': str(user_uuid)},
+            )
+
+        return operation_id
+
+
+class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
+    """Use case for rebuilding known tags for all registered users."""
+
+    async def execute(self, admin: models.User) -> int:
+        """Initiate serial operation execution."""
+        self.ensure_admin(admin,
+                          subject=f'known tags for all registered users')
+
+        async with self.mediator.storage.transaction():
+            LOG.info(
+                'User {} requested rebuilding of '
+                'known tags for all registered users',
+                admin,
+            )
+            repo = self.mediator.misc_repo
+            operation_id = await repo.create_serial_operation(
+                name=const.SERIAL_REBUILD_KNOWN_TAGS_ALL,
+                extras={},
             )
 
         return operation_id

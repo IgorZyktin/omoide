@@ -37,23 +37,23 @@ async def api_action_rebuild_known_tags_anon(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Rebuilding known tags for anon',
+        'result': 'rebuilding known tags for anon',
         'operation_id': operation_id,
     }
 
 
 @api_actions_router.post(
-    '/rebuild_known_tags_known/{user_uuid}',
+    '/rebuild_known_tags_user/{user_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
-async def api_action_rebuild_known_tags_known(
+async def api_action_rebuild_known_tags_user(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_uuid: UUID,
 ):
-    """Recalculate all known tags for known user."""
-    use_case = actions_use_cases.RebuildKnownTagsKnownUseCase(mediator)
+    """Recalculate all known tags for registered user."""
+    use_case = actions_use_cases.RebuildKnownTagsUserUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin, user_uuid)
@@ -62,8 +62,32 @@ async def api_action_rebuild_known_tags_known(
         raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
 
     return {
-        'result': 'Rebuilding known tags for known user',
+        'result': 'rebuilding known tags for user',
         'user_uuid': str(user_uuid),
+        'operation_id': operation_id,
+    }
+
+
+@api_actions_router.post(
+    '/rebuild_known_tags_all',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, int | str],
+)
+async def api_action_rebuild_known_tags_all(
+    admin: Annotated[models.User, Depends(dep.get_admin_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Recalculate all known tags for registered user."""
+    use_case = actions_use_cases.RebuildKnownTagsAllUseCase(mediator)
+
+    try:
+        operation_id = await use_case.execute(admin)
+    except Exception as exc:
+        web.raise_from_exc(exc)
+        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+
+    return {
+        'result': 'rebuilding known tags for all registered users',
         'operation_id': operation_id,
     }
 
