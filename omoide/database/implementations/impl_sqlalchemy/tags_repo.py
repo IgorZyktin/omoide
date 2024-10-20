@@ -82,7 +82,6 @@ class TagsRepo(AbsTagsRepo[Connection]):
     ) -> dict[str, int]:
         """Return known tags for specific user."""
         known_tags: dict[str, int] = defaultdict(int)
-        public_users = sa.select(db_models.PublicUsers.user_uuid)
         marker = -1
 
         while True:
@@ -97,7 +96,7 @@ class TagsRepo(AbsTagsRepo[Connection]):
                 )
                 .where(
                     sa.or_(
-                        db_models.Item.owner_uuid.in_(public_users),
+                        db_models.Item.owner_uuid == user.uuid,
                         db_models.Item.permissions.any(
                             str(user.uuid)  # type: ignore
                         ),
