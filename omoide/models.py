@@ -439,7 +439,7 @@ class SerialOperation(Generic[MediatorT], abc.ABC):
         return set(ALL_SERIAL_OPERATIONS.keys())
 
     @abc.abstractmethod
-    def execute(self, mediator: MediatorT) -> bool:
+    def execute(self, mediator: MediatorT) -> None:
         """Perform workload."""
 
     @property
@@ -448,3 +448,13 @@ class SerialOperation(Generic[MediatorT], abc.ABC):
         if self.started_at is None or self.ended_at is None:
             return 0.0
         return (self.ended_at - self.started_at).total_seconds()
+
+
+@dataclass
+class DummyOperation(SerialOperation):
+    """Operation for testing purposes."""
+
+    name: str = const.SERIAL_DUMMY
+
+    def execute(self, mediator: MediatorT) -> None:
+        """Perform workload."""

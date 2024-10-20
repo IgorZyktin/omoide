@@ -24,13 +24,14 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
         self.mediator = mediator
         self.stopping = False
 
-    def start(self) -> None:
+    def start(self, register: bool = True) -> None:
         """Start worker."""
         self.register_signals()
         self.mediator.database.connect()
 
-        with self.mediator.database.transaction() as conn:
-            self.mediator.workers.register_worker(conn, self.config.name)
+        if register:
+            with self.mediator.database.transaction() as conn:
+                self.mediator.workers.register_worker(conn, self.config.name)
 
         LOG.info('Worker {!r} started', self.config.name)
 

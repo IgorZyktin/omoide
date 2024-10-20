@@ -43,6 +43,7 @@ ENV_DB_URL_ADMIN = 'OMOIDE__DB_URL_ADMIN'
 
 
 # Supported serial operations
+SERIAL_DUMMY = 'dummy'
 SERIAL_REBUILD_KNOWN_TAGS_ANON = 'rebuild_known_tags_anon'
 SERIAL_REBUILD_KNOWN_TAGS_USER = 'rebuild_known_tags_user'
 SERIAL_REBUILD_KNOWN_TAGS_ALL = 'rebuild_known_tags_all'
