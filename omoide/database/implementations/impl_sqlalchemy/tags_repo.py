@@ -1,7 +1,9 @@
 """Repository that performs operations on tags."""
 
+import abc
 import itertools
 from collections import defaultdict
+from typing import Callable
 
 import sqlalchemy as sa
 from sqlalchemy import Connection
@@ -11,17 +13,17 @@ from omoide.database import db_models
 from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 
 
-class TagsRepo(AbsTagsRepo[Connection]):
-    """Repository that performs operations on tags."""
+class _TagsRepoHelper(AbsTagsRepo[Connection], abc.ABC):
+    """Helper class."""
 
-    def get_known_tags_anon(
-        self,
+    @staticmethod
+    def _process_batch_of_tags(
         conn: Connection,
+        get_conditions: Callable[[int], list[sa.ColumnElement]],
         batch_size: int,
     ) -> dict[str, int]:
-        """Return known tags for anon."""
+        """Process batch of tags load."""
         known_tags: dict[str, int] = defaultdict(int)
-        public_users = sa.select(db_models.PublicUsers.user_uuid)
         marker = -1
 
         while True:
@@ -35,8 +37,7 @@ class TagsRepo(AbsTagsRepo[Connection]):
                     db_models.ComputedTags.item_uuid == db_models.Item.uuid,
                 )
                 .where(
-                    db_models.Item.owner_uuid.in_(public_users),
-                    db_models.Item.id > marker,
+                    *get_conditions(marker)
                 )
             ).order_by(db_models.Item.id).limit(batch_size)
 
@@ -51,6 +52,31 @@ class TagsRepo(AbsTagsRepo[Connection]):
                 break
 
         return dict(known_tags)
+
+
+class TagsRepo(_TagsRepoHelper):
+    """Repository that performs operations on tags."""
+
+    def get_known_tags_anon(
+        self,
+        conn: Connection,
+        batch_size: int,
+    ) -> dict[str, int]:
+        """Return known tags for anon."""
+        public_users = sa.select(db_models.PublicUsers.user_uuid)
+
+        def get_conditions(_marker: int) -> list[sa.ColumnElement]:
+            """Return list of filtering conditions."""
+            return [
+                db_models.Item.owner_uuid.in_(public_users),
+                db_models.Item.id > _marker
+            ]
+
+        return self._process_batch_of_tags(
+            conn=conn,
+            get_conditions=get_conditions,
+            batch_size=batch_size,
+        )
 
     def drop_known_tags_anon(self, conn: Connection) -> int:
         """Drop all known tags for anon user."""
@@ -81,41 +107,24 @@ class TagsRepo(AbsTagsRepo[Connection]):
         batch_size: int,
     ) -> dict[str, int]:
         """Return known tags for specific user."""
-        known_tags: dict[str, int] = defaultdict(int)
-        marker = -1
 
-        while True:
-            stmt = (
-                sa.select(
-                    db_models.Item.id,
-                    db_models.ComputedTags.tags,
-                )
-                .join(
-                    db_models.ComputedTags,
-                    db_models.ComputedTags.item_uuid == db_models.Item.uuid,
-                )
-                .where(
-                    sa.or_(
-                        db_models.Item.owner_uuid == user.uuid,
-                        db_models.Item.permissions.any(
-                            str(user.uuid)  # type: ignore
-                        ),
+        def get_conditions(_marker: int) -> list[sa.ColumnElement]:
+            """Return list of filtering conditions."""
+            return [
+                sa.or_(
+                    db_models.Item.owner_uuid == user.uuid,
+                    db_models.Item.permissions.any(
+                        str(user.uuid)  # type: ignore
                     ),
-                    db_models.Item.id > marker,
-                )
-            ).order_by(db_models.Item.id).limit(batch_size)
+                ),
+                db_models.Item.id > _marker,
+            ]
 
-            response = conn.execute(stmt).fetchall()
-
-            for item_id, item_tags in response:
-                for item_tag in item_tags:
-                    known_tags[item_tag.casefold()] += 1
-                marker = item_id
-
-            if len(response) < batch_size:
-                break
-
-        return dict(known_tags)
+        return self._process_batch_of_tags(
+            conn=conn,
+            get_conditions=get_conditions,
+            batch_size=batch_size,
+        )
 
     def drop_known_tags_user(
         self,
