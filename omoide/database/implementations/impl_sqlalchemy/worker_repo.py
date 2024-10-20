@@ -1,22 +1,22 @@
 """Repository that perform worker-related operations."""
 
 import sqlalchemy as sa
+from sqlalchemy import Connection
 
 from omoide import exceptions
 from omoide import utils
-from omoide.database.interfaces.abs_worker_repo import AbsWorkerRepo
+from omoide.database import db_models
+from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
 from omoide.models import OperationStatus
 from omoide.models import SerialOperation
-from omoide.database import db_models
-from sqlalchemy.ext.asyncio import AsyncConnection
 
 
-class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
+class WorkersRepo(AbsWorkersRepo[Connection]):
     """Repository that perform worker-related operations."""
 
-    async def register_worker(
+    def register_worker(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
         worker_name: str,
     ) -> None:
         """Ensure we're allowed to run and update starting time."""
@@ -26,14 +26,14 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
             .where(db_models.RegisteredWorkers.worker_name == worker_name)
         )
 
-        response = await conn.execute(query)
+        response = conn.execute(query)
 
         if not response.rowcount:
             raise exceptions.UnknownWorkerError(worker_name=worker_name)
 
-    async def take_serial_lock(
+    def take_serial_lock(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
         worker_name: str,
     ) -> bool:
         """Try acquiring the lock, return True on success."""
@@ -41,12 +41,12 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
             worker_name=worker_name,
             last_update=utils.now(),
         )
-        response = await conn.execute(query)
+        response = conn.execute(query)
         return bool(response.rowcount)
 
-    async def release_serial_lock(
+    def release_serial_lock(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
         worker_name: str,
     ) -> bool:
         """Try releasing the lock, return True on success."""
@@ -60,12 +60,12 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
                 db_models.SerialLock.worker_name == worker_name,
             )
         )
-        response = await conn.execute(query)
+        response = conn.execute(query)
         return bool(response.rowcount)
 
-    async def get_next_serial_operation(
+    def get_next_serial_operation(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
     ) -> SerialOperation | None:
         """Try locking next serial operation."""
         select_query = (
@@ -75,7 +75,7 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
             .limit(1)
         )
 
-        operation = (await conn.execute(select_query)).fetchone()
+        operation = conn.execute(select_query).fetchone()
 
         if operation is None:
             return None
@@ -93,9 +93,9 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
             log=operation.log,
         )
 
-    async def lock_serial_operation(
+    def lock_serial_operation(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
         operation: SerialOperation,
         worker_name: str,
     ) -> bool:
@@ -113,12 +113,12 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
             .where(db_models.SerialOperation.id == operation.id)
         )
 
-        response = await conn.execute(update_query)
+        response = conn.execute(update_query)
         return bool(response.rowcount)
 
-    async def mark_serial_operation_done(
+    def mark_serial_operation_done(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
         operation: SerialOperation,
     ) -> SerialOperation:
         """Mark operation as done."""
@@ -137,13 +137,12 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
 
         operation.updated_at = now
         operation.ended_at = now
-
-        await conn.execute(query)
+        conn.execute(query)
         return operation
 
-    async def mark_serial_operation_failed(
+    def mark_serial_operation_failed(
         self,
-        conn: AsyncConnection,
+        conn: Connection,
         operation: SerialOperation,
         error: str,
     ) -> SerialOperation:
@@ -168,6 +167,5 @@ class WorkerRepo(AbsWorkerRepo[AsyncConnection]):
 
         operation.updated_at = now
         operation.ended_at = now
-
-        await conn.execute(query)
+        conn.execute(query)
         return operation

@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from typing import Any
 
 import sqlalchemy as sa
@@ -16,7 +17,9 @@ from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.database import db_models
-from omoide.workers.serial.worker import SerialWorker
+
+if TYPE_CHECKING:
+    from omoide.workers.serial.worker import SerialWorker
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -259,10 +262,10 @@ class RebuildKnownTagsAll(RebuildKnownTagsUser):
                     step,
                 )
                 tags = await self._get_tags_batched(
-                    self._get_available_tags_known,
-                    conn, batch_size, user
+                    self._get_available_tags_known, conn, batch_size, user
                 )
                 await self._drop_known_tags_known(conn, user)
-                await self._insert_known_tags_known(conn, user, tags,
-                                                    batch_size)
+                await self._insert_known_tags_known(
+                    conn, user, tags, batch_size
+                )
         return True

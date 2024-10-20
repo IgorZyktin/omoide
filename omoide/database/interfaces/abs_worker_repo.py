@@ -9,11 +9,11 @@ from omoide.models import SerialOperation
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
+class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform worker-related operations."""
 
     @abc.abstractmethod
-    async def register_worker(
+    def register_worker(
         self,
         conn: ConnectionT,
         worker_name: str,
@@ -21,7 +21,7 @@ class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
         """Ensure we're allowed to run and update starting time."""
 
     @abc.abstractmethod
-    async def take_serial_lock(
+    def take_serial_lock(
         self,
         conn: ConnectionT,
         worker_name: str,
@@ -29,7 +29,7 @@ class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
         """Try acquiring the lock, return True on success."""
 
     @abc.abstractmethod
-    async def release_serial_lock(
+    def release_serial_lock(
         self,
         conn: ConnectionT,
         worker_name: str,
@@ -37,14 +37,14 @@ class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
         """Try releasing the lock, return True on success."""
 
     @abc.abstractmethod
-    async def get_next_serial_operation(
+    def get_next_serial_operation(
         self,
         conn: ConnectionT,
     ) -> SerialOperation | None:
         """Return next serial operation."""
 
     @abc.abstractmethod
-    async def lock_serial_operation(
+    def lock_serial_operation(
         self,
         conn: ConnectionT,
         operation: SerialOperation,
@@ -53,7 +53,7 @@ class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
         """Lock operation, return True on success."""
 
     @abc.abstractmethod
-    async def mark_serial_operation_done(
+    def mark_serial_operation_done(
         self,
         conn: ConnectionT,
         operation: SerialOperation,
@@ -61,7 +61,7 @@ class AbsWorkerRepo(Generic[ConnectionT], abc.ABC):
         """Mark operation as done."""
 
     @abc.abstractmethod
-    async def mark_serial_operation_failed(
+    def mark_serial_operation_failed(
         self,
         conn: ConnectionT,
         operation: SerialOperation,

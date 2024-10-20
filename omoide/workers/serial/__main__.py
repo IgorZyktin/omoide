@@ -1,51 +1,52 @@
 """Worker that performs operations one by one."""
 
-import asyncio
+import time
 
 from omoide import custom_logging
 from omoide.database.implementations.impl_sqlalchemy.database import (
     SqlalchemyDatabase,
 )
-from omoide.database.implementations.impl_sqlalchemy.worker_repo import (
-    WorkerRepo,
-)
 from omoide.database.implementations.impl_sqlalchemy.users_repo import (
     UsersRepo,
 )
+from omoide.database.implementations.impl_sqlalchemy.worker_repo import (
+    WorkersRepo,
+)
+from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial import cfg
 from omoide.workers.serial.worker import SerialWorker
 
 LOG = custom_logging.get_logger(__name__)
 
 
-async def main() -> None:
+def main() -> None:
     """Entry point."""
     config = cfg.Config()
-    database = SqlalchemyDatabase(config.db_admin_url.get_secret_value())
-    worker_repo = WorkerRepo()
-    users_repo = UsersRepo()
-    worker = SerialWorker(config, database, worker_repo, users_repo)
+    mediator = WorkerMediator(
+        database=SqlalchemyDatabase(config.db_admin_url.get_secret_value()),
+        users=UsersRepo(),
+        workers=WorkersRepo(),
+    )
+    worker = SerialWorker(config, mediator)
 
-    await worker.start(config.name)
-    loop = asyncio.get_event_loop()
-    worker.register_signals(loop)
+    worker.start()
 
     try:
         while True:
-            did_something = await worker.execute()
+            did_something = worker.execute()
 
             if worker.stopping:
                 break
 
             if did_something:
-                await asyncio.sleep(config.short_delay)
+                time.sleep(config.short_delay)
             else:
-                await asyncio.sleep(config.long_delay)
-    except (KeyboardInterrupt, asyncio.CancelledError):
+                time.sleep(config.long_delay)
+    except KeyboardInterrupt:
         LOG.warning('Stopped manually')
     finally:
-        await worker.stop(config.name)
+        worker.stop()
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()

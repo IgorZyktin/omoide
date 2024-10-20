@@ -1,34 +1,34 @@
 """Sqlalchemy database."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import contextmanager
+from typing import ContextManager
 
-from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import Connection
+from sqlalchemy import create_engine
 
 from omoide.database.interfaces.abs_database import AbsDatabase
 
 
-class SqlalchemyDatabase(AbsDatabase[AsyncConnection]):
-    """Base class for all databases."""
+class SqlalchemyDatabase(AbsDatabase[Connection]):
+    """Synchronous database."""
 
     def __init__(self, db_url: str, echo: bool = False) -> None:
         """Initialize instance."""
-        self._engine = create_async_engine(
+        self._engine = create_engine(
             db_url,
             echo=echo,
             pool_pre_ping=True,
         )
 
-    async def connect(self) -> None:
+    def connect(self) -> None:
         """Connect to the database."""
 
-    async def disconnect(self) -> None:
+    def disconnect(self) -> None:
         """Disconnect from the database."""
-        await self._engine.dispose()
+        self._engine.dispose()
 
-    @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[AsyncConnection]:
+    @contextmanager
+    def transaction(self) -> ContextManager[Connection]:
         """Start transaction."""
-        async with self._engine.begin() as connection:
+        with self._engine.begin() as connection:
             yield connection

@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 from typing import Any
+from typing import Generic
 from typing import NamedTuple
 from typing import Self
+from typing import TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -378,9 +380,6 @@ class ParentTags(NamedTuple):
     computed_tags: set[str]
 
 
-ALL_SERIAL_OPERATIONS: dict[str, type['SerialOperation']] = {}
-
-
 class OperationStatus(enum.StrEnum):
     """Possible statuses for operation."""
 
@@ -394,8 +393,12 @@ class OperationStatus(enum.StrEnum):
         return f'<{self.name.lower()}>'
 
 
+ALL_SERIAL_OPERATIONS: dict[str, type['SerialOperation']] = {}
+MediatorT = TypeVar('MediatorT')
+
+
 @dataclass
-class SerialOperation(abc.ABC):
+class SerialOperation(Generic[MediatorT], abc.ABC):
     """Base class for all serial operations."""
 
     id: int
@@ -408,6 +411,7 @@ class SerialOperation(abc.ABC):
     ended_at: datetime | None
     log: str | None
     name: str = 'operation'
+    goal: str = 'unknown'
 
     def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
         """Store descendant."""
@@ -435,7 +439,7 @@ class SerialOperation(abc.ABC):
         return set(ALL_SERIAL_OPERATIONS.keys())
 
     @abc.abstractmethod
-    async def execute(self, **kwargs: Any) -> bool:
+    def execute(self, mediator: MediatorT) -> bool:
         """Perform workload."""
 
     @property
