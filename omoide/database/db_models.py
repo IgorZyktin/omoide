@@ -439,7 +439,7 @@ class Item(Base):
     )
 
     exif: Mapped['EXIF'] = relationship(
-        'EXIF', passive_deletes=True, back_populates='item', uselist=True
+        'EXIF', passive_deletes=True, back_populates='item', uselist=False
     )
 
     # other -------------------------------------------------------------------
@@ -663,9 +663,9 @@ class EXIF(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
         unique=True,

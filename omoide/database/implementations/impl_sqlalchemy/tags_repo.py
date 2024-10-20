@@ -28,18 +28,21 @@ class _TagsRepoHelper(AbsTagsRepo[Connection], abc.ABC):
 
         while True:
             stmt = (
-                sa.select(
-                    db_models.Item.id,
-                    db_models.ComputedTags.tags,
+                (
+                    sa.select(
+                        db_models.Item.id,
+                        db_models.ComputedTags.tags,
+                    )
+                    .join(
+                        db_models.ComputedTags,
+                        db_models.ComputedTags.item_uuid
+                        == db_models.Item.uuid,
+                    )
+                    .where(*get_conditions(marker))
                 )
-                .join(
-                    db_models.ComputedTags,
-                    db_models.ComputedTags.item_uuid == db_models.Item.uuid,
-                )
-                .where(
-                    *get_conditions(marker)
-                )
-            ).order_by(db_models.Item.id).limit(batch_size)
+                .order_by(db_models.Item.id)
+                .limit(batch_size)
+            )
 
             response = conn.execute(stmt).fetchall()
 
@@ -69,7 +72,7 @@ class TagsRepo(_TagsRepoHelper):
             """Return list of filtering conditions."""
             return [
                 db_models.Item.owner_uuid.in_(public_users),
-                db_models.Item.id > _marker
+                db_models.Item.id > _marker,
             ]
 
         return self._process_batch_of_tags(

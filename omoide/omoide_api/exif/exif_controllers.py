@@ -55,7 +55,7 @@ async def api_create_exif(
 )
 async def api_read_exif(
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Read EXIF data for existing item."""
