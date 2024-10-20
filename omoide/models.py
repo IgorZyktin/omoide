@@ -454,7 +454,7 @@ class SerialOperation(Generic[MediatorT], abc.ABC):
 class DummyOperation(SerialOperation):
     """Operation for testing purposes."""
 
-    name: str = const.SERIAL_DUMMY
+    name: str = const.DUMMY_OPERATION
 
     def execute(self, mediator: MediatorT) -> None:
         """Perform workload."""

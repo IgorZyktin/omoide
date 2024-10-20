@@ -1,5 +1,7 @@
 """Repository that perform worker-related operations."""
 
+from typing import Collection
+
 import sqlalchemy as sa
 from sqlalchemy import Connection
 
@@ -66,11 +68,15 @@ class WorkersRepo(AbsWorkersRepo[Connection]):
     def get_next_serial_operation(
         self,
         conn: Connection,
+        names: Collection[str],
     ) -> SerialOperation | None:
         """Try locking next serial operation."""
         select_query = (
             sa.select(db_models.SerialOperation)
-            .where(db_models.SerialOperation.status == OperationStatus.CREATED)
+            .where(
+                db_models.SerialOperation.status == OperationStatus.CREATED,
+                db_models.SerialOperation.name.in_(tuple(names)),
+            )
             .order_by(db_models.SerialOperation.id)
             .limit(1)
         )

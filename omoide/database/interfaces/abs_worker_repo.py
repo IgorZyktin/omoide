@@ -1,6 +1,7 @@
 """Repository that perform worker-related operations."""
 
 import abc
+from typing import Collection
 from typing import Generic
 from typing import TypeVar
 
@@ -40,6 +41,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     def get_next_serial_operation(
         self,
         conn: ConnectionT,
+        names: Collection[str],
     ) -> SerialOperation | None:
         """Return next serial operation."""
 

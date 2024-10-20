@@ -46,7 +46,10 @@ class SerialWorker(BaseWorker[Config]):
             self.has_lock = True
 
         with self.mediator.database.transaction() as conn:
-            operation = self.mediator.workers.get_next_serial_operation(conn)
+            operation = self.mediator.workers.get_next_serial_operation(
+                conn=conn,
+                names=self.config.supported_operations,
+            )
 
         if not operation:
             return False
