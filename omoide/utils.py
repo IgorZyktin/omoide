@@ -231,7 +231,7 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
         if result is sentinel:
             result = func(*args, **kwargs)
             objects[func.__name__] = result
-        return result
+        return result  # type: ignore
 
     return wrapper
 

@@ -75,9 +75,9 @@ class User(ModelMixin):
     role: Role
     is_public: bool
 
-    def __eq__(self, other: 'User') -> bool:
+    def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
-        return self.id == other.id
+        return bool(self.id == getattr(other, 'id', None))
 
     def __hash__(self) -> int:
         """Return hash of UUID."""
@@ -184,9 +184,9 @@ class Item(ModelMixin):
     tags: list[str] = field(default_factory=list)
     permissions: list[UUID] = field(default_factory=list)
 
-    def __eq__(self, other: 'Item') -> bool:
+    def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
-        return self.uuid == other.uuid
+        return bool(self.uuid == getattr(other, 'uuid', None))
 
     def __hash__(self) -> int:
         """Return hash of UUID."""
@@ -394,11 +394,13 @@ class OperationStatus(enum.StrEnum):
 
 
 ALL_SERIAL_OPERATIONS: dict[str, type['SerialOperation']] = {}
+
+ConfigT = TypeVar('ConfigT')
 MediatorT = TypeVar('MediatorT')
 
 
 @dataclass
-class SerialOperation(Generic[MediatorT], abc.ABC):
+class SerialOperation(Generic[ConfigT, MediatorT], abc.ABC):
     """Base class for all serial operations."""
 
     id: int
@@ -439,7 +441,7 @@ class SerialOperation(Generic[MediatorT], abc.ABC):
         return set(ALL_SERIAL_OPERATIONS.keys())
 
     @abc.abstractmethod
-    def execute(self, mediator: MediatorT) -> None:
+    def execute(self, config: ConfigT, mediator: MediatorT) -> None:
         """Perform workload."""
 
     @property
@@ -448,13 +450,3 @@ class SerialOperation(Generic[MediatorT], abc.ABC):
         if self.started_at is None or self.ended_at is None:
             return 0.0
         return (self.ended_at - self.started_at).total_seconds()
-
-
-@dataclass
-class DummyOperation(SerialOperation):
-    """Operation for testing purposes."""
-
-    name: str = const.DUMMY_OPERATION
-
-    def execute(self, mediator: MediatorT) -> None:
-        """Perform workload."""

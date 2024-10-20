@@ -1,0 +1,14 @@
+[Unit]
+Description=Omoide serial worker daemon
+After=network.target
+
+[Service]
+User=omoide_worker
+WorkingDirectory=/home/omoide_worker/omoide
+ExecStart=<путь до интерпретатора> -m omoide.workers.serial
+EnvironmentFile=/etc/omoide/env
+CPUAccounting=true
+MemoryAccounting=true
+
+[Install]
+WantedBy=multi-user.target

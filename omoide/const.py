@@ -41,10 +41,8 @@ STORAGE_PREFIX_SIZE = 2
 ENV_FOLDER = 'OMOIDE__FOLDER'
 ENV_DB_URL_ADMIN = 'OMOIDE__DB_URL_ADMIN'
 
-# Supported operations
-DUMMY_OPERATION = 'dummy'
-
 # Supported serial operations
+SERIAL_DUMMY = 'serial_dummy'
 SERIAL_REBUILD_KNOWN_TAGS_ANON = 'rebuild_known_tags_anon'
 SERIAL_REBUILD_KNOWN_TAGS_USER = 'rebuild_known_tags_user'
 SERIAL_REBUILD_KNOWN_TAGS_ALL = 'rebuild_known_tags_all'

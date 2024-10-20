@@ -2,6 +2,8 @@
 
 from contextlib import contextmanager
 from typing import ContextManager
+from typing import Generator
+from typing import Iterator
 
 from sqlalchemy import Connection
 from sqlalchemy import create_engine
@@ -28,7 +30,7 @@ class SqlalchemyDatabase(AbsDatabase[Connection]):
         self._engine.dispose()
 
     @contextmanager
-    def transaction(self) -> ContextManager[Connection]:
+    def transaction(self) -> Iterator[Connection]:
         """Start transaction."""
         with self._engine.begin() as connection:
             yield connection

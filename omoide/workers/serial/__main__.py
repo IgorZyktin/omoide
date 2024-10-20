@@ -11,6 +11,7 @@ from omoide import utils
 from omoide.database.implementations.impl_sqlalchemy.database import (
     SqlalchemyDatabase,
 )
+from omoide.database.implementations.impl_sqlalchemy.tags_repo import TagsRepo
 from omoide.database.implementations.impl_sqlalchemy.users_repo import (
     UsersRepo,
 )
@@ -45,6 +46,7 @@ def main(operation: str, extras: str) -> None:
     config = cfg.Config()
     mediator = WorkerMediator(
         database=SqlalchemyDatabase(config.db_admin_url.get_secret_value()),
+        tags=TagsRepo(),
         users=UsersRepo(),
         workers=WorkersRepo(),
     )
@@ -83,7 +85,7 @@ def run_manual(worker: SerialWorker, operation_name: str, extras: str) -> None:
     )
 
     try:
-        operation.execute(worker.mediator)
+        operation.execute(worker.config, worker.mediator)
     finally:
         worker.stop()
 
@@ -96,7 +98,7 @@ def run_automatic(worker: SerialWorker) -> None:
         while True:
             did_something = worker.execute()
 
-            if worker.stopping:
+            if worker.mediator.stopping:
                 break
 
             if did_something:

@@ -22,7 +22,6 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
         """Initialize instance."""
         self.config = config
         self.mediator = mediator
-        self.stopping = False
 
     def start(self, register: bool = True) -> None:
         """Start worker."""
@@ -48,7 +47,7 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
             _ = frame
             string = signal.strsignal(signum)
             LOG.info('Caught signal {!r}, stopping', string)
-            self.stopping = True
+            self.mediator.stopping = True
 
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)

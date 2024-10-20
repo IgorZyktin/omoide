@@ -70,7 +70,7 @@ class SerialWorker(BaseWorker[Config]):
     def execute_operation(self, operation: SerialOperation) -> None:
         """Perform workload."""
         try:
-            operation.execute(self.mediator)
+            operation.execute(self.config, self.mediator)
         except Exception as exc:
             error = utils.exc_to_str(exc)
             with self.mediator.database.transaction() as conn:
@@ -94,6 +94,6 @@ class SerialWorker(BaseWorker[Config]):
                     'Operation {num}. `{goal}`, '
                     'completed in {duration:0.3f} sec.',
                     num=operation.id,
-                    operation=operation.goal,
+                    operation=operation.goal.title(),
                     duration=operation.duration,
                 )
