@@ -33,7 +33,7 @@ class CreateUserUseCase(BaseItemUseCase):
             uuid=uuid4(),
             name=name,
             login=login,
-            role=models.Role.user,
+            role=models.Role.USER,
             is_public=False,
         )
 

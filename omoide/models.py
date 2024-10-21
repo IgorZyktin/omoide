@@ -59,9 +59,9 @@ class SecretStrCustom(UserString):
 class Role(enum.IntEnum):
     """User role."""
 
-    user = 0
-    anon = 1
-    admin = 2
+    USER = 0
+    ANON = 1
+    ADMIN = 2
 
 
 @dataclass
@@ -91,22 +91,22 @@ class User(ModelMixin):
     @property
     def is_admin(self) -> bool:
         """Return True if user is an administrator."""
-        return self.role is Role.admin
+        return self.role is Role.ADMIN
 
     @property
     def is_not_admin(self) -> bool:
         """Return True if user is not an administrator."""
-        return self.role is not Role.admin
+        return self.role is not Role.ADMIN
 
     @property
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
-        return self.role is Role.anon
+        return self.role is Role.ANON
 
     @property
     def is_not_anon(self) -> bool:
         """Return True if user is registered one."""
-        return self.role is not Role.anon
+        return self.role is not Role.ANON
 
     @classmethod
     def new_anon(cls) -> Self:
@@ -116,7 +116,7 @@ class User(ModelMixin):
             uuid=const.DUMMY_UUID,
             name=const.ANON,
             login='',
-            role=Role.anon,
+            role=Role.ANON,
             is_public=False,
         )
 
