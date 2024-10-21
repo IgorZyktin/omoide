@@ -344,6 +344,22 @@ class LongJob(Base):
     error: Mapped[str] = mapped_column(sa.Text, nullable=False)
 
 
+class Status(Base):
+    """Item status model."""
+
+    __tablename__ = 'item_statuses'
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+    )
+
+    description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
+
+
 class Item(Base):
     """Single unit of storage."""
 
@@ -392,6 +408,9 @@ class Item(Base):
 
     # fields ------------------------------------------------------------------
 
+    status: Mapped[models.Status] = mapped_column(
+        sa.Integer, sa.ForeignKey('item_status.id'), nullable=False, index=True
+    )
     number: Mapped[int] = mapped_column(
         sa.BigInteger, autoincrement=True, nullable=False
     )

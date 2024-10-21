@@ -365,6 +365,8 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             'uuid': item.uuid,
             'parent_uuid': item.parent_uuid,
             'owner_uuid': item.owner_uuid,
+            # TODO - currently all items are available from the start
+            'status': models.Status.AVAILABLE.value,
             'name': item.name,
             'is_collection': item.is_collection,
             'content_ext': item.content_ext,
@@ -381,7 +383,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             sa.insert(db_models.Item)
             .values(**values)
             .returning(
-                db_models.Item.number,  # TODO - find way to return id
+                db_models.Item.number,
             )
         )
 

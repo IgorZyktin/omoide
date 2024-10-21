@@ -167,6 +167,16 @@ class AccessStatus(ModelMixin):
         )
 
 
+class Status(enum.IntEnum):
+    """Item status."""
+
+    AVAILABLE = 0
+    CREATED = 1
+    PROCESSING = 2
+    DELETED = 3
+    ERROR = 4
+
+
 @dataclass
 class Item(ModelMixin):
     """Standard item."""
@@ -181,6 +191,7 @@ class Item(ModelMixin):
     content_ext: str | None
     preview_ext: str | None
     thumbnail_ext: str | None
+    status: Status = Status.AVAILABLE  # TODO - make it mandatory
     tags: list[str] = field(default_factory=list)
     permissions: list[UUID] = field(default_factory=list)
 
