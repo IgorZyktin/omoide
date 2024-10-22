@@ -1,22 +1,38 @@
 {% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
+{% from "macros.html" import render_lineage %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
+{% endblock %}
 
 {% block body %}
-    {% for each in groups %}
-        {{ each }}
+    {% for signature, items in groups %}
+        <h2>MD5 - {{ signature }}</h2>
+        <div style="display: flex; flex-direction: column; align-items: center">
+            {% for item, parents in items %}
+                {{ render_lineage(request, parents, item, aim_wrapper) }}
+                <div id="item_{{ item.uuid }}" style="display: flex; flex-direction: row; align-items: center">
+                    <h3>Item {{ item.uuid }}</h3>
+                    {{ render_thumbnail_for_item(request, item, '???', aim_wrapper) }}
+                    <a href="javascript:void(0)" onclick="deleteThis('{{ item.uuid }}')" class="button">Delete this item</a>
+                </div>
+            {% endfor %}
+        </div>
+        <br>
     {% endfor %}
-{#    <div class="envelope-container"></div>#}
-{#    <script>#}
-{#        $(document).ready(function () {#}
-{#            let container = document.querySelector('.envelope-container')#}
-{#            let endpoint = '{{ endpoint }}'#}
-{#            let scroller = new Scroller(container, endpoint)#}
-{#            let callback = function () {#}
-{#                scroller.trigger()#}
-{#            }#}
-{##}
-{#            window.addEventListener('scroll', callback)#}
-{#            scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)#}
-{#            callback()#}
-{#        });#}
-{#    </script>#}
+
+    <script>
+        function deleteThis(uuid) {
+            deleteItem(this, uuid, false)
+            let inp = document.getElementById('item_' + uuid)
+
+            if (inp !== undefined) {
+                inp.remove()
+            }
+        }
+
+    </script>
+
 {% endblock %}
