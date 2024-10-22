@@ -36,3 +36,20 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
                 user=user,
             )
         return known_tags
+
+
+class AppProfileDuplicatesUseCase(BaseAPPUseCase):
+    """Use case for duplicated items search."""
+
+    async def execute(
+        self,
+        user: models.User,
+        limit: int,
+    ) -> list[tuple[str, list[models.Item]]]:
+        """Return groups of items with same hash."""
+        async with self.mediator.storage.transaction():
+            groups = await self.mediator.items_repo.get_duplicated_items(
+                user=user,
+                limit=limit,
+            )
+        return groups

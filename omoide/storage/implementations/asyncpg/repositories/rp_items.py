@@ -587,3 +587,73 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
                 )
             )
             await self.db.execute(stmt)
+
+    async def get_all_items(
+        self,
+        ids: Collection[int],
+    ) -> dict[int, models.Item | None]:
+        """Return map with item for every id."""
+        result: dict[int, models.Item | None] = dict.fromkeys(ids)
+
+        stmt = sa.select(db_models.Item).where(
+            db_models.Item.id.in_(tuple(ids))
+        )
+
+        response = await self.db.fetch_all(stmt)
+        for row in response:
+            item = models.Item(**row)
+            result[item.id] = item
+
+        return result
+
+    async def get_duplicated_items(
+        self,
+        user: models.User,
+        limit: int,
+    ) -> list[tuple[str, list[models.Item]]]:
+        """Return groups of items with same hash."""
+        with_signature = (
+            sa.select(
+                db_models.SignatureMD5.signature,
+                sa.func.array_agg(db_models.Item.id).label('ids'),
+            )
+            .join(
+                db_models.SignatureMD5,
+                db_models.Item.id == db_models.SignatureMD5.item_id,
+            )
+            .where(
+                db_models.Item.owner_uuid == user.uuid,
+            )
+            .group_by(db_models.SignatureMD5.signature)
+            .having(
+                sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1)
+                > 1
+            )
+            .order_by(
+                sa.desc(
+                    sa.func.array_length(
+                        sa.func.array_agg(db_models.Item.id), 1
+                    )
+                )
+            )
+            .limit(limit)
+        )
+
+        response = await self.db.fetch_all(with_signature)
+        all_ids: set[int] = set()
+        signatures_to_groups: list[tuple[str, list[int]]] = []
+
+        for row in response:
+            ids = sorted(row.ids)
+            signatures_to_groups.append((row.signature, ids))
+            all_ids.update(ids)
+
+        all_items = await self.get_all_items(all_ids)
+
+        return [
+            (
+                signature,
+                [item for item_id in ids if (item := all_items.get(item_id))],
+            )
+            for signature, ids in signatures_to_groups
+        ]

@@ -182,3 +182,18 @@ class AbsItemsRepo(abc.ABC):
         permissions: Collection[UUID],
     ) -> None:
         """Remove users from computed permissions of the item."""
+
+    @abc.abstractmethod
+    async def get_all_items(
+        self,
+        ids: Collection[int],
+    ) -> dict[int, models.Item | None]:
+        """Return map with item for every id."""
+
+    @abc.abstractmethod
+    async def get_duplicated_items(
+        self,
+        user: models.User,
+        limit: int,
+    ) -> list[tuple[str, list[models.Item]]]:
+        """Return groups of items with same hash."""

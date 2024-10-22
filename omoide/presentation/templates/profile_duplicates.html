@@ -1,0 +1,22 @@
+{% extends "base_search.html" %}
+
+{% block body %}
+    {% for each in groups %}
+        {{ each }}
+    {% endfor %}
+{#    <div class="envelope-container"></div>#}
+{#    <script>#}
+{#        $(document).ready(function () {#}
+{#            let container = document.querySelector('.envelope-container')#}
+{#            let endpoint = '{{ endpoint }}'#}
+{#            let scroller = new Scroller(container, endpoint)#}
+{#            let callback = function () {#}
+{#                scroller.trigger()#}
+{#            }#}
+{##}
+{#            window.addEventListener('scroll', callback)#}
+{#            scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)#}
+{#            callback()#}
+{#        });#}
+{#    </script>#}
+{% endblock %}
