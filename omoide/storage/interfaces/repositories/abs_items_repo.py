@@ -195,5 +195,5 @@ class AbsItemsRepo(abc.ABC):
         self,
         user: models.User,
         limit: int,
-    ) -> list[tuple[str, list[models.Item]]]:
+    ) -> list[tuple[str, list[tuple[models.Item, list[models.Item]]]]]:
         """Return groups of items with same hash."""

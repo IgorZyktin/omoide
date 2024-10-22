@@ -610,7 +610,9 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         self,
         user: models.User,
         limit: int,
-    ) -> list[tuple[str, list[models.Item]]]:
+    ) -> list[
+        tuple[str, list[tuple[models.Item, list[models.Item]]]]
+    ]:
         """Return groups of items with same hash."""
         with_signature = (
             sa.select(
@@ -623,6 +625,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             )
             .where(
                 db_models.Item.owner_uuid == user.uuid,
+                ~db_models.Item.is_collection,
             )
             .group_by(db_models.SignatureMD5.signature)
             .having(
@@ -650,10 +653,18 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
         all_items = await self.get_all_items(all_ids)
 
-        return [
-            (
-                signature,
-                [item for item_id in ids if (item := all_items.get(item_id))],
-            )
-            for signature, ids in signatures_to_groups
-        ]
+        result = []
+
+        for signature, ids in signatures_to_groups:
+            row = []
+            for item_id in ids:
+                item = all_items.get(item_id)
+
+                if not item:
+                    continue
+
+                parents = await self.get_parents(item)
+                row.append((item, parents))
+            result.append((signature, row))
+
+        return result
