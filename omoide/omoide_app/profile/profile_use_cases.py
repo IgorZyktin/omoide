@@ -32,3 +32,20 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
         async with self.mediator.database.transaction() as conn:
             known_tags = await self.mediator.tags.count_all_tags_known(conn, user)
         return known_tags
+
+
+class AppProfileDuplicatesUseCase(BaseAPPUseCase):
+    """Use case for duplicated items search."""
+
+    async def execute(
+        self,
+        user: models.User,
+        limit: int,
+    ) -> list[tuple[str, list[models.Item]]]:
+        """Return groups of items with same hash."""
+        async with self.mediator.storage.transaction():
+            groups = await self.mediator.items_repo.get_duplicated_items(
+                user=user,
+                limit=limit,
+            )
+        return groups

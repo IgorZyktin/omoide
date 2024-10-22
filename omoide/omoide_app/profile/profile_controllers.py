@@ -149,3 +149,41 @@ async def app_profile_new(
         'endpoint': request.url_for('api_get_recent_updates'),
     }
     return templates.TemplateResponse('profile_new.html', context)
+
+
+@app_profile_router.get('/profile/duplicates')
+async def app_profile_duplicates(
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
+):
+    """Show duplicated items."""
+    if user.is_anon:
+        return RedirectResponse(request.url_for('app_forbidden'))
+
+    # TODO - put it into config
+    limit = 10
+    use_case = profile_use_cases.AppProfileDuplicatesUseCase(mediator)
+
+    try:
+        groups = await use_case.execute(user, limit)
+    except Exception as exc:
+        return web.redirect_from_exc(request, exc)
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'groups': groups,
+        'aim_wrapper': aim_wrapper,
+        'block_direct': True,
+        'block_ordered': True,
+        'block_collections': True,
+        'block_paginated': True,
+    }
+
+    return templates.TemplateResponse('profile_duplicates.html', context)
