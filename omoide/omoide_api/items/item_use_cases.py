@@ -8,6 +8,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
+from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
@@ -371,3 +372,44 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             size = metainfo.content_size
 
         return f'{checksum} {size} {fs_path} {user_visible_filename}'
+
+
+class ChangePermissionsUseCase(BaseAPIUseCase):
+    """Use case for item permissions change."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        permissions: list[UUID],
+        apply_to_parents: bool,
+        apply_to_children: bool,
+        apply_to_children_as: const.ApplyAs,
+    ) -> int:
+        """Execute."""
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject=f'item permissions')
+
+            LOG.info('{} is updating permissions of {}', user, item)
+
+            if apply_to_parents or apply_to_parents:
+                added, deleted = utils.get_delta(item.permissions, permissions)
+                repo = self.mediator.misc_repo
+                operation_id = await repo.create_serial_operation(
+                    name=const.SERIAL_UPDATE_PERMISSIONS,
+                    extras={
+                        'item_uuid': str(item_uuid),
+                        'added': [str(x) for x in added],
+                        'deleted': [str(x) for x in deleted],
+                        'original': [str(x) for x in item.permissions],
+                        'apply_to_parents': apply_to_parents,
+                        'apply_to_children': apply_to_children,
+                        'apply_to_children_as': apply_to_children_as.name,
+                    },
+                )
+
+            item.permissions = list(set(permissions))
+            await self.mediator.items_repo.update_item(item)
+
+        return operation_id

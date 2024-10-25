@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 from typing import Any
+from typing import Collection
 from typing import Generic
 from typing import NamedTuple
 from typing import Self

@@ -183,6 +183,45 @@ async def api_delete_item(
     )
 
 
+@api_items_router.put(
+    '/{item_uuid}/permissions',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, bool | str | int | None],
+)
+async def api_item_update_permissions(
+    item_uuid: UUID,
+    permissions_in: item_api_models.PermissionsInput,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Change permissions for given item.
+
+    Can affect parents and children.
+    """
+    use_case = item_use_cases.ChangePermissionsUseCase(mediator)
+
+    try:
+        operation_id = await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            permissions=permissions_in.permissions,
+            apply_to_parents=permissions_in.apply_to_parents,
+            apply_to_children=permissions_in.apply_to_children,
+            apply_to_children_as=permissions_in.apply_to_children_as,
+        )
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    return {
+        'result': 'Enqueued permissions change',
+        'item_uuid': str(item_uuid),
+        'apply_to_parents': permissions_in.apply_to_parents,
+        'apply_to_children': permissions_in.apply_to_children,
+        'apply_to_children_as': permissions_in.apply_as.value,
+        'operation_id': operation_id,
+    }
+
+
 # TODO - instead of sending data as base64 encoded string
 #  we need to switch to file sending
 @api_items_router.put(

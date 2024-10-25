@@ -57,25 +57,6 @@ async def api_item_update_tags(
     return {'result': 'ok'}
 
 
-@router.put('/{uuid}/permissions')
-async def api_item_update_permissions(
-    uuid: UUID,
-    new_permissions: api_models.NewPermissionsIn,
-    user: models.User = Depends(dep.get_current_user),
-    policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-    use_case: use_cases.ApiItemUpdatePermissionsUseCase = Depends(
-        dep.api_item_update_permissions_use_case
-    ),
-):
-    """Set new permissions for the item and possibly parents/children."""
-    result = await use_case.execute(policy, user, uuid, new_permissions)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return {'result': 'ok'}
-
-
 @router.put('/{uuid}/parent/{new_parent_uuid}')
 async def api_item_update_parent(
     uuid: UUID,

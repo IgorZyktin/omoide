@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
+from omoide import const
 from omoide import utils
 
 MAX_MEDIA_SIZE = 52_428_800
@@ -99,3 +100,12 @@ class MediaInput(BaseModel):
         sep = self.content.index(',')
         body = self.content[sep + 1 :]
         return base64.decodebytes(body.encode('utf-8'))
+
+
+class PermissionsInput(BaseModel):
+    """Input info for new item permissions."""
+
+    permissions: list[UUID]
+    apply_to_parents: bool = False
+    apply_to_children: bool = True
+    apply_to_children_as: const.ApplyAs = const.ApplyAs.DELTA
