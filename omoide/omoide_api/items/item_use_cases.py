@@ -381,17 +381,20 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-        permissions: list[UUID],
+        permissions: set[UUID],
         apply_to_parents: bool,
         apply_to_children: bool,
         apply_to_children_as: const.ApplyAs,
-    ) -> int:
+    ) -> int | None:
         """Execute."""
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject=f'item permissions')
 
             LOG.info('{} is updating permissions of {}', user, item)
+
+            if item.permissions == permissions:
+                return None
 
             if apply_to_parents or apply_to_parents:
                 added, deleted = utils.get_delta(item.permissions, permissions)
@@ -405,11 +408,11 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                         'original': [str(x) for x in item.permissions],
                         'apply_to_parents': apply_to_parents,
                         'apply_to_children': apply_to_children,
-                        'apply_to_children_as': apply_to_children_as.name,
+                        'apply_to_children_as': apply_to_children_as.value,
                     },
                 )
 
-            item.permissions = list(set(permissions))
+            item.permissions = permissions
             await self.mediator.items_repo.update_item(item)
 
         return operation_id

@@ -9,7 +9,7 @@ from uuid import UUID
 
 VERSION = '0.3.9'
 
-FRONTEND_VERSION = 9
+FRONTEND_VERSION = 10
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
@@ -51,5 +51,6 @@ SERIAL_UPDATE_PERMISSIONS = 'update_permissions'
 
 class ApplyAs(enum.StrEnum):
     """How to apply changes."""
+
     DELTA: str = 'delta'
     COPY: str = 'copy'

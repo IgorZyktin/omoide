@@ -217,7 +217,7 @@ async def api_item_update_permissions(
         'item_uuid': str(item_uuid),
         'apply_to_parents': permissions_in.apply_to_parents,
         'apply_to_children': permissions_in.apply_to_children,
-        'apply_to_children_as': permissions_in.apply_as.value,
+        'apply_to_children_as': permissions_in.apply_to_children_as,
         'operation_id': operation_id,
     }
 

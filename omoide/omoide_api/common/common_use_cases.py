@@ -49,7 +49,7 @@ class BaseAPIUseCase:
             (
                 user.is_admin,
                 item.owner_uuid == user.uuid,
-                str(user.uuid) in item.permissions,
+                user.uuid in item.permissions,
             )
         ):
             return
@@ -108,7 +108,7 @@ class BaseAPIUseCase:
             all(
                 (
                     item.owner_uuid == user.uuid,
-                    str(user.uuid) in item.permissions,
+                    user.uuid in item.permissions,
                 )
             )
             or user.is_admin

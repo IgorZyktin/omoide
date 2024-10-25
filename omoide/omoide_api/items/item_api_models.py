@@ -105,7 +105,7 @@ class MediaInput(BaseModel):
 class PermissionsInput(BaseModel):
     """Input info for new item permissions."""
 
-    permissions: list[UUID]
+    permissions: set[UUID]
     apply_to_parents: bool = False
     apply_to_children: bool = True
     apply_to_children_as: const.ApplyAs = const.ApplyAs.DELTA

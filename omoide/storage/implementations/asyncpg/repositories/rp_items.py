@@ -138,7 +138,12 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             msg = 'Item with UUID {uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, uuid=uuid)
 
-        return models.Item(**response)
+        raw_item = dict(response)
+        permissions = raw_item.pop('permissions', [])
+        return models.Item(
+            **raw_item,
+            permissions={UUID(x) for x in permissions},
+        )
 
     async def get_items_anon(
         self,
@@ -404,7 +409,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
                 content_ext=item.content_ext,
                 preview_ext=item.preview_ext,
                 thumbnail_ext=item.thumbnail_ext,
-                tags=item.tags,
+                tags=tuple(item.tags),
                 permissions=tuple(str(x) for x in item.permissions),
             )
             .where(

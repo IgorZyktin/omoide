@@ -194,7 +194,7 @@ class Item(ModelMixin):
     thumbnail_ext: str | None
     status: Status = Status.AVAILABLE  # TODO - make it mandatory
     tags: list[str] = field(default_factory=list)
-    permissions: list[UUID] = field(default_factory=list)
+    permissions: set[UUID] = field(default_factory=list)
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""

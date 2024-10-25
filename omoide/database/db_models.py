@@ -429,7 +429,7 @@ class Item(Base):
     # array fields ------------------------------------------------------------
 
     tags: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    permissions: Mapped[list[str]] = mapped_column(
+    permissions: Mapped[set[UUID]] = mapped_column(
         pg.ARRAY(sa.Text), nullable=False
     )
 
