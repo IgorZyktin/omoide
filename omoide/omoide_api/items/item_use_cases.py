@@ -415,4 +415,10 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
             item.permissions = permissions
             await self.mediator.items_repo.update_item(item)
 
+            for user_uuid in (added | deleted):
+                operation_id = await repo.create_serial_operation(
+                    name=const.SERIAL_REBUILD_KNOWN_TAGS_USER,
+                    extras={'user_uuid': str(user_uuid)},
+                )
+
         return operation_id

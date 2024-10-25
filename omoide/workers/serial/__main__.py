@@ -11,6 +11,9 @@ from omoide import utils
 from omoide.database.implementations.impl_sqlalchemy.database import (
     SqlalchemyDatabase,
 )
+from omoide.database.implementations.impl_sqlalchemy.items_repo import (
+    ItemsRepo,
+)
 from omoide.database.implementations.impl_sqlalchemy.tags_repo import TagsRepo
 from omoide.database.implementations.impl_sqlalchemy.users_repo import (
     UsersRepo,
@@ -46,6 +49,7 @@ def main(operation: str, extras: str) -> None:
     config = cfg.Config()
     mediator = WorkerMediator(
         database=SqlalchemyDatabase(config.db_admin_url.get_secret_value()),
+        items=ItemsRepo(),
         tags=TagsRepo(),
         users=UsersRepo(),
         workers=WorkersRepo(),

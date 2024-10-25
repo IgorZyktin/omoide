@@ -2,7 +2,6 @@
 
 import abc
 from contextlib import contextmanager
-from typing import ContextManager
 from typing import Generic
 from typing import Iterator
 from typing import TypeVar
