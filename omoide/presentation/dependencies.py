@@ -359,30 +359,6 @@ def api_item_update_tags_use_case(
 
 
 @utils.memorize
-def api_item_update_permissions_use_case(
-    users_repo: Annotated[
-        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
-    ],
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-    meta_repo: Annotated[
-        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
-    ],
-    misc_repo: Annotated[
-        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
-    ],
-) -> use_cases.ApiItemUpdatePermissionsUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemUpdatePermissionsUseCase(
-        users_repo=users_repo,
-        items_repo=items_repo,
-        metainfo_repo=meta_repo,
-        misc_repo=misc_repo,
-    )
-
-
-@utils.memorize
 def api_item_update_parent_use_case(
     policy: Annotated[interfaces.AbsPolicy, Depends(get_policy)],
     users_repo: Annotated[
