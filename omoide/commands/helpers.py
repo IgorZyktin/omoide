@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 from typing import Any
 from uuid import UUID
-
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -133,23 +133,25 @@ def get_item(
     return item
 
 
-def insert_into_metainfo_extras(
+def insert_item_note(
     session: Session,
-    metainfo: db_models.Metainfo,
-    new_data: dict[str, Any],
+    item: db_models.Item,
+    key: str,
+    value: str,
 ) -> None:
-    """Insert new keys and values to JSONB field in metainfo."""
-    for key, value in new_data.items():
-        stmt = (
-            sa.update(db_models.Metainfo)
-            .where(db_models.Metainfo.item_uuid == metainfo.item_uuid)
-            .values(
-                extras=sa.func.jsonb_set(
-                    db_models.Metainfo.extras,
-                    [key],
-                    f'"{value}"' if isinstance(value, str) else value,
-                )
-            )
-        )
-        flag_modified(metainfo, 'extras')
-        session.execute(stmt)
+    """Insert new keys in notes."""
+    insert = pg_insert(db_models.ItemNote).values(
+        item_id=item.id,
+        key=key,
+        value=value,
+    )
+
+    stmt = insert.on_conflict_do_update(
+        index_elements=[
+            db_models.ItemNote.item_id,
+            db_models.ItemNote.key,
+        ],
+        set_={'value': insert.excluded.value},
+    )
+
+    session.execute(stmt)

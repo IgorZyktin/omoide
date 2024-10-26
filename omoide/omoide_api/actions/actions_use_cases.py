@@ -305,9 +305,10 @@ class CopyImageUseCase(BaseAPIUseCase):
             )
 
             if media_types:
-                await self.mediator.meta_repo.update_metainfo_extras(
-                    item_uuid=target_uuid,
-                    new_extras={'copied_image_from': str(source_uuid)},
+                await self.mediator.meta_repo.add_item_note(
+                    item=target,
+                    key='copied_image_from',
+                    value=str(source_uuid),
                 )
 
         return media_types

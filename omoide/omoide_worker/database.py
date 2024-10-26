@@ -7,6 +7,7 @@ from omoide import custom_logging
 from omoide import utils
 from omoide.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -72,16 +73,25 @@ class WorkerDatabase(SyncDatabase):
 
     def mark_origin(self, command: db_models.CommandCopy) -> None:
         """Mark where item got its image."""
-        stmt = (
-            sa.update(db_models.Metainfo)
-            .where(db_models.Metainfo.item_uuid == command.target_uuid)
-            .values(
-                extras=sa.func.jsonb_set(
-                    db_models.Metainfo.extras,
-                    ['copied_image_from'],
-                    f'"{command.source_uuid}"',
-                )
-            )
+        query = (
+            sa.select(db_models.Item.id)
+            .where(db_models.Item.uuid == command.source_uuid)
+        )
+
+        item_id = self.session.execute(query).scalar()
+
+        insert = pg_insert(db_models.ItemNote).values(
+            item_id=item_id,
+            key='copied_image_from',
+            value=str(command.source_uuid),
+        )
+
+        stmt = insert.on_conflict_do_update(
+            index_elements=[
+                db_models.ItemNote.item_id,
+                db_models.ItemNote.key,
+            ],
+            set_={'value': insert.excluded.value},
         )
         self.session.execute(stmt)
 

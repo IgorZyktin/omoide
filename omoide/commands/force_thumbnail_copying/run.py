@@ -124,10 +124,11 @@ def copy_properties(
     parent_metainfo.thumbnail_height = child_metainfo.thumbnail_height
     parent_metainfo.thumbnail_size = child_metainfo.thumbnail_size
 
-    helpers.insert_into_metainfo_extras(
+    helpers.insert_item_note(
         session=session,
-        metainfo=parent_metainfo,
-        new_data={'copied_image_from': str(child.uuid)},
+        item=parent,
+        key='copied_image_from',
+        value=str(child.uuid),
     )
 
     parent_metainfo.updated_at = utils.now()

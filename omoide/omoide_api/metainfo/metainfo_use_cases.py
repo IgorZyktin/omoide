@@ -58,7 +58,6 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
 
             current_metainfo.user_time = metainfo.user_time
             current_metainfo.content_type = metainfo.content_type
-            current_metainfo.extras = metainfo.extras
 
             current_metainfo.content_width = metainfo.content_width
             current_metainfo.content_height = metainfo.content_height

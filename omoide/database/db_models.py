@@ -502,8 +502,6 @@ class Metainfo(Base):
         sa.String(length=SMALL), nullable=True
     )
 
-    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
-
     content_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     preview_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     thumbnail_size: Mapped[int | None] = mapped_column(
@@ -539,6 +537,44 @@ class Metainfo(Base):
 
     item: Mapped[Item] = relationship(
         'Item', passive_deletes=True, back_populates='metainfo', uselist=False
+    )
+
+
+class ItemNote(Base):
+    """Additional info for items."""
+
+    __tablename__ = 'item_notes'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        unique=True,
+    )
+
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    key: Mapped[str] = mapped_column(
+        sa.CHAR(MEDIUM), nullable=False, index=True
+    )
+
+    value: Mapped[str] = mapped_column(sa.CHAR(HUGE), nullable=False)
+
+    # other -------------------------------------------------------------------
+
+    __table_args__ = (
+        sa.UniqueConstraint('item_id', 'key', name='item_notes_uc'),
     )
 
 

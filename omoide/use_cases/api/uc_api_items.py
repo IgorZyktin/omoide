@@ -208,18 +208,6 @@ class ApiItemUpdateUseCase:
                     item.thumbnail_ext = (
                         str(operation.value) if operation.value else None
                     )
-                elif operation.path == '/copied_image_from':
-                    if operation.value and utils.is_valid_uuid(
-                        str(operation.value)
-                    ):
-                        uuid = UUID(str(operation.value))
-                        metainfo = await self.metainfo_repo.read_metainfo(item)
-                        metainfo.extras['copied_image_from'] = str(
-                            operation.value
-                        )
-                        await self.metainfo_repo.update_metainfo(
-                            user, item.uuid, metainfo
-                        )
             await self.items_repo.update_item(item)
             await self.metainfo_repo.mark_metainfo_updated(item.uuid)
         return Success(True)

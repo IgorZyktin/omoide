@@ -47,6 +47,15 @@ class AbsMetainfoRepo(abc.ABC):
         """Add new data to extras."""
 
     @abc.abstractmethod
+    async def add_item_note(
+        self,
+        item: models.Item,
+        key: str,
+        value: str
+    ) -> None:
+        """Add new note to given item."""
+
+    @abc.abstractmethod
     async def get_total_disk_usage(
         self,
         user: models.User,

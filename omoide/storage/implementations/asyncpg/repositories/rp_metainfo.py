@@ -3,6 +3,7 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 import sqlalchemy as sa
 
 from omoide import exceptions
@@ -91,30 +92,28 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-    async def update_metainfo_extras(
+    async def add_item_note(
         self,
-        item_uuid: UUID,
-        new_extras: dict[str, Any],
+        item: models.Item,
+        key: str,
+        value: str
     ) -> None:
-        """Add new data to extras."""
-        if not new_extras:
-            return
+        """Add new note to given item."""
+        insert = pg_insert(db_models.ItemNote).values(
+            item_id=item.id,
+            key=key,
+            value=value,
+        )
 
-        for key, value in new_extras.items():
-            stmt = (
-                sa.update(db_models.Metainfo)
-                .where(db_models.Metainfo.item_uuid == item_uuid)
-                .values(
-                    extras=sa.func.jsonb_set(
-                        db_models.Metainfo.extras,
-                        [key],
-                        f'"{value}"' if isinstance(value, str) else value,
-                    )
-                )
-            )
-            await self.db.execute(stmt)
+        stmt = insert.on_conflict_do_update(
+            index_elements=[
+                db_models.ItemNote.item_id,
+                db_models.ItemNote.key,
+            ],
+            set_={'value': insert.excluded.value},
+        )
 
-        await self.mark_metainfo_updated(item_uuid)
+        await self.db.execute(stmt)
 
     async def get_total_disk_usage(
         self,
