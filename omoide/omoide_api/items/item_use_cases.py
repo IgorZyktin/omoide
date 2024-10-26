@@ -207,6 +207,42 @@ class RenameItemUseCase(BaseItemUseCase):
         return operation_id
 
 
+class UpdateItemTagsUseCase(BaseItemUseCase):
+    """Use case for item tags update."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        tags: set[str],
+    ) -> int | None:
+        """Execute."""
+        self.ensure_not_anon(user, operation='update items')
+
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='items')
+
+            if item.tags == tags:
+                return None
+
+            LOG.info('{} is updating tags of {}', user, item)
+
+            item.tags = tags
+            await self.mediator.items_repo.update_item(item)
+
+            operation = so.UpdateTagsSO(
+                extras={
+                    'item_uuid': str(item_uuid),
+                    'apply_to_children': True,
+                },
+            )
+            repo = self.mediator.misc_repo
+            operation_id = await repo.create_serial_operation(operation)
+
+        return operation_id
+
+
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 

@@ -208,6 +208,35 @@ async def api_rename_item(
     }
 
 
+@api_items_router.put(
+    '/{item_uuid}/tags',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str | int | None],
+)
+async def api_update_item_tags(
+    item_uuid: UUID,
+    item_tags_in: item_api_models.ItemUpdateTagsInput,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Update item tags."""
+    use_case = item_use_cases.UpdateItemTagsUseCase(mediator)
+
+    try:
+        operation_id = await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            tags=item_tags_in.tags,
+        )
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    return {
+        'result': f'Changed tags of {item_uuid}',
+        'operation_id': operation_id,
+    }
+
+
 @api_items_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,

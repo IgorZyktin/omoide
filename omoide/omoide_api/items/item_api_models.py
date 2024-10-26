@@ -38,11 +38,11 @@ class ItemInput(BaseModel):
     name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    tags: list[str] = Field([], max_length=MAX_TAGS)
+    tags: set[str] = Field([], max_length=MAX_TAGS)
     permissions: list[UUID] = Field([], max_length=MAX_PERMISSIONS)
 
     @model_validator(mode='after')
-    def check_tags(self) -> 'ItemInput':
+    def check_tags(self) -> Self:
         """Raise if tag is too big."""
         for tag in self.tags:
             if len(tag) > MAX_ITEM_FIELD_LENGTH:
@@ -54,7 +54,7 @@ class ItemInput(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def ensure_collection_has_name(self) -> 'ItemInput':
+    def ensure_collection_has_name(self) -> Self:
         """Raise if got nameless collection."""
         if self.is_collection and not self.name:
             msg = 'Collection must have a name'
@@ -72,6 +72,24 @@ class ItemRenameInput(BaseModel):
     """Input info for item rename."""
 
     name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
+
+
+class ItemUpdateTagsInput(BaseModel):
+    """Input info for item tags update."""
+
+    tags: set[str] = Field([], max_length=MAX_TAGS)
+
+    @model_validator(mode='after')
+    def check_tags(self) -> Self:
+        """Raise if tag is too big."""
+        for tag in self.tags:
+            if len(tag) > MAX_ITEM_FIELD_LENGTH:
+                msg = (
+                    f'Tag is too long ({len(tag)} symbols), '
+                    f'max allowed length is {MAX_ITEM_FIELD_LENGTH} symbols'
+                )
+                raise ValueError(msg)
+        return self
 
 
 class MediaInput(BaseModel):
