@@ -48,10 +48,7 @@ class AbsMetainfoRepo(abc.ABC):
 
     @abc.abstractmethod
     async def add_item_note(
-        self,
-        item: models.Item,
-        key: str,
-        value: str
+        self, item: models.Item, key: str, value: str
     ) -> None:
         """Add new note to given item."""
 

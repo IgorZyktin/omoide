@@ -25,7 +25,8 @@ class LoginUserUseCase(BaseAPIUseCase):
             ):
                 user.last_login = utils.now()
                 await self.mediator.users_repo.update_user(
-                    user.uuid, last_login=user.last_login)
+                    user.uuid, last_login=user.last_login
+                )
                 return user
 
         return models.User.new_anon()

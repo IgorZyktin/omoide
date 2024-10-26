@@ -73,9 +73,8 @@ class WorkerDatabase(SyncDatabase):
 
     def mark_origin(self, command: db_models.CommandCopy) -> None:
         """Mark where item got its image."""
-        query = (
-            sa.select(db_models.Item.id)
-            .where(db_models.Item.uuid == command.source_uuid)
+        query = sa.select(db_models.Item.id).where(
+            db_models.Item.uuid == command.source_uuid
         )
 
         item_id = self.session.execute(query).scalar()

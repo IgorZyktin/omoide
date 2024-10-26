@@ -93,10 +93,7 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
             raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
     async def add_item_note(
-        self,
-        item: models.Item,
-        key: str,
-        value: str
+        self, item: models.Item, key: str, value: str
     ) -> None:
         """Add new note to given item."""
         insert = pg_insert(db_models.ItemNote).values(
