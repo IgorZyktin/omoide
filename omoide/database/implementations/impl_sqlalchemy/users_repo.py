@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Connection
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
@@ -13,7 +13,7 @@ from omoide.database import db_models
 from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
 
 
-class UsersRepo(AbsUsersRepo[Connection]):
+class UsersRepo(AbsUsersRepo[AsyncConnection]):
     """Repository that performs operations on users."""
 
     @staticmethod
@@ -28,14 +28,14 @@ class UsersRepo(AbsUsersRepo[Connection]):
             is_public=response.is_public,
         )
 
-    def get_by_id(
+    async def get_by_id(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         user_id: int,
     ) -> models.User:
         """Return User with given id."""
         stmt = sa.select(db_models.User).where(db_models.User.id == user_id)
-        response = conn.execute(stmt).first()
+        response = (await conn.execute(stmt)).first()
 
         if response is None:
             msg = 'User with ID {user_id} does not exist'
@@ -43,14 +43,14 @@ class UsersRepo(AbsUsersRepo[Connection]):
 
         return self._user_from_response(response)
 
-    def get_by_uuid(
+    async def get_by_uuid(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         uuid: UUID,
     ) -> models.User:
         """Return User with given UUID."""
         stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
-        response = conn.execute(stmt).first()
+        response = (await conn.execute(stmt)).first()
 
         if response is None:
             msg = 'User with UUID {user_uuid} does not exist'
@@ -58,9 +58,9 @@ class UsersRepo(AbsUsersRepo[Connection]):
 
         return self._user_from_response(response)
 
-    def select(
+    async def select(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         user_id: int | None = None,
         uuid: UUID | None = None,
         login: str | None = None,
@@ -91,5 +91,5 @@ class UsersRepo(AbsUsersRepo[Connection]):
         if limit is not None:
             stmt = stmt.limit(limit)
 
-        response = conn.execute(stmt).fetchall()
+        response = (await conn.execute(stmt)).fetchall()
         return [self._user_from_response(row) for row in response]

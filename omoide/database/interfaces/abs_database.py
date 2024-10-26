@@ -1,26 +1,26 @@
-"""Abstract databases."""
+"""Abstract database."""
 
 import abc
-from contextlib import contextmanager
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Generic
-from typing import Iterator
 from typing import TypeVar
 
 ConnectionT = TypeVar('ConnectionT')
 
 
 class AbsDatabase(Generic[ConnectionT], abc.ABC):
-    """Abstract synchronous database."""
+    """Base class for all databases."""
 
     @abc.abstractmethod
-    def connect(self) -> None:
+    async def connect(self) -> None:
         """Connect to the database."""
 
     @abc.abstractmethod
-    def disconnect(self) -> None:
+    async def disconnect(self) -> None:
         """Disconnect from the database."""
 
-    @contextmanager
+    @asynccontextmanager
     @abc.abstractmethod
-    def transaction(self) -> Iterator[ConnectionT]:
+    def transaction(self) -> AsyncIterator[ConnectionT]:
         """Start transaction."""

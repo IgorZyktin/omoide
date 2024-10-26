@@ -1,8 +1,10 @@
 """General worker class for all workers."""
 
 import abc
+import asyncio
+import functools
+import os
 import signal
-from typing import Any
 from typing import Generic
 from typing import TypeVar
 
@@ -23,35 +25,54 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
         self.config = config
         self.mediator = mediator
 
-    def start(self, register: bool = True) -> None:
+    async def start(self, register: bool = True) -> None:
         """Start worker."""
-        self.register_signals()
-        self.mediator.database.connect()
+        await self.register_signals()
+        await self.mediator.database.connect()
 
         if register:
-            with self.mediator.database.transaction() as conn:
-                self.mediator.workers.register_worker(conn, self.config.name)
+            async with self.mediator.database.transaction() as conn:
+                await self.mediator.workers.register_worker(
+                    conn=conn,
+                    worker_name=self.config.name,
+                )
 
         LOG.info('Worker {!r} started', self.config.name)
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Start worker."""
-        self.mediator.database.disconnect()
+        await self.mediator.database.disconnect()
         LOG.info('Worker {!r} stopped', self.config.name)
 
-    def register_signals(self) -> None:
+    async def register_signals(self) -> None:
         """Decide how we will stop."""
+        if os.name == 'nt':
+            LOG.warning('Running on Windows, can stop only using Ctr+C')
+            return
 
-        def signal_handler(signum: int, frame: Any) -> None:
+        loop = asyncio.get_event_loop()
+
+        def signal_handler(sig: int) -> None:
             """Handle signal."""
-            _ = frame
-            string = signal.strsignal(signum)
-            LOG.info('Caught signal {!r}, stopping', string)
-            self.mediator.stopping = True
+            string = signal.strsignal(sig)
+            LOG.info(
+                'Worker {} caught signal {}, stopping',
+                self.config.name,
+                string,
+            )
+            loop.remove_signal_handler(sig)
+            self.stopping = True
 
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        loop.add_signal_handler(
+            signal.SIGINT,
+            functools.partial(signal_handler, sig=signal.SIGINT),
+        )
+
+        loop.add_signal_handler(
+            signal.SIGTERM,
+            functools.partial(signal_handler, sig=signal.SIGTERM),
+        )
 
     @abc.abstractmethod
-    def execute(self) -> bool:
+    async def execute(self) -> bool:
         """Perform workload."""

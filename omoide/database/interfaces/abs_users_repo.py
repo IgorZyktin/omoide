@@ -15,15 +15,15 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on users."""
 
     @abc.abstractmethod
-    def get_by_id(self, conn: ConnectionT, user_id: int) -> models.User:
+    async def get_by_id(self, conn: ConnectionT, user_id: int) -> models.User:
         """Return User with given id."""
 
     @abc.abstractmethod
-    def get_by_uuid(self, conn: ConnectionT, uuid: UUID) -> models.User:
+    async def get_by_uuid(self, conn: ConnectionT, uuid: UUID) -> models.User:
         """Return User with given UUID."""
 
     @abc.abstractmethod
-    def select(
+    async def select(
         self,
         conn: ConnectionT,
         user_id: int | None = None,

@@ -6,19 +6,19 @@ from collections import defaultdict
 from typing import Callable
 
 import sqlalchemy as sa
-from sqlalchemy import Connection
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import models
 from omoide.database import db_models
 from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 
 
-class _TagsRepoHelper(AbsTagsRepo[Connection], abc.ABC):
+class _TagsRepoHelper(AbsTagsRepo[AsyncConnection], abc.ABC):
     """Helper class."""
 
     @staticmethod
-    def _process_batch_of_tags(
-        conn: Connection,
+    async def _process_batch_of_tags(
+        conn: AsyncConnection,
         get_conditions: Callable[[int], list[sa.ColumnElement]],
         batch_size: int,
     ) -> dict[str, int]:
@@ -44,7 +44,7 @@ class _TagsRepoHelper(AbsTagsRepo[Connection], abc.ABC):
                 .limit(batch_size)
             )
 
-            response = conn.execute(stmt).fetchall()
+            response = (await conn.execute(stmt)).fetchall()
 
             for item_id, item_tags in response:
                 for item_tag in item_tags:
@@ -60,9 +60,9 @@ class _TagsRepoHelper(AbsTagsRepo[Connection], abc.ABC):
 class TagsRepo(_TagsRepoHelper):
     """Repository that performs operations on tags."""
 
-    def get_known_tags_anon(
+    async def get_known_tags_anon(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         batch_size: int,
     ) -> dict[str, int]:
         """Return known tags for anon."""
@@ -75,21 +75,21 @@ class TagsRepo(_TagsRepoHelper):
                 db_models.Item.id > _marker,
             ]
 
-        return self._process_batch_of_tags(
+        return await self._process_batch_of_tags(
             conn=conn,
             get_conditions=get_conditions,
             batch_size=batch_size,
         )
 
-    def drop_known_tags_anon(self, conn: Connection) -> int:
+    async def drop_known_tags_anon(self, conn: AsyncConnection) -> int:
         """Drop all known tags for anon user."""
         stmt = sa.delete(db_models.KnownTagsAnon)
-        response = conn.execute(stmt)
+        response = await conn.execute(stmt)
         return int(response.rowcount)
 
-    def insert_known_tags_anon(
+    async def insert_known_tags_anon(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         tags: dict[str, int],
         batch_size: int,
     ) -> None:
@@ -101,11 +101,11 @@ class TagsRepo(_TagsRepoHelper):
 
         for batch in itertools.batched(payload, batch_size):
             stmt = sa.insert(db_models.KnownTagsAnon).values(batch)
-            conn.execute(stmt)
+            await conn.execute(stmt)
 
-    def get_known_tags_user(
+    async def get_known_tags_user(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         user: models.User,
         batch_size: int,
     ) -> dict[str, int]:
@@ -123,27 +123,27 @@ class TagsRepo(_TagsRepoHelper):
                 db_models.Item.id > _marker,
             ]
 
-        return self._process_batch_of_tags(
+        return await self._process_batch_of_tags(
             conn=conn,
             get_conditions=get_conditions,
             batch_size=batch_size,
         )
 
-    def drop_known_tags_user(
+    async def drop_known_tags_user(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         user: models.User,
     ) -> int:
         """Drop all known tags for specific user."""
         stmt = sa.delete(db_models.KnownTags).where(
             db_models.KnownTags.user_id == user.id
         )
-        response = conn.execute(stmt)
+        response = await conn.execute(stmt)
         return int(response.rowcount)
 
-    def insert_known_tags_user(
+    async def insert_known_tags_user(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         user: models.User,
         tags: dict[str, int],
         batch_size: int,
@@ -156,4 +156,4 @@ class TagsRepo(_TagsRepoHelper):
 
         for batch in itertools.batched(payload, batch_size):
             stmt = sa.insert(db_models.KnownTags).values(batch)
-            conn.execute(stmt)
+            await conn.execute(stmt)

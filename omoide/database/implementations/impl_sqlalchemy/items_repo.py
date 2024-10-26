@@ -4,7 +4,7 @@ from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Connection
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
@@ -12,7 +12,7 @@ from omoide.database import db_models
 from omoide.database.interfaces.abs_items_repo import AbsItemsRepo
 
 
-class ItemsRepo(AbsItemsRepo[Connection]):
+class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     """Repository that performs operations on items."""
 
     @staticmethod
@@ -33,14 +33,14 @@ class ItemsRepo(AbsItemsRepo[Connection]):
             permissions={UUID(x) for x in response.permissions},
         )
 
-    def get_by_id(
+    async def get_by_id(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         item_id: int,
     ) -> models.Item:
         """Return Item with given id."""
         stmt = sa.select(db_models.Item).where(db_models.Item.id == item_id)
-        response = conn.execute(stmt).first()
+        response = (await conn.execute(stmt)).first()
 
         if response is None:
             msg = 'Item with ID {item_id} does not exist'
@@ -48,14 +48,14 @@ class ItemsRepo(AbsItemsRepo[Connection]):
 
         return self._item_from_response(response)
 
-    def get_by_uuid(
+    async def get_by_uuid(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         uuid: UUID,
     ) -> models.Item:
         """Return User with given UUID."""
         stmt = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
-        response = conn.execute(stmt).first()
+        response = (await conn.execute(stmt)).first()
 
         if response is None:
             msg = 'Item with UUID {item_uuid} does not exist'
@@ -63,9 +63,9 @@ class ItemsRepo(AbsItemsRepo[Connection]):
 
         return self._item_from_response(response)
 
-    def get_children(
+    async def get_children(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         item: models.Item,
     ) -> list[models.Item]:
         """Return children of given item."""
@@ -74,12 +74,12 @@ class ItemsRepo(AbsItemsRepo[Connection]):
             .where(db_models.Item.parent_uuid == item.uuid)
             .order_by(db_models.Item.id)
         )
-        response = conn.execute(stmt).fetchall()
+        response = (await conn.execute(stmt)).fetchall()
         return [self._item_from_response(x) for x in response]
 
-    def get_parents(
+    async def get_parents(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         item: models.Item,
     ) -> list[models.Item]:
         """Return parents of given item."""
@@ -90,7 +90,7 @@ class ItemsRepo(AbsItemsRepo[Connection]):
             stmt = sa.select(db_models.Item).where(
                 db_models.Item.uuid == parent_uuid
             )
-            raw_parent = conn.execute(stmt).fetchone()
+            raw_parent = (await conn.execute(stmt)).fetchone()
 
             if raw_parent is None:
                 break
@@ -101,7 +101,7 @@ class ItemsRepo(AbsItemsRepo[Connection]):
 
         return list(reversed(parents))
 
-    def save(self, conn: Connection, item: models.Item) -> None:
+    async def save(self, conn: AsyncConnection, item: models.Item) -> None:
         """Save given item."""
         stmt = (
             sa.update(db_models.Item)
@@ -121,4 +121,4 @@ class ItemsRepo(AbsItemsRepo[Connection]):
                 db_models.Item.id == item.id,
             )
         )
-        conn.execute(stmt)
+        await conn.execute(stmt)

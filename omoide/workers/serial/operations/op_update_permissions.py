@@ -23,55 +23,61 @@ class UpdatePermissionsExecutor(
 
     operation: so.UpdatePermissionsSO
 
-    def execute(self) -> None:
+    async def execute(self) -> None:
         """Perform workload."""
         affected_users: set[UUID] = set()
 
         if self.operation.apply_to_parents:
-            self.apply_to_parents(affected_users)
+            await self.apply_to_parents(affected_users)
 
         if self.operation.apply_to_children:
-            self.apply_to_children(affected_users)
+            await self.apply_to_children(affected_users)
 
-        with self.mediator.database.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             for user_uuid in affected_users:
                 operation = so.RebuildKnownTagsUserSO(
                     extras={'user_uuid': str(user_uuid)},
                 )
-                self.mediator.workers.create_serial_operation(conn, operation)
+                await self.mediator.workers.create_serial_operation(
+                    conn=conn,
+                    operation=operation,
+                )
 
-    def apply_to_parents(self, affected_users: set[UUID]) -> None:
+    async def apply_to_parents(self, affected_users: set[UUID]) -> None:
         """Change permissions in parents."""
         affected_users.update(self.operation.added)
 
-        with self.mediator.database.transaction() as conn:
-            item = self.mediator.items.get_by_uuid(
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(
                 conn=conn,
                 uuid=self.operation.item_uuid,
             )
 
-            parents = self.mediator.items.get_parents(conn, item)
+            parents = await self.mediator.items.get_parents(conn, item)
 
             for parent in reversed(parents):
                 parent.permissions = parent.permissions | self.operation.added
-                self.mediator.items.save(conn, parent)
+                await self.mediator.items.save(conn, parent)
                 LOG.info(
                     'Permissions change in {child} affected {parent} (parent)',
                     child=item,
                     parent=parent,
                 )
 
-    def apply_to_children(self, affected_users: set[UUID]) -> None:
+    async def apply_to_children(self, affected_users: set[UUID]) -> None:
         """Change permissions in children."""
-        with self.mediator.database.transaction() as conn:
-            top_item = self.mediator.items.get_by_uuid(
+        async with self.mediator.database.transaction() as conn:
+            top_item = await self.mediator.items.get_by_uuid(
                 conn=conn,
                 uuid=self.operation.item_uuid,
             )
 
-            top_children = self.mediator.items.get_children(conn, top_item)
+            top_children = await self.mediator.items.get_children(
+                conn=conn,
+                item=top_item,
+            )
 
-            def _recursively_apply(
+            async def _recursively_apply(
                 parent: models.Item,
                 child: models.Item,
             ) -> None:
@@ -97,16 +103,20 @@ class UpdatePermissionsExecutor(
                         self.operation.added | self.operation.deleted
                     )
 
-                self.mediator.items.save(conn, child)
+                await self.mediator.items.save(conn, child)
                 LOG.info(
                     'Permissions change in {parent} affected {child} (child)',
                     parent=parent,
                     child=child,
                 )
 
-                sub_children = self.mediator.items.get_children(conn, child)
+                sub_children = await self.mediator.items.get_children(
+                    conn=conn,
+                    item=child,
+                )
+
                 for sub_child in sub_children:
-                    _recursively_apply(child, sub_child)
+                    await _recursively_apply(child, sub_child)
 
             for top_child in top_children:
-                _recursively_apply(top_item, top_child)
+                await _recursively_apply(top_item, top_child)

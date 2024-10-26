@@ -79,12 +79,15 @@ class SerialOperation:
             self.log += f'\n{text}'
 
 
+@dataclass
 class DummySO(SerialOperation):
     """Operation for testing purposes."""
 
     name: str = 'dummy'
+    goal: str = 'to test things'
 
 
+@dataclass
 class RebuildKnownTagsAnonSO(SerialOperation):
     """Rebuild known tags for anon."""
 
@@ -92,6 +95,7 @@ class RebuildKnownTagsAnonSO(SerialOperation):
     goal: str = 'rebuild known tags for anon'
 
 
+@dataclass
 class RebuildKnownTagsUserSO(SerialOperation):
     """Rebuild known tags registered anon."""
 
@@ -104,6 +108,7 @@ class RebuildKnownTagsUserSO(SerialOperation):
         return UUID(self.extras['user_uuid'])
 
 
+@dataclass
 class RebuildKnownTagsAllSO(SerialOperation):
     """Rebuild known tags for registered user."""
 
@@ -111,6 +116,7 @@ class RebuildKnownTagsAllSO(SerialOperation):
     goal: str = 'rebuild known tags for all users'
 
 
+@dataclass
 class UpdatePermissionsSO(SerialOperation):
     """Update permission in item and all dependant objects."""
 

@@ -35,8 +35,9 @@ class SerialOperationExecutor(Generic[ConfigT, MediatorT], abc.ABC):
 
     def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
         """Store descendant."""
-        _ALL_SERIAL_OPERATIONS_EXECUTORS[cls.operation.name] = cls
         super().__init_subclass__(*args, **kwargs)
+        key = cls.__annotations__['operation'].name
+        _ALL_SERIAL_OPERATIONS_EXECUTORS[key] = cls
 
     @staticmethod
     def from_operation(
@@ -53,5 +54,5 @@ class SerialOperationExecutor(Generic[ConfigT, MediatorT], abc.ABC):
         return executor_type(operation, config, mediator)
 
     @abc.abstractmethod
-    def execute(self) -> None:
+    async def execute(self) -> None:
         """Perform workload."""

@@ -1,13 +1,12 @@
 """Worker that performs operations one by one."""
 
-import time
+import asyncio
 
 import click
 import ujson
 
 from omoide import custom_logging
 from omoide import serial_operations as so
-from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy as sa
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial import cfg
@@ -34,6 +33,11 @@ LOG = custom_logging.get_logger(__name__)
 )
 def main(operation: str, extras: str) -> None:
     """Entry point."""
+    asyncio.run(_main(operation, extras))
+
+
+async def _main(operation: str, extras: str) -> None:
+    """ASync entry point."""
     config = cfg.Config()
     mediator = WorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_admin_url.get_secret_value()),
@@ -45,28 +49,20 @@ def main(operation: str, extras: str) -> None:
     worker = SerialWorker(config, mediator)
 
     if operation:
-        run_manual(worker, operation, extras)
+        await run_manual(worker, operation, extras)
     else:
-        run_automatic(worker)
+        await run_automatic(worker)
 
 
-def run_manual(worker: SerialWorker, operation_name: str, extras: str) -> None:
+async def run_manual(
+    worker: SerialWorker,
+    operation_name: str,
+    extras: str,
+) -> None:
     """Oneshot run."""
-    worker.start(register=False)
+    await worker.start(register=False)
 
     extras_dict = ujson.loads(extras) if extras else {}
-    now = utils.now()
-    kwargs = {
-        'id': -1,
-        'worker_name': 'manual',
-        'status': so.OperationStatus.CREATED,
-        'extras': extras_dict,
-        'created_at': now,
-        'updated_at': now,
-        'started_at': now,
-        'ended_at': None,
-        'log': None,
-    }
 
     LOG.info(
         'Running {!r} manually with extras {!r}',
@@ -75,36 +71,41 @@ def run_manual(worker: SerialWorker, operation_name: str, extras: str) -> None:
     )
 
     try:
-        operation = so.SerialOperation.from_name(name=operation_name, **kwargs)
+        operation = so.SerialOperation.from_name(
+            name=operation_name,
+            extras=extras_dict,
+        )
         executor = op.SerialOperationExecutor.from_operation(
             operation=operation,
             config=worker.config,
             mediator=worker.mediator,
         )
-        executor.execute()
+        await executor.execute()
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        LOG.warning('Stopped manually')
     finally:
-        worker.stop()
+        await worker.stop()
 
 
-def run_automatic(worker: SerialWorker) -> None:
+async def run_automatic(worker: SerialWorker) -> None:
     """Daemon run."""
-    worker.start()
+    await worker.start()
 
     try:
         while True:
-            did_something = worker.execute()
+            did_something = await worker.execute()
 
             if worker.mediator.stopping:
                 break
 
             if did_something:
-                time.sleep(worker.config.short_delay)
+                await asyncio.sleep(worker.config.short_delay)
             else:
-                time.sleep(worker.config.long_delay)
-    except KeyboardInterrupt:
+                await asyncio.sleep(worker.config.long_delay)
+    except (KeyboardInterrupt, asyncio.CancelledError):
         LOG.warning('Stopped manually')
     finally:
-        worker.stop()
+        await worker.stop()
 
 
 if __name__ == '__main__':
