@@ -81,10 +81,6 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                 raise exceptions.NotAllowedError(msg)
 
             item = await self.items_repo.get_item(uuid)
-
-            # if item.parent_uuid is not None:
-            #     old_parent = await self.items_repo.get_item(item.parent_uuid)
-
             item.parent_uuid = new_parent_uuid
             await self.items_repo.update_item(item)
 
@@ -97,13 +93,15 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     new_parent,
                 )
 
+            # TODO - need to update known tags for both old and new parents
+
             operation = so.UpdateTagsSO(
                 extras={
                     'item_uuid': str(uuid),
                     'apply_to_children': True,
                 },
             )
-            operation_id = await self.misc_repo.create_serial_operation(
+            await self.misc_repo.create_serial_operation(
                 operation
             )
 

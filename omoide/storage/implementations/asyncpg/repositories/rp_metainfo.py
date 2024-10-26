@@ -1,6 +1,5 @@
 """Repository that perform CRUD operations on metainfo."""
 
-from typing import Any
 from uuid import UUID
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -59,7 +58,6 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo, asyncpg.AsyncpgStorage):
 
     async def update_metainfo(
         self,
-        user: models.User,
         item_uuid: UUID,
         metainfo: models.Metainfo,
     ) -> None:

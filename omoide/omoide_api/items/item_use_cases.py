@@ -469,7 +469,7 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
         """Execute."""
         async with self.mediator.storage.transaction():
             item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item, subject=f'item permissions')
+            self.ensure_admin_or_owner(user, item, subject='item permissions')
 
             LOG.info('{} is updating permissions of {}', user, item)
 

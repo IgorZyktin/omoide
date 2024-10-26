@@ -59,14 +59,13 @@ def run(config: Config, database: SyncDatabase) -> None:
                 total_changed += operations
                 last_meta = metainfo.item_uuid
 
-                if config.log_every_item:
-                    if operations:
-                        LOG.info(
-                            '\t\tChanged item {} {} ({} operations)',
-                            item.uuid,
-                            item.name,
-                            operations,
-                        )
+                if config.log_every_item and operations:
+                    LOG.info(
+                        '\t\tChanged item {} {} ({} operations)',
+                        item.uuid,
+                        item.name,
+                        operations,
+                    )
 
                 if operations:
                     session.commit()

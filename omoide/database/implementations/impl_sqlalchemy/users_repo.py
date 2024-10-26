@@ -141,4 +141,4 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         """Return UUIDs of public users."""
         stmt = sa.select(db_models.PublicUsers.user_uuid)
         response = (await conn.execute(stmt)).fetchall()
-        return set(x.user_uuid for x in response)
+        return {x.user_uuid for x in response}

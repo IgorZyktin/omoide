@@ -3,7 +3,7 @@
 import abc
 import itertools
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection

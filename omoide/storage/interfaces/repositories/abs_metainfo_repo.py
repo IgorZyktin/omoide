@@ -28,7 +28,6 @@ class AbsMetainfoRepo(abc.ABC):
     @abc.abstractmethod
     async def update_metainfo(
         self,
-        user: models.User,
         item_uuid: UUID,
         metainfo: models.Metainfo,
     ) -> None:

@@ -173,7 +173,8 @@ def get_authenticator() -> interfaces.AbsAuthenticator:
 
 @utils.memorize
 def get_policy(
-    items_repo: storage_interfaces.AbsItemsRepo = Depends(get_items_repo),
+    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
+                          Depends(get_items_repo)],
 ) -> interfaces.AbsPolicy:
     """Get policy instance."""
     return infra.Policy(items_repo=items_repo)

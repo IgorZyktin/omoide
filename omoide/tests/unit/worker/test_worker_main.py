@@ -23,7 +23,7 @@ def test_worker_main_once(valid_worker_config):
             'omoide.omoide_worker.__main__.Worker', return_value=fake_worker
         ),
     ):
-        result = CliRunner().invoke(main, ['--once'])  # type: ignore
+        result = CliRunner().invoke(main, ['--once'])
 
     # assert
     assert result.exit_code == 0
@@ -53,7 +53,7 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
         ),
     ):
         fake_worker.counter = 0
-        result = CliRunner().invoke(main, ['--no-once'])  # type: ignore
+        result = CliRunner().invoke(main, ['--no-once'])
 
     # assert
     assert result.exit_code == 0

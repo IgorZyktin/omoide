@@ -1,9 +1,6 @@
 """Repository that performs various operations on different objects."""
 
 from collections.abc import Collection
-from datetime import datetime
-from typing import Any
-from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -190,59 +187,6 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.SignatureCRC32.item_id],
             set_={'signature': insert.excluded.signature},
-        )
-
-        await self.db.execute(stmt)
-
-    async def start_long_job(
-        self,
-        name: str,
-        user_uuid: UUID,
-        target_uuid: UUID | None,
-        added: Collection[str],
-        deleted: Collection[str],
-        started: datetime,
-        extras: dict[str, Any],
-    ) -> int:
-        """Start long job."""
-        stmt = (
-            sa.insert(db_models.LongJob)
-            .values(
-                name=name,
-                user_uuid=user_uuid,
-                target_uuid=target_uuid,
-                added=list(added),
-                deleted=list(deleted),
-                status='started',
-                started=started,
-                duration=None,
-                operations=None,
-                extras=extras,
-                error='',
-            )
-            .returning(db_models.LongJob.id)
-        )
-
-        return int(await self.db.execute(stmt))
-
-    async def finish_long_job(
-        self,
-        id: int,  # noqa: A002
-        status: str,
-        duration: float,
-        operations: int,
-        error: str,
-    ) -> None:
-        """Finish long job."""
-        stmt = (
-            sa.update(db_models.LongJob)
-            .values(
-                status=status,
-                duration=duration,
-                operations=operations,
-                error=error,
-            )
-            .where(db_models.LongJob.id == id)
         )
 
         await self.db.execute(stmt)

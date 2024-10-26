@@ -4,7 +4,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import status
 
@@ -98,7 +97,6 @@ async def api_action_rebuild_computed_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     target: actions_api_models.RebuildComputedTagsInput,
-    background_tasks: BackgroundTasks,
 ):
     """Recalculate all computed tags for specific user.
 
@@ -113,12 +111,8 @@ async def api_action_rebuild_computed_tags(
             admin, target.user_uuid
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
-    background_tasks.add_task(
-        use_case.execute, admin, item, job_id, target.including_children
-    )
     return {
         'result': 'Rebuilding computed tags',
         'target_user': owner.name or str(owner.uuid),
@@ -150,8 +144,7 @@ async def api_action_copy_image(
             target_uuid=target.target_item_uuid,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'Copying image',

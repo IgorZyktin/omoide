@@ -3,7 +3,6 @@
 from collections.abc import Collection
 from typing import Any
 from uuid import UUID
-from uuid import uuid4
 
 import sqlalchemy as sa
 
@@ -186,7 +185,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
             sa.or_(
                 db_models.Item.permissions.any(str(user.uuid)),
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.owner_uuid.in_(  # noqa
+                db_models.Item.owner_uuid.in_(
                     sa.select(db_models.PublicUsers.user_uuid)
                 ),
             )

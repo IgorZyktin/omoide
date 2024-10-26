@@ -37,7 +37,7 @@ class SignaturesRepo(interfaces.AbsSignaturesRepo, asyncpg.AsyncpgStorage):
             db_models.SignatureCRC32.item_id,
             db_models.SignatureCRC32.signature,
         ).where(
-            db_models.SignatureCRC32.item_id.in_(tuple(ids))  # noqa
+            db_models.SignatureCRC32.item_id.in_(ids)  # noqa
         )
 
         response = await self.db.fetch_all(query)
@@ -89,7 +89,7 @@ class SignaturesRepo(interfaces.AbsSignaturesRepo, asyncpg.AsyncpgStorage):
             db_models.SignatureCRC32.item_id,
             db_models.SignatureCRC32.signature,
         ).where(
-            db_models.SignatureCRC32.item_id.in_(tuple(ids))  # noqa
+            db_models.SignatureCRC32.item_id.in_(ids)
         )
 
         response = await self.db.fetch_all(query)

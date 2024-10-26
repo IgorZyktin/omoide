@@ -69,5 +69,5 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
             current_metainfo.thumbnail_height = metainfo.thumbnail_height
 
             await self.mediator.meta_repo.update_metainfo(
-                user, item_uuid, current_metainfo
+                item_uuid, current_metainfo
             )

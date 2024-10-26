@@ -46,13 +46,13 @@ async def app_item_update(
     request: Request,
     uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: models.User = Depends(dep.get_current_user),
-    policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-    use_case: use_cases.AppItemUpdateUseCase = Depends(
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
+    use_case: Annotated[use_cases.AppItemUpdateUseCase, Depends(
         dep.app_item_update_use_case
-    ),
-    config: Config = Depends(dep.get_config),
-    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    )],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Edit item page."""
@@ -98,13 +98,13 @@ async def app_item_delete(
     request: Request,
     uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: models.User = Depends(dep.get_current_user),
-    policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-    use_case: use_cases.AppItemDeleteUseCase = Depends(
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
+    use_case: Annotated[use_cases.AppItemDeleteUseCase, Depends(
         dep.app_item_delete_use_case
-    ),
-    config: Config = Depends(dep.get_config),
-    aim_wrapper: web.AimWrapper = Depends(dep.get_aim),
+    )],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Delete item page."""

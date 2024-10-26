@@ -1,7 +1,7 @@
 """Repository that perform worker-related operations."""
 
 import abc
-from typing import Collection
+from collections.abc import Collection
 from typing import Generic
 from typing import TypeVar
 

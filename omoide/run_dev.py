@@ -6,7 +6,7 @@ from omoide.presentation import app_config
 from omoide.presentation.app import app
 
 
-def main():
+def main() -> None:
     """Entry point."""
     config = app_config.Config()
     uvicorn.run(

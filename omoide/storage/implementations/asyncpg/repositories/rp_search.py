@@ -228,7 +228,7 @@ class SearchRepository(_SearchRepositoryBase):
                 db_models.KnownTags.tag,
             )
             .where(
-                db_models.KnownTags.tag.ilike('%' + tag + '%'),  # type: ignore
+                db_models.KnownTags.tag.ilike(f'%{tag}%'),
                 db_models.KnownTags.user_id == user.id,
                 db_models.KnownTags.counter > 0,
             )

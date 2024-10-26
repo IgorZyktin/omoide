@@ -1,6 +1,6 @@
 """Repository that perform worker-related operations."""
 
-from typing import Collection
+from collections.abc import Collection
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection

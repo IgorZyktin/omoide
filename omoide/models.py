@@ -1,7 +1,6 @@
 """Domain-level models."""
 
 import enum
-from collections import UserString
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
@@ -32,24 +31,6 @@ class ModelMixin:
         return {
             key: value for key, value in dump.items() if key not in exclude
         }
-
-
-# TODO - Use this in model instead of pydantic one
-class SecretStrCustom(UserString):
-    """String class that adds functionality similar to pydantic."""
-
-    def get_secret_value(self) -> str:
-        """Get the secret value."""
-        return self.data
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return '***'
-
-    def __repr__(self) -> str:
-        """Return textual representation."""
-        name = type(self).__name__
-        return f'{name}(***)'
 
 
 class Role(enum.IntEnum):
