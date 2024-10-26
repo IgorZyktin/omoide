@@ -409,8 +409,10 @@ class Item(Base):
     # fields ------------------------------------------------------------------
 
     status: Mapped[models.Status] = mapped_column(
-        sa.Integer, sa.ForeignKey('item_statuses.id'),
-        nullable=False, index=True
+        sa.Integer,
+        sa.ForeignKey('item_statuses.id'),
+        nullable=False,
+        index=True,
     )
     number: Mapped[int] = mapped_column(
         sa.BigInteger, autoincrement=True, nullable=False

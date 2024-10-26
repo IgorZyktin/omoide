@@ -11,10 +11,10 @@ from omoide.workers.serial import cfg
 from omoide.workers.serial.worker import SerialWorker
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def serial_worker_config() -> cfg.Config:
     """Return configured instance."""
-    env_var = 'OMOIDE_DB_URL_TEST'
+    env_var = 'OMOIDE_DB_TEST_URL'
     db_name = 'omoide_test'
     db_url = os.environ.get(env_var)
 
@@ -25,7 +25,7 @@ def serial_worker_config() -> cfg.Config:
     if not db_url.endswith(db_name):
         msg = (
             "Are you sure you're using test "
-            f"database? URL must end with {db_name}"
+            f'database? URL must end with {db_name}'
         )
         raise RuntimeError(msg)
 
@@ -42,16 +42,17 @@ def serial_worker_config() -> cfg.Config:
             'rebuild_known_tags_user',
             'rebuild_known_tags_all',
             'update_permissions',
-        ]
+        ],
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def serial_worker_mediator(serial_worker_config) -> WorkerMediator:
     """Return configured instance."""
     return WorkerMediator(
         database=sa.SqlalchemyDatabase(
-            db_url=serial_worker_config.db_admin_url.get_secret_value()
+            db_url=serial_worker_config.db_admin_url.get_secret_value(),
+            echo=True,
         ),
         items=sa.ItemsRepo(),
         tags=sa.TagsRepo(),
@@ -60,7 +61,7 @@ def serial_worker_mediator(serial_worker_config) -> WorkerMediator:
     )
 
 
-@pytest_asyncio.fixture(scope='session')
+@pytest_asyncio.fixture
 async def serial_worker(
     serial_worker_config,
     serial_worker_mediator,

@@ -1,6 +1,5 @@
 """Update permissions for item."""
 
-from dataclasses import dataclass
 from uuid import UUID
 
 from omoide import const
@@ -15,7 +14,6 @@ from omoide.workers.serial.cfg import Config
 LOG = custom_logging.get_logger(__name__)
 
 
-@dataclass
 class UpdatePermissionsExecutor(
     op.SerialOperationExecutor[Config, WorkerMediator],
 ):
@@ -57,6 +55,9 @@ class UpdatePermissionsExecutor(
 
             for parent in reversed(parents):
                 parent.permissions = parent.permissions | self.operation.added
+                parent.permissions = (
+                    parent.permissions - self.operation.deleted
+                )
                 await self.mediator.items.save(conn, parent)
                 LOG.info(
                     'Permissions change in {child} affected {parent} (parent)',

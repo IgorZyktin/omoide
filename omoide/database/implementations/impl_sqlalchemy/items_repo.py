@@ -33,6 +33,39 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             permissions={UUID(x) for x in response.permissions},
         )
 
+    async def create(self, conn: AsyncConnection, item: models.Item) -> int:
+        """Create new item."""
+        values: dict[str, Any] = {
+            'uuid': item.uuid,
+            'parent_uuid': item.parent_uuid,
+            'owner_uuid': item.owner_uuid,
+            'status': item.status,
+            'name': item.name,
+            'number': item.number,
+            'is_collection': item.is_collection,
+            'content_ext': item.content_ext,
+            'preview_ext': item.preview_ext,
+            'thumbnail_ext': item.thumbnail_ext,
+            'tags': tuple(item.tags),
+            'permissions': tuple(str(x) for x in item.permissions),
+        }
+
+        if item.id >= 0:
+            values['id'] = item.id
+
+        stmt = (
+            sa.insert(db_models.Item)
+            .values(**values)
+            .returning(
+                db_models.Item.id,
+            )
+        )
+
+        response = await conn.execute(stmt)
+        item_id = int(response.scalar() or -1)
+        item.id = item_id
+        return item_id
+
     async def get_by_id(
         self,
         conn: AsyncConnection,
@@ -122,3 +155,9 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             )
         )
         await conn.execute(stmt)
+
+    async def delete(self, conn: AsyncConnection, item: models.Item) -> bool:
+        """Delete given item."""
+        stmt = sa.delete(db_models.Item).where(db_models.Item.id == item.id)
+        response = await conn.execute(stmt)
+        return bool(response.rowcount)

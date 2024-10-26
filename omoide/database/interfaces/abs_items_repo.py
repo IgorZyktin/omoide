@@ -14,6 +14,10 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on items."""
 
     @abc.abstractmethod
+    async def create(self, conn: ConnectionT, item: models.Item) -> int:
+        """Create new item."""
+
+    @abc.abstractmethod
     async def get_by_id(self, conn: ConnectionT, item_id: int) -> models.Item:
         """Return Item with given id."""
 
@@ -40,3 +44,7 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def save(self, conn: ConnectionT, item: models.Item) -> None:
         """Save given item."""
+
+    @abc.abstractmethod
+    async def delete(self, conn: ConnectionT, item: models.Item) -> bool:
+        """Delete given item."""

@@ -28,6 +28,38 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             is_public=response.is_public,
         )
 
+    async def create(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        encoded_password: str,
+        auth_complexity: int,
+    ) -> int:
+        """Create new user."""
+        values = {
+            'uuid': user.uuid,
+            'name': user.name,
+            'login': user.login,
+            'password': encoded_password,
+            'auth_complexity': auth_complexity,
+            'role': user.role,
+            'is_public': user.is_public,
+        }
+
+        if user.id >= 0:
+            values['id'] = user.id
+
+        stmt = (
+            sa.insert(db_models.User)
+            .values(values)
+            .returning(db_models.User.id)
+        )
+
+        response = await conn.execute(stmt)
+        user_id = int(response.scalar() or -1)
+        user.id = user_id
+        return user_id
+
     async def get_by_id(
         self,
         conn: AsyncConnection,
@@ -93,3 +125,9 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         response = (await conn.execute(stmt)).fetchall()
         return [self._user_from_response(row) for row in response]
+
+    async def delete(self, conn: AsyncConnection, user: models.User) -> bool:
+        """Delete given user."""
+        stmt = sa.delete(db_models.User).where(db_models.User.id == user.id)
+        response = await conn.execute(stmt)
+        return bool(response.rowcount)
