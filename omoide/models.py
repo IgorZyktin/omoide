@@ -70,6 +70,8 @@ class User(ModelMixin):
     login: str
     role: Role
     is_public: bool
+    registered_at: datetime
+    last_login: datetime | None
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
@@ -114,6 +116,8 @@ class User(ModelMixin):
             login='',
             role=Role.ANON,
             is_public=False,
+            registered_at=utils.now(),
+            last_login=None,
         )
 
 

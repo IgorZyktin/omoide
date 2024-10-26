@@ -86,6 +86,12 @@ class User(Base):
     is_public: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, index=True
     )
+    registered_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False
+    )
+    last_login: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), nullable=True
+    )
 
     # relations ---------------------------------------------------------------
 
@@ -109,17 +115,7 @@ class User(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<User, {self.uuid}, {self.name}>'
-
-    # Feature: Add email field so users could change passwords by themselves
-
-    # Feature: Add registered_at field to be able
-    # to see how long user uses the site
-
-    # Feature: Add last_login field to know when user was active last time
-
-    # Feature: Add is_confirmed field to switch between demo and active users.
-    # Activation links can be sent via emails
+        return f'<User, id={self.id}, {self.uuid}, {self.name}>'
 
 
 class PublicUsers(Base):

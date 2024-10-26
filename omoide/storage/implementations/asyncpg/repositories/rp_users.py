@@ -8,6 +8,7 @@ import sqlalchemy as sa
 
 from omoide import exceptions
 from omoide import models
+from omoide import utils
 from omoide.storage import interfaces
 from omoide.database import db_models
 from omoide.storage.implementations.asyncpg.asyncpg_storage import (
@@ -28,6 +29,8 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             login=response.login,
             role=response.role,
             is_public=response.is_public,
+            registered_at=response.registered_at,
+            last_login=response.last_login,
         )
 
     async def create_user(
@@ -44,6 +47,8 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
             auth_complexity=auth_complexity,
             role_id=user.role,
             is_public=user.is_public,
+            registered_at=utils.now(),
+            last_login=None,
         )
 
         await self.db.execute(stmt)
@@ -122,7 +127,7 @@ class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
 
         return [self._user_from_response(row) for row in response]
 
-    async def update_user(self, uuid: UUID, **kwargs: str) -> None:
+    async def update_user(self, uuid: UUID, **kwargs: Any) -> None:
         """Update User."""
         stmt = (
             sa.update(db_models.User)

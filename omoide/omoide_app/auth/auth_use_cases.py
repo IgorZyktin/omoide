@@ -1,6 +1,7 @@
 """Use cases for auth-related APP operations."""
 
 from omoide import models
+from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 
@@ -22,6 +23,9 @@ class LoginUserUseCase(BaseAPIUseCase):
                 reference=reference_password,
                 auth_complexity=auth_complexity,
             ):
+                user.last_login = utils.now()
+                await self.mediator.users_repo.update_user(
+                    user.uuid, last_login=user.last_login)
                 return user
 
         return models.User.new_anon()

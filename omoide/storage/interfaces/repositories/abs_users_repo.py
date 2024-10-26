@@ -2,6 +2,7 @@
 
 import abc
 from collections.abc import Collection
+from typing import Any
 from uuid import UUID
 
 from omoide import models
@@ -46,7 +47,7 @@ class AbsUsersRepo(abc.ABC):
         """Return filtered list of users."""
 
     @abc.abstractmethod
-    async def update_user(self, uuid: UUID, **kwargs: str) -> None:
+    async def update_user(self, uuid: UUID, **kwargs: Any) -> None:
         """Update User."""
 
     @abc.abstractmethod
