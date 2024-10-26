@@ -68,6 +68,12 @@ class ItemUpdateInput(BaseModel):
     is_collection: bool = False
 
 
+class ItemRenameInput(BaseModel):
+    """Input info for item rename."""
+
+    name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
+
+
 class MediaInput(BaseModel):
     """Input info for media creation."""
 

@@ -163,7 +163,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         number: int | None,
         is_collection: bool,
         tags: list[str],
-        permissions: list[UUID],
+        permissions: set[UUID],
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -245,22 +245,12 @@ class BaseItemUseCase(BaseAPIUseCase):
     async def delete_one_item(
         self,
         item: models.Item,
-        affected_users: dict[UUID, models.User],
-        computed_tags: set[str],
     ) -> None:
         """Delete item with all corresponding media."""
-        if item.owner_uuid not in affected_users:
-            owner = await self.mediator.users_repo.get_user_by_uuid(
-                uuid=item.owner_uuid,
-            )
-            affected_users[owner.uuid] = owner
-
         children = await self.mediator.items_repo.get_children(item)
-        tags = await self.mediator.misc_repo.get_computed_tags(item)
-        computed_tags.update(tags)
 
         for child in children:
-            await self.delete_one_item(child, affected_users, computed_tags)
+            await self.delete_one_item(child)
 
         await self.mediator.object_storage.delete_all_objects(item)
         LOG.warning('Deleting item {}', item)

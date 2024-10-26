@@ -157,3 +157,34 @@ class UpdatePermissionsSO(SerialOperation):
     def apply_to_children_as(self) -> const.ApplyAs:
         """Extract from extras."""
         return const.ApplyAs(self.extras['apply_to_children_as'])
+
+
+@dataclass
+class UpdateTagsSO(SerialOperation):
+    """Update tags for given item and maybe all children."""
+
+    name: str = 'update_tags'
+    goal: str = 'update tags for item'
+
+    @cached_property
+    def item_uuid(self) -> UUID:
+        """Extract from extras."""
+        return UUID(self.extras['item_uuid'])
+
+    @cached_property
+    def apply_to_children(self) -> bool:
+        """Extract from extras."""
+        return bool(self.extras['apply_to_children'])
+
+
+@dataclass
+class DropVisibilitySO(SerialOperation):
+    """After item deletion, it must be wiped out from known tags."""
+
+    name: str = 'drop_visibility'
+    goal: str = 'hide item from known tags'
+
+    @cached_property
+    def item_uuid(self) -> UUID:
+        """Extract from extras."""
+        return UUID(self.extras['item_uuid'])

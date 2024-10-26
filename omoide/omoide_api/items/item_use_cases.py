@@ -11,7 +11,7 @@ from omoide import models
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
-from omoide.serial_operations import UpdatePermissionsSO
+from omoide import serial_operations as so
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -162,10 +162,49 @@ class UpdateItemUseCase(BaseItemUseCase):
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='items')
 
+            if item.is_collection == is_collection:
+                return
+
             LOG.info('{} is updating {}', user, item)
 
             item.is_collection = is_collection
             await self.mediator.items_repo.update_item(item)
+
+
+class RenameItemUseCase(BaseItemUseCase):
+    """Use case for item rename."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        name: str,
+    ) -> int | None:
+        """Execute."""
+        self.ensure_not_anon(user, operation='update items')
+
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='items')
+
+            if item.name == name:
+                return None
+
+            LOG.info('{} is renaming {}', user, item)
+
+            item.name = name
+            await self.mediator.items_repo.update_item(item)
+
+            operation = so.UpdateTagsSO(
+                extras={
+                    'item_uuid': str(item_uuid),
+                    'apply_to_children': True,
+                },
+            )
+            repo = self.mediator.misc_repo
+            operation_id = await repo.create_serial_operation(operation)
+
+        return operation_id
 
 
 class DeleteItemUseCase(BaseItemUseCase):
@@ -202,28 +241,15 @@ class DeleteItemUseCase(BaseItemUseCase):
                     uuid=item.parent_uuid,
                 )
 
-        # TODO - put it into long job
-        affected_users: dict[UUID, models.User] = {user.uuid: user}
-        computed_tags: set[str] = set()
         async with self.mediator.storage.transaction():
             # heavy recursive call
-            await self.delete_one_item(item, affected_users, computed_tags)
+            await self.delete_one_item(item)
 
         async with self.mediator.storage.transaction():
-            public = await self.mediator.users_repo.get_public_user_uuids()
-            users_uuids = set(affected_users.keys())
-            anon_affected = users_uuids.intersection(public)
-
-            if anon_affected:
-                await repo.decr_known_tags_anon(computed_tags)
-                await repo.drop_unused_known_tags_anon()
-
-            for affected_user in affected_users.values():
-                await repo.decr_known_tags_known(
-                    user=affected_user,
-                    tags=computed_tags,
-                )
-                await repo.drop_unused_known_tags_known(affected_user)
+            operation = so.DropVisibilitySO(
+                extras={'item_uuid': str(item_uuid)},
+            )
+            await repo.create_serial_operation(operation)
 
         return switch_to
 
@@ -249,12 +275,7 @@ class BaseUploadUseCase(BaseAPIUseCase):
                 user, item, subject=f'item {self.media_type} data'
             )
 
-            LOG.info(
-                'User {} is uploading {} for item {}',
-                user,
-                self.media_type,
-                item,
-            )
+            LOG.info('{} is uploading {} for {}', user, self.media_type, item)
 
             await self.mediator.object_storage.save_object(
                 item=item,
@@ -423,7 +444,7 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                 added, deleted = utils.get_delta(item.permissions, permissions)
                 repo = self.mediator.misc_repo
 
-                operation = UpdatePermissionsSO(
+                operation = so.UpdatePermissionsSO(
                     extras={
                         'item_uuid': str(item_uuid),
                         'added': [str(x) for x in added],
