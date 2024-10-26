@@ -24,8 +24,6 @@ AUTH_COMPLEXITY = 4  # minimal
 
 ANON: Literal['anon'] = 'anon'
 
-DB_BATCH_SIZE = 200
-
 ASC: Literal['asc'] = 'asc'
 DESC: Literal['desc'] = 'desc'
 RANDOM: Literal['random'] = 'random'

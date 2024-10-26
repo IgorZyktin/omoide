@@ -289,26 +289,6 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         return [models.Item(**row) for row in response]
 
     # TODO - remove this method
-    async def get_direct_children_uuids_of(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> list[UUID]:
-        """Return all direct items of th given item."""
-        stmt = sa.select(db_models.Item.uuid).where(
-            db_models.Item.parent_uuid == item_uuid,
-            sa.or_(
-                db_models.Item.permissions.any(str(user.uuid)),
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.owner_uuid.in_(  # noqa
-                    sa.select(db_models.PublicUsers.user_uuid)
-                ),
-            ),
-        )
-        response = await self.db.fetch_all(stmt)
-        return [x['uuid'] for x in response]
-
-    # TODO - remove this method
     async def read_computed_tags(
         self,
         uuid: UUID,
@@ -349,20 +329,6 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_one(stmt)
 
         return domain.Item(**response) if response else None
-
-    async def get_free_uuid(self) -> UUID:
-        """Generate new UUID4 for an item."""
-        stmt = """
-        SELECT 1 FROM items WHERE uuid = :uuid
-        UNION
-        SELECT 1 FROM orphan_files WHERE item_uuid = :uuid;
-        """
-        while True:
-            uuid = uuid4()
-            exists = await self.db.fetch_one(stmt, {'uuid': uuid})
-
-            if not exists:
-                return uuid
 
     async def create_item(self, item: models.Item) -> None:
         """Return id for created item."""

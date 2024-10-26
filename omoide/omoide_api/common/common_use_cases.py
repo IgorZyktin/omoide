@@ -1,6 +1,7 @@
 """Common use case elements."""
 
 from uuid import UUID
+from uuid import uuid4
 
 from omoide import custom_logging
 from omoide import exceptions
@@ -167,7 +168,7 @@ class BaseItemUseCase(BaseAPIUseCase):
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
-            valid_uuid = await self.mediator.items_repo.get_free_uuid()
+            valid_uuid = uuid4()
         else:
             valid_uuid = uuid
 

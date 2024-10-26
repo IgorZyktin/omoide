@@ -5,12 +5,10 @@ from collections.abc import Iterator
 import contextlib
 from pathlib import Path
 import time
-from typing import Any
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.attributes import flag_modified
 
 from omoide import utils
 from omoide.database import db_models

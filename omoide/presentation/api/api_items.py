@@ -8,9 +8,7 @@ from fastapi import Depends
 from omoide import interfaces
 from omoide import models
 from omoide import use_cases
-from omoide.infra.special_types import Failure
 from omoide.presentation import dependencies as dep
-from omoide.presentation import web
 
 router = APIRouter(prefix='/api/items')
 
@@ -27,8 +25,4 @@ async def api_item_update_parent(
 ):
     """Set new parent for the item."""
     result = await use_case.execute(policy, user, uuid, new_parent_uuid)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return {'result': 'ok'}
+    return {'result': str(result)}

@@ -91,14 +91,6 @@ class AbsItemsRepo(abc.ABC):
         """Return all siblings for the given item."""
 
     @abc.abstractmethod
-    async def get_direct_children_uuids_of(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> list[UUID]:
-        """Return all direct items of th given item."""
-
-    @abc.abstractmethod
     async def read_computed_tags(
         self,
         uuid: UUID,
@@ -112,10 +104,6 @@ class AbsItemsRepo(abc.ABC):
         name: str,
     ) -> domain.Item | None:
         """Return corresponding item."""
-
-    @abc.abstractmethod
-    async def get_free_uuid(self) -> UUID:
-        """Generate new UUID for the item."""
 
     @abc.abstractmethod
     async def create_item(self, item: models.Item) -> None:

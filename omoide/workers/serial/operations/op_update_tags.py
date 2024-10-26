@@ -75,8 +75,9 @@ class UpdateTagsExecutor(
                     all_computed_tags
                 )
                 all_computed_tags.update(computed_tags)
-                await self.mediator.tags.save_computed_tags(conn, item,
-                                                            computed_tags)
+                await self.mediator.tags.save_computed_tags(
+                    conn, item, computed_tags
+                )
 
                 affected_users.update({item.owner_uuid, *item.permissions})
 
