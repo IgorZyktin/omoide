@@ -48,3 +48,7 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def delete(self, conn: ConnectionT, user: models.User) -> bool:
         """Delete given user."""
+
+    @abc.abstractmethod
+    async def get_public_users(self, conn: ConnectionT) -> set[UUID]:
+        """Return UUIDs of public users."""

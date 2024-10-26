@@ -27,6 +27,8 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             login=response.login,
             role=response.role,
             is_public=response.is_public,
+            registered_at=response.registered_at,
+            last_login=response.last_login,
         )
 
     async def create(
@@ -134,3 +136,9 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         stmt = sa.delete(db_models.User).where(db_models.User.id == user.id)
         response = await conn.execute(stmt)
         return bool(response.rowcount)
+
+    async def get_public_users(self, conn: AsyncConnection) -> set[UUID]:
+        """Return UUIDs of public users."""
+        stmt = sa.select(db_models.PublicUsers.user_uuid)
+        response = (await conn.execute(stmt)).fetchall()
+        return set(x.user_uuid for x in response)

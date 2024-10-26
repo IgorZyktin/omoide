@@ -59,3 +59,20 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         batch_size: int,
     ) -> None:
         """Insert given tags for specific user."""
+
+    @abc.abstractmethod
+    async def get_computed_tags(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+    ) -> set[str]:
+        """Return computed tags for given item."""
+
+    @abc.abstractmethod
+    async def save_computed_tags(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+        tags: set[str],
+    ) -> None:
+        """Save computed tags for given item."""

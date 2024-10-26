@@ -33,12 +33,18 @@ class UpdatePermissionsExecutor(
 
         async with self.mediator.database.transaction() as conn:
             for user_uuid in affected_users:
-                operation = so.RebuildKnownTagsUserSO(
-                    extras={'user_uuid': str(user_uuid)},
-                )
                 await self.mediator.workers.create_serial_operation(
                     conn=conn,
-                    operation=operation,
+                    operation=so.RebuildKnownTagsUserSO(
+                        extras={'user_uuid': str(user_uuid)},
+                    ),
+                )
+
+            public_users = await self.mediator.users.get_public_users(conn)
+            if public_users & affected_users:
+                await self.mediator.workers.create_serial_operation(
+                    conn=conn,
+                    operation=so.RebuildKnownTagsAnonSO(),
                 )
 
     async def apply_to_parents(self, affected_users: set[UUID]) -> None:

@@ -7,6 +7,7 @@ from typing import Callable
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import models
 from omoide.database import db_models
@@ -157,3 +158,34 @@ class TagsRepo(_TagsRepoHelper):
         for batch in itertools.batched(payload, batch_size):
             stmt = sa.insert(db_models.KnownTags).values(batch)
             await conn.execute(stmt)
+
+    async def get_computed_tags(
+        self,
+        conn: AsyncConnection,
+        item: models.Item,
+    ) -> set[str]:
+        """Return computed tags for given item."""
+        stmt = sa.select(db_models.ComputedTags).where(
+            db_models.ComputedTags.item_uuid == item.uuid
+        )
+        response = (await conn.execute(stmt)).fetchone()
+        return set(response)
+
+    async def save_computed_tags(
+        self,
+        conn: AsyncConnection,
+        item: models.Item,
+        tags: set[str],
+    ) -> None:
+        """Save computed tags for given item."""
+        insert = pg_insert(db_models.ComputedTags).values(
+            item_uuid=item.uuid,
+            tags=tuple(tags),
+        )
+
+        stmt = insert.on_conflict_do_update(
+            index_elements=[db_models.ComputedTags.item_uuid],
+            set_={'tags': insert.excluded.tags},
+        )
+
+        await conn.execute(stmt)
