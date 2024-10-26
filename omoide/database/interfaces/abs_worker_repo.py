@@ -5,7 +5,7 @@ from typing import Collection
 from typing import Generic
 from typing import TypeVar
 
-from omoide.models import SerialOperation
+from omoide.serial_operations import SerialOperation
 
 ConnectionT = TypeVar('ConnectionT')
 
@@ -36,6 +36,14 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         worker_name: str,
     ) -> bool:
         """Try releasing the lock, return True on success."""
+
+    @abc.abstractmethod
+    def create_serial_operation(
+        self,
+        conn: ConnectionT,
+        operation: SerialOperation,
+    ) -> int:
+        """Create serial operation."""
 
     @abc.abstractmethod
     def get_next_serial_operation(

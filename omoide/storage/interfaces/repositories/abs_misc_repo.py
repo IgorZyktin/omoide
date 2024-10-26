@@ -7,6 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from omoide import models
+from omoide.serial_operations import SerialOperation
 
 
 class AbsMiscRepo(abc.ABC):
@@ -96,9 +97,5 @@ class AbsMiscRepo(abc.ABC):
         """Finish long job."""
 
     @abc.abstractmethod
-    async def create_serial_operation(
-        self,
-        name: str,
-        extras: dict[str, Any] | None = None,
-    ) -> int:
+    async def create_serial_operation(self, operation: SerialOperation) -> int:
         """Create serial operation."""

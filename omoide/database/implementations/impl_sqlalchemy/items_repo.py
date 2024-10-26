@@ -69,11 +69,11 @@ class ItemsRepo(AbsItemsRepo[Connection]):
         item: models.Item,
     ) -> list[models.Item]:
         """Return children of given item."""
-        stmt = sa.select(
-            db_models.Item
-        ).where(
-            db_models.Item.parent_uuid == item.uuid
-        ).order_by(db_models.Item.id)
+        stmt = (
+            sa.select(db_models.Item)
+            .where(db_models.Item.parent_uuid == item.uuid)
+            .order_by(db_models.Item.id)
+        )
         response = conn.execute(stmt).fetchall()
         return [self._item_from_response(x) for x in response]
 
@@ -87,9 +87,7 @@ class ItemsRepo(AbsItemsRepo[Connection]):
         parent_uuid = item.parent_uuid
 
         while parent_uuid:
-            stmt = sa.select(
-                db_models.Item
-            ).where(
+            stmt = sa.select(db_models.Item).where(
                 db_models.Item.uuid == parent_uuid
             )
             raw_parent = conn.execute(stmt).fetchone()

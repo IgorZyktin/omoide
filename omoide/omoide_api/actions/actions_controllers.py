@@ -26,15 +26,14 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 async def api_action_rebuild_known_tags_anon(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-):
+) -> dict[str, int | str]:
     """Recalculate all known tags for anon user."""
     use_case = actions_use_cases.RebuildKnownTagsAnonUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for anon',
@@ -51,15 +50,14 @@ async def api_action_rebuild_known_tags_user(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_uuid: UUID,
-):
+) -> dict[str, int | str]:
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsUserUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin, user_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for user',
@@ -76,15 +74,14 @@ async def api_action_rebuild_known_tags_user(
 async def api_action_rebuild_known_tags_all(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-):
+) -> dict[str, int | str]:
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsAllUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for all registered users',

@@ -9,8 +9,7 @@ from omoide import exceptions
 from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
-from omoide.models import OperationStatus
-from omoide.models import SerialOperation
+from omoide.serial_operations import SerialOperation, OperationStatus
 
 
 class WorkersRepo(AbsWorkersRepo[Connection]):
@@ -64,6 +63,32 @@ class WorkersRepo(AbsWorkersRepo[Connection]):
         )
         response = conn.execute(query)
         return bool(response.rowcount)
+
+    def create_serial_operation(
+        self,
+        conn: Connection,
+        operation: SerialOperation,
+    ) -> int:
+        """Create serial operation."""
+        stmt = (
+            sa.insert(db_models.SerialOperation)
+            .values(
+                name=operation.name,
+                worker_name=operation.worker_name,
+                status=operation.status,
+                extras=operation.extras,
+                created_at=operation.created_at,
+                updated_at=operation.updated_at,
+                started_at=operation.started_at,
+                ended_at=operation.ended_at,
+                log=operation.log,
+            )
+            .returning(db_models.SerialOperation.id)
+        )
+
+        operation_id = int(conn.execute(stmt).scalar() or -1)
+        operation.id = operation_id
+        return operation_id
 
     def get_next_serial_operation(
         self,
@@ -154,11 +179,7 @@ class WorkersRepo(AbsWorkersRepo[Connection]):
     ) -> SerialOperation:
         """Mark operation as failed."""
         now = utils.now()
-
-        if operation.log:
-            operation.log += f'\n{error}'
-        else:
-            operation.log = error
+        operation.add_to_log(error)
 
         query = (
             sa.update(db_models.SerialOperation)

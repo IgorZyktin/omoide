@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import models
-from omoide import utils
+from omoide.serial_operations import SerialOperation
 from omoide.storage import interfaces
 from omoide.database import db_models
 from omoide.storage.implementations import asyncpg
@@ -247,28 +247,24 @@ class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
 
         await self.db.execute(stmt)
 
-    async def create_serial_operation(
-        self,
-        name: str,
-        extras: dict[str, Any] | None = None,
-    ) -> int:
+    async def create_serial_operation(self, operation: SerialOperation) -> int:
         """Create serial operation."""
-        now = utils.now()
-
         stmt = (
             sa.insert(db_models.SerialOperation)
             .values(
-                name=name,
-                worker_name=None,
-                status='created',
-                extras=extras or {},
-                created_at=now,
-                updated_at=now,
-                started_at=None,
-                ended_at=None,
-                log=None,
+                name=operation.name,
+                worker_name=operation.worker_name,
+                status=operation.status,
+                extras=operation.extras,
+                created_at=operation.created_at,
+                updated_at=operation.updated_at,
+                started_at=operation.started_at,
+                ended_at=operation.ended_at,
+                log=operation.log,
             )
             .returning(db_models.SerialOperation.id)
         )
 
-        return int(await self.db.execute(stmt))
+        operation_id = int(await self.db.execute(stmt))
+        operation.id = operation_id
+        return operation_id

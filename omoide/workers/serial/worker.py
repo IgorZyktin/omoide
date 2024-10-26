@@ -2,9 +2,10 @@
 
 from omoide import custom_logging
 from omoide import utils
-from omoide.models import SerialOperation
+from omoide.serial_operations import SerialOperation
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
+from omoide.workers.serial import operations as op
 from omoide.workers.serial.cfg import Config
 
 LOG = custom_logging.get_logger(__name__)
@@ -70,7 +71,12 @@ class SerialWorker(BaseWorker[Config]):
     def execute_operation(self, operation: SerialOperation) -> None:
         """Perform workload."""
         try:
-            operation.execute(self.config, self.mediator)
+            executor = op.SerialOperationExecutor.from_operation(
+                operation=operation,
+                config=self.config,
+                mediator=self.mediator,
+            )
+            executor.execute()
         except Exception as exc:
             error = utils.exc_to_str(exc)
             with self.mediator.database.transaction() as conn:

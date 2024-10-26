@@ -10,6 +10,7 @@ from omoide import custom_logging
 from omoide import models
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
+from omoide import serial_operations as so
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -96,13 +97,12 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
         self.ensure_admin(admin, subject='known tags for anon')
 
         async with self.mediator.storage.transaction():
-            LOG.info(
-                'User {} requested rebuilding of known tags for anon user',
-                admin,
-            )
-            repo = self.mediator.misc_repo
-            operation_id = await repo.create_serial_operation(
-                name=const.SERIAL_REBUILD_KNOWN_TAGS_ANON,
+            LOG.info('{} is rebuilding known tags for anon', admin)
+
+            operation_id = (
+                await self.mediator.misc_repo.create_serial_operation(
+                    operation=so.RebuildKnownTagsAnonSO()
+                )
             )
 
         return operation_id
@@ -117,15 +117,15 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
 
         async with self.mediator.storage.transaction():
             user = await self.mediator.users_repo.get_user_by_uuid(user_uuid)
-            LOG.info(
-                'User {} requested rebuilding of known tags for user {}',
-                admin,
-                user,
+            LOG.info('{} is rebuilding known tags for {}', admin, user)
+
+            operation = so.RebuildKnownTagsUserSO(
+                extras={'user_uuid': str(user.uuid)},
             )
-            repo = self.mediator.misc_repo
-            operation_id = await repo.create_serial_operation(
-                name=const.SERIAL_REBUILD_KNOWN_TAGS_USER,
-                extras={'user_uuid': str(user_uuid)},
+            operation_id = (
+                await self.mediator.misc_repo.create_serial_operation(
+                    operation=operation,
+                )
             )
 
         return operation_id
@@ -141,15 +141,12 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
         )
 
         async with self.mediator.storage.transaction():
-            LOG.info(
-                'User {} requested rebuilding of '
-                'known tags for all registered users',
-                admin,
-            )
-            repo = self.mediator.misc_repo
-            operation_id = await repo.create_serial_operation(
-                name=const.SERIAL_REBUILD_KNOWN_TAGS_ALL,
-                extras={},
+            LOG.info('{} is rebuilding known tags for all users', admin)
+
+            operation_id = (
+                await self.mediator.misc_repo.create_serial_operation(
+                    operation=so.RebuildKnownTagsAllSO()
+                )
             )
 
         return operation_id
