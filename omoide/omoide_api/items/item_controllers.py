@@ -153,6 +153,32 @@ async def api_read_many_items(
     )
 
 
+@api_items_router.patch(
+    '/{item_uuid}',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str],
+)
+async def api_update_item(
+    item_uuid: UUID,
+    item_update_in: item_api_models.ItemUpdateInput,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Update exising item."""
+    use_case = item_use_cases.UpdateItemUseCase(mediator)
+
+    try:
+        await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            is_collection=item_update_in.is_collection,
+        )
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    return {'result': f'Updated item {item_uuid}'}
+
+
 @api_items_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,

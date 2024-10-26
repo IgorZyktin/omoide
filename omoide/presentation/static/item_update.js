@@ -1,17 +1,3 @@
-const BASIC_TEXT_FIELDS = [
-    'name',
-    'content_ext',
-    'preview_ext',
-    'thumbnail_ext',
-]
-
-const BASIC_BOOL_FIELDS = [
-    'is_collection',
-]
-
-const BASIC_FIELDS = BASIC_TEXT_FIELDS.concat(BASIC_BOOL_FIELDS)
-
-
 function alterModelTextField(element, fieldName) {
     // change item model field
     newModel[fieldName] = $(element).val().trim()
@@ -42,16 +28,10 @@ function alterModelPermissionsField(element) {
 
 function resetBasic() {
     // restore parameters
-    for (let field of BASIC_FIELDS) {
-        newModel[field] = oldModel[field]
-    }
-
+    newModel['is_collection'] = oldModel['is_collection']
     $('#item_name').val(oldModel['name'] || '')
     $('#thumbnail_origin').val(oldModel['copied_image_from'] || '').trigger('input')
     $('#item_is_collection').prop('checked', oldModel['is_collection']);
-    $('#item_content_ext').val(oldModel['content_ext'] || '')
-    $('#item_preview_ext').val(oldModel['preview_ext'] || '')
-    $('#item_thumbnail_ext').val(oldModel['thumbnail_ext'] || '')
 }
 
 function resetTags() {
@@ -121,40 +101,16 @@ function saveBasicStuff(alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PATCH',
-        url: `/api/items/${newModel['uuid']}`,
+        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}`,
         contentType: 'application/json',
-        data: JSON.stringify([
+        data: JSON.stringify(
             {
-                'op': 'replace',
-                'path': '/name',
-                'value': newModel['name'],
+                'is_collection': newModel['is_collection'],
             },
-            {
-                'op': 'replace',
-                'path': '/content_ext',
-                'value': newModel['content_ext'],
-            },
-            {
-                'op': 'replace',
-                'path': '/preview_ext',
-                'value': newModel['preview_ext'],
-            },
-            {
-                'op': 'replace',
-                'path': '/thumbnail_ext',
-                'value': newModel['thumbnail_ext'],
-            },
-            {
-                'op': 'replace',
-                'path': '/is_collection',
-                'value': newModel['is_collection'],
-            },
-        ]),
+        ),
         success: function (response) {
             console.log('Saved basic fields', response)
-            for (let field of BASIC_FIELDS) {
-                oldModel[field] = newModel[field]
-            }
+            oldModel['is_collection'] = newModel['is_collection']
             tryLoadingThumbnail(oldModel['uuid'], $('#thumbnail'))
             makeAnnounce('Basic fields saved', alertsElementId)
         },

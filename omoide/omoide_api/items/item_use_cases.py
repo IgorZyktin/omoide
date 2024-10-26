@@ -146,6 +146,28 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
         return duration, items
 
 
+class UpdateItemUseCase(BaseItemUseCase):
+    """Use case for item update."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        is_collection: bool,
+    ) -> None:
+        """Execute."""
+        self.ensure_not_anon(user, operation='update items')
+
+        async with self.mediator.storage.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='items')
+
+            LOG.info('{} is updating {}', user, item)
+
+            item.is_collection = is_collection
+            await self.mediator.items_repo.update_item(item)
+
+
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 

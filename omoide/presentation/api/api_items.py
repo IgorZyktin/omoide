@@ -16,28 +16,6 @@ from omoide.presentation import web
 router = APIRouter(prefix='/api/items')
 
 
-@router.patch('/{uuid}')
-async def api_partial_update_item(
-    uuid: UUID,
-    operations: list[api_models.PatchOperation],
-    user: models.User = Depends(dep.get_current_user),
-    policy: interfaces.AbsPolicy = Depends(dep.get_policy),
-    use_case: use_cases.ApiItemUpdateUseCase = Depends(
-        dep.api_item_update_use_case
-    ),
-):
-    """Update item."""
-    result = await use_case.execute(policy, user, uuid, operations)
-
-    if isinstance(result, Failure):
-        web.raise_from_error(result.error)
-
-    return {'result': 'ok'}
-
-
-# Not actually REST api endpoints >> heavy operations
-
-
 @router.put('/{uuid}/tags')
 async def api_item_update_tags(
     uuid: UUID,

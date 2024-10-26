@@ -2,6 +2,7 @@
 
 import base64
 import math
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -61,6 +62,12 @@ class ItemInput(BaseModel):
         return self
 
 
+class ItemUpdateInput(BaseModel):
+    """Input info for item update."""
+
+    is_collection: bool = False
+
+
 class MediaInput(BaseModel):
     """Input info for media creation."""
 
@@ -68,7 +75,7 @@ class MediaInput(BaseModel):
     ext: str = Field(..., min_length=1)
 
     @model_validator(mode='after')
-    def check_extension(self) -> 'MediaInput':
+    def check_extension(self) -> Self:
         """Raise if we do not support this extension."""
         if self.ext.lower() not in SUPPORTED_EXTENSION:
             msg = (
@@ -79,7 +86,7 @@ class MediaInput(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def check_size(self) -> 'MediaInput':
+    def check_size(self) -> Self:
         """Raise if content is too big."""
         if self.expected_binary_size > MAX_MEDIA_SIZE:
             msg = (

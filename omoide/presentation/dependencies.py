@@ -319,22 +319,6 @@ def app_item_delete_use_case(
 
 
 @utils.memorize
-def api_item_update_use_case(
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-    meta_repo: Annotated[
-        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
-    ],
-) -> use_cases.ApiItemUpdateUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemUpdateUseCase(
-        items_repo=items_repo,
-        metainfo_repo=meta_repo,
-    )
-
-
-@utils.memorize
 def api_item_update_tags_use_case(
     users_repo: Annotated[
         storage_interfaces.AbsUsersRepo, Depends(get_users_repo)

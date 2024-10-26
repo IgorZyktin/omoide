@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Any
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -44,7 +45,7 @@ class MetainfoInput(BaseModel):
     model_config = {'json_schema_extra': {'examples': [_BASE_EXAMPLE]}}
 
     @model_validator(mode='after')
-    def ensure_extras_are_not_too_big(self) -> 'MetainfoInput':  # TODO - Self
+    def ensure_extras_are_not_too_big(self) -> Self:
         """Raise if given string is too big."""
         size = utils.get_size(self.extras)
         if size > MAXIMUM_EXTRAS_SIZE:

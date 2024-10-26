@@ -22,7 +22,6 @@ from omoide.presentation import api_models
 from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
-    'ApiItemUpdateUseCase',
     'ApiItemUpdateParentUseCase',
     'ApiItemUpdateTagsUseCase',
 ]

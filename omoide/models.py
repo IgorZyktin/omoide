@@ -325,7 +325,7 @@ class SpaceUsage(ModelMixin):
         )
 
     @classmethod
-    def empty(cls, uuid: UUID) -> 'SpaceUsage':  # TODO - replace with Self
+    def empty(cls, uuid: UUID) -> Self:
         """Return result with zero bytes used."""
         return cls(
             uuid=uuid,

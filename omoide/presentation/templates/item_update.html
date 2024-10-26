@@ -94,27 +94,6 @@
                        id="item_is_collection">
             </div>
 
-            <label for="item_content_ext">Content extension:</label>
-            <input id="item_content_ext"
-                   type="text"
-                   value="{{ item.content_ext or '' }}"
-                   onchange="alterModelTextField(this, 'content_ext')"
-                   class="height-auto">
-
-            <label for="item_preview_ext">Preview extension:</label>
-            <input id="item_preview_ext"
-                   type="text"
-                   value="{{ item.preview_ext or '' }}"
-                   onchange="alterModelTextField(this, 'preview_ext')"
-                   class="height-auto">
-
-            <label for="item_thumbnail_ext">Thumbnail extension:</label>
-            <input id="item_thumbnail_ext"
-                   type="text"
-                   value="{{ item.thumbnail_ext or '' }}"
-                   onchange="alterModelTextField(this, 'thumbnail_ext')"
-                   class="height-auto">
-
             <div id="alerts_basic"></div>
             <input id="save_basic"
                    type="button"
