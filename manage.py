@@ -12,7 +12,7 @@ LOG = custom_logging.get_logger(__name__)
 
 
 @click.group()
-def cli():
+def cli() -> None:
     """Manual CLI operations."""
 
 

@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Connection
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
@@ -13,7 +13,7 @@ from omoide.database import db_models
 from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
 
 
-class UsersRepo(AbsUsersRepo[Connection]):
+class UsersRepo(AbsUsersRepo[AsyncConnection]):
     """Repository that performs operations on users."""
 
     @staticmethod
@@ -28,14 +28,46 @@ class UsersRepo(AbsUsersRepo[Connection]):
             is_public=response.is_public,
         )
 
-    def get_by_id(
+    async def create(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
+        user: models.User,
+        encoded_password: str,
+        auth_complexity: int,
+    ) -> int:
+        """Create new user."""
+        values = {
+            'uuid': user.uuid,
+            'name': user.name,
+            'login': user.login,
+            'password': encoded_password,
+            'auth_complexity': auth_complexity,
+            'role': user.role,
+            'is_public': user.is_public,
+        }
+
+        if user.id >= 0:
+            values['id'] = user.id
+
+        stmt = (
+            sa.insert(db_models.User)
+            .values(values)
+            .returning(db_models.User.id)
+        )
+
+        response = await conn.execute(stmt)
+        user_id = int(response.scalar() or -1)
+        user.id = user_id
+        return user_id
+
+    async def get_by_id(
+        self,
+        conn: AsyncConnection,
         user_id: int,
     ) -> models.User:
         """Return User with given id."""
         stmt = sa.select(db_models.User).where(db_models.User.id == user_id)
-        response = conn.execute(stmt).first()
+        response = (await conn.execute(stmt)).first()
 
         if response is None:
             msg = 'User with ID {user_id} does not exist'
@@ -43,14 +75,14 @@ class UsersRepo(AbsUsersRepo[Connection]):
 
         return self._user_from_response(response)
 
-    def get_by_uuid(
+    async def get_by_uuid(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         uuid: UUID,
     ) -> models.User:
         """Return User with given UUID."""
         stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
-        response = conn.execute(stmt).first()
+        response = (await conn.execute(stmt)).first()
 
         if response is None:
             msg = 'User with UUID {user_uuid} does not exist'
@@ -58,9 +90,9 @@ class UsersRepo(AbsUsersRepo[Connection]):
 
         return self._user_from_response(response)
 
-    def select(
+    async def select(
         self,
-        conn: Connection,
+        conn: AsyncConnection,
         user_id: int | None = None,
         uuid: UUID | None = None,
         login: str | None = None,
@@ -91,5 +123,11 @@ class UsersRepo(AbsUsersRepo[Connection]):
         if limit is not None:
             stmt = stmt.limit(limit)
 
-        response = conn.execute(stmt).fetchall()
+        response = (await conn.execute(stmt)).fetchall()
         return [self._user_from_response(row) for row in response]
+
+    async def delete(self, conn: AsyncConnection, user: models.User) -> bool:
+        """Delete given user."""
+        stmt = sa.delete(db_models.User).where(db_models.User.id == user.id)
+        response = await conn.execute(stmt)
+        return bool(response.rowcount)

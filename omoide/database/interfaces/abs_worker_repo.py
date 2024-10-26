@@ -5,7 +5,7 @@ from typing import Collection
 from typing import Generic
 from typing import TypeVar
 
-from omoide.models import SerialOperation
+from omoide.serial_operations import SerialOperation
 
 ConnectionT = TypeVar('ConnectionT')
 
@@ -14,7 +14,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform worker-related operations."""
 
     @abc.abstractmethod
-    def register_worker(
+    async def register_worker(
         self,
         conn: ConnectionT,
         worker_name: str,
@@ -22,7 +22,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Ensure we're allowed to run and update starting time."""
 
     @abc.abstractmethod
-    def take_serial_lock(
+    async def take_serial_lock(
         self,
         conn: ConnectionT,
         worker_name: str,
@@ -30,7 +30,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Try acquiring the lock, return True on success."""
 
     @abc.abstractmethod
-    def release_serial_lock(
+    async def release_serial_lock(
         self,
         conn: ConnectionT,
         worker_name: str,
@@ -38,7 +38,15 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Try releasing the lock, return True on success."""
 
     @abc.abstractmethod
-    def get_next_serial_operation(
+    async def create_serial_operation(
+        self,
+        conn: ConnectionT,
+        operation: SerialOperation,
+    ) -> int:
+        """Create serial operation."""
+
+    @abc.abstractmethod
+    async def get_next_serial_operation(
         self,
         conn: ConnectionT,
         names: Collection[str],
@@ -46,7 +54,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Return next serial operation."""
 
     @abc.abstractmethod
-    def lock_serial_operation(
+    async def lock_serial_operation(
         self,
         conn: ConnectionT,
         operation: SerialOperation,
@@ -55,7 +63,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Lock operation, return True on success."""
 
     @abc.abstractmethod
-    def mark_serial_operation_done(
+    async def mark_serial_operation_done(
         self,
         conn: ConnectionT,
         operation: SerialOperation,
@@ -63,7 +71,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Mark operation as done."""
 
     @abc.abstractmethod
-    def mark_serial_operation_failed(
+    async def mark_serial_operation_failed(
         self,
         conn: ConnectionT,
         operation: SerialOperation,

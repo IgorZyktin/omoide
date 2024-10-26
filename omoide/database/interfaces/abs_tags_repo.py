@@ -13,7 +13,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on tags."""
 
     @abc.abstractmethod
-    def get_known_tags_anon(
+    async def get_known_tags_anon(
         self,
         conn: ConnectionT,
         batch_size: int,
@@ -21,11 +21,11 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Return known tags for anon."""
 
     @abc.abstractmethod
-    def drop_known_tags_anon(self, conn: ConnectionT) -> int:
+    async def drop_known_tags_anon(self, conn: ConnectionT) -> int:
         """Drop all known tags for anon user."""
 
     @abc.abstractmethod
-    def insert_known_tags_anon(
+    async def insert_known_tags_anon(
         self,
         conn: ConnectionT,
         tags: dict[str, int],
@@ -34,7 +34,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Insert given tags for anon user."""
 
     @abc.abstractmethod
-    def get_known_tags_user(
+    async def get_known_tags_user(
         self,
         conn: ConnectionT,
         user: models.User,
@@ -43,7 +43,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Return known tags for specific user."""
 
     @abc.abstractmethod
-    def drop_known_tags_user(
+    async def drop_known_tags_user(
         self,
         conn: ConnectionT,
         user: models.User,
@@ -51,7 +51,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Drop all known tags for specific user."""
 
     @abc.abstractmethod
-    def insert_known_tags_user(
+    async def insert_known_tags_user(
         self,
         conn: ConnectionT,
         user: models.User,

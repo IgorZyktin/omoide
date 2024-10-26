@@ -41,8 +41,7 @@ async def api_create_item(
     try:
         _, items = await use_case.execute(user, [item_in.model_dump()])
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     item = items[0]
 
@@ -74,8 +73,7 @@ async def api_create_many_items(
             items_in=[item_in.model_dump() for item_in in items_in],
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
@@ -102,8 +100,7 @@ async def api_read_item(
     try:
         item = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return common_api_models.OneItemOutput(
         item=common_api_models.ItemOutput(**item.model_dump())
@@ -146,8 +143,7 @@ async def api_read_many_items(
             limit=limit,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
@@ -173,8 +169,7 @@ async def api_delete_item(
     try:
         parent = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return common_api_models.ItemDeleteOutput(
         result=f'Deleted item {item_uuid}',
@@ -249,8 +244,7 @@ async def api_upload_item_content(
             ext=media.ext,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'Enqueued content adding',
@@ -285,8 +279,7 @@ async def api_upload_item_preview(
             ext=media.ext,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'Enqueued preview adding',
@@ -321,8 +314,7 @@ async def api_upload_item_thumbnail(
             ext=media.ext,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'result': 'Enqueued thumbnail adding',
@@ -349,10 +341,13 @@ async def api_download_collection(
             item_uuid=item_uuid,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
-    filename = urllib.parse.quote(item.name or 'unnamed collection')
+    if item and item.name:
+        filename = urllib.parse.quote(item.name)
+    else:
+        filename = 'unnamed collection'
+
     filename = f'Omoide - {filename}'
 
     return PlainTextResponse(

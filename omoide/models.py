@@ -1,6 +1,5 @@
-"""Logic models."""
+"""Domain-level models."""
 
-import abc
 import enum
 from collections import UserString
 from dataclasses import asdict
@@ -8,18 +7,14 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 from typing import Any
-from typing import Collection
-from typing import Generic
 from typing import NamedTuple
 from typing import Self
-from typing import TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import Field
 
 from omoide import const
-from omoide import exceptions
 from omoide import utils
 
 
@@ -194,7 +189,7 @@ class Item(ModelMixin):
     thumbnail_ext: str | None
     status: Status = Status.AVAILABLE  # TODO - make it mandatory
     tags: list[str] = field(default_factory=list)
-    permissions: set[UUID] = field(default_factory=list)
+    permissions: set[UUID] = field(default_factory=set)
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
@@ -390,75 +385,3 @@ class ParentTags(NamedTuple):
 
     parent: Item
     computed_tags: set[str]
-
-
-class OperationStatus(enum.StrEnum):
-    """Possible statuses for operation."""
-
-    CREATED = 'created'
-    PROCESSING = 'processing'
-    DONE = 'done'
-    FAILED = 'failed'
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return f'<{self.name.lower()}>'
-
-
-ALL_SERIAL_OPERATIONS: dict[str, type['SerialOperation']] = {}
-
-ConfigT = TypeVar('ConfigT')
-MediatorT = TypeVar('MediatorT')
-
-
-@dataclass
-class SerialOperation(Generic[ConfigT, MediatorT], abc.ABC):
-    """Base class for all serial operations."""
-
-    id: int
-    worker_name: str
-    status: OperationStatus
-    extras: dict[str, Any]
-    created_at: datetime
-    updated_at: datetime
-    started_at: datetime | None
-    ended_at: datetime | None
-    log: str | None
-    name: str = 'operation'
-    goal: str = 'unknown'
-
-    def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
-        """Store descendant."""
-        ALL_SERIAL_OPERATIONS[cls.name] = cls
-        super().__init_subclass__(*args, **kwargs)
-
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return f'<{self.id}, {self.name!r}>'
-
-    @staticmethod
-    def from_name(**kwargs: Any) -> 'SerialOperation':
-        """Create specific instance type."""
-        name = kwargs['name']
-        class_ = ALL_SERIAL_OPERATIONS.get(name)
-
-        if class_ is None:
-            raise exceptions.UnknownSerialOperationError(name=name)
-
-        return class_(**kwargs)
-
-    @staticmethod
-    def get_all_possible_operations() -> set[str]:
-        """Return set of names for all descendants."""
-        return set(ALL_SERIAL_OPERATIONS.keys())
-
-    @abc.abstractmethod
-    def execute(self, config: ConfigT, mediator: MediatorT) -> None:
-        """Perform workload."""
-
-    @property
-    def duration(self) -> float:
-        """Get execution duration."""
-        if self.started_at is None or self.ended_at is None:
-            return 0.0
-        return (self.ended_at - self.started_at).total_seconds()

@@ -11,6 +11,7 @@ from omoide import models
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
+from omoide.serial_operations import UpdatePermissionsSO
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -399,8 +400,8 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
             if apply_to_parents or apply_to_parents:
                 added, deleted = utils.get_delta(item.permissions, permissions)
                 repo = self.mediator.misc_repo
-                operation_id = await repo.create_serial_operation(
-                    name=const.SERIAL_UPDATE_PERMISSIONS,
+
+                operation = UpdatePermissionsSO(
                     extras={
                         'item_uuid': str(item_uuid),
                         'added': [str(x) for x in added],
@@ -411,14 +412,9 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                         'apply_to_children_as': apply_to_children_as.value,
                     },
                 )
+                operation_id = await repo.create_serial_operation(operation)
 
             item.permissions = permissions
             await self.mediator.items_repo.update_item(item)
-
-            for user_uuid in (added | deleted):
-                operation_id = await repo.create_serial_operation(
-                    name=const.SERIAL_REBUILD_KNOWN_TAGS_USER,
-                    extras={'user_uuid': str(user_uuid)},
-                )
 
         return operation_id
