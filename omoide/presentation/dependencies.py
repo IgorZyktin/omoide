@@ -20,6 +20,9 @@ from omoide import use_cases
 from omoide import utils
 from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
 from omoide.database.implementations.impl_sqlalchemy.exif_repo import EXIFRepo
+from omoide.database.implementations.impl_sqlalchemy.signatures_repo import (
+    SignaturesRepo,
+)
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
@@ -234,7 +237,7 @@ def get_mediator(
         search_repo=search_repo,
         storage=storage,
         database=database,
-        signatures=asyncpg.SignaturesRepo(),
+        signatures=SignaturesRepo(),
         users_repo=users_repo,
         object_storage=object_storage,
     )

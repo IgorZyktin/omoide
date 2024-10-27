@@ -165,10 +165,10 @@ class TagsRepo(_TagsRepoHelper):
         item: models.Item,
     ) -> set[str]:
         """Return computed tags for given item."""
-        stmt = sa.select(db_models.ComputedTags).where(
+        stmt = sa.select(db_models.ComputedTags.tags).where(
             db_models.ComputedTags.item_uuid == item.uuid
         )
-        response = (await conn.execute(stmt)).fetchone()
+        response = (await conn.execute(stmt)).scalar()
         return set(response)
 
     async def save_computed_tags(

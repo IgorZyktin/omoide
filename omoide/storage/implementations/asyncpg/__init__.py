@@ -19,9 +19,6 @@ from omoide.storage.implementations.asyncpg.repositories.rp_misc import (
 from omoide.storage.implementations.asyncpg.repositories.rp_search import (
     SearchRepository,  # noqa: F401,F403
 )
-from omoide.storage.implementations.asyncpg.repositories.rp_signatures import (
-    SignaturesRepo,  # noqa: F401,F403
-)
 from omoide.storage.implementations.asyncpg.repositories.rp_users import (
     UsersRepo,  # noqa: F401,F403
 )

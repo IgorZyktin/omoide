@@ -392,11 +392,15 @@ class DownloadCollectionUseCase(BaseItemUseCase):
                 raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
             children = await self.mediator.items_repo.get_children(item)
-            signatures = (
-                await self.mediator.signatures_repo.get_cr32_signatures(
-                    items=children,
-                )
+
+        # TODO - remove transaction splitting
+        async with self.mediator.database.transaction() as conn:
+            signatures = await self.mediator.signatures.get_cr32_signatures(
+                conn=conn,
+                items=children,
             )
+
+        async with self.mediator.storage.transaction():
             metainfos = await self.mediator.meta_repo.get_metainfos(children)
             valid_children = [
                 child

@@ -58,12 +58,7 @@ class EXIFRepo(AbsEXIFRepo[AsyncConnection]):
         exif: dict[str, Any],
     ) -> bool:
         """Update existing EXIF record for given item or create new one."""
-        insert = (
-            pg_insert(db_models.EXIF)
-            .where(db_models.EXIF.item_id == item.id)
-            .values(exif=exif)
-        )
-
+        insert = pg_insert(db_models.EXIF).values(item_id=item.id, exif=exif)
         stmt = insert.on_conflict_do_update(
             index_elements=[db_models.EXIF.item_id],
             set_={'exif': insert.excluded.exif},

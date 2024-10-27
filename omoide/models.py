@@ -247,7 +247,6 @@ class Metainfo(ModelMixin):
     user_time: datetime | None
 
     content_type: str | None
-    extras: dict[str, Any]
 
     content_size: int | None
     preview_size: int | None

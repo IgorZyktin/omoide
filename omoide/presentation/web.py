@@ -98,8 +98,7 @@ def raise_from_exc(
     language: str | None = None,
 ) -> NoReturn:
     """Cast exception into HTTP response."""
-    if not isinstance(exc, exceptions.BaseOmoideError):
-        LOG.exception('Failed to perform request')
+    LOG.exception('Failed to perform request')
 
     code = get_corresponding_exception_code(exc)
 
