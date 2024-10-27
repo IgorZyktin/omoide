@@ -29,23 +29,22 @@ async def api_create_exif(
     response: Response,
     item_uuid: UUID,
     exif: exif_api_models.EXIFModel,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    owner: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Add EXIF data to existing item."""
     use_case = exif_use_cases.CreateEXIFUseCase(mediator)
 
     try:
-        await use_case.execute(user, item_uuid, exif.exif)
+        await use_case.execute(owner, item_uuid, exif.exif)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     response.headers['Location'] = str(
         request.url_for('api_read_exif', item_uuid=item_uuid)
     )
 
-    return {'result': f'Created EXIF for the item {item_uuid}'}
+    return {'result': 'created exif', 'item_uuid': str(item_uuid)}
 
 
 @api_exif_router.get(
@@ -64,8 +63,7 @@ async def api_read_exif(
     try:
         exif = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return exif_api_models.EXIFModel(exif=exif)
 
@@ -78,7 +76,7 @@ async def api_read_exif(
 async def api_update_exif(
     item_uuid: UUID,
     exif: exif_api_models.EXIFModel,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    owner: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Update EXIF data for existing item.
@@ -88,11 +86,11 @@ async def api_update_exif(
     use_case = exif_use_cases.UpdateEXIFUseCase(mediator)
 
     try:
-        await use_case.execute(user, item_uuid, exif.exif)
+        await use_case.execute(owner, item_uuid, exif.exif)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
-    return {'result': f'Updated EXIF for item {item_uuid}'}
+        return web.raise_from_exc(exc)
+
+    return {'result': 'updated exif', 'item_uuid': str(item_uuid)}
 
 
 @api_exif_router.delete(
@@ -102,16 +100,15 @@ async def api_update_exif(
 )
 async def api_delete_exif(
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    owner: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Delete EXIF data from exising item."""
     use_case = exif_use_cases.DeleteEXIFUseCase(mediator)
 
     try:
-        await use_case.execute(user, item_uuid)
+        await use_case.execute(owner, item_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
-    return {'result': f'Deleted EXIF for the item {item_uuid}'}
+    return {'result': 'deleted exif', 'item_uuid': str(item_uuid)}

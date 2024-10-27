@@ -18,6 +18,7 @@ from omoide import interfaces
 from omoide import models
 from omoide import use_cases
 from omoide import utils
+from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorage
@@ -108,9 +109,9 @@ def get_media_repo() -> storage_interfaces.AbsMediaRepo:
 
 # TODO - remove
 @utils.memorize
-def get_exif_repo() -> storage_interfaces.AbsEXIFRepository:
+def get_exif_repo() -> AbsEXIFRepo:
     """Get repo instance."""
-    return asyncpg.EXIFRepository(get_db())
+    return asyncpg.EXIFRepository()
 
 
 # TODO - remove
@@ -202,9 +203,7 @@ def get_mediator(
     browse_repo: Annotated[
         storage_interfaces.AbsBrowseRepository, Depends(get_browse_repo)
     ],
-    exif_repo: Annotated[
-        storage_interfaces.AbsEXIFRepository, Depends(get_exif_repo)
-    ],
+    exif: Annotated[AbsEXIFRepo, Depends(get_exif_repo)],
     items_repo: Annotated[
         storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
     ],
@@ -232,7 +231,7 @@ def get_mediator(
     return Mediator(
         authenticator=authenticator,
         browse_repo=browse_repo,  # FIXME - app-related dependency
-        exif_repo=exif_repo,
+        exif=exif,
         items_repo=items_repo,
         meta_repo=meta_repo,
         misc_repo=misc_repo,

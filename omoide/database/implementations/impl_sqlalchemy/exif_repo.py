@@ -1,11 +1,10 @@
-"""Repository that performs CRUD operations on EXIF."""
+"""Repository that perform operations on EXIF data."""
 
 from typing import Any
 
 import sqlalchemy as sa
-from asyncpg import exceptions as asyncpg_exceptions
-from databases.core import Database
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
@@ -13,13 +12,12 @@ from omoide.database import db_models
 from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo
 
 
-# TODO - remove this class
-class EXIFRepository(AbsEXIFRepo[Database]):
-    """Repository that performs CRUD operations on EXIF."""
+class EXIFRepo(AbsEXIFRepo[AsyncConnection]):
+    """Repository that perform operations on EXIF data."""
 
     async def create(
         self,
-        conn: Database,
+        conn: AsyncConnection,
         item: models.Item,
         exif: dict[str, Any],
     ) -> None:
@@ -28,7 +26,7 @@ class EXIFRepository(AbsEXIFRepo[Database]):
 
         try:
             await conn.execute(stmt)
-        except asyncpg_exceptions.UniqueViolationError as exc:
+        except sa.exc.IntegrityError as exc:
             msg = 'EXIF data for item {item_uuid} already exists'
             raise exceptions.AlreadyExistsError(
                 msg,
@@ -37,25 +35,25 @@ class EXIFRepository(AbsEXIFRepo[Database]):
 
     async def get_by_item(
         self,
-        conn: Database,
+        conn: AsyncConnection,
         item: models.Item,
     ) -> dict[str, Any]:
         """Return EXIF record for given item."""
-        stmt = sa.select(db_models.EXIF).where(
+        query = sa.select(db_models.EXIF.exif).where(
             db_models.EXIF.item_id == item.id
         )
 
-        response = await conn.fetch_one(stmt)
+        response = (await conn.execute(query)).scalar()
 
         if response is None:
             msg = 'EXIF data for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
 
-        return dict(response['exif'])
+        return dict(response)
 
     async def save(
         self,
-        conn: Database,
+        conn: AsyncConnection,
         item: models.Item,
         exif: dict[str, Any],
     ) -> bool:
@@ -71,12 +69,12 @@ class EXIFRepository(AbsEXIFRepo[Database]):
             set_={'exif': insert.excluded.exif},
         )
 
-        await conn.execute(stmt)
-        return True
+        response = await conn.execute(stmt)
+        return int(response.rowcount)
 
     async def delete(
         self,
-        conn: Database,
+        conn: AsyncConnection,
         item: models.Item,
     ) -> None:
         """Delete EXIF record for given item."""
@@ -86,7 +84,7 @@ class EXIFRepository(AbsEXIFRepo[Database]):
             .returning(1)
         )
 
-        response = await conn.fetch_one(stmt)
+        response = await conn.execute(stmt)
 
         if response is None:
             msg = 'EXIF data for item {item_uuid} does not exist'

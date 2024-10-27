@@ -4,9 +4,6 @@ from omoide.storage.interfaces.abs_storage import AbsStorage  # noqa: F401,F403
 from omoide.storage.interfaces.repositories.abs_browse_repo import (
     AbsBrowseRepository,  # noqa: F401,F403
 )
-from omoide.storage.interfaces.repositories.abs_exif_repo import (
-    AbsEXIFRepository,  # noqa: F401,F403
-)
 from omoide.storage.interfaces.repositories.abs_items_repo import (
     AbsItemsRepo,  # noqa: F401,F403
 )

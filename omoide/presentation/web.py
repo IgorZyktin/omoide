@@ -15,6 +15,7 @@ from starlette.responses import RedirectResponse
 from omoide import const
 from omoide import custom_logging
 from omoide import domain
+from omoide import exceptions
 from omoide import exceptions as api_exceptions
 from omoide.domain import errors
 from omoide.presentation import constants
@@ -97,7 +98,8 @@ def raise_from_exc(
     language: str | None = None,
 ) -> NoReturn:
     """Cast exception into HTTP response."""
-    LOG.exception('Failed to perform request')
+    if not isinstance(exc, exceptions.BaseOmoideError):
+        LOG.exception('Failed to perform request')
 
     code = get_corresponding_exception_code(exc)
 

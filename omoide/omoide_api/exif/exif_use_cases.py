@@ -22,12 +22,12 @@ class CreateEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='add EXIF data')
 
-        async with self.mediator.storage.transaction():
+        async with self.mediator.storage.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
-            LOG.info('User {} is creating EXIF for item {}', user, item)
-            await self.mediator.exif_repo.create_exif(item, exif)
+            LOG.info('{} is creating EXIF for {}', user, item)
+            await self.mediator.exif.create(conn, item, exif)
 
 
 class ReadEXIFUseCase(BaseAPIUseCase):
@@ -39,13 +39,13 @@ class ReadEXIFUseCase(BaseAPIUseCase):
         item_uuid: UUID,
     ) -> dict[str, Any]:
         """Execute."""
-        async with self.mediator.storage.transaction():
+        async with self.mediator.storage.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner_or_allowed_to(
                 user, item, subject='EXIF data'
             )
 
-            exif = await self.mediator.exif_repo.read_exif(item)
+            exif = await self.mediator.exif.get_by_item(conn, item)
 
         return exif
 
@@ -62,12 +62,12 @@ class UpdateEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update EXIF data')
 
-        async with self.mediator.storage.transaction():
+        async with self.mediator.storage.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
-            LOG.info('User {} is updating EXIF for item {}', user, item)
-            await self.mediator.exif_repo.update_exif(item, exif)
+            LOG.info('{} is updating EXIF for {}', user, item)
+            await self.mediator.exif.save(conn, item, exif)
 
 
 class DeleteEXIFUseCase(BaseAPIUseCase):
@@ -77,9 +77,9 @@ class DeleteEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='delete EXIF data')
 
-        async with self.mediator.storage.transaction():
+        async with self.mediator.storage.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
-            LOG.info('User {} is deleting EXIF for item {}', user, item)
-            await self.mediator.exif_repo.delete_exif(item)
+            LOG.info('{} is deleting EXIF for {}', user, item)
+            await self.mediator.exif.delete(conn, item)

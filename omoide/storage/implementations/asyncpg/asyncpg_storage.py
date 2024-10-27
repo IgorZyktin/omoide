@@ -1,5 +1,6 @@
 """Base storage class."""
 
+from contextlib import asynccontextmanager
 from typing import Any
 
 from omoide.storage.interfaces.abs_storage import AbsStorage
@@ -12,6 +13,8 @@ class AsyncpgStorage(AbsStorage):
         """Initialize instance."""
         self.db = db
 
-    def transaction(self) -> Any:
+    @asynccontextmanager
+    async def transaction(self) -> Any:
         """Start transaction."""
-        return self.db.transaction()
+        async with self.db.transaction():
+            yield self.db
