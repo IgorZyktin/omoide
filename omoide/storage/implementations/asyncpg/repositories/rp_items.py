@@ -276,7 +276,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**row) for row in reversed(response)]
 
-    async def get_siblings(self, item: models) -> list[models.Item]:
+    async def get_siblings(self, item: models.Item) -> list[models.Item]:
         """Return all siblings for the given item."""
         stmt = sa.select(db_models.Item)
 

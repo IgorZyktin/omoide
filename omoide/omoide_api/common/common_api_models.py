@@ -1,6 +1,7 @@
 """Web level API models."""
 
 from typing import Any
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -82,9 +83,15 @@ class ManyItemsOutput(BaseModel):
     }
 
 
+class ItemDeleteInput(BaseModel):
+    """Input info for item deletion."""
+
+    desired_switch: Literal['parent', 'sibling'] | None = 'sibling'
+
+
 class ItemDeleteOutput(BaseModel):
     """Output info after item deletion."""
 
     result: str
     item_uuid: str
-    switch_to: ItemOutput
+    switch_to: ItemOutput | None

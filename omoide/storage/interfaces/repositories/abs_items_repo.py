@@ -87,7 +87,7 @@ class AbsItemsRepo(abc.ABC):
         """Return lineage of all parents for the given item."""
 
     @abc.abstractmethod
-    async def get_siblings(self, item: models) -> list[models.Item]:
+    async def get_siblings(self, item: models.Item) -> list[models.Item]:
         """Return all siblings for the given item."""
 
     @abc.abstractmethod

@@ -74,13 +74,6 @@ def get_search_repo() -> storage_interfaces.AbsSearchRepository:
 
 # TODO - remove
 @utils.memorize
-def get_signatures_repo() -> storage_interfaces.AbsSignaturesRepo:
-    """Get repo instance."""
-    return asyncpg.SignaturesRepo(get_db())
-
-
-# TODO - remove
-@utils.memorize
 def get_browse_repo() -> storage_interfaces.AbsBrowseRepository:
     """Get repo instance."""
     return asyncpg.BrowseRepository(get_db())

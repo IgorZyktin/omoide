@@ -2,6 +2,7 @@
 
 import time
 from typing import Any
+from typing import Literal
 from uuid import UUID
 
 from omoide import const
@@ -246,38 +247,45 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 
-    async def execute(self, user: models.User, item_uuid: UUID) -> models.Item:
+    async def execute(
+        self,
+        owner: models.User,
+        item_uuid: UUID,
+        desired_switch: Literal['parent', 'sibling'] | None,
+    ) -> models.Item | None:
         """Execute."""
-        self.ensure_not_anon(user, operation='delete items')
+        self.ensure_not_anon(owner, operation='delete items')
         repo = self.mediator.misc_repo
+        switch_to = None
 
-        async with self.mediator.storage.transaction():
+        async with self.mediator.database.transaction() as conn:
+            _ = conn  # FIXME
             item = await self.mediator.items_repo.get_item(item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='items')
+            self.ensure_admin_or_owner(owner, item, subject='items')
 
             if item.parent_uuid is None:
                 msg = 'Root items cannot be deleted'
                 raise exceptions.NotAllowedError(msg)
 
-            LOG.info('User {} is deleting item {}', user, item)
-
-            siblings = await self.mediator.items_repo.get_siblings(item)
-
-            if len(siblings) > 1:
-                index = siblings.index(item)
-                last = len(siblings) - 1
-
-                if index == len(siblings) - 1:
-                    switch_to = siblings[last - 1]
-                else:
-                    switch_to = siblings[index + 1]
-
-            else:
+            if desired_switch == 'parent':
                 switch_to = await self.mediator.items_repo.get_item(
-                    uuid=item.parent_uuid,
-                )
+                    item.parent_uuid)
 
-        async with self.mediator.storage.transaction():
+            elif desired_switch == 'sibling':
+                siblings = await self.mediator.items_repo.get_siblings(item)
+                if len(siblings) > 1:
+                    index = siblings.index(item)
+                    last = len(siblings) - 1
+
+                    if index == len(siblings) - 1:
+                        switch_to = siblings[last - 1]
+                    else:
+                        switch_to = siblings[index + 1]
+
+            LOG.info('{} is deleting {}', owner, item)
+
+        async with self.mediator.database.transaction() as conn:
+            _ = conn  # FIXME
             # heavy recursive call
             await self.delete_one_item(item)
 
@@ -288,6 +296,18 @@ class DeleteItemUseCase(BaseItemUseCase):
             await repo.create_serial_operation(operation)
 
         return switch_to
+
+    async def delete_one_item(self, item: models.Item) -> None:
+        """Delete item with all corresponding media."""
+        # TODO - perform soft delete here
+        children = await self.mediator.items_repo.get_children(item)
+
+        for child in children:
+            await self.delete_one_item(child)
+
+        await self.mediator.object_storage.delete_all_objects(item)
+        LOG.warning('Deleting item {}', item)
+        await self.mediator.items_repo.delete_item(item)
 
 
 class BaseUploadUseCase(BaseAPIUseCase):

@@ -244,21 +244,31 @@ async def api_update_item_tags(
 )
 async def api_delete_item(
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    how_to_delete: common_api_models.ItemDeleteInput,
+    owner: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Delete exising item."""
     use_case = item_use_cases.DeleteItemUseCase(mediator)
 
     try:
-        parent = await use_case.execute(user, item_uuid)
+        item = await use_case.execute(
+            owner=owner,
+            item_uuid=item_uuid,
+            desired_switch=how_to_delete.desired_switch,
+        )
     except Exception as exc:
         return web.raise_from_exc(exc)
 
+    if item is None:
+        switch_to = None
+    else:
+        switch_to = common_api_models.ItemOutput(**item.model_dump())
+
     return common_api_models.ItemDeleteOutput(
-        result=f'Deleted item {item_uuid}',
+        result='deleted item',
         item_uuid=str(item_uuid),
-        switch_to=common_api_models.ItemOutput(**parent.model_dump()),
+        switch_to=switch_to,
     )
 
 

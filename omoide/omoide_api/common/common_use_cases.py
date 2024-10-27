@@ -242,17 +242,3 @@ class BaseItemUseCase(BaseAPIUseCase):
         )
 
         return set(affected_users), computed_tags
-
-    async def delete_one_item(
-        self,
-        item: models.Item,
-    ) -> None:
-        """Delete item with all corresponding media."""
-        children = await self.mediator.items_repo.get_children(item)
-
-        for child in children:
-            await self.delete_one_item(child)
-
-        await self.mediator.object_storage.delete_all_objects(item)
-        LOG.warning('Deleting item {}', item)
-        await self.mediator.items_repo.delete_item(item)
