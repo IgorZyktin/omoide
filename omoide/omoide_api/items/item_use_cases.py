@@ -269,7 +269,8 @@ class DeleteItemUseCase(BaseItemUseCase):
 
             if desired_switch == 'parent':
                 switch_to = await self.mediator.items_repo.get_item(
-                    item.parent_uuid)
+                    item.parent_uuid
+                )
 
             elif desired_switch == 'sibling':
                 siblings = await self.mediator.items_repo.get_siblings(item)

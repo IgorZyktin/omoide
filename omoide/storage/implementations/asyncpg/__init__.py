@@ -4,9 +4,6 @@ from omoide.storage.implementations.asyncpg.asyncpg_storage import (
 from omoide.storage.implementations.asyncpg.repositories.rp_browse import (
     BrowseRepository,  # noqa: F401,F403
 )
-from omoide.storage.implementations.asyncpg.repositories.rp_exif import (
-    EXIFRepository,  # noqa: F401,F403
-)
 from omoide.storage.implementations.asyncpg.repositories.rp_items import (
     ItemsRepo,  # noqa: F401,F403
 )

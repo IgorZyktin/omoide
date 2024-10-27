@@ -35,9 +35,11 @@ def get_app() -> FastAPI:
         """Application lifespan."""
         # Connect to the database
         await dep.get_db().connect()
+        await dep.get_database().connect()
         yield
         # Disconnect from the database
         await dep.get_db().disconnect()
+        await dep.get_database().disconnect()
 
     new_app = FastAPI(
         lifespan=lifespan,

@@ -18,7 +18,9 @@ from omoide import interfaces
 from omoide import models
 from omoide import use_cases
 from omoide import utils
-from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo
+from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
+from omoide.database.implementations.impl_sqlalchemy.exif_repo import EXIFRepo
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorage
@@ -54,6 +56,16 @@ def get_templates() -> Jinja2Templates:
 def get_db() -> Database:
     """Get database instance."""
     return Database(get_config().db_url_app.get_secret_value())
+
+
+@utils.memorize
+def get_database() -> SqlalchemyDatabase:
+    """Get database instance."""
+    config = get_config()
+    return SqlalchemyDatabase(
+        db_url=config.db_url_app.get_secret_value(),
+        echo=False,
+    )
 
 
 @utils.memorize
@@ -209,18 +221,19 @@ def get_mediator(
     object_storage: Annotated[
         object_interfaces.AbsObjectStorage, Depends(get_object_storage)
     ],
+    database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
         browse_repo=browse_repo,  # FIXME - app-related dependency
-        exif=asyncpg.EXIFRepository(),
+        exif=EXIFRepo(),
         items_repo=items_repo,
         meta_repo=meta_repo,
         misc_repo=misc_repo,
         search_repo=search_repo,
         storage=storage,
-        database=storage,  # TODO: remove duplication
+        database=database,
         signatures=asyncpg.SignaturesRepo(),
         users_repo=users_repo,
         object_storage=object_storage,
