@@ -48,9 +48,9 @@ async def app_item_update(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     user: Annotated[models.User, Depends(dep.get_current_user)],
     policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
-    use_case: Annotated[use_cases.AppItemUpdateUseCase, Depends(
-        dep.app_item_update_use_case
-    )],
+    use_case: Annotated[
+        use_cases.AppItemUpdateUseCase, Depends(dep.app_item_update_use_case)
+    ],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
@@ -100,9 +100,9 @@ async def app_item_delete(
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     user: Annotated[models.User, Depends(dep.get_current_user)],
     policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
-    use_case: Annotated[use_cases.AppItemDeleteUseCase, Depends(
-        dep.app_item_delete_use_case
-    )],
+    use_case: Annotated[
+        use_cases.AppItemDeleteUseCase, Depends(dep.app_item_delete_use_case)
+    ],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001

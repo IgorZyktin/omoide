@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from omoide import interfaces
 from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo
+from omoide.database.interfaces.abs_signatures_repo import AbsSignaturesRepo
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.storage import interfaces as storage_interfaces
 
@@ -19,7 +20,7 @@ class Mediator:
     meta_repo: storage_interfaces.AbsMetainfoRepo
     misc_repo: storage_interfaces.AbsMiscRepo
     search_repo: storage_interfaces.AbsSearchRepository
-    signatures_repo: storage_interfaces.AbsSignaturesRepo
+    signatures: AbsSignaturesRepo
     storage: storage_interfaces.AbsStorage
     users_repo: storage_interfaces.AbsUsersRepo
 

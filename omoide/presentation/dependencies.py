@@ -109,13 +109,6 @@ def get_media_repo() -> storage_interfaces.AbsMediaRepo:
 
 # TODO - remove
 @utils.memorize
-def get_exif_repo() -> AbsEXIFRepo:
-    """Get repo instance."""
-    return asyncpg.EXIFRepository()
-
-
-# TODO - remove
-@utils.memorize
 def get_misc_repo() -> storage_interfaces.AbsMiscRepo:
     """Get repo instance."""
     return asyncpg.MiscRepo(get_db())
@@ -174,8 +167,9 @@ def get_authenticator() -> interfaces.AbsAuthenticator:
 
 @utils.memorize
 def get_policy(
-    items_repo: Annotated[storage_interfaces.AbsItemsRepo,
-                          Depends(get_items_repo)],
+    items_repo: Annotated[
+        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
+    ],
 ) -> interfaces.AbsPolicy:
     """Get policy instance."""
     return infra.Policy(items_repo=items_repo)
@@ -203,7 +197,6 @@ def get_mediator(
     browse_repo: Annotated[
         storage_interfaces.AbsBrowseRepository, Depends(get_browse_repo)
     ],
-    exif: Annotated[AbsEXIFRepo, Depends(get_exif_repo)],
     items_repo: Annotated[
         storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
     ],
@@ -215,9 +208,6 @@ def get_mediator(
     ],
     search_repo: Annotated[
         storage_interfaces.AbsSearchRepository, Depends(get_search_repo)
-    ],
-    signatures_repo: Annotated[
-        storage_interfaces.AbsSignaturesRepo, Depends(get_signatures_repo)
     ],
     storage: Annotated[storage_interfaces.AbsStorage, Depends(get_storage)],
     users_repo: Annotated[
@@ -231,13 +221,13 @@ def get_mediator(
     return Mediator(
         authenticator=authenticator,
         browse_repo=browse_repo,  # FIXME - app-related dependency
-        exif=exif,
+        exif=asyncpg.EXIFRepository(),
         items_repo=items_repo,
         meta_repo=meta_repo,
         misc_repo=misc_repo,
         search_repo=search_repo,
         storage=storage,
-        signatures_repo=signatures_repo,
+        signatures=asyncpg.SignaturesRepo(),
         users_repo=users_repo,
         object_storage=object_storage,
     )

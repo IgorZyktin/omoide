@@ -1,4 +1,5 @@
 """Item related API operations."""
+
 from typing import Annotated
 from uuid import UUID
 
@@ -19,9 +20,10 @@ async def api_item_update_parent(
     new_parent_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     policy: Annotated[interfaces.AbsPolicy, Depends(dep.get_policy)],
-    use_case: Annotated[use_cases.ApiItemUpdateParentUseCase, Depends(
-        dep.api_item_update_parent_use_case
-    )],
+    use_case: Annotated[
+        use_cases.ApiItemUpdateParentUseCase,
+        Depends(dep.api_item_update_parent_use_case),
+    ],
 ):
     """Set new parent for the item."""
     result = await use_case.execute(policy, user, uuid, new_parent_uuid)

@@ -22,6 +22,3 @@ from omoide.storage.interfaces.repositories.abs_search_repo import (
 from omoide.storage.interfaces.repositories.abs_users_repo import (
     AbsUsersRepo,  # noqa: F401,F403
 )
-from omoide.storage.interfaces.repositories.abs_signatures_repo import (
-    AbsSignaturesRepo,  # noqa: F401,F403
-)

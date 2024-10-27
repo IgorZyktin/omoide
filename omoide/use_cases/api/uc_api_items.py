@@ -101,8 +101,6 @@ class ApiItemUpdateParentUseCase(BaseItemMediaUseCase):
                     'apply_to_children': True,
                 },
             )
-            await self.misc_repo.create_serial_operation(
-                operation
-            )
+            await self.misc_repo.create_serial_operation(operation)
 
         return new_parent_uuid
