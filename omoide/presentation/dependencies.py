@@ -227,6 +227,7 @@ def get_mediator(
         misc_repo=misc_repo,
         search_repo=search_repo,
         storage=storage,
+        database=storage,  # TODO: remove duplication
         signatures=asyncpg.SignaturesRepo(),
         users_repo=users_repo,
         object_storage=object_storage,

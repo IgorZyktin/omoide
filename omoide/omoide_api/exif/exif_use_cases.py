@@ -22,7 +22,7 @@ class CreateEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='add EXIF data')
 
-        async with self.mediator.storage.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
@@ -39,7 +39,7 @@ class ReadEXIFUseCase(BaseAPIUseCase):
         item_uuid: UUID,
     ) -> dict[str, Any]:
         """Execute."""
-        async with self.mediator.storage.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner_or_allowed_to(
                 user, item, subject='EXIF data'
@@ -62,7 +62,7 @@ class UpdateEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update EXIF data')
 
-        async with self.mediator.storage.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
@@ -77,7 +77,7 @@ class DeleteEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='delete EXIF data')
 
-        async with self.mediator.storage.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items_repo.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
