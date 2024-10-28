@@ -9,10 +9,10 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
+from omoide import serial_operations as so
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
-from omoide import serial_operations as so
 
 LOG = custom_logging.get_logger(__name__)
 

@@ -9,12 +9,12 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.users import user_api_models
 from omoide.omoide_api.users import user_use_cases
-from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_users_router = APIRouter(prefix='/users', tags=['Users'])

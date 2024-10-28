@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from omoide import const
 from omoide import custom_logging
-from omoide import models
 from omoide import infra
+from omoide import models
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.rebuild_image_sizes.cfg import Config

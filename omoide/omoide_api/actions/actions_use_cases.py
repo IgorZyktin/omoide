@@ -5,8 +5,8 @@ from uuid import UUID
 from omoide import const
 from omoide import custom_logging
 from omoide import models
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide import serial_operations as so
+from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -54,7 +54,7 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.ensure_admin(admin, subject=f'known tags for all registered users')
+        self.ensure_admin(admin, subject='known tags for all registered users')
 
         async with self.mediator.database.transaction():
             LOG.info('{} is rebuilding known tags for all users', admin)

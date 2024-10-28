@@ -12,12 +12,12 @@ from fastapi import Response
 from fastapi import status
 from fastapi.responses import PlainTextResponse
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
-from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_items_router = APIRouter(prefix='/items', tags=['Items'])

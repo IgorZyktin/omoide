@@ -13,15 +13,11 @@ from starlette.requests import Request
 
 from omoide import const
 from omoide import infra
-from omoide import interfaces
 from omoide import models
 from omoide import utils
-from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
-from omoide.database.implementations.impl_sqlalchemy.exif_repo import EXIFRepo
-from omoide.database.implementations.impl_sqlalchemy.signatures_repo import (
-    SignaturesRepo,
-)
+from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.infra import AbsAuthenticator
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorage
@@ -51,10 +47,10 @@ def get_templates() -> Jinja2Templates:
 
 
 @utils.memorize
-def get_database() -> SqlalchemyDatabase:
+def get_database() -> impl_sqlalchemy.SqlalchemyDatabase:
     """Get database instance."""
     config = get_config()
-    return SqlalchemyDatabase(
+    return impl_sqlalchemy.SqlalchemyDatabase(
         db_url=config.db_url_app.get_secret_value(),
         echo=False,
     )
@@ -97,7 +93,7 @@ def get_credentials(request: Request) -> HTTPBasicCredentials:
 
 
 @utils.memorize
-def get_authenticator() -> interfaces.AbsAuthenticator:
+def get_authenticator() -> AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator()
 
@@ -107,29 +103,29 @@ def get_object_storage() -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
     return FileObjectStorage(
-        media_repo=MediaRepo(),
+        media_repo=impl_sqlalchemy.MediaRepo(),
         prefix_size=config.prefix_size,
     )
 
 
 @utils.memorize
 def get_mediator(
-    authenticator: Annotated[interfaces.AbsAuthenticator, Depends(get_authenticator)],
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
     object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
-        browse=BrowseRepo(),  # FIXME - app-related dependency
-        exif=EXIFRepo(),
-        items=ItemsRepo(),
-        meta=MetaRepo(),
-        misc=MiscRepo(),
-        search=SearchRepo(),
+        browse=impl_sqlalchemy.BrowseRepo(),  # FIXME - app-related dependency
+        exif=impl_sqlalchemy.EXIFRepo(),
+        items=impl_sqlalchemy.ItemsRepo(),
+        meta=impl_sqlalchemy.MetaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
+        search=impl_sqlalchemy.SearchRepo(),
         database=database,
-        signatures=SignaturesRepo(),
-        users=UsersRepo(),
+        signatures=impl_sqlalchemy.SignaturesRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
         object_storage=object_storage,
     )
 

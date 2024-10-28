@@ -2,17 +2,17 @@
 
 from uuid import UUID
 
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import exceptions
 from omoide import models
 from omoide import utils
-from omoide.storage import interfaces as storage_interfaces
 from omoide.database import db_models
+from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo
 
 
-class MetainfoRepo(storage_interfaces.AbsMetainfoRepo):
+class MetaRepo(AbsMetaRepo):
     """Repository that perform CRUD operations on metainfo."""
 
     async def create_metainfo(self, metainfo: models.Metainfo) -> None:

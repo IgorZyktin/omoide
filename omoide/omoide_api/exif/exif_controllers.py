@@ -9,11 +9,11 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.exif import exif_api_models
 from omoide.omoide_api.exif import exif_use_cases
-from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_exif_router = APIRouter(prefix='/exif', tags=['EXIF'])

@@ -4,20 +4,20 @@ from typing import Annotated
 from uuid import UUID
 
 import fastapi
-import ujson
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
+import ujson
 
 from omoide import custom_logging
+from omoide import dependencies as dep
 from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.items import item_use_cases
-from omoide import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 

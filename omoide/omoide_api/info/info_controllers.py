@@ -7,8 +7,8 @@ from fastapi import Depends
 from fastapi import status
 
 from omoide import const
-from omoide import models
 from omoide import dependencies as dep
+from omoide import models
 
 api_info_router = APIRouter(prefix='/info', tags=['Info'])
 

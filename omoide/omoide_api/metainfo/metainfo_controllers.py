@@ -7,11 +7,11 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.metainfo import metainfo_api_models
 from omoide.omoide_api.metainfo import metainfo_use_cases
-from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])

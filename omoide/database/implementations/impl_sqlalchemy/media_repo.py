@@ -7,13 +7,13 @@ import sqlalchemy as sa
 from omoide import const
 from omoide import custom_logging
 from omoide import models
-from omoide.storage import interfaces
 from omoide.database import db_models
+from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class MediaRepo(interfaces.AbsMediaRepo):
+class MediaRepo(AbsMediaRepo):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(self, media: models.Media) -> int:

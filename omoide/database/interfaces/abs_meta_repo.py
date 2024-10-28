@@ -6,7 +6,7 @@ from uuid import UUID
 from omoide import models
 
 
-class AbsMetainfoRepo(abc.ABC):
+class AbsMetaRepo(abc.ABC):
     """Repository that perform CRUD operations on metainfo records."""
 
     @abc.abstractmethod

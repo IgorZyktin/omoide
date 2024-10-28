@@ -7,12 +7,12 @@ from sqlalchemy.sql import Select
 
 from omoide import const
 from omoide import models
-from omoide.storage import interfaces as storage_interfaces
 from omoide.database import db_models
-from omoide.storage.implementations.asyncpg.repositories import queries
+from omoide.database.implementations.impl_sqlalchemy import queries
+from omoide.database.interfaces.abs_search_repo import AbsSearchRepo
 
 
-class _SearchRepositoryBase(storage_interfaces.AbsSearchRepository, abc.ABC):
+class _SearchRepositoryBase(AbsSearchRepo, abc.ABC):
     """Base class with helper methods."""
 
     @staticmethod
@@ -47,7 +47,7 @@ class _SearchRepositoryBase(storage_interfaces.AbsSearchRepository, abc.ABC):
         return stmt
 
 
-class SearchRepository(_SearchRepositoryBase):
+class SearchRepo(_SearchRepositoryBase):
     """Repository that performs all search queries."""
 
     async def count(

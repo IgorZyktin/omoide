@@ -3,17 +3,17 @@
 PostgreSQL specific because application needs arrays.
 """
 
-import os
 from datetime import datetime
+import os
 from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 
 from omoide import const
 from omoide import models

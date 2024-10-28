@@ -6,12 +6,12 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import models
-from omoide.serial_operations import SerialOperation
-from omoide.storage import interfaces
 from omoide.database import db_models
+from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo
+from omoide.serial_operations import SerialOperation
 
 
-class MiscRepo(interfaces.AbsMiscRepo):
+class MiscRepo(AbsMiscRepo):
     """Repository that performs various operations on different objects."""
 
     async def get_computed_tags(self, item: models.Item) -> set[str]:

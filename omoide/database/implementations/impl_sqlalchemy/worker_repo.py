@@ -9,7 +9,8 @@ from omoide import exceptions
 from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
-from omoide.serial_operations import SerialOperation, OperationStatus
+from omoide.serial_operations import OperationStatus
+from omoide.serial_operations import SerialOperation
 
 
 class WorkersRepo(AbsWorkersRepo[AsyncConnection]):

@@ -7,7 +7,7 @@ from omoide import const
 from omoide import models
 
 
-class AbsBrowseRepository(abc.ABC):
+class AbsBrowseRepo(abc.ABC):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod

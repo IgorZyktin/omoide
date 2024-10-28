@@ -211,9 +211,7 @@ class AimWrapper:
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)
         params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
-        params['items_per_page'] = cls.extract_int(
-            params, 'items_per_page', 25
-        )
+        params['items_per_page'] = cls.extract_int(params, 'items_per_page', 25)
 
         params['page'] = max(params['page'], 1)
 

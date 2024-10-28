@@ -6,7 +6,7 @@ from omoide import const
 from omoide import models
 
 
-class AbsSearchRepository(abc.ABC):
+class AbsSearchRepo(abc.ABC):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod

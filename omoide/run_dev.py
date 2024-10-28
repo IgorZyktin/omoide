@@ -3,8 +3,8 @@
 from fastapi import Request
 import uvicorn
 
-from omoide.presentation import app_config
 from omoide.application import app
+from omoide.presentation import app_config
 
 
 def main() -> None:

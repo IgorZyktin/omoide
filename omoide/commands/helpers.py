@@ -6,8 +6,9 @@ import contextlib
 from pathlib import Path
 import time
 from uuid import UUID
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from omoide import utils

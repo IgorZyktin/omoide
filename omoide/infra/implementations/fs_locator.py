@@ -4,14 +4,10 @@ import functools
 import os.path
 
 from omoide import models
-from omoide import interfaces
-
-__all__ = [
-    'FilesystemLocator',
-]
+from omoide.infra.interfaces.abs_locator import AbsLocator
 
 
-class FilesystemLocator(interfaces.AbsLocator):
+class FilesystemLocator(AbsLocator):
     """Helper object that generates paths for files."""
 
     def __init__(

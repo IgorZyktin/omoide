@@ -1,8 +1,8 @@
 """Global constants."""
 
-import enum
 from datetime import datetime
 from datetime import timezone
+import enum
 from typing import Literal
 from typing import TypeAlias
 from uuid import UUID

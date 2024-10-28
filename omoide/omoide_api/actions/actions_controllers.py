@@ -7,11 +7,11 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.actions import actions_api_models
 from omoide.omoide_api.actions import actions_use_cases
-from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])

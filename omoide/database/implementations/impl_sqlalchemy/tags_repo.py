@@ -1,13 +1,13 @@
 """Repository that performs operations on tags."""
 
 import abc
-import itertools
 from collections import defaultdict
 from collections.abc import Callable
+import itertools
 
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import models
 from omoide.database import db_models

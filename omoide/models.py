@@ -1,10 +1,10 @@
 """Domain-level models."""
 
-import enum
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+import enum
 from typing import Any
 from typing import NamedTuple
 from typing import Self

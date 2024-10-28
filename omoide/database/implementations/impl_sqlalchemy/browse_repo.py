@@ -8,18 +8,13 @@ from sqlalchemy.dialects import postgresql as pg
 
 from omoide import const
 from omoide import models
-from omoide.storage import interfaces as storage_interfaces
 from omoide.database import db_models
-from omoide.storage.implementations.asyncpg.repositories import queries
-from omoide.storage.implementations.asyncpg.repositories.rp_items import (
-    ItemsRepo,
-)
+from omoide.database.implementations.impl_sqlalchemy import queries
+from omoide.database.implementations.impl_sqlalchemy.rp_items import ItemsRepo
+from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo
 
 
-class BrowseRepository(
-    storage_interfaces.AbsBrowseRepository,
-    ItemsRepo,
-):
+class BrowseRepo(AbsBrowseRepo, ItemsRepo):
     """Repository that performs all browse queries."""
 
     async def get_children(

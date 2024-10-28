@@ -2,10 +2,10 @@
 
 import bcrypt
 
-from omoide import interfaces
+from omoide.infra.interfaces.abs_authenticator import AbsAuthenticator
 
 
-class BcryptAuthenticator(interfaces.AbsAuthenticator):
+class BcryptAuthenticator(AbsAuthenticator):
     """Authenticator that uses bcrypt algorithm."""
 
     def encode_password(
