@@ -26,7 +26,7 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return Item with given UUID."""
 
     @abc.abstractmethod
-    async def get_by_name(self, conn: ConnectionT, name: str,) -> models.Item:
+    async def get_by_name(self, conn: ConnectionT, name: str) -> models.Item:
         """Return Item with given name."""
 
     @abc.abstractmethod
@@ -84,3 +84,19 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def delete(self, conn: ConnectionT, item: models.Item) -> bool:
         """Delete the given item."""
+
+    @abc.abstractmethod
+    async def read_computed_tags(
+        self,
+        conn: ConnectionT,
+        uuid: UUID,
+    ) -> list[str]:
+        """Return all computed tags for the item."""
+
+    @abc.abstractmethod
+    async def count_all_children_of(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+    ) -> int:
+        """Count dependant items."""

@@ -74,7 +74,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return db_models.Item.cast(response)
 
-    async def get_by_name(self, conn: AsyncConnection, name: str,) -> models.Item:
+    async def get_by_name(self, conn: AsyncConnection, name: str) -> models.Item:
         """Return Item with given name."""
         query = sa.select(db_models.Item).where(db_models.Item.name == name)
         response = (await conn.execute(query)).first()
@@ -266,3 +266,48 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         stmt = sa.delete(db_models.Item).where(db_models.Item.id == item.id)
         response = await conn.execute(stmt)
         return bool(response.rowcount)
+
+    async def read_computed_tags(
+        self,
+        conn: AsyncConnection,
+        uuid: UUID,
+    ) -> list[str]:
+        """Return all computed tags for the item."""
+        query = sa.select(db_models.ComputedTags.tags).where(
+            db_models.ComputedTags.item_uuid == uuid,
+        )
+        response = (await conn.execute(query)).fetchone()
+
+        if response:
+            return list(response.tags)
+        return []
+
+    async def count_all_children_of(
+        self,
+        conn: AsyncConnection,
+        item: models.Item,
+    ) -> int:
+        """Count dependant items."""
+        query = """
+        WITH RECURSIVE nested_items AS (
+            SELECT parent_uuid,
+                   uuid
+            FROM items
+            WHERE uuid = :uuid
+            UNION ALL
+            SELECT i.parent_uuid,
+                   i.uuid
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+        )
+        SELECT count(*) AS total
+        FROM nested_items;
+        """
+
+        values = {'uuid': item.uuid}
+        response = (await conn.execute(sa.text(query), values)).fetchone()
+
+        if response is None:
+            return 0
+
+        return int(response.total)

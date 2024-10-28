@@ -15,7 +15,7 @@ from omoide.database.implementations.impl_sqlalchemy import queries
 from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo
 
 
-class BrowseRepo(AbsBrowseRepo):
+class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
     """Repository that performs all browse queries."""
 
     async def get_children(
@@ -349,11 +349,9 @@ class BrowseRepo(AbsBrowseRepo):
         """Get names of parents of the given items."""
         uuids = [str(x.parent_uuid) if x.parent_uuid else None for x in items]
 
-        subquery = sa.select(
-            sa.func.unnest(
-                cast(uuids, pg.ARRAY(sa.Text))
-            ).label('uuid')
-        ).subquery('given_uuid')
+        subquery = sa.select(sa.func.unnest(cast(uuids, pg.ARRAY(sa.Text))).label('uuid')).subquery(
+            'given_uuid'
+        )
 
         stmt = sa.select(subquery.c.uuid, db_models.Item.name).join(
             db_models.Item,

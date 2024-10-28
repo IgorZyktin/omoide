@@ -48,15 +48,12 @@ class AppUpdateItemUseCase(BaseAPPUseCase):
             msg = 'You are not allowed to update items'
             raise exceptions.AccessDeniedError(msg)
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
-
-            total = await self.mediator.items.count_all_children_of(item)
-            can_see = await self.mediator.users.get_users(
-                uuids=item.permissions,
-            )
-            computed_tags = await self.mediator.items.read_computed_tags(item_uuid)
-            metainfo = await self.mediator.meta.get_by_item(item)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            total = await self.mediator.items.count_all_children_of(conn, item)
+            can_see = await self.mediator.users.select(conn, uuids=item.permissions)
+            computed_tags = await self.mediator.items.read_computed_tags(conn, item_uuid)
+            metainfo = await self.mediator.meta.get_by_item(conn, item)
 
         return item, total, can_see, computed_tags, metainfo
 
@@ -74,13 +71,13 @@ class AppDeleteItemUseCase(BaseAPPUseCase):
             msg = 'You are not allowed to delete items'
             raise exceptions.AccessDeniedError(msg)
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
 
             if item.owner_uuid != user.uuid and user.is_not_admin:
                 msg = 'You must own item {item_uuid} to delete it'
                 raise exceptions.AccessDeniedError(msg, item_uuid=item_uuid)
 
-            total = await self.mediator.items.count_all_children_of(item)
+            total = await self.mediator.items.count_all_children_of(conn, item)
 
         return item, total

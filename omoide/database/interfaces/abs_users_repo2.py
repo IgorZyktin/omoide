@@ -29,13 +29,6 @@ class AbsUsersRepo(abc.ABC):
         """Return User."""
 
     @abc.abstractmethod
-    async def get_user_by_login(
-        self,
-        login: str,
-    ) -> tuple[models.User, str, int] | None:
-        """Return user+password for given login."""
-
-    @abc.abstractmethod
     async def get_users(
         self,
         uuid: UUID | None = None,
@@ -49,13 +42,6 @@ class AbsUsersRepo(abc.ABC):
     @abc.abstractmethod
     async def update_user(self, uuid: UUID, **kwargs: Any) -> None:
         """Update User."""
-
-    @abc.abstractmethod
-    async def calc_total_space_used_by(
-        self,
-        user: models.User,
-    ) -> models.SpaceUsage:
-        """Return total amount of used space for user."""
 
     @abc.abstractmethod
     async def get_public_user_uuids(self) -> set[UUID]:

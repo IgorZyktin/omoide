@@ -40,7 +40,7 @@ class UpdatePermissionsExecutor(
                     ),
                 )
 
-            public_users = await self.mediator.users.get_public_users(conn)
+            public_users = await self.mediator.users.get_public_user_uuids(conn)
             if public_users & affected_users:
                 await self.mediator.workers.create_serial_operation(
                     conn=conn,

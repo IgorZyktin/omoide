@@ -18,11 +18,11 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
         """Initiate serial operation execution."""
         self.ensure_admin(admin, subject='known tags for anon')
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for anon', admin)
 
             operation_id = await self.mediator.misc.create_serial_operation(
-                operation=so.RebuildKnownTagsAnonSO()
+                conn=conn, operation=so.RebuildKnownTagsAnonSO()
             )
 
         return operation_id
@@ -43,6 +43,7 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
                 extras={'user_uuid': str(user.uuid)},
             )
             operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
                 operation=operation,
             )
 
@@ -56,11 +57,11 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
         """Initiate serial operation execution."""
         self.ensure_admin(admin, subject='known tags for all registered users')
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for all users', admin)
 
             operation_id = await self.mediator.misc.create_serial_operation(
-                operation=so.RebuildKnownTagsAllSO()
+                conn=conn, operation=so.RebuildKnownTagsAllSO()
             )
 
         return operation_id
@@ -97,7 +98,7 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
                     'apply_to_children': True,
                 },
             )
-            operation_id = await self.mediator.misc.create_serial_operation(operation)
+            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         return owner, item, operation_id
 

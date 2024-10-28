@@ -163,7 +163,7 @@ class TagsRepo(_TagsRepoHelper):
             db_models.ComputedTags.item_uuid == item.uuid
         )
         response = (await conn.execute(stmt)).scalar()
-        return set(response)
+        return set(response.tags)
 
     async def save_computed_tags(
         self,

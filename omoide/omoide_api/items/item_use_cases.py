@@ -33,7 +33,7 @@ class CreateItemsUseCase(BaseItemUseCase):
         all_computed_tags: set[str] = set()
         all_affected_users: set[models.User] = set()
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
                 item = await self.create_one_item(user, **raw_item)
                 items.append(item)
@@ -45,45 +45,45 @@ class CreateItemsUseCase(BaseItemUseCase):
             [str(item.uuid) for item in items],
         )
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             parents: dict[UUID, models.Item] = {}
             for item in items:
                 if item.parent_uuid is not None and item.parent_uuid not in parents:
-                    parent = await self.mediator.items.get_item(
-                        uuid=item.parent_uuid,
-                    )
+                    parent = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
                     parents[parent.uuid] = parent
 
             parent_computed_tags: dict[UUID, set[str]] = {}
             for parent in parents.values():
                 parent_tags = await self.mediator.misc.get_computed_tags(
+                    conn,
                     item=parent,
                 )
                 parent_computed_tags[parent.uuid] = parent_tags
 
             for item in items:
                 new_users, new_tags = await self.post_item_creation(
+                    conn=conn,
                     item=item,
                     parent_computed_tags=parent_computed_tags,
                 )
                 all_computed_tags.update(new_tags)
                 all_affected_users.update(new_users)
 
-        async with self.mediator.database.transaction():
-            for affected_user in all_affected_users:
-                await self.mediator.misc.incr_known_tags_known(
-                    user=affected_user,
-                    tags=all_computed_tags,
-                )
-
-            public = await self.mediator.users.get_public_user_uuids()
-            users_uuids = {user.uuid for user in all_affected_users}
-            anon_affected = users_uuids.intersection(public)
-
-            if anon_affected:
-                await self.mediator.misc.incr_known_tags_anon(
-                    tags=all_computed_tags,
-                )
+        # async with self.mediator.database.transaction() as conn:
+        #     for affected_user in all_affected_users:
+        #         await self.mediator.misc.incr_known_tags_known(
+        #             user=affected_user,
+        #             tags=all_computed_tags,
+        #         )
+        #
+        #     public = await self.mediator.users.get_public_user_uuids()
+        #     users_uuids = {user.uuid for user in all_affected_users}
+        #     anon_affected = users_uuids.intersection(public)
+        #
+        #     if anon_affected:
+        #         await self.mediator.misc.incr_known_tags_anon(
+        #             tags=all_computed_tags,
+        #         )
 
         duration = time.perf_counter() - start
         return duration, items
@@ -197,8 +197,7 @@ class RenameItemUseCase(BaseItemUseCase):
                     'apply_to_children': True,
                 },
             )
-            repo = self.mediator.misc
-            operation_id = await repo.create_serial_operation(operation)
+            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         return operation_id
 
@@ -253,8 +252,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                     'apply_to_children': True,
                 },
             )
-            repo = self.mediator.misc
-            operation_id = await repo.create_serial_operation(operation)
+            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
             # TODO - need to update known tags for both old and new parents
             # TODO - need to copy image from the item to new parent
@@ -292,8 +290,7 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
                     'apply_to_children': True,
                 },
             )
-            repo = self.mediator.misc
-            operation_id = await repo.create_serial_operation(operation)
+            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         return operation_id
 
@@ -309,12 +306,10 @@ class DeleteItemUseCase(BaseItemUseCase):
     ) -> models.Item | None:
         """Execute."""
         self.ensure_not_anon(owner, operation='delete items')
-        repo = self.mediator.misc
         switch_to = None
 
         async with self.mediator.database.transaction() as conn:
-            _ = conn  # FIXME
-            item = await self.mediator.items.get_item(item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(owner, item, subject='items')
 
             if item.parent_uuid is None:
@@ -322,10 +317,10 @@ class DeleteItemUseCase(BaseItemUseCase):
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'parent':
-                switch_to = await self.mediator.items.get_item(item.parent_uuid)
+                switch_to = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
 
             elif desired_switch == 'sibling':
-                siblings = await self.mediator.items.get_siblings(item)
+                siblings = await self.mediator.items.get_siblings(conn, item)
                 if len(siblings) > 1:
                     index = siblings.index(item)
                     last = len(siblings) - 1
@@ -338,29 +333,28 @@ class DeleteItemUseCase(BaseItemUseCase):
             LOG.info('{} is deleting {}', owner, item)
 
         async with self.mediator.database.transaction() as conn:
-            _ = conn  # FIXME
             # heavy recursive call
-            await self.delete_one_item(item)
+            await self.delete_one_item(conn, item)
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             operation = so.DropVisibilitySO(
                 extras={'item_uuid': str(item_uuid)},
             )
-            await repo.create_serial_operation(operation)
+            await self.mediator.misc.create_serial_operation(conn, operation)
 
         return switch_to
 
-    async def delete_one_item(self, item: models.Item) -> None:
+    async def delete_one_item(self, conn, item: models.Item) -> None:
         """Delete item with all corresponding media."""
         # TODO - perform soft delete here
-        children = await self.mediator.items.get_children(item)
+        children = await self.mediator.items.get_children(conn, item)
 
         for child in children:
-            await self.delete_one_item(child)
+            await self.delete_one_item(conn, child)
 
         await self.mediator.object_storage.delete_all_objects(item)
         LOG.warning('Deleting item {}', item)
-        await self.mediator.items.delete_item(conn, item)
+        await self.mediator.items.delete(conn, item)
 
 
 class BaseUploadUseCase(BaseAPIUseCase):
@@ -378,8 +372,8 @@ class BaseUploadUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation=f'upload {self.media_type}')
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject=f'item {self.media_type} data')
 
             LOG.info('{} is uploading {} for {}', user, self.media_type, item)
@@ -421,10 +415,10 @@ class DownloadCollectionUseCase(BaseItemUseCase):
         """Execute."""
         lines: list[str] = []
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
-            owner = await self.mediator.users.get_user_by_uuid(item.owner_uuid)
-            public_users = await self.mediator.users.get_public_user_uuids()
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            owner = await self.mediator.users.get_by_uuid(conn, item.owner_uuid)
+            public_users = await self.mediator.users.get_public_user_uuids(conn)
 
             if all(
                 (
@@ -437,7 +431,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
                 msg = 'Item {item_uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-            children = await self.mediator.items.get_children(item)
+            children = await self.mediator.items.get_children(conn, item)
 
         # TODO - remove transaction splitting
         async with self.mediator.database.transaction() as conn:
@@ -446,8 +440,8 @@ class DownloadCollectionUseCase(BaseItemUseCase):
                 items=children,
             )
 
-        async with self.mediator.database.transaction():
-            metainfos = await self.mediator.meta.get_metainfos(children)
+        async with self.mediator.database.transaction() as conn:
+            metainfos = await self.mediator.meta.get_metainfos(conn, children)
             valid_children = [
                 child
                 for child in children
@@ -535,8 +529,8 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
         apply_to_children_as: const.ApplyAs,
     ) -> int | None:
         """Execute."""
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='item permissions')
 
             LOG.info('{} is updating permissions of {}', user, item)
@@ -559,9 +553,9 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                         'apply_to_children_as': apply_to_children_as.value,
                     },
                 )
-                operation_id = await repo.create_serial_operation(operation)
+                operation_id = await repo.create_serial_operation(conn, operation)
 
             item.permissions = permissions
-            await self.mediator.items.update_item(item)
+            await self.mediator.items.save(conn, item)
 
         return operation_id

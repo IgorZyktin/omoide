@@ -13,13 +13,13 @@ from omoide.database import db_models
 from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo
 
 
-class MetaRepo(AbsMetaRepo):
+class MetaRepo(AbsMetaRepo[AsyncConnection]):
     """Repository that perform CRUD operations on metainfo."""
 
-    async def create_metainfo(self, metainfo: models.Metainfo) -> None:
+    async def create(self, conn: AsyncConnection, metainfo: models.Metainfo) -> None:
         """Create metainfo."""
         stmt = sa.insert(db_models.Metainfo).values(**metainfo.model_dump())
-        await self.db.execute(stmt)
+        await conn.execute(stmt)
 
     async def get_by_item(self, conn: AsyncConnection, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
@@ -31,10 +31,11 @@ class MetaRepo(AbsMetaRepo):
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
 
-        return models.Metainfo(**response._mapping)
+        return db_models.Metainfo.cast(response)
 
     async def get_metainfos(
         self,
+        conn: AsyncConnection,
         items: list[models.Item],
     ) -> dict[UUID, models.Metainfo | None]:  # TODO use item_id, not UUID
         """Return many metainfo records."""
@@ -47,15 +48,17 @@ class MetaRepo(AbsMetaRepo):
             )
         )
 
-        response = await self.db.fetch_all(query)
+        response = (await conn.execute(query)).fetchall()
+
         for row in response:
-            model = models.Metainfo(**row)
+            model = db_models.Metainfo.cast(row)
             metainfos[model.item_uuid] = model
 
         return metainfos
 
     async def update_metainfo(
         self,
+        conn: AsyncConnection,
         item_uuid: UUID,
         metainfo: models.Metainfo,
     ) -> None:
@@ -67,13 +70,13 @@ class MetaRepo(AbsMetaRepo):
             .returning(1)
         )
 
-        response = await self.db.execute(stmt)
+        response = await conn.execute(stmt)
 
         if response is None:
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-    async def mark_metainfo_updated(self, item_uuid: UUID) -> None:
+    async def mark_metainfo_updated(self, conn: AsyncConnection, item_uuid: UUID) -> None:
         """Set last updated to current datetime."""
         stmt = (
             sa.update(db_models.Metainfo)
@@ -82,7 +85,7 @@ class MetaRepo(AbsMetaRepo):
             .returning(1)
         )
 
-        response = await self.db.execute(stmt)
+        response = await conn.execute(stmt)
 
         if response is None:
             msg = 'Metainfo for item {item_uuid} does not exist'
@@ -114,10 +117,11 @@ class MetaRepo(AbsMetaRepo):
 
     async def get_total_disk_usage(
         self,
+        conn: AsyncConnection,
         user: models.User,
     ) -> models.DiskUsage:
         """Return total disk usage for specified user."""
-        stmt = (
+        query = (
             sa.select(
                 sa.func.sum(sa.func.coalesce(db_models.Metainfo.content_size, 0)).label(
                     'content_bytes'
@@ -136,6 +140,6 @@ class MetaRepo(AbsMetaRepo):
             .where(db_models.Item.owner_uuid == user.uuid)
         )
 
-        response = await self.db.fetch_one(stmt)
+        response = (await conn.execute(query)).fetchone()
 
-        return models.DiskUsage(**response)
+        return models.DiskUsage(**response._mapping)

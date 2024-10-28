@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import const
 from omoide import custom_logging
@@ -16,7 +17,7 @@ LOG = custom_logging.get_logger(__name__)
 class MediaRepo(AbsMediaRepo):
     """Repository that perform CRUD operations on media."""
 
-    async def create_media(self, media: models.Media) -> int:
+    async def create_media(self, conn: AsyncConnection, media: models.Media) -> int:
         """Create Media, return media id."""
         stmt = (
             sa.insert(db_models.Media)
@@ -24,10 +25,10 @@ class MediaRepo(AbsMediaRepo):
             .returning(db_models.Media.id)
         )
 
-        media_id = await self.db.execute(stmt)
+        media_id = (await conn.execute(stmt)).scalar()
         return int(media_id)
 
-    async def delete_processed_media(self, user: models.User) -> int:
+    async def delete_processed_media(self, conn: AsyncConnection, user: models.User) -> int:
         """Delete fully downloaded media rows."""
         stmt = sa.delete(db_models.Media).where(
             db_models.Media.processed_at != sa.null(),
@@ -35,21 +36,22 @@ class MediaRepo(AbsMediaRepo):
             db_models.Media.owner_uuid == user.uuid,
         )
 
-        response = await self.db.execute(stmt)
+        response = await conn.execute(stmt)
         return int(response.rowcount)
 
-    async def delete_all_processed_media(self) -> int:
+    async def delete_all_processed_media(self, conn: AsyncConnection) -> int:
         """Delete fully downloaded media rows."""
         stmt = sa.delete(db_models.Media).where(
             db_models.Media.processed_at != sa.null(),
             db_models.Media.error == sa.null(),
         )
 
-        response = await self.db.execute(stmt)
+        response = await conn.execute(stmt)
         return int(response.rowcount)
 
     async def copy_image(
         self,
+        conn: AsyncConnection,
         source_item: models.Item,
         target_item: models.Item,
         media_type: const.MEDIA_TYPE,
@@ -72,11 +74,12 @@ class MediaRepo(AbsMediaRepo):
             .returning(db_models.CommandCopy.id)
         )
 
-        copy_id = await self.db.execute(stmt)
+        copy_id = (await conn.execute(stmt)).scalar()
         return int(copy_id)
 
     async def mark_file_as_orphan(
         self,
+        conn: AsyncConnection,
         item: models.Item,
         media_type: const.MEDIA_TYPE,
         ext: str,
@@ -90,4 +93,4 @@ class MediaRepo(AbsMediaRepo):
             ext=ext,
             moment=moment,
         )
-        await self.db.execute(stmt)
+        await conn.execute(stmt)

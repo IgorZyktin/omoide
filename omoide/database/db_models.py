@@ -518,6 +518,27 @@ class Metainfo(Base):
         'Item', passive_deletes=True, back_populates='metainfo', uselist=False
     )
 
+    @staticmethod
+    def cast(row: sa.Row) -> models.Metainfo:
+        """Convert to domain-level object."""
+        return models.Metainfo(
+            item_uuid=row.item_uuid,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+            deleted_at=row.deleted_at,
+            user_time=row.user_time,
+            content_type=row.content_type,
+            content_size=row.content_size,
+            preview_size=row.preview_size,
+            thumbnail_size=row.thumbnail_size,
+            content_width=row.content_width,
+            content_height=row.content_height,
+            preview_width=row.preview_width,
+            preview_height=row.preview_height,
+            thumbnail_width=row.thumbnail_width,
+            thumbnail_height=row.thumbnail_height,
+        )
+
 
 class ItemNote(Base):
     """Additional info for items."""

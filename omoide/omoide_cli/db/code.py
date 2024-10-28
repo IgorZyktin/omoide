@@ -40,7 +40,6 @@ async def copy_images_from_children(
     async with database.transaction() as conn:
         rows = await get_items_without_images(conn, only_users, only_items, limit)
         for item_uuid, name, copied_image_from_uuid in rows:
-
             changed = False
             target_item = await items.get_by_uuid(conn, item_uuid)
 
@@ -111,24 +110,28 @@ async def get_items_without_images(
     limit: int | None,
 ) -> list[tuple[UUID, str, str | None]]:
     """Return all items without images."""
-    query = sa.select(
-        db_models.Item.uuid,
-        db_models.Item.name,
-        db_models.ItemNote.value,
-    ).where(
-        sa.or_(
-            db_models.Item.content_ext == sa.null(),
-            db_models.Item.preview_ext == sa.null(),
-            db_models.Item.thumbnail_ext == sa.null(),
-        ),
-        sa.or_(
-            db_models.ItemNote.key == sa.null(),
-            db_models.ItemNote.key == 'copied_image_from',
+    query = (
+        sa.select(
+            db_models.Item.uuid,
+            db_models.Item.name,
+            db_models.ItemNote.value,
         )
-    ).join(
-        db_models.ItemNote,
-        db_models.ItemNote.item_id == db_models.Item.id,
-        isouter=True,
+        .where(
+            sa.or_(
+                db_models.Item.content_ext == sa.null(),
+                db_models.Item.preview_ext == sa.null(),
+                db_models.Item.thumbnail_ext == sa.null(),
+            ),
+            sa.or_(
+                db_models.ItemNote.key == sa.null(),
+                db_models.ItemNote.key == 'copied_image_from',
+            ),
+        )
+        .join(
+            db_models.ItemNote,
+            db_models.ItemNote.item_id == db_models.Item.id,
+            isouter=True,
+        )
     )
 
     if only_users is not None:

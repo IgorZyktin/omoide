@@ -144,6 +144,7 @@ class BaseItemUseCase(BaseAPIUseCase):
 
     async def create_one_item(
         self,
+        conn,
         user: models.User,
         uuid: UUID | None,
         parent_uuid: UUID | None,
@@ -205,13 +206,14 @@ class BaseItemUseCase(BaseAPIUseCase):
             thumbnail_height=None,
         )
 
-        await self.mediator.items.create_item(item)
-        await self.mediator.meta.create_metainfo(metainfo)
+        await self.mediator.items.create(conn, item)
+        await self.mediator.meta.create(conn, metainfo)
 
         return item
 
     async def post_item_creation(
         self,
+        conn,
         item: models.Item,
         parent_computed_tags: dict[UUID, set[str]],
     ) -> tuple[set[models.User], set[str]]:
@@ -219,9 +221,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         affected_users: list[models.User] = []
 
         if item.permissions:
-            affected_users = await self.mediator.users.get_users(
-                uuids=item.permissions,
-            )
+            affected_users = await self.mediator.users.select(conn, uuids=item.permissions)
 
         computed_tags = await self.mediator.misc.update_computed_tags(
             item=item,

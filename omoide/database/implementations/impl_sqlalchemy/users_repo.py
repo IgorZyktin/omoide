@@ -68,6 +68,21 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         return db_models.User.cast(response)
 
+    async def get_by_login(
+        self,
+        conn: AsyncConnection,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
+        query = sa.select(db_models.User).where(db_models.User.login == login)
+        response = (await conn.execute(query)).fetchone()
+
+        if response is None:
+            return None
+
+        user = db_models.User.cast(response)
+        return user, response.password, response.auth_complexity
+
     async def select(
         self,
         conn: AsyncConnection,
@@ -103,6 +118,23 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         response = (await conn.execute(query)).fetchall()
         return [db_models.User.cast(row) for row in response]
+
+    async def save(self, conn: AsyncConnection, user: models.User) -> bool:
+        """Save given user."""
+        stmt = (
+            sa.update(db_models.User)
+            .values(
+                name=user.name,
+                login=user.login,
+                role=user.role.value,
+                is_public=user.is_public,
+                registered_at=user.registered_at,
+                last_login=user.last_login,
+            )
+            .where(db_models.User.id == user.id)
+        )
+        response = await conn.execute(stmt)
+        return bool(response.rowcount)
 
     async def delete(self, conn: AsyncConnection, user: models.User) -> bool:
         """Delete given user."""
@@ -143,10 +175,55 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         if users:
             query = query.where(
-                db_models.Item.owner_uuid.in_(
-                    tuple(str(user.uuid) for user in users)
-                )
+                db_models.Item.owner_uuid.in_(tuple(str(user.uuid) for user in users))
             )
 
         response = (await conn.execute(query)).fetchall()
         return [db_models.Item.cast(row) for row in response]
+
+    async def calc_total_space_used_by(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+    ) -> models.SpaceUsage:
+        """Return total amount of used space for user."""
+        query = (
+            sa.select(
+                sa.func.sum(db_models.Metainfo.content_size).label('content_size'),
+                sa.func.sum(db_models.Metainfo.preview_size).label('preview_size'),
+                sa.func.sum(db_models.Metainfo.thumbnail_size).label('thumbnail_size'),
+            )
+            .join(
+                db_models.Item,
+                db_models.Item.uuid == db_models.Metainfo.item_uuid,
+            )
+            .where(db_models.Item.owner_uuid == str(user.uuid))
+        )
+
+        response = (await conn.execute(query)).fetchone()
+
+        return models.SpaceUsage(
+            uuid=user.uuid,
+            content_size=response.content_size or 0,
+            preview_size=response.preview_size or 0,
+            thumbnail_size=response.thumbnail_size or 0,
+        )
+
+    async def count_items_by_owner(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        collections: bool = False,
+    ) -> int:
+        """Return total amount of items for given user uuid."""
+        query = (
+            sa.select(sa.func.count().label('total_items'))
+            .select_from(db_models.Item)
+            .where(db_models.Item.owner_uuid == user.uuid)
+        )
+
+        if collections:
+            query = query.where(db_models.Item.is_collection)
+
+        response = (await conn.execute(query)).fetchone()
+        return int(response.total_items)

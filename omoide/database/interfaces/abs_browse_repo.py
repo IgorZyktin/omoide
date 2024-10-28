@@ -1,6 +1,7 @@
 """Repository that performs all browse queries."""
 
 import abc
+from typing import Generic
 from typing import TypeVar
 from uuid import UUID
 
@@ -10,7 +11,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsBrowseRepo(abc.ABC):
+class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod

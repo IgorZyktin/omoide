@@ -23,7 +23,7 @@ class CreateEXIFUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='add EXIF data')
 
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_item(item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
             LOG.info('{} is creating EXIF for {}', user, item)
@@ -40,7 +40,7 @@ class ReadEXIFUseCase(BaseAPIUseCase):
     ) -> dict[str, Any]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_item(item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner_or_allowed_to(user, item, subject='EXIF data')
 
             exif = await self.mediator.exif.get_by_item(conn, item)

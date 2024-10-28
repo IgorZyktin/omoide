@@ -1,6 +1,5 @@
 """Manual CLI operations."""
 
-
 import click
 from pydantic import SecretStr
 

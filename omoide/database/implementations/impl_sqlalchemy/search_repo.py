@@ -117,9 +117,7 @@ class SearchRepo(_SearchRepositoryBase):
     ) -> list[models.Item]:
         """Return home items for anon."""
         query = sa.select(db_models.Item).where(
-            db_models.Item.owner_uuid.in_(
-                sa.select(db_models.PublicUsers.user_uuid)
-            )
+            db_models.Item.owner_uuid.in_(sa.select(db_models.PublicUsers.user_uuid))
         )
 
         if collections:

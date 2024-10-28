@@ -45,15 +45,17 @@ class CreateUserUseCase(BaseItemUseCase):
             auth_complexity=const.AUTH_COMPLEXITY,
         )
 
-        async with self.mediator.database.transaction():
-            await self.mediator.users.create_user(
-                user,
+        async with self.mediator.database.transaction() as conn:
+            await self.mediator.users.create(
+                conn=conn,
+                user=user,
                 encoded_password=encoded_password,
                 auth_complexity=const.AUTH_COMPLEXITY,
             )
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             item = await self.create_one_item(
+                conn=conn,
                 user=user,
                 uuid=None,
                 parent_uuid=None,
@@ -61,8 +63,8 @@ class CreateUserUseCase(BaseItemUseCase):
                 name=user.name,
                 is_collection=True,
                 number=None,
-                tags=[user.name],
-                permissions=[],
+                tags={user.name},
+                permissions=set(),
             )
 
             extras = {'root_item': item.uuid}
@@ -93,7 +95,8 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
                 new_name,
             )
 
-            await self.mediator.users.update_user(conn, user_uuid, name=new_name)
+            target_user.name = new_name
+            await self.mediator.users.save(conn, target_user)
 
             root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
@@ -126,7 +129,8 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
                 new_login,
             )
 
-            await self.mediator.users.update_user(user_uuid, login=new_login)
+            target_user.login = new_login
+            await self.mediator.users.save(conn, target_user)
 
             root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
@@ -152,9 +156,7 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
 
             LOG.info('User {} is updating user {} password', user, target_user)
 
-            pack = await self.mediator.users.get_user_by_login(
-                login=target_user.login,
-            )
+            pack = await self.mediator.users.get_by_login(conn, target_user.login)
             _, password, auth_complexity = pack
 
             # TODO - what if new password is the same as previous one?
@@ -230,11 +232,12 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
-            disk_usage = await self.mediator.meta.get_total_disk_usage(target_user)
+            disk_usage = await self.mediator.meta.get_total_disk_usage(conn, target_user)
 
-            total_items = await self.mediator.items.count_items_by_owner(target_user)
+            total_items = await self.mediator.users.count_items_by_owner(conn, target_user)
 
-            total_collections = await self.mediator.items.count_items_by_owner(
+            total_collections = await self.mediator.users.count_items_by_owner(
+                conn,
                 target_user,
                 collections=True,
             )

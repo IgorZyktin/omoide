@@ -190,7 +190,7 @@ def make_locator(
         content_ext=item.content_ext,
         preview_ext=item.preview_ext,
         thumbnail_ext=item.thumbnail_ext,
-        tags=[],
+        tags=set(),
         permissions=set(),
     )
 
