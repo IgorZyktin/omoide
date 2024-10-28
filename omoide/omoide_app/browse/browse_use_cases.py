@@ -21,7 +21,7 @@ class BaseBrowseUseCase(BaseAPPUseCase):
         item: models.Item,
     ) -> None:
         """Raise if user has no access to this item."""
-        public_users = await self.mediator.users_repo.get_public_user_uuids()
+        public_users = await self.mediator.users.get_public_user_uuids()
 
         allowed_to = any(
             (
@@ -46,13 +46,13 @@ class AppBrowseDynamicUseCase(BaseBrowseUseCase):
         item_uuid: UUID,
     ) -> tuple[list[models.Item], models.Item, models.Metainfo]:
         """Return browse model suitable for rendering."""
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items.get_item(item_uuid)
 
             await self._ensure_allowed_to(user, item)
 
-            parents = await self.mediator.items_repo.get_parents(item)
-            metainfo = await self.mediator.meta_repo.read_metainfo(item)
+            parents = await self.mediator.items.get_parents(item)
+            metainfo = await self.mediator.meta.read_metainfo(item)
 
         return parents, item, metainfo
 
@@ -80,21 +80,21 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
         aim: web.Aim,
     ) -> BrowseResult:
         """Return browse model suitable for rendering."""
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items.get_item(item_uuid)
 
             await self._ensure_allowed_to(user, item)
 
-            parents = await self.mediator.items_repo.get_parents(item)
-            children = await self.mediator.browse_repo.get_children(
+            parents = await self.mediator.items.get_parents(item)
+            children = await self.mediator.browse.get_children(
                 item=item,
                 offset=aim.offset,
                 limit=aim.items_per_page,
             )
 
-            names = await self.mediator.browse_repo.get_parent_names(children)
-            total_items = await self.mediator.browse_repo.count_children(item)
-            metainfo = await self.mediator.meta_repo.read_metainfo(item)
+            names = await self.mediator.browse.get_parent_names(children)
+            total_items = await self.mediator.browse.count_children(item)
+            metainfo = await self.mediator.meta.read_metainfo(item)
 
         return BrowseResult(
             item=item,

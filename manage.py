@@ -1,4 +1,5 @@
 """Manual CLI operations."""
+from typing import Any
 
 import click
 from pydantic import SecretStr
@@ -26,7 +27,7 @@ def cli() -> None:
     '--only-users',
     help='Apply to one or more specially listed users (comma separated)',
 )
-def command_force_cover_copying(**kwargs) -> None:
+def command_force_cover_copying(**kwargs: str | bool) -> None:
     """Force collections to explicitly write origins of their thumbnails.
 
     May require you to run it more than one time.
@@ -34,7 +35,7 @@ def command_force_cover_copying(**kwargs) -> None:
     from omoide.commands.force_thumbnail_copying import cfg
     from omoide.commands.force_thumbnail_copying import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
 
     only_users = []
     if kwargs.pop('only_users', ''):
@@ -91,12 +92,12 @@ def command_force_cover_copying(**kwargs) -> None:
     default='',
     help='Item from which we should start',
 )
-def command_refresh_file_sizes_in_db(**kwargs) -> None:
+def command_refresh_file_sizes_in_db(**kwargs: str | int | bool) -> None:
     """Recalculate all file sizes for every item."""
     from omoide.commands.refresh_file_sizes_in_db import cfg
     from omoide.commands.refresh_file_sizes_in_db import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
 
     only_users = []
     if kwargs.pop('only_users', ''):
@@ -153,12 +154,12 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     default=-1,
     help='Maximum amount of items to process (-1 for infinity)',
 )
-def command_rebuild_image_sizes(**kwargs) -> None:
+def command_rebuild_image_sizes(**kwargs: int | str | bool) -> None:
     """Rebuild all content/preview/thumbnail sizes."""
     from omoide.commands.rebuild_image_sizes import cfg
     from omoide.commands.rebuild_image_sizes import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
 
     only_users = []
     if kwargs.pop('only_users', ''):

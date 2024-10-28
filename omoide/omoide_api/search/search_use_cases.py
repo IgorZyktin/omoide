@@ -24,8 +24,8 @@ class AutocompleteUseCase(BaseAPIUseCase):
         if len(tag) < minimal_length:
             return []
 
-        repo = self.mediator.search_repo
-        async with self.mediator.storage.transaction():
+        repo = self.mediator.search
+        async with self.mediator.database.transaction():
             if user.is_anon:
                 variants = await repo.autocomplete_tag_anon(
                     tag=tag, limit=limit
@@ -51,15 +51,15 @@ class RecentUpdatesUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='read recently updated items')
 
-        async with self.mediator.storage.transaction():
-            items = await self.mediator.browse_repo.get_recently_updated_items(
+        async with self.mediator.database.transaction():
+            items = await self.mediator.browse.get_recently_updated_items(
                 user=user,
                 order=order,
                 collections=collections,
                 last_seen=last_seen,
                 limit=limit,
             )
-            names = await self.mediator.browse_repo.get_parent_names(items)
+            names = await self.mediator.browse.get_parent_names(items)
 
         return items, names
 
@@ -113,8 +113,8 @@ class ApiSearchTotalUseCase(BaseSearchUseCase):
         start = time.perf_counter()
         tags_include, tags_exclude = self.parse_tags(query)
 
-        async with self.mediator.storage.transaction():
-            total = await self.mediator.search_repo.count(
+        async with self.mediator.database.transaction():
+            total = await self.mediator.search.count(
                 user=user,
                 tags_include=tags_include,
                 tags_exclude=tags_exclude,
@@ -150,8 +150,8 @@ class ApiSearchUseCase(BaseSearchUseCase):
         start = time.perf_counter()
         tags_include, tags_exclude = self.parse_tags(query)
 
-        async with self.mediator.storage.transaction():
-            items = await self.mediator.search_repo.search(
+        async with self.mediator.database.transaction():
+            items = await self.mediator.search.search(
                 user,
                 tags_include=tags_include,
                 tags_exclude=tags_exclude,
@@ -160,7 +160,7 @@ class ApiSearchUseCase(BaseSearchUseCase):
                 last_seen=last_seen,
                 limit=limit,
             )
-            names = await self.mediator.browse_repo.get_parent_names(items)
+            names = await self.mediator.browse.get_parent_names(items)
 
         duration = time.perf_counter() - start
 

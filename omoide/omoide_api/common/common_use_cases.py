@@ -178,9 +178,9 @@ class BaseItemUseCase(BaseAPIUseCase):
             raise exceptions.NotAllowedError(msg)
 
         if parent_uuid is None:
-            parent = await self.mediator.items_repo.get_root_item(user)
+            parent = await self.mediator.items.get_root_item(user)
         else:
-            parent = await self.mediator.items_repo.get_item(parent_uuid)
+            parent = await self.mediator.items.get_item(parent_uuid)
             if parent.owner_uuid != user.uuid:
                 raise exceptions.NotAllowedError(msg)
 
@@ -206,7 +206,6 @@ class BaseItemUseCase(BaseAPIUseCase):
             deleted_at=None,
             user_time=None,
             content_type=None,
-            extras={},
             content_size=None,
             preview_size=None,
             thumbnail_size=None,
@@ -218,8 +217,8 @@ class BaseItemUseCase(BaseAPIUseCase):
             thumbnail_height=None,
         )
 
-        await self.mediator.items_repo.create_item(item)
-        await self.mediator.meta_repo.create_metainfo(metainfo)
+        await self.mediator.items.create_item(item)
+        await self.mediator.meta.create_metainfo(metainfo)
 
         return item
 
@@ -232,11 +231,11 @@ class BaseItemUseCase(BaseAPIUseCase):
         affected_users: list[models.User] = []
 
         if item.permissions:
-            affected_users = await self.mediator.users_repo.get_users(
+            affected_users = await self.mediator.users.get_users(
                 uuids=item.permissions,
             )
 
-        computed_tags = await self.mediator.misc_repo.update_computed_tags(
+        computed_tags = await self.mediator.misc.update_computed_tags(
             item=item,
             parent_computed_tags=parent_computed_tags.get(item.uuid, set()),
         )

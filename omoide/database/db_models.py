@@ -10,7 +10,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -19,11 +19,14 @@ from omoide import const
 from omoide import models
 
 metadata = sa.MetaData()
-Base = declarative_base(metadata=metadata)
 
 HUGE = 1024
 MEDIUM = 256
 SMALL = 64
+
+
+class Base(DeclarativeBase):
+    """Base model type."""
 
 
 class Role(Base):

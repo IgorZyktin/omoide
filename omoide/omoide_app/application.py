@@ -7,12 +7,13 @@ from collections.abc import Iterator
 from contextlib import asynccontextmanager
 import os
 from typing import Any
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from omoide.omoide_app.auth import auth_controllers
-from omoide.omoide_app.browse import browse_controller
+from omoide.omoide_app.browse import browse_controllers
 from omoide.omoide_app.home import home_controllers
 from omoide.omoide_app.items import item_controllers
 from omoide.omoide_app.preview import preview_controllers
@@ -28,8 +29,9 @@ def get_app() -> FastAPI:
     """Create app instance."""
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):  # noqa
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         """Application lifespan."""
+        _ = app
         await dep.get_database().connect()
         yield
         await dep.get_database().disconnect()
@@ -62,7 +64,7 @@ def get_app() -> FastAPI:
 def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
     current_app.include_router(auth_controllers.app_auth_router)
-    current_app.include_router(browse_controller.app_browse_router)
+    current_app.include_router(browse_controllers.app_browse_router)
     current_app.include_router(home_controllers.app_home_router)
     current_app.include_router(item_controllers.app_items_router)
     current_app.include_router(preview_controllers.app_preview_router)

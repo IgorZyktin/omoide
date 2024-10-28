@@ -38,8 +38,8 @@ class ItemInput(BaseModel):
     name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    tags: set[str] = Field([], max_length=MAX_TAGS)
-    permissions: list[UUID] = Field([], max_length=MAX_PERMISSIONS)
+    tags: set[str] = Field(set(), max_length=MAX_TAGS)
+    permissions: set[UUID] = Field(set(), max_length=MAX_PERMISSIONS)
 
     @model_validator(mode='after')
     def check_tags(self) -> Self:

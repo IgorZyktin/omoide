@@ -13,7 +13,7 @@ from omoide import utils
 
 MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
 
-_BASE_EXAMPLE = {
+_BASE_EXAMPLE: dict[str, int | str | dict] = {
     'user_time': '2022-02-16 19:51:14.321331+00:00',
     'content_type': 'image/jpeg',
     'extras': {'original_file_name': 'IMG_6607.jpg'},

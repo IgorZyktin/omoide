@@ -22,9 +22,9 @@ class ApiHomeUseCase(BaseAPIUseCase):
     ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
         """Perform search request."""
         start = time.perf_counter()
-        repo = self.mediator.search_repo
+        repo = self.mediator.search
 
-        async with self.mediator.storage.transaction():
+        async with self.mediator.database.transaction():
             if user.is_anon:
                 items = await repo.get_home_items_for_anon(
                     order=order,
@@ -44,7 +44,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
                     limit=limit,
                 )
 
-            names = await self.mediator.browse_repo.get_parent_names(items)
+            names = await self.mediator.browse.get_parent_names(items)
 
         duration = time.perf_counter() - start
 

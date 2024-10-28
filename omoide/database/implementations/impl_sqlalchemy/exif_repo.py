@@ -65,7 +65,7 @@ class EXIFRepo(AbsEXIFRepo[AsyncConnection]):
         )
 
         response = await conn.execute(stmt)
-        return int(response.rowcount)
+        return bool(response.rowcount)
 
     async def delete(
         self,

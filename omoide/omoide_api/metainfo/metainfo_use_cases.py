@@ -21,13 +21,13 @@ class ReadMetainfoUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='read metainfo records')
 
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items.get_item(item_uuid)
             self.ensure_admin_or_owner_or_allowed_to(
                 user, item, subject='item metadata'
             )
 
-            metainfo = await self.mediator.meta_repo.read_metainfo(item)
+            metainfo = await self.mediator.meta.read_metainfo(item)
 
         return metainfo
 
@@ -44,13 +44,13 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update metainfo records')
 
-        async with self.mediator.storage.transaction():
-            item = await self.mediator.items_repo.get_item(item_uuid)
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items.get_item(item_uuid)
             self.ensure_admin_or_owner(user, item, subject='item metadata')
 
             LOG.info('Updating metainfo for {}, command by {}', item, user)
 
-            current_metainfo = await self.mediator.meta_repo.read_metainfo(
+            current_metainfo = await self.mediator.meta.read_metainfo(
                 item
             )
 
@@ -68,6 +68,6 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
             current_metainfo.thumbnail_width = metainfo.thumbnail_width
             current_metainfo.thumbnail_height = metainfo.thumbnail_height
 
-            await self.mediator.meta_repo.update_metainfo(
+            await self.mediator.meta.update_metainfo(
                 item_uuid, current_metainfo
             )

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from omoide import const
 from omoide import custom_logging
-from omoide import domain
 from omoide import infra
+from omoide import models
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.refresh_file_sizes_in_db.cfg import Config
@@ -91,7 +91,8 @@ def update_size(
     base_folder: str,
 ) -> int:
     """Get actual file size."""
-    dom_item = domain.Item(
+    dom_item = models.Item(
+        id=-1,
         uuid=item.uuid,
         parent_uuid=item.parent_uuid,
         owner_uuid=item.owner_uuid,

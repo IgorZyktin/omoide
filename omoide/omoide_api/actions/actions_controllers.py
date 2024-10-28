@@ -25,7 +25,7 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 async def api_action_rebuild_known_tags_anon(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-) -> dict[str, int | str]:
+):
     """Recalculate all known tags for anon user."""
     use_case = actions_use_cases.RebuildKnownTagsAnonUseCase(mediator)
 
@@ -49,7 +49,7 @@ async def api_action_rebuild_known_tags_user(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_uuid: UUID,
-) -> dict[str, int | str]:
+):
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsUserUseCase(mediator)
 
@@ -73,7 +73,7 @@ async def api_action_rebuild_known_tags_user(
 async def api_action_rebuild_known_tags_all(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-) -> dict[str, int | str]:
+):
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsAllUseCase(mediator)
 
@@ -130,7 +130,7 @@ async def api_action_copy_image(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     target: actions_api_models.CopyContentInput,
-) -> dict[str, str | list[str]]:
+):
     """Copy image from one item to another.
 
     This will invoke copying of content, preview and a thumbnail.

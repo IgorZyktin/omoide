@@ -9,12 +9,11 @@ from omoide import custom_logging
 from omoide import models
 from omoide.storage import interfaces
 from omoide.database import db_models
-from omoide.storage.implementations import asyncpg
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
+class MediaRepo(interfaces.AbsMediaRepo):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(self, media: models.Media) -> int:
@@ -26,7 +25,7 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
         )
 
         media_id = await self.db.execute(stmt)
-        return media_id
+        return int(media_id)
 
     async def delete_processed_media(self, user: models.User) -> int:
         """Delete fully downloaded media rows."""
@@ -37,7 +36,7 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
         )
 
         response = await self.db.execute(stmt)
-        return response.rowcount
+        return int(response.rowcount)
 
     async def delete_all_processed_media(self) -> int:
         """Delete fully downloaded media rows."""
@@ -47,7 +46,7 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
         )
 
         response = await self.db.execute(stmt)
-        return response.rowcount
+        return int(response.rowcount)
 
     async def copy_image(
         self,
@@ -74,7 +73,7 @@ class MediaRepo(interfaces.AbsMediaRepo, asyncpg.AsyncpgStorage):
         )
 
         copy_id = await self.db.execute(stmt)
-        return copy_id
+        return int(copy_id)
 
     async def mark_file_as_orphan(
         self,

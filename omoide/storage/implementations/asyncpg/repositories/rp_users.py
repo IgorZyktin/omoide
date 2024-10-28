@@ -11,12 +11,9 @@ from omoide import models
 from omoide import utils
 from omoide.storage import interfaces
 from omoide.database import db_models
-from omoide.storage.implementations.asyncpg.asyncpg_storage import (
-    AsyncpgStorage,
-)
 
 
-class UsersRepo(interfaces.AbsUsersRepo, AsyncpgStorage):
+class UsersRepo(interfaces.AbsUsersRepo):
     """Repository that performs operations on users."""
 
     @staticmethod

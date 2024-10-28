@@ -52,7 +52,7 @@ def get_corresponding_exception_code(exc: Exception) -> int:
     )
 
 
-def safe_template(template: str, **kwargs) -> str:
+def safe_template(template: str, **kwargs: str) -> str:
     """Try converting error as correct as possible."""
     message = template
 
@@ -128,10 +128,7 @@ class Aim(BaseModel):
         """Calculate how many pages we need considering this query."""
         return int(total_items / (self.items_per_page or 1))
 
-    def using(
-        self,
-        **kwargs,
-    ) -> 'Aim':
+    def using(self, **kwargs: Any) -> 'Aim':
         """Create new instance with given params."""
         values = self.model_dump()
         values.update(kwargs)
@@ -160,14 +157,11 @@ class AimWrapper:
         return getattr(self.aim, item)
 
     @classmethod
-    def from_params(
-        cls,
-        params: dict,
-        **kwargs,
-    ) -> 'AimWrapper':
+    def from_params(cls, params: dict, **kwargs: Any) -> 'AimWrapper':
         """Build Aim object from raw params."""
         raw_query = params.get('q', '')
-        tags_include, tags_exclude = [], []
+        tags_include: list[str] = []
+        tags_exclude: list[str] = []
 
         local_params = copy.deepcopy(params)
         local_params['query'] = Query(
@@ -258,7 +252,7 @@ class AimWrapper:
             result = default
         return result
 
-    def to_url(self, **kwargs) -> str:
+    def to_url(self, **kwargs: Any) -> str:
         """Convert to URL string."""
         local_params = self.aim.url_safe()
         local_params.update(kwargs)
@@ -273,7 +267,7 @@ class AimWrapper:
 
         return urlencode(local_params)
 
-    def to_url_no_q(self, **kwargs) -> str:
+    def to_url_no_q(self, **kwargs: Any) -> str:
         """Create same url but without query."""
         kwargs['q'] = ''
         return self.to_url(**kwargs)

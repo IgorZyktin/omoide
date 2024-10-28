@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from omoide import const
 from omoide import custom_logging
-from omoide import domain
+from omoide import models
 from omoide import infra
 from omoide import utils
 from omoide.commands import helpers
@@ -186,7 +186,8 @@ def make_locator(
     item: db_models.Item,
 ) -> infra.FilesystemLocator:
     """Make locator from pieces of item data."""
-    dom_item = domain.Item(
+    dom_item = models.Item(
+        id=-1,
         uuid=item.uuid,
         parent_uuid=item.parent_uuid,
         owner_uuid=user.uuid,
@@ -197,7 +198,7 @@ def make_locator(
         preview_ext=item.preview_ext,
         thumbnail_ext=item.thumbnail_ext,
         tags=[],
-        permissions=[],
+        permissions=set(),
     )
 
     locator = infra.FilesystemLocator(

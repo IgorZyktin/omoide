@@ -12,11 +12,11 @@ class AppProfileUsageUseCase(BaseAPPUseCase):
         user: models.User,
     ) -> tuple[models.SpaceUsage, int, int]:
         """Execute."""
-        async with self.mediator.storage.transaction():
-            size = await self.mediator.users_repo.calc_total_space_used_by(
+        async with self.mediator.database.transaction():
+            size = await self.mediator.users.calc_total_space_used_by(
                 user=user,
             )
-            repo = self.mediator.items_repo
+            repo = self.mediator.items
             total_items = await repo.count_items_by_owner(user)
             total_collections = await repo.count_items_by_owner(
                 user=user,
@@ -31,8 +31,8 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
 
     async def execute(self, user: models.User) -> dict[str, int]:
         """Return tags with their counters."""
-        async with self.mediator.storage.transaction():
-            known_tags = await self.mediator.search_repo.count_all_tags_known(
+        async with self.mediator.database.transaction():
+            known_tags = await self.mediator.search.count_all_tags_known(
                 user=user,
             )
         return known_tags

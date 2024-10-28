@@ -1,6 +1,3 @@
-from omoide.storage.implementations.asyncpg.asyncpg_storage import (
-    AsyncpgStorage,  # noqa: F401,F403
-)
 from omoide.storage.implementations.asyncpg.repositories.rp_browse import (
     BrowseRepository,  # noqa: F401,F403
 )

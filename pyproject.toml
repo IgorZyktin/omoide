@@ -14,7 +14,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "pydantic-settings>=2.5.2",
     "pydantic>=2.9.2",
-    "sqlalchemy[asyncio,mypy]>=2.0.35",
+    "sqlalchemy[asyncio]>=2.0.36",
     "ujson>=5.10.0",
 ]
 
@@ -153,12 +153,34 @@ warn_unused_configs = true
 exclude = ["^venv"]
 plugins = [
     "pydantic.mypy",
-    "sqlalchemy.ext.mypy.plugin",
 ]
 
 [[tool.mypy.overrides]]
 module = "omoide.tests.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "omoide.omoide_api.actions.actions_controllers",
+    "omoide.omoide_api.browse.browse_controllers",
+    "omoide.omoide_api.exif.exif_controllers",
+    "omoide.omoide_api.home.home_controllers",
+    "omoide.omoide_api.info.info_controllers",
+    "omoide.omoide_api.items.item_controllers",
+    "omoide.omoide_api.metainfo.metainfo_controllers",
+    "omoide.omoide_api.search.search_controllers",
+    "omoide.omoide_app.search.search_controllers",
+    "omoide.omoide_api.users.user_controllers",
+    "omoide.omoide_app.auth.auth_controllers",
+    "omoide.omoide_app.browse.browse_controllers",
+    "omoide.omoide_app.items.item_controllers",
+    "omoide.omoide_app.special.special_controllers",
+    "omoide.omoide_app.profile.profile_controllers",
+    "omoide.omoide_app.preview.preview_controllers",
+    "omoide.omoide_app.upload.upload_controllers",
+    "omoide.omoide_app.home.home_controllers",
+]
+disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

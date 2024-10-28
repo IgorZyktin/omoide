@@ -9,15 +9,10 @@ from omoide import const
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
 from omoide.database import db_models
-from omoide.storage.implementations import asyncpg
 from omoide.storage.implementations.asyncpg.repositories import queries
 
 
-class _SearchRepositoryBase(
-    storage_interfaces.AbsSearchRepository,
-    asyncpg.AsyncpgStorage,
-    abc.ABC,
-):
+class _SearchRepositoryBase(storage_interfaces.AbsSearchRepository, abc.ABC):
     """Base class with helper methods."""
 
     @staticmethod

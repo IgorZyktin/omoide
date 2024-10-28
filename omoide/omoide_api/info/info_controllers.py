@@ -18,7 +18,7 @@ api_info_router = APIRouter(prefix='/info', tags=['Info'])
     status_code=status.HTTP_200_OK,
     response_model=dict[str, str],
 )
-async def api_get_version() -> dict[str, str]:
+async def api_get_version():
     """Get current version of the API."""
     return {'version': const.VERSION}
 
@@ -28,19 +28,8 @@ async def api_get_version() -> dict[str, str]:
     status_code=status.HTTP_200_OK,
     response_model=dict[str, str | None],
 )
-async def api_get_myself(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-) -> dict[str, str | None]:
+async def api_get_myself(user: Annotated[models.User, Depends(dep.get_current_user)]):
     """Return current user as API sees it."""
     if user.is_anon:
-        result = {
-            'uuid': None,
-            'name': 'anon',
-        }
-    else:
-        result = {
-            'uuid': str(user.uuid),
-            'name': user.name,
-        }
-
-    return result
+        return {'uuid': None, 'name': 'anon'}
+    return {'uuid': str(user.uuid), 'name': user.name}

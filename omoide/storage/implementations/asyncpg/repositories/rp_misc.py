@@ -12,7 +12,7 @@ from omoide.database import db_models
 from omoide.storage.implementations import asyncpg
 
 
-class MiscRepo(interfaces.AbsMiscRepo, asyncpg.AsyncpgStorage):
+class MiscRepo(interfaces.AbsMiscRepo):
     """Repository that performs various operations on different objects."""
 
     async def get_computed_tags(self, item: models.Item) -> set[str]:

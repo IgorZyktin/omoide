@@ -6,16 +6,14 @@ from uuid import UUID
 
 import sqlalchemy as sa
 
-from omoide import domain
 from omoide import exceptions
 from omoide import models
 from omoide.storage import interfaces as storage_interfaces
 from omoide.database import db_models
-from omoide.storage.implementations import asyncpg
 from omoide.storage.implementations.asyncpg.repositories import queries
 
 
-class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
+class ItemsRepo(storage_interfaces.AbsItemsRepo):
     """Repository that performs operations on items."""
 
     async def check_access(
@@ -53,7 +51,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
     async def count_all_children_of(
         self,
-        item: domain.Item,
+        item: models.Item,
     ) -> int:
         """Count dependant items."""
         stmt = """
@@ -77,7 +75,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         if response is None:
             return 0
 
-        return response['total']
+        return int(response['total'])
 
     async def get_root_item(self, user: models.User) -> models.Item:
         """Return root Item for given user."""
@@ -118,7 +116,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
     async def read_item(
         self,
         item_uuid: UUID,
-    ) -> domain.Item | None:
+    ) -> models.Item | None:
         """Return item or None."""
         stmt = sa.select(db_models.Item).where(
             db_models.Item.uuid == item_uuid
@@ -306,7 +304,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         self,
         user: models.User,
         name: str,
-    ) -> domain.Item | None:
+    ) -> models.Item | None:
         """Return corresponding item."""
         stmt = sa.select(db_models.Item)
 
@@ -327,7 +325,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         stmt = queries.ensure_user_has_permissions(user, stmt)
         response = await self.db.fetch_one(stmt)
 
-        return domain.Item(**response) if response else None
+        return models.Item(**response) if response else None
 
     async def create_item(self, item: models.Item) -> None:
         """Return id for created item."""
@@ -362,7 +360,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
 
     async def update_item(
         self,
-        item: domain.Item,
+        item: models.Item,
     ) -> None:
         """Update existing item."""
         stmt = (
@@ -432,7 +430,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo, asyncpg.AsyncpgStorage):
         if response is None:
             return False
 
-        return response['total'] >= 1
+        return bool(response['total'] >= 1)
 
     async def update_permissions(
         self,
