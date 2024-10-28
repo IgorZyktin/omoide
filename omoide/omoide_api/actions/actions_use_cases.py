@@ -114,9 +114,12 @@ class CopyImageUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='copy image for item')
 
-        async with self.mediator.database.transaction():
-            source = await self.mediator.items.get_item(source_uuid)
-            target = await self.mediator.items.get_item(target_uuid)
+        if source_uuid == target_uuid:
+            return []
+
+        async with self.mediator.database.transaction() as conn:
+            source = await self.mediator.items.get_by_uuid(conn, source_uuid)
+            target = await self.mediator.items.get_by_uuid(conn, target_uuid)
 
             self.ensure_admin_or_owner(user, source, subject='item images')
             self.ensure_admin_or_owner(user, target, subject='item images')
@@ -128,6 +131,7 @@ class CopyImageUseCase(BaseAPIUseCase):
 
             if media_types:
                 await self.mediator.meta.add_item_note(
+                    conn=conn,
                     item=target,
                     key='copied_image_from',
                     value=str(source_uuid),

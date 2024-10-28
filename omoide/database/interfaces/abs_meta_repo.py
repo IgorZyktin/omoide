@@ -1,9 +1,12 @@
 """Repository that perform CRUD operations on metainfo records."""
 
 import abc
+from typing import TypeVar
 from uuid import UUID
 
 from omoide import models
+
+ConnectionT = TypeVar('ConnectionT')
 
 
 class AbsMetaRepo(abc.ABC):
@@ -37,7 +40,13 @@ class AbsMetaRepo(abc.ABC):
         """Set `updated_at` field to current datetime."""
 
     @abc.abstractmethod
-    async def add_item_note(self, item: models.Item, key: str, value: str) -> None:
+    async def add_item_note(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+        key: str,
+        value: str,
+    ) -> None:
         """Add new note to given item."""
 
     @abc.abstractmethod

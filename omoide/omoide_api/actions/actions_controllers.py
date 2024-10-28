@@ -127,7 +127,7 @@ async def api_action_rebuild_computed_tags(
 async def api_action_copy_image(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.CopyContentInput,
+    target: actions_api_models.CopyImageInput,
 ):
     """Copy image from one item to another.
 

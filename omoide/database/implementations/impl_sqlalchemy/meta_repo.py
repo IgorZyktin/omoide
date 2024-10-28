@@ -4,6 +4,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
@@ -87,7 +88,13 @@ class MetaRepo(AbsMetaRepo):
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-    async def add_item_note(self, item: models.Item, key: str, value: str) -> None:
+    async def add_item_note(
+        self,
+        conn: AsyncConnection,
+        item: models.Item,
+        key: str,
+        value: str,
+    ) -> None:
         """Add new note to given item."""
         insert = pg_insert(db_models.ItemNote).values(
             item_id=item.id,
@@ -103,7 +110,7 @@ class MetaRepo(AbsMetaRepo):
             set_={'value': insert.excluded.value},
         )
 
-        await self.db.execute(stmt)
+        await conn.execute(stmt)
 
     async def get_total_disk_usage(
         self,
