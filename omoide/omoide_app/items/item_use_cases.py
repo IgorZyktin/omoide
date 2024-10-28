@@ -17,17 +17,18 @@ class AppCreateItemUseCase(BaseAPPUseCase):
         parent_uuid: UUID,
     ) -> tuple[models.Item, list[models.User]]:
         """Execute."""
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             if parent_uuid == const.DUMMY_UUID:
-                parent = await self.mediator.items.get_root_item(user)
+                parent = await self.mediator.users.get_root_item(conn, user)
             else:
-                parent = await self.mediator.items.get_item(parent_uuid)
+                parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
 
                 if parent.owner_uuid != user.uuid:
                     msg = 'You are not allowed to create items for other users'
                     raise exceptions.AccessDeniedError(msg)
 
-            users_with_permission = await self.mediator.users.get_users(
+            users_with_permission = await self.mediator.users.select(
+                conn=conn,
                 uuids=parent.permissions,
             )
 

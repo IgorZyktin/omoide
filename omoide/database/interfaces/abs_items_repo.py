@@ -1,14 +1,16 @@
 """Repository that perform operations on items."""
 
 import abc
+from typing import Generic
+from typing import TypeVar
 from uuid import UUID
 
 from omoide import models
-from omoide.database.interfaces.abs_base import AbsRepo
-from omoide.database.interfaces.abs_base import ConnectionT
+
+ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsItemsRepo(AbsRepo, abc.ABC):
+class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on items."""
 
     @abc.abstractmethod
@@ -26,6 +28,10 @@ class AbsItemsRepo(AbsRepo, abc.ABC):
     @abc.abstractmethod
     async def get_children(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
         """Return list of children for given item."""
+
+    @abc.abstractmethod
+    async def count_children(self, conn: ConnectionT, item: models.Item) -> int:
+        """Count all children of an item with given UUID."""
 
     @abc.abstractmethod
     async def get_parents(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:

@@ -2,13 +2,15 @@
 
 import abc
 from collections.abc import Collection
+from typing import Generic
+from typing import TypeVar
 
-from omoide.database.interfaces.abs_base import AbsRepo
-from omoide.database.interfaces.abs_base import ConnectionT
 from omoide.serial_operations import SerialOperation
 
+ConnectionT = TypeVar('ConnectionT')
 
-class AbsWorkersRepo(AbsRepo, abc.ABC):
+
+class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform worker-related operations."""
 
     @abc.abstractmethod

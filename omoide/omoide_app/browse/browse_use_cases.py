@@ -95,7 +95,7 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
             )
 
             names = await self.mediator.browse.get_parent_names(conn, children)
-            total_items = await self.mediator.browse.count_children(conn, item)
+            total_items = await self.mediator.items.count_children(conn, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
 
         return BrowseResult(

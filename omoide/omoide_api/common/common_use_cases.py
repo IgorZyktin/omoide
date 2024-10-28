@@ -151,7 +151,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         name: str,
         number: int | None,
         is_collection: bool,
-        tags: list[str],
+        tags: set[str],
         permissions: set[UUID],
     ) -> models.Item:
         """Create single item."""
@@ -166,9 +166,9 @@ class BaseItemUseCase(BaseAPIUseCase):
             raise exceptions.NotAllowedError(msg)
 
         if parent_uuid is None:
-            parent = await self.mediator.items.get_root_item(user)
+            parent = await self.mediator.users.get_root_item(conn, user)
         else:
-            parent = await self.mediator.items.get_item(parent_uuid)
+            parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
             if parent.owner_uuid != user.uuid:
                 raise exceptions.NotAllowedError(msg)
 

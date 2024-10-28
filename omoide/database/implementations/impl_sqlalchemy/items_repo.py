@@ -15,24 +15,6 @@ from omoide.database.interfaces.abs_items_repo import AbsItemsRepo
 class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     """Repository that performs operations on items."""
 
-    @staticmethod
-    def _item_from_response(response: Any) -> models.Item:
-        """Convert DB response to item model."""
-        return models.Item(
-            id=response.id,
-            uuid=response.uuid,
-            parent_uuid=response.parent_uuid,
-            owner_uuid=response.owner_uuid,
-            name=response.name,
-            number=response.number,
-            is_collection=response.is_collection,
-            content_ext=response.content_ext,
-            preview_ext=response.preview_ext,
-            thumbnail_ext=response.thumbnail_ext,
-            tags=set(response.tags),
-            permissions={UUID(x) for x in response.permissions},
-        )
-
     async def create(self, conn: AsyncConnection, item: models.Item) -> int:
         """Create new item."""
         values: dict[str, Any] = {
@@ -75,7 +57,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with ID {item_id} does not exist'
             raise exceptions.DoesNotExistError(msg, item_id=item_id)
 
-        return self._item_from_response(response)
+        return db_models.Item.cast(response)
 
     async def get_by_uuid(
         self,
@@ -90,7 +72,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with UUID {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=uuid)
 
-        return self._item_from_response(response)
+        return db_models.Item.cast(response)
 
     async def get_children(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of children for given item."""
@@ -100,7 +82,18 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             .order_by(db_models.Item.id)
         )
         response = (await conn.execute(query)).fetchall()
-        return [self._item_from_response(row) for row in response]
+        return [db_models.Item.cast(row) for row in response]
+
+    async def count_children(self, conn: AsyncConnection, item: models.Item) -> int:
+        """Count all children of an item with given UUID."""
+        query = (
+            sa.select(sa.func.count().label('total_items'))
+            .select_from(db_models.Item)
+            .where(db_models.Item.parent_uuid == item.uuid)
+        )
+
+        response = (await conn.execute(query)).fetchone()
+        return int(response.total_items)
 
     async def get_parents(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of parents for given item."""
@@ -114,7 +107,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             if raw_parent is None:
                 break
 
-            parent = self._item_from_response(raw_parent)
+            parent = db_models.Item.cast(raw_parent)
             parents.append(parent)
             parent_uuid = parent.parent_uuid
 
@@ -129,7 +122,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         )
 
         response = (await conn.execute(query)).fetchall()
-        return [self._item_from_response(row) for row in response]
+        return [db_models.Item.cast(row) for row in response]
 
     async def save(self, conn: AsyncConnection, item: models.Item) -> bool:
         """Save the given item."""

@@ -104,7 +104,7 @@ class SearchRepo(_SearchRepositoryBase):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item(**row._mapping) for row in response]
+        return [db_models.Item.cast(row) for row in response]
 
     async def get_home_items_for_anon(
         self,
@@ -116,23 +116,23 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for anon."""
-        stmt = sa.select(db_models.Item).where(
+        query = sa.select(db_models.Item).where(
             db_models.Item.owner_uuid.in_(
                 sa.select(db_models.PublicUsers.user_uuid)
             )
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == sa.true())
+            query = query.where(db_models.Item.is_collection == sa.true())
 
         if direct:
-            stmt = stmt.where(db_models.Item.parent_uuid == sa.null())
+            query = query.where(db_models.Item.parent_uuid == sa.null())
 
-        stmt = queries.apply_order(stmt, order, last_seen)
-        stmt = stmt.limit(limit)
+        query = queries.apply_order(query, order, last_seen)
+        query = query.limit(limit)
 
-        response = (await conn.execute(stmt)).fetchall()
-        return [models.Item(**row._mapping) for row in response]
+        response = (await conn.execute(query)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def get_home_items_for_known(
         self,
@@ -145,7 +145,7 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for known user."""
-        stmt = sa.select(db_models.Item).where(
+        query = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.owner_uuid == user.uuid,
                 db_models.Item.permissions.any(user.uuid),
@@ -153,32 +153,36 @@ class SearchRepo(_SearchRepositoryBase):
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == sa.true())
+            query = query.where(db_models.Item.is_collection == sa.true())
 
         if direct:
-            stmt = stmt.where(db_models.Item.parent_uuid == sa.null())
+            query = query.where(db_models.Item.parent_uuid == sa.null())
 
-        stmt = queries.apply_order(stmt, order, last_seen)
-        stmt = stmt.limit(limit)
+        query = queries.apply_order(query, order, last_seen)
+        query = query.limit(limit)
 
-        response = (await conn.execute(stmt)).fetchall()
-        return [models.Item(**row._mapping) for row in response]
+        response = (await conn.execute(query)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
-    async def count_all_tags_anon(self) -> dict[str, int]:
+    async def count_all_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
         """Return counters for known tags (anon user)."""
-        stmt = sa.select(
+        query = sa.select(
             db_models.KnownTagsAnon.tag,
             db_models.KnownTagsAnon.counter,
         ).order_by(
             sa.desc(db_models.KnownTagsAnon.counter),
         )
 
-        response = await self.db.fetch_all(stmt)
-        return {row['tag']: row['counter'] for row in response}
+        response = (await conn.execute(query)).fetchall()
+        return {row.tag: row.counter for row in response}
 
-    async def count_all_tags_known(self, user: models.User) -> dict[str, int]:
+    async def count_all_tags_known(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+    ) -> dict[str, int]:
         """Return counters for known tags (known user)."""
-        stmt = (
+        query = (
             sa.select(
                 db_models.KnownTags.tag,
                 db_models.KnownTags.counter,
@@ -191,8 +195,8 @@ class SearchRepo(_SearchRepositoryBase):
             )
         )
 
-        response = await self.db.fetch_all(stmt)
-        return {row['tag']: row['counter'] for row in response}
+        response = (await conn.execute(query)).fetchall()
+        return {row.tag: row.counter for row in response}
 
     async def autocomplete_tag_anon(
         self,
@@ -201,7 +205,7 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[str]:
         """Autocomplete tag for anon user."""
-        stmt = (
+        query = (
             sa.select(db_models.KnownTagsAnon.tag)
             .where(
                 db_models.KnownTagsAnon.tag.ilike(f'%{tag}%'),
@@ -214,7 +218,7 @@ class SearchRepo(_SearchRepositoryBase):
             .limit(limit)
         )
 
-        response = (await conn.execute(stmt)).fetchall()
+        response = (await conn.execute(query)).fetchall()
         return [row.tag for row in response]
 
     async def autocomplete_tag_known(
@@ -225,7 +229,7 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[str]:
         """Autocomplete tag for known user."""
-        stmt = (
+        query = (
             sa.select(db_models.KnownTags.tag)
             .where(
                 db_models.KnownTags.tag.ilike(f'%{tag}%'),
@@ -239,5 +243,5 @@ class SearchRepo(_SearchRepositoryBase):
             .limit(limit)
         )
 
-        response = (await conn.execute(stmt)).fetchall()
+        response = (await conn.execute(query)).fetchall()
         return [row.tag for row in response]

@@ -64,11 +64,11 @@ class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
         """Return home items for known user."""
 
     @abc.abstractmethod
-    async def count_all_tags_anon(self) -> dict[str, int]:
+    async def count_all_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
         """Return counters for known tags (anon user)."""
 
     @abc.abstractmethod
-    async def count_all_tags_known(self, user: models.User) -> dict[str, int]:
+    async def count_all_tags_known(self, conn: ConnectionT, user: models.User) -> dict[str, int]:
         """Return counters for known tags (known user)."""
 
     @abc.abstractmethod

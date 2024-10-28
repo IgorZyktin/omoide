@@ -24,10 +24,6 @@ class AbsBrowseRepo(abc.ABC):
         """Load all children of given item."""
 
     @abc.abstractmethod
-    async def count_children(self, conn: ConnectionT, item: models.Item) -> int:
-        """Count all children of an item with given UUID."""
-
-    @abc.abstractmethod
     async def browse_direct_anon(
         self,
         conn: ConnectionT,

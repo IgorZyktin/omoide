@@ -1,4 +1,5 @@
 """Browse repository."""
+
 from collections.abc import Collection
 from uuid import UUID
 
@@ -19,12 +20,13 @@ class BrowseRepo(AbsBrowseRepo):
 
     async def get_children(
         self,
+        conn: AsyncConnection,
         item: models.Item,
         offset: int | None,
         limit: int | None,
     ) -> list[models.Item]:
         """Load all children of given item."""
-        stmt = (
+        query = (
             sa.select(db_models.Item)
             .where(
                 db_models.Item.parent_uuid == item.uuid,
@@ -33,27 +35,17 @@ class BrowseRepo(AbsBrowseRepo):
         )
 
         if offset:
-            stmt = stmt.offset(offset)
+            query = query.offset(offset)
 
         if limit is not None:
-            stmt = stmt.limit(limit)
+            query = query.limit(limit)
 
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**x) for x in response]
-
-    async def count_children(self, item: models.Item) -> int:
-        """Count all children of an item with given UUID."""
-        stmt = (
-            sa.select(sa.func.count().label('total_items'))
-            .select_from(db_models.Item)
-            .where(db_models.Item.parent_uuid == item.uuid)
-        )
-
-        response = await self.db.fetch_one(stmt)
-        return int(response['total_items'])
+        response = (await conn.execute(sa.text(query))).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def browse_direct_anon(
         self,
+        conn: AsyncConnection,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
         collections: bool,
@@ -61,7 +53,7 @@ class BrowseRepo(AbsBrowseRepo):
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
-        stmt = sa.select(db_models.Item).where(
+        query = sa.select(db_models.Item).where(
             db_models.Item.owner_uuid.in_(  # noqa
                 sa.select(db_models.PublicUsers.user_uuid)
             ),
@@ -69,16 +61,17 @@ class BrowseRepo(AbsBrowseRepo):
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == sa.true())
+            query = query.where(db_models.Item.is_collection == sa.true())
 
-        stmt = queries.apply_order(stmt, order, last_seen)
-        stmt = stmt.limit(limit)
+        query = queries.apply_order(query, order, last_seen)
+        query = query.limit(limit)
 
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(sa.text(query))).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def browse_direct_known(
         self,
+        conn: AsyncConnection,
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -87,28 +80,29 @@ class BrowseRepo(AbsBrowseRepo):
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
-        stmt = sa.select(db_models.Item).where(
+        query = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.owner_uuid.in_(  # noqa
                     sa.select(db_models.PublicUsers.user_uuid)
                 ),
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.permissions.any(user.uuid),
             ),
             db_models.Item.parent_uuid == item_uuid,
         )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == sa.true())
+            query = query.where(db_models.Item.is_collection == sa.true())
 
-        stmt = queries.apply_order(stmt, order, last_seen)
-        stmt = stmt.limit(limit)
+        query = queries.apply_order(query, order, last_seen)
+        query = query.limit(limit)
 
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(sa.text(query))).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def browse_related_anon(
         self,
+        conn: AsyncConnection,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
         collections: bool,
@@ -116,7 +110,7 @@ class BrowseRepo(AbsBrowseRepo):
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
-        stmt = """
+        query = """
     WITH RECURSIVE nested_items AS
            (SELECT items.id            AS id,
                    items.uuid          AS uuid,
@@ -170,26 +164,27 @@ class BrowseRepo(AbsBrowseRepo):
         }
 
         if collections:
-            stmt += ' AND is_collection = True'
+            query += ' AND is_collection = True'
 
         if order == const.ASC:
-            stmt += ' AND number > :last_seen'
-            stmt += ' ORDER BY number'
+            query += ' AND number > :last_seen'
+            query += ' ORDER BY number'
             values['last_seen'] = last_seen
         elif order == const.DESC:
-            stmt += ' AND number < :last_seen'
-            stmt += ' ORDER BY number'
+            query += ' AND number < :last_seen'
+            query += ' ORDER BY number'
             values['last_seen'] = last_seen
         else:
-            stmt += ' ORDER BY random()'
+            query += ' ORDER BY random()'
 
-        stmt += ' LIMIT :limit;'
+        query += ' LIMIT :limit;'
 
-        response = await self.db.fetch_all(stmt, values)
-        return [models.Item(**x) for x in response]
+        response = (await conn.execute(sa.text(query), values)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def browse_related_known(
         self,
+        conn: AsyncConnection,
         user: models.User,
         item_uuid: UUID,
         order: const.ORDER_TYPE,
@@ -198,7 +193,7 @@ class BrowseRepo(AbsBrowseRepo):
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
-        stmt = """
+        query = """
     WITH RECURSIVE nested_items AS
            (SELECT items.id            AS id,
                    items.uuid          AS uuid,
@@ -255,23 +250,23 @@ class BrowseRepo(AbsBrowseRepo):
         }
 
         if collections:
-            stmt += ' AND is_collection = True'
+            query += ' AND is_collection = True'
 
         if order == const.ASC:
-            stmt += ' AND number > :last_seen'
-            stmt += ' ORDER BY number'
+            query += ' AND number > :last_seen'
+            query += ' ORDER BY number'
             values['last_seen'] = last_seen
         elif order == const.DESC:
-            stmt += ' AND number < :last_seen'
-            stmt += ' ORDER BY number'
+            query += ' AND number < :last_seen'
+            query += ' ORDER BY number'
             values['last_seen'] = last_seen
         else:
-            stmt += ' ORDER BY random()'
+            query += ' ORDER BY random()'
 
-        stmt += ' LIMIT :limit;'
+        query += ' LIMIT :limit;'
 
-        response = await self.db.fetch_all(stmt, values)
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(sa.text(query), values)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def get_recently_updated_items(
         self,
@@ -283,7 +278,7 @@ class BrowseRepo(AbsBrowseRepo):
         limit: int,
     ) -> list[models.Item]:
         """Return recently updated items."""
-        stmt = """
+        query = """
         WITH valid_items AS (
             SELECT id,
                    uuid,
@@ -328,23 +323,23 @@ class BrowseRepo(AbsBrowseRepo):
         }
 
         if collections:
-            stmt += ' AND is_collection = True'
+            query += ' AND is_collection = True'
 
         if order == const.ASC:
-            stmt += ' AND number > :last_seen'
-            stmt += ' ORDER BY number'
+            query += ' AND number > :last_seen'
+            query += ' ORDER BY number'
             values['last_seen'] = last_seen
         elif order == const.DESC:
-            stmt += ' AND number < :last_seen'
-            stmt += ' ORDER BY number'
+            query += ' AND number < :last_seen'
+            query += ' ORDER BY number'
             values['last_seen'] = last_seen
         else:
-            stmt += ' ORDER BY random()'
+            query += ' ORDER BY random()'
 
-        stmt += ' LIMIT :limit;'
+        query += ' LIMIT :limit;'
 
-        response = await self.db.fetch_all(stmt, values)
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(sa.text(query), values)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
 
     async def get_parent_names(
         self,

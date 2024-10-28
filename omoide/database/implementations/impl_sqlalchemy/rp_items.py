@@ -16,39 +16,6 @@ from omoide.database.interfaces.abs_items_repo import AbsItemsRepo
 class ItemsRepo(AbsItemsRepo):
     """Repository that performs operations on items."""
 
-    async def check_access(
-        self,
-        user: models.User,
-        uuid: UUID,
-    ) -> models.AccessStatus:
-        """Check access to the Item with given UUID for the given User."""
-        query = """
-        SELECT owner_uuid,
-               exists(SELECT 1
-                      FROM public_users pu
-                      WHERE pu.user_uuid = owner_uuid) AS is_public,
-               (SELECT :user_uuid = ANY (permissions)) AS is_permitted,
-               owner_uuid::text = :user_uuid AS is_owner
-        FROM items
-        WHERE uuid = :uuid;
-        """
-
-        values = {
-            'user_uuid': str(user.uuid),
-            'uuid': str(uuid),
-        }
-        response = await self.db.fetch_one(query, values)
-
-        if response is None:
-            return models.AccessStatus.not_found()
-
-        return models.AccessStatus(
-            exists=True,
-            is_public=bool(response['is_public']),
-            is_permitted=bool(response['is_permitted']),
-            is_owner=bool(response['is_owner']),
-        )
-
     async def count_all_children_of(
         self,
         item: models.Item,
@@ -76,23 +43,6 @@ class ItemsRepo(AbsItemsRepo):
             return 0
 
         return int(response['total'])
-
-    async def get_root_item(self, user: models.User) -> models.Item:
-        """Return root Item for given user."""
-        stmt = sa.select(db_models.Item).where(
-            sa.and_(
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.parent_uuid == sa.null(),
-            )
-        )
-
-        response = await self.db.fetch_one(stmt)
-
-        if response is None:
-            msg = 'User {user_uuid} has no root item'
-            raise exceptions.DoesNotExistError(msg, user_uuid=user.uuid)
-
-        return models.Item(**response)
 
     async def get_all_root_items(
         self,

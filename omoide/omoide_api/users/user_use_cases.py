@@ -82,10 +82,8 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update user name')
 
-        async with self.mediator.database.transaction():
-            target_user = await self.mediator.users.get_user_by_uuid(
-                uuid=user_uuid,
-            )
+        async with self.mediator.database.transaction() as conn:
+            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info(
@@ -95,9 +93,9 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
                 new_name,
             )
 
-            await self.mediator.users.update_user(user_uuid, name=new_name)
+            await self.mediator.users.update_user(conn, user_uuid, name=new_name)
 
-            root = await self.mediator.items.get_root_item(target_user)
+            root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
             # TODO - after renaming root item
             #  we need to recalculate tags in children
@@ -117,10 +115,8 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update user login')
 
-        async with self.mediator.database.transaction():
-            target_user = await self.mediator.users.get_user_by_uuid(
-                uuid=user_uuid,
-            )
+        async with self.mediator.database.transaction() as conn:
+            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info(
@@ -132,7 +128,7 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
 
             await self.mediator.users.update_user(user_uuid, login=new_login)
 
-            root = await self.mediator.items.get_root_item(target_user)
+            root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
 
         return target_user, extras
@@ -150,10 +146,8 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update user login')
 
-        async with self.mediator.database.transaction():
-            target_user = await self.mediator.users.get_user_by_uuid(
-                uuid=user_uuid,
-            )
+        async with self.mediator.database.transaction() as conn:
+            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info('User {} is updating user {} password', user, target_user)
@@ -171,7 +165,7 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
 
             await self.mediator.users.update_user(user_uuid, password=encoded_password)
 
-            root = await self.mediator.items.get_root_item(target_user)
+            root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
 
         return target_user, extras
@@ -188,16 +182,16 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='get list of users')
         extras: dict[UUID, UUID | None]
 
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             if user.is_admin:
-                users = await self.mediator.users.get_users()
-                roots = await self.mediator.items.get_all_root_items(
+                users = await self.mediator.users.select(conn)
+                roots = await self.mediator.users.get_all_root_items(
                     *users,
                 )
                 extras = {root.owner_uuid: root.uuid for root in roots}
 
             else:
-                root = await self.mediator.items.get_root_item(user)
+                root = await self.mediator.users.get_root_item(conn, user)
                 users = [user]
                 extras = {user.uuid: root.uuid}
 
@@ -215,12 +209,10 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='get user info')
 
-        async with self.mediator.database.transaction():
-            target_user = await self.mediator.users.get_user_by_uuid(
-                uuid=user_uuid,
-            )
+        async with self.mediator.database.transaction() as conn:
+            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
-            root = await self.mediator.items.get_root_item(target_user)
+            root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
 
         return target_user, extras
@@ -237,10 +229,8 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='get user stats')
 
-        async with self.mediator.database.transaction():
-            target_user = await self.mediator.users.get_user_by_uuid(
-                uuid=user_uuid,
-            )
+        async with self.mediator.database.transaction() as conn:
+            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             disk_usage = await self.mediator.meta.get_total_disk_usage(target_user)
@@ -265,26 +255,18 @@ class GetAnonUserTagsUseCase(BaseAPIUseCase):
 
     async def execute(self) -> dict[str, int]:
         """Execute."""
-        async with self.mediator.database.transaction():
-            tags = await self.mediator.search.count_all_tags_anon()
+        async with self.mediator.database.transaction() as conn:
+            tags = await self.mediator.search.count_all_tags_anon(conn)
         return tags
 
 
 class GetKnownUserTagsUseCase(BaseAPIUseCase):
     """Use case for getting tags available to specific user."""
 
-    async def execute(
-        self,
-        user: models.User,
-        user_uuid: UUID,
-    ) -> dict[str, int]:
+    async def execute(self, user: models.User, user_uuid: UUID) -> dict[str, int]:
         """Execute."""
-        async with self.mediator.database.transaction():
-            target_user = await self.mediator.users.get_user_by_uuid(
-                uuid=user_uuid,
-            )
+        async with self.mediator.database.transaction() as conn:
+            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'user tags')
-            tags = await self.mediator.search.count_all_tags_known(
-                user=target_user,
-            )
+            tags = await self.mediator.search.count_all_tags_known(conn, user=target_user)
         return tags

@@ -438,6 +438,24 @@ class Item(Base):
         sa.Index('ix_items_permissions', permissions, postgresql_using='gin'),
     )
 
+    @staticmethod
+    def cast(row: sa.Row) -> models.Item:
+        """Convert to domain-level object."""
+        return models.Item(
+            id=row.id,
+            uuid=row.uuid,
+            parent_uuid=row.parent_uuid,
+            owner_uuid=row.owner_uuid,
+            name=row.name,
+            number=row.number,
+            is_collection=row.is_collection,
+            content_ext=row.content_ext,
+            preview_ext=row.preview_ext,
+            thumbnail_ext=row.thumbnail_ext,
+            tags=set(row.tags),
+            permissions={UUID(x) for x in row.permissions},
+        )
+
 
 class Metainfo(Base):
     """Meta information for items."""

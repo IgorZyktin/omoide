@@ -52,3 +52,7 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def get_public_user_uuids(self, conn: ConnectionT) -> set[UUID]:
         """Return UUIDs of public users."""
+
+    @abc.abstractmethod
+    async def get_root_item(self, conn: ConnectionT, user: models.User) -> models.Item:
+        """Return root item for given user."""

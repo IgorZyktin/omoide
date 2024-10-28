@@ -138,3 +138,20 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         stmt = sa.select(db_models.PublicUsers.user_uuid)
         response = (await conn.execute(stmt)).fetchall()
         return {x.user_uuid for x in response}
+
+    async def get_root_item(self, conn: AsyncConnection, user: models.User) -> models.Item:
+        """Return root item for given user."""
+        stmt = sa.select(db_models.Item).where(
+            sa.and_(
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.parent_uuid == sa.null(),
+            )
+        )
+
+        response = (await conn.execute(stmt)).fetchone()
+
+        if response is None:
+            msg = 'User {user_uuid} has no root item'
+            raise exceptions.DoesNotExistError(msg, user_uuid=user.uuid)
+
+        return db_models.Item.cast(response)

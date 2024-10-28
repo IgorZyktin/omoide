@@ -79,9 +79,9 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
         """Prepare for execution."""
         self.ensure_admin(admin, subject=self.affected_target)
 
-        async with self.mediator.database.transaction():
-            owner = await self.mediator.users.get_user_by_uuid(user_uuid)
-            item = await self.mediator.items.get_root_item(owner)
+        async with self.mediator.database.transaction() as conn:
+            owner = await self.mediator.users.get_by_uuid(conn, user_uuid)
+            item = await self.mediator.users.get_root_item(conn, owner)
 
             LOG.info(
                 '{} is rebuilding {} for item {} (owner is {})',

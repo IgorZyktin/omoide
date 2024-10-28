@@ -11,18 +11,6 @@ class AbsItemsRepo(abc.ABC):
     """Repository that performs operations on items."""
 
     @abc.abstractmethod
-    async def check_access(
-        self,
-        user: models.User,
-        uuid: UUID,
-    ) -> models.AccessStatus:
-        """Check access to the Item with given UUID for the given User."""
-
-    @abc.abstractmethod
-    async def get_root_item(self, user: models.User) -> models.Item:
-        """Return root Item for given user."""
-
-    @abc.abstractmethod
     async def get_all_root_items(
         self,
         *users: models.User,
