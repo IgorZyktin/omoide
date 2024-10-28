@@ -17,43 +17,6 @@ def cli() -> None:
     """Manual CLI operations."""
 
 
-@cli.command(name='force_thumbnail_copying')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--only-users',
-    help='Apply to one or more specially listed users (comma separated)',
-)
-def command_force_cover_copying(**kwargs: str | bool) -> None:
-    """Force collections to explicitly write origins of their thumbnails.
-
-    May require you to run it more than one time.
-    """
-    from omoide.commands.force_thumbnail_copying import cfg
-    from omoide.commands.force_thumbnail_copying import run
-
-    db_url = SecretStr(str(kwargs.pop('db_url')))
-
-    only_users = []
-    if kwargs.pop('only_users', ''):
-        only_users = utils.split(str(kwargs.pop('only_users', '')))
-
-    config = cfg.Config(db_url=db_url, only_users=only_users)
-    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
-
-    with (
-        database.life_cycle(),
-        helpers.timing(
-            callback=LOG.info,
-            start_template='Forcing items to copy thumbnails...',
-        ),
-    ):
-        run.run(config, database)
-
-
 @cli.command(name='refresh_file_sizes_in_db')
 @click.option(
     '--db-url',
