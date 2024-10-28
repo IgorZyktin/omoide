@@ -171,7 +171,7 @@ class Item(ModelMixin):
     preview_ext: str | None
     thumbnail_ext: str | None
     status: Status = Status.AVAILABLE  # TODO - make it mandatory
-    tags: list[str] = field(default_factory=list)
+    tags: set[str] = field(default_factory=set)
     permissions: set[UUID] = field(default_factory=set)
 
     def __eq__(self, other: object) -> bool:

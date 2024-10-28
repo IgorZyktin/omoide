@@ -1,16 +1,14 @@
 """Repository that perform operations on items."""
 
 import abc
-from typing import Generic
-from typing import TypeVar
 from uuid import UUID
 
 from omoide import models
+from omoide.database.interfaces.abs_base import AbsRepo
+from omoide.database.interfaces.abs_base import ConnectionT
 
-ConnectionT = TypeVar('ConnectionT')
 
-
-class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
+class AbsItemsRepo(AbsRepo, abc.ABC):
     """Repository that perform operations on items."""
 
     @abc.abstractmethod
@@ -26,25 +24,21 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return Item with given UUID."""
 
     @abc.abstractmethod
-    async def get_children(
-        self,
-        conn: ConnectionT,
-        item: models.Item,
-    ) -> list[models.Item]:
-        """Return children of given item."""
+    async def get_children(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
+        """Return list of children for given item."""
 
     @abc.abstractmethod
-    async def get_parents(
-        self,
-        conn: ConnectionT,
-        item: models.Item,
-    ) -> list[models.Item]:
-        """Return parents of given item."""
+    async def get_parents(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
+        """Return list of parents for given item."""
 
     @abc.abstractmethod
-    async def save(self, conn: ConnectionT, item: models.Item) -> None:
-        """Save given item."""
+    async def get_siblings(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
+        """Return list of siblings for given item."""
+
+    @abc.abstractmethod
+    async def save(self, conn: ConnectionT, item: models.Item) -> bool:
+        """Save the given item."""
 
     @abc.abstractmethod
     async def delete(self, conn: ConnectionT, item: models.Item) -> bool:
-        """Delete given item."""
+        """Delete the given item."""

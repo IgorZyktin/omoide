@@ -215,17 +215,6 @@ class ItemsRepo(AbsItemsRepo):
         response = await self.db.fetch_one(stmt)
         return int(response['total_items'])
 
-    async def get_children(self, item: models.Item) -> list[models.Item]:
-        """Return all direct descendants of the given item."""
-        stmt = (
-            sa.select(db_models.Item)
-            .where(db_models.Item.parent_uuid == item.uuid)
-            .order_by(db_models.Item.number)
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
-
     async def get_parents(self, item: models.Item) -> list[models.Item]:
         """Return lineage of all parents for the given item."""
         stmt = """
@@ -267,17 +256,6 @@ class ItemsRepo(AbsItemsRepo):
 
         response = await self.db.fetch_all(stmt, values)
         return [models.Item(**row) for row in reversed(response)]
-
-    async def get_siblings(self, item: models.Item) -> list[models.Item]:
-        """Return all siblings for the given item."""
-        stmt = sa.select(db_models.Item)
-
-        stmt = stmt.where(db_models.Item.parent_uuid == item.parent_uuid).order_by(
-            db_models.Item.number
-        )
-
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
 
     # TODO - remove this method
     async def read_computed_tags(

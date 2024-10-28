@@ -25,7 +25,7 @@ class ReadMetainfoUseCase(BaseAPIUseCase):
             item = await self.mediator.items.get_item(item_uuid)
             self.ensure_admin_or_owner_or_allowed_to(user, item, subject='item metadata')
 
-            metainfo = await self.mediator.meta.read_metainfo(item)
+            metainfo = await self.mediator.meta.get_by_item(item)
 
         return metainfo
 
@@ -48,7 +48,7 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
 
             LOG.info('Updating metainfo for {}, command by {}', item, user)
 
-            current_metainfo = await self.mediator.meta.read_metainfo(item)
+            current_metainfo = await self.mediator.meta.get_by_item(item)
 
             current_metainfo.updated_at = utils.now()
 

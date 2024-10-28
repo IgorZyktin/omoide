@@ -50,5 +50,5 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         """Delete given user."""
 
     @abc.abstractmethod
-    async def get_public_users(self, conn: ConnectionT) -> set[UUID]:
+    async def get_public_user_uuids(self, conn: ConnectionT) -> set[UUID]:
         """Return UUIDs of public users."""

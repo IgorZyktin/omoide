@@ -86,10 +86,6 @@ class AbsItemsRepo(abc.ABC):
         """Return lineage of all parents for the given item."""
 
     @abc.abstractmethod
-    async def get_siblings(self, item: models.Item) -> list[models.Item]:
-        """Return all siblings for the given item."""
-
-    @abc.abstractmethod
     async def read_computed_tags(
         self,
         uuid: UUID,

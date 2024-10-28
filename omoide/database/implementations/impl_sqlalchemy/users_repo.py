@@ -133,7 +133,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def get_public_users(self, conn: AsyncConnection) -> set[UUID]:
+    async def get_public_user_uuids(self, conn: AsyncConnection) -> set[UUID]:
         """Return UUIDs of public users."""
         stmt = sa.select(db_models.PublicUsers.user_uuid)
         response = (await conn.execute(stmt)).fetchall()

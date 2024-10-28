@@ -21,17 +21,17 @@ class MetaRepo(AbsMetaRepo):
         stmt = sa.insert(db_models.Metainfo).values(**metainfo.model_dump())
         await self.db.execute(stmt)
 
-    async def read_metainfo(self, item: models.Item) -> models.Metainfo:
+    async def get_by_item(self, conn: AsyncConnection, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
-        stmt = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_uuid == item.uuid)
+        query = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_uuid == item.uuid)
 
-        response = await self.db.fetch_one(stmt)
+        response = (await conn.execute(query)).fetchone()
 
         if response is None:
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
 
-        return models.Metainfo(**response)
+        return models.Metainfo(**response._mapping)
 
     async def get_metainfos(
         self,

@@ -29,7 +29,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             content_ext=response.content_ext,
             preview_ext=response.preview_ext,
             thumbnail_ext=response.thumbnail_ext,
-            tags=response.tags,
+            tags=set(response.tags),
             permissions={UUID(x) for x in response.permissions},
         )
 
@@ -66,18 +66,14 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         item.id = item_id
         return item_id
 
-    async def get_by_id(
-        self,
-        conn: AsyncConnection,
-        item_id: int,
-    ) -> models.Item:
+    async def get_by_id(self, conn: AsyncConnection, item_id: int) -> models.Item:
         """Return Item with given id."""
-        stmt = sa.select(db_models.Item).where(db_models.Item.id == item_id)
-        response = (await conn.execute(stmt)).first()
+        query = sa.select(db_models.Item).where(db_models.Item.id == item_id)
+        response = (await conn.execute(query)).first()
 
         if response is None:
             msg = 'Item with ID {item_id} does not exist'
-            raise exceptions.DoesNotExistError(msg, user_id=item_id)
+            raise exceptions.DoesNotExistError(msg, item_id=item_id)
 
         return self._item_from_response(response)
 
@@ -87,8 +83,8 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         uuid: UUID,
     ) -> models.Item:
         """Return User with given UUID."""
-        stmt = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
-        response = (await conn.execute(stmt)).first()
+        query = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
+        response = (await conn.execute(query)).first()
 
         if response is None:
             msg = 'Item with UUID {item_uuid} does not exist'
@@ -96,32 +92,24 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return self._item_from_response(response)
 
-    async def get_children(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-    ) -> list[models.Item]:
-        """Return children of given item."""
-        stmt = (
+    async def get_children(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
+        """Return list of children for given item."""
+        query = (
             sa.select(db_models.Item)
             .where(db_models.Item.parent_uuid == item.uuid)
             .order_by(db_models.Item.id)
         )
-        response = (await conn.execute(stmt)).fetchall()
-        return [self._item_from_response(x) for x in response]
+        response = (await conn.execute(query)).fetchall()
+        return [self._item_from_response(row) for row in response]
 
-    async def get_parents(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-    ) -> list[models.Item]:
-        """Return parents of given item."""
+    async def get_parents(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
+        """Return list of parents for given item."""
         parents: list[models.Item] = []
         parent_uuid = item.parent_uuid
 
         while parent_uuid:
-            stmt = sa.select(db_models.Item).where(db_models.Item.uuid == parent_uuid)
-            raw_parent = (await conn.execute(stmt)).fetchone()
+            query = sa.select(db_models.Item).where(db_models.Item.uuid == parent_uuid)
+            raw_parent = (await conn.execute(query)).fetchone()
 
             if raw_parent is None:
                 break
@@ -132,8 +120,19 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return list(reversed(parents))
 
-    async def save(self, conn: AsyncConnection, item: models.Item) -> None:
-        """Save given item."""
+    async def get_siblings(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
+        """Return list of siblings for given item."""
+        query = (
+            sa.select(db_models.Item)
+            .where(db_models.Item.parent_uuid == item.parent_uuid)
+            .order_by(db_models.Item.number)
+        )
+
+        response = (await conn.execute(query)).fetchall()
+        return [self._item_from_response(row) for row in response]
+
+    async def save(self, conn: AsyncConnection, item: models.Item) -> bool:
+        """Save the given item."""
         stmt = (
             sa.update(db_models.Item)
             .values(
@@ -148,14 +147,13 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                 tags=tuple(item.tags),
                 permissions=tuple(str(x) for x in item.permissions),
             )
-            .where(
-                db_models.Item.id == item.id,
-            )
+            .where(db_models.Item.id == item.id)
         )
-        await conn.execute(stmt)
+        response = await conn.execute(stmt)
+        return bool(response.rowcount)
 
     async def delete(self, conn: AsyncConnection, item: models.Item) -> bool:
-        """Delete given item."""
+        """Delete the given item."""
         stmt = sa.delete(db_models.Item).where(db_models.Item.id == item.id)
         response = await conn.execute(stmt)
         return bool(response.rowcount)

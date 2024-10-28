@@ -27,9 +27,9 @@ class AppPreviewUseCase(BaseAPPUseCase):
         item_uuid: UUID,
     ) -> PreviewResult:
         """Execute."""
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
-            public_users = await self.mediator.users.get_public_user_uuids()
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            public_users = await self.mediator.users.get_public_user_uuids(conn)
 
             allowed_to = any(
                 (
@@ -44,9 +44,9 @@ class AppPreviewUseCase(BaseAPPUseCase):
                 msg = 'You are not allowed to preview this'
                 raise exceptions.AccessDeniedError(msg)
 
-            metainfo = await self.mediator.meta.read_metainfo(item)
-            parents = await self.mediator.items.get_parents(item)
-            siblings = await self.mediator.items.get_siblings(item)
+            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            parents = await self.mediator.items.get_parents(conn, item)
+            siblings = await self.mediator.items.get_siblings(conn, item)
 
             all_tags: set[str] = set()
             all_tags.update(item.tags)
