@@ -34,6 +34,32 @@ class AppCreateItemUseCase(BaseAPPUseCase):
         return parent, users_with_permission
 
 
+class AppUpdateItemUseCase(BaseAPPUseCase):
+    """Use case for item modification page."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+    ) -> tuple[models.Item, int, list[models.User], list[str], models.Metainfo | None]:
+        """Execute."""
+        if user.is_anon:
+            msg = 'You are not allowed to update items'
+            raise exceptions.AccessDeniedError(msg)
+
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+
+            total = await self.mediator.items_repo.count_all_children_of(item)
+            can_see = await self.mediator.users_repo.get_users(
+                uuids=item.permissions,
+            )
+            computed_tags = await self.mediator.items_repo.read_computed_tags(item_uuid)
+            metainfo = await self.mediator.meta_repo.read_metainfo(item)
+
+        return item, total, can_see, computed_tags, metainfo
+
+
 class AppDeleteItemUseCase(BaseAPPUseCase):
     """Use case for item deletion page."""
 

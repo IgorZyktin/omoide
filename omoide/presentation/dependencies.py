@@ -212,26 +212,3 @@ async def get_admin_user(
         status_code=status.HTTP_403_FORBIDDEN,
         detail='You are not allowed to perform this operation',
     )
-
-
-# app item related use cases --------------------------------------------------
-
-
-@utils.memorize
-def app_item_update_use_case(
-    users_repo: Annotated[
-        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
-    ],
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-    meta_repo: Annotated[
-        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
-    ],
-) -> use_cases.AppItemUpdateUseCase:
-    """Get use case instance."""
-    return use_cases.AppItemUpdateUseCase(
-        users_repo=users_repo,
-        items_repo=items_repo,
-        metainfo_repo=meta_repo,
-    )
