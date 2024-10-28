@@ -26,6 +26,10 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return Item with given UUID."""
 
     @abc.abstractmethod
+    async def get_by_name(self, conn: ConnectionT, name: str,) -> models.Item:
+        """Return Item with given name."""
+
+    @abc.abstractmethod
     async def get_children(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
         """Return list of children for given item."""
 
@@ -40,6 +44,38 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def get_siblings(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
         """Return list of siblings for given item."""
+
+    @abc.abstractmethod
+    async def get_items_anon(
+        self,
+        conn: ConnectionT,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str | None,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+
+    @abc.abstractmethod
+    async def get_items_known(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str | None,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+
+    @abc.abstractmethod
+    async def check_child(
+        self,
+        conn: ConnectionT,
+        possible_parent_uuid: UUID,
+        possible_child_uuid: UUID,
+    ) -> bool:
+        """Return True if given item is actually a child."""
 
     @abc.abstractmethod
     async def save(self, conn: ConnectionT, item: models.Item) -> bool:

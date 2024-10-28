@@ -61,7 +61,7 @@ class UpdateEXIFUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='update EXIF data')
 
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_item(item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
             LOG.info('{} is updating EXIF for {}', user, item)
@@ -76,7 +76,7 @@ class DeleteEXIFUseCase(BaseAPIUseCase):
         self.ensure_not_anon(user, operation='delete EXIF data')
 
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_item(item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='EXIF data')
 
             LOG.info('{} is deleting EXIF for {}', user, item)

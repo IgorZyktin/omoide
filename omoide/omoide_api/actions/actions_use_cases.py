@@ -35,8 +35,8 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
         """Initiate serial operation execution."""
         self.ensure_admin(admin, subject=f'known tags for user {user_uuid}')
 
-        async with self.mediator.database.transaction():
-            user = await self.mediator.users.get_user_by_uuid(user_uuid)
+        async with self.mediator.database.transaction() as conn:
+            user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             LOG.info('{} is rebuilding known tags for {}', admin, user)
 
             operation = so.RebuildKnownTagsUserSO(

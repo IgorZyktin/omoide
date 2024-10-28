@@ -185,11 +185,8 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         async with self.mediator.database.transaction() as conn:
             if user.is_admin:
                 users = await self.mediator.users.select(conn)
-                roots = await self.mediator.users.get_all_root_items(
-                    *users,
-                )
+                roots = await self.mediator.users.get_all_root_items(conn, *users)
                 extras = {root.owner_uuid: root.uuid for root in roots}
-
             else:
                 root = await self.mediator.users.get_root_item(conn, user)
                 users = [user]

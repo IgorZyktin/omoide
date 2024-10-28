@@ -44,23 +44,6 @@ class ItemsRepo(AbsItemsRepo):
 
         return int(response['total'])
 
-    async def get_all_root_items(
-        self,
-        *users: models.User,
-    ) -> list[models.Item]:
-        """Return list of root items."""
-        stmt = sa.select(db_models.Item).where(db_models.Item.parent_uuid == sa.null())
-
-        if users:
-            stmt = stmt.where(
-                db_models.Item.owner_uuid.in_(  # noqa
-                    tuple(str(user.uuid) for user in users)
-                )
-            )
-
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**each) for each in response]
-
     async def read_item(
         self,
         item_uuid: UUID,
@@ -87,65 +70,6 @@ class ItemsRepo(AbsItemsRepo):
             **raw_item,
             permissions={UUID(x) for x in permissions},
         )
-
-    async def get_items_anon(
-        self,
-        owner_uuid: UUID | None,
-        parent_uuid: UUID | None,
-        name: str | None,
-        limit: int,
-    ) -> list[models.Item]:
-        """Return Items."""
-        stmt = sa.select(db_models.Item).where(
-            db_models.Item.owner_uuid.in_(  # noqa
-                sa.select(db_models.PublicUsers.user_uuid)
-            )
-        )
-
-        if parent_uuid is not None:
-            stmt = stmt.where(db_models.Item.parent_uuid == parent_uuid)
-
-        if owner_uuid is not None:
-            stmt = stmt.where(db_models.Item.owner_uuid == owner_uuid)
-
-        if name is not None:
-            stmt = stmt.where(db_models.Item.name == name)
-
-        stmt = stmt.limit(limit)
-
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
-
-    async def get_items_known(
-        self,
-        user: models.User,
-        owner_uuid: UUID | None,
-        parent_uuid: UUID | None,
-        name: str | None,
-        limit: int,
-    ) -> list[models.Item]:
-        """Return Items."""
-        stmt = sa.select(db_models.Item).where(
-            sa.or_(
-                db_models.Item.permissions.any(str(user.uuid)),
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.owner_uuid.in_(sa.select(db_models.PublicUsers.user_uuid)),
-            )
-        )
-
-        if parent_uuid is not None:
-            stmt = stmt.where(db_models.Item.parent_uuid == parent_uuid)
-
-        if owner_uuid is not None:
-            stmt = stmt.where(db_models.Item.owner_uuid == owner_uuid)
-
-        if name is not None:
-            stmt = stmt.where(db_models.Item.name == name)
-
-        stmt = stmt.limit(limit)
-
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
 
     async def count_items_by_owner(
         self,
@@ -309,48 +233,6 @@ class ItemsRepo(AbsItemsRepo):
         stmt = sa.delete(db_models.Item).where(db_models.Item.uuid == item.uuid)
         await self.db.execute(stmt)
 
-    async def check_child(
-        self,
-        possible_parent_uuid: UUID,
-        possible_child_uuid: UUID,
-    ) -> bool:
-        """Return True if given item is actually a child.
-
-        Before checking ensure that UUIDs are not equal. Item is considered
-        of being child of itself. This check initially was added to ensure that
-        we could not create circular link when setting new parent for the item.
-        """
-        if possible_parent_uuid == possible_child_uuid:
-            return True
-
-        stmt = """
-        WITH RECURSIVE nested_items AS (
-            SELECT parent_uuid,
-                   uuid
-            FROM items
-            WHERE uuid = :possible_parent_uuid
-            UNION ALL
-            SELECT i.parent_uuid,
-                   i.uuid
-            FROM items i
-                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
-        )
-        SELECT count(*) AS total
-        FROM nested_items
-        WHERE uuid = :possible_child_uuid;
-        """
-
-        values = {
-            'possible_parent_uuid': str(possible_parent_uuid),
-            'possible_child_uuid': str(possible_child_uuid),
-        }
-
-        response = await self.db.fetch_one(stmt, values)
-
-        if response is None:
-            return False
-
-        return bool(response['total'] >= 1)
 
     async def update_permissions(
         self,
@@ -399,79 +281,3 @@ class ItemsRepo(AbsItemsRepo):
                         )
                     )
                     await self.db.execute(stmt)
-
-    async def add_tags(
-        self,
-        uuid: UUID,
-        tags: Collection[str],
-    ) -> None:
-        """Add new tags to computed tags of the item."""
-        for tag in tags:
-            stmt = (
-                sa.update(db_models.ComputedTags)
-                .where(db_models.ComputedTags.item_uuid == uuid)
-                .values(
-                    tags=sa.func.array_append(
-                        db_models.ComputedTags.tags,
-                        tag,
-                    )
-                )
-            )
-            await self.db.execute(stmt)
-
-    async def delete_tags(
-        self,
-        uuid: UUID,
-        tags: Collection[str],
-    ) -> None:
-        """Remove tags from computed tags of the item."""
-        for tag in tags:
-            stmt = (
-                sa.update(db_models.ComputedTags)
-                .where(db_models.ComputedTags.item_uuid == uuid)
-                .values(
-                    tags=sa.func.array_remove(
-                        db_models.ComputedTags.tags,
-                        tag,
-                    )
-                )
-            )
-            await self.db.execute(stmt)
-
-    async def add_permissions(
-        self,
-        uuid: UUID,
-        permissions: Collection[UUID],
-    ) -> None:
-        """Add new users to computed permissions of the item."""
-        for user_uuid in permissions:
-            stmt = (
-                sa.update(db_models.Item)
-                .where(db_models.Item.uuid == uuid)
-                .values(
-                    permissions=sa.func.array_append(
-                        db_models.Item.permissions,
-                        str(user_uuid),
-                    )
-                )
-            )
-            await self.db.execute(stmt)
-
-    async def delete_permissions(
-        self,
-        uuid: UUID,
-        permissions: Collection[UUID],
-    ) -> None:
-        """Remove users from computed permissions of the item."""
-        for user_uuid in permissions:
-            stmt = (
-                sa.update(db_models.Item)
-                .where(db_models.Item.uuid == uuid)
-                .values(
-                    permissions=sa.func.array_remove(
-                        db_models.Item.permissions,
-                        str(user_uuid),
-                    )
-                )
-            )
-            await self.db.execute(stmt)

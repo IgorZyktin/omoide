@@ -74,6 +74,17 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return db_models.Item.cast(response)
 
+    async def get_by_name(self, conn: AsyncConnection, name: str,) -> models.Item:
+        """Return Item with given name."""
+        query = sa.select(db_models.Item).where(db_models.Item.name == name)
+        response = (await conn.execute(query)).first()
+
+        if response is None:
+            msg = 'Item with name {name!r} does not exist'
+            raise exceptions.DoesNotExistError(msg, name=name)
+
+        return db_models.Item.cast(response)
+
     async def get_children(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of children for given item."""
         query = (
@@ -123,6 +134,111 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         response = (await conn.execute(query)).fetchall()
         return [db_models.Item.cast(row) for row in response]
+
+    async def get_items_anon(
+        self,
+        conn: AsyncConnection,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str | None,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+        query = sa.select(db_models.Item).where(
+            db_models.Item.owner_uuid.in_(  # noqa
+                sa.select(db_models.PublicUsers.user_uuid)
+            )
+        )
+
+        if parent_uuid is not None:
+            query = query.where(db_models.Item.parent_uuid == parent_uuid)
+
+        if owner_uuid is not None:
+            query = query.where(db_models.Item.owner_uuid == owner_uuid)
+
+        if name is not None:
+            query = query.where(db_models.Item.name == name)
+
+        query = query.limit(limit)
+
+        response = (await conn.execute(query)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
+
+    async def get_items_known(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        owner_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str | None,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return Items."""
+        query = sa.select(db_models.Item).where(
+            sa.or_(
+                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.owner_uuid.in_(sa.select(db_models.PublicUsers.user_uuid)),
+            )
+        )
+
+        if parent_uuid is not None:
+            query = query.where(db_models.Item.parent_uuid == parent_uuid)
+
+        if owner_uuid is not None:
+            query = query.where(db_models.Item.owner_uuid == owner_uuid)
+
+        if name is not None:
+            query = query.where(db_models.Item.name == name)
+
+        query = query.limit(limit)
+
+        response = (await conn.execute(query)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
+
+    async def check_child(
+        self,
+        conn: AsyncConnection,
+        possible_parent_uuid: UUID,
+        possible_child_uuid: UUID,
+    ) -> bool:
+        """Return True if given item is actually a child.
+
+        Before checking ensure that UUIDs are not equal. Item is considered
+        of being child of itself. This check initially was added to ensure that
+        we could not create circular link when setting new parent for the item.
+        """
+        if possible_parent_uuid == possible_child_uuid:
+            return True
+
+        query = """
+        WITH RECURSIVE nested_items AS (
+            SELECT parent_uuid,
+                   uuid
+            FROM items
+            WHERE uuid = :possible_parent_uuid
+            UNION ALL
+            SELECT i.parent_uuid,
+                   i.uuid
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+        )
+        SELECT count(*) AS total
+        FROM nested_items
+        WHERE uuid = :possible_child_uuid;
+        """
+
+        values = {
+            'possible_parent_uuid': str(possible_parent_uuid),
+            'possible_child_uuid': str(possible_child_uuid),
+        }
+
+        response = (await conn.execute(sa.text(query), values)).fetchone()
+
+        if response is None:
+            return False
+
+        return bool(response.total >= 1)
 
     async def save(self, conn: AsyncConnection, item: models.Item) -> bool:
         """Save the given item."""

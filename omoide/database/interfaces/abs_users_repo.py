@@ -56,3 +56,11 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def get_root_item(self, conn: ConnectionT, user: models.User) -> models.Item:
         """Return root item for given user."""
+
+    @abc.abstractmethod
+    async def get_all_root_items(
+        self,
+        conn: ConnectionT,
+        *users: models.User,
+    ) -> list[models.Item]:
+        """Return list of root items."""

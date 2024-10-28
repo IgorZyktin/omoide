@@ -110,6 +110,20 @@ class User(Base):
         """Return string representation."""
         return f'<User, id={self.id}, {self.uuid}, {self.name}>'
 
+    @staticmethod
+    def cast(row: sa.Row) -> models.User:
+        """Convert to domain-level object."""
+        return models.User(
+            id=row.id,
+            uuid=row.uuid,
+            name=row.name,
+            login=row.login,
+            role=row.role,
+            is_public=row.is_public,
+            registered_at=row.registered_at,
+            last_login=row.last_login,
+        )
+
 
 class PublicUsers(Base):
     """List of users who demonstrate their content publicly."""

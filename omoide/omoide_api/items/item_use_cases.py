@@ -94,8 +94,8 @@ class ReadItemUseCase(BaseAPIUseCase):
 
     async def execute(self, user: models.User, item_uuid: UUID) -> models.Item:
         """Execute."""
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
 
             if any(
                 (
@@ -105,7 +105,7 @@ class ReadItemUseCase(BaseAPIUseCase):
             ):
                 return item
 
-            public_users = await self.mediator.users.get_public_user_uuids()
+            public_users = await self.mediator.users.get_public_user_uuids(conn)
 
             if item.owner_uuid in public_users:
                 return item
@@ -128,14 +128,14 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
     ) -> tuple[float, list[models.Item]]:
         """Execute."""
         start = time.perf_counter()
-        async with self.mediator.database.transaction():
+        async with self.mediator.database.transaction() as conn:
             if user.is_anon:
                 items = await self.mediator.items.get_items_anon(
-                    owner_uuid, parent_uuid, name, limit
+                    conn, owner_uuid, parent_uuid, name, limit
                 )
             else:
                 items = await self.mediator.items.get_items_known(
-                    user, owner_uuid, parent_uuid, name, limit
+                    conn, user, owner_uuid, parent_uuid, name, limit
                 )
 
         duration = time.perf_counter() - start
@@ -154,8 +154,8 @@ class UpdateItemUseCase(BaseItemUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update items')
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='items')
 
             if item.is_collection == is_collection:
@@ -164,7 +164,7 @@ class UpdateItemUseCase(BaseItemUseCase):
             LOG.info('{} is updating {}', user, item)
 
             item.is_collection = is_collection
-            await self.mediator.items.update_item(item)
+            await self.mediator.items.save(conn, item)
 
 
 class RenameItemUseCase(BaseItemUseCase):
@@ -179,8 +179,8 @@ class RenameItemUseCase(BaseItemUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update items')
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='items')
 
             if item.name == name:
@@ -189,7 +189,7 @@ class RenameItemUseCase(BaseItemUseCase):
             LOG.info('{} is renaming {}', user, item)
 
             item.name = name
-            await self.mediator.items.update_item(item)
+            await self.mediator.items.save(conn, item)
 
             operation = so.UpdateTagsSO(
                 extras={
@@ -215,8 +215,8 @@ class ChangeParentItemUseCase(BaseItemUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='change parent item')
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='items')
 
             if item.parent_uuid == new_parent_uuid:
@@ -225,10 +225,10 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             if item.parent_uuid is None:
                 old_parent = None
             else:
-                old_parent = await self.mediator.items.get_item(item.parent_uuid)
+                old_parent = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
 
-            new_parent = await self.mediator.items.get_item(new_parent_uuid)
-            is_child = await self.mediator.items.check_child(new_parent_uuid, item.uuid)
+            new_parent = await self.mediator.items.get_by_uuid(conn, new_parent_uuid)
+            is_child = await self.mediator.items.check_child(conn, new_parent_uuid, item.uuid)
 
             if is_child:
                 msg = 'Item {new_parent_uuid} is actually a child of {item_uuid}'
@@ -245,7 +245,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             )
 
             item.parent_uuid = new_parent_uuid
-            await self.mediator.items.update_item(item)
+            await self.mediator.items.save(conn, item)
 
             operation = so.UpdateTagsSO(
                 extras={
@@ -274,8 +274,8 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
         """Execute."""
         self.ensure_not_anon(user, operation='update items')
 
-        async with self.mediator.database.transaction():
-            item = await self.mediator.items.get_item(item_uuid)
+        async with self.mediator.database.transaction() as conn:
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='items')
 
             if item.tags == tags:
@@ -284,7 +284,7 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
             LOG.info('{} is updating tags of {}', user, item)
 
             item.tags = tags
-            await self.mediator.items.update_item(item)
+            await self.mediator.items.save(conn, item)
 
             operation = so.UpdateTagsSO(
                 extras={
@@ -360,7 +360,7 @@ class DeleteItemUseCase(BaseItemUseCase):
 
         await self.mediator.object_storage.delete_all_objects(item)
         LOG.warning('Deleting item {}', item)
-        await self.mediator.items.delete_item(item)
+        await self.mediator.items.delete_item(conn, item)
 
 
 class BaseUploadUseCase(BaseAPIUseCase):
