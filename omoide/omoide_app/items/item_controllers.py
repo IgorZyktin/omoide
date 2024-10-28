@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import custom_logging
 from omoide import models
+from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.items import item_use_cases
 from omoide.presentation import dependencies as dep
@@ -62,3 +63,40 @@ async def app_create_item(
     }
 
     return templates.TemplateResponse('create_item.html', context)
+
+
+@app_items_router.get('/delete/{item_uuid}')
+async def app_delete_item(
+    request: Request,
+    item_uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    config: Annotated[Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
+):
+    """Delete item page."""
+    if user.is_anon:
+        return RedirectResponse(request.url_for('app_forbidden'))
+
+    use_case = item_use_cases.AppDeleteItemUseCase(mediator)
+
+    try:
+        item, total = await use_case.execute(user, item_uuid)
+    except Exception as exc:
+        return web.redirect_from_exc(request, exc)
+
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim_wrapper': aim_wrapper,
+        'current_item': item,
+        'item': item,
+        'url': request.url_for('app_search'),
+        'uuid': item_uuid,
+        'total': utils.sep_digits(total),
+    }
+
+    return templates.TemplateResponse('item_delete.html', context)

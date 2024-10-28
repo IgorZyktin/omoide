@@ -271,7 +271,7 @@
                         <span>Edit</span>
                     </a>
 
-                    <a href="{{ request.url_for('app_item_delete', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                    <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Delete current item"
                        class="button">
                         <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
@@ -287,7 +287,7 @@
                         <span>Edit</span>
                     </a>
 
-                    <a href="{{ request.url_for('app_item_delete', uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                    <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                        title="Delete current item"
                        class="button-disabled">
                         <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"

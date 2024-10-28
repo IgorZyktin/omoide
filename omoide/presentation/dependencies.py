@@ -4,7 +4,6 @@ from base64 import b64decode
 import binascii
 from typing import Annotated
 
-from databases import Database
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
@@ -32,7 +31,6 @@ from omoide.presentation import app_config
 from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 from omoide.storage import interfaces as storage_interfaces
-from omoide.storage.implementations import asyncpg
 
 
 @utils.memorize
@@ -56,12 +54,6 @@ def get_templates() -> Jinja2Templates:
 
 
 @utils.memorize
-def get_db() -> Database:
-    """Get database instance."""
-    return Database(get_config().db_url_app.get_secret_value())
-
-
-@utils.memorize
 def get_database() -> SqlalchemyDatabase:
     """Get database instance."""
     config = get_config()
@@ -69,64 +61,6 @@ def get_database() -> SqlalchemyDatabase:
         db_url=config.db_url_app.get_secret_value(),
         echo=False,
     )
-
-
-@utils.memorize
-def get_storage() -> storage_interfaces.AbsStorage:
-    """Get storage instance."""
-    return asyncpg.AsyncpgStorage(get_db())
-
-
-# repositories ----------------------------------------------------------------
-
-
-# TODO - remove
-@utils.memorize
-def get_search_repo() -> storage_interfaces.AbsSearchRepository:
-    """Get repo instance."""
-    return asyncpg.SearchRepository(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_browse_repo() -> storage_interfaces.AbsBrowseRepository:
-    """Get repo instance."""
-    return asyncpg.BrowseRepository(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_users_repo() -> storage_interfaces.AbsUsersRepo:
-    """Get repo instance."""
-    return asyncpg.UsersRepo(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_items_repo() -> storage_interfaces.AbsItemsRepo:
-    """Get repo instance."""
-    return asyncpg.ItemsRepo(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_media_repo() -> storage_interfaces.AbsMediaRepo:
-    """Get repo instance."""
-    return asyncpg.MediaRepo(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_misc_repo() -> storage_interfaces.AbsMiscRepo:
-    """Get repo instance."""
-    return asyncpg.MiscRepo(get_db())
-
-
-# TODO - remove
-@utils.memorize
-def get_metainfo_repo() -> storage_interfaces.AbsMetainfoRepo:
-    """Get repo instance."""
-    return asyncpg.MetainfoRepo(get_db())
 
 
 # application specific objects ------------------------------------------------
@@ -300,18 +234,6 @@ def app_item_update_use_case(
         users_repo=users_repo,
         items_repo=items_repo,
         metainfo_repo=meta_repo,
-    )
-
-
-@utils.memorize
-def app_item_delete_use_case(
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-) -> use_cases.AppItemDeleteUseCase:
-    """Get use case instance."""
-    return use_cases.AppItemDeleteUseCase(
-        items_repo=items_repo,
     )
 
 

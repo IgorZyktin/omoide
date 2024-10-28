@@ -14,7 +14,6 @@ from omoide.storage import interfaces as storage_interfaces
 
 __all__ = [
     'AppItemUpdateUseCase',
-    'AppItemDeleteUseCase',
 ]
 
 
@@ -67,36 +66,3 @@ class AppItemUpdateUseCase:
             metainfo = await self.metainfo_repo.read_metainfo(item)
 
         return Success((item, total, can_see, computed_tags, metainfo))
-
-
-class AppItemDeleteUseCase:
-    """Use case for item deletion page."""
-
-    def __init__(
-        self,
-        items_repo: storage_interfaces.AbsItemsRepo,
-    ) -> None:
-        """Initialize instance."""
-        self.items_repo = items_repo
-
-    async def execute(
-        self,
-        policy: interfaces.AbsPolicy,
-        user: models.User,
-        uuid: UUID,
-    ) -> Result[errors.Error, tuple[domain.Item, int]]:
-        """Execute."""
-        async with self.items_repo.transaction():
-            error = await policy.is_restricted(user, uuid, actions.Item.DELETE)
-
-            if error:
-                return Failure(error)
-
-            item = await self.items_repo.read_item(uuid)
-
-            if item is None:
-                return Failure(errors.ItemDoesNotExist(uuid=uuid))
-
-            total = await self.items_repo.count_all_children_of(item)
-
-        return Success((item, total))

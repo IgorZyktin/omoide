@@ -32,3 +32,28 @@ class AppCreateItemUseCase(BaseAPPUseCase):
             )
 
         return parent, users_with_permission
+
+
+class AppDeleteItemUseCase(BaseAPPUseCase):
+    """Use case for item deletion page."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+    ) -> tuple[models.Item, int]:
+        """Execute."""
+        if user.is_anon:
+            msg = 'You are not allowed to delete items'
+            raise exceptions.AccessDeniedError(msg)
+
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+
+            if item.owner_uuid != user.uuid and user.is_not_admin:
+                msg = 'You must own item {item_uuid} to delete it'
+                raise exceptions.AccessDeniedError(msg, item_uuid=item_uuid)
+
+            total = await self.mediator.items_repo.count_all_children_of(item)
+
+        return item, total

@@ -9,6 +9,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.30.0",
     "loguru>=0.7.2",
     "psycopg2-binary>=2.9.9",
     "pydantic-settings>=2.5.2",
@@ -20,7 +21,6 @@ dependencies = [
 [project.optional-dependencies]
 web = [
     "bcrypt>=4.2.0",
-    "databases[asyncpg]>=0.9.0",
     "fastapi>=0.115.0",
     "gunicorn>=23.0.0",
     "jinja2>=3.1.4",
