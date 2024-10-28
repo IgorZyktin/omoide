@@ -130,7 +130,7 @@ async def api_action_copy_image(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     target: actions_api_models.CopyContentInput,
-):
+) -> dict[str, str | list[str]]:
     """Copy image from one item to another.
 
     This will invoke copying of content, preview and a thumbnail.

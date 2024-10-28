@@ -1,6 +1,6 @@
 """Root APP application.
 
-All interaction with user goes here.
+All interactions with user are here.
 """
 
 from collections.abc import Iterator
@@ -9,7 +9,6 @@ import os
 from typing import Any
 
 from fastapi import FastAPI
-from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 
 from omoide.omoide_app.auth import auth_controllers
@@ -33,12 +32,8 @@ def get_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):  # noqa
         """Application lifespan."""
-        # Connect to the database
-        await dep.get_db().connect()
         await dep.get_database().connect()
         yield
-        # Disconnect from the database
-        await dep.get_db().disconnect()
         await dep.get_database().disconnect()
 
     new_app = FastAPI(
@@ -55,24 +50,13 @@ def get_app() -> FastAPI:
         name='static',
     )
 
+    # TODO - stop using two folders for the application
     if app_config.Config().env != 'prod':
         new_app.mount(
             '/content',
             StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
             name='content',
         )
-
-        @new_app.get('/all_routes')
-        def get_all_urls_from_request(request: Request):
-            """List all URLs for this Fastapi instance.
-
-            Supposed to be used only for debugging!
-            """
-            url_list = [
-                {'path': route.path, 'name': route.name}
-                for route in request.app.routes
-            ]
-            return url_list
 
     return new_app
 
