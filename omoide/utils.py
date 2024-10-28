@@ -313,6 +313,9 @@ def to_simple_type(something: Any) -> Any:
     if isinstance(something, list):
         return [to_simple_type(value) for value in something]
 
+    if isinstance(something, set):
+        return [to_simple_type(value) for value in something]
+
     return str(something)
 
 

@@ -40,7 +40,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         if limit is not None:
             query = query.limit(limit)
 
-        response = (await conn.execute(sa.text(query))).fetchall()
+        response = (await conn.execute(query)).fetchall()
         return [db_models.Item.cast(row) for row in response]
 
     async def browse_direct_anon(
@@ -66,7 +66,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query = queries.apply_order(query, order, last_seen)
         query = query.limit(limit)
 
-        response = (await conn.execute(sa.text(query))).fetchall()
+        response = (await conn.execute(query)).fetchall()
         return [db_models.Item.cast(row) for row in response]
 
     async def browse_direct_known(
