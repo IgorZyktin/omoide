@@ -4,7 +4,6 @@ import abc
 from collections.abc import Collection
 from uuid import UUID
 
-from omoide import domain
 from omoide import models
 
 
@@ -35,7 +34,7 @@ class AbsItemsRepo(abc.ABC):
     async def read_item(
         self,
         uuid: UUID,
-    ) -> domain.Item | None:
+    ) -> models.Item | None:
         """Return Item or None."""
 
     @abc.abstractmethod
@@ -74,7 +73,7 @@ class AbsItemsRepo(abc.ABC):
     @abc.abstractmethod
     async def count_all_children_of(
         self,
-        item: domain.Item,
+        item: models.Item,
     ) -> int:
         """Count dependant items."""
 
@@ -102,7 +101,7 @@ class AbsItemsRepo(abc.ABC):
         self,
         user: models.User,
         name: str,
-    ) -> domain.Item | None:
+    ) -> models.Item | None:
         """Return corresponding item."""
 
     @abc.abstractmethod
@@ -112,7 +111,7 @@ class AbsItemsRepo(abc.ABC):
     @abc.abstractmethod
     async def update_item(
         self,
-        item: domain.Item,
+        item: models.Item,
     ) -> None:
         """Update existing item."""
 

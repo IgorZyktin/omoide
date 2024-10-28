@@ -3,7 +3,7 @@
 import functools
 import os.path
 
-from omoide import domain
+from omoide import models
 from omoide import interfaces
 
 __all__ = [
@@ -17,7 +17,7 @@ class FilesystemLocator(interfaces.AbsLocator):
     def __init__(
         self,
         base_folder: str,
-        item: domain.Item,
+        item: models.Item,
         prefix_size: int,
     ) -> None:
         """Initialize instance."""

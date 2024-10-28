@@ -4,10 +4,10 @@ from typing import NamedTuple
 from uuid import UUID
 
 from omoide import custom_logging
-from omoide import domain
 from omoide import exceptions
 from omoide import models
 from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
+from omoide.presentation import web
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -67,7 +67,7 @@ class BrowseResult(NamedTuple):
     total_pages: int
     items: list[models.Item]
     names: list[str | None]
-    aim: domain.Aim
+    aim: web.Aim
 
 
 class AppBrowsePagedUseCase(BaseBrowseUseCase):
@@ -77,7 +77,7 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-        aim: domain.Aim,
+        aim: web.Aim,
     ) -> BrowseResult:
         """Return browse model suitable for rendering."""
         async with self.mediator.storage.transaction():

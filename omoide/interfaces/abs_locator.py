@@ -3,7 +3,7 @@
 import abc
 import functools
 
-from omoide import domain
+from omoide import models
 
 
 class AbsLocator(abc.ABC):
@@ -14,7 +14,7 @@ class AbsLocator(abc.ABC):
 
     def __init__(
         self,
-        item: domain.Item,
+        item: models.Item,
         prefix_size: int,
     ) -> None:
         """Initialize instance."""
