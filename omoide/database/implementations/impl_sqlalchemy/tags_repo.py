@@ -36,8 +36,7 @@ class _TagsRepoHelper(AbsTagsRepo[AsyncConnection], abc.ABC):
                     )
                     .join(
                         db_models.ComputedTags,
-                        db_models.ComputedTags.item_uuid
-                        == db_models.Item.uuid,
+                        db_models.ComputedTags.item_uuid == db_models.Item.uuid,
                     )
                     .where(*get_conditions(marker))
                 )
@@ -95,10 +94,7 @@ class TagsRepo(_TagsRepoHelper):
         batch_size: int,
     ) -> None:
         """Insert given tags for anon user."""
-        payload = [
-            {'tag': str(tag), 'counter': counter}
-            for tag, counter in tags.items()
-        ]
+        payload = [{'tag': str(tag), 'counter': counter} for tag, counter in tags.items()]
 
         for batch in itertools.batched(payload, batch_size):
             stmt = sa.insert(db_models.KnownTagsAnon).values(batch)
@@ -136,9 +132,7 @@ class TagsRepo(_TagsRepoHelper):
         user: models.User,
     ) -> int:
         """Drop all known tags for specific user."""
-        stmt = sa.delete(db_models.KnownTags).where(
-            db_models.KnownTags.user_id == user.id
-        )
+        stmt = sa.delete(db_models.KnownTags).where(db_models.KnownTags.user_id == user.id)
         response = await conn.execute(stmt)
         return int(response.rowcount)
 

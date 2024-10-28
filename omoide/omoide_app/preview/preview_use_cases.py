@@ -29,9 +29,7 @@ class AppPreviewUseCase(BaseAPPUseCase):
         """Execute."""
         async with self.mediator.database.transaction():
             item = await self.mediator.items.get_item(item_uuid)
-            public_users = (
-                await self.mediator.users.get_public_user_uuids()
-            )
+            public_users = await self.mediator.users.get_public_user_uuids()
 
             allowed_to = any(
                 (

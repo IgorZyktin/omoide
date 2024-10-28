@@ -58,9 +58,7 @@ class SearchRepository(_SearchRepositoryBase):
         collections: bool,
     ) -> int:
         """Return total amount of items relevant to this search query."""
-        stmt = sa.select(sa.func.count().label('total_items')).select_from(
-            db_models.Item
-        )
+        stmt = sa.select(sa.func.count().label('total_items')).select_from(db_models.Item)
 
         stmt = self._expand_query(
             user=user,

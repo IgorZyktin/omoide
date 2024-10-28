@@ -25,11 +25,7 @@ def get_all_corresponding_users(
     if only_users is None:
         return session.query(db_models.User).all()
 
-    return (
-        session.query(db_models.User)
-        .filter(db_models.User.uuid.in_(only_users))
-        .all()
-    )
+    return session.query(db_models.User).filter(db_models.User.uuid.in_(only_users)).all()
 
 
 @dataclass
@@ -82,20 +78,14 @@ def scan_for_user(conn: Connection, user: db_models.User) -> Stats:
     """Calculate disk usage for specific user."""
     stmt = (
         sa.select(
-            sa.func.coalesce(
-                sa.func.sum(db_models.Metainfo.content_size), 0
-            ).label('content_size'),
-            sa.func.coalesce(
-                sa.func.sum(db_models.Metainfo.preview_size), 0
-            ).label('preview_size'),
-            sa.func.coalesce(
-                sa.func.sum(db_models.Metainfo.thumbnail_size), 0
-            ).label('thumbnail_size'),
+            sa.func.coalesce(sa.func.sum(db_models.Metainfo.content_size), 0).label('content_size'),
+            sa.func.coalesce(sa.func.sum(db_models.Metainfo.preview_size), 0).label('preview_size'),
+            sa.func.coalesce(sa.func.sum(db_models.Metainfo.thumbnail_size), 0).label(
+                'thumbnail_size'
+            ),
             sa.func.count(db_models.Item.content_ext).label('content_total'),
             sa.func.count(db_models.Item.preview_ext).label('preview_total'),
-            sa.func.count(db_models.Item.thumbnail_ext).label(
-                'thumbnail_total'
-            ),
+            sa.func.count(db_models.Item.thumbnail_ext).label('thumbnail_total'),
             sa.func.count(db_models.Item.uuid).label('total_items'),
         )
         .join(
@@ -185,8 +175,7 @@ def print_results(stats: list[Stats], threshold: float = 0.1) -> None:
         """Format multiline summary."""
         lines = [
             _highlight(utils.sep_digits(getattr(_stat, f'{what}_total'))),
-            _stat.percent(what, 'total', total[f'{what}_total'])
-            + '% of files',
+            _stat.percent(what, 'total', total[f'{what}_total']) + '% of files',
             _stat.percent(what, 'size', total[f'{what}_size']) + '% of size',
         ]
 

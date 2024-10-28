@@ -22,9 +22,7 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo):
 
     async def read_metainfo(self, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
-        stmt = sa.select(db_models.Metainfo).where(
-            db_models.Metainfo.item_uuid == item.uuid
-        )
+        stmt = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_uuid == item.uuid)
 
         response = await self.db.fetch_one(stmt)
 
@@ -89,9 +87,7 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo):
             msg = 'Metainfo for item {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-    async def add_item_note(
-        self, item: models.Item, key: str, value: str
-    ) -> None:
+    async def add_item_note(self, item: models.Item, key: str, value: str) -> None:
         """Add new note to given item."""
         insert = pg_insert(db_models.ItemNote).values(
             item_id=item.id,
@@ -116,15 +112,15 @@ class MetainfoRepo(storage_interfaces.AbsMetainfoRepo):
         """Return total disk usage for specified user."""
         stmt = (
             sa.select(
-                sa.func.sum(
-                    sa.func.coalesce(db_models.Metainfo.content_size, 0)
-                ).label('content_bytes'),
-                sa.func.sum(
-                    sa.func.coalesce(db_models.Metainfo.preview_size, 0)
-                ).label('preview_bytes'),
-                sa.func.sum(
-                    sa.func.coalesce(db_models.Metainfo.thumbnail_size, 0)
-                ).label('thumbnail_bytes'),
+                sa.func.sum(sa.func.coalesce(db_models.Metainfo.content_size, 0)).label(
+                    'content_bytes'
+                ),
+                sa.func.sum(sa.func.coalesce(db_models.Metainfo.preview_size, 0)).label(
+                    'preview_bytes'
+                ),
+                sa.func.sum(sa.func.coalesce(db_models.Metainfo.thumbnail_size, 0)).label(
+                    'thumbnail_bytes'
+                ),
             )
             .join(
                 db_models.Item,

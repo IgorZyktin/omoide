@@ -41,9 +41,7 @@ class RebuildKnownTagsRegisteredExecutor(
     async def execute(self) -> None:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            user = await self.mediator.users.get_by_uuid(
-                conn, self.operation.user_uuid
-            )
+            user = await self.mediator.users.get_by_uuid(conn, self.operation.user_uuid)
 
             self.operation.goal = f'rebuild known tags for {user}'
 

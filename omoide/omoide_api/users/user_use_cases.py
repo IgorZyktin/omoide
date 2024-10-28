@@ -95,9 +95,7 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
                 new_name,
             )
 
-            await self.mediator.users.update_user(
-                user_uuid, name=new_name
-            )
+            await self.mediator.users.update_user(user_uuid, name=new_name)
 
             root = await self.mediator.items.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -132,9 +130,7 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
                 new_login,
             )
 
-            await self.mediator.users.update_user(
-                user_uuid, login=new_login
-            )
+            await self.mediator.users.update_user(user_uuid, login=new_login)
 
             root = await self.mediator.items.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -173,9 +169,7 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
                 given_password=new_password, auth_complexity=auth_complexity
             )
 
-            await self.mediator.users.update_user(
-                user_uuid, password=encoded_password
-            )
+            await self.mediator.users.update_user(user_uuid, password=encoded_password)
 
             root = await self.mediator.items.get_root_item(target_user)
             extras = {'root_item': root.uuid}
@@ -249,19 +243,13 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
             )
             self.ensure_admin_or_owner(user, target_user, 'users')
 
-            disk_usage = await self.mediator.meta.get_total_disk_usage(
-                target_user
-            )
+            disk_usage = await self.mediator.meta.get_total_disk_usage(target_user)
 
-            total_items = await self.mediator.items.count_items_by_owner(
-                target_user
-            )
+            total_items = await self.mediator.items.count_items_by_owner(target_user)
 
-            total_collections = await (
-                self.mediator.items.count_items_by_owner(
-                    target_user,
-                    collections=True,
-                )
+            total_collections = await self.mediator.items.count_items_by_owner(
+                target_user,
+                collections=True,
             )
 
         return models.ResourceUsage(

@@ -77,24 +77,14 @@ class User(Base):
 
     # fields ------------------------------------------------------------------
 
-    login: Mapped[str] = mapped_column(
-        sa.String(length=MEDIUM), nullable=False, unique=True
-    )
-    password: Mapped[str] = mapped_column(
-        sa.String(length=HUGE), nullable=False
-    )
+    login: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False, unique=True)
+    password: Mapped[str] = mapped_column(sa.String(length=HUGE), nullable=False)
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
     auth_complexity: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
-    is_public: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, index=True
-    )
-    registered_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    last_login: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
+    is_public: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, index=True)
+    registered_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    last_login: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     # relations ---------------------------------------------------------------
 
@@ -175,9 +165,7 @@ class ComputedTags(Base):
 
     # other -------------------------------------------------------------------
 
-    __table_args__ = (
-        sa.Index('ix_computed_tags', tags, postgresql_using='gin'),
-    )
+    __table_args__ = (sa.Index('ix_computed_tags', tags, postgresql_using='gin'),)
 
 
 class OrphanFiles(Base):
@@ -201,18 +189,12 @@ class OrphanFiles(Base):
     # fields ------------------------------------------------------------------
 
     media_type: Mapped[str] = mapped_column(
-        sa.Enum(
-            const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'
-        )
+        sa.Enum(const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type')
     )
 
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(), nullable=False, index=True
-    )
+    owner_uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True)
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(), nullable=False, index=True
-    )
+    item_uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True)
 
     ext: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
 
@@ -324,12 +306,8 @@ class LongJob(Base):
     )
 
     added: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    deleted: Mapped[list[str]] = mapped_column(
-        pg.ARRAY(sa.Text), nullable=False
-    )
-    status: Mapped[str] = mapped_column(
-        sa.String(length=SMALL), index=True, nullable=False
-    )
+    deleted: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
+    status: Mapped[str] = mapped_column(sa.String(length=SMALL), index=True, nullable=False)
     started: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True),
         nullable=False,
@@ -413,27 +391,17 @@ class Item(Base):
         nullable=False,
         index=True,
     )
-    number: Mapped[int] = mapped_column(
-        sa.BigInteger, autoincrement=True, nullable=False
-    )
+    number: Mapped[int] = mapped_column(sa.BigInteger, autoincrement=True, nullable=False)
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
     is_collection: Mapped[bool] = mapped_column(sa.Boolean, nullable=False)
-    content_ext: Mapped[str | None] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
-    preview_ext: Mapped[str | None] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
-    thumbnail_ext: Mapped[str | None] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
+    content_ext: Mapped[str | None] = mapped_column(sa.String(length=SMALL), nullable=True)
+    preview_ext: Mapped[str | None] = mapped_column(sa.String(length=SMALL), nullable=True)
+    thumbnail_ext: Mapped[str | None] = mapped_column(sa.String(length=SMALL), nullable=True)
 
     # array fields ------------------------------------------------------------
 
     tags: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    permissions: Mapped[set[UUID]] = mapped_column(
-        pg.ARRAY(sa.Text), nullable=False
-    )
+    permissions: Mapped[set[UUID]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
 
     # methods -----------------------------------------------------------------
 
@@ -488,47 +456,23 @@ class Metainfo(Base):
 
     # fields ------------------------------------------------------------------
 
-    created_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
-    user_time: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=False), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    user_time: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=False), nullable=True)
 
-    content_type: Mapped[str] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
+    content_type: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=True)
 
     content_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     preview_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
-    thumbnail_size: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
+    thumbnail_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
-    content_width: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    content_height: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    preview_width: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    preview_height: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    thumbnail_width: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    thumbnail_height: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
+    content_width: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    content_height: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    preview_width: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    preview_height: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    thumbnail_width: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    thumbnail_height: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # methods -----------------------------------------------------------------
 
@@ -568,17 +512,13 @@ class ItemNote(Base):
 
     # fields ------------------------------------------------------------------
 
-    key: Mapped[str] = mapped_column(
-        sa.CHAR(MEDIUM), nullable=False, index=True
-    )
+    key: Mapped[str] = mapped_column(sa.CHAR(MEDIUM), nullable=False, index=True)
 
     value: Mapped[str] = mapped_column(sa.CHAR(HUGE), nullable=False)
 
     # other -------------------------------------------------------------------
 
-    __table_args__ = (
-        sa.UniqueConstraint('item_id', 'key', name='item_notes_uc'),
-    )
+    __table_args__ = (sa.UniqueConstraint('item_id', 'key', name='item_notes_uc'),)
 
 
 class Media(Base):
@@ -627,9 +567,7 @@ class Media(Base):
     )
 
     media_type: Mapped[str] = mapped_column(
-        sa.Enum(
-            const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'
-        ),
+        sa.Enum(const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'),
         nullable=False,
     )
 
@@ -672,9 +610,7 @@ class CommandCopy(Base):
         sa.DateTime(timezone=True), nullable=False, index=True
     )
 
-    processed_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
+    processed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     error: Mapped[str] = mapped_column(sa.Text, nullable=True)
 
@@ -704,9 +640,7 @@ class CommandCopy(Base):
     )
 
     media_type: Mapped[str] = mapped_column(
-        sa.Enum(
-            const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'
-        ),
+        sa.Enum(const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'),
         nullable=False,
     )
 
@@ -758,9 +692,7 @@ class SignatureMD5(Base):
 
     # fields ------------------------------------------------------------------
 
-    signature: Mapped[str] = mapped_column(
-        sa.CHAR(32), nullable=False, index=True
-    )
+    signature: Mapped[str] = mapped_column(sa.CHAR(32), nullable=False, index=True)
 
 
 class SignatureCRC32(Base):
@@ -781,9 +713,7 @@ class SignatureCRC32(Base):
 
     # fields ------------------------------------------------------------------
 
-    signature: Mapped[int] = mapped_column(
-        sa.BigInteger, nullable=False, index=True
-    )
+    signature: Mapped[int] = mapped_column(sa.BigInteger, nullable=False, index=True)
 
 
 class RegisteredWorkers(Base):
@@ -868,18 +798,10 @@ class SerialOperation(Base):
 
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    started_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
-    ended_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
 

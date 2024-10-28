@@ -33,9 +33,7 @@ def run(config: Config, database: SyncDatabase) -> None:
 
             changed = 0
             for item in leaf_items:
-                changed += force_copy_to_all_parents(
-                    session, item, already_handled
-                )
+                changed += force_copy_to_all_parents(session, item, already_handled)
                 total_operations += changed
             LOG.info('Changed {} items', changed)
             session.commit()
@@ -98,9 +96,7 @@ def force_copy_to_all_parents(
         parent_metainfo = helpers.get_metainfo(session, item)
 
         if parent.uuid not in already_handled:
-            copy_properties(
-                session, parent, parent_metainfo, item, leaf_metainfo
-            )
+            copy_properties(session, parent, parent_metainfo, item, leaf_metainfo)
             invoke_worker_to_copy(session, parent, item)
             already_handled.add(parent.uuid)
             changed += 1

@@ -38,9 +38,7 @@ CODES_TO_EXCEPTIONS: dict[int, list[type[Exception]]] = {
 }
 
 EXCEPTION_TO_CODE_MAP: dict[type[Exception], int] = {
-    error: code
-    for code, errors in CODES_TO_EXCEPTIONS.items()
-    for error in errors
+    error: code for code, errors in CODES_TO_EXCEPTIONS.items() for error in errors
 }
 
 
@@ -277,9 +275,7 @@ def _get_href(request: Request, item: models.Item) -> str:
     """Return base for HREF formation."""
     base = request.scope.get('root_path')
     prefix = str(item.uuid)[:2]
-    return (
-        f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
-    )
+    return f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
 
 
 def get_content_href(request: Request, item: models.Item) -> str:

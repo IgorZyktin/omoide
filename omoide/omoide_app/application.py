@@ -22,7 +22,7 @@ from omoide.omoide_app.search import search_controllers
 from omoide.omoide_app.special import special_controllers
 from omoide.omoide_app.upload import upload_controllers
 from omoide.presentation import app_config
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 
 
 def get_app() -> FastAPI:

@@ -61,9 +61,7 @@ class UpdatePermissionsExecutor(
 
             for parent in reversed(parents):
                 parent.permissions = parent.permissions | self.operation.added
-                parent.permissions = (
-                    parent.permissions - self.operation.deleted
-                )
+                parent.permissions = parent.permissions - self.operation.deleted
                 await self.mediator.items.save(conn, parent)
                 LOG.info(
                     'Permissions change in {child} affected {parent} (parent)',
@@ -97,18 +95,10 @@ class UpdatePermissionsExecutor(
                     child.permissions = self.operation.original
                     affected_users.update(sub_added | sub_deleted)
 
-                elif (
-                    self.operation.apply_to_children_as is const.ApplyAs.DELTA
-                ):
-                    child.permissions = (
-                        child.permissions | self.operation.added
-                    )
-                    child.permissions = (
-                        child.permissions - self.operation.deleted
-                    )
-                    affected_users.update(
-                        self.operation.added | self.operation.deleted
-                    )
+                elif self.operation.apply_to_children_as is const.ApplyAs.DELTA:
+                    child.permissions = child.permissions | self.operation.added
+                    child.permissions = child.permissions - self.operation.deleted
+                    affected_users.update(self.operation.added | self.operation.deleted)
 
                 await self.mediator.items.save(conn, child)
                 LOG.info(

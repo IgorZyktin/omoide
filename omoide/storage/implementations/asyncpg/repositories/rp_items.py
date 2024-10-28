@@ -99,9 +99,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo):
         *users: models.User,
     ) -> list[models.Item]:
         """Return list of root items."""
-        stmt = sa.select(db_models.Item).where(
-            db_models.Item.parent_uuid == sa.null()
-        )
+        stmt = sa.select(db_models.Item).where(db_models.Item.parent_uuid == sa.null())
 
         if users:
             stmt = stmt.where(
@@ -118,9 +116,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo):
         item_uuid: UUID,
     ) -> models.Item | None:
         """Return item or None."""
-        stmt = sa.select(db_models.Item).where(
-            db_models.Item.uuid == item_uuid
-        )
+        stmt = sa.select(db_models.Item).where(db_models.Item.uuid == item_uuid)
 
         response = await self.db.fetch_one(stmt)
 
@@ -183,9 +179,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo):
             sa.or_(
                 db_models.Item.permissions.any(str(user.uuid)),
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.owner_uuid.in_(
-                    sa.select(db_models.PublicUsers.user_uuid)
-                ),
+                db_models.Item.owner_uuid.in_(sa.select(db_models.PublicUsers.user_uuid)),
             )
         )
 
@@ -278,9 +272,9 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo):
         """Return all siblings for the given item."""
         stmt = sa.select(db_models.Item)
 
-        stmt = stmt.where(
-            db_models.Item.parent_uuid == item.parent_uuid
-        ).order_by(db_models.Item.number)
+        stmt = stmt.where(db_models.Item.parent_uuid == item.parent_uuid).order_by(
+            db_models.Item.number
+        )
 
         response = await self.db.fetch_all(stmt)
         return [models.Item(**row) for row in response]
@@ -384,9 +378,7 @@ class ItemsRepo(storage_interfaces.AbsItemsRepo):
 
     async def delete_item(self, item: models.Item) -> None:
         """Delete item."""
-        stmt = sa.delete(db_models.Item).where(
-            db_models.Item.uuid == item.uuid
-        )
+        stmt = sa.delete(db_models.Item).where(db_models.Item.uuid == item.uuid)
         await self.db.execute(stmt)
 
     async def check_child(

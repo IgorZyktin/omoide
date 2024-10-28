@@ -8,7 +8,7 @@ from fastapi import status
 
 from omoide import const
 from omoide import models
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 
 api_info_router = APIRouter(prefix='/info', tags=['Info'])
 
@@ -28,7 +28,9 @@ async def api_get_version():
     status_code=status.HTTP_200_OK,
     response_model=dict[str, str | None],
 )
-async def api_get_myself(user: Annotated[models.User, Depends(dep.get_current_user)]):
+async def api_get_myself(
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+):
     """Return current user as API sees it."""
     if user.is_anon:
         return {'uuid': None, 'name': 'anon'}

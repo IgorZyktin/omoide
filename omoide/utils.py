@@ -30,9 +30,7 @@ def get_bucket(uuid: UUID | str, length: int = 2) -> str:
     return str(uuid)[:length]
 
 
-UUID_TEMPLATE = re.compile(
-    '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-)
+UUID_TEMPLATE = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 
 
 def is_valid_uuid(uuid: UUID | str) -> bool:
@@ -185,9 +183,7 @@ def human_readable_time(seconds: int) -> str:
     return string
 
 
-def group_to_size(
-    iterable: Iterable, group_size: int = 2, default: Any = '?'
-) -> Iterator[tuple]:
+def group_to_size(iterable: Iterable, group_size: int = 2, default: Any = '?') -> Iterator[tuple]:
     """Return contents of the iterable grouped in blocks of given size.
 
     >>> list(group_to_size([1, 2, 3, 4, 5, 6, 7], 2, '?'))
@@ -236,9 +232,7 @@ def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
     return wrapper
 
 
-def serialize_model(
-    model: Any, do_not_serialize: Collection[str] = frozenset()
-) -> str:
+def serialize_model(model: Any, do_not_serialize: Collection[str] = frozenset()) -> str:
     """Convert model to human-readable string."""
     attributes: list[str] = []
     model_to_list(
@@ -299,9 +293,7 @@ def get_size(obj: Any, seen: set[int] | None = None) -> int:
     elif hasattr(obj, '__dict__'):
         size += get_size(obj.__dict__, seen)
 
-    elif hasattr(obj, '__iter__') and not isinstance(
-        obj, (str | bytes | bytearray)
-    ):
+    elif hasattr(obj, '__iter__') and not isinstance(obj, (str | bytes | bytearray)):
         size += sum([get_size(i, seen) for i in obj])
 
     return size

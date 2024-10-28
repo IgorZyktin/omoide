@@ -21,10 +21,8 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
         async with self.mediator.database.transaction():
             LOG.info('{} is rebuilding known tags for anon', admin)
 
-            operation_id = (
-                await self.mediator.misc.create_serial_operation(
-                    operation=so.RebuildKnownTagsAnonSO()
-                )
+            operation_id = await self.mediator.misc.create_serial_operation(
+                operation=so.RebuildKnownTagsAnonSO()
             )
 
         return operation_id
@@ -44,10 +42,8 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
             operation = so.RebuildKnownTagsUserSO(
                 extras={'user_uuid': str(user.uuid)},
             )
-            operation_id = (
-                await self.mediator.misc.create_serial_operation(
-                    operation=operation,
-                )
+            operation_id = await self.mediator.misc.create_serial_operation(
+                operation=operation,
             )
 
         return operation_id
@@ -58,17 +54,13 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.ensure_admin(
-            admin, subject=f'known tags for all registered users'
-        )
+        self.ensure_admin(admin, subject=f'known tags for all registered users')
 
         async with self.mediator.database.transaction():
             LOG.info('{} is rebuilding known tags for all users', admin)
 
-            operation_id = (
-                await self.mediator.misc.create_serial_operation(
-                    operation=so.RebuildKnownTagsAllSO()
-                )
+            operation_id = await self.mediator.misc.create_serial_operation(
+                operation=so.RebuildKnownTagsAllSO()
             )
 
         return operation_id

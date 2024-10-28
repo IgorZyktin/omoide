@@ -17,7 +17,7 @@ from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.items import item_use_cases
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 
@@ -101,7 +101,13 @@ async def app_item_update(
     use_case = item_use_cases.AppUpdateItemUseCase(mediator)
 
     try:
-        item, total, permissions, computed_tags, metainfo = await use_case.execute(
+        (
+            item,
+            total,
+            permissions,
+            computed_tags,
+            metainfo,
+        ) = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
         )
@@ -110,9 +116,7 @@ async def app_item_update(
 
     lower_tags = [tag.lower() for tag in item.tags]
     external_tags = [
-        tag
-        for tag in computed_tags
-        if tag not in lower_tags and not utils.is_valid_uuid(tag)
+        tag for tag in computed_tags if tag not in lower_tags and not utils.is_valid_uuid(tag)
     ]
 
     model = serialize_item(item)

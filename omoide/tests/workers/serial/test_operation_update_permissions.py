@@ -24,15 +24,9 @@ async def test_serial_operation_update_permissions(
         'is_public': False,
     }
 
-    user_1 = models.User(
-        id=1, login='l1', uuid=uuid4(), name='user_1', **user_common
-    )
-    user_2 = models.User(
-        id=2, login='l2', uuid=uuid4(), name='user_2', **user_common
-    )
-    user_3 = models.User(
-        id=3, login='l3', uuid=uuid4(), name='user_3', **user_common
-    )
+    user_1 = models.User(id=1, login='l1', uuid=uuid4(), name='user_1', **user_common)
+    user_2 = models.User(id=2, login='l2', uuid=uuid4(), name='user_2', **user_common)
+    user_3 = models.User(id=3, login='l3', uuid=uuid4(), name='user_3', **user_common)
     users = [user_1, user_2, user_3]
 
     items_common = {
@@ -46,9 +40,7 @@ async def test_serial_operation_update_permissions(
         'tags': [],
     }
 
-    item_1 = models.Item(
-        id=1, uuid=uuid4(), parent_uuid=None, name='item_1', **items_common
-    )
+    item_1 = models.Item(id=1, uuid=uuid4(), parent_uuid=None, name='item_1', **items_common)
     item_2 = models.Item(
         id=2,
         uuid=uuid4(),

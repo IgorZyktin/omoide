@@ -39,16 +39,13 @@ def run(config: Config, database: SyncDatabase) -> None:
             if not all_metainfo:
                 continue
 
-            LOG.info(
-                'Refreshing image sizes for user {} {}', user.uuid, user.name
-            )
+            LOG.info('Refreshing image sizes for user {} {}', user.uuid, user.name)
 
             rebuild_sizes(config, user, all_metainfo)
             spent = time.perf_counter() - start
 
             LOG.info(
-                'Rebuilt image sizes for '
-                '{} {} ({} records) in {:0.3f} sec.',
+                'Rebuilt image sizes for ' '{} {} ({} records) in {:0.3f} sec.',
                 user.uuid,
                 user.name,
                 utils.sep_digits(len(all_metainfo)),
@@ -124,16 +121,12 @@ def rebuild_sizes(
     try:
         from PIL import Image
     except ImportError:
-        LOG.exception(
-            'You have to install "pillow" package to run this command'
-        )
+        LOG.exception('You have to install "pillow" package to run this command')
         sys.exit(1)
 
     for metainfo, item in all_metainfo:
         if metainfo is None or item is None:
-            LOG.error(
-                'Failed to get data, metainfo={}, item={}', metainfo, item
-            )
+            LOG.error('Failed to get data, metainfo={}, item={}', metainfo, item)
             continue
 
         locator = make_locator(config, user, item)

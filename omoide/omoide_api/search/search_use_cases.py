@@ -27,13 +27,9 @@ class AutocompleteUseCase(BaseAPIUseCase):
         repo = self.mediator.search
         async with self.mediator.database.transaction():
             if user.is_anon:
-                variants = await repo.autocomplete_tag_anon(
-                    tag=tag, limit=limit
-                )
+                variants = await repo.autocomplete_tag_anon(tag=tag, limit=limit)
             else:
-                variants = await repo.autocomplete_tag_known(
-                    user=user, tag=tag, limit=limit
-                )
+                variants = await repo.autocomplete_tag_known(user=user, tag=tag, limit=limit)
         return variants
 
 

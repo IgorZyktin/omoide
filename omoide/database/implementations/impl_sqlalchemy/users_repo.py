@@ -54,11 +54,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         if user.id >= 0:
             values['id'] = user.id
 
-        stmt = (
-            sa.insert(db_models.User)
-            .values(values)
-            .returning(db_models.User.id)
-        )
+        stmt = sa.insert(db_models.User).values(values).returning(db_models.User.id)
 
         response = await conn.execute(stmt)
         user_id = int(response.scalar() or -1)

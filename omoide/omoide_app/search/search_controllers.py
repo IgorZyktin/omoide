@@ -10,7 +10,7 @@ from fastapi.responses import Response
 from starlette.templating import Jinja2Templates
 
 from omoide import models
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 from omoide.presentation import web
 from omoide.presentation.app_config import Config
 

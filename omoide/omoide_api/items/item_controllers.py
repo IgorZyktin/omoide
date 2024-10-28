@@ -17,7 +17,7 @@ from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_items_router = APIRouter(prefix='/items', tags=['Items'])
@@ -45,13 +45,9 @@ async def api_create_item(
 
     item = items[0]
 
-    response.headers['Location'] = str(
-        request.url_for('api_read_item', item_uuid=item.uuid)
-    )
+    response.headers['Location'] = str(request.url_for('api_read_item', item_uuid=item.uuid))
 
-    return common_api_models.OneItemOutput(
-        item=common_api_models.ItemOutput(**item.model_dump())
-    )
+    return common_api_models.OneItemOutput(item=common_api_models.ItemOutput(**item.model_dump()))
 
 
 @api_items_router.post(
@@ -77,10 +73,7 @@ async def api_create_many_items(
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
-        items=[
-            common_api_models.ItemOutput(**item.model_dump(exclude={'id'}))
-            for item in items
-        ],
+        items=[common_api_models.ItemOutput(**item.model_dump(exclude={'id'})) for item in items],
     )
 
 
@@ -102,9 +95,7 @@ async def api_read_item(
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return common_api_models.OneItemOutput(
-        item=common_api_models.ItemOutput(**item.model_dump())
-    )
+    return common_api_models.OneItemOutput(item=common_api_models.ItemOutput(**item.model_dump()))
 
 
 @api_items_router.get(
@@ -147,9 +138,7 @@ async def api_read_many_items(
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
-        items=[
-            common_api_models.ItemOutput(**item.model_dump()) for item in items
-        ],
+        items=[common_api_models.ItemOutput(**item.model_dump()) for item in items],
     )
 
 

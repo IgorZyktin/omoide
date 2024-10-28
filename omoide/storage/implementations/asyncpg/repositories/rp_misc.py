@@ -9,7 +9,6 @@ from omoide import models
 from omoide.serial_operations import SerialOperation
 from omoide.storage import interfaces
 from omoide.database import db_models
-from omoide.storage.implementations import asyncpg
 
 
 class MiscRepo(interfaces.AbsMiscRepo):

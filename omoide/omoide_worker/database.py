@@ -73,9 +73,7 @@ class WorkerDatabase(SyncDatabase):
 
     def mark_origin(self, command: db_models.CommandCopy) -> None:
         """Mark where item got its image."""
-        query = sa.select(db_models.Item.id).where(
-            db_models.Item.uuid == command.source_uuid
-        )
+        query = sa.select(db_models.Item.id).where(db_models.Item.uuid == command.source_uuid)
 
         item_id = self.session.execute(query).scalar()
 
@@ -138,10 +136,7 @@ class WorkerDatabase(SyncDatabase):
             target.thumbnail_ext = source.thumbnail_ext
 
         else:
-            msg = (
-                f'Got unknown media_type {command.media_type} '
-                f'for copy command {command.id}'
-            )
+            msg = f'Got unknown media_type {command.media_type} ' f'for copy command {command.id}'
             raise ValueError(msg)
 
     def drop_media(self) -> int:

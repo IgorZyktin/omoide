@@ -72,9 +72,7 @@ def test_worker_config_warm_up_coefficient(
     warm_up_coefficient,
 ):
     """Must raise on inadequate warm up coefficient."""
-    valid_worker_config_dict['timer_strategy']['warm_up_coefficient'] = (
-        warm_up_coefficient
-    )
+    valid_worker_config_dict['timer_strategy']['warm_up_coefficient'] = warm_up_coefficient
 
     with pytest.raises(ValidationError):
         Config(**valid_worker_config_dict)
@@ -103,9 +101,7 @@ def test_worker_config_hot_does_not_exist(valid_worker_config_dict):
     valid_worker_config_dict['save_hot'] = True
     valid_worker_config_dict['save_cold'] = False
 
-    valid_worker_config_dict['cold_folder'] = valid_worker_config_dict[
-        'hot_folder'
-    ]
+    valid_worker_config_dict['cold_folder'] = valid_worker_config_dict['hot_folder']
     valid_worker_config_dict['hot_folder'] = '/nonexistent'
 
     with pytest.raises(ValidationError, match='Hot folder does not exist*'):

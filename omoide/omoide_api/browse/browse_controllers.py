@@ -15,7 +15,7 @@ from omoide.infra.mediator import Mediator
 from omoide.omoide_api.browse import browse_api_models
 from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 
 api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 

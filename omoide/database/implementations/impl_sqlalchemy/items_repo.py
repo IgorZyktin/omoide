@@ -120,9 +120,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         parent_uuid = item.parent_uuid
 
         while parent_uuid:
-            stmt = sa.select(db_models.Item).where(
-                db_models.Item.uuid == parent_uuid
-            )
+            stmt = sa.select(db_models.Item).where(db_models.Item.uuid == parent_uuid)
             raw_parent = (await conn.execute(stmt)).fetchone()
 
             if raw_parent is None:

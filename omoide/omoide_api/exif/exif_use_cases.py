@@ -41,9 +41,7 @@ class ReadEXIFUseCase(BaseAPIUseCase):
         """Execute."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_item(item_uuid)
-            self.ensure_admin_or_owner_or_allowed_to(
-                user, item, subject='EXIF data'
-            )
+            self.ensure_admin_or_owner_or_allowed_to(user, item, subject='EXIF data')
 
             exif = await self.mediator.exif.get_by_item(conn, item)
 

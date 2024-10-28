@@ -48,10 +48,7 @@ class CreateItemsUseCase(BaseItemUseCase):
         async with self.mediator.database.transaction():
             parents: dict[UUID, models.Item] = {}
             for item in items:
-                if (
-                    item.parent_uuid is not None
-                    and item.parent_uuid not in parents
-                ):
+                if item.parent_uuid is not None and item.parent_uuid not in parents:
                     parent = await self.mediator.items.get_item(
                         uuid=item.parent_uuid,
                     )
@@ -108,9 +105,7 @@ class ReadItemUseCase(BaseAPIUseCase):
             ):
                 return item
 
-            public_users = (
-                await self.mediator.users.get_public_user_uuids()
-            )
+            public_users = await self.mediator.users.get_public_user_uuids()
 
             if item.owner_uuid in public_users:
                 return item
@@ -237,12 +232,12 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             if is_child:
                 msg = 'Item {new_parent_uuid} is actually a child of {item_uuid}'
-                raise exceptions.InvalidInputError(msg, new_parent_uuid=new_parent_uuid,
-                                                   item_uuid=item_uuid)
+                raise exceptions.InvalidInputError(
+                    msg, new_parent_uuid=new_parent_uuid, item_uuid=item_uuid
+                )
 
             LOG.info(
-                '{user} is setting {new_parent} as a parent '
-                'for {item} (former is {old_parent})',
+                '{user} is setting {new_parent} as a parent ' 'for {item} (former is {old_parent})',
                 user=user,
                 new_parent=new_parent,
                 item=item,
@@ -327,9 +322,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'parent':
-                switch_to = await self.mediator.items.get_item(
-                    item.parent_uuid
-                )
+                switch_to = await self.mediator.items.get_item(item.parent_uuid)
 
             elif desired_switch == 'sibling':
                 siblings = await self.mediator.items.get_siblings(item)
@@ -387,9 +380,7 @@ class BaseUploadUseCase(BaseAPIUseCase):
 
         async with self.mediator.database.transaction():
             item = await self.mediator.items.get_item(item_uuid)
-            self.ensure_admin_or_owner(
-                user, item, subject=f'item {self.media_type} data'
-            )
+            self.ensure_admin_or_owner(user, item, subject=f'item {self.media_type} data')
 
             LOG.info('{} is uploading {} for {}', user, self.media_type, item)
 
@@ -432,12 +423,8 @@ class DownloadCollectionUseCase(BaseItemUseCase):
 
         async with self.mediator.database.transaction():
             item = await self.mediator.items.get_item(item_uuid)
-            owner = await self.mediator.users.get_user_by_uuid(
-                item.owner_uuid
-            )
-            public_users = (
-                await self.mediator.users.get_public_user_uuids()
-            )
+            owner = await self.mediator.users.get_user_by_uuid(item.owner_uuid)
+            public_users = await self.mediator.users.get_public_user_uuids()
 
             if all(
                 (
@@ -474,8 +461,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
 
                 if signature is None:
                     LOG.warning(
-                        'User {} requested download '
-                        'for item {}, but is has no signature',
+                        'User {} requested download ' 'for item {}, but is has no signature',
                         user,
                         item,
                     )
@@ -521,9 +507,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
 
         fs_path = f'{base}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
 
-        user_visible_filename = (
-            f'{template.format(current)}___{item_uuid}.{content_ext}'
-        )
+        user_visible_filename = f'{template.format(current)}___{item_uuid}.{content_ext}'
 
         if signature is None:
             checksum = '-'

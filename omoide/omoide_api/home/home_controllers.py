@@ -12,7 +12,7 @@ from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.home import home_use_cases
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 
 api_home_router = APIRouter(prefix='/home', tags=['Home'])
 

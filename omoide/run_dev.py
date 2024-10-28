@@ -1,4 +1,5 @@
 """Development runner, do not use in production."""
+
 from fastapi import Request
 import uvicorn
 
@@ -18,10 +19,7 @@ def main() -> None:
 
         Use only for debugging!
         """
-        url_list = [
-            {'path': route.path, 'name': route.name}
-            for route in request.app.routes
-        ]
+        url_list = [{'path': route.path, 'name': route.name} for route in request.app.routes]
         return url_list
 
     uvicorn.run(

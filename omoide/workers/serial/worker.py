@@ -81,9 +81,7 @@ class SerialWorker(BaseWorker[Config]):
         except Exception as exc:
             error = utils.exc_to_str(exc)
             async with self.mediator.database.transaction() as conn:
-                await self.mediator.workers.mark_serial_operation_failed(
-                    conn, operation, error
-                )
+                await self.mediator.workers.mark_serial_operation_failed(conn, operation, error)
                 LOG.exception(
                     'Operation {num}. `{goal}`, '
                     'failed in {duration:0.3f} sec. because of {error}',
@@ -94,12 +92,9 @@ class SerialWorker(BaseWorker[Config]):
                 )
         else:
             async with self.mediator.database.transaction() as conn:
-                await self.mediator.workers.mark_serial_operation_done(
-                    conn, operation
-                )
+                await self.mediator.workers.mark_serial_operation_done(conn, operation)
                 LOG.info(
-                    'Operation {num}. `{goal}`, '
-                    'completed in {duration:0.3f} sec.',
+                    'Operation {num}. `{goal}`, ' 'completed in {duration:0.3f} sec.',
                     num=operation.id,
                     operation=operation.goal.title(),
                     duration=operation.duration,

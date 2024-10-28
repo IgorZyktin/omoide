@@ -58,10 +58,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform such operations'
 
@@ -88,10 +85,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform this operation'
 
@@ -119,10 +113,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform such operations'
 
@@ -141,10 +132,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform such operations'
 

@@ -23,10 +23,7 @@ def serial_worker_config() -> cfg.Config:
         raise RuntimeError(msg)
 
     if not db_url.endswith(db_name):
-        msg = (
-            "Are you sure you're using test "
-            f'database? URL must end with {db_name}'
-        )
+        msg = "Are you sure you're using test " f'database? URL must end with {db_name}'
         raise RuntimeError(msg)
 
     return cfg.Config(

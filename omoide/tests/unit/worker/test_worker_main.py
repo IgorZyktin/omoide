@@ -19,9 +19,7 @@ def test_worker_main_once(valid_worker_config):
         ),
         mock.patch('omoide.omoide_worker.__main__.WorkerDatabase'),
         mock.patch('omoide.omoide_worker.__main__.Filesystem'),
-        mock.patch(
-            'omoide.omoide_worker.__main__.Worker', return_value=fake_worker
-        ),
+        mock.patch('omoide.omoide_worker.__main__.Worker', return_value=fake_worker),
     ):
         result = CliRunner().invoke(main, ['--once'])
 
@@ -48,9 +46,7 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
         ),
         mock.patch('omoide.omoide_worker.__main__.WorkerDatabase'),
         mock.patch('omoide.omoide_worker.__main__.Filesystem'),
-        mock.patch(
-            'omoide.omoide_worker.__main__.Worker', return_value=fake_worker
-        ),
+        mock.patch('omoide.omoide_worker.__main__.Worker', return_value=fake_worker),
     ):
         fake_worker.counter = 0
         result = CliRunner().invoke(main, ['--no-once'])

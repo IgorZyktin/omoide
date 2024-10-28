@@ -95,10 +95,7 @@ class Worker(interfaces.AbsWorker):
             media.item.metainfo.thumbnail_size = len(media.content)
 
         else:
-            msg = (
-                f'Got unknown media_type {media.media_type} '
-                f'for media {media.id}'
-            )
+            msg = f'Got unknown media_type {media.media_type} ' f'for media {media.id}'
             raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()

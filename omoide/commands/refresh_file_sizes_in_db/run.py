@@ -43,15 +43,11 @@ def run(config: Config, database: SyncDatabase) -> None:
 
     for user in users:
         with database.start_session() as session:
-            LOG.info(
-                'Refreshing file sizes for user {} {}', user.uuid, user.name
-            )
+            LOG.info('Refreshing file sizes for user {} {}', user.uuid, user.name)
 
             models_for_user = get_models(session, config, user)
 
-            LOG.info(
-                'Checking {} models', utils.sep_digits(len(models_for_user))
-            )
+            LOG.info('Checking {} models', utils.sep_digits(len(models_for_user)))
 
             for i, (metainfo, item) in enumerate(models_for_user, start=1):
                 operations = update_size(config, metainfo, item, path)

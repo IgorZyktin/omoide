@@ -109,11 +109,7 @@ def _prettify_combined_graph(
         return
 
     for i, (key, values) in enumerate(full_graph.items(), start=1):
-        sep = (
-            ('╚' if key in actual_graph else '└')
-            if i == len(full_graph)
-            else '├'
-        )
+        sep = ('╚' if key in actual_graph else '└') if i == len(full_graph) else '├'
 
         line = '══>' if key in actual_graph else ''
 

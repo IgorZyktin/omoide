@@ -14,7 +14,7 @@ from omoide import const
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.preview import preview_use_cases
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 from omoide.presentation import infra
 from omoide.presentation import web
 from omoide.presentation.app_config import Config

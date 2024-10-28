@@ -1,4 +1,5 @@
 """Information about the API itself."""
+
 from omoide import const
 
 __version__ = const.VERSION

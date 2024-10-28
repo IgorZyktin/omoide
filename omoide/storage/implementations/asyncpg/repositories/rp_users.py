@@ -126,11 +126,7 @@ class UsersRepo(interfaces.AbsUsersRepo):
 
     async def update_user(self, uuid: UUID, **kwargs: Any) -> None:
         """Update User."""
-        stmt = (
-            sa.update(db_models.User)
-            .where(db_models.User.uuid == uuid)
-            .values(**kwargs)
-        )
+        stmt = sa.update(db_models.User).where(db_models.User.uuid == uuid).values(**kwargs)
         await self.db.execute(stmt)
 
     async def calc_total_space_used_by(
@@ -140,15 +136,9 @@ class UsersRepo(interfaces.AbsUsersRepo):
         """Return total amount of used space for user."""
         stmt = (
             sa.select(
-                sa.func.sum(db_models.Metainfo.content_size).label(
-                    'content_size'
-                ),
-                sa.func.sum(db_models.Metainfo.preview_size).label(
-                    'preview_size'
-                ),
-                sa.func.sum(db_models.Metainfo.thumbnail_size).label(
-                    'thumbnail_size'
-                ),
+                sa.func.sum(db_models.Metainfo.content_size).label('content_size'),
+                sa.func.sum(db_models.Metainfo.preview_size).label('preview_size'),
+                sa.func.sum(db_models.Metainfo.thumbnail_size).label('thumbnail_size'),
             )
             .join(
                 db_models.Item,

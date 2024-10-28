@@ -24,9 +24,7 @@ class LoginUserUseCase(BaseAPIUseCase):
                 auth_complexity=auth_complexity,
             ):
                 user.last_login = utils.now()
-                await self.mediator.users.update_user(
-                    user.uuid, last_login=user.last_login
-                )
+                await self.mediator.users.update_user(user.uuid, last_login=user.last_login)
                 return user
 
         return models.User.new_anon()

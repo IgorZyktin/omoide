@@ -11,7 +11,7 @@ from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.actions import actions_api_models
 from omoide.omoide_api.actions import actions_use_cases
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
@@ -107,9 +107,7 @@ async def api_action_rebuild_computed_tags(
     use_case = actions_use_cases.RebuildComputedTagsUseCase(mediator)
 
     try:
-        owner, item, job_id = await use_case.pre_execute(
-            admin, target.user_uuid
-        )
+        owner, item, job_id = await use_case.pre_execute(admin, target.user_uuid)
     except Exception as exc:
         return web.raise_from_exc(exc)
 

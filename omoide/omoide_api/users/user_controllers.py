@@ -14,7 +14,7 @@ from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.users import user_api_models
 from omoide.omoide_api.users import user_use_cases
-from omoide.presentation import dependencies as dep
+from omoide import dependencies as dep
 from omoide.presentation import web
 
 api_users_router = APIRouter(prefix='/users', tags=['Users'])
@@ -84,9 +84,7 @@ async def api_get_all_users(
         'users': [
             user_api_models.UserOutput(
                 **utils.serialize(user.model_dump()),
-                extras={
-                    'root_item': utils.to_simple_type(extras.get(user.uuid))
-                },
+                extras={'root_item': utils.to_simple_type(extras.get(user.uuid))},
             )
             for user in users
         ]

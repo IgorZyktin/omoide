@@ -1,4 +1,5 @@
 """Manual CLI operations."""
+
 from typing import Any
 
 import click
@@ -169,9 +170,7 @@ def command_rebuild_image_sizes(**kwargs: int | str | bool) -> None:
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-            callback=LOG.info, start_template='Rebuilding all image sizes...'
-        ):
+        with helpers.timing(callback=LOG.info, start_template='Rebuilding all image sizes...'):
             run.run(config, database)
 
 

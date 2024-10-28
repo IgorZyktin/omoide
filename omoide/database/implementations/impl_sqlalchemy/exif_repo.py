@@ -39,9 +39,7 @@ class EXIFRepo(AbsEXIFRepo[AsyncConnection]):
         item: models.Item,
     ) -> dict[str, Any]:
         """Return EXIF record for given item."""
-        query = sa.select(db_models.EXIF.exif).where(
-            db_models.EXIF.item_id == item.id
-        )
+        query = sa.select(db_models.EXIF.exif).where(db_models.EXIF.item_id == item.id)
 
         response = (await conn.execute(query)).scalar()
 
@@ -73,11 +71,7 @@ class EXIFRepo(AbsEXIFRepo[AsyncConnection]):
         item: models.Item,
     ) -> None:
         """Delete EXIF record for given item."""
-        stmt = (
-            sa.delete(db_models.EXIF)
-            .where(db_models.EXIF.item_id == item.id)
-            .returning(1)
-        )
+        stmt = sa.delete(db_models.EXIF).where(db_models.EXIF.item_id == item.id).returning(1)
 
         response = await conn.execute(stmt)
 
