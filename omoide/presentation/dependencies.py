@@ -235,36 +235,3 @@ def app_item_update_use_case(
         items_repo=items_repo,
         metainfo_repo=meta_repo,
     )
-
-
-# api item related use cases --------------------------------------------------
-
-
-@utils.memorize
-def api_item_update_parent_use_case(
-    policy: Annotated[interfaces.AbsPolicy, Depends(get_policy)],
-    users_repo: Annotated[
-        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
-    ],
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-    metainfo_repo: Annotated[
-        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
-    ],
-    media_repository: Annotated[
-        storage_interfaces.AbsMediaRepo, Depends(get_media_repo)
-    ],
-    misc_repo: Annotated[
-        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
-    ],
-) -> use_cases.ApiItemUpdateParentUseCase:
-    """Get use case instance."""
-    return use_cases.ApiItemUpdateParentUseCase(
-        policy=policy,
-        users_repo=users_repo,
-        items_repo=items_repo,
-        metainfo_repo=metainfo_repo,
-        media_repo=media_repository,
-        misc_repo=misc_repo,
-    )

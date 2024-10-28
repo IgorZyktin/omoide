@@ -208,6 +208,65 @@ class RenameItemUseCase(BaseItemUseCase):
         return operation_id
 
 
+class ChangeParentItemUseCase(BaseItemUseCase):
+    """Use case for setting new parent item."""
+
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+        new_parent_uuid: UUID,
+    ) -> int | None:
+        """Execute."""
+        self.ensure_not_anon(user, operation='change parent item')
+
+        async with self.mediator.database.transaction():
+            item = await self.mediator.items_repo.get_item(item_uuid)
+            self.ensure_admin_or_owner(user, item, subject='items')
+
+            if item.parent_uuid == new_parent_uuid:
+                return None
+
+            if item.parent_uuid is None:
+                old_parent = None
+            else:
+                old_parent = await self.mediator.items_repo.get_item(item.parent_uuid)
+
+            new_parent = await self.mediator.items_repo.get_item(new_parent_uuid)
+            is_child = await self.mediator.items_repo.check_child(new_parent_uuid, item.uuid)
+
+            if is_child:
+                msg = 'Item {new_parent_uuid} is actually a child of {item_uuid}'
+                raise exceptions.InvalidInputError(msg, new_parent_uuid=new_parent_uuid,
+                                                   item_uuid=item_uuid)
+
+            LOG.info(
+                '{user} is setting {new_parent} as a parent '
+                'for {item} (former is {old_parent})',
+                user=user,
+                new_parent=new_parent,
+                item=item,
+                old_parent=old_parent,
+            )
+
+            item.parent_uuid = new_parent_uuid
+            await self.mediator.items_repo.update_item(item)
+
+            operation = so.UpdateTagsSO(
+                extras={
+                    'item_uuid': str(item_uuid),
+                    'apply_to_children': True,
+                },
+            )
+            repo = self.mediator.misc_repo
+            operation_id = await repo.create_serial_operation(operation)
+
+            # TODO - need to update known tags for both old and new parents
+            # TODO - need to copy image from the item to new parent
+
+        return operation_id
+
+
 class UpdateItemTagsUseCase(BaseItemUseCase):
     """Use case for item tags update."""
 

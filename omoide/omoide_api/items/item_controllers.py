@@ -209,6 +209,37 @@ async def api_rename_item(
 
 
 @api_items_router.put(
+    '/{item_uuid}/parent/{new_parent_uuid}',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str | int | None],
+)
+async def api_change_parent_item(
+    item_uuid: UUID,
+    new_parent_uuid: UUID,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Rename exising item."""
+    use_case = item_use_cases.ChangeParentItemUseCase(mediator)
+
+    try:
+        operation_id = await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            new_parent_uuid=new_parent_uuid,
+        )
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    return {
+        'result': 'changed parent of the item',
+        'item_uuid': str(item_uuid),
+        'new_parent_uuid': str(new_parent_uuid),
+        'operation_id': operation_id,
+    }
+
+
+@api_items_router.put(
     '/{item_uuid}/tags',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
