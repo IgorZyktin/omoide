@@ -64,7 +64,7 @@ def raise_from_exc(
     language: str | None = None,
 ) -> NoReturn:
     """Cast exception into HTTP response."""
-    LOG.exception('Failed to perform request')
+    LOG.exception('Failed to perform API request')
 
     code = get_corresponding_exception_code(exc)
 
@@ -79,6 +79,8 @@ def raise_from_exc(
 
 def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
     """Return redirection from exception (do not raise)."""
+    LOG.exception('Failed to perform APP request')
+
     code = get_corresponding_exception_code(exc)
 
     match code:

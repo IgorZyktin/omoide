@@ -1,17 +1,22 @@
 """Repository that performs all search queries."""
 
 import abc
+from typing import Generic
+from typing import TypeVar
 
 from omoide import const
 from omoide import models
 
+ConnectionT = TypeVar('ConnectionT')
 
-class AbsSearchRepo(abc.ABC):
+
+class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
     async def count(
         self,
+        conn: ConnectionT,
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
@@ -22,6 +27,7 @@ class AbsSearchRepo(abc.ABC):
     @abc.abstractmethod
     async def search(
         self,
+        conn: ConnectionT,
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
@@ -35,6 +41,7 @@ class AbsSearchRepo(abc.ABC):
     @abc.abstractmethod
     async def get_home_items_for_anon(
         self,
+        conn: ConnectionT,
         order: const.ORDER_TYPE,
         collections: bool,
         direct: bool,
@@ -46,6 +53,7 @@ class AbsSearchRepo(abc.ABC):
     @abc.abstractmethod
     async def get_home_items_for_known(
         self,
+        conn: ConnectionT,
         user: models.User,
         order: const.ORDER_TYPE,
         collections: bool,
@@ -64,12 +72,18 @@ class AbsSearchRepo(abc.ABC):
         """Return counters for known tags (known user)."""
 
     @abc.abstractmethod
-    async def autocomplete_tag_anon(self, tag: str, limit: int) -> list[str]:
+    async def autocomplete_tag_anon(
+        self,
+        conn: ConnectionT,
+        tag: str,
+        limit: int,
+    ) -> list[str]:
         """Autocomplete tag for anon user."""
 
     @abc.abstractmethod
     async def autocomplete_tag_known(
         self,
+        conn: ConnectionT,
         user: models.User,
         tag: str,
         limit: int,

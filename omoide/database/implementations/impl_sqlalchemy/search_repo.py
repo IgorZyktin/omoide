@@ -3,6 +3,7 @@
 import abc
 
 import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.sql import Select
 
 from omoide import const
@@ -12,39 +13,39 @@ from omoide.database.implementations.impl_sqlalchemy import queries
 from omoide.database.interfaces.abs_search_repo import AbsSearchRepo
 
 
-class _SearchRepositoryBase(AbsSearchRepo, abc.ABC):
+class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     """Base class with helper methods."""
 
     @staticmethod
     def _expand_query(
         user: models.User,
-        stmt: Select,
+        query: Select,
         tags_include: set[str],
         tags_exclude: set[str],
         collections: bool,
     ) -> Select:
         """Add access control and filtering."""
-        stmt = stmt.join(
+        query = query.join(
             db_models.ComputedTags,
             db_models.ComputedTags.item_uuid == db_models.Item.uuid,
         )
 
-        stmt = queries.ensure_user_has_permissions(user, stmt)
+        query = queries.ensure_user_has_permissions(user, query)
 
         if tags_include:
-            stmt = stmt.where(
+            query = query.where(
                 db_models.ComputedTags.tags.contains(tuple(tags_include)),
             )
 
         if tags_exclude:
-            stmt = stmt.where(
+            query = query.where(
                 ~db_models.ComputedTags.tags.overlap(tuple(tags_exclude)),
             )
 
         if collections:
-            stmt = stmt.where(db_models.Item.is_collection == sa.true())
+            query = query.where(db_models.Item.is_collection == sa.true())
 
-        return stmt
+        return query
 
 
 class SearchRepo(_SearchRepositoryBase):
@@ -52,28 +53,29 @@ class SearchRepo(_SearchRepositoryBase):
 
     async def count(
         self,
+        conn: AsyncConnection,
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
         collections: bool,
     ) -> int:
         """Return total amount of items relevant to this search query."""
-        stmt = sa.select(sa.func.count().label('total_items')).select_from(db_models.Item)
+        query = sa.select(sa.func.count().label('total_items')).select_from(db_models.Item)
 
-        stmt = self._expand_query(
+        query = self._expand_query(
             user=user,
-            stmt=stmt,
+            query=query,
             tags_include=tags_include,
             tags_exclude=tags_exclude,
             collections=collections,
         )
 
-        response = await self.db.fetch_one(stmt)
-
-        return int(response['total_items'])
+        response = (await conn.execute(query)).fetchone()
+        return int(response.total_items)
 
     async def search(
         self,
+        conn: AsyncConnection,
         user: models.User,
         tags_include: set[str],
         tags_exclude: set[str],
@@ -83,30 +85,30 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Find items for dynamic load."""
-        stmt = sa.select(db_models.Item)
+        query = sa.select(db_models.Item)
 
-        stmt = self._expand_query(
+        query = self._expand_query(
             user=user,
-            stmt=stmt,
+            query=query,
             tags_include=tags_include,
             tags_exclude=tags_exclude,
             collections=collections,
         )
 
-        stmt = queries.apply_order(
-            stmt=stmt,
+        query = queries.apply_order(
+            stmt=query,
             order=order,
             last_seen=last_seen,
         )
 
-        stmt = stmt.limit(limit)
+        query = query.limit(limit)
 
-        response = await self.db.fetch_all(stmt)
-
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(query)).fetchall()
+        return [models.Item(**row._mapping) for row in response]
 
     async def get_home_items_for_anon(
         self,
+        conn: AsyncConnection,
         order: const.ORDER_TYPE,
         collections: bool,
         direct: bool,
@@ -115,7 +117,7 @@ class SearchRepo(_SearchRepositoryBase):
     ) -> list[models.Item]:
         """Return home items for anon."""
         stmt = sa.select(db_models.Item).where(
-            db_models.Item.owner_uuid.in_(  # noqa
+            db_models.Item.owner_uuid.in_(
                 sa.select(db_models.PublicUsers.user_uuid)
             )
         )
@@ -129,11 +131,12 @@ class SearchRepo(_SearchRepositoryBase):
         stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(stmt)).fetchall()
+        return [models.Item(**row._mapping) for row in response]
 
     async def get_home_items_for_known(
         self,
+        conn: AsyncConnection,
         user: models.User,
         order: const.ORDER_TYPE,
         collections: bool,
@@ -145,7 +148,7 @@ class SearchRepo(_SearchRepositoryBase):
         stmt = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.permissions.any(user.uuid),
             )
         )
 
@@ -158,8 +161,8 @@ class SearchRepo(_SearchRepositoryBase):
         stmt = queries.apply_order(stmt, order, last_seen)
         stmt = stmt.limit(limit)
 
-        response = await self.db.fetch_all(stmt)
-        return [models.Item(**row) for row in response]
+        response = (await conn.execute(stmt)).fetchall()
+        return [models.Item(**row._mapping) for row in response]
 
     async def count_all_tags_anon(self) -> dict[str, int]:
         """Return counters for known tags (anon user)."""
@@ -191,7 +194,12 @@ class SearchRepo(_SearchRepositoryBase):
         response = await self.db.fetch_all(stmt)
         return {row['tag']: row['counter'] for row in response}
 
-    async def autocomplete_tag_anon(self, tag: str, limit: int) -> list[str]:
+    async def autocomplete_tag_anon(
+        self,
+        conn: AsyncConnection,
+        tag: str,
+        limit: int,
+    ) -> list[str]:
         """Autocomplete tag for anon user."""
         stmt = (
             sa.select(db_models.KnownTagsAnon.tag)
@@ -206,20 +214,19 @@ class SearchRepo(_SearchRepositoryBase):
             .limit(limit)
         )
 
-        response = await self.db.fetch_all(stmt)
+        response = (await conn.execute(stmt)).fetchall()
         return [row.tag for row in response]
 
     async def autocomplete_tag_known(
         self,
+        conn: AsyncConnection,
         user: models.User,
         tag: str,
         limit: int,
     ) -> list[str]:
         """Autocomplete tag for known user."""
         stmt = (
-            sa.select(
-                db_models.KnownTags.tag,
-            )
+            sa.select(db_models.KnownTags.tag)
             .where(
                 db_models.KnownTags.tag.ilike(f'%{tag}%'),
                 db_models.KnownTags.user_id == user.id,
@@ -232,5 +239,5 @@ class SearchRepo(_SearchRepositoryBase):
             .limit(limit)
         )
 
-        response = await self.db.fetch_all(stmt)
+        response = (await conn.execute(stmt)).fetchall()
         return [row.tag for row in response]

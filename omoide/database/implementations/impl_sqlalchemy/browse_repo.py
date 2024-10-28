@@ -1,20 +1,20 @@
 """Browse repository."""
-
+from collections.abc import Collection
 from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy import cast
 from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import const
 from omoide import models
 from omoide.database import db_models
 from omoide.database.implementations.impl_sqlalchemy import queries
-from omoide.database.implementations.impl_sqlalchemy.rp_items import ItemsRepo
 from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo
 
 
-class BrowseRepo(AbsBrowseRepo, ItemsRepo):
+class BrowseRepo(AbsBrowseRepo):
     """Repository that performs all browse queries."""
 
     async def get_children(
@@ -275,6 +275,7 @@ class BrowseRepo(AbsBrowseRepo, ItemsRepo):
 
     async def get_recently_updated_items(
         self,
+        conn: AsyncConnection,
         user: models.User,
         order: const.ORDER_TYPE,
         collections: bool,
@@ -347,14 +348,15 @@ class BrowseRepo(AbsBrowseRepo, ItemsRepo):
 
     async def get_parent_names(
         self,
-        items: list[models.Item],
+        conn: AsyncConnection,
+        items: Collection[models.Item],
     ) -> list[str | None]:
         """Get names of parents of the given items."""
         uuids = [str(x.parent_uuid) if x.parent_uuid else None for x in items]
 
         subquery = sa.select(
             sa.func.unnest(
-                cast(uuids, pg.ARRAY(sa.Text))  # type: ignore
+                cast(uuids, pg.ARRAY(sa.Text))
             ).label('uuid')
         ).subquery('given_uuid')
 
@@ -364,5 +366,5 @@ class BrowseRepo(AbsBrowseRepo, ItemsRepo):
             isouter=True,
         )
 
-        response = await self.db.fetch_all(stmt)
-        return [record['name'] for record in response]
+        response = (await conn.execute(stmt)).fetchall()
+        return [record.name for record in response]
