@@ -15,7 +15,6 @@ from omoide import const
 from omoide import infra
 from omoide import interfaces
 from omoide import models
-from omoide import use_cases
 from omoide import utils
 from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
 from omoide.database.implementations.impl_sqlalchemy.exif_repo import EXIFRepo
@@ -108,71 +107,33 @@ def get_authenticator() -> interfaces.AbsAuthenticator:
 
 
 @utils.memorize
-def get_policy(
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-) -> interfaces.AbsPolicy:
-    """Get policy instance."""
-    return infra.Policy(items_repo=items_repo)
-
-
-@utils.memorize
-def get_object_storage(
-    media_repo: Annotated[
-        storage_interfaces.AbsMediaRepo, Depends(get_media_repo)
-    ],
-) -> object_interfaces.AbsObjectStorage:
+def get_object_storage() -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
     return FileObjectStorage(
-        media_repo=media_repo,
+        media_repo=MediaRepo(),
         prefix_size=config.prefix_size,
     )
 
 
 @utils.memorize
 def get_mediator(
-    authenticator: Annotated[
-        interfaces.AbsAuthenticator, Depends(get_authenticator)
-    ],
-    browse_repo: Annotated[
-        storage_interfaces.AbsBrowseRepository, Depends(get_browse_repo)
-    ],
-    items_repo: Annotated[
-        storage_interfaces.AbsItemsRepo, Depends(get_items_repo)
-    ],
-    meta_repo: Annotated[
-        storage_interfaces.AbsMetainfoRepo, Depends(get_metainfo_repo)
-    ],
-    misc_repo: Annotated[
-        storage_interfaces.AbsMiscRepo, Depends(get_misc_repo)
-    ],
-    search_repo: Annotated[
-        storage_interfaces.AbsSearchRepository, Depends(get_search_repo)
-    ],
-    storage: Annotated[storage_interfaces.AbsStorage, Depends(get_storage)],
-    users_repo: Annotated[
-        storage_interfaces.AbsUsersRepo, Depends(get_users_repo)
-    ],
-    object_storage: Annotated[
-        object_interfaces.AbsObjectStorage, Depends(get_object_storage)
-    ],
+    authenticator: Annotated[interfaces.AbsAuthenticator, Depends(get_authenticator)],
+    object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
-        browse_repo=browse_repo,  # FIXME - app-related dependency
+        browse=BrowseRepo(),  # FIXME - app-related dependency
         exif=EXIFRepo(),
-        items_repo=items_repo,
-        meta_repo=meta_repo,
-        misc_repo=misc_repo,
-        search_repo=search_repo,
-        storage=storage,
+        items=ItemsRepo(),
+        meta=MetaRepo(),
+        misc=MiscRepo(),
+        search=SearchRepo(),
         database=database,
         signatures=SignaturesRepo(),
-        users_repo=users_repo,
+        users=UsersRepo(),
         object_storage=object_storage,
     )
 

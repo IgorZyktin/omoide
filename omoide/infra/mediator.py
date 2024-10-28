@@ -15,15 +15,15 @@ class Mediator:
     """Class that ties all components together."""
 
     authenticator: interfaces.AbsAuthenticator
-    browse_repo: storage_interfaces.AbsBrowseRepository
+    browse: storage_interfaces.AbsBrowseRepository
     exif: AbsEXIFRepo
-    items_repo: storage_interfaces.AbsItemsRepo
-    meta_repo: storage_interfaces.AbsMetainfoRepo
-    misc_repo: storage_interfaces.AbsMiscRepo
-    search_repo: storage_interfaces.AbsSearchRepository
+    items: storage_interfaces.AbsItemsRepo
+    meta: storage_interfaces.AbsMetainfoRepo
+    misc: storage_interfaces.AbsMiscRepo
+    search: storage_interfaces.AbsSearchRepository
     signatures: AbsSignaturesRepo
     storage: storage_interfaces.AbsStorage
     database: AbsDatabase
-    users_repo: storage_interfaces.AbsUsersRepo
+    users: storage_interfaces.AbsUsersRepo
 
     object_storage: object_interfaces.AbsObjectStorage
