@@ -16,7 +16,6 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions as api_exceptions
 from omoide import models
-from omoide.presentation import constants
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -213,13 +212,13 @@ class AimWrapper:
         params['page'] = cls.extract_int(params, 'page', 1)
         params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
         params['items_per_page'] = cls.extract_int(
-            params, 'items_per_page', constants.ITEMS_PER_PAGE
+            params, 'items_per_page', 25
         )
 
         params['page'] = max(params['page'], 1)
 
         if params['items_per_page'] < 1:
-            params['items_per_page'] = constants.ITEMS_PER_PAGE
+            params['items_per_page'] = 25
 
     @staticmethod
     def extract_bool(

@@ -27,7 +27,6 @@ from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorage
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import app_config
-from omoide.presentation import constants as app_constants
 from omoide.presentation import web
 
 
@@ -69,7 +68,7 @@ def get_aim(request: Request) -> web.AimWrapper:
     params = dict(request.query_params)
     return web.AimWrapper.from_params(
         params=params,
-        items_per_page=min(app_constants.ITEMS_PER_PAGE, app_constants.MAX_ITEMS_PER_PAGE),
+        items_per_page=25,
     )
 
 

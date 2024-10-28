@@ -4,7 +4,7 @@ from fastapi import Request
 import uvicorn
 
 from omoide.presentation import app_config
-from omoide.presentation.app import app
+from omoide.application import app
 
 
 def main() -> None:
