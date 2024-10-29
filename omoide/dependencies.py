@@ -17,7 +17,8 @@ from omoide import models
 from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
-from omoide.infra import AbsAuthenticator
+from omoide.infra.interfaces import AbsAuthenticator
+from omoide.infra.interfaces import AbsPolicy
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorage
@@ -99,6 +100,12 @@ def get_authenticator() -> AbsAuthenticator:
 
 
 @utils.memorize
+def get_policy() -> AbsPolicy:
+    """Get policy instance."""
+    return infra.Policy()
+
+
+@utils.memorize
 def get_object_storage() -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
@@ -111,12 +118,14 @@ def get_object_storage() -> object_interfaces.AbsObjectStorage:
 @utils.memorize
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    policy: Annotated[AbsPolicy, Depends(get_policy)],
     object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
+        policy=policy,
         browse=impl_sqlalchemy.BrowseRepo(),  # FIXME - app-related dependency
         exif=impl_sqlalchemy.EXIFRepo(),
         items=impl_sqlalchemy.ItemsRepo(),

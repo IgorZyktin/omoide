@@ -12,6 +12,7 @@ class Mediator:
     """Class that ties all components together."""
 
     authenticator: infra_interfaces.AbsAuthenticator
+    policy: infra_interfaces.AbsPolicy
 
     browse: database_interfaces.AbsBrowseRepo
     exif: database_interfaces.AbsEXIFRepo

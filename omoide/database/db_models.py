@@ -36,7 +36,10 @@ class Role(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        primary_key=True, nullable=False, index=True, unique=True,
+        primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
@@ -51,7 +54,11 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        primary_key=True, autoincrement=True, nullable=False, index=True, unique=True,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True, unique=True)
@@ -153,7 +160,10 @@ class ComputedTags(Base):
     item_id: Mapped[UUID] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        primary_key=True, nullable=False, index=True, unique=True,
+        primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     # array fields ------------------------------------------------------------
@@ -218,7 +228,9 @@ class KnownTags(Base):
     user_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('users.id', ondelete='CASCADE'),
-        index=True, primary_key=True, unique=True,
+        index=True,
+        primary_key=True,
+        unique=True,
     )
     tag: Mapped[str] = mapped_column(
         sa.String(length=MEDIUM), nullable=False, index=True, primary_key=True
@@ -246,7 +258,10 @@ class KnownTagsAnon(Base):
 
     tag: Mapped[str] = mapped_column(
         sa.String(length=MEDIUM),
-        unique=True, nullable=False, index=True, primary_key=True,
+        unique=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -264,7 +279,11 @@ class Status(Base):
     __tablename__ = 'item_statuses'
 
     id: Mapped[int] = mapped_column(
-        sa.Integer, primary_key=True, nullable=False, index=True, unique=True,
+        sa.Integer,
+        primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
@@ -278,7 +297,12 @@ class Item(Base):
     # primary and foreign keys ------------------------------------------------
 
     id: Mapped[int] = mapped_column(
-        sa.Integer, primary_key=True, autoincrement=True, nullable=False, index=True, unique=True,
+        sa.Integer,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True, unique=True)
@@ -286,19 +310,26 @@ class Item(Base):
     parent_id: Mapped[int | None] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=True, index=True, unique=False,
+        nullable=True,
+        index=True,
+        unique=False,
     )
 
     owner_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False, index=True, unique=False,
+        nullable=False,
+        index=True,
+        unique=False,
     )
 
     # fields ------------------------------------------------------------------
 
     status: Mapped[models.Status] = mapped_column(
-        sa.Integer, sa.ForeignKey('item_statuses.id'), nullable=False, index=True,
+        sa.Integer,
+        sa.ForeignKey('item_statuses.id'),
+        nullable=False,
+        index=True,
     )
     number: Mapped[int] = mapped_column(sa.Integer, nullable=False)
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
@@ -376,7 +407,10 @@ class Metainfo(Base):
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False, index=True, primary_key=True, unique=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -442,13 +476,18 @@ class ItemNote(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        primary_key=True, autoincrement=True, nullable=False, index=True, unique=True,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        unique=True,
     )
 
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False, index=True,
+        nullable=False,
+        index=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -475,7 +514,11 @@ class Media(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        autoincrement=True, nullable=False, index=True, primary_key=True, unique=True,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -492,13 +535,17 @@ class Media(Base):
     owner_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False, index=True, unique=False,
+        nullable=False,
+        index=True,
+        unique=False,
     )
 
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False, index=True, unique=False,
+        nullable=False,
+        index=True,
+        unique=False,
     )
 
     media_type: Mapped[str] = mapped_column(
@@ -592,7 +639,10 @@ class EXIF(Base):
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False, index=True, unique=True, primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
+        primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -616,7 +666,10 @@ class SignatureMD5(Base):
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False, index=True, unique=True, primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
+        primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -634,7 +687,10 @@ class SignatureCRC32(Base):
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False, index=True, unique=True, primary_key=True,
+        nullable=False,
+        index=True,
+        unique=True,
+        primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
