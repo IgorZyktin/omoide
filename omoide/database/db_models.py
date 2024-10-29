@@ -36,9 +36,7 @@ class Role(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        primary_key=True,
-        nullable=False,
-        index=True,
+        primary_key=True, nullable=False, index=True, unique=True,
     )
 
     description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
@@ -53,30 +51,19 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        # TODO - actually make it a primary key
-        # primary_key=True,  noqa: ERA001
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        unique=True,
+        primary_key=True, autoincrement=True, nullable=False, index=True, unique=True,
     )
 
-    uuid: Mapped[UUID] = mapped_column(
-        # TODO - remove from primary keys
-        pg.UUID(),
-        primary_key=True,
-        nullable=False,
-        index=True,
-        unique=True,
-    )
-
+    uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True, unique=True)
     role: Mapped[models.Role] = mapped_column(
-        sa.Integer, sa.ForeignKey('user_roles.id'), nullable=False
+        sa.Integer, sa.ForeignKey('user_roles.id'), nullable=False, index=True
     )
 
     # fields ------------------------------------------------------------------
 
-    login: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False, unique=True)
+    login: Mapped[str] = mapped_column(
+        sa.String(length=MEDIUM), nullable=False, unique=True, index=True
+    )
     password: Mapped[str] = mapped_column(sa.String(length=HUGE), nullable=False)
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
     auth_complexity: Mapped[int] = mapped_column(sa.Integer, nullable=False)
@@ -90,7 +77,7 @@ class User(Base):
     items: Mapped[list['Item']] = relationship(
         'Item',
         passive_deletes=True,
-        primaryjoin='Item.owner_uuid==User.uuid',
+        primaryjoin='Item.owner_id==User.id',
         back_populates='owner',
         uselist=True,
     )
@@ -98,7 +85,7 @@ class User(Base):
     media: Mapped['Media'] = relationship(
         'Media',
         passive_deletes=True,
-        primaryjoin='Media.owner_uuid==User.uuid',
+        primaryjoin='Media.owner_id==User.id',
         back_populates='owner',
         uselist=True,
     )
@@ -163,18 +150,15 @@ class ComputedTags(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
-        primary_key=True,
-        nullable=False,
-        index=True,
-        unique=True,
+    item_id: Mapped[UUID] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
+        primary_key=True, nullable=False, index=True, unique=True,
     )
 
     # array fields ------------------------------------------------------------
 
-    tags: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
+    tags: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
 
     # other -------------------------------------------------------------------
 
@@ -234,8 +218,7 @@ class KnownTags(Base):
     user_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('users.id', ondelete='CASCADE'),
-        index=True,
-        primary_key=True,
+        index=True, primary_key=True, unique=True,
     )
     tag: Mapped[str] = mapped_column(
         sa.String(length=MEDIUM), nullable=False, index=True, primary_key=True
@@ -263,10 +246,7 @@ class KnownTagsAnon(Base):
 
     tag: Mapped[str] = mapped_column(
         sa.String(length=MEDIUM),
-        unique=True,
-        nullable=False,
-        index=True,
-        primary_key=True,
+        unique=True, nullable=False, index=True, primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -274,11 +254,7 @@ class KnownTagsAnon(Base):
     counter: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
     __table_args__ = (
-        sa.Index(
-            'ix_known_tags_anon',
-            tag,
-            postgresql_ops={'tag': 'text_pattern_ops'},
-        ),
+        sa.Index('ix_known_tags_anon', tag, postgresql_ops={'tag': 'text_pattern_ops'}),
     )
 
 
@@ -288,10 +264,7 @@ class Status(Base):
     __tablename__ = 'item_statuses'
 
     id: Mapped[int] = mapped_column(
-        sa.Integer,
-        primary_key=True,
-        nullable=False,
-        index=True,
+        sa.Integer, primary_key=True, nullable=False, index=True, unique=True,
     )
 
     description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
@@ -305,53 +278,29 @@ class Item(Base):
     # primary and foreign keys ------------------------------------------------
 
     id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        # TODO - actually make it a primary key
-        # primary_key=True,  noqa: ERA001
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        unique=True,
+        sa.Integer, primary_key=True, autoincrement=True, nullable=False, index=True, unique=True,
     )
 
-    uuid: Mapped[UUID] = mapped_column(
-        # TODO - remove from primary keys
-        pg.UUID(),
-        primary_key=True,
-        nullable=False,
-        index=True,
-        unique=True,
+    uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True, unique=True)
+
+    parent_id: Mapped[int | None] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
+        nullable=True, index=True, unique=False,
     )
 
-    parent_uuid: Mapped[UUID | None] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'items.uuid',
-            ondelete='CASCADE',
-        ),
-        nullable=True,
-        index=True,
-    )
-
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'users.uuid',
-            ondelete='CASCADE',
-        ),
-        nullable=False,
-        index=True,
+    owner_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False, index=True, unique=False,
     )
 
     # fields ------------------------------------------------------------------
 
     status: Mapped[models.Status] = mapped_column(
-        sa.Integer,
-        sa.ForeignKey('item_statuses.id'),
-        nullable=False,
-        index=True,
+        sa.Integer, sa.ForeignKey('item_statuses.id'), nullable=False, index=True,
     )
-    number: Mapped[int] = mapped_column(sa.BigInteger, autoincrement=True, nullable=False)
+    number: Mapped[int] = mapped_column(sa.Integer, nullable=False)
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
     is_collection: Mapped[bool] = mapped_column(sa.Boolean, nullable=False)
     content_ext: Mapped[str | None] = mapped_column(sa.String(length=SMALL), nullable=True)
@@ -420,16 +369,14 @@ class Item(Base):
 class Metainfo(Base):
     """Meta information for items."""
 
-    __tablename__ = 'metainfo'
+    __tablename__ = 'item_metainfo'
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-        primary_key=True,
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
+        nullable=False, index=True, primary_key=True, unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -456,7 +403,7 @@ class Metainfo(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<Metainfo, {self.item_uuid}, {self.content_type!r}>'
+        return f'<Metainfo, item_id={self.item_id}, {self.content_type!r}>'
 
     # relations ---------------------------------------------------------------
 
@@ -495,24 +442,18 @@ class ItemNote(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        primary_key=True,
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        unique=True,
+        primary_key=True, autoincrement=True, nullable=False, index=True, unique=True,
     )
 
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
+        nullable=False, index=True,
     )
 
     # fields ------------------------------------------------------------------
 
     key: Mapped[str] = mapped_column(sa.CHAR(MEDIUM), nullable=False, index=True)
-
     value: Mapped[str] = mapped_column(sa.CHAR(HUGE), nullable=False)
 
     # other -------------------------------------------------------------------
@@ -533,11 +474,8 @@ class Media(Base):
     # primary and foreign keys ------------------------------------------------
 
     id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        primary_key=True,
+        sa.Integer,
+        autoincrement=True, nullable=False, index=True, primary_key=True, unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -551,18 +489,16 @@ class Media(Base):
     )
     error: Mapped[str] = mapped_column(sa.Text, nullable=True)
 
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
+    owner_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False, index=True, unique=False,
     )
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
+        nullable=False, index=True, unique=False,
     )
 
     media_type: Mapped[str] = mapped_column(
@@ -579,7 +515,7 @@ class Media(Base):
         'User',
         passive_deletes=True,
         back_populates='media',
-        primaryjoin='Media.owner_uuid==User.uuid',
+        primaryjoin='Media.owner_id==User.id',
         uselist=False,
     )
 
@@ -656,10 +592,7 @@ class EXIF(Base):
     item_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-        unique=True,
-        primary_key=True,
+        nullable=False, index=True, unique=True, primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -681,12 +614,9 @@ class SignatureMD5(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_id: Mapped[int] = mapped_column(
-        sa.BigInteger,
+        sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-        unique=True,
-        primary_key=True,
+        nullable=False, index=True, unique=True, primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -702,12 +632,9 @@ class SignatureCRC32(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_id: Mapped[int] = mapped_column(
-        sa.BigInteger,
+        sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-        unique=True,
-        primary_key=True,
+        nullable=False, index=True, unique=True, primary_key=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -728,6 +655,7 @@ class RegisteredWorkers(Base):
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -754,6 +682,7 @@ class SerialLock(Base):
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -778,6 +707,7 @@ class SerialOperation(Base):
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
