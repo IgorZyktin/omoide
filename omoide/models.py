@@ -10,9 +10,6 @@ from typing import NamedTuple
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel
-from pydantic import Field
-
 from omoide import const
 from omoide import utils
 
@@ -84,6 +81,12 @@ class User(ModelMixin):
     def is_not_anon(self) -> bool:
         """Return True if user is registered one."""
         return self.role is not Role.ANON
+
+    @property
+    def timezone(self) -> None:
+        """Return timezone for this user."""
+        # TODO - add timezone to users
+        return None
 
     @classmethod
     def new_anon(cls) -> Self:
@@ -162,29 +165,6 @@ class Item(ModelMixin):
             computed_tags.add(str(self.parent_uuid))
 
         return computed_tags
-
-
-class MetainfoOld(BaseModel):
-    """Metainfo for item."""
-
-    created_at: datetime = const.DUMMY_TIME
-    updated_at: datetime = const.DUMMY_TIME
-    deleted_at: datetime | None = None
-    user_time: datetime | None = None
-
-    content_type: str | None = None
-    extras: dict[str, Any] = Field(default_factory=dict)
-
-    content_size: int | None = None
-    preview_size: int | None = None
-    thumbnail_size: int | None = None
-
-    content_width: int | None = None
-    content_height: int | None = None
-    preview_width: int | None = None
-    preview_height: int | None = None
-    thumbnail_width: int | None = None
-    thumbnail_height: int | None = None
 
 
 @dataclass
