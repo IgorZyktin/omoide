@@ -113,9 +113,7 @@ class TagsRepo(_TagsRepoHelper):
             return [
                 sa.or_(
                     db_models.Item.owner_uuid == user.uuid,
-                    db_models.Item.permissions.any(
-                        str(user.uuid)  # type: ignore
-                    ),
+                    db_models.Item.permissions.any(str(user.uuid)),
                 ),
                 db_models.Item.id > _marker,
             ]

@@ -49,16 +49,6 @@ def get_corresponding_exception_code(exc: Exception) -> int:
     )
 
 
-def safe_template(template: str, **kwargs: str) -> str:
-    """Try converting error as correct as possible."""
-    message = template
-
-    for kev, value in kwargs.items():
-        message = message.replace('{' + str(kev) + '}', str(value))
-
-    return message
-
-
 def raise_from_exc(
     exc: Exception,
     language: str | None = None,
@@ -273,7 +263,7 @@ class AimWrapper:
 def _get_href(request: Request, item: models.Item) -> str:
     """Return base for HREF formation."""
     base = request.scope.get('root_path')
-    prefix = str(item.uuid)[:2]
+    prefix = str(item.uuid)[:const.STORAGE_PREFIX_SIZE]
     return f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
 
 

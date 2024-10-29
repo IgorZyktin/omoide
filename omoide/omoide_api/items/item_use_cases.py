@@ -435,7 +435,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
 
         # TODO - remove transaction splitting
         async with self.mediator.database.transaction() as conn:
-            signatures = await self.mediator.signatures.get_cr32_signatures(
+            signatures = await self.mediator.signatures.get_cr32_signatures_map(
                 conn=conn,
                 items=children,
             )

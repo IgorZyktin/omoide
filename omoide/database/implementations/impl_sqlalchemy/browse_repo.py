@@ -86,7 +86,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                     sa.select(db_models.PublicUsers.user_uuid)
                 ),
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.permissions.any(user.uuid),
+                db_models.Item.permissions.any(str(user.uuid)),
             ),
             db_models.Item.parent_uuid == item_uuid,
         )
@@ -97,7 +97,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query = queries.apply_order(query, order, last_seen)
         query = query.limit(limit)
 
-        response = (await conn.execute(sa.text(query))).fetchall()
+        response = (await conn.execute(query)).fetchall()
         return [db_models.Item.cast(row) for row in response]
 
     async def browse_related_anon(

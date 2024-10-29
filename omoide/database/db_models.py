@@ -37,7 +37,6 @@ class Role(Base):
     id: Mapped[int] = mapped_column(
         sa.Integer,
         primary_key=True,
-        autoincrement=True,
         nullable=False,
         index=True,
     )
@@ -283,58 +282,6 @@ class KnownTagsAnon(Base):
     )
 
 
-class LongJob(Base):
-    """Long mutation operations."""
-
-    __tablename__ = 'long_jobs'
-
-    # primary and foreign keys ------------------------------------------------
-
-    id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        primary_key=True,
-    )
-
-    # fields ------------------------------------------------------------------
-
-    name: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
-
-    user_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-        index=True,
-        primary_key=True,
-    )
-
-    target_uuid: Mapped[UUID | None] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'items.uuid',
-            ondelete='CASCADE',
-        ),
-        nullable=True,
-        index=True,
-    )
-
-    added: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    deleted: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    status: Mapped[str] = mapped_column(sa.String(length=SMALL), index=True, nullable=False)
-    started: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True),
-        nullable=False,
-        index=True,
-        server_default=sa.text("timezone('utc', now())"),
-    )
-    duration: Mapped[float] = mapped_column(sa.Float, nullable=True)
-
-    operations: Mapped[int] = mapped_column(sa.Integer, nullable=True)
-    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
-    error: Mapped[str] = mapped_column(sa.Text, nullable=False)
-
-
 class Status(Base):
     """Item status model."""
 
@@ -343,7 +290,6 @@ class Status(Base):
     id: Mapped[int] = mapped_column(
         sa.Integer,
         primary_key=True,
-        autoincrement=True,
         nullable=False,
         index=True,
     )
@@ -510,7 +456,7 @@ class Metainfo(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<DB Metainfo, {self.item_uuid}, {self.content_type!r}>'
+        return f'<Metainfo, {self.item_uuid}, {self.content_type!r}>'
 
     # relations ---------------------------------------------------------------
 

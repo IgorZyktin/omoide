@@ -126,7 +126,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             .values(
                 name=user.name,
                 login=user.login,
-                role=user.role.value,
+                role=user.role,
                 is_public=user.is_public,
                 registered_at=user.registered_at,
                 last_login=user.last_login,

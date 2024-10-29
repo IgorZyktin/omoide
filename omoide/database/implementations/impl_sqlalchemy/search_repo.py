@@ -146,7 +146,7 @@ class SearchRepo(_SearchRepositoryBase):
         query = sa.select(db_models.Item).where(
             sa.or_(
                 db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.permissions.any(user.uuid),
+                db_models.Item.permissions.any(str(user.uuid)),
             )
         )
 

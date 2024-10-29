@@ -84,7 +84,7 @@ def serialize_item(
 
 
 @app_items_router.get('/update/{item_uuid}')
-async def app_item_update(
+async def app_update_item(
     request: Request,
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],

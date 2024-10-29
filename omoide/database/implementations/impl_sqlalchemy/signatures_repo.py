@@ -1,4 +1,6 @@
-"""Repository that performs various operations on different objects."""
+"""Repository that performs various operations related to image signatures."""
+
+from collections.abc import Collection
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -10,7 +12,7 @@ from omoide.database.interfaces.abs_signatures_repo import AbsSignaturesRepo
 
 
 class SignaturesRepo(AbsSignaturesRepo[AsyncConnection]):
-    """Repository that performs various operations on different objects."""
+    """Repository that performs various operations related to image signatures."""
 
     async def get_md5_signature(
         self,
@@ -23,12 +25,12 @@ class SignaturesRepo(AbsSignaturesRepo[AsyncConnection]):
         )
         return (await conn.execute(query)).scalar()
 
-    async def get_md5_signatures(
+    async def get_md5_signatures_map(
         self,
         conn: AsyncConnection,
-        items: list[models.Item],
+        items: Collection[models.Item],
     ) -> dict[int, str | None]:
-        """Get many signatures."""
+        """Get map of MD5 signatures."""
         ids = [item.id for item in items]
         signatures: dict[int, str | None] = dict.fromkeys(ids)
 
@@ -73,12 +75,12 @@ class SignaturesRepo(AbsSignaturesRepo[AsyncConnection]):
         )
         return (await conn.execute(query)).scalar()
 
-    async def get_cr32_signatures(
+    async def get_cr32_signatures_map(
         self,
         conn: AsyncConnection,
-        items: list[models.Item],
+        items: Collection[models.Item],
     ) -> dict[int, int | None]:
-        """Get many signatures."""
+        """Get map of CRC32 signatures."""
         ids = [item.id for item in items]
         signatures: dict[int, int | None] = dict.fromkeys(ids)
 

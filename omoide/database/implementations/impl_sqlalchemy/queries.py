@@ -20,7 +20,7 @@ def ensure_registered_user_has_permissions(
     """Ensure that registered user has permission to access this."""
     return stmt.where(
         sa.or_(
-            db_models.Item.owner_uuid == str(user.uuid),
+            db_models.Item.owner_uuid == user.uuid,
             db_models.Item.permissions.any(str(user.uuid)),
         )
     )

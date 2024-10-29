@@ -14,7 +14,7 @@ from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
 LOG = custom_logging.get_logger(__name__)
 
 
-class MediaRepo(AbsMediaRepo):
+class MediaRepo(AbsMediaRepo[AsyncConnection]):
     """Repository that perform CRUD operations on media."""
 
     async def create_media(self, conn: AsyncConnection, media: models.Media) -> int:

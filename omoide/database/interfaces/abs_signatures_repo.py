@@ -21,7 +21,7 @@ class AbsSignaturesRepo(Generic[ConnectionT], abc.ABC):
         """Get signature record."""
 
     @abc.abstractmethod
-    async def get_md5_signatures(
+    async def get_md5_signatures_map(
         self,
         conn: ConnectionT,
         items: list[models.Item],
@@ -46,7 +46,7 @@ class AbsSignaturesRepo(Generic[ConnectionT], abc.ABC):
         """Get signature record."""
 
     @abc.abstractmethod
-    async def get_cr32_signatures(
+    async def get_cr32_signatures_map(
         self,
         conn: ConnectionT,
         items: list[models.Item],
