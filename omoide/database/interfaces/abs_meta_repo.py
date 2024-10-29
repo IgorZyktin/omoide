@@ -1,6 +1,7 @@
 """Repository that perform CRUD operations on metainfo records."""
 
 import abc
+from collections.abc import Collection
 from typing import Generic
 from typing import TypeVar
 from uuid import UUID
@@ -22,25 +23,21 @@ class AbsMetaRepo(Generic[ConnectionT], abc.ABC):
         """Return metainfo."""
 
     @abc.abstractmethod
-    async def get_metainfos(
+    async def get_metainfo_map(
         self,
         conn: ConnectionT,
-        items: list[models.Item],
-    ) -> dict[UUID, models.Metainfo | None]:  # TODO use item_id, not UUID
-        """Return many metainfo records."""
+        items: Collection[models.Item],
+    ) -> dict[int, models.Metainfo | None]:
+        """Get map of metainfo records."""
 
     @abc.abstractmethod
-    async def update_metainfo(
+    async def save(
         self,
         conn: ConnectionT,
-        item_uuid: UUID,
+        item: models.Item,
         metainfo: models.Metainfo,
     ) -> None:
         """Update metainfo."""
-
-    @abc.abstractmethod
-    async def mark_metainfo_updated(self, conn: ConnectionT, item_uuid: UUID) -> None:
-        """Set `updated_at` field to current datetime."""
 
     @abc.abstractmethod
     async def add_item_note(

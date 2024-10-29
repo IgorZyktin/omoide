@@ -441,7 +441,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             )
 
         async with self.mediator.database.transaction() as conn:
-            metainfos = await self.mediator.meta.get_metainfos(conn, children)
+            metainfos = await self.mediator.meta.get_metainfo_map(conn, children)
             valid_children = [
                 child
                 for child in children

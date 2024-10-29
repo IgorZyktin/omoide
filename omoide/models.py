@@ -1,10 +1,10 @@
 """Domain-level models."""
-
+import enum
+from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
-import enum
 from typing import Any
 from typing import NamedTuple
 from typing import Self
@@ -26,6 +26,36 @@ class ModelMixin:
             return dump
 
         return {key: value for key, value in dump.items() if key not in exclude}
+
+
+@dataclass
+class ChangesMixin:
+    """Mixin that tracks changes in its attributes."""
+    _changes: set[str] = field(default_factory=set)
+    _ignore_changes: tuple[str] = ('id',)
+
+    def __post_init__(self) -> None:
+        """Clear all newly set attributes."""
+        self.reset_changes()
+
+    def __setattr__(self, attr: str, value: Any) -> None:
+        """Set attribute and track changes."""
+        if attr != '_changes':
+            self._changes.add(attr)
+        super().__setattr__(attr, value)
+
+    def what_changed(self, ignore_fields: Collection[str] = ()) -> dict[str, Any]:
+        """Return changed attributes."""
+        ignore = ignore_fields or self._ignore_changes
+        return {key: getattr(self, key) for key in self._changes if key not in ignore}
+
+    def mark_changed(self, key: str) -> None:
+        """Store the fact that this attribute has changed."""
+        self._changes.add(key)
+
+    def reset_changes(self) -> None:
+        """Clear all changed attributes."""
+        self._changes.clear()
 
 
 class Role(enum.IntEnum):
@@ -167,8 +197,8 @@ class Item(ModelMixin):
         return computed_tags
 
 
-@dataclass
-class Metainfo(ModelMixin):
+@dataclass(kw_only=True)
+class Metainfo(ModelMixin, ChangesMixin):
     """Metainfo for item."""
 
     item_uuid: UUID

@@ -1,6 +1,6 @@
 """Repository that perform CRUD operations on metainfo."""
 
-from uuid import UUID
+from collections.abc import Collection
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo
 
@@ -23,7 +22,7 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
 
     async def get_by_item(self, conn: AsyncConnection, item: models.Item) -> models.Metainfo:
         """Return metainfo."""
-        query = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_uuid == item.uuid)
+        query = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_id == item.id)
 
         response = (await conn.execute(query)).fetchone()
 
@@ -33,40 +32,36 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
 
         return db_models.Metainfo.cast(response)
 
-    async def get_metainfos(
+    async def get_metainfo_map(
         self,
         conn: AsyncConnection,
-        items: list[models.Item],
-    ) -> dict[UUID, models.Metainfo | None]:  # TODO use item_id, not UUID
+        items: Collection[models.Item],
+    ) -> dict[int, models.Metainfo | None]:
         """Return many metainfo records."""
-        uuids = [item.uuid for item in items]
-        metainfos: dict[UUID, models.Metainfo | None] = dict.fromkeys(uuids)
+        ids = [item.id for item in items]
+        metainfos: dict[int, models.Metainfo | None] = dict.fromkeys(ids)
 
-        query = sa.select(db_models.Metainfo).where(
-            db_models.Metainfo.item_uuid.in_(  # noqa
-                tuple(str(uuid) for uuid in uuids)
-            )
-        )
+        query = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_id.in_(ids))
 
         response = (await conn.execute(query)).fetchall()
 
         for row in response:
             model = db_models.Metainfo.cast(row)
-            metainfos[model.item_uuid] = model
+            metainfos[model.item_id] = model
 
         return metainfos
 
-    async def update_metainfo(
+    async def save(
         self,
         conn: AsyncConnection,
-        item_uuid: UUID,
+        item: models.Item,
         metainfo: models.Metainfo,
     ) -> None:
         """Update metainfo."""
         stmt = (
             sa.update(db_models.Metainfo)
-            .where(db_models.Metainfo.item_uuid == item_uuid)
-            .values(**metainfo.model_dump(exclude={'item_uuid', 'created_at'}))
+            .where(db_models.Metainfo.item_id == metainfo.item_id)
+            .values(**metainfo.what_changed())
             .returning(1)
         )
 
@@ -74,22 +69,7 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
 
         if response is None:
             msg = 'Metainfo for item {item_uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
-
-    async def mark_metainfo_updated(self, conn: AsyncConnection, item_uuid: UUID) -> None:
-        """Set last updated to current datetime."""
-        stmt = (
-            sa.update(db_models.Metainfo)
-            .values(updated_at=utils.now())
-            .where(db_models.Metainfo.item_uuid == item_uuid)
-            .returning(1)
-        )
-
-        response = await conn.execute(stmt)
-
-        if response is None:
-            msg = 'Metainfo for item {item_uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
+            raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
 
     async def add_item_note(
         self,
@@ -135,9 +115,9 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
             )
             .join(
                 db_models.Item,
-                db_models.Item.uuid == db_models.Metainfo.item_uuid,
+                db_models.Item.id == db_models.Metainfo.item_id,
             )
-            .where(db_models.Item.owner_uuid == user.uuid)
+            .where(db_models.Item.owner_id == user.id)
         )
 
         response = (await conn.execute(query)).fetchone()
