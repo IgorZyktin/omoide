@@ -5,7 +5,6 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
-from pydantic import field_validator
 
 QUERY_DEFAULT = ''
 LAST_SEEN_DEFAULT = -1

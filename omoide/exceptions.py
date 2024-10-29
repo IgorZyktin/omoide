@@ -39,7 +39,7 @@ class BaseOmoideError(Exception):
 
         for key, value in kwargs.items():
             message_before = message
-            message = message.replace(f'{{kev}}', str(value))
+            message = message.replace('{kev}', str(value))
 
             if message != message_before:
                 used.add(key)

@@ -263,7 +263,7 @@ class AimWrapper:
 def _get_href(request: Request, item: models.Item) -> str:
     """Return base for HREF formation."""
     base = request.scope.get('root_path')
-    prefix = str(item.uuid)[:const.STORAGE_PREFIX_SIZE]
+    prefix = str(item.uuid)[: const.STORAGE_PREFIX_SIZE]
     return f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
 
 
