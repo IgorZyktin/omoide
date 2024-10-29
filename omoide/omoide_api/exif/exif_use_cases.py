@@ -13,18 +13,15 @@ LOG = custom_logging.get_logger(__name__)
 class CreateEXIFUseCase(BaseAPIUseCase):
     """Use case for creation of an EXIF."""
 
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        exif: dict[str, Any],
-    ) -> None:
+    do_what: str = 'create EXIF data'
+
+    async def execute(self, user: models.User, item_uuid: UUID, exif: dict[str, Any]) -> None:
         """Execute."""
-        self.ensure_not_anon(user, operation='add EXIF data')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='EXIF data')
+            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
 
             LOG.info('{} is creating EXIF for {}', user, item)
             await self.mediator.exif.create(conn, item, exif)
@@ -33,15 +30,13 @@ class CreateEXIFUseCase(BaseAPIUseCase):
 class ReadEXIFUseCase(BaseAPIUseCase):
     """Use case for getting an EXIF."""
 
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> dict[str, Any]:
+    do_what: str = 'read EXIF data'
+
+    async def execute(self, user: models.User, item_uuid: UUID) -> dict[str, Any]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.ensure_admin_or_owner_or_allowed_to(user, item, subject='EXIF data')
+            self.mediator.policy.ensure_can_see(user, item, to=self.do_what)
 
             exif = await self.mediator.exif.get_by_item(conn, item)
 
@@ -51,18 +46,15 @@ class ReadEXIFUseCase(BaseAPIUseCase):
 class UpdateEXIFUseCase(BaseAPIUseCase):
     """Use case for updating of an EXIF."""
 
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-        exif: dict[str, Any],
-    ) -> None:
+    do_what: str = 'update EXIF data'
+
+    async def execute(self, user: models.User, item_uuid: UUID, exif: dict[str, Any]) -> None:
         """Execute."""
-        self.ensure_not_anon(user, operation='update EXIF data')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='EXIF data')
+            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
 
             LOG.info('{} is updating EXIF for {}', user, item)
             await self.mediator.exif.save(conn, item, exif)
@@ -71,13 +63,15 @@ class UpdateEXIFUseCase(BaseAPIUseCase):
 class DeleteEXIFUseCase(BaseAPIUseCase):
     """Use case for deleting of an EXIF."""
 
+    do_what: str = 'delete EXIF data'
+
     async def execute(self, user: models.User, item_uuid: UUID) -> None:
         """Execute."""
-        self.ensure_not_anon(user, operation='delete EXIF data')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='EXIF data')
+            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
 
             LOG.info('{} is deleting EXIF for {}', user, item)
             await self.mediator.exif.delete(conn, item)
