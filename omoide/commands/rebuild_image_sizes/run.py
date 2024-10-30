@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from omoide import const
 from omoide import custom_logging
-from omoide import domain
 from omoide import infra
+from omoide import models
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.rebuild_image_sizes.cfg import Config
@@ -39,16 +39,13 @@ def run(config: Config, database: SyncDatabase) -> None:
             if not all_metainfo:
                 continue
 
-            LOG.info(
-                'Refreshing image sizes for user {} {}', user.uuid, user.name
-            )
+            LOG.info('Refreshing image sizes for user {} {}', user.uuid, user.name)
 
             rebuild_sizes(config, user, all_metainfo)
             spent = time.perf_counter() - start
 
             LOG.info(
-                'Rebuilt image sizes for '
-                '{} {} ({} records) in {:0.3f} sec.',
+                'Rebuilt image sizes for ' '{} {} ({} records) in {:0.3f} sec.',
                 user.uuid,
                 user.name,
                 utils.sep_digits(len(all_metainfo)),
@@ -124,16 +121,12 @@ def rebuild_sizes(
     try:
         from PIL import Image
     except ImportError:
-        LOG.exception(
-            'You have to install "pillow" package to run this command'
-        )
+        LOG.exception('You have to install "pillow" package to run this command')
         sys.exit(1)
 
     for metainfo, item in all_metainfo:
         if metainfo is None or item is None:
-            LOG.error(
-                'Failed to get data, metainfo={}, item={}', metainfo, item
-            )
+            LOG.error('Failed to get data, metainfo={}, item={}', metainfo, item)
             continue
 
         locator = make_locator(config, user, item)
@@ -186,7 +179,8 @@ def make_locator(
     item: db_models.Item,
 ) -> infra.FilesystemLocator:
     """Make locator from pieces of item data."""
-    dom_item = domain.Item(
+    dom_item = models.Item(
+        id=-1,
         uuid=item.uuid,
         parent_uuid=item.parent_uuid,
         owner_uuid=user.uuid,
@@ -196,8 +190,8 @@ def make_locator(
         content_ext=item.content_ext,
         preview_ext=item.preview_ext,
         thumbnail_ext=item.thumbnail_ext,
-        tags=[],
-        permissions=[],
+        tags=set(),
+        permissions=set(),
     )
 
     locator = infra.FilesystemLocator(

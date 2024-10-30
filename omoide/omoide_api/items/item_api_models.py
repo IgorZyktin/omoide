@@ -38,8 +38,8 @@ class ItemInput(BaseModel):
     name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    tags: set[str] = Field([], max_length=MAX_TAGS)
-    permissions: list[UUID] = Field([], max_length=MAX_PERMISSIONS)
+    tags: set[str] = Field(set(), max_length=MAX_TAGS)
+    permissions: set[UUID] = Field(set(), max_length=MAX_PERMISSIONS)
 
     @model_validator(mode='after')
     def check_tags(self) -> Self:
@@ -102,10 +102,7 @@ class MediaInput(BaseModel):
     def check_extension(self) -> Self:
         """Raise if we do not support this extension."""
         if self.ext.lower() not in SUPPORTED_EXTENSION:
-            msg = (
-                'Unsupported extension, '
-                f'must be one of {sorted(SUPPORTED_EXTENSION)}'
-            )
+            msg = 'Unsupported extension, ' f'must be one of {sorted(SUPPORTED_EXTENSION)}'
             raise ValueError(msg)
         return self
 
@@ -113,10 +110,7 @@ class MediaInput(BaseModel):
     def check_size(self) -> Self:
         """Raise if content is too big."""
         if self.expected_binary_size > MAX_MEDIA_SIZE:
-            msg = (
-                'Sent content is too big, '
-                f'maximum allowed size is {MAX_MEDIA_SIZE_HR}'
-            )
+            msg = 'Sent content is too big, ' f'maximum allowed size is {MAX_MEDIA_SIZE_HR}'
             raise ValueError(msg)
         return self
 

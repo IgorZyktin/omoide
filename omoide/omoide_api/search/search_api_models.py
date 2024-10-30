@@ -11,9 +11,7 @@ class AutocompleteOutput(BaseModel):
     variants: list[str]
 
     model_config = {
-        'json_schema_extra': {
-            'examples': [{'variants': ['abridge', 'apple', 'authorise']}]
-        }
+        'json_schema_extra': {'examples': [{'variants': ['abridge', 'apple', 'authorise']}]}
     }
 
 

@@ -1,12 +1,12 @@
 """All possible serial operations."""
 
-import enum
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+import enum
+from functools import cached_property
 from typing import Any
 from uuid import UUID
-from functools import cached_property
 
 from omoide import const
 from omoide import exceptions

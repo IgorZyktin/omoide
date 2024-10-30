@@ -1,6 +1,8 @@
 """Information about the API itself."""
 
-__version__ = '0.3.8'
+from omoide import const
+
+__version__ = const.VERSION
 
 DESCRIPTION = """
 Backend of Omoide application.

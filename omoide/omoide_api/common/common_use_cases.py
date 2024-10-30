@@ -58,10 +58,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform such operations'
 
@@ -88,10 +85,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform this operation'
 
@@ -119,10 +113,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform such operations'
 
@@ -141,10 +132,7 @@ class BaseAPIUseCase:
         if error_message:
             msg = error_message
         elif subject:
-            msg = (
-                'You are not allowed to perform '
-                f'such operations with {subject}'
-            )
+            msg = 'You are not allowed to perform ' f'such operations with {subject}'
         else:
             msg = 'You are not allowed to perform such operations'
 
@@ -156,6 +144,7 @@ class BaseItemUseCase(BaseAPIUseCase):
 
     async def create_one_item(
         self,
+        conn,
         user: models.User,
         uuid: UUID | None,
         parent_uuid: UUID | None,
@@ -163,7 +152,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         name: str,
         number: int | None,
         is_collection: bool,
-        tags: list[str],
+        tags: set[str],
         permissions: set[UUID],
     ) -> models.Item:
         """Create single item."""
@@ -178,9 +167,9 @@ class BaseItemUseCase(BaseAPIUseCase):
             raise exceptions.NotAllowedError(msg)
 
         if parent_uuid is None:
-            parent = await self.mediator.items_repo.get_root_item(user)
+            parent = await self.mediator.users.get_root_item(conn, user)
         else:
-            parent = await self.mediator.items_repo.get_item(parent_uuid)
+            parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
             if parent.owner_uuid != user.uuid:
                 raise exceptions.NotAllowedError(msg)
 
@@ -206,7 +195,6 @@ class BaseItemUseCase(BaseAPIUseCase):
             deleted_at=None,
             user_time=None,
             content_type=None,
-            extras={},
             content_size=None,
             preview_size=None,
             thumbnail_size=None,
@@ -218,13 +206,14 @@ class BaseItemUseCase(BaseAPIUseCase):
             thumbnail_height=None,
         )
 
-        await self.mediator.items_repo.create_item(item)
-        await self.mediator.meta_repo.create_metainfo(metainfo)
+        await self.mediator.items.create(conn, item)
+        await self.mediator.meta.create(conn, metainfo)
 
         return item
 
     async def post_item_creation(
         self,
+        conn,
         item: models.Item,
         parent_computed_tags: dict[UUID, set[str]],
     ) -> tuple[set[models.User], set[str]]:
@@ -232,11 +221,9 @@ class BaseItemUseCase(BaseAPIUseCase):
         affected_users: list[models.User] = []
 
         if item.permissions:
-            affected_users = await self.mediator.users_repo.get_users(
-                uuids=item.permissions,
-            )
+            affected_users = await self.mediator.users.select(conn, uuids=item.permissions)
 
-        computed_tags = await self.mediator.misc_repo.update_computed_tags(
+        computed_tags = await self.mediator.misc.update_computed_tags(
             item=item,
             parent_computed_tags=parent_computed_tags.get(item.uuid, set()),
         )

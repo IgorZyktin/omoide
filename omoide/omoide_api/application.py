@@ -5,7 +5,6 @@ All backend stuff is here.
 
 from fastapi import APIRouter
 from fastapi import FastAPI
-from fastapi import Request
 
 from omoide import const
 from omoide.omoide_api import api_info
@@ -17,13 +16,12 @@ from omoide.omoide_api.info import info_controllers
 from omoide.omoide_api.items import item_controllers
 from omoide.omoide_api.metainfo import metainfo_controllers
 from omoide.omoide_api.search import search_controllers
-from omoide.omoide_api.users import users_controllers
-from omoide.presentation import app_config
+from omoide.omoide_api.users import user_controllers
 
 
 def get_api() -> FastAPI:
     """Create API instance."""
-    new_api = FastAPI(
+    return FastAPI(
         redoc_url=None,
         title='OmoideAPI',
         version=const.VERSION,
@@ -34,22 +32,6 @@ def get_api() -> FastAPI:
             'url': 'https://opensource.org/license/mit',
         },
     )
-
-    if app_config.Config().env != 'prod':
-
-        @new_api.get('/all_routes')
-        def get_all_urls_from_request(request: Request):
-            """List all URLs for this Fastapi instance.
-
-            Supposed to be used only for debugging!
-            """
-            url_list = [
-                {'path': route.path, 'name': route.name}
-                for route in request.app.routes
-            ]
-            return url_list
-
-    return new_api
 
 
 def apply_api_routes_v1(current_api: FastAPI) -> None:
@@ -64,6 +46,6 @@ def apply_api_routes_v1(current_api: FastAPI) -> None:
     api_router_v1.include_router(item_controllers.api_items_router)
     api_router_v1.include_router(metainfo_controllers.api_metainfo_router)
     api_router_v1.include_router(search_controllers.api_search_router)
-    api_router_v1.include_router(users_controllers.api_users_router)
+    api_router_v1.include_router(user_controllers.api_users_router)
 
     current_api.include_router(api_router_v1)

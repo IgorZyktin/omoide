@@ -1,17 +1,15 @@
 """Domain-level models."""
 
-import enum
+from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+import enum
 from typing import Any
 from typing import NamedTuple
 from typing import Self
 from uuid import UUID
-
-from pydantic import BaseModel
-from pydantic import Field
 
 from omoide import const
 from omoide import utils
@@ -28,9 +26,38 @@ class ModelMixin:
         if not exclude:
             return dump
 
-        return {
-            key: value for key, value in dump.items() if key not in exclude
-        }
+        return {key: value for key, value in dump.items() if key not in exclude}
+
+
+@dataclass
+class ChangesMixin:
+    """Mixin that tracks changes in its attributes."""
+
+    _changes: set[str] = field(default_factory=set)
+    _ignore_changes: tuple[str] = ('id',)
+
+    def __post_init__(self) -> None:
+        """Clear all newly set attributes."""
+        self.reset_changes()
+
+    def __setattr__(self, attr: str, value: Any) -> None:
+        """Set attribute and track changes."""
+        if attr != '_changes':
+            self._changes.add(attr)
+        super().__setattr__(attr, value)
+
+    def what_changed(self, ignore_fields: Collection[str] = ()) -> dict[str, Any]:
+        """Return changed attributes."""
+        ignore = ignore_fields or self._ignore_changes
+        return {key: getattr(self, key) for key in self._changes if key not in ignore}
+
+    def mark_changed(self, key: str) -> None:
+        """Store the fact that this attribute has changed."""
+        self._changes.add(key)
+
+    def reset_changes(self) -> None:
+        """Clear all changed attributes."""
+        self._changes.clear()
 
 
 class Role(enum.IntEnum):
@@ -87,6 +114,12 @@ class User(ModelMixin):
         """Return True if user is registered one."""
         return self.role is not Role.ANON
 
+    @property
+    def timezone(self) -> None:
+        """Return timezone for this user."""
+        # TODO - add timezone to users
+        return None
+
     @classmethod
     def new_anon(cls) -> Self:
         """Return new anon user."""
@@ -99,52 +132,6 @@ class User(ModelMixin):
             is_public=False,
             registered_at=utils.now(),
             last_login=None,
-        )
-
-
-@dataclass
-class AccessStatus(ModelMixin):
-    """Status of an access and existence check."""
-
-    exists: bool
-    is_public: bool
-    is_permitted: bool
-    is_owner: bool
-
-    @property
-    def does_not_exist(self) -> bool:
-        """Return True if item does not exist."""
-        return not self.exists
-
-    @property
-    def is_given(self) -> bool:
-        """Return True if user can access this item."""
-        return any(
-            [
-                self.is_public,
-                self.is_owner,
-                self.is_permitted,
-            ]
-        )
-
-    @property
-    def is_not_given(self) -> bool:
-        """Return True if user cannot access this item."""
-        return not self.is_given
-
-    @property
-    def is_not_owner(self) -> bool:
-        """Return True if user is not owner of the item."""
-        return not self.is_owner
-
-    @classmethod
-    def not_found(cls) -> 'AccessStatus':
-        """Item does not exist."""
-        return cls(
-            exists=False,
-            is_public=False,
-            is_permitted=False,
-            is_owner=False,
         )
 
 
@@ -173,8 +160,8 @@ class Item(ModelMixin):
     preview_ext: str | None
     thumbnail_ext: str | None
     status: Status = Status.AVAILABLE  # TODO - make it mandatory
-    tags: list[str] = field(default_factory=list)
-    permissions: set[UUID] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
+    permissions: set[int] = field(default_factory=set)
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
@@ -212,34 +199,11 @@ class Item(ModelMixin):
         return computed_tags
 
 
-class MetainfoOld(BaseModel):
+@dataclass(kw_only=True)
+class Metainfo(ModelMixin, ChangesMixin):
     """Metainfo for item."""
 
-    created_at: datetime = const.DUMMY_TIME
-    updated_at: datetime = const.DUMMY_TIME
-    deleted_at: datetime | None = None
-    user_time: datetime | None = None
-
-    content_type: str | None = None
-    extras: dict[str, Any] = Field(default_factory=dict)
-
-    content_size: int | None = None
-    preview_size: int | None = None
-    thumbnail_size: int | None = None
-
-    content_width: int | None = None
-    content_height: int | None = None
-    preview_width: int | None = None
-    preview_height: int | None = None
-    thumbnail_width: int | None = None
-    thumbnail_height: int | None = None
-
-
-@dataclass
-class Metainfo(ModelMixin):
-    """Metainfo for item."""
-
-    item_uuid: UUID
+    item_id: int
 
     created_at: datetime
     updated_at: datetime

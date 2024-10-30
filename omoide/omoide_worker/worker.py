@@ -7,11 +7,11 @@ import zlib
 from omoide import const
 from omoide import custom_logging
 from omoide import utils
+from omoide.database import db_models
 from omoide.omoide_worker import interfaces
 from omoide.omoide_worker.database import WorkerDatabase
 from omoide.omoide_worker.filesystem import Filesystem
 from omoide.omoide_worker.worker_config import Config
-from omoide.database import db_models
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -95,10 +95,7 @@ class Worker(interfaces.AbsWorker):
             media.item.metainfo.thumbnail_size = len(media.content)
 
         else:
-            msg = (
-                f'Got unknown media_type {media.media_type} '
-                f'for media {media.id}'
-            )
+            msg = f'Got unknown media_type {media.media_type} ' f'for media {media.id}'
             raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()

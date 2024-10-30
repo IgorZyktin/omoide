@@ -3,27 +3,30 @@
 PostgreSQL specific because application needs arrays.
 """
 
-import os
 from datetime import datetime
+import os
 from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 
 from omoide import const
 from omoide import models
 
 metadata = sa.MetaData()
-Base = declarative_base(metadata=metadata)
 
 HUGE = 1024
 MEDIUM = 256
 SMALL = 64
+
+
+class Base(DeclarativeBase):
+    """Base model type."""
 
 
 class Role(Base):
@@ -34,12 +37,12 @@ class Role(Base):
     id: Mapped[int] = mapped_column(
         sa.Integer,
         primary_key=True,
-        autoincrement=True,
         nullable=False,
         index=True,
+        unique=True,
     )
 
-    description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
+    description: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
 
 
 class User(Base):
@@ -51,54 +54,37 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(
         sa.Integer,
-        # TODO - actually make it a primary key
-        # primary_key=True,  noqa: ERA001
+        primary_key=True,
         autoincrement=True,
         nullable=False,
         index=True,
         unique=True,
     )
 
-    uuid: Mapped[UUID] = mapped_column(
-        # TODO - remove from primary keys
-        pg.UUID(),
-        primary_key=True,
-        nullable=False,
-        index=True,
-        unique=True,
-    )
-
+    uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True, unique=True)
     role: Mapped[models.Role] = mapped_column(
-        sa.Integer, sa.ForeignKey('user_roles.id'), nullable=False
+        sa.Integer, sa.ForeignKey('user_roles.id'), nullable=False, index=True
     )
 
     # fields ------------------------------------------------------------------
 
     login: Mapped[str] = mapped_column(
-        sa.String(length=MEDIUM), nullable=False, unique=True
+        sa.String(length=MEDIUM), nullable=False, unique=True, index=True
     )
-    password: Mapped[str] = mapped_column(
-        sa.String(length=HUGE), nullable=False
-    )
+    password: Mapped[str] = mapped_column(sa.String(length=HUGE), nullable=False)
     name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
     auth_complexity: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
-    is_public: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, index=True
-    )
-    registered_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    last_login: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
+    is_public: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, index=True)
+    registered_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    last_login: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     # relations ---------------------------------------------------------------
 
     items: Mapped[list['Item']] = relationship(
         'Item',
         passive_deletes=True,
-        primaryjoin='Item.owner_uuid==User.uuid',
+        primaryjoin='Item.owner_id==User.id',
         back_populates='owner',
         uselist=True,
     )
@@ -106,7 +92,7 @@ class User(Base):
     media: Mapped['Media'] = relationship(
         'Media',
         passive_deletes=True,
-        primaryjoin='Media.owner_uuid==User.uuid',
+        primaryjoin='Media.owner_id==User.id',
         back_populates='owner',
         uselist=True,
     )
@@ -116,6 +102,20 @@ class User(Base):
     def __repr__(self) -> str:
         """Return string representation."""
         return f'<User, id={self.id}, {self.uuid}, {self.name}>'
+
+    @staticmethod
+    def cast(row: sa.Row) -> models.User:
+        """Convert to domain-level object."""
+        return models.User(
+            id=row.id,
+            uuid=row.uuid,
+            name=row.name,
+            login=row.login,
+            role=row.role,
+            is_public=row.is_public,
+            registered_at=row.registered_at,
+            last_login=row.last_login,
+        )
 
 
 class PublicUsers(Base):
@@ -157,9 +157,9 @@ class ComputedTags(Base):
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
         primary_key=True,
         nullable=False,
         index=True,
@@ -168,57 +168,11 @@ class ComputedTags(Base):
 
     # array fields ------------------------------------------------------------
 
-    tags: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
+    tags: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
 
     # other -------------------------------------------------------------------
 
-    __table_args__ = (
-        sa.Index('ix_computed_tags', tags, postgresql_using='gin'),
-    )
-
-
-class OrphanFiles(Base):
-    """Model that tracks files of already deleted items.
-
-    Has not foreign keys because user/item could already be deleted.
-    """
-
-    __tablename__ = 'orphan_files'
-
-    # primary and foreign keys ------------------------------------------------
-
-    id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        primary_key=True,
-    )
-
-    # fields ------------------------------------------------------------------
-
-    media_type: Mapped[str] = mapped_column(
-        sa.Enum(
-            const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'
-        )
-    )
-
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(), nullable=False, index=True
-    )
-
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(), nullable=False, index=True
-    )
-
-    ext: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
-
-    moment: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True),
-        nullable=False,
-        index=True,
-        server_default=sa.text("timezone('utc', now())"),
-    )
+    __table_args__ = (sa.Index('ix_computed_tags', tags, postgresql_using='gin'),)
 
 
 class KnownTags(Base):
@@ -240,7 +194,7 @@ class KnownTags(Base):
         primary_key=True,
     )
     tag: Mapped[str] = mapped_column(
-        sa.String(length=MEDIUM), nullable=False, index=True, primary_key=True
+        sa.String(MEDIUM), nullable=False, index=True, primary_key=True
     )
 
     # fields ------------------------------------------------------------------
@@ -264,7 +218,7 @@ class KnownTagsAnon(Base):
     # primary and foreign keys ------------------------------------------------
 
     tag: Mapped[str] = mapped_column(
-        sa.String(length=MEDIUM),
+        sa.String(MEDIUM),
         unique=True,
         nullable=False,
         index=True,
@@ -276,68 +230,8 @@ class KnownTagsAnon(Base):
     counter: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
     __table_args__ = (
-        sa.Index(
-            'ix_known_tags_anon',
-            tag,
-            postgresql_ops={'tag': 'text_pattern_ops'},
-        ),
+        sa.Index('ix_known_tags_anon', tag, postgresql_ops={'tag': 'text_pattern_ops'}),
     )
-
-
-class LongJob(Base):
-    """Long mutation operations."""
-
-    __tablename__ = 'long_jobs'
-
-    # primary and foreign keys ------------------------------------------------
-
-    id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        primary_key=True,
-    )
-
-    # fields ------------------------------------------------------------------
-
-    name: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
-
-    user_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-        index=True,
-        primary_key=True,
-    )
-
-    target_uuid: Mapped[UUID | None] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'items.uuid',
-            ondelete='CASCADE',
-        ),
-        nullable=True,
-        index=True,
-    )
-
-    added: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    deleted: Mapped[list[str]] = mapped_column(
-        pg.ARRAY(sa.Text), nullable=False
-    )
-    status: Mapped[str] = mapped_column(
-        sa.String(length=SMALL), index=True, nullable=False
-    )
-    started: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True),
-        nullable=False,
-        index=True,
-        server_default=sa.text("timezone('utc', now())"),
-    )
-    duration: Mapped[float] = mapped_column(sa.Float, nullable=True)
-
-    operations: Mapped[int] = mapped_column(sa.Integer, nullable=True)
-    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
-    error: Mapped[str] = mapped_column(sa.Text, nullable=False)
 
 
 class Status(Base):
@@ -348,12 +242,12 @@ class Status(Base):
     id: Mapped[int] = mapped_column(
         sa.Integer,
         primary_key=True,
-        autoincrement=True,
         nullable=False,
         index=True,
+        unique=True,
     )
 
-    description: Mapped[str] = mapped_column(sa.VARCHAR(SMALL), nullable=False)
+    description: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
 
 
 class Item(Base):
@@ -364,42 +258,30 @@ class Item(Base):
     # primary and foreign keys ------------------------------------------------
 
     id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        # TODO - actually make it a primary key
-        # primary_key=True,  noqa: ERA001
+        sa.Integer,
+        primary_key=True,
         autoincrement=True,
         nullable=False,
         index=True,
         unique=True,
     )
 
-    uuid: Mapped[UUID] = mapped_column(
-        # TODO - remove from primary keys
-        pg.UUID(),
-        primary_key=True,
-        nullable=False,
-        index=True,
-        unique=True,
-    )
+    uuid: Mapped[UUID] = mapped_column(pg.UUID(), nullable=False, index=True, unique=True)
 
-    parent_uuid: Mapped[UUID | None] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'items.uuid',
-            ondelete='CASCADE',
-        ),
+    parent_id: Mapped[int | None] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
         nullable=True,
         index=True,
+        unique=False,
     )
 
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'users.uuid',
-            ondelete='CASCADE',
-        ),
+    owner_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
+        unique=False,
     )
 
     # fields ------------------------------------------------------------------
@@ -410,33 +292,23 @@ class Item(Base):
         nullable=False,
         index=True,
     )
-    number: Mapped[int] = mapped_column(
-        sa.BigInteger, autoincrement=True, nullable=False
-    )
-    name: Mapped[str] = mapped_column(sa.String(length=MEDIUM), nullable=False)
+    number: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+    name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
     is_collection: Mapped[bool] = mapped_column(sa.Boolean, nullable=False)
-    content_ext: Mapped[str | None] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
-    preview_ext: Mapped[str | None] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
-    thumbnail_ext: Mapped[str | None] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
+    content_ext: Mapped[str | None] = mapped_column(sa.String(SMALL), nullable=True)
+    preview_ext: Mapped[str | None] = mapped_column(sa.String(SMALL), nullable=True)
+    thumbnail_ext: Mapped[str | None] = mapped_column(sa.String(SMALL), nullable=True)
 
     # array fields ------------------------------------------------------------
 
-    tags: Mapped[list[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
-    permissions: Mapped[set[UUID]] = mapped_column(
-        pg.ARRAY(sa.Text), nullable=False
-    )
+    tags: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
+    permissions: Mapped[set[int]] = mapped_column(pg.ARRAY(sa.Integer), nullable=False)
 
     # methods -----------------------------------------------------------------
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<DB Item, {self.uuid}, {self.name!r}>'
+        return f'<Item, id={self.id}, {self.uuid}, {self.name!r}>'
 
     # relations ---------------------------------------------------------------
 
@@ -444,7 +316,7 @@ class Item(Base):
         'User',
         passive_deletes=True,
         back_populates='items',
-        primaryjoin='Item.owner_uuid==User.uuid',
+        primaryjoin='Item.owner_id==User.id',
         uselist=False,
     )
 
@@ -467,77 +339,93 @@ class Item(Base):
         sa.Index('ix_items_permissions', permissions, postgresql_using='gin'),
     )
 
+    @staticmethod
+    def cast(row: sa.Row) -> models.Item:
+        """Convert to domain-level object."""
+        return models.Item(
+            id=row.id,
+            uuid=row.uuid,
+            parent_uuid=row.parent_uuid,
+            owner_uuid=row.owner_uuid,
+            name=row.name,
+            number=row.number,
+            is_collection=row.is_collection,
+            content_ext=row.content_ext,
+            preview_ext=row.preview_ext,
+            thumbnail_ext=row.thumbnail_ext,
+            tags=set(row.tags),
+            permissions=set(row.permissions),
+        )
+
 
 class Metainfo(Base):
     """Meta information for items."""
 
-    __tablename__ = 'metainfo'
+    __tablename__ = 'item_metainfo'
 
     # primary and foreign keys ------------------------------------------------
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
 
-    created_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
-    user_time: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=False), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    user_time: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=False), nullable=True)
 
-    content_type: Mapped[str] = mapped_column(
-        sa.String(length=SMALL), nullable=True
-    )
+    content_type: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=True)
 
     content_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     preview_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
-    thumbnail_size: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
+    thumbnail_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
-    content_width: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    content_height: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    preview_width: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    preview_height: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    thumbnail_width: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
-    thumbnail_height: Mapped[int | None] = mapped_column(
-        sa.Integer, nullable=True
-    )
+    content_width: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    content_height: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    preview_width: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    preview_height: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    thumbnail_width: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    thumbnail_height: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # methods -----------------------------------------------------------------
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<DB Metainfo, {self.item_uuid}, {self.content_type!r}>'
+        return f'<Metainfo, item_id={self.item_id}, {self.content_type!r}>'
 
     # relations ---------------------------------------------------------------
 
     item: Mapped[Item] = relationship(
         'Item', passive_deletes=True, back_populates='metainfo', uselist=False
     )
+
+    @staticmethod
+    def cast(row: sa.Row) -> models.Metainfo:
+        """Convert to domain-level object."""
+        return models.Metainfo(
+            item_id=row.item_id,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+            deleted_at=row.deleted_at,
+            user_time=row.user_time,
+            content_type=row.content_type,
+            content_size=row.content_size,
+            preview_size=row.preview_size,
+            thumbnail_size=row.thumbnail_size,
+            content_width=row.content_width,
+            content_height=row.content_height,
+            preview_width=row.preview_width,
+            preview_height=row.preview_height,
+            thumbnail_width=row.thumbnail_width,
+            thumbnail_height=row.thumbnail_height,
+        )
 
 
 class ItemNote(Base):
@@ -565,17 +453,12 @@ class ItemNote(Base):
 
     # fields ------------------------------------------------------------------
 
-    key: Mapped[str] = mapped_column(
-        sa.CHAR(MEDIUM), nullable=False, index=True
-    )
-
-    value: Mapped[str] = mapped_column(sa.CHAR(HUGE), nullable=False)
+    key: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False, index=True)
+    value: Mapped[str] = mapped_column(sa.String(HUGE), nullable=False)
 
     # other -------------------------------------------------------------------
 
-    __table_args__ = (
-        sa.UniqueConstraint('item_id', 'key', name='item_notes_uc'),
-    )
+    __table_args__ = (sa.UniqueConstraint('item_id', 'key', name='item_notes_uc'),)
 
 
 class Media(Base):
@@ -591,11 +474,12 @@ class Media(Base):
     # primary and foreign keys ------------------------------------------------
 
     id: Mapped[int] = mapped_column(
-        sa.BigInteger,
+        sa.Integer,
         autoincrement=True,
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
@@ -609,27 +493,23 @@ class Media(Base):
     )
     error: Mapped[str] = mapped_column(sa.Text, nullable=True)
 
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+    owner_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
+        unique=False,
     )
 
-    item_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
+        unique=False,
     )
 
-    media_type: Mapped[str] = mapped_column(
-        sa.Enum(
-            const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'
-        ),
-        nullable=False,
-    )
-
+    media_type: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
     content: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
     ext: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
 
@@ -639,75 +519,13 @@ class Media(Base):
         'User',
         passive_deletes=True,
         back_populates='media',
-        primaryjoin='Media.owner_uuid==User.uuid',
+        primaryjoin='Media.owner_id==User.id',
         uselist=False,
     )
 
     item: Mapped[Item] = relationship(
         'Item', passive_deletes=True, back_populates='media', uselist=False
     )
-
-
-class CommandCopy(Base):
-    """Operation of copying image from one item to another."""
-
-    __tablename__ = 'commands_copy'
-
-    # primary and foreign keys ------------------------------------------------
-
-    id: Mapped[int] = mapped_column(
-        sa.BigInteger,
-        autoincrement=True,
-        nullable=False,
-        index=True,
-        primary_key=True,
-    )
-
-    # fields ------------------------------------------------------------------
-
-    created_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False, index=True
-    )
-
-    processed_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
-
-    error: Mapped[str] = mapped_column(sa.Text, nullable=True)
-
-    owner_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-    )
-
-    source_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'items.uuid',
-            ondelete='CASCADE',
-        ),
-        nullable=False,
-    )
-
-    target_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey(
-            'items.uuid',
-            ondelete='CASCADE',
-        ),
-        nullable=False,
-    )
-
-    media_type: Mapped[str] = mapped_column(
-        sa.Enum(
-            const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'
-        ),
-        nullable=False,
-    )
-
-    ext: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
 
 
 class EXIF(Base):
@@ -745,7 +563,7 @@ class SignatureMD5(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_id: Mapped[int] = mapped_column(
-        sa.BigInteger,
+        sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
@@ -755,9 +573,7 @@ class SignatureMD5(Base):
 
     # fields ------------------------------------------------------------------
 
-    signature: Mapped[str] = mapped_column(
-        sa.CHAR(32), nullable=False, index=True
-    )
+    signature: Mapped[str] = mapped_column(sa.CHAR(32), nullable=False, index=True)
 
 
 class SignatureCRC32(Base):
@@ -768,7 +584,7 @@ class SignatureCRC32(Base):
     # primary and foreign keys ------------------------------------------------
 
     item_id: Mapped[int] = mapped_column(
-        sa.BigInteger,
+        sa.Integer,
         sa.ForeignKey('items.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
@@ -778,9 +594,7 @@ class SignatureCRC32(Base):
 
     # fields ------------------------------------------------------------------
 
-    signature: Mapped[int] = mapped_column(
-        sa.BigInteger, nullable=False, index=True
-    )
+    signature: Mapped[int] = mapped_column(sa.BigInteger, nullable=False, index=True)
 
 
 class RegisteredWorkers(Base):
@@ -796,12 +610,13 @@ class RegisteredWorkers(Base):
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
 
     worker_name: Mapped[str] = mapped_column(
-        sa.CHAR(MEDIUM), nullable=False, index=True, unique=True
+        sa.String(MEDIUM), nullable=False, index=True, unique=True
     )
 
     last_restart: Mapped[datetime] = mapped_column(
@@ -822,11 +637,12 @@ class SerialLock(Base):
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
 
-    worker_name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=True)
+    worker_name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=True)
 
     last_update: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), nullable=False, index=True
@@ -846,37 +662,20 @@ class SerialOperation(Base):
         nullable=False,
         index=True,
         primary_key=True,
+        unique=True,
     )
 
     # fields ------------------------------------------------------------------
 
-    name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=False)
-    worker_name: Mapped[str] = mapped_column(sa.VARCHAR(MEDIUM), nullable=True)
-
-    status: Mapped[str] = mapped_column(
-        sa.Enum(
-            'created',
-            'processing',
-            'done',
-            'failed',
-            name='serial_operation_status',
-        )
-    )
-
+    name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
+    worker_name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=True)
+    status: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    started_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
-    ended_at: Mapped[datetime | None] = mapped_column(
-        sa.DateTime(timezone=True), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
 

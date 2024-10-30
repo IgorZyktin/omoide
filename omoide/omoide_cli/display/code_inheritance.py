@@ -53,24 +53,12 @@ def _serialize_item(
     """Convert item to pretty string."""
     uuid = ''
     if show_uuids:
-        uuid = (
-            f'{colorama.Fore.LIGHTBLACK_EX}'
-            f'<{item.uuid}>'
-            f'{colorama.Fore.RESET}'
-        )
+        uuid = f'{colorama.Fore.LIGHTBLACK_EX}' f'<{item.uuid}>' f'{colorama.Fore.RESET}'
 
     if item.parent_uuid is None:
-        name = (
-            f'{colorama.Fore.RED}'
-            f'{item.name or "???"}'
-            f'{colorama.Fore.RESET}'
-        )
+        name = f'{colorama.Fore.RED}' f'{item.name or "???"}' f'{colorama.Fore.RESET}'
     else:
-        name = (
-            f'{colorama.Fore.GREEN}'
-            f'{item.name or "???"}'
-            f'{colorama.Fore.RESET}'
-        )
+        name = f'{colorama.Fore.GREEN}' f'{item.name or "???"}' f'{colorama.Fore.RESET}'
 
     children = ''
     if total_children:

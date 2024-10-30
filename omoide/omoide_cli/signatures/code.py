@@ -15,8 +15,8 @@ from sqlalchemy.engine import Connection
 
 from omoide import const
 from omoide import custom_logging
-from omoide.omoide_cli import common
 from omoide.database import db_models
+from omoide.omoide_cli import common
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -169,9 +169,7 @@ def get_items(
         )
 
     # skip items without content
-    query = query.where(db_models.Item.content_ext != sa.null()).order_by(
-        db_models.Item.id
-    )
+    query = query.where(db_models.Item.content_ext != sa.null()).order_by(db_models.Item.id)
 
     if limit is not None:
         query = query.limit(min(batch_size, limit))

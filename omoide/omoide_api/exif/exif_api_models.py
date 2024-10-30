@@ -41,9 +41,6 @@ class EXIFModel(BaseModel):
         if size > limits.MAXIMUM_EXIF_SIZE:
             hr_size = utils.human_readable_size(size)
             hr_limit = utils.human_readable_size(limits.MAXIMUM_EXIF_SIZE)
-            msg = (
-                f'Given EXIF is too big (got {hr_size}), '
-                f'allowed maximum is {hr_limit}'
-            )
+            msg = f'Given EXIF is too big (got {hr_size}), ' f'allowed maximum is {hr_limit}'
             raise ValueError(msg)
         return self

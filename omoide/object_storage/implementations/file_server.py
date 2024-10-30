@@ -3,10 +3,8 @@
 from omoide import const
 from omoide import models
 from omoide import utils
-from omoide.object_storage.interfaces.abs_object_storage import (
-    AbsObjectStorage,
-)
-from omoide.storage.interfaces.repositories.abs_media_repo import AbsMediaRepo
+from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
+from omoide.object_storage.interfaces.abs_object_storage import AbsObjectStorage
 
 
 class FileObjectStorage(AbsObjectStorage):

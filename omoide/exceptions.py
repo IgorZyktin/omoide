@@ -23,14 +23,34 @@ class BaseOmoideError(Exception):
 
         super().__init__(self.__rendered_text)
 
-    @staticmethod
-    def __render_text(template: str, **kwargs: str) -> str:
+    def __render_text(self, template: str, **kwargs: str) -> str:
         """Safely convert error to text message."""
         try:
             rendered_text = template.format(**kwargs)
         except (IndexError, KeyError, ValueError) as exc:
-            rendered_text = f'{template} {kwargs} ({exc})'
+            rendered_text = self.__safe_render(template, exc, **kwargs)
         return rendered_text
+
+    @staticmethod
+    def __safe_render(template: str, exc: Exception, **kwargs: str) -> str:
+        """Try converting error as correct as possible."""
+        message = template
+        used: set[str] = set()
+
+        for key, value in kwargs.items():
+            message_before = message
+            message = message.replace('{kev}', str(value))
+
+            if message != message_before:
+                used.add(key)
+
+        unused = {key: value for key, value in kwargs.items() if key not in used}
+        if unused:
+            message += f' unused arguments: {unused}'
+
+        message += f' [{type(exc).__name__}: {exc}]'
+
+        return message
 
     def __str__(self) -> str:
         """Return textual representation."""

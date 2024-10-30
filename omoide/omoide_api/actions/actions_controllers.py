@@ -7,11 +7,11 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.actions import actions_api_models
 from omoide.omoide_api.actions import actions_use_cases
-from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
 api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
@@ -25,7 +25,7 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 async def api_action_rebuild_known_tags_anon(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-) -> dict[str, int | str]:
+):
     """Recalculate all known tags for anon user."""
     use_case = actions_use_cases.RebuildKnownTagsAnonUseCase(mediator)
 
@@ -49,7 +49,7 @@ async def api_action_rebuild_known_tags_user(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_uuid: UUID,
-) -> dict[str, int | str]:
+):
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsUserUseCase(mediator)
 
@@ -73,7 +73,7 @@ async def api_action_rebuild_known_tags_user(
 async def api_action_rebuild_known_tags_all(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-) -> dict[str, int | str]:
+):
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsAllUseCase(mediator)
 
@@ -107,9 +107,7 @@ async def api_action_rebuild_computed_tags(
     use_case = actions_use_cases.RebuildComputedTagsUseCase(mediator)
 
     try:
-        owner, item, job_id = await use_case.pre_execute(
-            admin, target.user_uuid
-        )
+        owner, item, job_id = await use_case.pre_execute(admin, target.user_uuid)
     except Exception as exc:
         return web.raise_from_exc(exc)
 
@@ -129,7 +127,7 @@ async def api_action_rebuild_computed_tags(
 async def api_action_copy_image(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.CopyContentInput,
+    target: actions_api_models.CopyImageInput,
 ):
     """Copy image from one item to another.
 

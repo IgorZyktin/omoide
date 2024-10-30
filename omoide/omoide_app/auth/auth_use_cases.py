@@ -10,8 +10,8 @@ class LoginUserUseCase(BaseAPIUseCase):
 
     async def execute(self, login: str, password: str) -> models.User:
         """Execute."""
-        async with self.mediator.storage.transaction():
-            response = await self.mediator.users_repo.get_user_by_login(login)
+        async with self.mediator.database.transaction() as conn:
+            response = await self.mediator.users.get_by_login(conn, login)
 
             if not response:
                 return models.User.new_anon()
@@ -24,9 +24,7 @@ class LoginUserUseCase(BaseAPIUseCase):
                 auth_complexity=auth_complexity,
             ):
                 user.last_login = utils.now()
-                await self.mediator.users_repo.update_user(
-                    user.uuid, last_login=user.last_login
-                )
+                await self.mediator.users.save(conn, user)
                 return user
 
         return models.User.new_anon()

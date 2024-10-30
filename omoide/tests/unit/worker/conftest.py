@@ -64,6 +64,4 @@ def dummy_worker_strategy():
 
 @pytest.fixture()
 def worker_dt():
-    return datetime.datetime(
-        2022, 12, 2, 20, 10, 15, 128, tzinfo=datetime.timezone.utc
-    )
+    return datetime.datetime(2022, 12, 2, 20, 10, 15, 128, tzinfo=datetime.timezone.utc)

@@ -19,7 +19,7 @@ from omoide.omoide_worker.worker import Worker
     help='Run once and then stop',
     show_default=True,
 )
-def main(once: bool):  # noqa: FBT001
+def main(once: bool) -> None:
     """Entry point."""
     config = worker_config.get_config()
     custom_logging.init_logging(config.log_level, diagnose=config.log_debug)

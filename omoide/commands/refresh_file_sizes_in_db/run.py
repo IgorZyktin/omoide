@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from omoide import const
 from omoide import custom_logging
-from omoide import domain
 from omoide import infra
+from omoide import models
 from omoide import utils
 from omoide.commands import helpers
 from omoide.commands.refresh_file_sizes_in_db.cfg import Config
@@ -43,15 +43,11 @@ def run(config: Config, database: SyncDatabase) -> None:
 
     for user in users:
         with database.start_session() as session:
-            LOG.info(
-                'Refreshing file sizes for user {} {}', user.uuid, user.name
-            )
+            LOG.info('Refreshing file sizes for user {} {}', user.uuid, user.name)
 
             models_for_user = get_models(session, config, user)
 
-            LOG.info(
-                'Checking {} models', utils.sep_digits(len(models_for_user))
-            )
+            LOG.info('Checking {} models', utils.sep_digits(len(models_for_user)))
 
             for i, (metainfo, item) in enumerate(models_for_user, start=1):
                 operations = update_size(config, metainfo, item, path)
@@ -91,7 +87,8 @@ def update_size(
     base_folder: str,
 ) -> int:
     """Get actual file size."""
-    dom_item = domain.Item(
+    dom_item = models.Item(
+        id=-1,
         uuid=item.uuid,
         parent_uuid=item.parent_uuid,
         owner_uuid=item.owner_uuid,

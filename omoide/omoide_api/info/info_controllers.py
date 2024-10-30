@@ -7,8 +7,8 @@ from fastapi import Depends
 from fastapi import status
 
 from omoide import const
+from omoide import dependencies as dep
 from omoide import models
-from omoide.presentation import dependencies as dep
 
 api_info_router = APIRouter(prefix='/info', tags=['Info'])
 
@@ -33,14 +33,5 @@ async def api_get_myself(
 ):
     """Return current user as API sees it."""
     if user.is_anon:
-        result = {
-            'uuid': None,
-            'name': 'anon',
-        }
-    else:
-        result = {
-            'uuid': str(user.uuid),
-            'name': user.name,
-        }
-
-    return result
+        return {'uuid': None, 'name': 'anon'}
+    return {'uuid': str(user.uuid), 'name': user.name}

@@ -25,12 +25,13 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         """Perform search request."""
         start = time.perf_counter()
 
-        async with self.mediator.storage.transaction():
-            repo = self.mediator.browse_repo
+        async with self.mediator.database.transaction() as conn:
+            repo = self.mediator.browse
 
             if direct:
                 if user.is_anon:
                     items = await repo.browse_direct_anon(
+                        conn=conn,
                         item_uuid=item_uuid,
                         order=order,
                         collections=collections,
@@ -39,6 +40,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     )
                 else:
                     items = await repo.browse_direct_known(
+                        conn=conn,
                         user=user,
                         item_uuid=item_uuid,
                         order=order,
@@ -48,6 +50,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     )
             elif user.is_anon:
                 items = await repo.browse_related_anon(
+                    conn=conn,
                     item_uuid=item_uuid,
                     order=order,
                     collections=collections,
@@ -56,6 +59,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                 )
             else:
                 items = await repo.browse_related_known(
+                    conn=conn,
                     user=user,
                     item_uuid=item_uuid,
                     order=order,
@@ -64,7 +68,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     limit=limit,
                 )
 
-            names = await self.mediator.browse_repo.get_parent_names(items)
+            names = await self.mediator.browse.get_parent_names(conn, items)
 
         duration = time.perf_counter() - start
 

@@ -14,27 +14,15 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform worker-related operations."""
 
     @abc.abstractmethod
-    async def register_worker(
-        self,
-        conn: ConnectionT,
-        worker_name: str,
-    ) -> None:
+    async def register_worker(self, conn: ConnectionT, worker_name: str) -> None:
         """Ensure we're allowed to run and update starting time."""
 
     @abc.abstractmethod
-    async def take_serial_lock(
-        self,
-        conn: ConnectionT,
-        worker_name: str,
-    ) -> bool:
+    async def take_serial_lock(self, conn: ConnectionT, worker_name: str) -> bool:
         """Try acquiring the lock, return True on success."""
 
     @abc.abstractmethod
-    async def release_serial_lock(
-        self,
-        conn: ConnectionT,
-        worker_name: str,
-    ) -> bool:
+    async def release_serial_lock(self, conn: ConnectionT, worker_name: str) -> bool:
         """Try releasing the lock, return True on success."""
 
     @abc.abstractmethod

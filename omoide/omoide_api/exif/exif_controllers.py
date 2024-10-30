@@ -9,11 +9,11 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
+from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.exif import exif_api_models
 from omoide.omoide_api.exif import exif_use_cases
-from omoide.presentation import dependencies as dep
 from omoide.presentation import web
 
 api_exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
@@ -40,9 +40,7 @@ async def api_create_exif(
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    response.headers['Location'] = str(
-        request.url_for('api_read_exif', item_uuid=item_uuid)
-    )
+    response.headers['Location'] = str(request.url_for('api_read_exif', item_uuid=item_uuid))
 
     return {'result': 'created exif', 'item_uuid': str(item_uuid)}
 

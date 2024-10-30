@@ -5,44 +5,20 @@ import http
 from typing import Any
 from typing import NoReturn
 from urllib.parse import urlencode
-from uuid import UUID
 
 from fastapi import HTTPException
 from fastapi import status
+from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import const
 from omoide import custom_logging
-from omoide import domain
-from omoide import exceptions
 from omoide import exceptions as api_exceptions
-from omoide.domain import errors
-from omoide.presentation import constants
+from omoide import models
 
 LOG = custom_logging.get_logger(__name__)
 
-# TODO - rewrite to base classes
-CODES_TO_ERRORS: dict[int, list[type[errors.Error]]] = {
-    # not supposed to be used, but just in case
-    http.HTTPStatus.INTERNAL_SERVER_ERROR: [
-        errors.Error,
-    ],
-    http.HTTPStatus.BAD_REQUEST: [
-        errors.NoUUID,
-    ],
-    http.HTTPStatus.NOT_FOUND: [
-        errors.ItemDoesNotExist,
-    ],
-    http.HTTPStatus.FORBIDDEN: [
-        errors.ItemRequiresAccess,
-        errors.ItemModificationByAnon,
-    ],
-}
-
-ERROR_TO_CODE_MAP: dict[type[errors.Error], int] = {
-    error: code for code, errors in CODES_TO_ERRORS.items() for error in errors
-}
 
 CODES_TO_EXCEPTIONS: dict[int, list[type[Exception]]] = {
     status.HTTP_400_BAD_REQUEST: [
@@ -61,18 +37,8 @@ CODES_TO_EXCEPTIONS: dict[int, list[type[Exception]]] = {
 }
 
 EXCEPTION_TO_CODE_MAP: dict[type[Exception], int] = {
-    error: code
-    for code, errors in CODES_TO_EXCEPTIONS.items()
-    for error in errors
+    error: code for code, errors in CODES_TO_EXCEPTIONS.items() for error in errors
 }
-
-
-def get_corresponding_error_code(error: errors.Error) -> int:
-    """Return HTTP code that corresponds to this error."""
-    return ERROR_TO_CODE_MAP.get(
-        type(error),
-        http.HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
 
 
 def get_corresponding_exception_code(exc: Exception) -> int:
@@ -83,22 +49,12 @@ def get_corresponding_exception_code(exc: Exception) -> int:
     )
 
 
-def safe_template(template: str, **kwargs) -> str:
-    """Try converting error as correct as possible."""
-    message = template
-
-    for kev, value in kwargs.items():
-        message = message.replace('{' + str(kev) + '}', str(value))
-
-    return message
-
-
 def raise_from_exc(
     exc: Exception,
     language: str | None = None,
 ) -> NoReturn:
     """Cast exception into HTTP response."""
-    LOG.exception('Failed to perform request')
+    LOG.exception('Failed to perform API request')
 
     code = get_corresponding_exception_code(exc)
 
@@ -113,6 +69,8 @@ def raise_from_exc(
 
 def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
     """Return redirection from exception (do not raise)."""
+    LOG.exception('Failed to perform APP request')
+
     code = get_corresponding_exception_code(exc)
 
     match code:
@@ -126,54 +84,51 @@ def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:
     return response
 
 
-def raise_from_error(
-    error: errors.Error,
-    language: str | None = None,
-) -> NoReturn:
-    """Cast domain level Error into HTTP response."""
-    code = get_corresponding_error_code(error)
+class Query(BaseModel):
+    """User search query."""
 
-    # TODO - add actual language so errors could be translated
-    assert language is None
+    raw_query: str
+    tags_include: list[str]
+    tags_exclude: list[str]
 
-    try:
-        message = error.template.format(**error.kwargs)
-    except KeyError:
-        LOG.exception('Failed to raise from error')
-        message = safe_template(error.template, **error.kwargs)
-
-    raise HTTPException(status_code=code, detail=message)
+    def __bool__(self) -> bool:
+        """Return True if query has tags to search."""
+        return any((self.tags_include, self.tags_exclude))
 
 
-def redirect_from_error(
-    request: Request,
-    error: errors.Error,
-    uuid: UUID | None = None,
-) -> RedirectResponse:
-    """Return appropriate response."""
-    code = get_corresponding_error_code(error)
-    response = None
+class Aim(BaseModel):
+    """Object that describes user's desired output."""
 
-    if code == http.HTTPStatus.BAD_REQUEST:
-        response = RedirectResponse(request.url_for('app_bad_request'))
+    query: Query
+    order: const.ORDER_TYPE
+    collections: bool
+    direct: bool
+    paged: bool
+    page: int
+    last_seen: int
+    items_per_page: int
 
-    elif code == http.HTTPStatus.NOT_FOUND and uuid is not None:
-        response = RedirectResponse(
-            str(request.url_for('app_not_found')) + f'?q={uuid}'
-        )
+    @property
+    def offset(self) -> int:
+        """Return offset from start of the result block."""
+        return self.items_per_page * (self.page - 1)
 
-    if (
-        code in (http.HTTPStatus.FORBIDDEN, http.HTTPStatus.UNAUTHORIZED)
-        and uuid is not None
-    ):
-        response = RedirectResponse(
-            str(request.url_for('app_forbidden')) + f'?q={uuid}'
-        )
+    def calc_total_pages(self, total_items: int) -> int:
+        """Calculate how many pages we need considering this query."""
+        return int(total_items / (self.items_per_page or 1))
 
-    if response is None:
-        response = RedirectResponse(request.url_for('app_bad_request'))
+    def using(self, **kwargs: Any) -> 'Aim':
+        """Create new instance with given params."""
+        values = self.model_dump()
+        values.update(kwargs)
+        return type(self)(**kwargs)
 
-    return response
+    def url_safe(self) -> dict:
+        """Return dict that can be converted to URL."""
+        params = self.model_dump()
+        params['q'] = self.query.raw_query
+        params.pop('query', None)
+        return params
 
 
 class AimWrapper:
@@ -181,7 +136,7 @@ class AimWrapper:
 
     def __init__(
         self,
-        aim: domain.Aim,
+        aim: Aim,
     ) -> None:
         """Initialize instance."""
         self.aim = aim
@@ -191,17 +146,14 @@ class AimWrapper:
         return getattr(self.aim, item)
 
     @classmethod
-    def from_params(
-        cls,
-        params: dict,
-        **kwargs,
-    ) -> 'AimWrapper':
+    def from_params(cls, params: dict, **kwargs: Any) -> 'AimWrapper':
         """Build Aim object from raw params."""
         raw_query = params.get('q', '')
-        tags_include, tags_exclude = [], []
+        tags_include: list[str] = []
+        tags_exclude: list[str] = []
 
         local_params = copy.deepcopy(params)
-        local_params['query'] = domain.Query(
+        local_params['query'] = Query(
             raw_query=raw_query,
             tags_include=tags_include,
             tags_exclude=tags_exclude,
@@ -209,7 +161,7 @@ class AimWrapper:
 
         local_params.update(kwargs)
         cls._fill_defaults(local_params)
-        aim = domain.Aim(**local_params)
+        aim = Aim(**local_params)
         return cls(aim)
 
     @classmethod
@@ -251,14 +203,12 @@ class AimWrapper:
         params['paged'] = cls.extract_bool(params, 'paged', False)
         params['page'] = cls.extract_int(params, 'page', 1)
         params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
-        params['items_per_page'] = cls.extract_int(
-            params, 'items_per_page', constants.ITEMS_PER_PAGE
-        )
+        params['items_per_page'] = cls.extract_int(params, 'items_per_page', 25)
 
         params['page'] = max(params['page'], 1)
 
         if params['items_per_page'] < 1:
-            params['items_per_page'] = constants.ITEMS_PER_PAGE
+            params['items_per_page'] = 25
 
     @staticmethod
     def extract_bool(
@@ -289,7 +239,7 @@ class AimWrapper:
             result = default
         return result
 
-    def to_url(self, **kwargs) -> str:
+    def to_url(self, **kwargs: Any) -> str:
         """Convert to URL string."""
         local_params = self.aim.url_safe()
         local_params.update(kwargs)
@@ -304,36 +254,34 @@ class AimWrapper:
 
         return urlencode(local_params)
 
-    def to_url_no_q(self, **kwargs) -> str:
+    def to_url_no_q(self, **kwargs: Any) -> str:
         """Create same url but without query."""
         kwargs['q'] = ''
         return self.to_url(**kwargs)
 
 
-def _get_href(request: Request, item: domain.Item) -> str:
+def _get_href(request: Request, item: models.Item) -> str:
     """Return base for HREF formation."""
     base = request.scope.get('root_path')
-    prefix = str(item.uuid)[:2]
-    return (
-        f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
-    )
+    prefix = str(item.uuid)[: const.STORAGE_PREFIX_SIZE]
+    return f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
 
 
-def get_content_href(request: Request, item: domain.Item) -> str:
+def get_content_href(request: Request, item: models.Item) -> str:
     """Return URL to the file."""
     base = _get_href(request, item)
     ext = f'.{item.content_ext}' if item.content_ext else ''
     return base.format(media_type='content') + ext
 
 
-def get_preview_href(request: Request, item: domain.Item) -> str:
+def get_preview_href(request: Request, item: models.Item) -> str:
     """Return URL to the file."""
     base = _get_href(request, item)
     ext = f'.{item.preview_ext}' if item.preview_ext else ''
     return base.format(media_type='preview') + ext
 
 
-def get_thumbnail_href(request: Request, item: domain.Item) -> str:
+def get_thumbnail_href(request: Request, item: models.Item) -> str:
     """Return URL to the file."""
     base = _get_href(request, item)
     ext = f'.{item.thumbnail_ext}' if item.thumbnail_ext else ''

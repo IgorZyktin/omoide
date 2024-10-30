@@ -33,6 +33,14 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         """Return User with given UUID."""
 
     @abc.abstractmethod
+    async def get_by_login(
+        self,
+        conn: ConnectionT,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
+
+    @abc.abstractmethod
     async def select(
         self,
         conn: ConnectionT,
@@ -46,9 +54,42 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         """Return filtered list of users."""
 
     @abc.abstractmethod
+    async def save(self, conn: ConnectionT, user: models.User) -> bool:
+        """Save given user."""
+
+    @abc.abstractmethod
     async def delete(self, conn: ConnectionT, user: models.User) -> bool:
         """Delete given user."""
 
     @abc.abstractmethod
-    async def get_public_users(self, conn: ConnectionT) -> set[UUID]:
+    async def get_public_user_uuids(self, conn: ConnectionT) -> set[UUID]:
         """Return UUIDs of public users."""
+
+    @abc.abstractmethod
+    async def get_root_item(self, conn: ConnectionT, user: models.User) -> models.Item:
+        """Return root item for given user."""
+
+    @abc.abstractmethod
+    async def get_all_root_items(
+        self,
+        conn: ConnectionT,
+        *users: models.User,
+    ) -> list[models.Item]:
+        """Return list of root items."""
+
+    @abc.abstractmethod
+    async def calc_total_space_used_by(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+    ) -> models.SpaceUsage:
+        """Return total amount of used space for user."""
+
+    @abc.abstractmethod
+    async def count_items_by_owner(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        collections: bool = False,
+    ) -> int:
+        """Return total amount of items for given user uuid."""

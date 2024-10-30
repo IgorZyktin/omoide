@@ -16,43 +16,6 @@ def cli() -> None:
     """Manual CLI operations."""
 
 
-@cli.command(name='force_thumbnail_copying')
-@click.option(
-    '--db-url',
-    required=True,
-    help='Database URL',
-)
-@click.option(
-    '--only-users',
-    help='Apply to one or more specially listed users (comma separated)',
-)
-def command_force_cover_copying(**kwargs) -> None:
-    """Force collections to explicitly write origins of their thumbnails.
-
-    May require you to run it more than one time.
-    """
-    from omoide.commands.force_thumbnail_copying import cfg
-    from omoide.commands.force_thumbnail_copying import run
-
-    db_url = SecretStr(kwargs.pop('db_url'))
-
-    only_users = []
-    if kwargs.pop('only_users', ''):
-        only_users = utils.split(str(kwargs.pop('only_users', '')))
-
-    config = cfg.Config(db_url=db_url, only_users=only_users)
-    database = sync_db.SyncDatabase(config.db_url.get_secret_value())
-
-    with (
-        database.life_cycle(),
-        helpers.timing(
-            callback=LOG.info,
-            start_template='Forcing items to copy thumbnails...',
-        ),
-    ):
-        run.run(config, database)
-
-
 @cli.command(name='refresh_file_sizes_in_db')
 @click.option(
     '--db-url',
@@ -91,12 +54,12 @@ def command_force_cover_copying(**kwargs) -> None:
     default='',
     help='Item from which we should start',
 )
-def command_refresh_file_sizes_in_db(**kwargs) -> None:
+def command_refresh_file_sizes_in_db(**kwargs: str | int | bool) -> None:
     """Recalculate all file sizes for every item."""
     from omoide.commands.refresh_file_sizes_in_db import cfg
     from omoide.commands.refresh_file_sizes_in_db import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
 
     only_users = []
     if kwargs.pop('only_users', ''):
@@ -153,12 +116,12 @@ def command_refresh_file_sizes_in_db(**kwargs) -> None:
     default=-1,
     help='Maximum amount of items to process (-1 for infinity)',
 )
-def command_rebuild_image_sizes(**kwargs) -> None:
+def command_rebuild_image_sizes(**kwargs: int | str | bool) -> None:
     """Rebuild all content/preview/thumbnail sizes."""
     from omoide.commands.rebuild_image_sizes import cfg
     from omoide.commands.rebuild_image_sizes import run
 
-    db_url = SecretStr(kwargs.pop('db_url'))
+    db_url = SecretStr(str(kwargs.pop('db_url')))
 
     only_users = []
     if kwargs.pop('only_users', ''):
@@ -168,9 +131,7 @@ def command_rebuild_image_sizes(**kwargs) -> None:
     database = sync_db.SyncDatabase(config.db_url.get_secret_value())
 
     with database.life_cycle():
-        with helpers.timing(
-            callback=LOG.info, start_template='Rebuilding all image sizes...'
-        ):
+        with helpers.timing(callback=LOG.info, start_template='Rebuilding all image sizes...'):
             run.run(config, database)
 
 

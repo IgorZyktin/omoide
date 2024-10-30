@@ -9,47 +9,36 @@ from omoide import exceptions
 from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
-from omoide.serial_operations import SerialOperation, OperationStatus
+from omoide.serial_operations import OperationStatus
+from omoide.serial_operations import SerialOperation
 
 
 class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
     """Repository that perform worker-related operations."""
 
-    async def register_worker(
-        self,
-        conn: AsyncConnection,
-        worker_name: str,
-    ) -> None:
+    async def register_worker(self, conn: AsyncConnection, worker_name: str) -> None:
         """Ensure we're allowed to run and update starting time."""
-        query = (
+        stmt = (
             sa.update(db_models.RegisteredWorkers)
             .values(last_restart=utils.now())
             .where(db_models.RegisteredWorkers.worker_name == worker_name)
         )
 
-        response = await conn.execute(query)
+        response = await conn.execute(stmt)
 
         if not response.rowcount:
             raise exceptions.UnknownWorkerError(worker_name=worker_name)
 
-    async def take_serial_lock(
-        self,
-        conn: AsyncConnection,
-        worker_name: str,
-    ) -> bool:
+    async def take_serial_lock(self, conn: AsyncConnection, worker_name: str) -> bool:
         """Try acquiring the lock, return True on success."""
-        query = sa.update(db_models.SerialLock).values(
+        stmt = sa.update(db_models.SerialLock).values(
             worker_name=worker_name,
             last_update=utils.now(),
         )
-        response = await conn.execute(query)
+        response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def release_serial_lock(
-        self,
-        conn: AsyncConnection,
-        worker_name: str,
-    ) -> bool:
+    async def release_serial_lock(self, conn: AsyncConnection, worker_name: str) -> bool:
         """Try releasing the lock, return True on success."""
         query = (
             sa.update(db_models.SerialLock)

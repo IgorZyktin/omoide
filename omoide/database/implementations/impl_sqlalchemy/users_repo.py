@@ -1,7 +1,6 @@
 """Repository that performs operations on users."""
 
 from collections.abc import Collection
-from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -16,20 +15,6 @@ from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
 
 class UsersRepo(AbsUsersRepo[AsyncConnection]):
     """Repository that performs operations on users."""
-
-    @staticmethod
-    def _user_from_response(response: Any) -> models.User:
-        """Convert DB response to user model."""
-        return models.User(
-            id=response.id,
-            uuid=response.uuid,
-            name=response.name,
-            login=response.login,
-            role=response.role,
-            is_public=response.is_public,
-            registered_at=response.registered_at,
-            last_login=response.last_login,
-        )
 
     async def create(
         self,
@@ -54,46 +39,49 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         if user.id >= 0:
             values['id'] = user.id
 
-        stmt = (
-            sa.insert(db_models.User)
-            .values(values)
-            .returning(db_models.User.id)
-        )
+        stmt = sa.insert(db_models.User).values(values).returning(db_models.User.id)
 
         response = await conn.execute(stmt)
         user_id = int(response.scalar() or -1)
         user.id = user_id
         return user_id
 
-    async def get_by_id(
-        self,
-        conn: AsyncConnection,
-        user_id: int,
-    ) -> models.User:
+    async def get_by_id(self, conn: AsyncConnection, user_id: int) -> models.User:
         """Return User with given id."""
-        stmt = sa.select(db_models.User).where(db_models.User.id == user_id)
-        response = (await conn.execute(stmt)).first()
+        query = sa.select(db_models.User).where(db_models.User.id == user_id)
+        response = (await conn.execute(query)).first()
 
         if response is None:
             msg = 'User with ID {user_id} does not exist'
             raise exceptions.DoesNotExistError(msg, user_id=user_id)
 
-        return self._user_from_response(response)
+        return db_models.User.cast(response)
 
-    async def get_by_uuid(
-        self,
-        conn: AsyncConnection,
-        uuid: UUID,
-    ) -> models.User:
+    async def get_by_uuid(self, conn: AsyncConnection, uuid: UUID) -> models.User:
         """Return User with given UUID."""
-        stmt = sa.select(db_models.User).where(db_models.User.uuid == uuid)
-        response = (await conn.execute(stmt)).first()
+        query = sa.select(db_models.User).where(db_models.User.uuid == uuid)
+        response = (await conn.execute(query)).first()
 
         if response is None:
             msg = 'User with UUID {user_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, user_uuid=uuid)
 
-        return self._user_from_response(response)
+        return db_models.User.cast(response)
+
+    async def get_by_login(
+        self,
+        conn: AsyncConnection,
+        login: str,
+    ) -> tuple[models.User, str, int] | None:
+        """Return user+password for given login."""
+        query = sa.select(db_models.User).where(db_models.User.login == login)
+        response = (await conn.execute(query)).fetchone()
+
+        if response is None:
+            return None
+
+        user = db_models.User.cast(response)
+        return user, response.password, response.auth_complexity
 
     async def select(
         self,
@@ -106,30 +94,47 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         limit: int | None = None,
     ) -> list[models.User]:
         """Return filtered list of users."""
-        stmt = sa.select(db_models.User)
+        query = sa.select(db_models.User)
 
         if user_id is not None:
-            stmt = stmt.where(db_models.User.id == user_id)
+            query = query.where(db_models.User.id == user_id)
 
         if uuid is not None:
-            stmt = stmt.where(db_models.User.uuid == uuid)
+            query = query.where(db_models.User.uuid == uuid)
 
         if login is not None:
-            stmt = stmt.where(db_models.User.login == login)
+            query = query.where(db_models.User.login == login)
 
         if ids is not None:
-            stmt = stmt.where(db_models.User.id.in_(tuple(ids)))
+            query = query.where(db_models.User.id.in_(tuple(ids)))
 
         if uuids is not None:
-            stmt = stmt.where(db_models.User.uuid.in_(tuple(uuids)))
+            query = query.where(db_models.User.uuid.in_(tuple(uuids)))
 
-        stmt = stmt.order_by(db_models.User.id)
+        query = query.order_by(db_models.User.id)
 
         if limit is not None:
-            stmt = stmt.limit(limit)
+            query = query.limit(limit)
 
-        response = (await conn.execute(stmt)).fetchall()
-        return [self._user_from_response(row) for row in response]
+        response = (await conn.execute(query)).fetchall()
+        return [db_models.User.cast(row) for row in response]
+
+    async def save(self, conn: AsyncConnection, user: models.User) -> bool:
+        """Save given user."""
+        stmt = (
+            sa.update(db_models.User)
+            .values(
+                name=user.name,
+                login=user.login,
+                role=user.role,
+                is_public=user.is_public,
+                registered_at=user.registered_at,
+                last_login=user.last_login,
+            )
+            .where(db_models.User.id == user.id)
+        )
+        response = await conn.execute(stmt)
+        return bool(response.rowcount)
 
     async def delete(self, conn: AsyncConnection, user: models.User) -> bool:
         """Delete given user."""
@@ -137,8 +142,88 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def get_public_users(self, conn: AsyncConnection) -> set[UUID]:
+    async def get_public_user_uuids(self, conn: AsyncConnection) -> set[UUID]:
         """Return UUIDs of public users."""
-        stmt = sa.select(db_models.PublicUsers.user_uuid)
-        response = (await conn.execute(stmt)).fetchall()
+        query = sa.select(db_models.PublicUsers.user_uuid)
+        response = (await conn.execute(query)).fetchall()
         return {x.user_uuid for x in response}
+
+    async def get_root_item(self, conn: AsyncConnection, user: models.User) -> models.Item:
+        """Return root item for given user."""
+        query = sa.select(db_models.Item).where(
+            sa.and_(
+                db_models.Item.owner_uuid == user.uuid,
+                db_models.Item.parent_uuid == sa.null(),
+            )
+        )
+
+        response = (await conn.execute(query)).fetchone()
+
+        if response is None:
+            msg = 'User {user_uuid} has no root item'
+            raise exceptions.DoesNotExistError(msg, user_uuid=user.uuid)
+
+        return db_models.Item.cast(response)
+
+    async def get_all_root_items(
+        self,
+        conn: AsyncConnection,
+        *users: models.User,
+    ) -> list[models.Item]:
+        """Return list of root items."""
+        query = sa.select(db_models.Item).where(db_models.Item.parent_uuid == sa.null())
+
+        if users:
+            query = query.where(
+                db_models.Item.owner_uuid.in_(tuple(str(user.uuid) for user in users))
+            )
+
+        response = (await conn.execute(query)).fetchall()
+        return [db_models.Item.cast(row) for row in response]
+
+    async def calc_total_space_used_by(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+    ) -> models.SpaceUsage:
+        """Return total amount of used space for user."""
+        query = (
+            sa.select(
+                sa.func.sum(db_models.Metainfo.content_size).label('content_size'),
+                sa.func.sum(db_models.Metainfo.preview_size).label('preview_size'),
+                sa.func.sum(db_models.Metainfo.thumbnail_size).label('thumbnail_size'),
+            )
+            .join(
+                db_models.Item,
+                db_models.Item.uuid == db_models.Metainfo.item_uuid,
+            )
+            .where(db_models.Item.owner_uuid == str(user.uuid))
+        )
+
+        response = (await conn.execute(query)).fetchone()
+
+        return models.SpaceUsage(
+            uuid=user.uuid,
+            content_size=response.content_size or 0,
+            preview_size=response.preview_size or 0,
+            thumbnail_size=response.thumbnail_size or 0,
+        )
+
+    async def count_items_by_owner(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        collections: bool = False,
+    ) -> int:
+        """Return total amount of items for given user uuid."""
+        query = (
+            sa.select(sa.func.count().label('total_items'))
+            .select_from(db_models.Item)
+            .where(db_models.Item.owner_uuid == user.uuid)
+        )
+
+        if collections:
+            query = query.where(db_models.Item.is_collection)
+
+        response = (await conn.execute(query)).fetchone()
+        return int(response.total_items)
