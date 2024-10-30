@@ -26,7 +26,11 @@ class ModelMixin:
         if not exclude:
             return dump
 
-        return {key: value for key, value in dump.items() if key not in exclude}
+        return {
+            key: value
+            for key, value in dump.items()
+            if key not in exclude and not key.startswith('_')
+        }
 
 
 @dataclass
