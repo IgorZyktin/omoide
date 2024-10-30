@@ -35,7 +35,7 @@ class CreateItemsUseCase(BaseItemUseCase):
 
         async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
-                item = await self.create_one_item(user, **raw_item)
+                item = await self.create_one_item(conn, user, **raw_item)
                 items.append(item)
 
         LOG.info(

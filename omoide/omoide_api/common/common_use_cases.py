@@ -153,7 +153,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         number: int | None,
         is_collection: bool,
         tags: set[str],
-        permissions: set[UUID],
+        permissions: set[int],
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -176,7 +176,9 @@ class BaseItemUseCase(BaseAPIUseCase):
         item = models.Item(
             id=-1,
             uuid=valid_uuid,
+            parent_id=parent.id,
             parent_uuid=parent.uuid,
+            owner_id=parent.owner_id,
             owner_uuid=parent.owner_uuid,
             name=name,
             number=number or -1,
@@ -189,7 +191,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         )
 
         metainfo = models.Metainfo(
-            item_uuid=item.uuid,
+            item_id=item.id,
             created_at=utils.now(),
             updated_at=utils.now(),
             deleted_at=None,
