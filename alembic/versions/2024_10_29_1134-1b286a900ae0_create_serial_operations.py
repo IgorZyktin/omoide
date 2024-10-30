@@ -25,11 +25,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('name', sa.String(length=256), nullable=False),
         sa.Column('worker_name', sa.String(length=256), nullable=True),
-        sa.Column(
-            'status',
-            sa.Enum('created', 'processing', 'done', 'failed', name='serial_operation_status'),
-            nullable=False,
-        ),
+        sa.Column('status', sa.String(length=64), nullable=False),
         sa.Column('extras', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),

@@ -28,11 +28,7 @@ def upgrade() -> None:
         sa.Column('error', sa.Text(), nullable=True),
         sa.Column('owner_id', sa.Integer(), nullable=False),
         sa.Column('item_id', sa.Integer(), nullable=False),
-        sa.Column(
-            'media_type',
-            sa.Enum('content', 'preview', 'thumbnail', name='media_type'),
-            nullable=False,
-        ),
+        sa.Column('media_type', sa.String(length=64), nullable=False),
         sa.Column('content', postgresql.BYTEA(), nullable=False),
         sa.Column('ext', sa.String(length=64), nullable=False),
         sa.ForeignKeyConstraint(['item_id'], ['items.id'], ondelete='CASCADE'),
