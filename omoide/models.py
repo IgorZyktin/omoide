@@ -159,7 +159,7 @@ class Item(ModelMixin):
     thumbnail_ext: str | None
     status: Status = Status.AVAILABLE  # TODO - make it mandatory
     tags: set[str] = field(default_factory=set)
-    permissions: set[UUID] = field(default_factory=set)
+    permissions: set[int] = field(default_factory=set)
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
@@ -201,7 +201,7 @@ class Item(ModelMixin):
 class Metainfo(ModelMixin, ChangesMixin):
     """Metainfo for item."""
 
-    item_uuid: UUID
+    item_id: int
 
     created_at: datetime
     updated_at: datetime
