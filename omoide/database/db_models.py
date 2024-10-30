@@ -192,7 +192,6 @@ class KnownTags(Base):
         sa.ForeignKey('users.id', ondelete='CASCADE'),
         index=True,
         primary_key=True,
-        unique=True,
     )
     tag: Mapped[str] = mapped_column(
         sa.String(MEDIUM), nullable=False, index=True, primary_key=True

@@ -36,7 +36,7 @@ def upgrade() -> None:
         postgresql_ops={'tag': 'text_pattern_ops'},
     )
     op.create_index(op.f('ix_known_tags_tag'), 'known_tags', ['tag'], unique=False)
-    op.create_index(op.f('ix_known_tags_user_id'), 'known_tags', ['user_id'], unique=True)
+    op.create_index(op.f('ix_known_tags_user_id'), 'known_tags', ['user_id'], unique=False)
 
     op.execute('GRANT ALL ON known_tags TO omoide_app;')
     op.execute('GRANT ALL ON known_tags TO omoide_worker;')
