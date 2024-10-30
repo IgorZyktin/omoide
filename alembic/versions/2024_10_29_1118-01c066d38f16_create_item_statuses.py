@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         'item_statuses',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('description', sa.VARCHAR(length=64), nullable=False),
+        sa.Column('description', sa.String(length=64), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_item_statuses_id'), 'item_statuses', ['id'], unique=True)
@@ -40,5 +40,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON item_statuses FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON item_statuses FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON item_statuses FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_item_statuses_id'), table_name='item_statuses')
     op.drop_table('item_statuses')
