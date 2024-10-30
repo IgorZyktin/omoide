@@ -5,16 +5,16 @@ Revises: 8080725c8d7a
 Create Date: 2024-10-29 11:44:55.059587+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = '8a834a50ca58'
-down_revision: Union[str, None] = '8080725c8d7a'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '8080725c8d7a'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column('value', sa.String(length=1024), nullable=False),
         sa.ForeignKeyConstraint(['item_id'], ['items.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('item_id', 'key', name='item_notes_uc')
+        sa.UniqueConstraint('item_id', 'key', name='item_notes_uc'),
     )
 
     op.create_index(op.f('ix_item_notes_id'), 'item_notes', ['id'], unique=True)

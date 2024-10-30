@@ -5,16 +5,17 @@ Revises: 8a834a50ca58
 Create Date: 2024-10-29 11:47:54.574033+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 revision: str = 'bc2b88a10fed'
-down_revision: Union[str, None] = '8a834a50ca58'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '8a834a50ca58'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -27,10 +28,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('item_id'),
     )
 
-    op.create_index('ix_computed_tags', 'computed_tags', ['tags'],
-                    unique=False, postgresql_using='gin')
-    op.create_index(op.f('ix_computed_tags_item_id'), 'computed_tags', ['item_id'],
-                    unique=True)
+    op.create_index(
+        'ix_computed_tags', 'computed_tags', ['tags'], unique=False, postgresql_using='gin'
+    )
+    op.create_index(op.f('ix_computed_tags_item_id'), 'computed_tags', ['item_id'], unique=True)
 
     op.execute('GRANT ALL ON computed_tags TO omoide_app;')
     op.execute('GRANT ALL ON computed_tags TO omoide_worker;')

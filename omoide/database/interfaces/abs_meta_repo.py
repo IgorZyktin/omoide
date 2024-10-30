@@ -4,7 +4,6 @@ import abc
 from collections.abc import Collection
 from typing import Generic
 from typing import TypeVar
-from uuid import UUID
 
 from omoide import models
 

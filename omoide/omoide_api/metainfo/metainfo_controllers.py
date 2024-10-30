@@ -40,11 +40,11 @@ async def api_read_metainfo(
         updated_at=metainfo.updated_at.astimezone(user.timezone).isoformat(),
         deleted_at=(
             metainfo.deleted_at.astimezone(user.timezone).isoformat()
-            if metainfo.deleted_at else None
+            if metainfo.deleted_at
+            else None
         ),
         user_time=(
-            metainfo.user_time.astimezone(user.timezone).isoformat()
-            if metainfo.user_time else None
+            metainfo.user_time.astimezone(user.timezone).isoformat() if metainfo.user_time else None
         ),
         **metainfo.model_dump(
             exclude={'created_at', 'updated_at', 'deleted_at', 'user_time'},

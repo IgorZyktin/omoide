@@ -48,7 +48,7 @@ class EXIFRepo(AbsEXIFRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def delete(self, conn: AsyncConnection, item: models.Item,) -> None:
+    async def delete(self, conn: AsyncConnection, item: models.Item) -> None:
         """Delete EXIF record for given item."""
         stmt = sa.delete(db_models.EXIF).where(db_models.EXIF.item_id == item.id).returning(1)
 

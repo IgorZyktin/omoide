@@ -8,6 +8,7 @@ from omoide import models
 @dataclass(kw_only=True)
 class Changeable(models.ChangesMixin):
     """Demo-object."""
+
     x: str
     y: int = 2
     z: int = 3

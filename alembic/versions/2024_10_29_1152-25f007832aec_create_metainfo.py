@@ -5,16 +5,16 @@ Revises: bc2b88a10fed
 Create Date: 2024-10-29 11:52:51.766110+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = '25f007832aec'
-down_revision: Union[str, None] = 'bc2b88a10fed'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = 'bc2b88a10fed'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.Column('thumbnail_width', sa.Integer(), nullable=True),
         sa.Column('thumbnail_height', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['item_id'], ['items.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('item_id')
+        sa.PrimaryKeyConstraint('item_id'),
     )
 
     op.create_index(op.f('ix_item_metainfo_item_id'), 'item_metainfo', ['item_id'], unique=True)

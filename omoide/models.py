@@ -1,10 +1,11 @@
 """Domain-level models."""
-import enum
+
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+import enum
 from typing import Any
 from typing import NamedTuple
 from typing import Self
@@ -31,6 +32,7 @@ class ModelMixin:
 @dataclass
 class ChangesMixin:
     """Mixin that tracks changes in its attributes."""
+
     _changes: set[str] = field(default_factory=set)
     _ignore_changes: tuple[str] = ('id',)
 

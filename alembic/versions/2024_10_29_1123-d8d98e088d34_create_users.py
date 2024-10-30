@@ -5,16 +5,16 @@ Revises: 01c066d38f16
 Create Date: 2024-10-29 11:23:36.348261+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = 'd8d98e088d34'
-down_revision: Union[str, None] = '01c066d38f16'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '01c066d38f16'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -31,8 +31,8 @@ def upgrade() -> None:
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.Column('registered_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(['role'], ['user_roles.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['role'], ['user_roles.id']),
+        sa.PrimaryKeyConstraint('id'),
     )
 
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=True)

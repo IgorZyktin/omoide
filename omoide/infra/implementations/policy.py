@@ -1,4 +1,5 @@
 """Policy variants."""
+
 from omoide import exceptions
 from omoide import models
 from omoide.infra.interfaces import AbsPolicy

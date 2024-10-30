@@ -5,16 +5,16 @@ Revises: 3cd33ce04e6c
 Create Date: 2024-10-29 11:08:53.871977+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = 'f9be6d5c70c5'
-down_revision: Union[str, None] = '3cd33ce04e6c'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '3cd33ce04e6c'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -25,9 +25,7 @@ def upgrade() -> None:
         sa.Column('description', sa.String(length=64), nullable=False),
         sa.PrimaryKeyConstraint('id'),
     )
-    op.create_index(
-        op.f('ix_user_roles_id'), 'user_roles', ['id'], unique=True
-    )
+    op.create_index(op.f('ix_user_roles_id'), 'user_roles', ['id'], unique=True)
 
     op.execute("INSERT INTO user_roles VALUES (0, 'user');")
     op.execute("INSERT INTO user_roles VALUES (1, 'anon');")

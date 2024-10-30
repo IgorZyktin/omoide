@@ -5,16 +5,17 @@ Revises: 316d326d0690
 Create Date: 2024-10-29 11:43:18.001048+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 revision: str = '8080725c8d7a'
-down_revision: Union[str, None] = '316d326d0690'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '316d326d0690'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -24,7 +25,7 @@ def upgrade() -> None:
         sa.Column('item_id', sa.Integer(), nullable=False),
         sa.Column('exif', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.ForeignKeyConstraint(['item_id'], ['items.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('item_id')
+        sa.PrimaryKeyConstraint('item_id'),
     )
 
     op.create_index(op.f('ix_exif_item_id'), 'exif', ['item_id'], unique=True)

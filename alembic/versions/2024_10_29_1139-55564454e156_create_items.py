@@ -5,16 +5,17 @@ Revises: 1b286a900ae0
 Create Date: 2024-10-29 11:39:01.201305+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 revision: str = '55564454e156'
-down_revision: Union[str, None] = '1b286a900ae0'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '1b286a900ae0'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -36,15 +37,16 @@ def upgrade() -> None:
         sa.Column('permissions', postgresql.ARRAY(sa.Integer), nullable=False),
         sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['parent_id'], ['items.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['status'], ['item_statuses.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['status'], ['item_statuses.id']),
+        sa.PrimaryKeyConstraint('id'),
     )
 
     op.create_index(op.f('ix_items_id'), 'items', ['id'], unique=True)
     op.create_index(op.f('ix_items_owner_id'), 'items', ['owner_id'], unique=False)
     op.create_index(op.f('ix_items_parent_id'), 'items', ['parent_id'], unique=False)
-    op.create_index('ix_items_permissions', 'items', ['permissions'],
-                    unique=False, postgresql_using='gin')
+    op.create_index(
+        'ix_items_permissions', 'items', ['permissions'], unique=False, postgresql_using='gin'
+    )
     op.create_index(op.f('ix_items_status'), 'items', ['status'], unique=False)
     op.create_index('ix_items_tags', 'items', ['tags'], unique=False, postgresql_using='gin')
     op.create_index(op.f('ix_items_uuid'), 'items', ['uuid'], unique=True)

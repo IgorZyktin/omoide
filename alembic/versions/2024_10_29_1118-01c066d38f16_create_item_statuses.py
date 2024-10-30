@@ -5,16 +5,16 @@ Revises: f9be6d5c70c5
 Create Date: 2024-10-29 11:18:59.876821+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = '01c066d38f16'
-down_revision: Union[str, None] = 'f9be6d5c70c5'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = 'f9be6d5c70c5'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -23,7 +23,7 @@ def upgrade() -> None:
         'item_statuses',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('description', sa.String(length=64), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
     )
     op.create_index(op.f('ix_item_statuses_id'), 'item_statuses', ['id'], unique=True)
 
