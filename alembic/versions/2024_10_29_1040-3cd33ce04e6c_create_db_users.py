@@ -18,13 +18,36 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Adding stuff."""
     # NOTE: Do not forget to change passwords later!
-    op.execute("CREATE ROLE omoide_app WITH LOGIN PASSWORD 'app-password1234';")
-    op.execute("CREATE ROLE omoide_worker WITH LOGIN PASSWORD 'worker-password1234';")
-    op.execute("CREATE ROLE omoide_monitoring WITH LOGIN PASSWORD 'monitoring-password1234';")
+    op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_roles WHERE rolname='omoide_app') THEN
+            CREATE ROLE omoide_app WITH LOGIN Password 'app-password1234';
+        END IF;
+    END $$;
+    """)
+
+    op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_roles WHERE rolname='omoide_worker') THEN
+            CREATE ROLE omoide_worker WITH LOGIN Password 'worker-password1234';
+        END IF;
+    END $$;
+    """)
+
+    op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_roles WHERE rolname='omoide_monitoring') THEN
+            CREATE ROLE omoide_monitoring WITH LOGIN Password 'monitoring-password1234';
+        END IF;
+    END $$;
+    """)
 
 
 def downgrade() -> None:
     """Removing stuff."""
-    op.execute('DROP ROLE omoide_app;')
-    op.execute('DROP ROLE omoide_worker;')
-    op.execute('DROP ROLE omoide_monitoring;')
+    op.execute('DROP ROLE IF EXISTS omoide_app;')
+    op.execute('DROP ROLE IF EXISTS omoide_worker;')
+    op.execute('DROP ROLE IF EXISTS omoide_monitoring;')
