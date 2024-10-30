@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         'user_roles',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('description', sa.VARCHAR(length=64), nullable=False),
+        sa.Column('description', sa.String(length=64), nullable=False),
         sa.PrimaryKeyConstraint('id'),
     )
     op.create_index(
@@ -40,5 +40,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON user_roles FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON user_roles FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON user_roles FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_user_roles_id'), table_name='user_roles')
     op.drop_table('user_roles')
