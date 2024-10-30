@@ -20,7 +20,9 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Create new item."""
         values: dict[str, Any] = {
             'uuid': item.uuid,
+            'parent_id': item.parent_id,
             'parent_uuid': item.parent_uuid,
+            'owner_id': item.owner_id,
             'owner_uuid': item.owner_uuid,
             'status': item.status,
             'name': item.name,
@@ -30,7 +32,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             'preview_ext': item.preview_ext,
             'thumbnail_ext': item.thumbnail_ext,
             'tags': tuple(item.tags),
-            'permissions': tuple(str(x) for x in item.permissions),
+            'permissions': tuple(item.permissions),
         }
 
         if item.id >= 0:
