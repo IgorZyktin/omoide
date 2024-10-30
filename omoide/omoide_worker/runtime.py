@@ -96,11 +96,6 @@ def get_strategy(config: worker_config.Config) -> interfaces.AbsStrategy:
     strategy: interfaces.AbsStrategy
 
     match strategy_name:
-        case 'SignalStrategy':
-            from omoide.omoide_worker.strategies import by_signal
-
-            strategy = by_signal.SignalStrategy()
-
         case 'TimerStrategy':
             from omoide.omoide_worker.strategies import by_timer
 
