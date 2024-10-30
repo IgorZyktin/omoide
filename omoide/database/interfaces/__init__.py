@@ -1,11 +1,11 @@
-from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo
-from omoide.database.interfaces.abs_database import AbsDatabase
-from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo
-from omoide.database.interfaces.abs_items_repo import AbsItemsRepo
-from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
-from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo
-from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo
-from omoide.database.interfaces.abs_search_repo import AbsSearchRepo
-from omoide.database.interfaces.abs_signatures_repo import AbsSignaturesRepo
-from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
-from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
+from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo  # noqa: F401
+from omoide.database.interfaces.abs_database import AbsDatabase  # noqa: F401
+from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo  # noqa: F401
+from omoide.database.interfaces.abs_items_repo import AbsItemsRepo  # noqa: F401
+from omoide.database.interfaces.abs_media_repo import AbsMediaRepo  # noqa: F401
+from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo  # noqa: F401
+from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo  # noqa: F401
+from omoide.database.interfaces.abs_search_repo import AbsSearchRepo  # noqa: F401
+from omoide.database.interfaces.abs_signatures_repo import AbsSignaturesRepo  # noqa: F401
+from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo  # noqa: F401
+from omoide.database.interfaces.abs_users_repo import AbsUsersRepo  # noqa: F401

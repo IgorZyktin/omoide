@@ -3,7 +3,6 @@
 import abc
 from typing import Generic
 from typing import TypeVar
-from uuid import UUID
 
 from omoide import const
 from omoide import models
@@ -28,7 +27,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
     async def browse_direct_anon(
         self,
         conn: ConnectionT,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -41,7 +40,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         user: models.User,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -53,7 +52,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
     async def browse_related_anon(
         self,
         conn: ConnectionT,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -66,7 +65,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         user: models.User,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,

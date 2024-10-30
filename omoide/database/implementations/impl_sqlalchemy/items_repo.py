@@ -57,7 +57,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with ID {item_id} does not exist'
             raise exceptions.DoesNotExistError(msg, item_id=item_id)
 
-        return db_models.Item.cast(response)
+        return models.Item.cast(response)
 
     async def get_by_uuid(
         self,
@@ -72,7 +72,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with UUID {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=uuid)
 
-        return db_models.Item.cast(response)
+        return models.Item.cast(response)
 
     async def get_by_name(self, conn: AsyncConnection, name: str) -> models.Item:
         """Return Item with given name."""
@@ -83,7 +83,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with name {name!r} does not exist'
             raise exceptions.DoesNotExistError(msg, name=name)
 
-        return db_models.Item.cast(response)
+        return models.Item.cast(response)
 
     async def get_children(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of children for given item."""
@@ -93,7 +93,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             .order_by(db_models.Item.id)
         )
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def count_children(self, conn: AsyncConnection, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
@@ -118,7 +118,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             if raw_parent is None:
                 break
 
-            parent = db_models.Item.cast(raw_parent)
+            parent = models.Item.cast(raw_parent)
             parents.append(parent)
             parent_uuid = parent.parent_uuid
 
@@ -133,7 +133,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         )
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def get_items_anon(
         self,
@@ -145,8 +145,8 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     ) -> list[models.Item]:
         """Return Items."""
         query = sa.select(db_models.Item).where(
-            db_models.Item.owner_uuid.in_(  # noqa
-                sa.select(db_models.PublicUsers.user_uuid)
+            db_models.Item.owner_id.in_(
+                sa.select(db_models.User.id).where(db_models.User.is_public)
             )
         )
 
@@ -162,7 +162,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def get_items_known(
         self,
@@ -176,9 +176,11 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Return Items."""
         query = sa.select(db_models.Item).where(
             sa.or_(
-                db_models.Item.permissions.any(str(user.uuid)),
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.owner_uuid.in_(sa.select(db_models.PublicUsers.user_uuid)),
+                db_models.Item.permissions.any(user.id),
+                db_models.Item.owner_id == user.id,
+                db_models.Item.owner_id.in_(
+                    sa.select(db_models.User.id).where(db_models.User.is_public)
+                ),
             )
         )
 
@@ -194,7 +196,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def check_child(
         self,
@@ -267,26 +269,18 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def read_computed_tags(
-        self,
-        conn: AsyncConnection,
-        uuid: UUID,
-    ) -> list[str]:
+    async def read_computed_tags(self, conn: AsyncConnection, item: models.Item) -> list[str]:
         """Return all computed tags for the item."""
         query = sa.select(db_models.ComputedTags.tags).where(
-            db_models.ComputedTags.item_uuid == uuid,
+            db_models.ComputedTags.item_id == item.id,
         )
         response = (await conn.execute(query)).fetchone()
 
-        if response:
-            return list(response.tags)
-        return []
+        if not response:
+            return []
+        return list(response.tags)
 
-    async def count_all_children_of(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-    ) -> int:
+    async def count_all_children_of(self, conn: AsyncConnection, item: models.Item) -> int:
         """Count dependant items."""
         query = """
         WITH RECURSIVE nested_items AS (

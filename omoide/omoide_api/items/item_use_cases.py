@@ -105,9 +105,9 @@ class ReadItemUseCase(BaseAPIUseCase):
             ):
                 return item
 
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
 
-            if item.owner_uuid in public_users:
+            if item.owner_id in public_users:
                 return item
 
         # NOTE - hiding the fact
@@ -418,13 +418,13 @@ class DownloadCollectionUseCase(BaseItemUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             owner = await self.mediator.users.get_by_uuid(conn, item.owner_uuid)
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
 
             if all(
                 (
-                    owner.uuid not in public_users,
-                    user.uuid != owner.uuid,
-                    user.uuid not in item.permissions,
+                    owner.id not in public_users,
+                    user.id != owner.id,
+                    user.id not in item.permissions,
                 )
             ):
                 # NOTE - hiding the fact
@@ -451,11 +451,11 @@ class DownloadCollectionUseCase(BaseItemUseCase):
             total = len(valid_children)
             for i, child in enumerate(valid_children, start=1):
                 signature = signatures.get(child.id)
-                metainfo = metainfos.get(child.uuid)  # TODO - use item.id
+                metainfo = metainfos.get(child.id)
 
                 if signature is None:
                     LOG.warning(
-                        'User {} requested download ' 'for item {}, but is has no signature',
+                        'User {} requested download for item {}, but is has no signature',
                         user,
                         item,
                     )
@@ -523,7 +523,7 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-        permissions: set[UUID],
+        permissions: set[int],
         apply_to_parents: bool,
         apply_to_children: bool,
         apply_to_children_as: const.ApplyAs,
@@ -545,9 +545,9 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                 operation = so.UpdatePermissionsSO(
                     extras={
                         'item_uuid': str(item_uuid),
-                        'added': [str(x) for x in added],
-                        'deleted': [str(x) for x in deleted],
-                        'original': [str(x) for x in item.permissions],
+                        'added': list(added),
+                        'deleted': list(deleted),
+                        'original': list(item.permissions),
                         'apply_to_parents': apply_to_parents,
                         'apply_to_children': apply_to_children,
                         'apply_to_children_as': apply_to_children_as.value,

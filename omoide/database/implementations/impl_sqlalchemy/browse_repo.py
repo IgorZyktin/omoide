@@ -1,7 +1,6 @@
 """Browse repository."""
 
 from collections.abc import Collection
-from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy import cast
@@ -41,12 +40,12 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
             query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def browse_direct_anon(
         self,
         conn: AsyncConnection,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -54,10 +53,10 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
         query = sa.select(db_models.Item).where(
-            db_models.Item.owner_uuid.in_(  # noqa
-                sa.select(db_models.PublicUsers.user_uuid)
+            db_models.Item.owner_id.in_(
+                sa.select(db_models.User.id).where(db_models.User.is_public)
             ),
-            db_models.Item.parent_uuid == item_uuid,
+            db_models.Item.parent_id == item.id,
         )
 
         if collections:
@@ -67,13 +66,13 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def browse_direct_known(
         self,
         conn: AsyncConnection,
         user: models.User,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -82,13 +81,13 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         """Find items to browse depending on parent (only direct)."""
         query = sa.select(db_models.Item).where(
             sa.or_(
-                db_models.Item.owner_uuid.in_(  # noqa
-                    sa.select(db_models.PublicUsers.user_uuid)
+                db_models.Item.owner_id.in_(
+                    sa.select(db_models.User.id).where(db_models.User.is_public)
                 ),
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.owner_id == user.id,
+                db_models.Item.permissions.any(user.id),
             ),
-            db_models.Item.parent_uuid == item_uuid,
+            db_models.Item.parent_id == item.id,
         )
 
         if collections:
@@ -98,12 +97,12 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def browse_related_anon(
         self,
         conn: AsyncConnection,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -114,7 +113,9 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
     WITH RECURSIVE nested_items AS
            (SELECT items.id            AS id,
                    items.uuid          AS uuid,
+                   items.parent_id     AS parent_id,
                    items.parent_uuid   AS parent_uuid,
+                   items.owner_id      AS owner_id,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
@@ -125,11 +126,13 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.tags          AS tags,
                    items.permissions   AS permissions
             FROM items
-            WHERE items.parent_uuid = CAST(:item_uuid AS uuid)
+            WHERE items.parent_id = :item_id
             UNION
             SELECT items.id            AS id,
                    items.uuid          AS uuid,
+                   items.parent_id     AS parent_id,
                    items.parent_uuid   AS parent_uuid,
+                   items.owner_id      AS owner_id,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
@@ -141,10 +144,12 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.permissions   AS permissions
             FROM items
                      INNER JOIN nested_items
-                                ON items.parent_uuid = nested_items.uuid)
+                                ON items.parent_id = nested_items.id)
     SELECT id,
            uuid,
+           parent_id,
            parent_uuid,
+           owner_id,
            owner_uuid,
            number,
            name,
@@ -155,11 +160,11 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
            tags,
            permissions
     FROM nested_items
-    WHERE owner_uuid IN (SELECT user_uuid FROM public_users)
+    WHERE owner_id IN (SELECT id FROM users WHERE is_public)
         """
 
         values = {
-            'item_uuid': str(item_uuid),
+            'item_id': item.id,
             'limit': limit,
         }
 
@@ -180,13 +185,13 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def browse_related_known(
         self,
         conn: AsyncConnection,
         user: models.User,
-        item_uuid: UUID,
+        item: models.Item,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -197,7 +202,9 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
     WITH RECURSIVE nested_items AS
            (SELECT items.id            AS id,
                    items.uuid          AS uuid,
+                   items.parent_id     AS parent_id,
                    items.parent_uuid   AS parent_uuid,
+                   items.owner_id      AS owner_id,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
@@ -208,11 +215,13 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.tags          AS tags,
                    items.permissions   AS permissions
             FROM items
-            WHERE items.parent_uuid = CAST(:item_uuid AS uuid)
+            WHERE items.parent_id = :item_id
             UNION
             SELECT items.id            AS id,
                    items.uuid          AS uuid,
+                   items.parent_id     AS parent_id,
                    items.parent_uuid   AS parent_uuid,
+                   items.owner_id      AS owner_id,
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
@@ -224,10 +233,12 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.permissions   AS permissions
             FROM items
                      INNER JOIN nested_items
-                                ON items.parent_uuid = nested_items.uuid)
+                                ON items.parent_id = nested_items.id)
     SELECT id,
            uuid,
+           parent_id,
            parent_uuid,
+           owner_id,
            owner_uuid,
            number,
            name,
@@ -238,14 +249,14 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
            tags,
            permissions
     FROM nested_items
-    WHERE ((owner_uuid IN (SELECT user_uuid FROM public_users))
-        OR (owner_uuid = CAST(:user_uuid AS uuid))
-        OR CAST(:user_uuid AS TEXT) = ANY(permissions))
+    WHERE (owner_id IN (SELECT id FROM users WHERE is_public)
+        OR owner_id = :user_id
+        OR :user_id = ANY(permissions)
         """
 
         values = {
-            'user_uuid': str(user.uuid),
-            'item_uuid': str(item_uuid),
+            'user_id': user.id,
+            'item_id': item.id,
             'limit': limit,
         }
 
@@ -266,7 +277,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def get_recently_updated_items(
         self,
@@ -282,7 +293,9 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         WITH valid_items AS (
             SELECT id,
                    uuid,
+                   parent_id,
                    parent_uuid,
+                   owner_id,
                    owner_uuid,
                    number,
                    name,
@@ -294,13 +307,14 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    permissions,
                    me.updated_at
             FROM items
-            LEFT JOIN metainfo me on uuid = me.item_uuid
-            WHERE ((owner_uuid = CAST(:user_uuid AS uuid)
-                OR CAST(:user_uuid AS TEXT) = ANY(permissions)))
+            LEFT JOIN item_metainfo me on id = me.item_id
+            WHERE (owner_id = :user_id OR :user_id = ANY(permissions))
         )
         SELECT id,
                uuid,
+               parent_id,
                parent_uuid,
+               owner_id,
                owner_uuid,
                number,
                name,
@@ -318,7 +332,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         """
 
         values = {
-            'user_uuid': str(user.uuid),
+            'user_id': user.id,
             'limit': limit,
         }
 
@@ -339,7 +353,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def get_parent_names(
         self,
@@ -347,16 +361,17 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         items: Collection[models.Item],
     ) -> list[str | None]:
         """Get names of parents of the given items."""
-        uuids = [str(x.parent_uuid) if x.parent_uuid else None for x in items]
+        ids = [item.parent_id for item in items]
 
-        subquery = sa.select(sa.func.unnest(cast(uuids, pg.ARRAY(sa.Text))).label('uuid')).subquery(
-            'given_uuid'
-        )
+        subquery = sa.select(
+            sa.func.unnest(cast(ids, pg.ARRAY(sa.Integer))).label('id')
+        ).subquery('given_id')
 
-        stmt = sa.select(subquery.c.uuid, db_models.Item.name).join(
+        stmt = sa.select(subquery.c.id, db_models.Item.name).join(
             db_models.Item,
-            db_models.Item.uuid == cast(subquery.c.uuid, pg.UUID),
+            db_models.Item.id == subquery.c.id,
             isouter=True,
+            full=True,
         )
 
         response = (await conn.execute(stmt)).fetchall()

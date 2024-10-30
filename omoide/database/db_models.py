@@ -276,10 +276,26 @@ class Item(Base):
         unique=False,
     )
 
+    parent_uuid: Mapped[UUID | None] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+        nullable=True,
+        index=True,
+        unique=False,
+    )
+
     owner_id: Mapped[int] = mapped_column(
         sa.Integer,
         sa.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
+        index=True,
+        unique=False,
+    )
+
+    owner_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+        nullable=True,
         index=True,
         unique=False,
     )
@@ -338,24 +354,6 @@ class Item(Base):
         sa.Index('ix_items_tags', tags, postgresql_using='gin'),
         sa.Index('ix_items_permissions', permissions, postgresql_using='gin'),
     )
-
-    @staticmethod
-    def cast(row: sa.Row) -> models.Item:
-        """Convert to domain-level object."""
-        return models.Item(
-            id=row.id,
-            uuid=row.uuid,
-            parent_uuid=row.parent_uuid,
-            owner_uuid=row.owner_uuid,
-            name=row.name,
-            number=row.number,
-            is_collection=row.is_collection,
-            content_ext=row.content_ext,
-            preview_ext=row.preview_ext,
-            thumbnail_ext=row.thumbnail_ext,
-            tags=set(row.tags),
-            permissions=set(row.permissions),
-        )
 
 
 class Metainfo(Base):

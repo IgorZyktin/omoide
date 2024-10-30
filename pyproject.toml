@@ -101,24 +101,25 @@ lint.select = [
 ]
 
 lint.ignore = [
+    "BLE001",  # Do not catch blind exception: `Exception`
     "COM812",  # Checks for the absence of trailing commas
     "D104",    # Missing docstring in public package
     "D203",    # 1 blank line required before class docstring
     "D204",    # 1 blank line required after class docstring
     "D213",    # Multi-line docstring summary should start at the second line
+    "FBT001",  # Boolean-typed positional argument in function definition
+    "FBT002",  # Boolean default positional argument in function definition
     "ISC001",  # Checks for implicitly concatenated strings on a single line
+    "PLE1205", # Too many arguments for `logging` format string
     "RUF100",  # Unused noqa directive (non-enabled: F401, `F403`)
     "S101",    # Use of assert detected
     "S104",    # Possible binding to all interfaces
     "S105",    # Possible hardcoded password assigned
     "S106",    # Possible hardcoded password assigned
     "S311",    # Standard pseudo-random generators for cryptographic purposes
+    "S324",    # Probable use of insecure hash functions
     "SIM108",  # Use ternary operator instead of `if`-`else`-block
     "TRY401",  # Redundant exception object included in logging.exception call
-    "S324",    # Probable use of insecure hash functions
-    "PLE1205", # Too many arguments for `logging` format string
-    "FBT001",  # Boolean-typed positional argument in function definition
-    "FBT002",  # Boolean default positional argument in function definition
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -130,6 +131,9 @@ lint.ignore = [
     "EM101",   # Exception must not use a string literal
     "PLR2004", # Magic value used in comparison
     "PT001",   # Use `@pytest.fixture` over `@pytest.fixture()`
+]
+"alembic/*" = [
+    "D401",  # First line of docstring should be in imperative mood
 ]
 
 [tool.ruff.format]

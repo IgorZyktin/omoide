@@ -10,7 +10,7 @@ from omoide.database import db_models
 
 def public_user_uuids() -> Select:
     """Select public user uuids."""
-    return sa.select(db_models.PublicUsers.user_uuid)
+    return sa.select(db_models.User.id).where(db_models.User.is_public)
 
 
 def ensure_registered_user_has_permissions(
@@ -20,8 +20,8 @@ def ensure_registered_user_has_permissions(
     """Ensure that registered user has permission to access this."""
     return stmt.where(
         sa.or_(
-            db_models.Item.owner_uuid == user.uuid,
-            db_models.Item.permissions.any(str(user.uuid)),
+            db_models.Item.owner_id == user.id,
+            db_models.Item.permissions.any(user.id),
         )
     )
 
@@ -31,7 +31,7 @@ def ensure_anon_user_has_permissions(
 ) -> Select:
     """Ensure that anon user has permission to access this."""
     return stmt.where(
-        db_models.Item.owner_uuid.in_(public_user_uuids())  # noqa
+        db_models.Item.owner_id.in_(public_user_uuids())
     )
 
 

@@ -9,10 +9,12 @@ class AbsPolicy(abc.ABC):
     """Special class that checks permissions."""
 
     @staticmethod
+    @abc.abstractmethod
     def ensure_registered(user: models.User, to: str, error_message: str | None = None) -> None:
         """Raise if Anon requesting this."""
 
     @staticmethod
+    @abc.abstractmethod
     def ensure_owner(
         user: models.User,
         item: models.Item,
@@ -22,6 +24,7 @@ class AbsPolicy(abc.ABC):
         """Raise if one user tries to modify object of some other user."""
 
     @staticmethod
+    @abc.abstractmethod
     def ensure_can_see(
         user: models.User,
         item: models.Item,

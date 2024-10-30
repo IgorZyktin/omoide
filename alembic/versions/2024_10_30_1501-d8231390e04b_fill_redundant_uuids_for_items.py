@@ -5,15 +5,14 @@ Revises: b637cad1a67c
 Create Date: 2024-10-30 15:01:11.762804+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 from alembic import op
 
-
 revision: str = 'd8231390e04b'
-down_revision: Union[str, None] = 'b637cad1a67c'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = 'b637cad1a67c'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

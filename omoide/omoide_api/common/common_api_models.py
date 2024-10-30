@@ -31,7 +31,7 @@ class ItemOutput(BaseModel):
     preview_ext: str | None
     thumbnail_ext: str | None
     tags: set[str] = []
-    permissions: set[UUID] = []
+    permissions: set[int] = []
     extras: dict[str, Any] = {}
 
 

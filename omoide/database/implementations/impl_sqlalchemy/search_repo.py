@@ -27,7 +27,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
         """Add access control and filtering."""
         query = query.join(
             db_models.ComputedTags,
-            db_models.ComputedTags.item_uuid == db_models.Item.uuid,
+            db_models.ComputedTags.item_id == db_models.Item.id,
         )
 
         query = queries.ensure_user_has_permissions(user, query)
@@ -104,7 +104,7 @@ class SearchRepo(_SearchRepositoryBase):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def get_home_items_for_anon(
         self,
@@ -116,21 +116,20 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for anon."""
-        query = sa.select(db_models.Item).where(
-            db_models.Item.owner_uuid.in_(sa.select(db_models.PublicUsers.user_uuid))
-        )
+        public_users = sa.select(db_models.User.id).where(db_models.User.is_public)
+        query = sa.select(db_models.Item).where(db_models.Item.owner_id.in_(public_users))
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
 
         if direct:
-            query = query.where(db_models.Item.parent_uuid == sa.null())
+            query = query.where(db_models.Item.parent_id == sa.null())
 
         query = queries.apply_order(query, order, last_seen)
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def get_home_items_for_known(
         self,
@@ -145,8 +144,8 @@ class SearchRepo(_SearchRepositoryBase):
         """Return home items for known user."""
         query = sa.select(db_models.Item).where(
             sa.or_(
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.permissions.any(str(user.uuid)),
+                db_models.Item.owner_id == user.id,
+                db_models.Item.permissions.any(user.id),
             )
         )
 
@@ -154,13 +153,13 @@ class SearchRepo(_SearchRepositoryBase):
             query = query.where(db_models.Item.is_collection == sa.true())
 
         if direct:
-            query = query.where(db_models.Item.parent_uuid == sa.null())
+            query = query.where(db_models.Item.parent_id == sa.null())
 
         query = queries.apply_order(query, order, last_seen)
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def count_all_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
         """Return counters for known tags (anon user)."""

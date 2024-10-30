@@ -26,42 +26,42 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         start = time.perf_counter()
 
         async with self.mediator.database.transaction() as conn:
-            repo = self.mediator.browse
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
 
             if direct:
                 if user.is_anon:
-                    items = await repo.browse_direct_anon(
+                    items = await self.mediator.browse.browse_direct_anon(
                         conn=conn,
-                        item_uuid=item_uuid,
+                        item=item,
                         order=order,
                         collections=collections,
                         last_seen=last_seen,
                         limit=limit,
                     )
                 else:
-                    items = await repo.browse_direct_known(
+                    items = await self.mediator.browse.browse_direct_known(
                         conn=conn,
                         user=user,
-                        item_uuid=item_uuid,
+                        item=item,
                         order=order,
                         collections=collections,
                         last_seen=last_seen,
                         limit=limit,
                     )
             elif user.is_anon:
-                items = await repo.browse_related_anon(
+                items = await self.mediator.browse.browse_related_anon(
                     conn=conn,
-                    item_uuid=item_uuid,
+                    item=item,
                     order=order,
                     collections=collections,
                     last_seen=last_seen,
                     limit=limit,
                 )
             else:
-                items = await repo.browse_related_known(
+                items = await self.mediator.browse.browse_related_known(
                     conn=conn,
                     user=user,
-                    item_uuid=item_uuid,
+                    item=item,
                     order=order,
                     collections=collections,
                     last_seen=last_seen,

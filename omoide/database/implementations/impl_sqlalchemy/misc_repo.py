@@ -15,7 +15,7 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
     async def get_computed_tags(self, conn: AsyncConnection, item: models.Item) -> set[str]:
         """Get computed tags for this item."""
         stmt = sa.select(db_models.ComputedTags.tags).where(
-            db_models.ComputedTags.item_uuid == item.uuid
+            db_models.ComputedTags.item_id == item.id
         )
         response = (await conn.execute(stmt)).fetchone()
         return {str(row) for row in response.tags}

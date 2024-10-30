@@ -6,7 +6,6 @@ from datetime import datetime
 import enum
 from functools import cached_property
 from typing import Any
-from uuid import UUID
 
 from omoide import const
 from omoide import exceptions
@@ -103,9 +102,9 @@ class RebuildKnownTagsUserSO(SerialOperation):
     goal: str = 'rebuild known tags for {user}'
 
     @cached_property
-    def user_uuid(self) -> UUID:
+    def user_id(self) -> int:
         """Extract from extras."""
-        return UUID(self.extras['user_uuid'])
+        return self.extras['user_id']
 
 
 @dataclass
@@ -124,24 +123,24 @@ class UpdatePermissionsSO(SerialOperation):
     goal: str = 'update permissions for item'
 
     @cached_property
-    def item_uuid(self) -> UUID:
+    def item_id(self) -> int:
         """Extract from extras."""
-        return UUID(self.extras['item_uuid'])
+        return self.extras['item_id']
 
     @cached_property
-    def added(self) -> set[UUID]:
+    def added(self) -> set[int]:
         """Extract from extras."""
-        return {UUID(x) for x in self.extras['added']}
+        return set(self.extras['added'])
 
     @cached_property
-    def deleted(self) -> set[UUID]:
+    def deleted(self) -> set[int]:
         """Extract from extras."""
-        return {UUID(x) for x in self.extras['deleted']}
+        return set(self.extras['deleted'])
 
     @cached_property
-    def original(self) -> set[UUID]:
+    def original(self) -> set[int]:
         """Extract from extras."""
-        return {UUID(x) for x in self.extras['original']}
+        return set(self.extras['original'])
 
     @cached_property
     def apply_to_parents(self) -> bool:
@@ -167,9 +166,9 @@ class UpdateTagsSO(SerialOperation):
     goal: str = 'update tags for item'
 
     @cached_property
-    def item_uuid(self) -> UUID:
+    def item_id(self) -> int:
         """Extract from extras."""
-        return UUID(self.extras['item_uuid'])
+        return self.extras['item_id']
 
     @cached_property
     def apply_to_children(self) -> bool:
@@ -185,6 +184,6 @@ class DropVisibilitySO(SerialOperation):
     goal: str = 'hide item from known tags'
 
     @cached_property
-    def item_uuid(self) -> UUID:
+    def item_id(self) -> int:
         """Extract from extras."""
-        return UUID(self.extras['item_uuid'])
+        return self.extras['item_id']

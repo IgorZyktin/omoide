@@ -221,7 +221,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         affected_users: list[models.User] = []
 
         if item.permissions:
-            affected_users = await self.mediator.users.select(conn, uuids=item.permissions)
+            affected_users = await self.mediator.users.select(conn, ids=item.permissions)
 
         computed_tags = await self.mediator.misc.update_computed_tags(
             item=item,

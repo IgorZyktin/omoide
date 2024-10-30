@@ -29,14 +29,14 @@ class AppPreviewUseCase(BaseAPPUseCase):
         """Execute."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
 
             allowed_to = any(
                 (
                     user.is_admin,
-                    item.owner_uuid in public_users,
-                    item.owner_uuid == user.uuid,
-                    str(user.uuid) in item.permissions,
+                    item.owner_id in public_users,
+                    item.owner_id == user.id,
+                    user.id in item.permissions,
                 )
             )
 

@@ -153,6 +153,8 @@ class Item(ModelMixin):
     uuid: UUID
     parent_uuid: UUID | None
     owner_uuid: UUID
+    parent_id: int | None
+    owner_id: int
     number: int
     name: str
     is_collection: bool
@@ -197,6 +199,26 @@ class Item(ModelMixin):
             computed_tags.add(str(self.parent_uuid))
 
         return computed_tags
+
+    @classmethod
+    def cast(cls, obj: Any) -> Self:
+        """Convert to domain-level object."""
+        return cls(
+            id=obj.id,
+            uuid=obj.uuid,
+            parent_id=obj.parent_id,
+            parent_uuid=obj.parent_uuid,
+            owner_id=obj.owner_id,
+            owner_uuid=obj.owner_uuid,
+            name=obj.name,
+            number=obj.number,
+            is_collection=obj.is_collection,
+            content_ext=obj.content_ext,
+            preview_ext=obj.preview_ext,
+            thumbnail_ext=obj.thumbnail_ext,
+            tags=set(obj.tags),
+            permissions=set(obj.permissions),
+        )
 
 
 @dataclass(kw_only=True)

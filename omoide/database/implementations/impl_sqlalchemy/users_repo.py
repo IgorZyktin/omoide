@@ -142,18 +142,18 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def get_public_user_uuids(self, conn: AsyncConnection) -> set[UUID]:
-        """Return UUIDs of public users."""
-        query = sa.select(db_models.PublicUsers.user_uuid)
+    async def get_public_user_ids(self, conn: AsyncConnection) -> set[int]:
+        """Return ids of public users."""
+        query = sa.select(db_models.User.id).where(db_models.User.is_public)
         response = (await conn.execute(query)).fetchall()
-        return {x.user_uuid for x in response}
+        return {x.id for x in response}
 
     async def get_root_item(self, conn: AsyncConnection, user: models.User) -> models.Item:
         """Return root item for given user."""
         query = sa.select(db_models.Item).where(
             sa.and_(
-                db_models.Item.owner_uuid == user.uuid,
-                db_models.Item.parent_uuid == sa.null(),
+                db_models.Item.owner_id == user.id,
+                db_models.Item.parent_id == sa.null(),
             )
         )
 
@@ -163,7 +163,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             msg = 'User {user_uuid} has no root item'
             raise exceptions.DoesNotExistError(msg, user_uuid=user.uuid)
 
-        return db_models.Item.cast(response)
+        return models.Item.cast(response)
 
     async def get_all_root_items(
         self,
@@ -179,7 +179,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             )
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.Item.cast(row) for row in response]
+        return [models.Item.cast(row) for row in response]
 
     async def calc_total_space_used_by(
         self,
@@ -195,18 +195,18 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             )
             .join(
                 db_models.Item,
-                db_models.Item.uuid == db_models.Metainfo.item_uuid,
+                db_models.Item.id == db_models.Metainfo.item_id,
             )
-            .where(db_models.Item.owner_uuid == str(user.uuid))
+            .where(db_models.Item.owner_id == user.id)
         )
 
         response = (await conn.execute(query)).fetchone()
 
         return models.SpaceUsage(
             uuid=user.uuid,
-            content_size=response.content_size or 0,
-            preview_size=response.preview_size or 0,
-            thumbnail_size=response.thumbnail_size or 0,
+            content_size=response.content_size if response else 0,
+            preview_size=response.preview_size if response else 0,
+            thumbnail_size=response.thumbnail_size if response else 0,
         )
 
     async def count_items_by_owner(

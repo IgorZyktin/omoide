@@ -26,7 +26,7 @@ class UpdateTagsExecutor(
                 conn=conn,
                 uuid=self.operation.item_uuid,
             )
-            affected_users: set[UUID] = {item.owner_uuid, *item.permissions}
+            affected_users: set[int] = {item.owner_id, *item.permissions}
 
         await self.update_tags(
             item=item,
@@ -42,7 +42,7 @@ class UpdateTagsExecutor(
                     ),
                 )
 
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
             if public_users & affected_users:
                 await self.mediator.workers.create_serial_operation(
                     conn=conn,

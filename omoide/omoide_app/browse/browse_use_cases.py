@@ -19,15 +19,15 @@ class BaseBrowseUseCase(BaseAPPUseCase):
     async def _ensure_allowed_to(
         user: models.User,
         item: models.Item,
-        public_users: set[UUID],
+        public_users: set[int],
     ) -> None:
         """Raise if user has no access to this item."""
         allowed_to = any(
             (
                 user.is_admin,
-                item.owner_uuid in public_users,
-                item.owner_uuid == user.uuid,
-                str(user.uuid) in item.permissions,
+                item.owner_id in public_users,
+                item.owner_id == user.id,
+                user.id in item.permissions,
             )
         )
 
@@ -48,7 +48,7 @@ class AppBrowseDynamicUseCase(BaseBrowseUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
 
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
             await self._ensure_allowed_to(user, item, public_users)
 
             parents = await self.mediator.items.get_parents(conn, item)
@@ -83,7 +83,7 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
 
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
             await self._ensure_allowed_to(user, item, public_users)
 
             parents = await self.mediator.items.get_parents(conn, item)

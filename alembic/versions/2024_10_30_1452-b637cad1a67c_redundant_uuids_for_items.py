@@ -5,16 +5,16 @@ Revises: 39ddf3e8fa1c
 Create Date: 2024-10-30 14:52:45.367168+03:00
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = 'b637cad1a67c'
-down_revision: Union[str, None] = '39ddf3e8fa1c'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '39ddf3e8fa1c'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

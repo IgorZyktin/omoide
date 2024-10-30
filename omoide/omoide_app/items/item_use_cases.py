@@ -29,7 +29,7 @@ class AppCreateItemUseCase(BaseAPPUseCase):
 
             users_with_permission = await self.mediator.users.select(
                 conn=conn,
-                uuids=parent.permissions,
+                ids=parent.permissions,
             )
 
         return parent, users_with_permission
@@ -51,8 +51,8 @@ class AppUpdateItemUseCase(BaseAPPUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             total = await self.mediator.items.count_all_children_of(conn, item)
-            can_see = await self.mediator.users.select(conn, uuids=item.permissions)
-            computed_tags = await self.mediator.items.read_computed_tags(conn, item_uuid)
+            can_see = await self.mediator.users.select(conn, ids=item.permissions)
+            computed_tags = await self.mediator.items.read_computed_tags(conn, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
 
         return item, total, can_see, computed_tags, metainfo

@@ -1,7 +1,5 @@
 """Update permissions for item."""
 
-from uuid import UUID
-
 from omoide import const
 from omoide import custom_logging
 from omoide import models
@@ -23,7 +21,7 @@ class UpdatePermissionsExecutor(
 
     async def execute(self) -> None:
         """Perform workload."""
-        affected_users: set[UUID] = set()
+        affected_users: set[int] = set()
 
         if self.operation.apply_to_parents:
             await self.apply_to_parents(affected_users)
@@ -32,30 +30,27 @@ class UpdatePermissionsExecutor(
             await self.apply_to_children(affected_users)
 
         async with self.mediator.database.transaction() as conn:
-            for user_uuid in affected_users:
+            for user_id in affected_users:
                 await self.mediator.workers.create_serial_operation(
                     conn=conn,
                     operation=so.RebuildKnownTagsUserSO(
-                        extras={'user_uuid': str(user_uuid)},
+                        extras={'user_id': user_id},
                     ),
                 )
 
-            public_users = await self.mediator.users.get_public_user_uuids(conn)
+            public_users = await self.mediator.users.get_public_user_ids(conn)
             if public_users & affected_users:
                 await self.mediator.workers.create_serial_operation(
                     conn=conn,
                     operation=so.RebuildKnownTagsAnonSO(),
                 )
 
-    async def apply_to_parents(self, affected_users: set[UUID]) -> None:
+    async def apply_to_parents(self, affected_users: set[int]) -> None:
         """Change permissions in parents."""
         affected_users.update(self.operation.added)
 
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(
-                conn=conn,
-                uuid=self.operation.item_uuid,
-            )
+            item = await self.mediator.items.get_by_id(conn, self.operation.item_id)
 
             parents = await self.mediator.items.get_parents(conn, item)
 
@@ -69,13 +64,10 @@ class UpdatePermissionsExecutor(
                     parent=parent,
                 )
 
-    async def apply_to_children(self, affected_users: set[UUID]) -> None:
+    async def apply_to_children(self, affected_users: set[int]) -> None:
         """Change permissions in children."""
         async with self.mediator.database.transaction() as conn:
-            top_item = await self.mediator.items.get_by_uuid(
-                conn=conn,
-                uuid=self.operation.item_uuid,
-            )
+            top_item = await self.mediator.items.get_by_id(conn, self.operation.item_id)
 
             top_children = await self.mediator.items.get_children(
                 conn=conn,
