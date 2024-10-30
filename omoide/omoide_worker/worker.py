@@ -69,8 +69,8 @@ class Worker(interfaces.AbsWorker):
     def _download_single_media(self, media: db_models.Media) -> None:
         """Save single media record."""
         self._filesystem.save_binary(
-            owner_uuid=media.owner_uuid,
-            item_uuid=media.item_uuid,
+            owner_uuid=media.owner.uuid,
+            item_uuid=media.item.uuid,
             media_type=media.media_type,
             ext=media.ext,
             content=media.content,
