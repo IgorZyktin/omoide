@@ -48,6 +48,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON users FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON users FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON users FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_users_uuid'), table_name='users')
     op.drop_index(op.f('ix_users_role'), table_name='users')
     op.drop_index(op.f('ix_users_login'), table_name='users')

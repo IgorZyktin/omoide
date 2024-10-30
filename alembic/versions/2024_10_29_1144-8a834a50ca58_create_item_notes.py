@@ -23,8 +23,8 @@ def upgrade() -> None:
         'item_notes',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('item_id', sa.Integer(), nullable=False),
-        sa.Column('key', sa.CHAR(length=256), nullable=False),
-        sa.Column('value', sa.CHAR(length=1024), nullable=False),
+        sa.Column('key', sa.String(length=256), nullable=False),
+        sa.Column('value', sa.String(length=1024), nullable=False),
         sa.ForeignKeyConstraint(['item_id'], ['items.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('item_id', 'key', name='item_notes_uc')
@@ -41,6 +41,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON item_notes FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON item_notes FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON item_notes FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_item_notes_key'), table_name='item_notes')
     op.drop_index(op.f('ix_item_notes_item_id'), table_name='item_notes')
     op.drop_index(op.f('ix_item_notes_id'), table_name='item_notes')

@@ -33,7 +33,7 @@ def upgrade() -> None:
         sa.Column('preview_ext', sa.String(length=64), nullable=True),
         sa.Column('thumbnail_ext', sa.String(length=64), nullable=True),
         sa.Column('tags', postgresql.ARRAY(sa.Text()), nullable=False),
-        sa.Column('permissions', postgresql.ARRAY(sa.Text()), nullable=False),
+        sa.Column('permissions', postgresql.ARRAY(sa.Integer), nullable=False),
         sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['parent_id'], ['items.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['status'], ['item_statuses.id'], ),
@@ -56,6 +56,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON items FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON items FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON items FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_items_uuid'), table_name='items')
     op.drop_index('ix_items_tags', table_name='items', postgresql_using='gin')
     op.drop_index(op.f('ix_items_status'), table_name='items')

@@ -40,6 +40,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON known_tags FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON known_tags FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON known_tags FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_known_tags_user_id'), table_name='known_tags')
     op.drop_index(op.f('ix_known_tags_tag'), table_name='known_tags')
     op.drop_index('ix_known_tags', table_name='known_tags',

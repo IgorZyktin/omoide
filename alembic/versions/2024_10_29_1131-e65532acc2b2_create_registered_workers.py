@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         'registered_workers',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('worker_name', sa.CHAR(length=256), nullable=False),
+        sa.Column('worker_name', sa.String(length=256), nullable=False),
         sa.Column('last_restart', sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
@@ -41,6 +41,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON registered_workers FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON registered_workers FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON registered_workers FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_registered_workers_worker_name'), table_name='registered_workers')
     op.drop_index(op.f('ix_registered_workers_last_restart'), table_name='registered_workers')
     op.drop_index(op.f('ix_registered_workers_id'), table_name='registered_workers')

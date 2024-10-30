@@ -37,6 +37,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON known_tags_anon FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON known_tags_anon FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON known_tags_anon FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_known_tags_anon_tag'), table_name='known_tags_anon')
     op.drop_index('ix_known_tags_anon', table_name='known_tags_anon',
                   postgresql_ops={'tag': 'text_pattern_ops'})

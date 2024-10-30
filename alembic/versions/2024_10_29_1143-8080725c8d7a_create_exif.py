@@ -36,5 +36,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON exif FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON exif FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON exif FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_exif_item_id'), table_name='exif')
     op.drop_table('exif')

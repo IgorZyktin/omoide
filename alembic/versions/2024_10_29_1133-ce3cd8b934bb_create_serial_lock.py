@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         'serial_lock',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('worker_name', sa.VARCHAR(length=256), nullable=True),
+        sa.Column('worker_name', sa.String(length=256), nullable=True),
         sa.Column('last_update', sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
@@ -37,6 +37,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON serial_lock FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_lock FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_lock FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_serial_lock_last_update'), table_name='serial_lock')
     op.drop_index(op.f('ix_serial_lock_id'), table_name='serial_lock')
     op.drop_table('serial_lock')

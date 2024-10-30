@@ -22,8 +22,8 @@ def upgrade() -> None:
     op.create_table(
         'serial_operations',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('name', sa.VARCHAR(length=256), nullable=False),
-        sa.Column('worker_name', sa.VARCHAR(length=256), nullable=True),
+        sa.Column('name', sa.String(length=256), nullable=False),
+        sa.Column('worker_name', sa.String(length=256), nullable=True),
         sa.Column('status', sa.Enum('created', 'processing', 'done', 'failed',
                                     name='serial_operation_status'), nullable=False),
         sa.Column('extras', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -37,12 +37,16 @@ def upgrade() -> None:
 
     op.create_index(op.f('ix_serial_operations_id'), 'serial_operations', ['id'], unique=True)
 
-    op.execute('GRANT SELECT ON serial_lock TO omoide_app;')
-    op.execute('GRANT ALL ON serial_lock TO omoide_worker;')
-    op.execute('GRANT SELECT ON serial_lock TO omoide_monitoring;')
+    op.execute('GRANT SELECT ON serial_operations TO omoide_app;')
+    op.execute('GRANT ALL ON serial_operations TO omoide_worker;')
+    op.execute('GRANT SELECT ON serial_operations TO omoide_monitoring;')
 
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON serial_operations FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_operations FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_operations FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_serial_operations_id'), table_name='serial_operations')
     op.drop_table('serial_operations')

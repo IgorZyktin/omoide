@@ -49,6 +49,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON media FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON media FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON media FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_media_processed_at'), table_name='media')
     op.drop_index(op.f('ix_media_owner_id'), table_name='media')
     op.drop_index(op.f('ix_media_item_id'), table_name='media')

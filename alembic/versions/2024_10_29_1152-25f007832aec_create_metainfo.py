@@ -1,4 +1,4 @@
-"""create computed metainfo
+"""create metainfo
 
 Revision ID: 25f007832aec
 Revises: bc2b88a10fed
@@ -49,5 +49,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON item_metainfo FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON item_metainfo FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON item_metainfo FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_item_metainfo_item_id'), table_name='item_metainfo')
     op.drop_table('item_metainfo')

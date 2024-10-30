@@ -56,9 +56,17 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON signatures_md5 FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON signatures_md5 FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON signatures_md5 FROM omoide_monitoring;')
+
     op.drop_index(op.f('ix_signatures_md5_signature'), table_name='signatures_md5')
     op.drop_index(op.f('ix_signatures_md5_item_id'), table_name='signatures_md5')
     op.drop_table('signatures_md5')
+
+    op.execute('REVOKE ALL PRIVILEGES ON signatures_crc32 FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON signatures_crc32 FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON signatures_crc32 FROM omoide_monitoring;')
 
     op.drop_index(op.f('ix_signatures_crc32_signature'), table_name='signatures_crc32')
     op.drop_index(op.f('ix_signatures_crc32_item_id'), table_name='signatures_crc32')
