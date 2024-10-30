@@ -112,8 +112,11 @@ async def api_get_recent_updates(
 
     return search_api_models.RecentUpdatesOutput(
         items=[
-            common_api_models.ItemOutput(**item.model_dump(), extras={'parent_name': parent_name})
-            for item, parent_name in zip(items, parent_names, strict=False)
+            common_api_models.ItemOutput(
+                **item.model_dump(),
+                extras={'parent_name': parent_names.get(item.parent_id)},
+            )
+            for item in items
         ],
     )
 

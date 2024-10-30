@@ -354,25 +354,3 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
         return [models.Item.cast(row) for row in response]
-
-    async def get_parent_names(
-        self,
-        conn: AsyncConnection,
-        items: Collection[models.Item],
-    ) -> list[str | None]:
-        """Get names of parents of the given items."""
-        ids = [item.parent_id for item in items]
-
-        subquery = sa.select(
-            sa.func.unnest(cast(ids, pg.ARRAY(sa.Integer))).label('id')
-        ).subquery('given_id')
-
-        stmt = sa.select(subquery.c.id, db_models.Item.name).join(
-            db_models.Item,
-            db_models.Item.id == subquery.c.id,
-            isouter=True,
-            full=True,
-        )
-
-        response = (await conn.execute(stmt)).fetchall()
-        return [record.name for record in response]

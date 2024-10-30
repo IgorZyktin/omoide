@@ -1,10 +1,11 @@
 """Repository that performs operations on items."""
-
+from collections.abc import Collection
 from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.dialects import postgresql as pg
 
 from omoide import exceptions
 from omoide import models
@@ -305,3 +306,29 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             return 0
 
         return int(response.total)
+
+    async def get_parent_names(
+        self,
+        conn: AsyncConnection,
+        items: Collection[models.Item],
+    ) -> dict[int, str | None]:
+        """Get names of parents of the given items."""
+        ids = [item.parent_id for item in items]
+        names: dict[int, str | None] = dict.fromkeys(ids)
+
+        subquery = sa.select(
+            sa.func.unnest(sa.cast(ids, pg.ARRAY(sa.Integer))).label('id')
+        ).subquery('given_id')
+
+        stmt = sa.select(subquery.c.id, db_models.Item.name).join(
+            db_models.Item,
+            db_models.Item.id == subquery.c.id,
+            isouter=True,
+        ).distinct(subquery.c.id)
+
+        response = (await conn.execute(stmt)).fetchall()
+
+        for row_id, row_name in response:
+            names[row_id] = row_name
+
+        return names

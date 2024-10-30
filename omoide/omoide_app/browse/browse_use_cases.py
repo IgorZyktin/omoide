@@ -66,7 +66,7 @@ class BrowseResult(NamedTuple):
     total_items: int
     total_pages: int
     items: list[models.Item]
-    names: list[str | None]
+    names: dict[int, str | None]
     aim: web.Aim
 
 
@@ -94,7 +94,7 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
                 limit=aim.items_per_page,
             )
 
-            names = await self.mediator.browse.get_parent_names(conn, children)
+            names = await self.mediator.items.get_parent_names(conn, children)
             total_items = await self.mediator.items.count_children(conn, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
 

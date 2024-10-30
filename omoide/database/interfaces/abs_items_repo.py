@@ -1,6 +1,7 @@
 """Repository that perform operations on items."""
 
 import abc
+from collections.abc import Collection
 from typing import Generic
 from typing import TypeVar
 from uuid import UUID
@@ -92,3 +93,11 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def count_all_children_of(self, conn: ConnectionT, item: models.Item) -> int:
         """Count dependant items."""
+
+    @abc.abstractmethod
+    async def get_parent_names(
+        self,
+        conn: ConnectionT,
+        items: Collection[models.Item],
+    ) -> dict[int, str | None]:
+        """Get names of parents of the given items."""

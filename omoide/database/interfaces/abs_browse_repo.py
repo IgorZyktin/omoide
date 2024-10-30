@@ -84,11 +84,3 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         limit: int,
     ) -> list[models.Item]:
         """Return recently updated items."""
-
-    @abc.abstractmethod
-    async def get_parent_names(
-        self,
-        conn: ConnectionT,
-        items: list[models.Item],
-    ) -> list[str | None]:
-        """Get names of parents of the given items."""

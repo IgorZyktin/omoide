@@ -68,8 +68,8 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     limit=limit,
                 )
 
-            names = await self.mediator.browse.get_parent_names(conn, items)
+            names = await self.mediator.items.get_parent_names(conn, items)
 
         duration = time.perf_counter() - start
 
-        return duration, items, [{'parent_name': name} for name in names]
+        return duration, items, [{'parent_name': names.get(item.parent_id)} for item in items]
