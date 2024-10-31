@@ -3,10 +3,10 @@ const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-
 
 const EMPTY_FILE = '/static/empty.png'
 
-const EXIF_ENDPOINT = '/api-new/v1/exif'
-const METAINFO_ENDPOINT = '/api-new/v1/metainfo'
-const ITEMS_ENDPOINT = '/api-new/v1/items'
-const ACTIONS_ENDPOINT = '/api-new/v1/actions'
+const EXIF_ENDPOINT = '/api/v1/exif'
+const METAINFO_ENDPOINT = '/api/v1/metainfo'
+const ITEMS_ENDPOINT = '/api/v1/items'
+const ACTIONS_ENDPOINT = '/api/v1/actions'
 
 
 function makeAlert(text, alertsElementId) {

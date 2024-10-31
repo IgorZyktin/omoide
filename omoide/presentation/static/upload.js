@@ -1082,7 +1082,7 @@ async function ensureParentIsCollection(parent) {
             $.ajax({
                 timeout: 5000, // 5 seconds
                 type: 'PATCH',
-                url: `/api/items/${parent.uuid}`,
+                url: `${ITEMS_ENDPOINT}/${parent.uuid}`,
                 contentType: 'application/json',
                 data: JSON.stringify([
                     {
@@ -1143,7 +1143,7 @@ async function uploadTagsForProxy(proxy) {
         $.ajax({
             timeout: 5000, // 5 seconds
             type: 'PUT',
-            url: `/api/items/${proxy.uuid}/tags`,
+            url: `${ITEMS_ENDPOINT}/${proxy.uuid}/tags`,
             contentType: 'application/json',
             data: JSON.stringify({'tags': tags}),
             success: function (response) {
@@ -1171,7 +1171,7 @@ async function uploadPermissionsProxy(proxy) {
         $.ajax({
             timeout: 5000, // 5 seconds
             type: 'PUT',
-            url: `/api/items/${proxy.uuid}/permissions`,
+            url: `${ITEMS_ENDPOINT}/${proxy.uuid}/permissions`,
             contentType: 'application/json',
             data: JSON.stringify({
                 'apply_to_parents': false,

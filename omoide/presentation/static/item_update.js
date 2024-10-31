@@ -129,7 +129,7 @@ function saveParent(totalChildren, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${newModel['uuid']}/parent/${newModel['parent_uuid']}`,
+        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/parent/${newModel['parent_uuid']}`,
         contentType: 'application/json',
         success: function (response) {
             console.log('Saved parent', response)
@@ -153,7 +153,7 @@ function saveTags(totalChildren, alertsElementId) {
     $.ajax({
         timeout: 5000, // 5 seconds
         type: 'PUT',
-        url: `/api/items/${newModel['uuid']}/tags`,
+        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/tags`,
         contentType: 'application/json',
         data: JSON.stringify({
             'tags': newModel['tags'],

@@ -9,7 +9,7 @@ from uuid import UUID
 
 VERSION = '0.3.9'
 
-FRONTEND_VERSION = 11
+FRONTEND_VERSION = 12
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
