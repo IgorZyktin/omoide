@@ -49,33 +49,33 @@ class MediaRepo(AbsMediaRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return int(response.rowcount)
 
-    async def copy_image(
-        self,
-        conn: AsyncConnection,
-        source_item: models.Item,
-        target_item: models.Item,
-        media_type: const.MEDIA_TYPE,
-        ext: str,
-        moment: datetime,
-    ) -> int:
-        """Save intention to copy data between items."""
-        stmt = (
-            sa.insert(db_models.CommandCopy)
-            .values(
-                created_at=moment,
-                processed_at=None,
-                error=None,
-                owner_uuid=str(source_item.owner_uuid),
-                source_uuid=str(source_item.uuid),
-                target_uuid=str(target_item.uuid),
-                media_type=media_type,
-                ext=ext,
-            )
-            .returning(db_models.CommandCopy.id)
-        )
-
-        copy_id = (await conn.execute(stmt)).scalar()
-        return int(copy_id)
+    # async def copy_image(
+    #     self,
+    #     conn: AsyncConnection,
+    #     source_item: models.Item,
+    #     target_item: models.Item,
+    #     media_type: const.MEDIA_TYPE,
+    #     ext: str,
+    #     moment: datetime,
+    # ) -> int:
+    #     """Save intention to copy data between items."""
+    #     stmt = (
+    #         sa.insert(db_models.CommandCopy)
+    #         .values(
+    #             created_at=moment,
+    #             processed_at=None,
+    #             error=None,
+    #             owner_uuid=str(source_item.owner_uuid),
+    #             source_uuid=str(source_item.uuid),
+    #             target_uuid=str(target_item.uuid),
+    #             media_type=media_type,
+    #             ext=ext,
+    #         )
+    #         .returning(db_models.CommandCopy.id)
+    #     )
+    #
+    #     copy_id = (await conn.execute(stmt)).scalar()
+    #     return int(copy_id)
 
     async def mark_file_as_orphan(
         self,
