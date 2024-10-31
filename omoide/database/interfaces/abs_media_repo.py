@@ -26,17 +26,17 @@ class AbsMediaRepo(Generic[ConnectionT], abc.ABC):
     async def delete_all_processed_media(self, conn: ConnectionT) -> int:
         """Delete fully downloaded media rows."""
 
-    @abc.abstractmethod
-    async def copy_image(
-        self,
-        conn: ConnectionT,
-        source_item: models.Item,
-        target_item: models.Item,
-        media_type: const.MEDIA_TYPE,
-        ext: str,
-        moment: datetime,
-    ) -> int:
-        """Save intention to copy data between items."""
+    # @abc.abstractmethod
+    # async def copy_image(
+    #     self,
+    #     conn: ConnectionT,
+    #     source_item: models.Item,
+    #     target_item: models.Item,
+    #     media_type: const.MEDIA_TYPE,
+    #     ext: str,
+    #     moment: datetime,
+    # ) -> int:
+    #     """Save intention to copy data between items."""
 
     @abc.abstractmethod
     async def mark_file_as_orphan(
