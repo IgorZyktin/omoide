@@ -1,6 +1,5 @@
 """Browse repository."""
 
-
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 

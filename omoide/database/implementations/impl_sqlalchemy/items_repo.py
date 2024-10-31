@@ -148,9 +148,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = sa.select(db_models.Item).where(
-            queries.item_is_public()
-        )
+        query = sa.select(db_models.Item).where(queries.item_is_public())
 
         if parent_uuid is not None:
             query = query.where(db_models.Item.parent_uuid == parent_uuid)
@@ -319,11 +317,15 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             sa.func.unnest(sa.cast(ids, pg.ARRAY(sa.Integer))).label('id')
         ).subquery('given_id')
 
-        stmt = sa.select(subquery.c.id, db_models.Item.name).join(
-            db_models.Item,
-            db_models.Item.id == subquery.c.id,
-            isouter=True,
-        ).distinct(subquery.c.id)
+        stmt = (
+            sa.select(subquery.c.id, db_models.Item.name)
+            .join(
+                db_models.Item,
+                db_models.Item.id == subquery.c.id,
+                isouter=True,
+            )
+            .distinct(subquery.c.id)
+        )
 
         response = (await conn.execute(stmt)).fetchall()
 
