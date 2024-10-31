@@ -1,7 +1,6 @@
 """Use cases that process browse requests from users."""
 
 import time
-from typing import Any
 from uuid import UUID
 
 from omoide import const
@@ -21,7 +20,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         collections: bool,
         last_seen: int,
         limit: int,
-    ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
+    ) -> tuple[float, list[models.Item], dict[int, models.User | None]]:
         """Perform search request."""
         start = time.perf_counter()
 
@@ -68,8 +67,8 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     limit=limit,
                 )
 
-            names = await self.mediator.items.get_parent_names(conn, items)
+            users = await self.mediator.users.get_map(conn, items)
 
         duration = time.perf_counter() - start
 
-        return duration, items, [{'parent_name': names.get(item.parent_id)} for item in items]
+        return duration, items, users

@@ -150,23 +150,25 @@ class BrowseRepo(_BrowseRepoBase):
             FROM items
                      INNER JOIN nested_items
                                 ON items.parent_id = nested_items.id)
-    SELECT id,
-           uuid,
-           parent_id,
-           parent_uuid,
-           owner_id,
-           owner_uuid,
-           number,
-           name,
-           status,
-           is_collection,
-           content_ext,
-           preview_ext,
-           thumbnail_ext,
-           tags,
-           permissions
+    SELECT nested_items.id,
+           nested_items.uuid,
+           nested_items.parent_id,
+           nested_items.parent_uuid,
+           nested_items.owner_id,
+           nested_items.owner_uuid,
+           nested_items.number,
+           nested_items.name,
+           nested_items.status,
+           nested_items.is_collection,
+           nested_items.content_ext,
+           nested_items.preview_ext,
+           nested_items.thumbnail_ext,
+           nested_items.tags,
+           nested_items.permissions,
+           i2.name as parent_name
     FROM nested_items
-    WHERE owner_id IN (SELECT id FROM users WHERE is_public)
+    LEFT JOIN items i2 ON nested_items.parent_id = i2.id
+    WHERE nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
         """
 
         values = {
@@ -191,7 +193,7 @@ class BrowseRepo(_BrowseRepoBase):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
     async def browse_related_known(
         self,
@@ -242,25 +244,27 @@ class BrowseRepo(_BrowseRepoBase):
             FROM items
                      INNER JOIN nested_items
                                 ON items.parent_id = nested_items.id)
-    SELECT id,
-           uuid,
-           parent_id,
-           parent_uuid,
-           owner_id,
-           owner_uuid,
-           number,
-           name,
-           status,
-           is_collection,
-           content_ext,
-           preview_ext,
-           thumbnail_ext,
-           tags,
-           permissions
+    SELECT nested_items.id,
+           nested_items.uuid,
+           nested_items.parent_id,
+           nested_items.parent_uuid,
+           nested_items.owner_id,
+           nested_items.owner_uuid,
+           nested_items.number,
+           nested_items.name,
+           nested_items.status,
+           nested_items.is_collection,
+           nested_items.content_ext,
+           nested_items.preview_ext,
+           nested_items.thumbnail_ext,
+           nested_items.tags,
+           nested_items.permissions,
+           i2.name as parent_name
     FROM nested_items
-    WHERE (owner_id IN (SELECT id FROM users WHERE is_public)
-        OR owner_id = :user_id
-        OR :user_id = ANY(permissions)
+    LEFT JOIN items i2 ON nested_items.parent_id = i2.id
+    WHERE nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
+        OR nested_items.owner_id = :user_id
+        OR :user_id = ANY(nested_items.permissions)
         """
 
         values = {
@@ -286,7 +290,7 @@ class BrowseRepo(_BrowseRepoBase):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
     async def get_recently_updated_items(
         self,
@@ -320,22 +324,24 @@ class BrowseRepo(_BrowseRepoBase):
             LEFT JOIN item_metainfo im on id = im.item_id
             WHERE (owner_id = :user_id OR :user_id = ANY(permissions))
         )
-        SELECT id,
-               uuid,
-               parent_id,
-               parent_uuid,
-               owner_id,
-               owner_uuid,
-               number,
-               name,
-               status,
-               is_collection,
-               content_ext,
-               preview_ext,
-               thumbnail_ext,
-               tags,
-               permissions
+        SELECT valid_items.id,
+               valid_items.uuid,
+               valid_items.parent_id,
+               valid_items.parent_uuid,
+               valid_items.owner_id,
+               valid_items.owner_uuid,
+               valid_items.number,
+               valid_items.name,
+               valid_items.status,
+               valid_items.is_collection,
+               valid_items.content_ext,
+               valid_items.preview_ext,
+               valid_items.thumbnail_ext,
+               valid_items.tags,
+               valid_items.permissions,
+               i2.name as parent_name
         FROM valid_items
+        LEFT JOIN items i2 ON valid_items.parent_id = i2.id
         WHERE
             date(valid_items.updated_at) = (
                 SELECT max(date(updated_at)) FROM valid_items
@@ -364,4 +370,4 @@ class BrowseRepo(_BrowseRepoBase):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.from_obj(row, extras={'parent_name': None}) for row in response]
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]

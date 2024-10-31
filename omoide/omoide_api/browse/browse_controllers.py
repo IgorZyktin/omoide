@@ -10,10 +10,9 @@ from fastapi import status
 
 from omoide import const
 from omoide import dependencies as dep
+from omoide import limits
 from omoide import models
-from omoide import utils
 from omoide.infra.mediator import Mediator
-from omoide.omoide_api.browse import browse_api_models
 from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
 
@@ -32,14 +31,8 @@ async def api_browse(
     direct: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = browse_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[
-        int,
-        Query(
-            ge=browse_api_models.BROWSE_MIN_LIMIT,
-            lt=browse_api_models.BROWSE_MAX_LIMIT,
-        ),
-    ] = browse_api_models.BROWSE_DEFAULT_LIMIT,
+    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    limit: Annotated[int, Query(ge=limits.MIN_BROWSE, lt=limits.MAX_BROWSE)] = limits.DEF_BROWSE,
 ):
     """Perform browse request.
 
@@ -47,7 +40,7 @@ async def api_browse(
     """
     use_case = browse_use_cases.ApiBrowseUseCase(mediator)
 
-    duration, items, extras = await use_case.execute(
+    duration, items, users = await use_case.execute(
         user=user,
         item_uuid=item_uuid,
         collections=collections,
@@ -59,11 +52,5 @@ async def api_browse(
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
-        items=[
-            common_api_models.ItemOutput(
-                **utils.serialize(item.model_dump()),
-                extras=utils.serialize(item_extras),
-            )
-            for item, item_extras in zip(items, extras, strict=False)
-        ],
+        items=common_api_models.convert_items(items, users),
     )

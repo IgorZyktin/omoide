@@ -16,7 +16,7 @@ class ApiHomeUseCase(BaseAPIUseCase):
         direct: bool,
         last_seen: int,
         limit: int,
-    ) -> list[models.Item]:
+    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Perform search request."""
         async with self.mediator.database.transaction() as conn:
             if user.is_anon:
@@ -40,4 +40,6 @@ class ApiHomeUseCase(BaseAPIUseCase):
                     limit=limit,
                 )
 
-        return items
+            users = await self.mediator.users.get_map(conn, items)
+
+        return items, users

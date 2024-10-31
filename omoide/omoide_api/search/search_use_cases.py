@@ -2,8 +2,6 @@
 
 import re
 import time
-from itertools import chain
-from typing import Any
 
 from omoide import const
 from omoide import models
@@ -136,14 +134,14 @@ class ApiSearchUseCase(BaseSearchUseCase):
         collections: bool,
         last_seen: int,
         limit: int,
-    ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
+    ) -> tuple[float, list[models.Item], dict[int, models.User | None]]:
         """Execute."""
         duration = 0.0
         items: list[models.Item] = []
-        extras: list[dict[str, Any]] = []
+        users: dict[int, models.User | None] = {}
 
         if len(query) < minimal_length:
-            return duration, items, extras
+            return duration, items, users
 
         start = time.perf_counter()
         tags_include, tags_exclude = self.parse_tags(query)
@@ -159,8 +157,8 @@ class ApiSearchUseCase(BaseSearchUseCase):
                 last_seen=last_seen,
                 limit=limit,
             )
-            names = await self.mediator.items.get_parent_names(conn, items)
+            users = await self.mediator.users.get_map(conn, items)
 
         duration = time.perf_counter() - start
 
-        return duration, items, [{'parent_name': names.get(item.parent_id)} for item in items]
+        return duration, items, users

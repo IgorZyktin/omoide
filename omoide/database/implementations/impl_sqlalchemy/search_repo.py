@@ -4,7 +4,6 @@ import abc
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy.orm import aliased
 from sqlalchemy.sql import Select
 
 from omoide import const
@@ -111,7 +110,7 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Find items for dynamic load."""
-        query = sa.select(db_models.Item)
+        query = queries.get_items_with_parent_names()
 
         query = self._expand_query(
             user=user,
@@ -121,16 +120,11 @@ class SearchRepo(_SearchRepositoryBase):
             collections=collections,
         )
 
-        query = queries.apply_order(
-            stmt=query,
-            order=order,
-            last_seen=last_seen,
-        )
-
+        query = queries.apply_order(query, order, last_seen)
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
     async def get_home_items_for_anon(
         self,

@@ -8,20 +8,10 @@ from pydantic import BaseModel
 
 from omoide import models
 
-QUERY_DEFAULT = ''
-LAST_SEEN_DEFAULT = -1
-MIN_LENGTH_DEFAULT = 2
-MAX_LENGTH_DEFAULT = 512
-MIN_LIMIT = 1
-MAX_LIMIT = 200
-DEFAULT_LIMIT = 30
-
-AUTOCOMPLETE_MIN_LENGTH = 2
-AUTOCOMPLETE_LIMIT = 10
-
 
 class Permission(BaseModel):
     """Human-readable representation of a permission entry."""
+
     uuid: UUID
     name: str
 
@@ -117,7 +107,9 @@ def convert_items(
                 Permission(
                     uuid=user.uuid,
                     name=user.name,
-                ) for user in users.get(item.id, [])],
+                )
+                for user in users.get(item.id, [])
+            ],
         )
         for item in items
     ]

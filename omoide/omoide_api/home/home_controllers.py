@@ -9,6 +9,7 @@ from fastapi import Query
 
 from omoide import const
 from omoide import dependencies as dep
+from omoide import limits
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
@@ -27,14 +28,8 @@ async def api_home(
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
     direct: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[
-        int,
-        Query(
-            ge=common_api_models.MIN_LIMIT,
-            lt=common_api_models.MAX_LIMIT,
-        ),
-    ] = common_api_models.DEFAULT_LIMIT,
+    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Return items for user home page.
 
@@ -43,7 +38,7 @@ async def api_home(
     start = time.perf_counter()
     use_case = home_use_cases.ApiHomeUseCase(mediator)
 
-    items = await use_case.execute(
+    items, users = await use_case.execute(
         user=user,
         order=order,
         collections=collections,
@@ -54,7 +49,7 @@ async def api_home(
 
     response = common_api_models.ManyItemsOutput(
         duration=0.0,
-        items=[common_api_models.ItemOutput(**item.model_dump()) for item in items],
+        items=common_api_models.convert_items(items, users),
     )
     response.duration = time.perf_counter() - start
     return response

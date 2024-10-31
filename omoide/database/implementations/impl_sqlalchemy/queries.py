@@ -22,9 +22,8 @@ def item_is_public() -> sa.BinaryExpression:
 def get_items_with_parent_names() -> Select:
     """Construct request that gathers names of item parents."""
     parents = aliased(db_models.Item)
-    return (
-        sa.select(db_models.Item, parents.name.label('parent_name'))
-        .join(parents, parents.id == db_models.Item.parent_id)
+    return sa.select(db_models.Item, parents.name.label('parent_name')).join(
+        parents, parents.id == db_models.Item.parent_id
     )
 
 

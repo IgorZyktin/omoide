@@ -15,6 +15,7 @@ from fastapi.responses import PlainTextResponse
 from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
+import omoide.limits
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
@@ -111,16 +112,16 @@ async def api_read_many_items(
     name: Annotated[
         str | None,
         Query(
-            max_length=common_api_models.MAX_LENGTH_DEFAULT,
+            max_length=omoide.limits.MAX_QUERY,
         ),
     ] = None,
     limit: Annotated[
         int,
         Query(
-            ge=common_api_models.MIN_LIMIT,
-            lt=common_api_models.MAX_LIMIT,
+            ge=omoide.limits.MIN_LIMIT,
+            lt=omoide.limits.MAX_LIMIT,
         ),
-    ] = common_api_models.DEFAULT_LIMIT,
+    ] = omoide.limits.DEF_LIMIT,
 ):
     """Get exising items."""
     use_case = item_use_cases.ReadManyItemsUseCase(mediator)

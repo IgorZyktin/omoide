@@ -10,8 +10,8 @@ from fastapi import status
 from omoide import const
 from omoide import custom_logging
 from omoide import dependencies as dep
+from omoide import limits
 from omoide import models
-from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
@@ -30,19 +30,11 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
 async def api_autocomplete(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    tag: Annotated[
-        str,
-        Query(
-            max_length=common_api_models.MAX_LENGTH_DEFAULT,
-        ),
-    ] = common_api_models.QUERY_DEFAULT,
+    tag: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     limit: Annotated[
         int,
-        Query(
-            ge=common_api_models.MIN_LIMIT,
-            lt=common_api_models.MAX_LIMIT,
-        ),
-    ] = common_api_models.AUTOCOMPLETE_LIMIT,
+        Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT),
+    ] = limits.AUTOCOMPLETE_LIMIT,
 ):
     """Return tags that match supplied string.
 
@@ -59,7 +51,7 @@ async def api_autocomplete(
         variants = await use_case.execute(
             user=user,
             tag=tag,
-            minimal_length=common_api_models.AUTOCOMPLETE_MIN_LENGTH,
+            minimal_length=limits.MIN_AUTOCOMPLETE,
             limit=limit,
         )
     except Exception:
@@ -83,14 +75,8 @@ async def api_get_recent_updates(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[
-        int,
-        Query(
-            ge=common_api_models.MIN_LIMIT,
-            lt=common_api_models.MAX_LIMIT,
-        ),
-    ] = common_api_models.DEFAULT_LIMIT,
+    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Return recently updated items.
 
@@ -122,12 +108,7 @@ async def api_get_recent_updates(
 async def api_search_total(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    q: Annotated[
-        str,
-        Query(
-            max_length=common_api_models.MAX_LENGTH_DEFAULT,
-        ),
-    ] = common_api_models.QUERY_DEFAULT,
+    q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     collections: Annotated[bool, Query()] = False,
 ):
     """Return total amount of items that correspond to search query."""
@@ -136,14 +117,11 @@ async def api_search_total(
     total, duration = await use_case.execute(
         user=user,
         query=q,
-        minimal_length=common_api_models.MIN_LENGTH_DEFAULT,
+        minimal_length=limits.MIN_QUERY,
         collections=collections,
     )
 
-    return search_api_models.SearchTotalOutput(
-        total=total,
-        duration=duration,
-    )
+    return search_api_models.SearchTotalOutput(total=total, duration=duration)
 
 
 @api_search_router.get(
@@ -154,22 +132,11 @@ async def api_search_total(
 async def api_search(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    q: Annotated[
-        str,
-        Query(
-            max_length=common_api_models.MAX_LENGTH_DEFAULT,
-        ),
-    ] = common_api_models.QUERY_DEFAULT,
+    q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = common_api_models.LAST_SEEN_DEFAULT,
-    limit: Annotated[
-        int,
-        Query(
-            ge=common_api_models.MIN_LIMIT,
-            lt=common_api_models.MAX_LIMIT,
-        ),
-    ] = common_api_models.DEFAULT_LIMIT,
+    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Perform search request.
 
@@ -179,10 +146,10 @@ async def api_search(
     """
     use_case = search_use_cases.ApiSearchUseCase(mediator)
 
-    duration, items, extras = await use_case.execute(
+    duration, items, users = await use_case.execute(
         user=user,
         query=q,
-        minimal_length=common_api_models.MIN_LENGTH_DEFAULT,
+        minimal_length=limits.MIN_QUERY,
         collections=collections,
         order=order,
         last_seen=last_seen,
@@ -191,11 +158,5 @@ async def api_search(
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
-        items=[
-            common_api_models.ItemOutput(
-                **utils.serialize(item.model_dump()),
-                extras=utils.serialize(item_extras),
-            )
-            for item, item_extras in zip(items, extras, strict=False)
-        ],
+        items=common_api_models.convert_items(items, users),
     )
