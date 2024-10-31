@@ -25,7 +25,11 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
         limit: int,
     ) -> list[models.Item]:
         """Return browse items (generic)."""
-        query = queries.get_items_with_parent_names().where(condition)
+        query = (
+            queries.get_items_with_parent_names()
+            .where(condition)
+            .where(db_models.Item.status == models.Status.AVAILABLE)
+        )
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
@@ -169,11 +173,13 @@ class BrowseRepo(_BrowseRepoBase):
     FROM nested_items
     LEFT JOIN items i2 ON nested_items.parent_id = i2.id
     WHERE nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
+      AND nested_items.status = :status
         """
 
         values = {
             'item_id': item.id,
             'limit': limit,
+            'status': models.Status.AVAILABLE.value,
         }
 
         if collections:
@@ -262,14 +268,18 @@ class BrowseRepo(_BrowseRepoBase):
            i2.name as parent_name
     FROM nested_items
     LEFT JOIN items i2 ON nested_items.parent_id = i2.id
-    WHERE nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
+    WHERE nested_items.status = :status
+      AND (
+        nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
         OR nested_items.owner_id = :user_id
         OR :user_id = ANY(nested_items.permissions)
+      ) 
         """
 
         values = {
             'user_id': user.id,
             'item_id': item.id,
+            'status': models.Status.AVAILABLE.value,
             'limit': limit,
         }
 
@@ -346,10 +356,12 @@ class BrowseRepo(_BrowseRepoBase):
             date(valid_items.updated_at) = (
                 SELECT max(date(updated_at)) FROM valid_items
             )
+            AND valid_items.status = :status
         """
 
         values = {
             'user_id': user.id,
+            'status': models.Status.AVAILABLE.value,
             'limit': limit,
         }
 
