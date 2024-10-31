@@ -1,11 +1,11 @@
 """Worker runtime."""
 
-import sys
 import threading
 
 from omoide import custom_logging
 from omoide.omoide_worker import interfaces
 from omoide.omoide_worker import worker_config
+from omoide.omoide_worker.strategies import by_timer
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -84,29 +84,8 @@ def perform_one_work_cycle(
 
 def get_strategy(config: worker_config.Config) -> interfaces.AbsStrategy:
     """Return instance of current strategy."""
-    if sys.platform == 'win32':
-        strategy_name = 'TimerStrategy'
-        LOG.warning(
-            'Backing off to {} while running on Windows',
-            strategy_name,
-        )
-    else:
-        strategy_name = config.strategy
-
-    strategy: interfaces.AbsStrategy
-
-    match strategy_name:
-        case 'TimerStrategy':
-            from omoide.omoide_worker.strategies import by_timer
-
-            strategy = by_timer.TimerStrategy(
-                min_interval=config.timer_strategy.min_interval,
-                max_interval=config.timer_strategy.max_interval,
-                warm_up_coefficient=config.timer_strategy.warm_up_coefficient,
-            )
-
-        case _:
-            msg = f'Unknown strategy: {strategy_name}'
-            raise RuntimeError(msg)
-
-    return strategy
+    return by_timer.TimerStrategy(
+        min_interval=config.timer_strategy.min_interval,
+        max_interval=config.timer_strategy.max_interval,
+        warm_up_coefficient=config.timer_strategy.warm_up_coefficient,
+    )
