@@ -9,11 +9,13 @@ from urllib.parse import urlencode
 from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
+from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import const
 from omoide import custom_logging
+from omoide import exceptions
 from omoide import exceptions as api_exceptions
 from omoide import models
 
@@ -51,18 +53,18 @@ def get_corresponding_exception_code(exc: Exception) -> int:
 
 def raise_from_exc(
     exc: Exception,
-    language: str | None = None,
+    lang: str | None = None,
 ) -> NoReturn:
     """Cast exception into HTTP response."""
+    _ = lang  # TODO - add localization
     LOG.exception('Failed to perform API request')
 
     code = get_corresponding_exception_code(exc)
 
-    if language:
-        # TODO - add localization
+    if isinstance(exc, (exceptions.BaseOmoideError, ValidationError)):
         detail = str(exc)
     else:
-        detail = str(exc)
+        detail = 'Something bad happened on the server side'
 
     raise HTTPException(status_code=code, detail=detail)
 
