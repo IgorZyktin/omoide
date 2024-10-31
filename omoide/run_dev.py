@@ -1,5 +1,7 @@
 """Development runner, do not use in production."""
 
+import os
+
 from fastapi import Request
 import uvicorn
 
@@ -22,9 +24,14 @@ def main() -> None:
         url_list = [{'path': route.path, 'name': route.name} for route in request.app.routes]
         return url_list
 
+    if os.name == 'nt':
+        host = '127.0.0.1'
+    else:
+        host = config.host
+
     uvicorn.run(
         app,
-        host=config.host,
+        host=host,
         port=8080,
     )
 
