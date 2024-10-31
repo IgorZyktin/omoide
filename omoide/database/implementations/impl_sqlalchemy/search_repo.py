@@ -59,14 +59,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
         limit: int,
     ) -> list[models.Item]:
         """Return home items (generic)."""
-        parents = aliased(db_models.Item)
-
-        # NOTE - extract items + their parent names in one go
-        query = (
-            sa.select(db_models.Item, parents.name.label('parent_name'))
-            .where(condition)
-            .join(parents, parents.id == db_models.Item.parent_id)
-        )
+        query = queries.get_items_with_parent_names().where(condition)
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())

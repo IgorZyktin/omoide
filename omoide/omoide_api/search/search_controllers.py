@@ -102,7 +102,7 @@ async def api_get_recent_updates(
     """
     use_case = search_use_cases.RecentUpdatesUseCase(mediator)
 
-    items, parent_names = await use_case.execute(
+    items, users = await use_case.execute(
         user=user,
         order=order,
         collections=collections,
@@ -111,13 +111,7 @@ async def api_get_recent_updates(
     )
 
     return search_api_models.RecentUpdatesOutput(
-        items=[
-            common_api_models.ItemOutput(
-                **item.model_dump(),
-                extras={'parent_name': parent_names.get(item.parent_id)},
-            )
-            for item in items
-        ],
+        items=common_api_models.convert_items(items, users)
     )
 
 

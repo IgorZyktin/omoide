@@ -1,5 +1,7 @@
 """Browse repository."""
 
+import abc
+
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -10,7 +12,32 @@ from omoide.database.implementations.impl_sqlalchemy import queries
 from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo
 
 
-class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
+class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
+    """Base class with helper methods."""
+
+    @staticmethod
+    async def _browse_base(
+        conn: AsyncConnection,
+        condition: sa.BinaryExpression | sa.BooleanClauseList,
+        order: const.ORDER_TYPE,
+        collections: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return browse items (generic)."""
+        query = queries.get_items_with_parent_names().where(condition)
+
+        if collections:
+            query = query.where(db_models.Item.is_collection == sa.true())
+
+        query = queries.apply_order(query, order, last_seen)
+        query = query.limit(limit)
+
+        response = (await conn.execute(query)).fetchall()
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+
+
+class BrowseRepo(_BrowseRepoBase):
     """Repository that performs all browse queries."""
 
     async def get_children(
@@ -48,19 +75,11 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
-        query = sa.select(db_models.Item).where(
+        condition = sa.and_(
             queries.item_is_public(),
             db_models.Item.parent_id == item.id,
         )
-
-        if collections:
-            query = query.where(db_models.Item.is_collection == sa.true())
-
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
-
-        response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return await self._browse_base(conn, condition, order, collections, last_seen, limit)
 
     async def browse_direct_known(
         self,
@@ -73,7 +92,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
-        query = sa.select(db_models.Item).where(
+        condition = sa.and_(
             sa.or_(
                 queries.item_is_public(),
                 db_models.Item.owner_id == user.id,
@@ -81,15 +100,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
             ),
             db_models.Item.parent_id == item.id,
         )
-
-        if collections:
-            query = query.where(db_models.Item.is_collection == sa.true())
-
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
-
-        response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return await self._browse_base(conn, condition, order, collections, last_seen, limit)
 
     async def browse_related_anon(
         self,
@@ -111,6 +122,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
+                   items.status        AS status,
                    items.is_collection AS is_collection,
                    items.content_ext   AS content_ext,
                    items.preview_ext   AS preview_ext,
@@ -128,6 +140,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
+                   items.status        AS status,
                    items.is_collection AS is_collection,
                    items.content_ext   AS content_ext,
                    items.preview_ext   AS preview_ext,
@@ -145,6 +158,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
            owner_uuid,
            number,
            name,
+           status,
            is_collection,
            content_ext,
            preview_ext,
@@ -200,6 +214,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
+                   items.status        AS status,
                    items.is_collection AS is_collection,
                    items.content_ext   AS content_ext,
                    items.preview_ext   AS preview_ext,
@@ -217,6 +232,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    items.owner_uuid    AS owner_uuid,
                    items.number        AS number,
                    items.name          AS name,
+                   items.status        AS status,
                    items.is_collection AS is_collection,
                    items.content_ext   AS content_ext,
                    items.preview_ext   AS preview_ext,
@@ -234,6 +250,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
            owner_uuid,
            number,
            name,
+           status,
            is_collection,
            content_ext,
            preview_ext,
@@ -291,15 +308,16 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                    owner_uuid,
                    number,
                    name,
+                   status,
                    is_collection,
                    content_ext,
                    preview_ext,
                    thumbnail_ext,
                    tags,
                    permissions,
-                   me.updated_at
+                   im.updated_at
             FROM items
-            LEFT JOIN item_metainfo me on id = me.item_id
+            LEFT JOIN item_metainfo im on id = im.item_id
             WHERE (owner_id = :user_id OR :user_id = ANY(permissions))
         )
         SELECT id,
@@ -310,6 +328,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
                owner_uuid,
                number,
                name,
+               status,
                is_collection,
                content_ext,
                preview_ext,
@@ -345,4 +364,4 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return [models.Item.from_obj(row, extras={'parent_name': None}) for row in response]

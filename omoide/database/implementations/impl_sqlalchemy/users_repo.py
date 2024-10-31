@@ -83,6 +83,32 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         user = models.User.from_obj(response)
         return user, response.password, response.auth_complexity
 
+    async def get_map(
+        self,
+        conn: AsyncConnection,
+        items: Collection[models.Item],
+        permissions: bool = True,
+        owners: bool = False,
+    ) -> dict[int, models.User | None]:
+        """Get map of users for given items."""
+        ids: set[int] = set()
+
+        for item in items:
+            if permissions:
+                ids.update(item.permissions)
+            if owners:
+                ids.add(item.owner_id)
+
+        users: dict[int, models.User | None] = dict.fromkeys(ids)
+        query = sa.select(db_models.User).where(db_models.User.id.in_(ids))
+
+        response = (await conn.execute(query)).fetchall()
+        for row in response:
+            user = models.User.from_obj(row)
+            users[user.id] = user
+
+        return users
+
     async def select(
         self,
         conn: AsyncConnection,

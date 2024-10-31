@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from omoide import models
+
 QUERY_DEFAULT = ''
 LAST_SEEN_DEFAULT = -1
 MIN_LENGTH_DEFAULT = 2
@@ -16,6 +18,12 @@ DEFAULT_LIMIT = 30
 
 AUTOCOMPLETE_MIN_LENGTH = 2
 AUTOCOMPLETE_LIMIT = 10
+
+
+class Permission(BaseModel):
+    """Human-readable representation of a permission entry."""
+    uuid: UUID
+    name: str
 
 
 class ItemOutput(BaseModel):
@@ -31,7 +39,7 @@ class ItemOutput(BaseModel):
     preview_ext: str | None
     thumbnail_ext: str | None
     tags: list[str] = []
-    permissions: list[str] = []
+    permissions: list[Permission] = []
     extras: dict[str, Any] = {}
 
 
@@ -95,3 +103,21 @@ class ItemDeleteOutput(BaseModel):
     result: str
     item_uuid: str
     switch_to: ItemOutput | None
+
+
+def convert_items(
+    items: list[models.Item],
+    users: dict[int, models.User | None],
+) -> list[ItemOutput]:
+    """Convert domain-level items into API format."""
+    return [
+        ItemOutput(
+            **item.model_dump(exclude={'permissions'}),
+            permissions=[
+                Permission(
+                    uuid=user.uuid,
+                    name=user.name,
+                ) for user in users.get(item.id, [])],
+        )
+        for item in items
+    ]

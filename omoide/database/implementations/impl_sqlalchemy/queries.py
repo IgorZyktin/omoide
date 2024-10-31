@@ -1,6 +1,7 @@
 """Common database queries."""
 
 import sqlalchemy as sa
+from sqlalchemy.orm import aliased
 from sqlalchemy.sql import Select
 
 from omoide import const
@@ -16,6 +17,15 @@ def public_user_ids() -> Select:
 def item_is_public() -> sa.BinaryExpression:
     """Return condition that check that owner of the item is public."""
     return db_models.Item.owner_id.in_(public_user_ids())
+
+
+def get_items_with_parent_names() -> Select:
+    """Construct request that gathers names of item parents."""
+    parents = aliased(db_models.Item)
+    return (
+        sa.select(db_models.Item, parents.name.label('parent_name'))
+        .join(parents, parents.id == db_models.Item.parent_id)
+    )
 
 
 def ensure_registered_user_has_permissions(

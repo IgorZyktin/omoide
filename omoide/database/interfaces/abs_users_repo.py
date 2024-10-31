@@ -41,6 +41,16 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         """Return user+password for given login."""
 
     @abc.abstractmethod
+    async def get_map(
+        self,
+        conn: ConnectionT,
+        items: Collection[models.Item],
+        permissions: bool = True,
+        owners: bool = False,
+    ) -> dict[int, models.User | None]:
+        """Get map of users for given items."""
+
+    @abc.abstractmethod
     async def select(
         self,
         conn: ConnectionT,
