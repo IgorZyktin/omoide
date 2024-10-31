@@ -9,7 +9,6 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide import serial_operations as so
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
@@ -42,27 +41,28 @@ class CreateItemsUseCase(BaseItemUseCase):
 
                 await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    operation=so.RebuildItemTagsSO(
-                        extras={
-                            'item_id': item.id,
-                            'apply_to_children': True,
-                            'apply_to_owner': False,
-                            'apply_to_permissions': False,
-                            'apply_to_anon': False,
-                        }
-                    ),
+                    name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
+                    extras={
+                        'item_id': item.id,
+                        'apply_to_children': True,
+                        'apply_to_owner': False,
+                        'apply_to_permissions': False,
+                        'apply_to_anon': False,
+                    }
                 )
 
             for user_id in all_affected_users:
                 await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    operation=so.RebuildKnownTagsUserSO(
-                        extras={'user_id': user_id},
-                    ),
+                    name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
+                    extras={'user_id': user_id},
                 )
 
             if user.is_public:
-                await self.mediator.misc.create_serial_operation(conn, so.RebuildKnownTagsAnonSO())
+                await self.mediator.misc.create_serial_operation(
+                    conn=conn,
+                    name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_ANON,
+                )
 
         LOG.info(
             'User {} created {} items: {}',
@@ -178,13 +178,17 @@ class RenameItemUseCase(BaseItemUseCase):
             item.name = name
             await self.mediator.items.save(conn, item)
 
-            operation = so.RebuildItemTagsSO(
+            operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
                 extras={
                     'item_id': item.id,
                     'apply_to_children': True,
+                    'apply_to_owner': True,
+                    'apply_to_permissions': True,
+                    'apply_to_anon': True,
                 },
             )
-            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         return operation_id
 
@@ -199,7 +203,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
         user: models.User,
         item_uuid: UUID,
         new_parent_uuid: UUID,
-    ) -> int | None:
+    ) -> list[int]:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
 
@@ -208,7 +212,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             self.mediator.policy.ensure_owner(user, item, to=self.do_what)
 
             if item.parent_uuid == new_parent_uuid:
-                return None
+                return []
 
             if item.parent_uuid is None:
                 old_parent = None
@@ -225,7 +229,8 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                 )
 
             LOG.info(
-                '{user} is setting {new_parent} as a parent ' 'for {item} (former is {old_parent})',
+                '{user} is setting {new_parent} as a parent '
+                'for {item} (previous parent is {old_parent})',
                 user=user,
                 new_parent=new_parent,
                 item=item,
@@ -235,18 +240,32 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             item.parent_uuid = new_parent_uuid
             await self.mediator.items.save(conn, item)
 
-            operation = so.RebuildItemTagsSO(
+            operation_id_tags = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
                 extras={
                     'item_id': item.id,
                     'apply_to_children': True,
+                    'apply_to_owner': True,
+                    'apply_to_permissions': True,
+                    'apply_to_anon': True,
                 },
             )
-            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
-            # TODO - need to update known tags for both old and new parents
+            operation_id_old_parent = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
+                extras={'user_id': old_parent.id},
+            )
+
+            operation_id_new_parent = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
+                extras={'user_id': new_parent.id},
+            )
             # TODO - need to copy image from the item to new parent
 
-        return operation_id
+        return [operation_id_tags, operation_id_old_parent, operation_id_new_parent]
 
 
 class UpdateItemTagsUseCase(BaseItemUseCase):
@@ -275,13 +294,17 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
             item.tags = tags
             await self.mediator.items.save(conn, item)
 
-            operation = so.RebuildItemTagsSO(
+            operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
                 extras={
                     'item_id': item.id,
                     'apply_to_children': True,
+                    'apply_to_owner': True,
+                    'apply_to_permissions': True,
+                    'apply_to_anon': True,
                 },
             )
-            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         return operation_id
 
@@ -324,30 +347,26 @@ class DeleteItemUseCase(BaseItemUseCase):
                         switch_to = siblings[index + 1]
 
             LOG.info('{} is deleting {}', user, item)
+            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            await self.mediator.object_storage.soft_delete(item)
+            await self.mediator.meta.soft_delete(conn, metainfo)
+            await self.mediator.items.soft_delete(conn, item)
 
-        async with self.mediator.database.transaction() as conn:
-            # heavy recursive call
-            await self.delete_one_item(conn, item)
+            members = await self.mediator.items.get_family(conn, item)
+            for member in members:
+                LOG.warning('Deletion of {} affected {}', item, member)
+                member_metainfo = await self.mediator.meta.get_by_item(conn, member)
+                await self.mediator.object_storage.soft_delete(member)
+                await self.mediator.meta.soft_delete(conn, member_metainfo)
+                await self.mediator.items.soft_delete(conn, member)
 
-        async with self.mediator.database.transaction() as conn:
-            operation = so.DropVisibilitySO(
-                extras={'item_uuid': str(item_uuid)},
+            await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.DECREASE_ITEM_VISIBILITY,
+                extras={'item_id': item.id},
             )
-            await self.mediator.misc.create_serial_operation(conn, operation)
 
         return switch_to
-
-    async def delete_one_item(self, conn, item: models.Item) -> None:
-        """Delete item with all corresponding media."""
-        # TODO - perform soft delete here
-        children = await self.mediator.items.get_children(conn, item)
-
-        for child in children:
-            await self.delete_one_item(conn, child)
-
-        await self.mediator.object_storage.delete_all_objects(item)
-        LOG.warning('Deleting item {}', item)
-        await self.mediator.items.delete(conn, item)
 
 
 class BaseUploadUseCase(BaseAPIUseCase):
@@ -372,7 +391,7 @@ class BaseUploadUseCase(BaseAPIUseCase):
 
             LOG.info('{} is uploading {} for {}', user, self.media_type, item)
 
-            await self.mediator.object_storage.save_object(
+            await self.mediator.object_storage.save(
                 item=item,
                 media_type=self.media_type,
                 binary_content=binary_content,
@@ -539,13 +558,14 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
             if item.permissions == permissions:
                 return None
 
-            if apply_to_parents or apply_to_parents:
+            if apply_to_parents or apply_to_children:
                 added, deleted = utils.get_delta(item.permissions, user_ids)
-                repo = self.mediator.misc
 
-                operation = so.RebuildPermissionsSO(
+                operation_id = await self.mediator.misc.create_serial_operation(
+                    conn=conn,
+                    name=const.AllSerialOperations.REBUILD_ITEM_PERMISSIONS,
                     extras={
-                        'item_uuid': str(item_uuid),
+                        'item_id': item.id,
                         'added': list(added),
                         'deleted': list(deleted),
                         'original': list(item.permissions),
@@ -554,7 +574,6 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                         'apply_to_children_as': apply_to_children_as.value,
                     },
                 )
-                operation_id = await repo.create_serial_operation(conn, operation)
 
             item.permissions = user_ids
             await self.mediator.items.save(conn, item)

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
+from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo
 
@@ -51,12 +52,7 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
 
         return metainfos
 
-    async def save(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-        metainfo: models.Metainfo,
-    ) -> None:
+    async def save(self, conn: AsyncConnection, metainfo: models.Metainfo) -> None:
         """Update metainfo."""
         stmt = (
             sa.update(db_models.Metainfo)
@@ -68,8 +64,22 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
         response = await conn.execute(stmt)
 
         if response is None:
-            msg = 'Metainfo for item {item_uuid} does not exist'
-            raise exceptions.DoesNotExistError(msg, item_uuid=item.uuid)
+            msg = 'Metainfo for item {item_id} does not exist'
+            raise exceptions.DoesNotExistError(msg, item_uuid=metainfo.item_id)
+
+    async def soft_delete(self, conn: AsyncConnection, metainfo: models.Metainfo) -> int:
+        """Mark item deleted."""
+        stmt = (
+            sa.update(db_models.Metainfo)
+            .where(db_models.Metainfo.item_id == metainfo.item_id)
+            .values(
+                updated_at=utils.now(),
+                deleted_at=utils.now(),
+            )
+        )
+
+        response = await conn.execute(stmt)
+        return int(response.rowcount)
 
     async def add_item_note(
         self,

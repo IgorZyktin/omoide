@@ -83,6 +83,10 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Save the given item."""
 
     @abc.abstractmethod
+    async def soft_delete(self, conn: ConnectionT, item: models.Item) -> bool:
+        """Mark tem as deleted."""
+
+    @abc.abstractmethod
     async def delete(self, conn: ConnectionT, item: models.Item) -> bool:
         """Delete the given item."""
 

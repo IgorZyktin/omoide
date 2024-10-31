@@ -5,7 +5,6 @@ from uuid import UUID
 from omoide import const
 from omoide import custom_logging
 from omoide import models
-from omoide import serial_operations as so
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
@@ -22,7 +21,8 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
             LOG.info('{} is rebuilding known tags for anon', admin)
 
             operation_id = await self.mediator.misc.create_serial_operation(
-                conn=conn, operation=so.RebuildKnownTagsAnonSO()
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_ANON,
             )
 
         return operation_id
@@ -39,12 +39,10 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
             user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             LOG.info('{} is rebuilding known tags for {}', admin, user)
 
-            operation = so.RebuildKnownTagsUserSO(
-                extras={'user_uuid': str(user.uuid)},
-            )
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operation,
+                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
+                extras={'user_id': user.id},
             )
 
         return operation_id
@@ -61,7 +59,8 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
             LOG.info('{} is rebuilding known tags for all users', admin)
 
             operation_id = await self.mediator.misc.create_serial_operation(
-                conn=conn, operation=so.RebuildKnownTagsAllSO()
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_ALL,
             )
 
         return operation_id
@@ -92,13 +91,17 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
                 owner,
             )
 
-            operation = so.RebuildItemTagsSO(
+            operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
                 extras={
                     'item_id': item.id,
                     'apply_to_children': True,
-                },
+                    'apply_to_owner': True,
+                    'apply_to_permissions': True,
+                    'apply_to_anon': True,
+                }
             )
-            operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         return owner, item, operation_id
 

@@ -76,7 +76,7 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
             metainfo.thumbnail_width = thumbnail_width
             metainfo.thumbnail_height = thumbnail_height
 
-            await self.mediator.meta.save(conn, item, metainfo)
+            await self.mediator.meta.save(conn, metainfo)
 
             for key, value in extras.items():
                 await self.mediator.meta.add_item_note(conn, item, key, value)

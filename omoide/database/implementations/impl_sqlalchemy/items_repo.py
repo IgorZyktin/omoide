@@ -254,6 +254,11 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
+    async def soft_delete(self, conn: AsyncConnection, item: models.Item) -> bool:
+        """Mark tem as deleted."""
+        item.status = models.Status.DELETED
+        return await self.save(conn, item)
+
     async def delete(self, conn: AsyncConnection, item: models.Item) -> bool:
         """Delete the given item."""
         stmt = sa.delete(db_models.Item).where(db_models.Item.id == item.id)

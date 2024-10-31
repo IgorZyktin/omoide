@@ -30,13 +30,12 @@ class AbsMetaRepo(Generic[ConnectionT], abc.ABC):
         """Get map of metainfo records."""
 
     @abc.abstractmethod
-    async def save(
-        self,
-        conn: ConnectionT,
-        item: models.Item,
-        metainfo: models.Metainfo,
-    ) -> None:
+    async def save(self, conn: ConnectionT, metainfo: models.Metainfo) -> None:
         """Update metainfo."""
+
+    @abc.abstractmethod
+    async def soft_delete(self, conn: ConnectionT, metainfo: models.Metainfo) -> int:
+        """Mark item deleted."""
 
     @abc.abstractmethod
     async def add_item_note(

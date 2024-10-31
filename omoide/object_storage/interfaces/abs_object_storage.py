@@ -10,7 +10,7 @@ class AbsObjectStorage(abc.ABC):
     """Abstract base object storage."""
 
     @abc.abstractmethod
-    async def save_object(
+    async def save(
         self,
         item: models.Item,
         media_type: const.MEDIA_TYPE,
@@ -20,11 +20,8 @@ class AbsObjectStorage(abc.ABC):
         """Save object of specific content type."""
 
     @abc.abstractmethod
-    async def delete_all_objects(
-        self,
-        item: models.Item,
-    ) -> list[const.MEDIA_TYPE]:
-        """Delete all objects for given item."""
+    async def soft_delete(self, item: models.Item) -> list[const.MEDIA_TYPE]:
+        """Mark all objects as deleted."""
 
     @abc.abstractmethod
     async def copy_all_objects(

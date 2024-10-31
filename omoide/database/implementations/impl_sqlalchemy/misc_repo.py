@@ -1,12 +1,15 @@
 """Repository that performs various operations on different objects."""
 
+from typing import Any
+
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from omoide import const
 from omoide import models
+from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo
-from omoide.serial_operations import SerialOperation
 
 
 class MiscRepo(AbsMiscRepo[AsyncConnection]):
@@ -23,25 +26,25 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
     async def create_serial_operation(
         self,
         conn: AsyncConnection,
-        operation: SerialOperation,
+        name: str,
+        extras: dict[str, Any] | None = None,
     ) -> int:
         """Create serial operation."""
         stmt = (
             sa.insert(db_models.SerialOperation)
             .values(
-                name=operation.name,
-                worker_name=operation.worker_name,
-                status=operation.status,
-                extras=operation.extras,
-                created_at=operation.created_at,
-                updated_at=operation.updated_at,
-                started_at=operation.started_at,
-                ended_at=operation.ended_at,
-                log=operation.log,
+                name=name,
+                worker_name=None,
+                status=models.OperationStatus.CREATED,
+                extras=extras or {},
+                created_at=utils.now(),
+                updated_at=utils.now(),
+                started_at=None,
+                ended_at=None,
+                log=None,
             )
             .returning(db_models.SerialOperation.id)
         )
 
         operation_id = int((await conn.execute(stmt)).scalar())
-        operation.id = operation_id
         return operation_id

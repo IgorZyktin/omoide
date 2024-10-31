@@ -437,3 +437,52 @@ class ParentTags(NamedTuple):
 
     parent: Item
     computed_tags: set[str]
+
+
+class OperationStatus(enum.StrEnum):
+    """Possible statuses for operation."""
+
+    CREATED = 'created'
+    PROCESSING = 'processing'
+    DONE = 'done'
+    FAILED = 'failed'
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return f'<{self.name.lower()}>'
+
+
+@dataclass
+class SerialOperation(OmoideModel):
+    """Base class for all serial operations."""
+
+    id: int
+    name: str
+    worker_name: str | None
+    status: OperationStatus
+    extras: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    started_at: datetime | None
+    ended_at: datetime | None
+    log: str | None
+
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return f'<{self.id}, {self.name!r}>'
+
+    @classmethod
+    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+        """Create instance from arbitrary object."""
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            worker_name=obj.worker_name,
+            status=OperationStatus(obj.status),
+            extras=extras or obj.extras or {},
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            started_at=obj.started_at,
+            ended_at=obj.ended_at,
+            log=obj.log,
+        )

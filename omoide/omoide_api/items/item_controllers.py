@@ -201,19 +201,19 @@ async def api_change_parent_item(
     use_case = item_use_cases.ChangeParentItemUseCase(mediator)
 
     try:
-        operation_id = await use_case.execute(
+        operations = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
             new_parent_uuid=new_parent_uuid,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.raise_from_exc(exc, lang=user.lang)
 
     return {
         'result': 'changed parent',
         'item_uuid': str(item_uuid),
         'new_parent_uuid': str(new_parent_uuid),
-        'operation_id': operation_id,
+        'operation': operations,
     }
 
 

@@ -45,3 +45,14 @@ class ApplyAs(enum.StrEnum):
 
     DELTA: str = 'delta'
     COPY: str = 'copy'
+
+
+class AllSerialOperations(enum.StrEnum):
+    """All possible serial operations."""
+
+    REBUILD_ITEM_TAGS: str = 'rebuild_item_tags'
+    REBUILD_ITEM_PERMISSIONS: str = 'rebuild_item_permissions'
+    DECREASE_ITEM_VISIBILITY: str = 'decrease_item_visibility'
+    REBUILD_KNOWN_TAGS_ALL: str = 'rebuild_known_tags_all'
+    REBUILD_KNOWN_TAGS_USER: str = 'rebuild_known_tags_user'
+    REBUILD_KNOWN_TAGS_ANON: str = 'rebuild_known_tags_anon'

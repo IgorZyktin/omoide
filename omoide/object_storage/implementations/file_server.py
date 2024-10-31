@@ -22,7 +22,7 @@ class FileObjectStorage(AbsObjectStorage):
         self.media = media
         self.prefix_size = prefix_size
 
-    async def save_object(
+    async def save(
         self,
         item: models.Item,
         media_type: const.MEDIA_TYPE,
@@ -45,40 +45,21 @@ class FileObjectStorage(AbsObjectStorage):
         async with self.database.transaction() as conn:
             await self.media.create_media(conn, media)
 
-    async def delete_all_objects(
-        self,
-        item: models.Item,
-    ) -> list[const.MEDIA_TYPE]:
-        """Delete all objects for given item."""
+    async def soft_delete(self, item: models.Item) -> list[const.MEDIA_TYPE]:
+        """Mark all objects as deleted."""
         deleted_types: list[const.MEDIA_TYPE] = []
-        now = utils.now()
 
-        # if item.content_ext:
-        #     await self.media.mark_file_as_orphan(
-        #         item=item,
-        #         media_type=const.CONTENT,
-        #         ext=item.content_ext,
-        #         moment=now,
-        #     )
-        #     deleted_types.append(const.CONTENT)
-        #
-        # if item.preview_ext:
-        #     await self.media.mark_file_as_orphan(
-        #         item=item,
-        #         media_type=const.PREVIEW,
-        #         ext=item.preview_ext,
-        #         moment=now,
-        #     )
-        #     deleted_types.append(const.PREVIEW)
-        #
-        # if item.thumbnail_ext:
-        #     await self.media.mark_file_as_orphan(
-        #         item=item,
-        #         media_type=const.THUMBNAIL,
-        #         ext=item.thumbnail_ext,
-        #         moment=now,
-        #     )
-        #     deleted_types.append(const.THUMBNAIL)
+        if item.content_ext:
+            pass
+            # TODO: create parallel operation for object renaming
+
+        if item.preview_ext:
+            pass
+            # TODO: create parallel operation for object renaming
+
+        if item.thumbnail_ext:
+            pass
+            # TODO: create parallel operation for object renaming
 
         return deleted_types
 
