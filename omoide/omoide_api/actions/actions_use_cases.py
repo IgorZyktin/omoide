@@ -72,7 +72,7 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
 
     affected_target = 'computed tags'
 
-    async def pre_execute(
+    async def execute(
         self,
         admin: models.User,
         user_uuid: UUID,
@@ -92,9 +92,9 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
                 owner,
             )
 
-            operation = so.UpdateTagsSO(
+            operation = so.RebuildItemTagsSO(
                 extras={
-                    'item_uuid': str(item.uuid),
+                    'item_id': item.id,
                     'apply_to_children': True,
                 },
             )

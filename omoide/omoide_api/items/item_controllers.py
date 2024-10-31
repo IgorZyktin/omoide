@@ -13,9 +13,9 @@ from fastapi import status
 from fastapi.responses import PlainTextResponse
 
 from omoide import dependencies as dep
+from omoide import limits
 from omoide import models
 from omoide.infra.mediator import Mediator
-import omoide.limits
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
@@ -34,7 +34,7 @@ async def api_create_item(
     response: Response,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    item_in: item_api_models.ItemInput,
+    item_in: common_api_models.ItemInput,
 ):
     """Get exising item."""
     use_case = item_use_cases.CreateItemsUseCase(mediator)
@@ -48,7 +48,7 @@ async def api_create_item(
 
     response.headers['Location'] = str(request.url_for('api_read_item', item_uuid=item.uuid))
 
-    return common_api_models.OneItemOutput(item=common_api_models.ItemOutput(**item.model_dump()))
+    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, {}))
 
 
 @api_items_router.post(
@@ -59,7 +59,7 @@ async def api_create_item(
 async def api_create_many_items(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    items_in: list[item_api_models.ItemInput],
+    items_in: list[common_api_models.ItemInput],
 ):
     """Get exising item."""
     use_case = item_use_cases.CreateItemsUseCase(mediator)
@@ -73,8 +73,7 @@ async def api_create_many_items(
         return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
-        duration=duration,
-        items=[common_api_models.ItemOutput(**item.model_dump(exclude={'id'})) for item in items],
+        duration=duration, items=common_api_models.convert_items(items, {})
     )
 
 
@@ -96,7 +95,7 @@ async def api_read_item(
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return common_api_models.OneItemOutput(item=common_api_models.ItemOutput(**item.model_dump()))
+    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, {}))
 
 
 @api_items_router.get(
@@ -109,19 +108,8 @@ async def api_read_many_items(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     owner_uuid: Annotated[UUID | None, Query()] = None,
     parent_uuid: Annotated[UUID | None, Query()] = None,
-    name: Annotated[
-        str | None,
-        Query(
-            max_length=omoide.limits.MAX_QUERY,
-        ),
-    ] = None,
-    limit: Annotated[
-        int,
-        Query(
-            ge=omoide.limits.MIN_LIMIT,
-            lt=omoide.limits.MAX_LIMIT,
-        ),
-    ] = omoide.limits.DEF_LIMIT,
+    name: Annotated[str | None, Query(max_length=limits.MAX_QUERY)] = None,
+    limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Get exising items."""
     use_case = item_use_cases.ReadManyItemsUseCase(mediator)
@@ -138,8 +126,7 @@ async def api_read_many_items(
         return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
-        duration=duration,
-        items=[common_api_models.ItemOutput(**item.model_dump()) for item in items],
+        duration=duration, items=common_api_models.convert_items(items, {})
     )
 
 
@@ -166,7 +153,7 @@ async def api_update_item(
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return {'result': f'Updated item {item_uuid}'}
+    return {'result': 'updated item', 'item_uuid': str(item_uuid)}
 
 
 @api_items_router.put(
@@ -193,7 +180,8 @@ async def api_rename_item(
         return web.raise_from_exc(exc)
 
     return {
-        'result': f'Renamed item {item_uuid}',
+        'result': 'enqueued name change',
+        'item_uuid': str(item_uuid),
         'operation_id': operation_id,
     }
 
@@ -222,7 +210,7 @@ async def api_change_parent_item(
         return web.raise_from_exc(exc)
 
     return {
-        'result': 'changed parent of the item',
+        'result': 'changed parent',
         'item_uuid': str(item_uuid),
         'new_parent_uuid': str(new_parent_uuid),
         'operation_id': operation_id,
@@ -253,7 +241,8 @@ async def api_update_item_tags(
         return web.raise_from_exc(exc)
 
     return {
-        'result': f'Changed tags of {item_uuid}',
+        'result': 'enqueued tags update',
+        'item_uuid': str(item_uuid),
         'operation_id': operation_id,
     }
 
@@ -266,7 +255,7 @@ async def api_update_item_tags(
 async def api_delete_item(
     item_uuid: UUID,
     how_to_delete: common_api_models.ItemDeleteInput,
-    owner: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Delete exising item."""
@@ -274,7 +263,7 @@ async def api_delete_item(
 
     try:
         item = await use_case.execute(
-            owner=owner,
+            user=user,
             item_uuid=item_uuid,
             desired_switch=how_to_delete.desired_switch,
         )
@@ -323,7 +312,7 @@ async def api_item_update_permissions(
         return web.raise_from_exc(exc)
 
     return {
-        'result': 'Enqueued permissions change',
+        'result': 'enqueued permissions change',
         'item_uuid': str(item_uuid),
         'apply_to_parents': permissions_in.apply_to_parents,
         'apply_to_children': permissions_in.apply_to_children,
@@ -362,7 +351,7 @@ async def api_upload_item_content(
         return web.raise_from_exc(exc)
 
     return {
-        'result': 'Enqueued content adding',
+        'result': 'enqueued content adding',
         'item_uuid': str(item_uuid),
     }
 
@@ -397,7 +386,7 @@ async def api_upload_item_preview(
         return web.raise_from_exc(exc)
 
     return {
-        'result': 'Enqueued preview adding',
+        'result': 'enqueued preview adding',
         'item_uuid': str(item_uuid),
     }
 
@@ -432,7 +421,7 @@ async def api_upload_item_thumbnail(
         return web.raise_from_exc(exc)
 
     return {
-        'result': 'Enqueued thumbnail adding',
+        'result': 'enqueued thumbnail adding',
         'item_uuid': str(item_uuid),
     }
 

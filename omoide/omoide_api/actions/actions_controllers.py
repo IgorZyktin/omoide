@@ -107,7 +107,7 @@ async def api_action_rebuild_computed_tags(
     use_case = actions_use_cases.RebuildComputedTagsUseCase(mediator)
 
     try:
-        owner, item, job_id = await use_case.pre_execute(admin, target.user_uuid)
+        owner, item, job_id = await use_case.execute(admin, target.user_uuid)
     except Exception as exc:
         return web.raise_from_exc(exc)
 

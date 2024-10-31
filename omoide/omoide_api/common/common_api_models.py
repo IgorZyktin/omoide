@@ -25,12 +25,12 @@ class ItemInput(BaseModel):
 
     uuid: UUID | None = None
     parent_uuid: UUID | None = None
-    owner_uuid: UUID | None = None
+    owner_uuid: UUID
     name: str = Field('', max_length=limits.MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    tags: list[str] = Field(set(), max_length=limits.MAX_TAGS)
-    permissions: list[UUID] = Field(set(), max_length=limits.MAX_PERMISSIONS)
+    tags: set[str] = Field(set(), max_length=limits.MAX_TAGS)
+    permissions: set[Permission] = Field(set(), max_length=limits.MAX_PERMISSIONS)
 
     @model_validator(mode='after')
     def check_tags(self) -> Self:
@@ -130,6 +130,11 @@ class ItemDeleteOutput(BaseModel):
     result: str
     item_uuid: str
     switch_to: ItemOutput | None
+
+
+def convert_item(item: models.Item, users: dict[int, models.User | None]) -> ItemOutput:
+    """Convert domain-level item into API format."""
+    return convert_items([item], users)[0]
 
 
 def convert_items(

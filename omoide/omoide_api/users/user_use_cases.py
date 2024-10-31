@@ -38,6 +38,9 @@ class CreateUserUseCase(BaseItemUseCase):
             is_public=False,
             registered_at=utils.now(),
             last_login=None,
+            timezone=None,
+            lang=None,
+            extras={},
         )
 
         encoded_password = self.mediator.authenticator.encode_password(

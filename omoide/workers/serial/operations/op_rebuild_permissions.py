@@ -12,12 +12,10 @@ from omoide.workers.serial.cfg import Config
 LOG = custom_logging.get_logger(__name__)
 
 
-class UpdatePermissionsExecutor(
-    op.SerialOperationExecutor[Config, WorkerMediator],
-):
+class RebuildPermissionsExecutor(op.SerialOperationExecutor[Config, WorkerMediator]):
     """Update permission for item."""
 
-    operation: so.UpdatePermissionsSO
+    operation: so.RebuildPermissionsSO
 
     async def execute(self) -> None:
         """Perform workload."""

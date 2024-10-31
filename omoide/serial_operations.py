@@ -116,11 +116,11 @@ class RebuildKnownTagsAllSO(SerialOperation):
 
 
 @dataclass
-class UpdatePermissionsSO(SerialOperation):
+class RebuildPermissionsSO(SerialOperation):
     """Update permission in item and all dependant objects."""
 
-    name: str = 'update_permissions'
-    goal: str = 'update permissions for item'
+    name: str = 'rebuild_permissions'
+    goal: str = 'rebuild permissions for item'
 
     @cached_property
     def item_id(self) -> int:
@@ -159,11 +159,11 @@ class UpdatePermissionsSO(SerialOperation):
 
 
 @dataclass
-class UpdateTagsSO(SerialOperation):
+class RebuildItemTagsSO(SerialOperation):
     """Update tags for given item and maybe all children."""
 
-    name: str = 'update_tags'
-    goal: str = 'update tags for item'
+    name: str = 'rebuild_item_tags'
+    goal: str = 'rebuild tags for item'
 
     @cached_property
     def item_id(self) -> int:
@@ -174,6 +174,21 @@ class UpdateTagsSO(SerialOperation):
     def apply_to_children(self) -> bool:
         """Extract from extras."""
         return bool(self.extras['apply_to_children'])
+
+    @cached_property
+    def apply_to_owner(self) -> bool:
+        """Extract from extras."""
+        return bool(self.extras['apply_to_owner'])
+
+    @cached_property
+    def apply_to_permissions(self) -> bool:
+        """Extract from extras."""
+        return bool(self.extras['apply_to_permissions'])
+
+    @cached_property
+    def apply_to_anon(self) -> bool:
+        """Extract from extras."""
+        return bool(self.extras['apply_to_anon'])
 
 
 @dataclass

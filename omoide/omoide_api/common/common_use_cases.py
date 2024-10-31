@@ -1,5 +1,6 @@
 """Common use case elements."""
 
+from typing import Any
 from uuid import UUID
 from uuid import uuid4
 
@@ -144,16 +145,16 @@ class BaseItemUseCase(BaseAPIUseCase):
 
     async def create_one_item(
         self,
-        conn,
+        conn: Any,  # TODO - find a way to skip this argument
         user: models.User,
         uuid: UUID | None,
         parent_uuid: UUID | None,
-        owner_uuid: UUID | None,
+        owner_uuid: UUID,
         name: str,
         number: int | None,
         is_collection: bool,
         tags: set[str],
-        permissions: set[int],
+        permissions: set[dict[str, UUID | str]],
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -163,7 +164,7 @@ class BaseItemUseCase(BaseAPIUseCase):
 
         msg = 'You are not allowed to create items for other users'
 
-        if owner_uuid is not None and owner_uuid != user.uuid:
+        if owner_uuid != user.uuid:
             raise exceptions.NotAllowedError(msg)
 
         if parent_uuid is None:
@@ -173,6 +174,12 @@ class BaseItemUseCase(BaseAPIUseCase):
             if parent.owner_uuid != user.uuid:
                 raise exceptions.NotAllowedError(msg)
 
+        _permissions: set[int] = set()
+        for each in permissions:
+            user_uuid = each['uuid']
+            user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+            _permissions.add(user.id)
+
         item = models.Item(
             id=-1,
             uuid=valid_uuid,
@@ -181,13 +188,15 @@ class BaseItemUseCase(BaseAPIUseCase):
             owner_id=parent.owner_id,
             owner_uuid=parent.owner_uuid,
             name=name,
+            status=models.Status.CREATED,
             number=number or -1,
             is_collection=is_collection,
             content_ext=None,
             preview_ext=None,
             thumbnail_ext=None,
             tags=tags,
-            permissions=permissions,
+            permissions=_permissions,
+            extras={},
         )
 
         metainfo = models.Metainfo(
