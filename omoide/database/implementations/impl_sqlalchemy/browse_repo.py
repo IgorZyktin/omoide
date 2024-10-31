@@ -1,10 +1,7 @@
 """Browse repository."""
 
-from collections.abc import Collection
 
 import sqlalchemy as sa
-from sqlalchemy import cast
-from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import const
@@ -40,7 +37,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
             query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def browse_direct_anon(
         self,
@@ -53,9 +50,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
         query = sa.select(db_models.Item).where(
-            db_models.Item.owner_id.in_(
-                sa.select(db_models.User.id).where(db_models.User.is_public)
-            ),
+            queries.item_is_public(),
             db_models.Item.parent_id == item.id,
         )
 
@@ -66,7 +61,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def browse_direct_known(
         self,
@@ -81,9 +76,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         """Find items to browse depending on parent (only direct)."""
         query = sa.select(db_models.Item).where(
             sa.or_(
-                db_models.Item.owner_id.in_(
-                    sa.select(db_models.User.id).where(db_models.User.is_public)
-                ),
+                queries.item_is_public(),
                 db_models.Item.owner_id == user.id,
                 db_models.Item.permissions.any(user.id),
             ),
@@ -97,7 +90,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def browse_related_anon(
         self,
@@ -185,7 +178,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def browse_related_known(
         self,
@@ -277,7 +270,7 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def get_recently_updated_items(
         self,
@@ -353,4 +346,4 @@ class BrowseRepo(AbsBrowseRepo[AsyncConnection]):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]

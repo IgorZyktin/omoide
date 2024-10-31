@@ -1,8 +1,5 @@
 """Use cases that process requests for home pages."""
 
-import time
-from typing import Any
-
 from omoide import const
 from omoide import models
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
@@ -19,10 +16,8 @@ class ApiHomeUseCase(BaseAPIUseCase):
         direct: bool,
         last_seen: int,
         limit: int,
-    ) -> tuple[float, list[models.Item], list[dict[str, Any]]]:
+    ) -> list[models.Item]:
         """Perform search request."""
-        start = time.perf_counter()
-
         async with self.mediator.database.transaction() as conn:
             if user.is_anon:
                 items = await self.mediator.search.get_home_items_for_anon(
@@ -45,8 +40,4 @@ class ApiHomeUseCase(BaseAPIUseCase):
                     limit=limit,
                 )
 
-            names = await self.mediator.items.get_parent_names(conn, items)
-
-        duration = time.perf_counter() - start
-
-        return duration, items, [{'parent_name': names.get(item.parent_id)} for item in items]
+        return items

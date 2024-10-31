@@ -1,9 +1,9 @@
 """Domain-level models."""
 
+import abc
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
-from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
@@ -15,14 +15,51 @@ from omoide import const
 from omoide import utils
 
 
-@dataclass
-class ModelMixin:
-    """Mixin that adds functionality similar to pydantic."""
+class OmoideModelBase(abc.ABC):
+    """Super base class, needed only to set one attribute."""
+
+    def __init__(self) -> None:
+        """Initialize instance."""
+        self._changes: set[str] = set()
+
+
+class OmoideModel(abc.ABC):
+    """Base class for all Omoide models."""
+
+    _ignore_changes: frozenset[str] = frozenset()
+    _changes: set[str] = set()
+
+    def __post_init__(self) -> None:
+        """Clear all newly set attributes."""
+        self._changes.clear()
+
+    def __setattr__(self, attr: str, value: Any) -> None:
+        """Set attribute and track changes."""
+        if attr != '_changes':
+            _changes = self.__dict__.setdefault('_changes', set())
+            _changes.add(attr)
+        super().__setattr__(attr, value)
+
+    def what_changed(self) -> frozenset[str]:
+        """Return changed attributes."""
+        return frozenset(self._changes)
+
+    def get_changes(self, ignore_changes: Collection[str] = ()) -> dict[str, Any]:
+        """Return changed attributes."""
+        ignore_changes = ignore_changes or self._ignore_changes
+        return {key: getattr(self, key) for key in self._changes if key not in ignore_changes}
+
+    def mark_changed(self, key: str) -> None:
+        """Store the fact that this attribute has changed."""
+        self._changes.add(key)
+
+    def reset_changes(self) -> None:
+        """Clear all changed attributes."""
+        self._changes.clear()
 
     def model_dump(self, exclude: set[str] | None = None) -> dict[str, Any]:
         """Convert model to dictionary."""
         dump = asdict(self)
-
         if not exclude:
             return dump
 
@@ -32,36 +69,10 @@ class ModelMixin:
             if key not in exclude and not key.startswith('_')
         }
 
-
-@dataclass
-class ChangesMixin:
-    """Mixin that tracks changes in its attributes."""
-
-    _changes: set[str] = field(default_factory=set)
-    _ignore_changes: tuple[str] = ('id',)
-
-    def __post_init__(self) -> None:
-        """Clear all newly set attributes."""
-        self.reset_changes()
-
-    def __setattr__(self, attr: str, value: Any) -> None:
-        """Set attribute and track changes."""
-        if attr != '_changes':
-            self._changes.add(attr)
-        super().__setattr__(attr, value)
-
-    def what_changed(self, ignore_fields: Collection[str] = ()) -> dict[str, Any]:
-        """Return changed attributes."""
-        ignore = ignore_fields or self._ignore_changes
-        return {key: getattr(self, key) for key in self._changes if key not in ignore}
-
-    def mark_changed(self, key: str) -> None:
-        """Store the fact that this attribute has changed."""
-        self._changes.add(key)
-
-    def reset_changes(self) -> None:
-        """Clear all changed attributes."""
-        self._changes.clear()
+    @classmethod
+    @abc.abstractmethod
+    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+        """Create instance from arbitrary object."""
 
 
 class Role(enum.IntEnum):
@@ -73,7 +84,7 @@ class Role(enum.IntEnum):
 
 
 @dataclass
-class User(ModelMixin):
+class User(OmoideModel):
     """User model."""
 
     id: int
@@ -84,19 +95,24 @@ class User(ModelMixin):
     is_public: bool
     registered_at: datetime
     last_login: datetime | None
+    timezone: str | None
+    lang: str | None
+
+    extras: dict[str, Any]  # ephemeral attribute
+
+    _ignore_changes: frozenset[str] = frozenset(('id', 'uuid'))
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
-        return bool(self.id == getattr(other, 'id', None))
+        return bool(self.uuid == getattr(other, 'uuid', None))
 
     def __hash__(self) -> int:
         """Return hash of UUID."""
-        return hash(self.id)
+        return hash(self.uuid)
 
     def __str__(self) -> str:
         """Return textual representation."""
-        name = type(self).__name__
-        return f'<{name} {self.id} {self.uuid} {self.name}>'
+        return f'<User id={self.id} {self.uuid} {self.name}>'
 
     @property
     def is_admin(self) -> bool:
@@ -118,12 +134,6 @@ class User(ModelMixin):
         """Return True if user is registered one."""
         return self.role is not Role.ANON
 
-    @property
-    def timezone(self) -> None:
-        """Return timezone for this user."""
-        # TODO - add timezone to users
-        return None
-
     @classmethod
     def new_anon(cls) -> Self:
         """Return new anon user."""
@@ -136,6 +146,26 @@ class User(ModelMixin):
             is_public=False,
             registered_at=utils.now(),
             last_login=None,
+            timezone=None,
+            lang=None,
+            extras={},
+        )
+
+    @classmethod
+    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+        """Create instance from arbitrary object."""
+        return cls(
+            id=obj.id,
+            uuid=obj.uuid,
+            name=obj.name,
+            login=obj.login,
+            role=obj.role,
+            is_public=obj.is_public,
+            registered_at=obj.registered_at,
+            last_login=obj.last_login,
+            timezone=None,  # TODO - actually use it
+            lang=None,  # TODO - actually use it
+            extras=extras or {},
         )
 
 
@@ -150,7 +180,7 @@ class Status(enum.IntEnum):
 
 
 @dataclass
-class Item(ModelMixin):
+class Item(OmoideModel):
     """Standard item."""
 
     id: int
@@ -165,9 +195,13 @@ class Item(ModelMixin):
     content_ext: str | None
     preview_ext: str | None
     thumbnail_ext: str | None
-    status: Status = Status.AVAILABLE  # TODO - make it mandatory
-    tags: set[str] = field(default_factory=set)
-    permissions: set[int] = field(default_factory=set)
+    status: Status
+    tags: set[str]
+    permissions: set[int]
+
+    extras: dict[str, Any]  # ephemeral attribute
+
+    _ignore_changes: frozenset[str] = frozenset(('id', 'uuid'))
 
     def __eq__(self, other: object) -> bool:
         """Return True if other has the same UUID."""
@@ -179,10 +213,9 @@ class Item(ModelMixin):
 
     def __str__(self) -> str:
         """Return textual representation."""
-        name = type(self).__name__
         if self.name:
-            return f'<{name} {self.uuid} {self.name}>'
-        return f'<{name} {self.uuid}>'
+            return f'<Item id={self.id} {self.uuid} {self.name}>'
+        return f'<Item id={self.id} {self.uuid}>'
 
     def get_computed_tags(self, parent_tags: set[str]) -> set[str]:
         """Return computed tags.
@@ -205,8 +238,20 @@ class Item(ModelMixin):
         return computed_tags
 
     @classmethod
-    def cast(cls, obj: Any) -> Self:
-        """Convert to domain-level object."""
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        if extras is not None:
+            _extras = extras
+        elif extra_keys:
+            _extras = {key: getattr(obj, key) for key in extra_keys}
+        else:
+            _extras = {}
+
         return cls(
             id=obj.id,
             uuid=obj.uuid,
@@ -220,13 +265,15 @@ class Item(ModelMixin):
             content_ext=obj.content_ext,
             preview_ext=obj.preview_ext,
             thumbnail_ext=obj.thumbnail_ext,
+            status=obj.status,
             tags=set(obj.tags),
             permissions=set(obj.permissions),
+            extras=_extras,
         )
 
 
-@dataclass(kw_only=True)
-class Metainfo(ModelMixin, ChangesMixin):
+@dataclass
+class Metainfo(OmoideModel):
     """Metainfo for item."""
 
     item_id: int
@@ -249,9 +296,31 @@ class Metainfo(ModelMixin, ChangesMixin):
     thumbnail_width: int | None
     thumbnail_height: int | None
 
+    @classmethod
+    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extras
+        return cls(
+            item_id=obj.item_id,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            deleted_at=obj.deleted_at,
+            user_time=obj.user_time,
+            content_type=obj.content_type,
+            content_size=obj.content_size,
+            preview_size=obj.preview_size,
+            thumbnail_size=obj.thumbnail_size,
+            content_width=obj.content_width,
+            content_height=obj.content_height,
+            preview_width=obj.preview_width,
+            preview_height=obj.preview_height,
+            thumbnail_width=obj.thumbnail_width,
+            thumbnail_height=obj.thumbnail_height,
+        )
+
 
 @dataclass
-class Media(ModelMixin):
+class Media(OmoideModel):
     """Transient content fot the item."""
 
     id: int
@@ -264,9 +333,27 @@ class Media(ModelMixin):
     content: bytes
     ext: str
 
+    _ignore_changes: frozenset[str] = frozenset(('id',))
+
+    @classmethod
+    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extras
+        return cls(
+            id=obj.id,
+            created_at=obj.created_at,
+            processed_at=obj.processed_at,
+            error=obj.error,
+            owner_uuid=obj.owner_uuid,
+            item_uuid=obj.item_uuid,
+            media_type=obj.media_type,
+            content=obj.content,
+            ext=obj.ext,
+        )
+
 
 @dataclass
-class SpaceUsage(ModelMixin):
+class SpaceUsage:
     """Total size of user data for specific user."""
 
     uuid: UUID
@@ -321,7 +408,7 @@ class SpaceUsage(ModelMixin):
 
 
 @dataclass
-class DiskUsage(ModelMixin):
+class DiskUsage:
     """Total disk usage of a specific user."""
 
     content_bytes: int
@@ -345,7 +432,7 @@ class DiskUsage(ModelMixin):
 
 
 @dataclass
-class ResourceUsage(ModelMixin):
+class ResourceUsage:
     """Total resource usage for specific user."""
 
     user_uuid: UUID

@@ -101,21 +101,7 @@ class User(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<User, id={self.id}, {self.uuid}, {self.name}>'
-
-    @staticmethod
-    def cast(row: sa.Row) -> models.User:
-        """Convert to domain-level object."""
-        return models.User(
-            id=row.id,
-            uuid=row.uuid,
-            name=row.name,
-            login=row.login,
-            role=row.role,
-            is_public=row.is_public,
-            registered_at=row.registered_at,
-            last_login=row.last_login,
-        )
+        return f'<DB User id={self.id} {self.uuid} {self.name}>'
 
 
 class PublicUsers(Base):
@@ -324,7 +310,9 @@ class Item(Base):
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f'<Item, id={self.id}, {self.uuid}, {self.name!r}>'
+        if self.name:
+            return f'<DB Item, id={self.id} {self.uuid} {self.name!r}>'
+        return f'<DB Item, id={self.id} {self.uuid}>'
 
     # relations ---------------------------------------------------------------
 

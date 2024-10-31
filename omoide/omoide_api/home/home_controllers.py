@@ -1,5 +1,6 @@
 """API operations that return detailed info on specific item groups."""
 
+import time
 from typing import Annotated
 
 from fastapi import APIRouter
@@ -9,7 +10,6 @@ from fastapi import Query
 from omoide import const
 from omoide import dependencies as dep
 from omoide import models
-from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.home import home_use_cases
@@ -40,9 +40,10 @@ async def api_home(
 
     Combined collections of all available users.
     """
+    start = time.perf_counter()
     use_case = home_use_cases.ApiHomeUseCase(mediator)
 
-    duration, items, extras = await use_case.execute(
+    items = await use_case.execute(
         user=user,
         order=order,
         collections=collections,
@@ -51,13 +52,9 @@ async def api_home(
         limit=limit,
     )
 
-    return common_api_models.ManyItemsOutput(
-        duration=duration,
-        items=[
-            common_api_models.ItemOutput(
-                **utils.serialize(item.model_dump()),
-                extras=utils.serialize(item_extras),
-            )
-            for item, item_extras in zip(items, extras, strict=False)
-        ],
+    response = common_api_models.ManyItemsOutput(
+        duration=0.0,
+        items=[common_api_models.ItemOutput(**item.model_dump()) for item in items],
     )
+    response.duration = time.perf_counter() - start
+    return response

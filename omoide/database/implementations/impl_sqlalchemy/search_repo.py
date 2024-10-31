@@ -4,6 +4,7 @@ import abc
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.orm import aliased
 from sqlalchemy.sql import Select
 
 from omoide import const
@@ -46,6 +47,38 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
             query = query.where(db_models.Item.is_collection == sa.true())
 
         return query
+
+    @staticmethod
+    async def _home_base(
+        conn: AsyncConnection,
+        condition: sa.BinaryExpression | sa.BooleanClauseList,
+        order: const.ORDER_TYPE,
+        collections: bool,
+        direct: bool,
+        last_seen: int,
+        limit: int,
+    ) -> list[models.Item]:
+        """Return home items (generic)."""
+        parents = aliased(db_models.Item)
+
+        # NOTE - extract items + their parent names in one go
+        query = (
+            sa.select(db_models.Item, parents.name.label('parent_name'))
+            .where(condition)
+            .join(parents, parents.id == db_models.Item.parent_id)
+        )
+
+        if collections:
+            query = query.where(db_models.Item.is_collection == sa.true())
+
+        if direct:
+            query = query.where(db_models.Item.parent_id == sa.null())
+
+        query = queries.apply_order(query, order, last_seen)
+        query = query.limit(limit)
+
+        response = (await conn.execute(query)).fetchall()
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
 
 class SearchRepo(_SearchRepositoryBase):
@@ -104,7 +137,7 @@ class SearchRepo(_SearchRepositoryBase):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def get_home_items_for_anon(
         self,
@@ -116,20 +149,8 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for anon."""
-        public_users = sa.select(db_models.User.id).where(db_models.User.is_public)
-        query = sa.select(db_models.Item).where(db_models.Item.owner_id.in_(public_users))
-
-        if collections:
-            query = query.where(db_models.Item.is_collection == sa.true())
-
-        if direct:
-            query = query.where(db_models.Item.parent_id == sa.null())
-
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
-
-        response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        condition = queries.item_is_public()
+        return await self._home_base(conn, condition, order, collections, direct, last_seen, limit)
 
     async def get_home_items_for_known(
         self,
@@ -142,24 +163,11 @@ class SearchRepo(_SearchRepositoryBase):
         limit: int,
     ) -> list[models.Item]:
         """Return home items for known user."""
-        query = sa.select(db_models.Item).where(
-            sa.or_(
-                db_models.Item.owner_id == user.id,
-                db_models.Item.permissions.any(user.id),
-            )
+        condition = sa.or_(
+            db_models.Item.owner_id == user.id,
+            db_models.Item.permissions.any(user.id),
         )
-
-        if collections:
-            query = query.where(db_models.Item.is_collection == sa.true())
-
-        if direct:
-            query = query.where(db_models.Item.parent_id == sa.null())
-
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
-
-        response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return await self._home_base(conn, condition, order, collections, direct, last_seen, limit)
 
     async def count_all_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
         """Return counters for known tags (anon user)."""

@@ -8,9 +8,14 @@ from omoide import models
 from omoide.database import db_models
 
 
-def public_user_uuids() -> Select:
-    """Select public user uuids."""
+def public_user_ids() -> Select:
+    """Select public user ids."""
     return sa.select(db_models.User.id).where(db_models.User.is_public)
+
+
+def item_is_public() -> sa.BinaryExpression:
+    """Return condition that check that owner of the item is public."""
+    return db_models.Item.owner_id.in_(public_user_ids())
 
 
 def ensure_registered_user_has_permissions(
@@ -30,9 +35,7 @@ def ensure_anon_user_has_permissions(
     stmt: Select,
 ) -> Select:
     """Ensure that anon user has permission to access this."""
-    return stmt.where(
-        db_models.Item.owner_id.in_(public_user_uuids())
-    )
+    return stmt.where(db_models.Item.owner_id.in_(public_user_ids()))
 
 
 def ensure_user_has_permissions(

@@ -55,7 +55,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             msg = 'User with ID {user_id} does not exist'
             raise exceptions.DoesNotExistError(msg, user_id=user_id)
 
-        return db_models.User.cast(response)
+        return models.User.from_obj(response)
 
     async def get_by_uuid(self, conn: AsyncConnection, uuid: UUID) -> models.User:
         """Return User with given UUID."""
@@ -66,7 +66,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             msg = 'User with UUID {user_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, user_uuid=uuid)
 
-        return db_models.User.cast(response)
+        return models.User.from_obj(response)
 
     async def get_by_login(
         self,
@@ -80,7 +80,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         if response is None:
             return None
 
-        user = db_models.User.cast(response)
+        user = models.User.from_obj(response)
         return user, response.password, response.auth_complexity
 
     async def select(
@@ -117,7 +117,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [db_models.User.cast(row) for row in response]
+        return [models.User.from_obj(row) for row in response]
 
     async def save(self, conn: AsyncConnection, user: models.User) -> bool:
         """Save given user."""
@@ -163,7 +163,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             msg = 'User {user_uuid} has no root item'
             raise exceptions.DoesNotExistError(msg, user_uuid=user.uuid)
 
-        return models.Item.cast(response)
+        return models.Item.from_obj(response)
 
     async def get_all_root_items(
         self,
@@ -179,7 +179,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             )
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def calc_total_space_used_by(
         self,

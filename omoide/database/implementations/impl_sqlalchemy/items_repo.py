@@ -1,11 +1,12 @@
 """Repository that performs operations on items."""
+
 from collections.abc import Collection
 from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
@@ -60,7 +61,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with ID {item_id} does not exist'
             raise exceptions.DoesNotExistError(msg, item_id=item_id)
 
-        return models.Item.cast(response)
+        return models.Item.from_obj(response)
 
     async def get_by_uuid(
         self,
@@ -75,7 +76,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with UUID {item_uuid} does not exist'
             raise exceptions.DoesNotExistError(msg, item_uuid=uuid)
 
-        return models.Item.cast(response)
+        return models.Item.from_obj(response)
 
     async def get_by_name(self, conn: AsyncConnection, name: str) -> models.Item:
         """Return Item with given name."""
@@ -86,7 +87,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             msg = 'Item with name {name!r} does not exist'
             raise exceptions.DoesNotExistError(msg, name=name)
 
-        return models.Item.cast(response)
+        return models.Item.from_obj(response)
 
     async def get_children(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of children for given item."""
@@ -96,7 +97,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             .order_by(db_models.Item.id)
         )
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def count_children(self, conn: AsyncConnection, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
@@ -121,7 +122,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             if raw_parent is None:
                 break
 
-            parent = models.Item.cast(raw_parent)
+            parent = models.Item.from_obj(raw_parent)
             parents.append(parent)
             parent_uuid = parent.parent_uuid
 
@@ -136,7 +137,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         )
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def get_items_anon(
         self,
@@ -148,9 +149,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     ) -> list[models.Item]:
         """Return Items."""
         query = sa.select(db_models.Item).where(
-            db_models.Item.owner_id.in_(
-                sa.select(db_models.User.id).where(db_models.User.is_public)
-            )
+            queries.item_is_public()
         )
 
         if parent_uuid is not None:
@@ -165,7 +164,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def get_items_known(
         self,
@@ -181,9 +180,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             sa.or_(
                 db_models.Item.permissions.any(user.id),
                 db_models.Item.owner_id == user.id,
-                db_models.Item.owner_id.in_(
-                    sa.select(db_models.User.id).where(db_models.User.is_public)
-                ),
+                queries.item_is_public(),
             )
         )
 
@@ -199,7 +196,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.cast(row) for row in response]
+        return [models.Item.from_obj(row) for row in response]
 
     async def check_child(
         self,
