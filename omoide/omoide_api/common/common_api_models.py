@@ -25,7 +25,6 @@ class ItemInput(BaseModel):
 
     uuid: UUID | None = None
     parent_uuid: UUID | None = None
-    owner_uuid: UUID
     name: str = Field('', max_length=limits.MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False

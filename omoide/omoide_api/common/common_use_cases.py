@@ -149,7 +149,6 @@ class BaseItemUseCase(BaseAPIUseCase):
         user: models.User,
         uuid: UUID | None,
         parent_uuid: UUID | None,
-        owner_uuid: UUID,
         name: str,
         number: int | None,
         is_collection: bool,
@@ -163,9 +162,6 @@ class BaseItemUseCase(BaseAPIUseCase):
             valid_uuid = uuid
 
         msg = 'You are not allowed to create items for other users'
-
-        if owner_uuid != user.uuid:
-            raise exceptions.NotAllowedError(msg)
 
         if parent_uuid is None:
             parent = await self.mediator.users.get_root_item(conn, user)
