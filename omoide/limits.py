@@ -1,5 +1,7 @@
 """Global limitation constants."""
 
+from omoide import utils
+
 # Search query
 DEF_QUERY = ''
 MIN_QUERY = 2
@@ -18,5 +20,24 @@ DEF_LAST_SEEN = -1
 MIN_AUTOCOMPLETE = 2
 AUTOCOMPLETE_LIMIT = 10
 
+# Items
+MAX_ITEM_FIELD_LENGTH = 256
+MAX_TAGS = 100
+MAX_PERMISSIONS = 100
+
 # EXIF
-MAXIMUM_EXIF_SIZE = 1024 * 1024 * 5  # 5 MiB
+MAX_EXIF_SIZE = 1024 * 1024 * 5  # 5 MiB
+MAX_EXIF_SIZE_HR = utils.human_readable_size(MAX_EXIF_SIZE)
+
+# Media
+MAX_MEDIA_SIZE = 1024 * 1024 * 50  # 50 MiB
+MAX_MEDIA_SIZE_HR = utils.human_readable_size(MAX_MEDIA_SIZE)
+
+SUPPORTED_EXTENSION = frozenset(
+    (
+        'jpg',
+        'jpeg',
+        'png',
+        'webp',
+    )
+)

@@ -3,63 +3,13 @@
 import base64
 import math
 from typing import Self
-from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
 from omoide import const
-from omoide import utils
-
-MAX_MEDIA_SIZE = 52_428_800
-MAX_MEDIA_SIZE_HR = utils.human_readable_size(MAX_MEDIA_SIZE)
-
-SUPPORTED_EXTENSION = frozenset(
-    (
-        'jpg',
-        'jpeg',
-        'png',
-        'webp',
-    )
-)
-
-MAX_ITEM_FIELD_LENGTH = 256
-MAX_TAGS = 100
-MAX_PERMISSIONS = 100
-
-
-class ItemInput(BaseModel):
-    """Input info for item creation."""
-
-    uuid: UUID | None = None
-    parent_uuid: UUID | None = None
-    owner_uuid: UUID | None = None
-    name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
-    number: int | None = None
-    is_collection: bool = False
-    tags: set[str] = Field(set(), max_length=MAX_TAGS)
-    permissions: set[UUID] = Field(set(), max_length=MAX_PERMISSIONS)
-
-    @model_validator(mode='after')
-    def check_tags(self) -> Self:
-        """Raise if tag is too big."""
-        for tag in self.tags:
-            if len(tag) > MAX_ITEM_FIELD_LENGTH:
-                msg = (
-                    f'Tag is too long ({len(tag)} symbols), '
-                    f'max allowed length is {MAX_ITEM_FIELD_LENGTH} symbols'
-                )
-                raise ValueError(msg)
-        return self
-
-    @model_validator(mode='after')
-    def ensure_collection_has_name(self) -> Self:
-        """Raise if got nameless collection."""
-        if self.is_collection and not self.name:
-            msg = 'Collection must have a name'
-            raise ValueError(msg)
-        return self
+from omoide import limits
 
 
 class ItemUpdateInput(BaseModel):
@@ -71,22 +21,22 @@ class ItemUpdateInput(BaseModel):
 class ItemRenameInput(BaseModel):
     """Input info for item rename."""
 
-    name: str = Field('', max_length=MAX_ITEM_FIELD_LENGTH)
+    name: str = Field('', max_length=limits.MAX_ITEM_FIELD_LENGTH)
 
 
 class ItemUpdateTagsInput(BaseModel):
     """Input info for item tags update."""
 
-    tags: set[str] = Field([], max_length=MAX_TAGS)
+    tags: set[str] = Field([], max_length=limits.MAX_TAGS)
 
     @model_validator(mode='after')
     def check_tags(self) -> Self:
         """Raise if tag is too big."""
         for tag in self.tags:
-            if len(tag) > MAX_ITEM_FIELD_LENGTH:
+            if len(tag) > limits.MAX_ITEM_FIELD_LENGTH:
                 msg = (
                     f'Tag is too long ({len(tag)} symbols), '
-                    f'max allowed length is {MAX_ITEM_FIELD_LENGTH} symbols'
+                    f'max allowed length is {limits.MAX_ITEM_FIELD_LENGTH} symbols'
                 )
                 raise ValueError(msg)
         return self
@@ -101,16 +51,16 @@ class MediaInput(BaseModel):
     @model_validator(mode='after')
     def check_extension(self) -> Self:
         """Raise if we do not support this extension."""
-        if self.ext.lower() not in SUPPORTED_EXTENSION:
-            msg = 'Unsupported extension, ' f'must be one of {sorted(SUPPORTED_EXTENSION)}'
+        if self.ext.lower() not in limits.SUPPORTED_EXTENSION:
+            msg = f'Unsupported extension, must be one of {sorted(limits.SUPPORTED_EXTENSION)}'
             raise ValueError(msg)
         return self
 
     @model_validator(mode='after')
     def check_size(self) -> Self:
         """Raise if content is too big."""
-        if self.expected_binary_size > MAX_MEDIA_SIZE:
-            msg = 'Sent content is too big, ' f'maximum allowed size is {MAX_MEDIA_SIZE_HR}'
+        if self.expected_binary_size > limits.MAX_MEDIA_SIZE:
+            msg = 'Sent content is too big, ' f'maximum allowed size is {limits.MAX_MEDIA_SIZE_HR}'
             raise ValueError(msg)
         return self
 

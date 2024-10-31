@@ -8,8 +8,6 @@ from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
-from omoide import serial_operations as so
-
 
 LOG = custom_logging.get_logger(__name__)
 

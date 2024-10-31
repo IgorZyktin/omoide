@@ -2,10 +2,14 @@
 
 from typing import Any
 from typing import Literal
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel
+from pydantic import Field
+from pydantic import model_validator
 
+from omoide import limits
 from omoide import models
 
 
@@ -14,6 +18,39 @@ class Permission(BaseModel):
 
     uuid: UUID
     name: str
+
+
+class ItemInput(BaseModel):
+    """Input info for item creation."""
+
+    uuid: UUID | None = None
+    parent_uuid: UUID | None = None
+    owner_uuid: UUID | None = None
+    name: str = Field('', max_length=limits.MAX_ITEM_FIELD_LENGTH)
+    number: int | None = None
+    is_collection: bool = False
+    tags: list[str] = Field(set(), max_length=limits.MAX_TAGS)
+    permissions: list[UUID] = Field(set(), max_length=limits.MAX_PERMISSIONS)
+
+    @model_validator(mode='after')
+    def check_tags(self) -> Self:
+        """Raise if tag is too big."""
+        for tag in self.tags:
+            if len(tag) > limits.MAX_ITEM_FIELD_LENGTH:
+                msg = (
+                    f'Tag is too long ({len(tag)} symbols), '
+                    f'max allowed length is {limits.MAX_ITEM_FIELD_LENGTH} symbols'
+                )
+                raise ValueError(msg)
+        return self
+
+    @model_validator(mode='after')
+    def ensure_collection_has_name(self) -> Self:
+        """Raise if got nameless collection."""
+        if self.is_collection and not self.name:
+            msg = 'Collection must have a name'
+            raise ValueError(msg)
+        return self
 
 
 class ItemOutput(BaseModel):
