@@ -61,7 +61,7 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
         stmt = (
             sa.update(db_models.Metainfo)
             .where(db_models.Metainfo.item_id == metainfo.item_id)
-            .values(**metainfo.what_changed())
+            .values(**metainfo.get_changes())
             .returning(1)
         )
 

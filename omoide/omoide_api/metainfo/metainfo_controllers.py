@@ -50,3 +50,25 @@ async def api_read_metainfo(
             exclude={'created_at', 'updated_at', 'deleted_at', 'user_time'},
         ),
     )
+
+
+@api_metainfo_router.put(
+    '/{item_uuid}',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, str],
+)
+async def api_update_metainfo(
+    item_uuid: UUID,
+    metainfo_input: metainfo_api_models.MetainfoInput,
+    user: Annotated[models.User, Depends(dep.get_known_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Update metainfo entry."""
+    use_case = metainfo_use_cases.UpdateMetainfoUseCase(mediator)
+
+    try:
+        await use_case.execute(user, item_uuid, **metainfo_input.model_dump())
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    return {'result': 'updated metainfo', 'item_uuid': str(item_uuid)}

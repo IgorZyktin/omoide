@@ -243,22 +243,14 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
     async def save(self, conn: AsyncConnection, item: models.Item) -> bool:
         """Save the given item."""
-        stmt = (
-            sa.update(db_models.Item)
-            .values(
-                parent_uuid=item.parent_uuid,
-                name=item.name,
-                status=item.status.value,
-                number=item.number,
-                is_collection=item.is_collection,
-                content_ext=item.content_ext,
-                preview_ext=item.preview_ext,
-                thumbnail_ext=item.thumbnail_ext,
-                tags=tuple(item.tags),
-                permissions=tuple(str(x) for x in item.permissions),
-            )
-            .where(db_models.Item.id == item.id)
-        )
+        changes = item.get_changes()
+        if 'tags' in changes:
+            changes['tags'] = tuple(changes['tags'])
+
+        if 'permissions' in changes:
+            changes['permissions'] = tuple(changes['permissions'])
+
+        stmt = sa.update(db_models.Item).values(**changes).where(db_models.Item.id == item.id)
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 

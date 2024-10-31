@@ -51,13 +51,10 @@ class OmoideModel(abc.ABC):
 
     def model_dump(self, exclude: set[str] | None = None) -> dict[str, Any]:
         """Convert model to dictionary."""
-        dump = asdict(self)
-        if not exclude:
-            return dump
-
+        exclude = exclude or set()
         return {
             key: value
-            for key, value in dump.items()
+            for key, value in asdict(self).items()
             if key not in exclude and not key.startswith('_')
         }
 
@@ -288,6 +285,8 @@ class Metainfo(OmoideModel):
     thumbnail_width: int | None
     thumbnail_height: int | None
 
+    _ignore_changes: frozenset[str] = frozenset(('item_id',))
+
     @classmethod
     def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
         """Create instance from arbitrary object."""
@@ -319,8 +318,8 @@ class Media(OmoideModel):
     created_at: datetime
     processed_at: datetime | None
     error: str | None
-    owner_uuid: UUID
-    item_uuid: UUID
+    owner_id: int
+    item_id: int
     media_type: str
     content: bytes
     ext: str
@@ -336,8 +335,8 @@ class Media(OmoideModel):
             created_at=obj.created_at,
             processed_at=obj.processed_at,
             error=obj.error,
-            owner_uuid=obj.owner_uuid,
-            item_uuid=obj.item_uuid,
+            owner_id=obj.owner_id,
+            item_id=obj.item_id,
             media_type=obj.media_type,
             content=obj.content,
             ext=obj.ext,

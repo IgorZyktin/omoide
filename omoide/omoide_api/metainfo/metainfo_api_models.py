@@ -1,6 +1,47 @@
 """Web level API models."""
 
+from datetime import datetime
+from typing import Any
+from typing import Self
+
 from pydantic import BaseModel
+from pydantic import Field
+from pydantic import NonNegativeInt
+from pydantic import model_validator
+
+from omoide import utils
+
+MAXIMUM_EXTRAS_SIZE = 1024 * 1024 * 5  # MiB
+
+
+class MetainfoInput(BaseModel):
+    """Metainfo for item."""
+
+    user_time: datetime | None = None
+    content_type: str | None = None
+    extras: dict[str, Any] = Field(default_factory=dict)
+
+    content_width: NonNegativeInt | None = None
+    content_height: NonNegativeInt | None = None
+
+    preview_width: NonNegativeInt | None = None
+    preview_height: NonNegativeInt | None = None
+
+    thumbnail_width: NonNegativeInt | None = None
+    thumbnail_height: NonNegativeInt | None = None
+
+    @model_validator(mode='after')
+    def ensure_extras_are_not_too_big(self) -> Self:
+        """Raise if given string is too big."""
+        size = utils.get_size(self.extras)
+        if size > MAXIMUM_EXTRAS_SIZE:
+            hr_size = utils.human_readable_size(size)
+            hr_limit = utils.human_readable_size(MAXIMUM_EXTRAS_SIZE)
+            msg = (
+                f'Given item extras are too big (got {hr_size}), ' f'allowed maximum is {hr_limit}'
+            )
+            raise ValueError(msg)
+        return self
 
 
 class MetainfoOutput(BaseModel):

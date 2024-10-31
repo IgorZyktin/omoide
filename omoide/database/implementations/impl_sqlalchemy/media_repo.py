@@ -33,7 +33,7 @@ class MediaRepo(AbsMediaRepo[AsyncConnection]):
         stmt = sa.delete(db_models.Media).where(
             db_models.Media.processed_at != sa.null(),
             db_models.Media.error == sa.null(),
-            db_models.Media.owner_uuid == user.uuid,
+            db_models.Media.owner_id == user.id,
         )
 
         response = await conn.execute(stmt)

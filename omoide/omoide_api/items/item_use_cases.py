@@ -517,23 +517,30 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-        permissions: set[int],
+        permissions: set[UUID],
         apply_to_parents: bool,
         apply_to_children: bool,
         apply_to_children_as: const.ApplyAs,
     ) -> int | None:
         """Execute."""
+        operation_id = None
+
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.ensure_admin_or_owner(user, item, subject='item permissions')
 
             LOG.info('{} is updating permissions of {}', user, item)
 
+            user_ids: set[int] = set()
+            for user_uuid in permissions:
+                user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+                user_ids.add(user.id)
+
             if item.permissions == permissions:
                 return None
 
             if apply_to_parents or apply_to_parents:
-                added, deleted = utils.get_delta(item.permissions, permissions)
+                added, deleted = utils.get_delta(item.permissions, user_ids)
                 repo = self.mediator.misc
 
                 operation = so.RebuildPermissionsSO(
@@ -549,7 +556,7 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
                 )
                 operation_id = await repo.create_serial_operation(conn, operation)
 
-            item.permissions = permissions
+            item.permissions = user_ids
             await self.mediator.items.save(conn, item)
 
         return operation_id

@@ -106,11 +106,14 @@ def get_policy() -> AbsPolicy:
 
 
 @utils.memorize
-def get_object_storage() -> object_interfaces.AbsObjectStorage:
+def get_object_storage(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
     return FileObjectStorage(
-        media_repo=impl_sqlalchemy.MediaRepo(),
+        database=database,
+        media=impl_sqlalchemy.MediaRepo(),
         prefix_size=config.prefix_size,
     )
 

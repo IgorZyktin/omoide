@@ -1176,9 +1176,8 @@ async function uploadPermissionsProxy(proxy) {
             data: JSON.stringify({
                 'apply_to_parents': false,
                 'apply_to_children': false,
-                'override': true,
-                'permissions_before': [],
-                'permissions_after': permissions,
+                'apply_to_children_as': 'copy',
+                'permissions': permissions,
             }),
             success: function (response) {
                 resolve(response)

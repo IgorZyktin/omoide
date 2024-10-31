@@ -5,10 +5,9 @@ Revises: dfdb436852da
 Create Date: 2024-10-31 13:21:06.126981+03:00
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from alembic import op
-
 
 revision: str = 'de66fcce311e'
 down_revision: str | None = 'dfdb436852da'
