@@ -50,7 +50,7 @@ class AppUpdateItemUseCase(BaseAPPUseCase):
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            total = await self.mediator.items.count_all_children_of(conn, item)
+            total = await self.mediator.items.count_family(conn, item)
             can_see = await self.mediator.users.select(conn, ids=item.permissions)
             computed_tags = await self.mediator.items.read_computed_tags(conn, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
@@ -78,6 +78,6 @@ class AppDeleteItemUseCase(BaseAPPUseCase):
                 msg = 'You must own item {item_uuid} to delete it'
                 raise exceptions.AccessDeniedError(msg, item_uuid=item_uuid)
 
-            total = await self.mediator.items.count_all_children_of(conn, item)
+            total = await self.mediator.items.count_family(conn, item)
 
         return item, total

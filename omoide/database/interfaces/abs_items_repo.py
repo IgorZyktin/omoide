@@ -47,6 +47,10 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return list of siblings for given item."""
 
     @abc.abstractmethod
+    async def get_family(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
+        """Return list of all descendants for given item (including item itself)."""
+
+    @abc.abstractmethod
     async def get_items_anon(
         self,
         conn: ConnectionT,
@@ -95,8 +99,8 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return all computed tags for the item."""
 
     @abc.abstractmethod
-    async def count_all_children_of(self, conn: ConnectionT, item: models.Item) -> int:
-        """Count dependant items."""
+    async def count_family(self, conn: ConnectionT, item: models.Item) -> int:
+        """Count all descendants for given item (including item itself)."""
 
     @abc.abstractmethod
     async def get_parent_names(

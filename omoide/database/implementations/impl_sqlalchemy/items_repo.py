@@ -140,6 +140,55 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row) for row in response]
 
+    async def get_family(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
+        """Return list of all descendants for given item (including item itself)."""
+        query = """
+        WITH RECURSIVE nested_items AS (
+            SELECT id,
+                   uuid,
+                   parent_id,
+                   parent_uuid,
+                   owner_id,
+                   owner_uuid,
+                   status,
+                   number,
+                   name,
+                   is_collection,
+                   content_ext,
+                   preview_ext,
+                   thumbnail_ext,
+                   tags,
+                   content_ext,
+                   permissions
+            FROM items
+            WHERE id = :id
+            UNION ALL
+            SELECT i.id,
+                   i.uuid,
+                   i.parent_id,
+                   i.parent_uuid,
+                   i.owner_id,
+                   i.owner_uuid,
+                   i.status,
+                   i.number,
+                   i.name,
+                   i.is_collection,
+                   i.content_ext,
+                   i.preview_ext,
+                   i.thumbnail_ext,
+                   i.tags,
+                   i.content_ext,
+                   i.permissions
+            FROM items i
+                     INNER JOIN nested_items it2 ON i.parent_id = it2.id
+        )
+        SELECT * FROM nested_items;
+        """
+
+        values = {'id': item.id}
+        response = (await conn.execute(sa.text(query), values)).fetchall()
+        return [models.Item.from_obj(row) for row in response]
+
     async def get_items_anon(
         self,
         conn: AsyncConnection,
@@ -276,25 +325,25 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             return []
         return list(response.tags)
 
-    async def count_all_children_of(self, conn: AsyncConnection, item: models.Item) -> int:
-        """Count dependant items."""
+    async def count_family(self, conn: AsyncConnection, item: models.Item) -> int:
+        """Count all descendants for given item (including item itself)."""
         query = """
         WITH RECURSIVE nested_items AS (
-            SELECT parent_uuid,
-                   uuid
+            SELECT parent_id,
+                   id
             FROM items
-            WHERE uuid = :uuid
+            WHERE id = :id
             UNION ALL
-            SELECT i.parent_uuid,
-                   i.uuid
+            SELECT i.parent_id,
+                   i.id
             FROM items i
-                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+                     INNER JOIN nested_items it2 ON i.parent_id = it2.id
         )
         SELECT count(*) AS total
         FROM nested_items;
         """
 
-        values = {'uuid': item.uuid}
+        values = {'id': item.id}
         response = (await conn.execute(sa.text(query), values)).fetchone()
 
         if response is None:

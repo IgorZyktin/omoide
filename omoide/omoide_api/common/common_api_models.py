@@ -1,7 +1,6 @@
 """Web level API models."""
 
 from typing import Any
-from typing import Literal
 from typing import Self
 from uuid import UUID
 
@@ -115,12 +114,6 @@ class ManyItemsOutput(BaseModel):
             ],
         }
     }
-
-
-class ItemDeleteInput(BaseModel):
-    """Input info for item deletion."""
-
-    desired_switch: Literal['parent', 'sibling'] | None = 'sibling'
 
 
 class ItemDeleteOutput(BaseModel):

@@ -346,15 +346,13 @@ class DeleteItemUseCase(BaseItemUseCase):
                     else:
                         switch_to = siblings[index + 1]
 
-            LOG.info('{} is deleting {}', user, item)
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
-            await self.mediator.object_storage.soft_delete(item)
-            await self.mediator.meta.soft_delete(conn, metainfo)
-            await self.mediator.items.soft_delete(conn, item)
-
             members = await self.mediator.items.get_family(conn, item)
+
             for member in members:
-                LOG.warning('Deletion of {} affected {}', item, member)
+                if member.id == item.id:
+                    LOG.info('{} is deleting {}', user, item)
+                else:
+                    LOG.info('Deletion of {} caused deletion of {}', item, member)
                 member_metainfo = await self.mediator.meta.get_by_item(conn, member)
                 await self.mediator.object_storage.soft_delete(member)
                 await self.mediator.meta.soft_delete(conn, member_metainfo)

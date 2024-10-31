@@ -2,6 +2,7 @@
 
 from typing import Annotated
 import urllib.parse
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -254,9 +255,9 @@ async def api_update_item_tags(
 )
 async def api_delete_item(
     item_uuid: UUID,
-    how_to_delete: common_api_models.ItemDeleteInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    desired_switch: Annotated[Literal['parent', 'sibling'], Query()] = 'sibling',
 ):
     """Delete exising item."""
     use_case = item_use_cases.DeleteItemUseCase(mediator)
@@ -265,7 +266,7 @@ async def api_delete_item(
         item = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
-            desired_switch=how_to_delete.desired_switch,
+            desired_switch=desired_switch,
         )
     except Exception as exc:
         return web.raise_from_exc(exc)
@@ -273,7 +274,7 @@ async def api_delete_item(
     if item is None:
         switch_to = None
     else:
-        switch_to = common_api_models.ItemOutput(**item.model_dump())
+        switch_to = common_api_models.convert_item(item, {})
 
     return common_api_models.ItemDeleteOutput(
         result='deleted item',
