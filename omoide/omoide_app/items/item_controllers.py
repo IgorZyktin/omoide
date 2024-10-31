@@ -27,7 +27,7 @@ app_items_router = fastapi.APIRouter()
 
 
 @app_items_router.get('/create/{parent_uuid}')
-async def app_create_item(
+async def app_create_item(  # noqa: PLR0913
     request: Request,
     parent_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
@@ -84,7 +84,7 @@ def serialize_item(
 
 
 @app_items_router.get('/update/{item_uuid}')
-async def app_update_item(
+async def app_update_item(  # noqa: PLR0913
     request: Request,
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],

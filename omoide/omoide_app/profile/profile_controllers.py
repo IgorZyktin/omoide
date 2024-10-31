@@ -51,7 +51,7 @@ async def app_profile(
 
 
 @app_profile_router.get('/profile/usage')
-async def app_profile_usage(
+async def app_profile_usage(  # noqa: PLR0913
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
@@ -89,7 +89,7 @@ async def app_profile_usage(
 
 
 @app_profile_router.get('/profile/tags')
-async def app_profile_tags(
+async def app_profile_tags(  # noqa: PLR0913
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     user: Annotated[models.User, Depends(dep.get_current_user)],

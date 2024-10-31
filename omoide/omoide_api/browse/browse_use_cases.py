@@ -11,7 +11,7 @@ from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 class ApiBrowseUseCase(BaseAPIUseCase):
     """Use case for browse."""
 
-    async def execute(
+    async def execute(  # noqa: PLR0913
         self,
         user: models.User,
         item_uuid: UUID,

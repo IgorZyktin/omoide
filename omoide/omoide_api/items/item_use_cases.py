@@ -61,13 +61,19 @@ class CreateItemsUseCase(BaseItemUseCase):
                 parent_computed_tags[parent.uuid] = parent_tags
 
             for item in items:
-                new_users, new_tags = await self.post_item_creation(
+                await self.post_item_creation(
                     conn=conn,
                     item=item,
                     parent_computed_tags=parent_computed_tags,
                 )
-                all_computed_tags.update(new_tags)
-                all_affected_users.update(new_users)
+
+        operation = so.UpdateTagsSO(
+            extras={
+                'item_uuid': str(item.uuid),
+                'apply_to_children': True,
+            },
+        )
+        operation_id = await self.mediator.misc.create_serial_operation(conn, operation)
 
         # async with self.mediator.database.transaction() as conn:
         #     for affected_user in all_affected_users:

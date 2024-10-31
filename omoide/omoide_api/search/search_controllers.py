@@ -129,7 +129,7 @@ async def api_search_total(
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
-async def api_search(
+async def api_search(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,

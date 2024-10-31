@@ -23,7 +23,7 @@ app_preview_router = fastapi.APIRouter()
 
 
 @app_preview_router.get('/preview/{item_uuid}')
-async def app_preview(
+async def app_preview(  # noqa: PLR0913
     request: Request,
     item_uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],

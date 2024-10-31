@@ -22,7 +22,7 @@ api_home_router = APIRouter(prefix='/home', tags=['Home'])
     '',
     response_model=common_api_models.ManyItemsOutput,
 )
-async def api_home(
+async def api_home(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,

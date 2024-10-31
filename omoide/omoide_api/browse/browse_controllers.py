@@ -24,7 +24,7 @@ api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
-async def api_browse(
+async def api_browse(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_uuid: UUID,

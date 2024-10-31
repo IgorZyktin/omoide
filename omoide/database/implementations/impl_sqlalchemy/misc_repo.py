@@ -20,43 +20,6 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
         response = (await conn.execute(stmt)).fetchone()
         return {str(row) for row in response.tags}
 
-    # async def update_computed_tags(
-    #     self,
-    #     conn: AsyncConnection,
-    #     item: models.Item,
-    #     parent_computed_tags: set[str],
-    # ) -> set[str]:
-    #     """Update computed tags for this item."""
-    #     computed_tags = item.get_computed_tags(parent_computed_tags)
-    #
-    #     insert = pg_insert(db_models.ComputedTags).values(
-    #         item_uuid=item.uuid,
-    #         tags=tuple(computed_tags),
-    #     )
-    #
-    #     stmt = insert.on_conflict_do_update(
-    #         index_elements=[db_models.ComputedTags.item_uuid],
-    #         set_={'tags': insert.excluded.tags},
-    #     )
-    #
-    #     await self.db.execute(stmt)
-    #     return computed_tags
-
-    # async def drop_unused_known_tags_anon(self) -> None:
-    #     """Drop tags with counter less of equal to 0."""
-    #     stmt = sa.delete(db_models.KnownTagsAnon).where(
-    #         db_models.KnownTagsAnon.counter <= 0,
-    #     )
-    #     await self.db.execute(stmt)
-
-    # async def drop_unused_known_tags_known(self, user: models.User) -> None:
-    #     """Drop tags with counter less of equal to 0."""
-    #     stmt = sa.delete(db_models.KnownTags).where(
-    #         db_models.KnownTags.user_id == user.id,
-    #         db_models.KnownTags.counter <= 0,
-    #     )
-    #     await self.db.execute(stmt)
-
     async def create_serial_operation(
         self,
         conn: AsyncConnection,

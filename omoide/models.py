@@ -15,19 +15,11 @@ from omoide import const
 from omoide import utils
 
 
-class OmoideModelBase(abc.ABC):
-    """Super base class, needed only to set one attribute."""
-
-    def __init__(self) -> None:
-        """Initialize instance."""
-        self._changes: set[str] = set()
-
-
 class OmoideModel(abc.ABC):
     """Base class for all Omoide models."""
 
     _ignore_changes: frozenset[str] = frozenset()
-    _changes: set[str] = set()
+    _changes: set[str] = set()  # noqa: RUF012
 
     def __post_init__(self) -> None:
         """Clear all newly set attributes."""

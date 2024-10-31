@@ -22,7 +22,7 @@ app_upload_router = fastapi.APIRouter()
 
 
 @app_upload_router.get('/upload/{item_uuid}')
-async def app_upload(
+async def app_upload(  # noqa: PLR0913
     request: Request,
     item_uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],

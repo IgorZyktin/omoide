@@ -8,6 +8,8 @@ from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.infra.mediator import Mediator
+from omoide import serial_operations as so
+
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -212,22 +214,3 @@ class BaseItemUseCase(BaseAPIUseCase):
         await self.mediator.meta.create(conn, metainfo)
 
         return item
-
-    async def post_item_creation(
-        self,
-        conn,
-        item: models.Item,
-        parent_computed_tags: dict[UUID, set[str]],
-    ) -> tuple[set[models.User], set[str]]:
-        """Update computed values after operation."""
-        affected_users: list[models.User] = []
-
-        if item.permissions:
-            affected_users = await self.mediator.users.select(conn, ids=item.permissions)
-
-        computed_tags = await self.mediator.misc.update_computed_tags(
-            item=item,
-            parent_computed_tags=parent_computed_tags.get(item.uuid, set()),
-        )
-
-        return set(affected_users), computed_tags

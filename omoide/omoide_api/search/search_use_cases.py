@@ -125,7 +125,7 @@ class ApiSearchTotalUseCase(BaseSearchUseCase):
 class ApiSearchUseCase(BaseSearchUseCase):
     """Use case for search."""
 
-    async def execute(
+    async def execute(  # noqa: PLR0913
         self,
         user: models.User,
         query: str,

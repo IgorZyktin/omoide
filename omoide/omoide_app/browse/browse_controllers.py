@@ -26,7 +26,7 @@ app_browse_router = fastapi.APIRouter(prefix='/browse')
 
 
 @app_browse_router.get('/{item_uuid}')
-async def app_browse(
+async def app_browse(  # noqa: PLR0913
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
