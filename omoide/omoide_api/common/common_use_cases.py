@@ -153,8 +153,8 @@ class BaseItemUseCase(BaseAPIUseCase):
         name: str,
         number: int | None,
         is_collection: bool,
-        tags: set[str],
-        permissions: set[dict[str, UUID | str]],
+        tags: list[str],
+        permissions: list[dict[str, UUID | str]],
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -194,13 +194,15 @@ class BaseItemUseCase(BaseAPIUseCase):
             content_ext=None,
             preview_ext=None,
             thumbnail_ext=None,
-            tags=tags,
+            tags=set(tags),
             permissions=_permissions,
             extras={},
         )
 
+        item_id = await self.mediator.items.create(conn, item)
+
         metainfo = models.Metainfo(
-            item_id=item.id,
+            item_id=item_id,
             created_at=utils.now(),
             updated_at=utils.now(),
             deleted_at=None,
@@ -217,7 +219,6 @@ class BaseItemUseCase(BaseAPIUseCase):
             thumbnail_height=None,
         )
 
-        await self.mediator.items.create(conn, item)
         await self.mediator.meta.create(conn, metainfo)
 
         return item

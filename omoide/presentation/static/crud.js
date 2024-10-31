@@ -9,13 +9,18 @@ function gatherItemParameters(owner_uuid) {
         parent_uuid = null
     }
 
+    let permissions = []
+    for (const each of $('#item_permissions').val().matchAll(UUID_REGEXP)){
+        permissions.push({uuid: each[0], name: ''})
+    }
+
     return {
         owner_uuid: owner_uuid,
         parent_uuid: parent_uuid,
         is_collection: $('#item_is_collection').is(':checked'),
         name: $('#item_name').val().trim(),
         tags: splitLines($('#item_tags').val()),
-        permissions: extractUUIDs($('#item_permissions').val()),
+        permissions: permissions,
     }
 }
 

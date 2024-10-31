@@ -29,8 +29,8 @@ class ItemInput(BaseModel):
     name: str = Field('', max_length=limits.MAX_ITEM_FIELD_LENGTH)
     number: int | None = None
     is_collection: bool = False
-    tags: set[str] = Field(set(), max_length=limits.MAX_TAGS)
-    permissions: set[Permission] = Field(set(), max_length=limits.MAX_PERMISSIONS)
+    tags: list[str] = Field([], max_length=limits.MAX_TAGS)
+    permissions: list[Permission] = Field([], max_length=limits.MAX_PERMISSIONS)
 
     @model_validator(mode='after')
     def check_tags(self) -> Self:
