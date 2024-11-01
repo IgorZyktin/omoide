@@ -12,8 +12,6 @@ const EXPECTED_STEPS = new Set([
     'generateFeaturesForProxy',
     'generateMetainfoForProxy',
     'createItemsForProxy',
-    'uploadTagsForProxy',
-    'uploadPermissionsForProxy',
     'uploadMetainfoForProxy',
     'saveContentForProxy',
     'savePreviewForProxy',
@@ -420,19 +418,25 @@ async function createItemsForProxy(targets, uploadState) {
 
     let parent_uuid = targets[0].parent_uuid
     let owner_uuid = $('#owner_uuid').val() || null
+    let commonTags = splitLines($('#item_tags').val())
+    let commonPermissions = extractAllUUIDs(splitLines($('#item_permissions').val()))
 
-    const defaultItem = {
-        uuid: null,
-        owner_uuid: owner_uuid,
-        parent_uuid: parent_uuid,
-        name: '',
-        is_collection: false,
-        tags: [],
-        permissions: [],
+    let arrayForSending = []
+    for (let target of targets) {
+        let localPermissions = []
+        for (const uuid of [...commonPermissions, ...target.getPermissions()]) {
+            localPermissions.push({uuid: uuid, name: ''})
+        }
+        arrayForSending.push({
+            uuid: null,
+            owner_uuid: owner_uuid,
+            parent_uuid: parent_uuid,
+            name: '',
+            is_collection: false,
+            tags: [...commonTags, ...target.getTags()],
+            permissions: localPermissions,
+        })
     }
-
-    const memberCardArray = Array.from(
-        {length: targets.length}).map(() => defaultItem);
 
     return new Promise(function (resolve, reject) {
         $.ajax({
@@ -440,7 +444,7 @@ async function createItemsForProxy(targets, uploadState) {
             type: 'POST',
             url: `${ITEMS_ENDPOINT}/bulk`,
             contentType: 'application/json',
-            data: JSON.stringify(memberCardArray),
+            data: JSON.stringify(arrayForSending),
             success: function (response) {
                 let items = response['items']
                 if (items.length !== targets.length) {
@@ -1084,13 +1088,9 @@ async function ensureParentIsCollection(parent) {
                 type: 'PATCH',
                 url: `${ITEMS_ENDPOINT}/${parent.uuid}`,
                 contentType: 'application/json',
-                data: JSON.stringify([
-                    {
-                        'op': 'replace',
-                        'path': '/is_collection',
-                        'value': true,
-                    }
-                ]),
+                data: JSON.stringify({
+                    'is_collection': true,
+                }),
                 success: async function (response) {
                     await ensureParentIsCollection(parent.parent_uuid)
                     resolve(response)
@@ -1129,67 +1129,6 @@ async function preprocessMedia(button, uploadState) {
     uploadState.setStatus('processed')
 }
 
-async function uploadTagsForProxy(proxy) {
-    // Update item tags as initial + per item
-    let tags = [
-        ...splitLines($('#item_tags').val()),
-        ...proxy.getTags(),
-    ]
-
-    if (!tags)
-        return
-
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            timeout: 5000, // 5 seconds
-            type: 'PUT',
-            url: `${ITEMS_ENDPOINT}/${proxy.uuid}/tags`,
-            contentType: 'application/json',
-            data: JSON.stringify({'tags': tags}),
-            success: function (response) {
-                resolve(response)
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                describeFail(XMLHttpRequest.responseJSON)
-                reject('fail')
-            },
-        })
-    })
-}
-
-async function uploadPermissionsProxy(proxy) {
-    // Update item permissions as initial + per item
-    let permissions = [
-        ...extractAllUUIDs(splitLines($('#item_permissions').val())),
-        ...proxy.getPermissions(),
-    ]
-
-    if (!permissions)
-        return
-
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            timeout: 5000, // 5 seconds
-            type: 'PUT',
-            url: `${ITEMS_ENDPOINT}/${proxy.uuid}/permissions`,
-            contentType: 'application/json',
-            data: JSON.stringify({
-                'apply_to_parents': false,
-                'apply_to_children': false,
-                'apply_to_children_as': 'copy',
-                'permissions': permissions,
-            }),
-            success: function (response) {
-                resolve(response)
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                describeFail(XMLHttpRequest.responseJSON)
-                reject('fail')
-            },
-        })
-    })
-}
-
 async function uploadMedia(button, uploadState) {
     // upload given media to the backend
     let targets = getTargets()
@@ -1204,10 +1143,6 @@ async function uploadMedia(button, uploadState) {
     if (upload_as.val() !== 'target') {
         await createItemsForProxy(targets, uploadState)
     }
-    await doIf(targets, uploadTagsForProxy, uploadState,
-        p => p.uuid && p.isValid)
-    await doIf(targets, uploadPermissionsProxy, uploadState,
-        p => p.uuid && p.isValid)
     await doIf(targets, uploadMetainfoForProxy, uploadState,
         p => !p.metainfo.uploaded && p.uuid && p.isValid)
     await doIf(targets, uploadEXIFProxy, uploadState,

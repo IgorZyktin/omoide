@@ -63,12 +63,11 @@ class TagsRepo(_TagsRepoHelper):
 
     async def get_known_tags_anon(self, conn: AsyncConnection, batch_size: int) -> dict[str, int]:
         """Return known tags for anon."""
-        public_users = queries.public_user_ids()
 
         def get_conditions(_marker: int) -> list[sa.ColumnElement]:
             """Return list of filtering conditions."""
             return [
-                db_models.Item.owner_uuid.in_(public_users),
+                db_models.Item.owner_id.in_(queries.public_user_ids()),
                 db_models.Item.id > _marker,
             ]
 
