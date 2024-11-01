@@ -55,13 +55,9 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
         def signal_handler(sig: int) -> None:
             """Handle signal."""
             string = signal.strsignal(sig)
-            LOG.info(
-                'Worker {} caught signal {}, stopping',
-                self.config.name,
-                string,
-            )
+            LOG.info('Worker {!r} caught signal {}, stopping', self.config.name, string)
             loop.remove_signal_handler(sig)
-            self.stopping = True
+            self.mediator.stopping = True
 
         loop.add_signal_handler(
             signal.SIGINT,

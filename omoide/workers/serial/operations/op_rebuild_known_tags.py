@@ -63,9 +63,6 @@ class RebuildKnownTagsAllOperation(SerialOperationImplementation):
             users = await self.mediator.users.select(conn)
 
         for step, user in enumerate(users, start=1):
-            if self.mediator.stopping:
-                break
-
             async with self.mediator.database.transaction() as conn:
                 start = time.monotonic()
                 tags = await self.mediator.tags.get_known_tags_user(
