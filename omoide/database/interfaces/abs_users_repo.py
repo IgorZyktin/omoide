@@ -80,12 +80,12 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         """Return root item for given user."""
 
     @abc.abstractmethod
-    async def get_all_root_items(
+    async def get_root_items_map(
         self,
         conn: ConnectionT,
         *users: models.User,
-    ) -> list[models.Item]:
-        """Return list of root items."""
+    ) -> dict[int, models.Item | None]:
+        """Return map of root items."""
 
     @abc.abstractmethod
     async def calc_total_space_used_by(

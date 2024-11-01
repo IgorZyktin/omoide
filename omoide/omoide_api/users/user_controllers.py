@@ -39,24 +39,20 @@ async def api_create_user(
     use_case = user_use_cases.CreateUserUseCase(mediator)
 
     try:
-        user_out, extras = await use_case.execute(
+        user_out = await use_case.execute(
             admin=admin,
             name=user_in.name,
             login=user_in.login,
             password=user_in.password,
         )
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     response.headers['Location'] = str(
         request.url_for('api_get_user_by_uuid', user_uuid=user_out.uuid)
     )
 
-    return user_api_models.UserOutput(
-        **utils.serialize(user_out.model_dump()),
-        extras=utils.serialize(extras),
-    )
+    return user_api_models.UserOutput(**utils.serialize(user_out.model_dump()))
 
 
 @api_users_router.get(
@@ -75,18 +71,13 @@ async def api_get_all_users(
     use_case = user_use_cases.GetAllUsersUseCase(mediator)
 
     try:
-        users, extras = await use_case.execute(user)
+        users = await use_case.execute(user)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return {
         'users': [
-            user_api_models.UserOutput(
-                **utils.serialize(user.model_dump()),
-                extras={'root_item': utils.to_simple_type(extras.get(user.uuid))},
-            )
-            for user in users
+            user_api_models.UserOutput(**utils.serialize(user.model_dump())) for user in users
         ]
     }
 
@@ -107,8 +98,7 @@ async def api_get_user_resource_usage(
     try:
         output = await use_case.execute(user, user_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return user_api_models.UserResourceUsageOutput(
         user_uuid=str(output.user_uuid),
@@ -128,17 +118,14 @@ async def api_get_user_resource_usage(
     status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
 )
-async def api_get_anon_tags(
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-):
+async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediator)]):
     """Get all known tags for anon user."""
     use_case = user_use_cases.GetAnonUserTagsUseCase(mediator)
 
     try:
         tags = await use_case.execute()
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return tags
 
@@ -159,8 +146,7 @@ async def api_get_user_tags(
     try:
         tags = await use_case.execute(user, user_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return tags
 
@@ -179,15 +165,11 @@ async def api_get_user_by_uuid(
     use_case = user_use_cases.GetUserByUUIDUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, user_uuid)
+        user = await use_case.execute(user, user_uuid)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
-    return user_api_models.UserOutput(
-        **utils.serialize(user.model_dump()),
-        extras=utils.serialize(extras),
-    )
+    return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
 
 @api_users_router.put(
@@ -205,15 +187,11 @@ async def api_change_user_name(
     use_case = user_use_cases.ChangeUserNameUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, user_uuid, payload.value)
+        user = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
-    return user_api_models.UserOutput(
-        **utils.serialize(user.model_dump()),
-        extras=utils.serialize(extras),
-    )
+    return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
 
 @api_users_router.put(
@@ -231,14 +209,11 @@ async def api_change_user_login(
     use_case = user_use_cases.ChangeUserLoginUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, user_uuid, payload.value)
+        user = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return user_api_models.UserOutput(
-        **utils.serialize(user.model_dump()),
-        extras=utils.serialize(extras),
-    )
+    return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
 
 @api_users_router.put(
@@ -256,11 +231,8 @@ async def api_change_user_password(
     use_case = user_use_cases.ChangeUserPasswordUseCase(mediator)
 
     try:
-        user, extras = await use_case.execute(user, user_uuid, payload.value)
+        user = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return user_api_models.UserOutput(
-        **utils.serialize(user.model_dump()),
-        extras=utils.serialize(extras),
-    )
+    return user_api_models.UserOutput(**utils.serialize(user.model_dump()))

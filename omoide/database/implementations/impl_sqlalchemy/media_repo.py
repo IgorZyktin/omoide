@@ -1,6 +1,5 @@
 """Repository that perform CRUD operations on media."""
 
-
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 

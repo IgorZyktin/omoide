@@ -24,7 +24,7 @@ class CreateUserUseCase(BaseItemUseCase):
         name: str,
         login: str,
         password: str,
-    ) -> tuple[models.User, dict[str, Any]]:
+    ) -> models.User:
         """Execute."""
         self.ensure_admin(admin, subject='users')
 
@@ -70,9 +70,9 @@ class CreateUserUseCase(BaseItemUseCase):
                 permissions=[],
             )
 
-            extras = {'root_item': item.uuid}
+            user.extras['root_item_uuid'] = item.uuid
 
-        return admin, extras
+        return admin
 
 
 class ChangeUserNameUseCase(BaseAPIUseCase):
@@ -83,7 +83,7 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         user: models.User,
         user_uuid: UUID,
         new_name: str,
-    ) -> tuple[models.User, dict[str, Any]]:
+    ) -> models.User:
         """Execute."""
         self.ensure_not_anon(user, operation='update user name')
 
@@ -92,7 +92,7 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
             self.ensure_admin_or_owner(user, target_user, 'users')
 
             LOG.info(
-                'User {} is updating user {} name to {}',
+                '{} is updating {} name to {}',
                 user,
                 target_user,
                 new_name,
@@ -102,11 +102,20 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
             await self.mediator.users.save(conn, target_user)
 
             root = await self.mediator.users.get_root_item(conn, target_user)
-            extras = {'root_item': root.uuid}
-            # TODO - after renaming root item
-            #  we need to recalculate tags in children
+            target_user.extras['root_item_uuid'] = root.uuid
+            await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
+                extras={
+                    'item_id': root.id,
+                    'apply_to_children': True,
+                    'apply_to_owner': True,
+                    'apply_to_permissions': True,
+                    'apply_to_anon': True,
+                },
+            )
 
-        return target_user, extras
+        return target_user
 
 
 class ChangeUserLoginUseCase(BaseAPIUseCase):
@@ -117,7 +126,7 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         user: models.User,
         user_uuid: UUID,
         new_login: str,
-    ) -> tuple[models.User, dict[str, Any]]:
+    ) -> models.User:
         """Execute."""
         self.ensure_not_anon(user, operation='update user login')
 
@@ -136,9 +145,9 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
             await self.mediator.users.save(conn, target_user)
 
             root = await self.mediator.users.get_root_item(conn, target_user)
-            extras = {'root_item': root.uuid}
+            target_user.extras['root_item_uuid'] = root.uuid
 
-        return target_user, extras
+        return target_user
 
 
 class ChangeUserPasswordUseCase(BaseAPIUseCase):
@@ -151,7 +160,7 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
         user: models.User,
         user_uuid: UUID,
         new_password: str,
-    ) -> tuple[models.User, dict[str, Any]]:
+    ) -> models.User:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
 
@@ -177,9 +186,9 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
                 await self.mediator.users.update_user_password(conn, target_user, encoded_password)
 
             root = await self.mediator.users.get_root_item(conn, target_user)
-            extras = {'root_item': root.uuid}
+            target_user.extras['root_item_uuid'] = root.uuid
 
-        return target_user, extras
+        return target_user
 
 
 class GetAllUsersUseCase(BaseAPIUseCase):
@@ -190,22 +199,21 @@ class GetAllUsersUseCase(BaseAPIUseCase):
     async def execute(
         self,
         user: models.User,
-    ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
+    ) -> list[models.User]:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
-        extras: dict[UUID, UUID | None]
 
         async with self.mediator.database.transaction() as conn:
             if user.is_admin:
                 users = await self.mediator.users.select(conn)
-                roots = await self.mediator.users.get_all_root_items(conn, *users)
-                extras = {root.owner_uuid: root.uuid for root in roots}
+                roots = await self.mediator.users.get_root_items_map(conn, *users)
+                for user in users:
+                    user.extras['root_item_uuid'] = roots.get(user.id, const.DUMMY_UUID)
             else:
                 root = await self.mediator.users.get_root_item(conn, user)
-                users = [user]
-                extras = {user.uuid: root.uuid}
+                user.extras['root_item_uuid'] = root or const.DUMMY_UUID
 
-        return users, extras
+        return users
 
 
 class GetUserByUUIDUseCase(BaseAPIUseCase):
@@ -215,7 +223,7 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         self,
         user: models.User,
         user_uuid: UUID,
-    ) -> tuple[models.User, dict[str, Any]]:
+    ) -> models.User:
         """Execute."""
         self.ensure_not_anon(user, operation='get user info')
 
@@ -223,9 +231,9 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.ensure_admin_or_owner(user, target_user, 'users')
             root = await self.mediator.users.get_root_item(conn, target_user)
-            extras = {'root_item': root.uuid}
+            target_user.extras['root_item_uuid'] = root.uuid
 
-        return target_user, extras
+        return target_user
 
 
 class GetUserResourceUsageUseCase(BaseAPIUseCase):

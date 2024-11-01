@@ -153,6 +153,13 @@ class User(OmoideModel):
         extras: dict[str, Any] | None = None,
     ) -> Self:
         """Create instance from arbitrary object."""
+        if extras is not None:
+            _extras = extras
+        elif extra_keys:
+            _extras = {key: getattr(obj, key) for key in extra_keys}
+        else:
+            _extras = {}
+
         return cls(
             id=obj.id,
             uuid=obj.uuid,
@@ -164,7 +171,7 @@ class User(OmoideModel):
             last_login=obj.last_login,
             timezone=None,  # TODO - actually use it
             lang=None,  # TODO - actually use it
-            extras=extras or {},
+            extras=_extras,
         )
 
 

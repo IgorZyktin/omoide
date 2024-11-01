@@ -42,11 +42,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         if item.number >= 0:
             values['number'] = item.number
 
-        stmt = (
-            sa.insert(db_models.Item)
-            .values(**values)
-            .returning(db_models.Item.id)
-        )
+        stmt = sa.insert(db_models.Item).values(**values).returning(db_models.Item.id)
 
         item_id = (await conn.execute(stmt)).scalar()
 
@@ -55,9 +51,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         # NOTE: Initially user id as a number
         update_stmt = (
-            sa.update(db_models.Item)
-            .where(db_models.Item.id == item_id)
-            .values(number=item_id)
+            sa.update(db_models.Item).where(db_models.Item.id == item_id).values(number=item_id)
         )
         await conn.execute(update_stmt)
         return item_id

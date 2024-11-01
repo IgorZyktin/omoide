@@ -74,13 +74,18 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         login: str,
     ) -> tuple[models.User, str, int] | None:
         """Return user+password for given login."""
-        query = sa.select(db_models.User).where(db_models.User.login == login)
+        query = (
+            sa.select(db_models.User, db_models.Item.uuid.label('root_item_uuid'))
+            .join(db_models.Item, db_models.Item.owner_id == db_models.User.id)
+            .where(db_models.User.login == login, db_models.Item.parent_id == sa.null())
+        )
+
         response = (await conn.execute(query)).fetchone()
 
         if response is None:
             return None
 
-        user = models.User.from_obj(response)
+        user = models.User.from_obj(response, extra_keys=['root_item_uuid'])
         return user, response.password, response.auth_complexity
 
     async def get_map(
@@ -191,21 +196,26 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         return models.Item.from_obj(response)
 
-    async def get_all_root_items(
+    async def get_root_items_map(
         self,
         conn: AsyncConnection,
         *users: models.User,
-    ) -> list[models.Item]:
-        """Return list of root items."""
-        query = sa.select(db_models.Item).where(db_models.Item.parent_uuid == sa.null())
+    ) -> dict[int, models.Item | None]:
+        """Return map of root items."""
+        root_items: dict[int, models.Item | None] = {}
 
+        query = sa.select(db_models.Item).where(db_models.Item.parent_uuid == sa.null())
         if users:
-            query = query.where(
-                db_models.Item.owner_uuid.in_(tuple(str(user.uuid) for user in users))
-            )
+            ids = [user.id for user in users]
+            root_items = dict.fromkeys(ids)
+            query = query.where(db_models.Item.owner_id.in_(ids))
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        for row in response:
+            item = models.Item.from_obj(row)
+            root_items[item.owner_id] = item
+
+        return root_items
 
     async def calc_total_space_used_by(
         self,
