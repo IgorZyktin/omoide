@@ -35,7 +35,7 @@ def ensure_registered_user_has_permissions(
     return stmt.where(
         sa.or_(
             db_models.Item.owner_id == user.id,
-            db_models.Item.permissions.any(user.id),
+            db_models.Item.permissions.any_() == user.id,
         )
     )
 

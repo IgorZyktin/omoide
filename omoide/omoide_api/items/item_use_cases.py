@@ -215,10 +215,10 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                 return []
 
             if item.parent_uuid is None:
-                old_parent = None
-            else:
-                old_parent = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
+                msg = 'You cannot change parent for the root item'
+                raise exceptions.InvalidInputError(msg)
 
+            old_parent = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
             new_parent = await self.mediator.items.get_by_uuid(conn, new_parent_uuid)
             is_child = await self.mediator.items.check_child(conn, new_parent_uuid, item.uuid)
 

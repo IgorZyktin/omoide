@@ -67,10 +67,10 @@ def get_all_metainfo_records(
         )
         .join(
             db_models.Item,
-            db_models.Item.uuid == db_models.Metainfo.item_uuid,
+            db_models.Item.id == db_models.Metainfo.item_id,
         )
         .filter(
-            db_models.Item.owner_uuid == user.uuid,
+            db_models.Item.owner_id == user.id,
             ~sa.and_(
                 db_models.Item.content_ext == sa.null(),
                 db_models.Item.preview_ext == sa.null(),
@@ -96,9 +96,7 @@ def get_all_metainfo_records(
     if config.limit > 0:
         query = query.limit(config.limit)
 
-    result = query.all()
-
-    return result
+    return [(meta, item) for meta, item in query.all()]
 
 
 class Sizes(BaseModel):
@@ -182,16 +180,20 @@ def make_locator(
     dom_item = models.Item(
         id=-1,
         uuid=item.uuid,
+        parent_id=item.parent_id,
         parent_uuid=item.parent_uuid,
+        owner_id=user.id,
         owner_uuid=user.uuid,
         number=item.number,
         name=item.name,
+        status=item.status,
         is_collection=item.is_collection,
         content_ext=item.content_ext,
         preview_ext=item.preview_ext,
         thumbnail_ext=item.thumbnail_ext,
         tags=set(),
         permissions=set(),
+        extras={},
     )
 
     locator = infra.FilesystemLocator(

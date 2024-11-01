@@ -29,7 +29,7 @@ def get_implementation(
     mediator: WorkerMediator,
 ) -> SerialOperationImplementation:
     """Return specific version of operation."""
-    operation_type = NAME_MAP.get(operation.name)
+    operation_type = NAME_MAP.get(const.AllSerialOperations(operation.name))
 
     if operation_type is None:
         raise exceptions.UnknownSerialOperationError(name=operation.name)

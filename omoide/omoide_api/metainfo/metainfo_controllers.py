@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
+import pytz
 
 from omoide import dependencies as dep
 from omoide import models
@@ -35,17 +36,23 @@ async def api_read_metainfo(
     except Exception as exc:
         return web.raise_from_exc(exc)
 
+    if user.timezone is None:
+        created_at = (metainfo.created_at.isoformat(),)
+        updated_at = (metainfo.updated_at.isoformat(),)
+        deleted_at = metainfo.deleted_at.isoformat() if metainfo.deleted_at else None
+        user_time = metainfo.user_time.isoformat() if metainfo.user_time else None
+    else:
+        tz = pytz.timezone(user.timezone or 'UTC')
+        created_at = (metainfo.created_at.astimezone(tz).isoformat(),)
+        updated_at = (metainfo.updated_at.astimezone(tz).isoformat(),)
+        deleted_at = metainfo.deleted_at.astimezone(tz).isoformat() if metainfo.deleted_at else None
+        user_time = metainfo.user_time.astimezone(tz).isoformat() if metainfo.user_time else None
+
     return metainfo_api_models.MetainfoOutput(
-        created_at=metainfo.created_at.astimezone(user.timezone).isoformat(),
-        updated_at=metainfo.updated_at.astimezone(user.timezone).isoformat(),
-        deleted_at=(
-            metainfo.deleted_at.astimezone(user.timezone).isoformat()
-            if metainfo.deleted_at
-            else None
-        ),
-        user_time=(
-            metainfo.user_time.astimezone(user.timezone).isoformat() if metainfo.user_time else None
-        ),
+        created_at=created_at,
+        updated_at=updated_at,
+        deleted_at=deleted_at,
+        user_time=user_time,
         **metainfo.model_dump(
             exclude={'created_at', 'updated_at', 'deleted_at', 'user_time'},
         ),

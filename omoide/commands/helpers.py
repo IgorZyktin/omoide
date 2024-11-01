@@ -5,6 +5,7 @@ from collections.abc import Iterator
 import contextlib
 from pathlib import Path
 import time
+from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -34,7 +35,7 @@ def timing(
 
         return template() or None
 
-    def _maybe_print(template: str | None, **kwargs) -> None:
+    def _maybe_print(template: str | None, **kwargs: Any) -> None:
         if template:
             callback(template.format(**kwargs))
 
@@ -100,9 +101,7 @@ def get_metainfo(
 ) -> db_models.Metainfo:
     """Get metainfo for given item."""
     metainfo = (
-        session.query(db_models.Metainfo)
-        .where(db_models.Metainfo.item_uuid == str(item.uuid))
-        .first()
+        session.query(db_models.Metainfo).where(db_models.Metainfo.item_id == item.id).first()
     )
 
     if metainfo is None:

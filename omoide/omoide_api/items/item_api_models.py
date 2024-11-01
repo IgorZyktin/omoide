@@ -28,7 +28,7 @@ class ItemRenameInput(BaseModel):
 class ItemUpdateTagsInput(BaseModel):
     """Input info for item tags update."""
 
-    tags: set[str] = Field([], max_length=limits.MAX_TAGS)
+    tags: set[str] = Field(set(), max_length=limits.MAX_TAGS)
 
     @model_validator(mode='after')
     def check_tags(self) -> Self:

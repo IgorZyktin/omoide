@@ -14,14 +14,6 @@ from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo
 class MiscRepo(AbsMiscRepo[AsyncConnection]):
     """Repository that performs various operations on different objects."""
 
-    async def get_computed_tags(self, conn: AsyncConnection, item: models.Item) -> set[str]:
-        """Get computed tags for this item."""
-        stmt = sa.select(db_models.ComputedTags.tags).where(
-            db_models.ComputedTags.item_id == item.id
-        )
-        response = (await conn.execute(stmt)).fetchone()
-        return {str(row) for row in response.tags}
-
     async def create_serial_operation(
         self,
         conn: AsyncConnection,
@@ -45,5 +37,5 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
             .returning(db_models.SerialOperation.id)
         )
 
-        operation_id = int((await conn.execute(stmt)).scalar())
-        return operation_id
+        operation_id = (await conn.execute(stmt)).scalar()
+        return operation_id if operation_id is not None else -1

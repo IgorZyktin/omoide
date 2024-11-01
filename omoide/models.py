@@ -54,13 +54,18 @@ class OmoideModel(abc.ABC):
         exclude = exclude or set()
         return {
             key: value
-            for key, value in asdict(self).items()
+            for key, value in asdict(self).items()  # type: ignore[call-overload]
             if key not in exclude and not key.startswith('_')
         }
 
     @classmethod
     @abc.abstractmethod
-    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
         """Create instance from arbitrary object."""
 
 
@@ -141,7 +146,12 @@ class User(OmoideModel):
         )
 
     @classmethod
-    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
         """Create instance from arbitrary object."""
         return cls(
             id=obj.id,
@@ -288,8 +298,12 @@ class Metainfo(OmoideModel):
     _ignore_changes: frozenset[str] = frozenset(('item_id',))
 
     @classmethod
-    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
-        """Create instance from arbitrary object."""
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
         _ = extras
         return cls(
             item_id=obj.item_id,
@@ -327,8 +341,12 @@ class Media(OmoideModel):
     _ignore_changes: frozenset[str] = frozenset(('id',))
 
     @classmethod
-    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
-        """Create instance from arbitrary object."""
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
         _ = extras
         return cls(
             id=obj.id,
@@ -486,8 +504,12 @@ class SerialOperation(OmoideModel):
             self.log += f'\n{text}'
 
     @classmethod
-    def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:
-        """Create instance from arbitrary object."""
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
         return cls(
             id=obj.id,
             name=obj.name,

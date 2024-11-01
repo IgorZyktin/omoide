@@ -53,7 +53,7 @@ def run(config: Config, database: SyncDatabase) -> None:
                 operations = update_size(config, metainfo, item, path)
                 local_changed += operations
                 total_changed += operations
-                last_meta = metainfo.item_uuid
+                last_meta = metainfo.item_id
 
                 if config.log_every_item and operations:
                     LOG.info(
@@ -146,7 +146,7 @@ def get_models(
         )
         .join(
             db_models.Item,
-            db_models.Item.uuid == db_models.Metainfo.item_uuid,
+            db_models.Item.id == db_models.Metainfo.item_id,
         )
         .filter(
             db_models.Item.owner_uuid == user.uuid,
@@ -160,14 +160,14 @@ def get_models(
 
     if config.marker:
         query = query.filter(
-            db_models.Metainfo.item_uuid >= config.marker  # noqa
+            db_models.Metainfo.item_id >= config.marker  # noqa
         )
 
     query = query.order_by(
-        db_models.Metainfo.item_uuid,
+        db_models.Metainfo.item_id,
     )
 
     if config.limit != -1:
         query = query.limit(config.limit)
 
-    return query.all()
+    return [(meta, item) for meta, item in query.all()]

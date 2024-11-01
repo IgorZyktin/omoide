@@ -7,6 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
+from pydantic.config import JsonDict
 
 from omoide import limits
 from omoide import models
@@ -68,7 +69,7 @@ class ItemOutput(BaseModel):
     extras: dict[str, Any] = {}
 
 
-DEFAULT_ITEM_EXAMPLE = {
+DEFAULT_ITEM_EXAMPLE: JsonDict = {
     'uuid': '27c004fe-af9e-43af-9e1c-bf36c8ea57f2',
     'parent_uuid': '30f37bec-4e1b-430d-bbfb-80b3f41f2b44',
     'owner_uuid': 'fec6e0ac-9142-4ccd-bbae-af0fc9037b1a',
@@ -142,7 +143,8 @@ def convert_items(
                     uuid=user.uuid,
                     name=user.name,
                 )
-                for user in users.get(item.id, [])
+                for user_id in item.permissions
+                if (user := users.get(user_id))
             ],
         )
         for item in items

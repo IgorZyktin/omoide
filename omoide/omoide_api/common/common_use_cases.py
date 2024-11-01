@@ -171,8 +171,10 @@ class BaseItemUseCase(BaseAPIUseCase):
                 raise exceptions.NotAllowedError(msg)
 
         _permissions: set[int] = set()
-        for each in permissions:
-            user_uuid = each['uuid']
+        for human_readable_user in permissions:
+            user_uuid = human_readable_user.get('uuid')
+            if not isinstance(user_uuid, UUID):
+                continue
             user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             _permissions.add(user.id)
 

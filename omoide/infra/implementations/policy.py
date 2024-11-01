@@ -32,8 +32,26 @@ class Policy(AbsPolicy):
         if user.is_admin or item.owner_id == user.id:
             return
 
-        if error_message is not None:
+        if error_message is None:
             msg = f'You are not allowed to {to} for the item {item.uuid}'
+        else:
+            msg = error_message
+
+        raise exceptions.NotAllowedError(msg)
+
+    @staticmethod
+    def ensure_represents(
+        user: models.User,
+        other_user: models.User,
+        to: str,
+        error_message: str | None = None,
+    ) -> None:
+        """Raise if one user tries to modify data of some other user."""
+        if user.is_admin or user.id == other_user.id:
+            return
+
+        if error_message is None:
+            msg = f'You are not allowed to {to} for the user {other_user.uuid}'
         else:
             msg = error_message
 
@@ -50,7 +68,7 @@ class Policy(AbsPolicy):
         if user.is_admin or item.owner_id == user.id or user.id in item.permissions:
             return
 
-        if error_message is not None:
+        if error_message is None:
             msg = f'You are not allowed to {to} of the item {item.uuid}'
         else:
             msg = error_message

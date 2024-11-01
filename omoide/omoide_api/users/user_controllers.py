@@ -233,8 +233,7 @@ async def api_change_user_login(
     try:
         user, extras = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return user_api_models.UserOutput(
         **utils.serialize(user.model_dump()),
@@ -259,8 +258,7 @@ async def api_change_user_password(
     try:
         user, extras = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
-        web.raise_from_exc(exc)
-        raise  # INCONVENIENCE - Pycharm does not recognize NoReturn
+        return web.raise_from_exc(exc)
 
     return user_api_models.UserOutput(
         **utils.serialize(user.model_dump()),

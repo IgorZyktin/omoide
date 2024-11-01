@@ -109,7 +109,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         )
 
         response = (await conn.execute(query)).fetchone()
-        return int(response.total_items)
+        return int(response.total_items) if response else 0
 
     async def get_parents(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of parents for given item."""
@@ -226,7 +226,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Return Items."""
         query = sa.select(db_models.Item).where(
             sa.or_(
-                db_models.Item.permissions.any(user.id),
+                db_models.Item.permissions.any_() == user.id,
                 db_models.Item.owner_id == user.id,
                 queries.item_is_public(),
             )
@@ -345,11 +345,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         values = {'id': item.id}
         response = (await conn.execute(sa.text(query), values)).fetchone()
-
-        if response is None:
-            return 0
-
-        return int(response.total)
+        return int(response.total) if response else 0
 
     async def get_parent_names(
         self,
@@ -357,7 +353,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         items: Collection[models.Item],
     ) -> dict[int, str | None]:
         """Get names of parents of the given items."""
-        ids = [item.parent_id for item in items]
+        ids = [item.parent_id for item in items if item.parent_id is not None]
         names: dict[int, str | None] = dict.fromkeys(ids)
 
         subquery = sa.select(

@@ -50,7 +50,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     @staticmethod
     async def _home_base(
         conn: AsyncConnection,
-        condition: sa.BinaryExpression | sa.BooleanClauseList,
+        condition: sa.BinaryExpression | sa.BooleanClauseList | sa.ColumnElement,
         order: const.ORDER_TYPE,
         collections: bool,
         direct: bool,
@@ -59,6 +59,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     ) -> list[models.Item]:
         """Return home items (generic)."""
         query = queries.get_items_with_parent_names().where(condition)
+        query = query.where(db_models.Item.status == models.Status.AVAILABLE)
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
@@ -96,7 +97,7 @@ class SearchRepo(_SearchRepositoryBase):
         )
 
         response = (await conn.execute(query)).fetchone()
-        return int(response.total_items)
+        return int(response.total_items) if response else 0
 
     async def search(
         self,
@@ -152,7 +153,7 @@ class SearchRepo(_SearchRepositoryBase):
         """Return home items for known user."""
         condition = sa.or_(
             db_models.Item.owner_id == user.id,
-            db_models.Item.permissions.any(user.id),
+            db_models.Item.permissions.any_() == user.id,
         )
         return await self._home_base(conn, condition, order, collections, direct, last_seen, limit)
 

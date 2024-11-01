@@ -1,11 +1,9 @@
 """Repository that perform CRUD operations on media."""
 
-from datetime import datetime
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from omoide import const
 from omoide import custom_logging
 from omoide import models
 from omoide.database import db_models
@@ -26,7 +24,7 @@ class MediaRepo(AbsMediaRepo[AsyncConnection]):
         )
 
         media_id = (await conn.execute(stmt)).scalar()
-        return int(media_id)
+        return media_id if media_id is not None else -1
 
     async def delete_processed_media(self, conn: AsyncConnection, user: models.User) -> int:
         """Delete fully downloaded media rows."""
@@ -77,20 +75,20 @@ class MediaRepo(AbsMediaRepo[AsyncConnection]):
     #     copy_id = (await conn.execute(stmt)).scalar()
     #     return int(copy_id)
 
-    async def mark_file_as_orphan(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-        media_type: const.MEDIA_TYPE,
-        ext: str,
-        moment: datetime,
-    ) -> None:
-        """Mark corresponding files as useless."""
-        stmt = sa.insert(db_models.OrphanFiles).values(
-            media_type=media_type,
-            owner_uuid=item.owner_uuid,
-            item_uuid=item.uuid,
-            ext=ext,
-            moment=moment,
-        )
-        await conn.execute(stmt)
+    # async def mark_file_as_orphan(
+    #     self,
+    #     conn: AsyncConnection,
+    #     item: models.Item,
+    #     media_type: const.MEDIA_TYPE,
+    #     ext: str,
+    #     moment: datetime,
+    # ) -> None:
+    #     """Mark corresponding files as useless."""
+    #     stmt = sa.insert(db_models.OrphanFiles).values(
+    #         media_type=media_type,
+    #         owner_uuid=item.owner_uuid,
+    #         item_uuid=item.uuid,
+    #         ext=ext,
+    #         moment=moment,
+    #     )
+    #     await conn.execute(stmt)

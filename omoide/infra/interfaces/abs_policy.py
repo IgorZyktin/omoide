@@ -25,6 +25,16 @@ class AbsPolicy(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
+    def ensure_represents(
+        user: models.User,
+        other_user: models.User,
+        to: str,
+        error_message: str | None = None,
+    ) -> None:
+        """Raise if one user tries to modify data of some other user."""
+
+    @staticmethod
+    @abc.abstractmethod
     def ensure_can_see(
         user: models.User,
         item: models.Item,

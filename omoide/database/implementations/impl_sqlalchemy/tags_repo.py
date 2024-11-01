@@ -36,7 +36,7 @@ class _TagsRepoHelper(AbsTagsRepo[AsyncConnection], abc.ABC):
                     )
                     .join(
                         db_models.ComputedTags,
-                        db_models.ComputedTags.item_uuid == db_models.Item.uuid,
+                        db_models.ComputedTags.item_id == db_models.Item.id,
                     )
                     .where(*get_conditions(marker))
                 )
@@ -109,7 +109,7 @@ class TagsRepo(_TagsRepoHelper):
             return [
                 sa.or_(
                     db_models.Item.owner_uuid == user.uuid,
-                    db_models.Item.permissions.any(str(user.uuid)),
+                    db_models.Item.permissions.any_() == user.id,
                 ),
                 db_models.Item.id > _marker,
             ]
@@ -147,17 +147,13 @@ class TagsRepo(_TagsRepoHelper):
             stmt = sa.insert(db_models.KnownTags).values(batch)
             await conn.execute(stmt)
 
-    async def get_computed_tags(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-    ) -> set[str]:
+    async def get_computed_tags(self, conn: AsyncConnection, item: models.Item) -> set[str]:
         """Return computed tags for given item."""
         stmt = sa.select(db_models.ComputedTags.tags).where(
-            db_models.ComputedTags.item_uuid == item.uuid
+            db_models.ComputedTags.item_id == item.id
         )
-        response = (await conn.execute(stmt)).scalar()
-        return set(response.tags)
+        response = (await conn.execute(stmt)).fetchone()
+        return set(response.tags) if response else set()
 
     async def save_computed_tags(
         self,
@@ -166,13 +162,10 @@ class TagsRepo(_TagsRepoHelper):
         tags: set[str],
     ) -> None:
         """Save computed tags for given item."""
-        insert = pg_insert(db_models.ComputedTags).values(
-            item_uuid=item.uuid,
-            tags=tuple(tags),
-        )
+        insert = pg_insert(db_models.ComputedTags).values(item_id=item.id, tags=tuple(tags))
 
         stmt = insert.on_conflict_do_update(
-            index_elements=[db_models.ComputedTags.item_uuid],
+            index_elements=[db_models.ComputedTags.item_id],
             set_={'tags': insert.excluded.tags},
         )
 

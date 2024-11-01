@@ -7,11 +7,12 @@ import typer
 import ujson
 
 from omoide import custom_logging
-from omoide import serial_operations as so
+from omoide import models
+from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy as sa
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial import cfg
-from omoide.workers.serial import operations as op
+from omoide.workers.serial import operations
 from omoide.workers.serial.worker import SerialWorker
 
 app = typer.Typer()
@@ -37,6 +38,7 @@ async def _main(operation: str, extras: str) -> None:
         tags=sa.TagsRepo(),
         users=sa.UsersRepo(),
         workers=sa.WorkersRepo(),
+        misc=sa.MiscRepo(),
     )
     worker = SerialWorker(config, mediator)
 
@@ -63,16 +65,24 @@ async def run_manual(
     )
 
     try:
-        operation = so.SerialOperation.from_name(
+        operation = models.SerialOperation(
+            id=-1,
             name=operation_name,
+            worker_name='dev',
+            status=models.OperationStatus.CREATED,
             extras=extras_dict,
+            created_at=utils.now(),
+            updated_at=utils.now(),
+            started_at=None,
+            ended_at=None,
+            log=None,
         )
-        executor = op.SerialOperationExecutor.from_operation(
-            operation=operation,
+        implementation = operations.get_implementation(
             config=worker.config,
+            operation=operation,
             mediator=worker.mediator,
         )
-        await executor.execute()
+        await implementation.execute()
     except (KeyboardInterrupt, asyncio.CancelledError):
         LOG.warning('Stopped manually')
     finally:

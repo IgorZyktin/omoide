@@ -103,3 +103,12 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         collections: bool = False,
     ) -> int:
         """Return total amount of items for given user uuid."""
+
+    @abc.abstractmethod
+    async def update_user_password(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        new_password: str,
+    ) -> None:
+        """Save new user password (this field is not a part of the user model)."""

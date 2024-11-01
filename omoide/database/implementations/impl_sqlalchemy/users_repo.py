@@ -252,4 +252,18 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             query = query.where(db_models.Item.is_collection)
 
         response = (await conn.execute(query)).fetchone()
-        return int(response.total_items)
+        return int(response.total_items) if response else 0
+
+    async def update_user_password(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        new_password: str,
+    ) -> None:
+        """Save new user password (this field is not a part of the user model)."""
+        stmt = (
+            sa.update(db_models.User.password)
+            .where(db_models.User.id == user.id)
+            .values(password=new_password)
+        )
+        await conn.execute(stmt)

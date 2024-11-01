@@ -18,7 +18,7 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
     @staticmethod
     async def _browse_base(
         conn: AsyncConnection,
-        condition: sa.BinaryExpression | sa.BooleanClauseList,
+        condition: sa.BinaryExpression | sa.BooleanClauseList | sa.ColumnElement,
         order: const.ORDER_TYPE,
         collections: bool,
         last_seen: int,
@@ -100,7 +100,7 @@ class BrowseRepo(_BrowseRepoBase):
             sa.or_(
                 queries.item_is_public(),
                 db_models.Item.owner_id == user.id,
-                db_models.Item.permissions.any(user.id),
+                db_models.Item.permissions.any_() == user.id,
             ),
             db_models.Item.parent_id == item.id,
         )

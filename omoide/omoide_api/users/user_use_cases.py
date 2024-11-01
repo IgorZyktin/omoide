@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from omoide import const
 from omoide import custom_logging
+from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
@@ -62,12 +63,11 @@ class CreateUserUseCase(BaseItemUseCase):
                 user=user,
                 uuid=None,
                 parent_uuid=None,
-                owner_uuid=user.uuid,
                 name=user.name,
                 is_collection=True,
                 number=None,
-                tags={user.name},
-                permissions=set(),
+                tags=[user.name],
+                permissions=[],
             )
 
             extras = {'root_item': item.uuid}
@@ -144,6 +144,8 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
 class ChangeUserPasswordUseCase(BaseAPIUseCase):
     """Use case for updating a user's password."""
 
+    do_what: str = 'change password'
+
     async def execute(
         self,
         user: models.User,
@@ -151,24 +153,28 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
         new_password: str,
     ) -> tuple[models.User, dict[str, Any]]:
         """Execute."""
-        self.ensure_not_anon(user, operation='update user login')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.ensure_admin_or_owner(user, target_user, 'users')
+            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
 
             LOG.info('User {} is updating user {} password', user, target_user)
 
             pack = await self.mediator.users.get_by_login(conn, target_user.login)
-            _, password, auth_complexity = pack
 
-            # TODO - what if new password is the same as previous one?
+            if not pack:
+                msg = 'User with UUID {user_uuid} does not exist'
+                raise exceptions.DoesNotExistError(msg, user_uuid=user_uuid)
+
+            _, password, auth_complexity = pack
 
             encoded_password = self.mediator.authenticator.encode_password(
                 given_password=new_password, auth_complexity=auth_complexity
             )
 
-            await self.mediator.users.update_user(user_uuid, password=encoded_password)
+            if encoded_password != password:
+                await self.mediator.users.update_user_password(conn, target_user, encoded_password)
 
             root = await self.mediator.users.get_root_item(conn, target_user)
             extras = {'root_item': root.uuid}
@@ -179,12 +185,14 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
 class GetAllUsersUseCase(BaseAPIUseCase):
     """Use case for getting all users."""
 
+    do_what: str = 'get list of users'
+
     async def execute(
         self,
         user: models.User,
     ) -> tuple[list[models.User], dict[UUID, UUID | None]]:
         """Execute."""
-        self.ensure_not_anon(user, operation='get list of users')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
         extras: dict[UUID, UUID | None]
 
         async with self.mediator.database.transaction() as conn:

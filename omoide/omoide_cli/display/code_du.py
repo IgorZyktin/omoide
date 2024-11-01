@@ -24,7 +24,6 @@ def get_all_corresponding_users(
     """Get all users according to arguments."""
     if only_users is None:
         return session.query(db_models.User).all()
-
     return session.query(db_models.User).filter(db_models.User.uuid.in_(only_users)).all()
 
 
@@ -76,23 +75,21 @@ class Stats:
 
 def scan_for_user(conn: Connection, user: db_models.User) -> Stats:
     """Calculate disk usage for specific user."""
+    meta = db_models.Metainfo
+    item = db_models.Item
+
     stmt = (
         sa.select(
-            sa.func.coalesce(sa.func.sum(db_models.Metainfo.content_size), 0).label('content_size'),
-            sa.func.coalesce(sa.func.sum(db_models.Metainfo.preview_size), 0).label('preview_size'),
-            sa.func.coalesce(sa.func.sum(db_models.Metainfo.thumbnail_size), 0).label(
-                'thumbnail_size'
-            ),
-            sa.func.count(db_models.Item.content_ext).label('content_total'),
-            sa.func.count(db_models.Item.preview_ext).label('preview_total'),
-            sa.func.count(db_models.Item.thumbnail_ext).label('thumbnail_total'),
-            sa.func.count(db_models.Item.uuid).label('total_items'),
+            sa.func.coalesce(sa.func.sum(meta.content_size), 0).label('content_size'),
+            sa.func.coalesce(sa.func.sum(meta.preview_size), 0).label('preview_size'),
+            sa.func.coalesce(sa.func.sum(meta.thumbnail_size), 0).label('thumbnail_size'),
+            sa.func.count(item.content_ext).label('content_total'),
+            sa.func.count(item.preview_ext).label('preview_total'),
+            sa.func.count(item.thumbnail_ext).label('thumbnail_total'),
+            sa.func.count(item.id).label('total_items'),
         )
-        .join(
-            db_models.Item,
-            db_models.Metainfo.item_uuid == db_models.Item.uuid,
-        )
-        .where(db_models.Item.owner_uuid == user.uuid)
+        .join(item, meta.item_id == item.id)
+        .where(item.owner_id == user.id)
     )
 
     response = conn.execute(stmt).fetchone()

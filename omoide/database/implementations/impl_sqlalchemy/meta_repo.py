@@ -132,4 +132,8 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
 
         response = (await conn.execute(query)).fetchone()
 
-        return models.DiskUsage(**response._mapping)
+        return models.DiskUsage(
+            content_bytes=response.content_bytes if response else 0,
+            preview_bytes=response.preview_bytes if response else 0,
+            thumbnail_bytes=response.thumbnail_bytes if response else 0,
+        )
