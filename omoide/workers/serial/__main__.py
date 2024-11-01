@@ -1,8 +1,9 @@
 """Worker that performs operations one by one."""
 
 import asyncio
+from typing import Annotated
 
-import click
+import typer
 import ujson
 
 from omoide import custom_logging
@@ -13,25 +14,16 @@ from omoide.workers.serial import cfg
 from omoide.workers.serial import operations as op
 from omoide.workers.serial.worker import SerialWorker
 
+app = typer.Typer()
+
 LOG = custom_logging.get_logger(__name__)
 
 
-@click.command()
-@click.option(
-    '--operation',
-    type=str,
-    default='',
-    help='Run this operation and then stop',
-    show_default=True,
-)
-@click.option(
-    '--extras',
-    type=str,
-    default='',
-    help='JSON formatted extra parameters',
-    show_default=True,
-)
-def main(operation: str, extras: str) -> None:
+@app.command()
+def main(
+    operation: Annotated[str, typer.Option(help='Run this operation and then stop')] = '',
+    extras: Annotated[str, typer.Option(help='JSON formatted extra parameters')] = '',
+) -> None:
     """Entry point."""
     asyncio.run(_main(operation, extras))
 
@@ -109,4 +101,4 @@ async def run_automatic(worker: SerialWorker) -> None:
 
 
 if __name__ == '__main__':
-    main()
+    app()
