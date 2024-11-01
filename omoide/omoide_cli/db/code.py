@@ -28,14 +28,16 @@ async def copy_images_from_children(
     """Force items to copy images from their children."""
     total = 0
 
-    database = SqlalchemyDatabase(db_url)
-    object_storage = FileObjectStorage(
-        media_repo=MediaRepo(),
-        prefix_size=const.STORAGE_PREFIX_SIZE,
-    )
-
     items = ItemsRepo()
     meta = MetaRepo()
+    media = MediaRepo()
+
+    database = SqlalchemyDatabase(db_url)
+    object_storage = FileObjectStorage(
+        database=database,
+        media=media,
+        prefix_size=const.STORAGE_PREFIX_SIZE,
+    )
 
     async with database.transaction() as conn:
         rows = await get_items_without_images(conn, only_users, only_items, limit)
@@ -60,7 +62,6 @@ async def copy_images_from_children(
                         source_item=source_item,
                         target_item=target_item,
                     )
-                    changed = True
                     total += 1
                     continue
 
