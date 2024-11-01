@@ -499,9 +499,13 @@ class SerialOperation(OmoideModel):
     @property
     def duration(self) -> float:
         """Get execution duration."""
-        if self.started_at is None or self.ended_at is None:
-            return 0.0
-        return (self.ended_at - self.started_at).total_seconds()
+        if self.started_at is None:
+            seconds = (self.updated_at - self.created_at).total_seconds()
+        elif self.ended_at is None:
+            seconds = (self.started_at - self.created_at).total_seconds()
+        else:
+            seconds = (self.ended_at - self.created_at).total_seconds()
+        return seconds
 
     def add_to_log(self, text: str) -> None:
         """Store additional text."""
