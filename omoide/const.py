@@ -1,18 +1,18 @@
 """Global constants."""
 
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 import enum
 from typing import Literal
 from typing import TypeAlias
 from uuid import UUID
 
-VERSION = '0.3.9'
+VERSION = '0.3.10'
 
-FRONTEND_VERSION = 12
+FRONTEND_VERSION = 13
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
-DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
+DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 
 CONTENT: Literal['content'] = 'content'
 PREVIEW: Literal['preview'] = 'preview'

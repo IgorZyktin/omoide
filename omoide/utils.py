@@ -16,7 +16,7 @@ from uuid import UUID
 
 def now() -> datetime.datetime:
     """Return current moment in time with timezone."""
-    return datetime.datetime.now(tz=datetime.timezone.utc)
+    return datetime.datetime.now(tz=datetime.UTC)
 
 
 def get_bucket(uuid: UUID | str, length: int = 2) -> str:

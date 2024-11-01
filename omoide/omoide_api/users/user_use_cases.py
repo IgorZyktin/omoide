@@ -1,6 +1,5 @@
 """Use cases for User-related operations."""
 
-from typing import Any
 from uuid import UUID
 from uuid import uuid4
 
