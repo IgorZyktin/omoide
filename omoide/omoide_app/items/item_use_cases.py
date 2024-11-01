@@ -42,7 +42,9 @@ class AppUpdateItemUseCase(BaseAPPUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[models.Item, int, list[models.User], list[str], models.Metainfo | None]:
+    ) -> tuple[
+        models.Item, int, list[models.User], list[str], models.Metainfo | None, dict[str, str]
+    ]:
         """Execute."""
         if user.is_anon:
             msg = 'You are not allowed to update items'
@@ -54,8 +56,9 @@ class AppUpdateItemUseCase(BaseAPPUseCase):
             can_see = await self.mediator.users.select(conn, ids=item.permissions)
             computed_tags = await self.mediator.items.read_computed_tags(conn, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
+            notes = await self.mediator.meta.get_item_notes(conn, item)
 
-        return item, total, can_see, computed_tags, metainfo
+        return item, total, can_see, computed_tags, metainfo, notes
 
 
 class AppDeleteItemUseCase(BaseAPPUseCase):

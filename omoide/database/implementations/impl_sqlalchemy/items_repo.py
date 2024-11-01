@@ -28,6 +28,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             'owner_uuid': item.owner_uuid,
             'status': item.status,
             'name': item.name,
+            'number': -1,
             'is_collection': item.is_collection,
             'content_ext': item.content_ext,
             'preview_ext': item.preview_ext,

@@ -107,6 +107,7 @@ async def app_update_item(  # noqa: PLR0913
             permissions,
             computed_tags,
             metainfo,
+            notes,
         ) = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
@@ -129,6 +130,7 @@ async def app_update_item(  # noqa: PLR0913
         'current_item': item,
         'item': item,
         'metainfo': metainfo,
+        'notes': notes,
         'total': utils.sep_digits(total),
         'permissions': permissions,
         'external_tags': external_tags,

@@ -48,6 +48,10 @@ class AbsMetaRepo(Generic[ConnectionT], abc.ABC):
         """Add new note to given item."""
 
     @abc.abstractmethod
+    async def get_item_notes(self, conn: ConnectionT, item: models.Item) -> dict[str, str]:
+        """Return notes for given item."""
+
+    @abc.abstractmethod
     async def get_total_disk_usage(
         self,
         conn: ConnectionT,

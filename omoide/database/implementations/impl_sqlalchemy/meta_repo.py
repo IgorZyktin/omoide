@@ -105,6 +105,15 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
 
         await conn.execute(stmt)
 
+    async def get_item_notes(self, conn: AsyncConnection, item: models.Item) -> dict[str, str]:
+        """Return notes for given item."""
+        query = (
+            sa.select(sa.func.json_object_agg(db_models.ItemNote.key, db_models.ItemNote.value))
+            .where(db_models.ItemNote.item_id == item.id)
+        )
+        response = (await conn.execute(query)).scalar()
+        return response or {}
+
     async def get_total_disk_usage(
         self,
         conn: AsyncConnection,

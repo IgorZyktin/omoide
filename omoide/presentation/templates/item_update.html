@@ -77,12 +77,21 @@
                    onchange="alterModelTextField(this, 'name')"
                    class="height-auto">
 
-            {% if metainfo and metainfo.extras.get('copied_image_from') %}
+            {% if notes and notes.get('copied_image_from') %}
                 <label for="thumbnail_origin">Copied image from:</label>
-                    <input id="thumbnail_origin"
-                           type="text"
-                           value="{{ metainfo.extras.get('copied_image_from') }}"
-                           class="height-auto">
+                <div style="display: flex; flex-direction: row; align-items: center">
+                        <input id="thumbnail_origin"
+                               type="text"
+                               value="{{ notes.get('copied_image_from') }}"
+                               class="height-auto" disabled>
+                    <a href="javascript:void(0)"
+                       onclick="copyText('{{ notes.get('copied_image_from') }}', 'ID', 'copy-alerts-item')"
+                       style="height: 100%">
+                        <img class="icon-big"
+                             src="{{ request.url_for('static', path='ic_copy_uuid.svg') }}"
+                             alt="Copy ID"
+                             title="Copy ID"/></a>
+                </div>
             {% endif %}
 
             <div id="thumbnail" class="thumbnail"></div>

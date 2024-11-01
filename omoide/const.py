@@ -52,7 +52,6 @@ class AllSerialOperations(enum.StrEnum):
 
     REBUILD_ITEM_TAGS = 'rebuild_item_tags'
     REBUILD_ITEM_PERMISSIONS = 'rebuild_item_permissions'
-    DECREASE_ITEM_VISIBILITY = 'decrease_item_visibility'
     REBUILD_KNOWN_TAGS_ALL = 'rebuild_known_tags_all'
     REBUILD_KNOWN_TAGS_USER = 'rebuild_known_tags_user'
     REBUILD_KNOWN_TAGS_ANON = 'rebuild_known_tags_anon'
