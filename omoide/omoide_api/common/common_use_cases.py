@@ -186,7 +186,7 @@ class BaseItemUseCase(BaseAPIUseCase):
             owner_id=parent.owner_id,
             owner_uuid=parent.owner_uuid,
             name=name,
-            status=models.Status.CREATED,
+            status=models.Status.AVAILABLE if is_collection else models.Status.CREATED,
             number=number or -1,
             is_collection=is_collection,
             content_ext=None,

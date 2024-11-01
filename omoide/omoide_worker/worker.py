@@ -6,6 +6,7 @@ import zlib
 
 from omoide import const
 from omoide import custom_logging
+from omoide import models
 from omoide import utils
 from omoide.database import db_models
 from omoide.omoide_worker import interfaces
@@ -99,6 +100,7 @@ class Worker(interfaces.AbsWorker):
             raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()
+        media.item.status = models.Status.AVAILABLE
 
     def _save_md5_signature(self, media: db_models.Media) -> None:
         """Save signature."""
