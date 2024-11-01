@@ -19,50 +19,40 @@ LOG = custom_logging.get_logger(__name__)
 class CreateItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
 
+    do_what: str = 'create items'
+
     async def execute(
         self,
         user: models.User,
         items_in: list[dict[str, Any]],
     ) -> tuple[float, list[models.Item]]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='create items')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         start = time.perf_counter()
         items: list[models.Item] = []
-        all_affected_users: set[int] = set()
 
         async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
                 item = await self.create_one_item(conn, user, **raw_item)
                 items.append(item)
 
-                all_affected_users.add(item.owner_id)
-                all_affected_users.update(item.permissions)
+                if item.parent_id is not None:
+                    parent = await self._get_cached_item(conn, item.parent_id)
+                    computed_tags = await self._get_cached_computed_tags(conn, parent)
+                else:
+                    computed_tags = set()
 
-                await self.mediator.misc.create_serial_operation(
-                    conn=conn,
-                    name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
-                    extras={
-                        'item_id': item.id,
-                        'apply_to_children': True,
-                        'apply_to_owner': False,
-                        'apply_to_permissions': False,
-                        'apply_to_anon': False,
-                    },
-                )
+                all_tags = item.get_computed_tags(computed_tags)
+                await self.mediator.tags.save_computed_tags(conn, item, all_tags)
 
-            for user_id in all_affected_users:
-                await self.mediator.misc.create_serial_operation(
-                    conn=conn,
-                    name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                    extras={'user_id': user_id},
-                )
+                await self.mediator.tags.increment_known_tags_user(conn, user, all_tags)
+                if user.is_public:
+                    await self.mediator.tags.increment_known_tags_anon(conn, all_tags)
 
-            if user.is_public:
-                await self.mediator.misc.create_serial_operation(
-                    conn=conn,
-                    name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_ANON,
-                )
+                for user_id in item.permissions:
+                    other_user = await self._get_cached_user(conn, user_id)
+                    await self.mediator.tags.increment_known_tags_user(conn, other_user, all_tags)
 
         LOG.info(
             'User {} created {} items: {}',
@@ -333,7 +323,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'parent':
-                switch_to = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
+                switch_to = await self.mediator.items.get_by_id(conn, item.parent_id)
 
             elif desired_switch == 'sibling':
                 siblings = await self.mediator.items.get_siblings(conn, item)
@@ -347,26 +337,28 @@ class DeleteItemUseCase(BaseItemUseCase):
                         switch_to = siblings[index + 1]
 
             members = await self.mediator.items.get_family(conn, item)
-            affected_users: set[int] = {item.owner_id, *item.permissions}
-
             for member in members:
                 if member.id == item.id:
                     LOG.info('{} is deleting {}', user, item)
                 else:
                     LOG.info('Deletion of {} caused deletion of {}', item, member)
-                affected_users.add(member.owner_id)
-                affected_users.update(member.permissions)
+
+                owner = await self._get_cached_user(conn, member.owner_id)
+                computed_tags = await self._get_cached_computed_tags(conn, member)
+                await self.mediator.tags.save_computed_tags(conn, member, set())
+                await self.mediator.tags.decrement_known_tags_user(conn, owner, computed_tags)
+
+                if owner.is_public:
+                    await self.mediator.tags.decrement_known_tags_anon(conn, computed_tags)
+
+                for user_id in item.permissions:
+                    user = await self._get_cached_user(conn, user_id)
+                    await self.mediator.tags.decrement_known_tags_user(conn, user, computed_tags)
+
                 member_metainfo = await self.mediator.meta.get_by_item(conn, member)
                 await self.mediator.object_storage.soft_delete(member)
                 await self.mediator.meta.soft_delete(conn, member_metainfo)
                 await self.mediator.items.soft_delete(conn, member)
-
-            for user_id in sorted(affected_users):
-                await self.mediator.misc.create_serial_operation(
-                    conn=conn,
-                    name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                    extras={'user_id': user_id},
-                )
 
         return switch_to
 
@@ -432,7 +424,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            owner = await self.mediator.users.get_by_uuid(conn, item.owner_uuid)
+            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
             public_users = await self.mediator.users.get_public_user_ids(conn)
 
             if all(

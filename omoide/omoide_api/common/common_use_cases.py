@@ -50,8 +50,8 @@ class BaseAPIUseCase:
         if any(
             (
                 user.is_admin,
-                item.owner_uuid == user.uuid,
-                user.uuid in item.permissions,
+                item.owner_id == user.id,
+                user.id in item.permissions,
             )
         ):
             return
@@ -76,9 +76,9 @@ class BaseAPIUseCase:
         conditions: list[bool] = []
 
         if isinstance(target, models.User):
-            conditions.append(user.uuid == target.uuid)
+            conditions.append(user.id == target.id)
         else:
-            conditions.append(target.owner_uuid == user.uuid)
+            conditions.append(target.owner_id == user.id)
 
         if all(conditions) or user.is_admin:
             return
@@ -103,8 +103,8 @@ class BaseAPIUseCase:
         if (
             all(
                 (
-                    item.owner_uuid == user.uuid,
-                    user.uuid in item.permissions,
+                    item.owner_id == user.id,
+                    user.id in item.permissions,
                 )
             )
             or user.is_admin
@@ -142,6 +142,46 @@ class BaseAPIUseCase:
 
 class BaseItemUseCase(BaseAPIUseCase):
     """Base class for use cases that create items."""
+
+    def __init__(self, mediator: Mediator) -> None:
+        """Initialize instance."""
+        super().__init__(mediator)
+        self._users_cache: dict[int, models.User] = {}
+        self._items_cache: dict[int, models.Item] = {}
+        self._computed_tags_cache: dict[int, set[str]] = {}
+
+    async def _get_cached_user(self, conn: Any, user_id: int) -> models.User:
+        """Perform cached request."""
+        user = self._users_cache.get(user_id)
+
+        if user is not None:
+            return user
+
+        user = await self.mediator.users.get_by_id(conn, user_id)
+        self._users_cache[user.id] = user
+        return user
+
+    async def _get_cached_item(self, conn: Any, item_id: int) -> models.Item:
+        """Perform cached request."""
+        item = self._items_cache.get(item_id)
+
+        if item is not None:
+            return item
+
+        item = await self.mediator.items.get_by_id(conn, item_id)
+        self._items_cache[item.id] = item
+        return item
+
+    async def _get_cached_computed_tags(self, conn: Any, item: models.Item) -> set[str]:
+        """Perform cached request."""
+        tags = self._computed_tags_cache.get(item.id)
+
+        if tags is not None:
+            return tags
+
+        tags = await self.mediator.tags.get_computed_tags(conn, item)
+        self._computed_tags_cache[item.id] = tags
+        return tags
 
     async def create_one_item(
         self,

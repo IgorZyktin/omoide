@@ -68,11 +68,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return models.Item.from_obj(response)
 
-    async def get_by_uuid(
-        self,
-        conn: AsyncConnection,
-        uuid: UUID,
-    ) -> models.Item:
+    async def get_by_uuid(self, conn: AsyncConnection, uuid: UUID,) -> models.Item:
         """Return User with given UUID."""
         query = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
         response = (await conn.execute(query)).first()
@@ -98,7 +94,10 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Return list of children for given item."""
         query = (
             sa.select(db_models.Item)
-            .where(db_models.Item.parent_uuid == item.uuid)
+            .where(
+                db_models.Item.parent_id == item.id,
+                db_models.Item.status != models.Status.DELETED,
+            )
             .order_by(db_models.Item.id)
         )
         response = (await conn.execute(query)).fetchall()
@@ -109,7 +108,10 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = (
             sa.select(sa.func.count().label('total_items'))
             .select_from(db_models.Item)
-            .where(db_models.Item.parent_uuid == item.uuid)
+            .where(
+                db_models.Item.parent_id == item.id,
+                db_models.Item.status != models.Status.DELETED,
+            )
         )
 
         response = (await conn.execute(query)).fetchone()
@@ -118,10 +120,10 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     async def get_parents(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
         """Return list of parents for given item."""
         parents: list[models.Item] = []
-        parent_uuid = item.parent_uuid
+        parent_id = item.parent_id
 
-        while parent_uuid:
-            query = sa.select(db_models.Item).where(db_models.Item.uuid == parent_uuid)
+        while parent_id:
+            query = sa.select(db_models.Item).where(db_models.Item.id == parent_id)
             raw_parent = (await conn.execute(query)).fetchone()
 
             if raw_parent is None:
@@ -129,7 +131,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
             parent = models.Item.from_obj(raw_parent)
             parents.append(parent)
-            parent_uuid = parent.parent_uuid
+            parent_id = parent.parent_id
 
         return list(reversed(parents))
 
@@ -137,7 +139,10 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Return list of siblings for given item."""
         query = (
             sa.select(db_models.Item)
-            .where(db_models.Item.parent_uuid == item.parent_uuid)
+            .where(
+                db_models.Item.parent_uuid == item.parent_uuid,
+                db_models.Item.status != models.Status.DELETED,
+            )
             .order_by(db_models.Item.number)
         )
 
@@ -186,10 +191,11 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             FROM items i
                      INNER JOIN nested_items it2 ON i.parent_id = it2.id
         )
-        SELECT * FROM nested_items;
+        SELECT * FROM nested_items
+        WHERE nested_items.status <> :status;
         """
 
-        values = {'id': item.id}
+        values = {'id': item.id, 'status': models.Status.DELETED}
         response = (await conn.execute(sa.text(query), values)).fetchall()
         return [models.Item.from_obj(row) for row in response]
 
@@ -202,7 +208,13 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = sa.select(db_models.Item).where(queries.item_is_public())
+        query = (
+            sa.select(db_models.Item)
+            .where(
+                queries.item_is_public(),
+                db_models.Item.status != models.Status.DELETED,
+            )
+        )
 
         if parent_uuid is not None:
             query = query.where(db_models.Item.parent_uuid == parent_uuid)
@@ -233,6 +245,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                 db_models.Item.permissions.any_() == user.id,
                 db_models.Item.owner_id == user.id,
                 queries.item_is_public(),
+                db_models.Item.status != models.Status.DELETED,
             )
         )
 
@@ -334,20 +347,23 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = """
         WITH RECURSIVE nested_items AS (
             SELECT parent_id,
+                   status,
                    id
             FROM items
             WHERE id = :id
             UNION ALL
             SELECT i.parent_id,
+                   i.status,
                    i.id
             FROM items i
                      INNER JOIN nested_items it2 ON i.parent_id = it2.id
         )
         SELECT count(*) AS total
-        FROM nested_items;
+        FROM nested_items
+        WHERE nested_items.status <> :status;
         """
 
-        values = {'id': item.id}
+        values = {'id': item.id, 'status': models.Status.DELETED}
         response = (await conn.execute(sa.text(query), values)).fetchone()
         return int(response.total) if response else 0
 

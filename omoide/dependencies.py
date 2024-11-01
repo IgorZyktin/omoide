@@ -129,14 +129,15 @@ def get_mediator(
     return Mediator(
         authenticator=authenticator,
         policy=policy,
+        database=database,
         browse=impl_sqlalchemy.BrowseRepo(),  # FIXME - app-related dependency
         exif=impl_sqlalchemy.EXIFRepo(),
         items=impl_sqlalchemy.ItemsRepo(),
         meta=impl_sqlalchemy.MetaRepo(),
         misc=impl_sqlalchemy.MiscRepo(),
         search=impl_sqlalchemy.SearchRepo(),
-        database=database,
         signatures=impl_sqlalchemy.SignaturesRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
         users=impl_sqlalchemy.UsersRepo(),
         object_storage=object_storage,
     )

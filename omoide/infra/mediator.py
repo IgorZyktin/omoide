@@ -13,6 +13,7 @@ class Mediator:
 
     authenticator: infra_interfaces.AbsAuthenticator
     policy: infra_interfaces.AbsPolicy
+    database: database_interfaces.AbsDatabase
 
     browse: database_interfaces.AbsBrowseRepo
     exif: database_interfaces.AbsEXIFRepo
@@ -21,7 +22,7 @@ class Mediator:
     misc: database_interfaces.AbsMiscRepo
     search: database_interfaces.AbsSearchRepo
     signatures: database_interfaces.AbsSignaturesRepo
-    database: database_interfaces.AbsDatabase
+    tags: database_interfaces.AbsTagsRepo
     users: database_interfaces.AbsUsersRepo
 
     object_storage: object_interfaces.AbsObjectStorage

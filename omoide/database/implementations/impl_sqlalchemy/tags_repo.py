@@ -96,6 +96,68 @@ class TagsRepo(_TagsRepoHelper):
             stmt = sa.insert(db_models.KnownTagsAnon).values(batch)
             await conn.execute(stmt)
 
+    async def increment_known_tags_user(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        tags: set[str],
+    ) -> None:
+        """Increase counter for given tags."""
+        for tag in tags:
+            stmt = (
+                sa.update(db_models.KnownTags)
+                .where(
+                    db_models.KnownTags.user_id == user.id,
+                    db_models.KnownTags.tag == tag
+                ).values(counter=sa.func.greatest(0, db_models.KnownTags.counter) + 1)
+            )
+            await conn.execute(stmt)
+
+    async def increment_known_tags_anon(
+        self,
+        conn: AsyncConnection,
+        tags: set[str],
+    ) -> None:
+        """Increase counter for given tags."""
+        for tag in tags:
+            stmt = (
+                sa.update(db_models.KnownTagsAnon)
+                .where(db_models.KnownTagsAnon.tag == tag)
+                .values(counter=sa.func.greatest(0, db_models.KnownTagsAnon.counter) + 1)
+            )
+            await conn.execute(stmt)
+
+    async def decrement_known_tags_user(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        tags: set[str],
+    ) -> None:
+        """Decrease counter for given tags."""
+        for tag in tags:
+            stmt = (
+                sa.update(db_models.KnownTags)
+                .where(
+                    db_models.KnownTags.user_id == user.id,
+                    db_models.KnownTags.tag == tag
+                ).values(counter=sa.func.greatest(0, db_models.KnownTags.counter - 1))
+            )
+            await conn.execute(stmt)
+
+    async def decrement_known_tags_anon(
+        self,
+        conn: AsyncConnection,
+        tags: set[str],
+    ) -> None:
+        """Decrease counter for given tags."""
+        for tag in tags:
+            stmt = (
+                sa.update(db_models.KnownTagsAnon)
+                .where(db_models.KnownTagsAnon.tag == tag)
+                .values(counter=sa.func.greatest(0, db_models.KnownTagsAnon.counter - 1))
+            )
+            await conn.execute(stmt)
+
     async def get_known_tags_user(
         self,
         conn: AsyncConnection,

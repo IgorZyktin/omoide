@@ -30,6 +30,40 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Insert given tags for anon user."""
 
     @abc.abstractmethod
+    async def increment_known_tags_user(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        tags: set[str],
+    ) -> None:
+        """Increase counter for given tags."""
+
+    @abc.abstractmethod
+    async def increment_known_tags_anon(
+        self,
+        conn: ConnectionT,
+        tags: set[str],
+    ) -> None:
+        """Increase counter for given tags."""
+
+    @abc.abstractmethod
+    async def decrement_known_tags_user(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        tags: set[str],
+    ) -> None:
+        """Decrease counter for given tags."""
+
+    @abc.abstractmethod
+    async def decrement_known_tags_anon(
+        self,
+        conn: ConnectionT,
+        tags: set[str],
+    ) -> None:
+        """Decrease counter for given tags."""
+
+    @abc.abstractmethod
     async def get_known_tags_user(
         self,
         conn: ConnectionT,
