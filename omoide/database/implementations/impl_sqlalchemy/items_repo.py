@@ -28,7 +28,6 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             'owner_uuid': item.owner_uuid,
             'status': item.status,
             'name': item.name,
-            'number': item.number,
             'is_collection': item.is_collection,
             'content_ext': item.content_ext,
             'preview_ext': item.preview_ext,
@@ -40,17 +39,27 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         if item.id >= 0:
             values['id'] = item.id
 
+        if item.number >= 0:
+            values['number'] = item.number
+
         stmt = (
             sa.insert(db_models.Item)
             .values(**values)
-            .returning(
-                db_models.Item.id,
-            )
+            .returning(db_models.Item.id)
         )
 
-        response = await conn.execute(stmt)
-        item_id = int(response.scalar() or -1)
-        item.id = item_id
+        item_id = (await conn.execute(stmt)).scalar()
+
+        if not item_id:
+            return -1
+
+        # NOTE: Initially user id as a number
+        update_stmt = (
+            sa.update(db_models.Item)
+            .where(db_models.Item.id == item_id)
+            .values(number=item_id)
+        )
+        await conn.execute(update_stmt)
         return item_id
 
     async def get_by_id(self, conn: AsyncConnection, item_id: int) -> models.Item:
