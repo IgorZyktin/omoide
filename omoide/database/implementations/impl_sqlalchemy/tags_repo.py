@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import models
 from omoide.database import db_models
+from omoide.database.implementations.impl_sqlalchemy import queries
 from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 
 
@@ -62,7 +63,7 @@ class TagsRepo(_TagsRepoHelper):
 
     async def get_known_tags_anon(self, conn: AsyncConnection, batch_size: int) -> dict[str, int]:
         """Return known tags for anon."""
-        public_users = sa.select(db_models.PublicUsers.user_uuid)
+        public_users = queries.public_user_ids()
 
         def get_conditions(_marker: int) -> list[sa.ColumnElement]:
             """Return list of filtering conditions."""
@@ -108,7 +109,7 @@ class TagsRepo(_TagsRepoHelper):
             """Return list of filtering conditions."""
             return [
                 sa.or_(
-                    db_models.Item.owner_uuid == user.uuid,
+                    db_models.Item.owner_id == user.id,
                     db_models.Item.permissions.any_() == user.id,
                 ),
                 db_models.Item.id > _marker,

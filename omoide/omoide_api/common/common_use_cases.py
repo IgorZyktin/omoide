@@ -197,10 +197,10 @@ class BaseItemUseCase(BaseAPIUseCase):
             extras={},
         )
 
-        item_id = await self.mediator.items.create(conn, item)
+        item.id = await self.mediator.items.create(conn, item)
 
         metainfo = models.Metainfo(
-            item_id=item_id,
+            item_id=item.id,
             created_at=utils.now(),
             updated_at=utils.now(),
             deleted_at=None,

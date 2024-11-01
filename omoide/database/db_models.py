@@ -104,25 +104,6 @@ class User(Base):
         return f'<DB User id={self.id} {self.uuid} {self.name}>'
 
 
-class PublicUsers(Base):
-    """List of users who demonstrate their content publicly."""
-
-    __tablename__ = 'public_users'
-
-    # primary and foreign keys ------------------------------------------------
-    number: Mapped[int] = mapped_column(
-        sa.Integer, autoincrement=True, nullable=False, primary_key=True
-    )
-
-    user_uuid: Mapped[UUID] = mapped_column(
-        pg.UUID(),
-        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-        unique=True,
-    )
-
-
 class ComputedTags(Base):
     """Combined tags of whole hierarchy of items.
 
