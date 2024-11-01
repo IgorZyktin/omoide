@@ -183,15 +183,15 @@ class BrowseRepo(_BrowseRepoBase):
         }
 
         if collections:
-            query += ' AND is_collection = True'
+            query += ' AND nested_items.is_collection = True'
 
         if order == const.ASC:
-            query += ' AND number > :last_seen'
-            query += ' ORDER BY number'
+            query += ' AND nested_items.number > :last_seen'
+            query += ' ORDER BY nested_items.number'
             values['last_seen'] = last_seen
         elif order == const.DESC:
-            query += ' AND number < :last_seen'
-            query += ' ORDER BY number'
+            query += ' AND nested_items.number < :last_seen'
+            query += ' ORDER BY nested_items.number'
             values['last_seen'] = last_seen
         else:
             query += ' ORDER BY random()'
@@ -284,15 +284,15 @@ class BrowseRepo(_BrowseRepoBase):
         }
 
         if collections:
-            query += ' AND is_collection = True'
+            query += ' AND nested_items.is_collection = True'
 
         if order == const.ASC:
-            query += ' AND number > :last_seen'
-            query += ' ORDER BY number'
+            query += ' AND nested_items.number > :last_seen'
+            query += ' ORDER BY nested_items.number'
             values['last_seen'] = last_seen
         elif order == const.DESC:
-            query += ' AND number < :last_seen'
-            query += ' ORDER BY number'
+            query += ' AND nested_items.number < :last_seen'
+            query += ' ORDER BY nested_items.number'
             values['last_seen'] = last_seen
         else:
             query += ' ORDER BY random()'
