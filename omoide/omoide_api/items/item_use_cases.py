@@ -48,7 +48,7 @@ class CreateItemsUseCase(BaseItemUseCase):
                         'apply_to_owner': False,
                         'apply_to_permissions': False,
                         'apply_to_anon': False,
-                    }
+                    },
                 )
 
             for user_id in all_affected_users:
@@ -347,22 +347,26 @@ class DeleteItemUseCase(BaseItemUseCase):
                         switch_to = siblings[index + 1]
 
             members = await self.mediator.items.get_family(conn, item)
+            affected_users: set[int] = {item.owner_id, *item.permissions}
 
             for member in members:
                 if member.id == item.id:
                     LOG.info('{} is deleting {}', user, item)
                 else:
                     LOG.info('Deletion of {} caused deletion of {}', item, member)
+                affected_users.add(member.owner_id)
+                affected_users.update(member.permissions)
                 member_metainfo = await self.mediator.meta.get_by_item(conn, member)
                 await self.mediator.object_storage.soft_delete(member)
                 await self.mediator.meta.soft_delete(conn, member_metainfo)
                 await self.mediator.items.soft_delete(conn, member)
 
-            await self.mediator.misc.create_serial_operation(
-                conn=conn,
-                name=const.AllSerialOperations.DECREASE_ITEM_VISIBILITY,
-                extras={'item_id': item.id},
-            )
+            for user_id in sorted(affected_users):
+                await self.mediator.misc.create_serial_operation(
+                    conn=conn,
+                    name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
+                    extras={'user_id': user_id},
+                )
 
         return switch_to
 

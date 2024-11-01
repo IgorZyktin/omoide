@@ -469,7 +469,21 @@ class SerialOperation(OmoideModel):
 
     def __str__(self) -> str:
         """Return textual representation."""
-        return f'<{self.id}, {self.name!r}>'
+        return f'<SerialOperation id={self.id} {self.name!r} {self.extras}>'
+
+    @property
+    def duration(self) -> float:
+        """Get execution duration."""
+        if self.started_at is None or self.ended_at is None:
+            return 0.0
+        return (self.ended_at - self.started_at).total_seconds()
+
+    def add_to_log(self, text: str) -> None:
+        """Store additional text."""
+        if self.log is None:
+            self.log = text
+        else:
+            self.log += f'\n{text}'
 
     @classmethod
     def from_obj(cls, obj: Any, extras: dict[str, Any] | None = None) -> Self:

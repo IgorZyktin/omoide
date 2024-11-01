@@ -60,11 +60,7 @@ class _TagsRepoHelper(AbsTagsRepo[AsyncConnection], abc.ABC):
 class TagsRepo(_TagsRepoHelper):
     """Repository that performs operations on tags."""
 
-    async def get_known_tags_anon(
-        self,
-        conn: AsyncConnection,
-        batch_size: int,
-    ) -> dict[str, int]:
+    async def get_known_tags_anon(self, conn: AsyncConnection, batch_size: int) -> dict[str, int]:
         """Return known tags for anon."""
         public_users = sa.select(db_models.PublicUsers.user_uuid)
 

@@ -6,11 +6,10 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
+from omoide import models
 from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
-from omoide.serial_operations import OperationStatus
-from omoide.serial_operations import SerialOperation
 
 
 class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
@@ -53,71 +52,33 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         response = await conn.execute(query)
         return bool(response.rowcount)
 
-    async def create_serial_operation(
-        self,
-        conn: AsyncConnection,
-        operation: SerialOperation,
-    ) -> int:
-        """Create serial operation."""
-        stmt = (
-            sa.insert(db_models.SerialOperation)
-            .values(
-                name=operation.name,
-                worker_name=operation.worker_name,
-                status=operation.status,
-                extras=operation.extras,
-                created_at=operation.created_at,
-                updated_at=operation.updated_at,
-                started_at=operation.started_at,
-                ended_at=operation.ended_at,
-                log=operation.log,
-            )
-            .returning(db_models.SerialOperation.id)
-        )
-
-        response = await conn.execute(stmt)
-        operation_id = int(response.scalar() or -1)
-        operation.id = operation_id
-        return operation_id
-
     async def get_next_serial_operation(
         self,
         conn: AsyncConnection,
         names: Collection[str],
-    ) -> SerialOperation | None:
+    ) -> models.SerialOperation | None:
         """Try locking next serial operation."""
         select_query = (
             sa.select(db_models.SerialOperation)
             .where(
-                db_models.SerialOperation.status == OperationStatus.CREATED,
+                db_models.SerialOperation.status == models.OperationStatus.CREATED,
                 db_models.SerialOperation.name.in_(tuple(names)),
             )
             .order_by(db_models.SerialOperation.id)
             .limit(1)
         )
 
-        operation = (await conn.execute(select_query)).fetchone()
+        response = (await conn.execute(select_query)).fetchone()
 
-        if operation is None:
+        if response is None:
             return None
 
-        return SerialOperation.from_name(
-            id=operation.id,
-            name=operation.name,
-            worker_name=operation.worker_name,
-            status=OperationStatus(operation.status),
-            extras=operation.extras,
-            created_at=operation.created_at,
-            updated_at=operation.updated_at,
-            started_at=operation.started_at,
-            ended_at=operation.ended_at,
-            log=operation.log,
-        )
+        return models.SerialOperation.from_obj(response)
 
     async def lock_serial_operation(
         self,
         conn: AsyncConnection,
-        operation: SerialOperation,
+        operation: models.SerialOperation,
         worker_name: str,
     ) -> bool:
         """Lock operation, return True on success."""
@@ -127,7 +88,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             sa.update(db_models.SerialOperation)
             .values(
                 worker_name=worker_name,
-                status=OperationStatus.PROCESSING,
+                status=models.OperationStatus.PROCESSING,
                 updated_at=now,
                 started_at=now,
             )
@@ -137,52 +98,16 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         response = await conn.execute(update_query)
         return bool(response.rowcount)
 
-    async def mark_serial_operation_done(
+    async def save_serial_operation(
         self,
         conn: AsyncConnection,
-        operation: SerialOperation,
-    ) -> SerialOperation:
-        """Mark operation as done."""
-        now = utils.now()
-
+        operation: models.SerialOperation,
+    ) -> int:
+        """Save operation."""
         query = (
             sa.update(db_models.SerialOperation)
             .where(db_models.SerialOperation.id == operation.id)
-            .values(
-                status=OperationStatus.DONE,
-                updated_at=now,
-                ended_at=now,
-                log=operation.log,
-            )
+            .values(**operation.get_changes())
         )
-
-        operation.updated_at = now
-        operation.ended_at = now
-        await conn.execute(query)
-        return operation
-
-    async def mark_serial_operation_failed(
-        self,
-        conn: AsyncConnection,
-        operation: SerialOperation,
-        error: str,
-    ) -> SerialOperation:
-        """Mark operation as failed."""
-        now = utils.now()
-        operation.add_to_log(error)
-
-        query = (
-            sa.update(db_models.SerialOperation)
-            .where(db_models.SerialOperation.id == operation.id)
-            .values(
-                status=OperationStatus.FAILED,
-                updated_at=now,
-                ended_at=now,
-                log=operation.log,
-            )
-        )
-
-        operation.updated_at = now
-        operation.ended_at = now
-        await conn.execute(query)
-        return operation
+        response = await conn.execute(query)
+        return int(response.rowcount)

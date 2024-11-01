@@ -100,7 +100,7 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
                     'apply_to_owner': True,
                     'apply_to_permissions': True,
                     'apply_to_anon': True,
-                }
+                },
             )
 
         return owner, item, operation_id

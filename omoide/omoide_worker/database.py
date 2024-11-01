@@ -1,11 +1,8 @@
 """Database helper class for Worker."""
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from omoide import const
 from omoide import custom_logging
-from omoide import utils
 from omoide.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 

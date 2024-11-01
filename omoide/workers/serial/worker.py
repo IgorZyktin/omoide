@@ -1,11 +1,11 @@
 """Worker that performs operations one by one."""
 
 from omoide import custom_logging
+from omoide import models
 from omoide import utils
-from omoide.serial_operations import SerialOperation
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
-from omoide.workers.serial import operations as op
+from omoide.workers.serial import operations
 from omoide.workers.serial.cfg import Config
 
 LOG = custom_logging.get_logger(__name__)
@@ -69,33 +69,38 @@ class SerialWorker(BaseWorker[Config]):
         await self.execute_operation(operation)
         return True
 
-    async def execute_operation(self, operation: SerialOperation) -> None:
+    async def execute_operation(self, operation: models.SerialOperation) -> None:
         """Perform workload."""
         try:
-            executor = op.SerialOperationExecutor.from_operation(
-                operation=operation,
+            implementation = operations.get_implementation(
                 config=self.config,
+                operation=operation,
                 mediator=self.mediator,
             )
-            await executor.execute()
+            await implementation.execute()
         except Exception as exc:
             error = utils.exc_to_str(exc)
-            async with self.mediator.database.transaction() as conn:
-                await self.mediator.workers.mark_serial_operation_failed(conn, operation, error)
-                LOG.exception(
-                    'Operation {num}. `{goal}`, '
-                    'failed in {duration:0.3f} sec. because of {error}',
-                    num=operation.id,
-                    operation=operation.goal.title(),
-                    duration=operation.duration,
-                    error=error,
-                )
+            now = utils.now()
+            operation.updated_at = now
+            operation.ended_at = now
+            operation.add_to_log(error)
+            operation.status = models.OperationStatus.FAILED
+            LOG.exception(
+                '{operation} failed in {duration:0.3f} sec. because of {error}',
+                operation=operation,
+                duration=operation.duration,
+                error=error,
+            )
         else:
+            now = utils.now()
+            operation.updated_at = now
+            operation.ended_at = now
+            operation.status = models.OperationStatus.DONE
+            LOG.info(
+                '{operation} completed in {duration:0.3f} sec.',
+                operation=operation,
+                duration=operation.duration,
+            )
+        finally:
             async with self.mediator.database.transaction() as conn:
-                await self.mediator.workers.mark_serial_operation_done(conn, operation)
-                LOG.info(
-                    'Operation {num}. `{goal}`, ' 'completed in {duration:0.3f} sec.',
-                    num=operation.id,
-                    operation=operation.goal.title(),
-                    duration=operation.duration,
-                )
+                await self.mediator.workers.save_serial_operation(conn, operation)

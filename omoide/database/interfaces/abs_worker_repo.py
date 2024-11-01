@@ -5,7 +5,7 @@ from collections.abc import Collection
 from typing import Generic
 from typing import TypeVar
 
-from omoide.serial_operations import SerialOperation
+from omoide import models
 
 ConnectionT = TypeVar('ConnectionT')
 
@@ -26,43 +26,26 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Try releasing the lock, return True on success."""
 
     @abc.abstractmethod
-    async def create_serial_operation(
-        self,
-        conn: ConnectionT,
-        operation: SerialOperation,
-    ) -> int:
-        """Create serial operation."""
-
-    @abc.abstractmethod
     async def get_next_serial_operation(
         self,
         conn: ConnectionT,
         names: Collection[str],
-    ) -> SerialOperation | None:
+    ) -> models.SerialOperation | None:
         """Return next serial operation."""
 
     @abc.abstractmethod
     async def lock_serial_operation(
         self,
         conn: ConnectionT,
-        operation: SerialOperation,
+        operation: models.SerialOperation,
         worker_name: str,
     ) -> bool:
         """Lock operation, return True on success."""
 
     @abc.abstractmethod
-    async def mark_serial_operation_done(
+    async def save_serial_operation(
         self,
         conn: ConnectionT,
-        operation: SerialOperation,
-    ) -> SerialOperation:
-        """Mark operation as done."""
-
-    @abc.abstractmethod
-    async def mark_serial_operation_failed(
-        self,
-        conn: ConnectionT,
-        operation: SerialOperation,
-        error: str,
-    ) -> SerialOperation:
-        """Mark operation as failed."""
+        operation: models.SerialOperation,
+    ) -> int:
+        """Save operation."""

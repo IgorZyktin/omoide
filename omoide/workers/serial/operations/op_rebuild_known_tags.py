@@ -3,48 +3,44 @@
 import time
 
 from omoide import custom_logging
-from omoide import serial_operations as so
+from omoide import models
 from omoide.workers.common.mediator import WorkerMediator
-from omoide.workers.serial import operations as op
 from omoide.workers.serial.cfg import Config
+from omoide.workers.serial.operations import SerialOperationImplementation
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildKnownTagsAnonExecutor(
-    op.SerialOperationExecutor[Config, WorkerMediator],
-):
+class RebuildKnownTagsAnonOperation(SerialOperationImplementation):
     """Rebuild known tags for anon."""
-
-    operation: so.RebuildKnownTagsAnonSO
 
     async def execute(self) -> None:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            tags = await self.mediator.tags.get_known_tags_anon(
-                conn,
-                batch_size=self.config.input_batch,
-            )
+            tags = await self.mediator.tags.get_known_tags_anon(conn, self.config.input_batch)
             await self.mediator.tags.drop_known_tags_anon(conn)
             await self.mediator.tags.insert_known_tags_anon(
                 conn, tags, batch_size=self.config.output_batch
             )
 
 
-class RebuildKnownTagsRegisteredExecutor(
-    op.SerialOperationExecutor[Config, WorkerMediator],
-):
+class RebuildKnownTagsRegisteredOperation(SerialOperationImplementation):
     """Rebuild known tags for specific user."""
 
-    operation: so.RebuildKnownTagsUserSO
+    def __init__(
+        self,
+        operation: models.SerialOperation,
+        config: Config,
+        mediator: WorkerMediator,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__(operation, config, mediator)
+        self.user_id = int(operation.extras['user_id'])
 
     async def execute(self) -> None:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            user = await self.mediator.users.get_by_uuid(conn, self.operation.user_uuid)
-
-            self.operation.goal = f'rebuild known tags for {user}'
-
+            user = await self.mediator.users.get_by_id(conn, self.user_id)
             tags = await self.mediator.tags.get_known_tags_user(
                 conn,
                 user,
@@ -56,26 +52,21 @@ class RebuildKnownTagsRegisteredExecutor(
             )
 
 
-class RebuildKnownTagsAllExecutor(
-    op.SerialOperationExecutor[Config, WorkerMediator],
-):
+class RebuildKnownTagsAllOperation(SerialOperationImplementation):
     """Rebuild known tags for all registered users."""
-
-    operation: so.RebuildKnownTagsAllSO
 
     async def execute(self) -> None:
         """Perform workload."""
-        LOG.info(
-            'Operation {}. Updating known tags for all users',
-            self.operation.id,
-        )
+        LOG.info('{}. Updating known tags for all users', self.operation)
 
         async with self.mediator.database.transaction() as conn:
             users = await self.mediator.users.select(conn)
 
-            for step, user in enumerate(users, start=1):
-                if self.mediator.stopping:
-                    break
+        for step, user in enumerate(users, start=1):
+            if self.mediator.stopping:
+                break
+
+            async with self.mediator.database.transaction() as conn:
                 start = time.monotonic()
                 tags = await self.mediator.tags.get_known_tags_user(
                     conn,

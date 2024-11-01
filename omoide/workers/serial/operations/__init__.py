@@ -1,15 +1,37 @@
-from omoide.workers.serial.operations.op_executor import SerialOperationExecutor  # noqa: F401,F403
-from omoide.workers.serial.operations.op_misc import DummyExecutor  # noqa: F401,F403
+"""Global namespace for all operations."""
+
+from omoide import const
+from omoide import exceptions
+from omoide import models
+from omoide.workers.common.mediator import WorkerMediator
+from omoide.workers.serial.cfg import Config
+from omoide.workers.serial.operations.base import SerialOperationImplementation
+from omoide.workers.serial.operations.op_rebuild_known_tags import RebuildKnownTagsAllOperation
+from omoide.workers.serial.operations.op_rebuild_known_tags import RebuildKnownTagsAnonOperation
 from omoide.workers.serial.operations.op_rebuild_known_tags import (
-    RebuildKnownTagsAllExecutor,  # noqa: F401,F403
+    RebuildKnownTagsRegisteredOperation,
 )
-from omoide.workers.serial.operations.op_rebuild_known_tags import (
-    RebuildKnownTagsAnonExecutor,  # noqa: F401,F403
-)
-from omoide.workers.serial.operations.op_rebuild_known_tags import (
-    RebuildKnownTagsRegisteredExecutor,  # noqa: F401,F403
-)
-from omoide.workers.serial.operations.op_rebuild_permissions import (
-    RebuildPermissionsExecutor,  # noqa: F401,F403
-)
-from omoide.workers.serial.operations.op_rebuild_tags import RebuildTagsExecutor  # noqa: F401,F403
+from omoide.workers.serial.operations.op_rebuild_permissions import RebuildItemPermissionsOperation
+from omoide.workers.serial.operations.op_rebuild_tags import RebuildItemTagsOperation
+
+NAME_MAP = {
+    const.AllSerialOperations.REBUILD_ITEM_TAGS: RebuildItemTagsOperation,
+    const.AllSerialOperations.REBUILD_ITEM_PERMISSIONS: RebuildItemPermissionsOperation,
+    const.AllSerialOperations.REBUILD_KNOWN_TAGS_ALL: RebuildKnownTagsAllOperation,
+    const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER: RebuildKnownTagsRegisteredOperation,
+    const.AllSerialOperations.REBUILD_KNOWN_TAGS_ANON: RebuildKnownTagsAnonOperation,
+}
+
+
+def get_implementation(
+    operation: models.SerialOperation,
+    config: Config,
+    mediator: WorkerMediator,
+) -> SerialOperationImplementation:
+    """Return specific version of operation."""
+    operation_type = NAME_MAP.get(operation.name)
+
+    if operation_type is None:
+        raise exceptions.UnknownSerialOperationError(name=operation.name)
+
+    return operation_type(operation, config, mediator)
