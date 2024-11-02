@@ -44,8 +44,6 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
-        else:
-            query = query.where(db_models.Item.is_collection == sa.false())
 
         return query
 
@@ -61,12 +59,10 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     ) -> list[models.Item]:
         """Return home items (generic)."""
         query = queries.get_items_with_parent_names().where(condition)
-        query = query.where(db_models.Item.status == models.Status.AVAILABLE)
+        query = query.where(db_models.Item.status != models.Status.DELETED)
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
-        else:
-            query = query.where(db_models.Item.is_collection == sa.false())
 
         if direct:
             query = query.where(db_models.Item.parent_id == sa.null())

@@ -27,11 +27,15 @@ def item_is_public() -> sa.BinaryExpression:
 def get_items_with_parent_names() -> Select:
     """Construct request that gathers names of item parents."""
     parents = aliased(db_models.Item)
-    return (
-        sa.select(db_models.Item, parents.name.label('parent_name'))
-        .join(parents, parents.id == db_models.Item.parent_id)
+    query = (
+        sa.select(
+            db_models.Item,
+            sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name')
+        )
+        .join(parents, parents.id == db_models.Item.parent_id, isouter=True)
         .where(db_models.Item.status != models.Status.DELETED)
     )
+    return query
 
 
 def ensure_registered_user_has_permissions(
