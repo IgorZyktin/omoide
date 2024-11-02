@@ -2,7 +2,10 @@
 
 import contextlib
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
+
+from PIL import Image
 
 from omoide import models
 
@@ -14,6 +17,23 @@ class ImageSizes:
     content_size: int | None = None
     preview_size: int | None = None
     thumbnail_size: int | None = None
+
+
+@dataclass
+class DimensionPair:
+    """DTO for image dimension passing."""
+
+    width: int | None = None
+    height: int | None = None
+
+
+@dataclass
+class ImageDimensions:
+    """DTO for image dimensions passing."""
+
+    content: DimensionPair = field(default_factory=DimensionPair)
+    preview: DimensionPair = field(default_factory=DimensionPair)
+    thumbnail: DimensionPair = field(default_factory=DimensionPair)
 
 
 class FileObjectStorageClient:
@@ -33,6 +53,33 @@ class FileObjectStorageClient:
         with contextlib.suppress(FileNotFoundError):
             return path.stat().st_size
         return None
+
+    @staticmethod
+    def _get_image_dimensions(path: Path) -> tuple[int, int] | tuple[None, None]:
+        """Calculate width and height."""
+        try:
+            size = Image.open(path).size
+        except FileNotFoundError:
+            return None, None
+        else:
+            width, height = size
+
+        return width, height
+
+    def get_dimensions_for_all_images(self, item: models.Item) -> ImageDimensions:
+        """Return image sizes for given item."""
+        dim = ImageDimensions()
+
+        if (content_path := self.get_content_path(item)) is not None:
+            dim.content.width, dim.content.height = self._get_image_dimensions(content_path)
+
+        if (preview_path := self.get_preview_path(item)) is not None:
+            dim.preview.width, dim.preview.height = self._get_image_dimensions(preview_path)
+
+        if (thumbnail_path := self.get_thumbnail_path(item)) is not None:
+            dim.thumbnail.width, dim.thumbnail.height = self._get_image_dimensions(thumbnail_path)
+
+        return dim
 
     def get_file_sizes(self, item: models.Item) -> ImageSizes:
         """Return image sizes for given item."""
