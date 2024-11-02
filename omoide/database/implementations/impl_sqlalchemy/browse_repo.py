@@ -366,15 +366,15 @@ class BrowseRepo(_BrowseRepoBase):
         }
 
         if collections:
-            query += ' AND is_collection = True'
+            query += ' AND valid_items.is_collection = True'
 
         if order == const.ASC:
-            query += ' AND number > :last_seen'
-            query += ' ORDER BY number'
+            query += ' AND valid_items.number > :last_seen'
+            query += ' ORDER BY valid_items.number'
             values['last_seen'] = last_seen
         elif order == const.DESC:
-            query += ' AND number < :last_seen'
-            query += ' ORDER BY number'
+            query += ' AND valid_items.number < :last_seen'
+            query += ' ORDER BY valid_items.number'
             values['last_seen'] = last_seen
         else:
             query += ' ORDER BY random()'
