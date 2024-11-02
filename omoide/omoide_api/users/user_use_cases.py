@@ -210,7 +210,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
                     each_user.extras['root_item_uuid'] = roots.get(each_user.id, const.DUMMY_UUID)
             else:
                 root = await self.mediator.users.get_root_item(conn, user)
-                user.extras['root_item_uuid'] = root or const.DUMMY_UUID
+                user.extras['root_item_uuid'] = root.uuid or const.DUMMY_UUID
                 users = [user]
 
         return users
