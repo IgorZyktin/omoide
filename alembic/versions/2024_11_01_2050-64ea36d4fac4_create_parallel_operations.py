@@ -5,11 +5,12 @@ Revises: de66fcce311e
 Create Date: 2024-11-01 20:50:00.206320+03:00
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = '64ea36d4fac4'
 down_revision: str | None = 'de66fcce311e'

@@ -10,8 +10,8 @@ from omoide import custom_logging
 from omoide import models
 from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy as sa
-from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.common import runtime
+from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial import cfg
 from omoide.workers.serial import operations
 from omoide.workers.serial.worker import SerialWorker

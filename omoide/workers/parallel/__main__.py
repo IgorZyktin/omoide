@@ -1,6 +1,7 @@
 """Worker that performs operations in parallel."""
 
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 import os
 
 import typer
@@ -9,9 +10,8 @@ from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
 from omoide.workers.common import runtime
 from omoide.workers.common.mediator import WorkerMediator
-from omoide.workers.parallel.worker import ParallelWorker
 from omoide.workers.parallel import cfg
-from concurrent.futures import ProcessPoolExecutor
+from omoide.workers.parallel.worker import ParallelWorker
 
 app = typer.Typer()
 

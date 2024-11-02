@@ -1,9 +1,10 @@
 """Worker class."""
 
 import hashlib
+from pathlib import Path
 import traceback
 import zlib
-from pathlib import Path
+
 from PIL import Image
 
 from omoide import const

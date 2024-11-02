@@ -1,8 +1,8 @@
 """Common code for all commands."""
 
 import os
-import sys
 from pathlib import Path
+import sys
 
 from omoide import const
 from omoide import custom_logging
