@@ -29,8 +29,7 @@ def get_items_with_parent_names() -> Select:
     parents = aliased(db_models.Item)
     query = (
         sa.select(
-            db_models.Item,
-            sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name')
+            db_models.Item, sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name')
         )
         .join(parents, parents.id == db_models.Item.parent_id, isouter=True)
         .where(db_models.Item.status != models.Status.DELETED)

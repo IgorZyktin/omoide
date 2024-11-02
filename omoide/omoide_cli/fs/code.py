@@ -83,7 +83,11 @@ async def refresh_file_sizes(
                 await meta.save(conn, metainfo)
 
                 if verbose:
-                    total_bytes = sizes.content_size + sizes.preview_size + sizes.thumbnail_size
+                    total_bytes = (
+                        (sizes.content_size or 0)
+                        + (sizes.preview_size or 0)
+                        + (sizes.thumbnail_size or 0)
+                    )
                     total_hr = utils.human_readable_size(total_bytes)
                     LOG.info('Updated {}, total {}', item, total_hr)
 

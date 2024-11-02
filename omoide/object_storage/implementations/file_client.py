@@ -104,7 +104,7 @@ class FileObjectStorageClient:
             self.folder
             / 'content'
             / str(item.owner_uuid)
-            / str(item.uuid)[:self.prefix_size]
+            / str(item.uuid)[: self.prefix_size]
             / f'{item.uuid}.{item.content_ext}'
         )
 
@@ -116,7 +116,7 @@ class FileObjectStorageClient:
             self.folder
             / 'preview'
             / str(item.owner_uuid)
-            / str(item.uuid)[:self.prefix_size]
+            / str(item.uuid)[: self.prefix_size]
             / f'{item.uuid}.{item.preview_ext}'
         )
 
@@ -128,6 +128,6 @@ class FileObjectStorageClient:
             self.folder
             / 'thumbnail'
             / str(item.owner_uuid)
-            / str(item.uuid)[:self.prefix_size]
+            / str(item.uuid)[: self.prefix_size]
             / f'{item.uuid}.{item.thumbnail_ext}'
         )

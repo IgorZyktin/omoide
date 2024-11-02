@@ -408,10 +408,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int | None,
     ) -> list[models.Item]:
         """Iterate on all items."""
-        query = (
-            sa.select(db_models.Item)
-            .where(db_models.Item.status != models.Status.DELETED)
-        )
+        query = sa.select(db_models.Item).where(db_models.Item.status != models.Status.DELETED)
 
         if last_seen is not None:
             query = query.where(db_models.Item.id > last_seen)
