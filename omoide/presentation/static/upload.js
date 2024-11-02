@@ -214,12 +214,6 @@ function createFileProxy(file, number) {
             uploaded: false,
             user_time: null,
             content_type: null,
-            content_width: null,
-            content_height: null,
-            preview_width: null,
-            preview_height: null,
-            thumbnail_width: null,
-            thumbnail_height: null,
             original_file_name: null,
             original_file_modified_at: null,
             features: [],
@@ -584,29 +578,6 @@ function tryGettingUserTime(proxy) {
     return null
 }
 
-async function getImageDimensions(image) {
-    // return width, height, resolution
-    return new Promise((resolve, reject) => {
-        const img = new Image()
-
-        // the following handler will fire after a successful loading of the image
-        img.onload = () => {
-            const {
-                naturalWidth: width,
-                naturalHeight: height,
-            } = img
-            resolve([width, height])
-        }
-
-        img.onerror = () => {
-            reject('There was some problem with the image.')
-        }
-
-        img.src = image
-    })
-}
-
-
 async function uploadMetainfoForProxy(proxy) {
     // upload metainfo
     return new Promise(function (resolve, reject) {
@@ -617,12 +588,6 @@ async function uploadMetainfoForProxy(proxy) {
             contentType: 'application/json',
             data: JSON.stringify({
                 user_time: proxy.metainfo.user_time,
-                content_width: proxy.metainfo.content_width,
-                content_height: proxy.metainfo.content_height,
-                preview_width: proxy.metainfo.preview_width,
-                preview_height: proxy.metainfo.preview_height,
-                thumbnail_width: proxy.metainfo.thumbnail_width,
-                thumbnail_height: proxy.metainfo.thumbnail_height,
                 content_type: proxy.metainfo.content_type,
                 extras: {
                     original_file_name: proxy.metainfo.original_file_name,
@@ -646,34 +611,6 @@ async function generateMetainfoForProxy(proxy, uploadState) {
     // extract file size, dimensions and other metainfo
     let date = new Date(proxy.file.lastModified)
     let lastModified = convertDatetimeToIsoString(date)
-
-    let content_width, content_height;
-    try {
-        [content_width, content_height] = await getImageDimensions(proxy.content)
-    } catch (error) {
-        [content_width, content_height] = [null, null]
-    }
-    proxy.metainfo.content_width = content_width
-    proxy.metainfo.content_height = content_height
-
-
-    let preview_width, preview_height;
-    try {
-        [preview_width, preview_height] = await getImageDimensions(proxy.preview)
-    } catch (error) {
-        [preview_width, preview_height] = [null, null]
-    }
-    proxy.metainfo.preview_width = preview_width
-    proxy.metainfo.preview_height = preview_height
-
-    let thumbnail_width, thumbnail_height;
-    try {
-        [thumbnail_width, thumbnail_height] = await getImageDimensions(proxy.thumbnail)
-    } catch (error) {
-        [thumbnail_width, thumbnail_height] = [null, null]
-    }
-    proxy.metainfo.thumbnail_width = thumbnail_width
-    proxy.metainfo.thumbnail_height = thumbnail_height
 
     proxy.metainfo.generated = true
     proxy.actualSteps.add('generateMetainfoForProxy')

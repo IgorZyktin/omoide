@@ -6,7 +6,6 @@ from typing import Self
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import NonNegativeInt
 from pydantic import model_validator
 
 from omoide import utils
@@ -20,15 +19,6 @@ class MetainfoInput(BaseModel):
     user_time: datetime | None = None
     content_type: str | None = None
     extras: dict[str, Any] = Field(default_factory=dict)
-
-    content_width: NonNegativeInt | None = None
-    content_height: NonNegativeInt | None = None
-
-    preview_width: NonNegativeInt | None = None
-    preview_height: NonNegativeInt | None = None
-
-    thumbnail_width: NonNegativeInt | None = None
-    thumbnail_height: NonNegativeInt | None = None
 
     @model_validator(mode='after')
     def ensure_extras_are_not_too_big(self) -> Self:

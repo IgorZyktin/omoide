@@ -3,6 +3,8 @@
 import hashlib
 import traceback
 import zlib
+from pathlib import Path
+from PIL import Image
 
 from omoide import const
 from omoide import custom_logging
@@ -69,34 +71,63 @@ class Worker(interfaces.AbsWorker):
 
     def _download_single_media(self, media: db_models.Media) -> None:
         """Save single media record."""
-        self._filesystem.save_binary(
+        paths = self._filesystem.save_binary(
             owner_uuid=media.owner.uuid,
             item_uuid=media.item.uuid,
             media_type=media.media_type,
             ext=media.ext,
             content=media.content,
         )
+
+        width = None
+        height = None
+
+        if paths:
+            width, height = self._get_image_dimensions(paths[0])
+
         self._save_md5_signature(media)
         self._save_cr32_signature(media)
-        self._alter_item_corresponding_to_media(media)
+        self._alter_item_corresponding_to_media(media, width, height)
 
     @staticmethod
-    def _alter_item_corresponding_to_media(media: db_models.Media) -> None:
+    def _get_image_dimensions(path: Path) -> tuple[int, int] | tuple[None, None]:
+        """Calculate width and height."""
+        try:
+            size = Image.open(path).size
+        except FileNotFoundError:
+            return None, None
+        else:
+            width, height = size
+
+        return width, height
+
+    @staticmethod
+    def _alter_item_corresponding_to_media(
+        media: db_models.Media,
+        width: int | None,
+        height: int | None,
+    ) -> None:
         """Store changes in item description."""
         if media.media_type == const.CONTENT:
+            media.item.metainfo.content_width = width
+            media.item.metainfo.content_height = height
             media.item.content_ext = media.ext
             media.item.metainfo.content_size = len(media.content)
 
         elif media.media_type == const.PREVIEW:
+            media.item.metainfo.preview_width = width
+            media.item.metainfo.preview_height = height
             media.item.preview_ext = media.ext
             media.item.metainfo.preview_size = len(media.content)
 
         elif media.media_type == const.THUMBNAIL:
+            media.item.metainfo.thumbnail_width = width
+            media.item.metainfo.thumbnail_height = height
             media.item.thumbnail_ext = media.ext
             media.item.metainfo.thumbnail_size = len(media.content)
 
         else:
-            msg = f'Got unknown media_type {media.media_type} ' f'for media {media.id}'
+            msg = f'Got unknown media_type {media.media_type} for media {media.id}'
             raise ValueError(msg)
 
         media.item.metainfo.updated_at = utils.now()

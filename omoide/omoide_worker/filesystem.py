@@ -61,8 +61,9 @@ class Filesystem:
         media_type: str,
         ext: str,
         content: bytes,
-    ) -> None:
+    ) -> list[Path]:
         """Save binary data to filesystem."""
+        paths: list[Path] = []
         bucket = utils.get_bucket(item_uuid, self._config.prefix_size)
         filename = f'{item_uuid}.{ext}'
         for folder in self._get_folders():
@@ -75,6 +76,8 @@ class Filesystem:
 
             self.ensure_folder_exists(path)
             self.safely_save(path, filename, content)
+            paths.append(path)
+        return paths
 
     @staticmethod
     def ensure_folder_exists(path: Path) -> bool:
