@@ -75,8 +75,8 @@ class Filesystem:
             )  # noqa: W503
 
             self.ensure_folder_exists(path)
-            self.safely_save(path, filename, content)
-            paths.append(path)
+            full_path = self.safely_save(path, filename, content)
+            paths.append(full_path)
         return paths
 
     @staticmethod
