@@ -109,3 +109,19 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         items: Collection[models.Item],
     ) -> dict[int, str | None]:
         """Get names of parents of the given items."""
+
+    @abc.abstractmethod
+    async def get_batch(
+        self,
+        conn: ConnectionT,
+        only_users: Collection[int],
+        only_items: Collection[int],
+        batch_size: int,
+        last_seen: int | None,
+        limit: int | None,
+    ) -> list[models.Item]:
+        """Iterate on all items."""
+
+    @abc.abstractmethod
+    async def cast_uuids(self, conn: ConnectionT, uuids: Collection[UUID]) -> set[int]:
+        """Convert collection of `item_uuid` into set of `item_id`."""

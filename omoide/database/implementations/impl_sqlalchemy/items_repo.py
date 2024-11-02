@@ -397,3 +397,43 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             names[row_id] = row_name
 
         return names
+
+    async def get_batch(
+        self,
+        conn: AsyncConnection,
+        only_users: Collection[int],
+        only_items: Collection[int],
+        batch_size: int,
+        last_seen: int | None,
+        limit: int | None,
+    ) -> list[models.Item]:
+        """Iterate on all items."""
+        query = (
+            sa.select(db_models.Item)
+            .where(db_models.Item.status != models.Status.DELETED)
+        )
+
+        if last_seen is not None:
+            query = query.where(db_models.Item.id > last_seen)
+
+        if only_users:
+            query = query.where(db_models.Item.owner_id.in_(only_users))
+
+        if only_items:
+            query = query.where(db_models.Item.uuid.in_(only_items))
+
+        query = query.order_by(db_models.Item.id)
+
+        if limit is not None:
+            query = query.limit(min(batch_size, limit))
+        else:
+            query = query.limit(batch_size)
+
+        response = (await conn.execute(query)).fetchall()
+        return [models.Item.from_obj(row) for row in response]
+
+    async def cast_uuids(self, conn: AsyncConnection, uuids: Collection[UUID]) -> set[int]:
+        """Convert collection of `item_uuid` into set of `item_id`."""
+        query = sa.select(db_models.Item.id).where(db_models.Item.uuid.in_(tuple(uuids)))
+        response = (await conn.execute(query)).fetchall()
+        return {row.id for row in response}

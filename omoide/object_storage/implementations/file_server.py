@@ -8,7 +8,7 @@ from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
 from omoide.object_storage.interfaces.abs_object_storage import AbsObjectStorage
 
 
-class FileObjectStorage(AbsObjectStorage):
+class FileObjectStorageServer(AbsObjectStorage):
     """Object storage that saves data into files.
 
     This implementation is server-side. It does not

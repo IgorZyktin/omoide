@@ -5,7 +5,6 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 import hashlib
 from pathlib import Path
-import sys
 from typing import Literal
 import zlib
 
@@ -33,17 +32,7 @@ def init(
     else:
         LOG.info('Adding {} hashes for files that miss them', what)
 
-    folder = common.extract_env(
-        what='File storage path',
-        variable=folder,
-        env_variable=const.ENV_FOLDER,
-    )
-
-    folder_path = Path(folder)
-
-    if not folder_path.exists():
-        LOG.error('Storage folder does not exist: {!r}', folder)
-        sys.exit(1)
+    folder_path = common.extract_folder(folder)
 
     db_url = common.extract_env(
         what='Database URL',
@@ -89,18 +78,18 @@ def process_items(  # noqa: PLR0913
     batch_number = 1
     engine = sa.create_engine(db_url, pool_pre_ping=True, future=True)
 
-    def condition(_total_in_batch: int) -> bool:
+    def condition(_total_in_batch: int, _batch_size: int) -> bool:
         """Cycle stop condition."""
         if limit is not None and total == limit:
             return False
 
-        return not (total_in_batch != 0 and total_in_batch < batch_size)
+        return not (_total_in_batch != 0 and _total_in_batch < _batch_size)
 
     try:
         with engine.connect() as conn:
             total_in_batch = 0
 
-            while condition(total_in_batch):
+            while condition(total_in_batch, batch_size):
                 LOG.info('Batch {}', batch_number)
                 items = get_items(conn, what, everything, batch_size, limit)
 

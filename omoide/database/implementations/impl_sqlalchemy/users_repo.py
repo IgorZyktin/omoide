@@ -277,3 +277,9 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             .values(password=new_password)
         )
         await conn.execute(stmt)
+
+    async def cast_uuids(self, conn: AsyncConnection, uuids: Collection[UUID]) -> set[int]:
+        """Convert collection of `user_uuid` into set of `user_id`."""
+        query = sa.select(db_models.User.id).where(db_models.User.uuid.in_(tuple(uuids)))
+        response = (await conn.execute(query)).fetchall()
+        return {row.id for row in response}

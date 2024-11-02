@@ -112,3 +112,7 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         new_password: str,
     ) -> None:
         """Save new user password (this field is not a part of the user model)."""
+
+    @abc.abstractmethod
+    async def cast_uuids(self, conn: ConnectionT, uuids: Collection[UUID]) -> set[int]:
+        """Convert collection of `user_uuid` into set of `user_id`."""

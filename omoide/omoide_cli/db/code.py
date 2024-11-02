@@ -13,7 +13,7 @@ from omoide.database.implementations.impl_sqlalchemy import ItemsRepo
 from omoide.database.implementations.impl_sqlalchemy import MediaRepo
 from omoide.database.implementations.impl_sqlalchemy import MetaRepo
 from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
-from omoide.object_storage.implementations.file_server import FileObjectStorage
+from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -33,7 +33,7 @@ async def copy_images_from_children(
     media = MediaRepo()
 
     database = SqlalchemyDatabase(db_url)
-    object_storage = FileObjectStorage(
+    object_storage = FileObjectStorageServer(
         database=database,
         media=media,
         prefix_size=const.STORAGE_PREFIX_SIZE,

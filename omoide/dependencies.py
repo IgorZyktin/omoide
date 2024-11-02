@@ -21,7 +21,7 @@ from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.interfaces import AbsPolicy
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
-from omoide.object_storage.implementations.file_server import FileObjectStorage
+from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import app_config
 from omoide.presentation import web
@@ -111,7 +111,7 @@ def get_object_storage(
 ) -> object_interfaces.AbsObjectStorage:
     """Get policy instance."""
     config = get_config()
-    return FileObjectStorage(
+    return FileObjectStorageServer(
         database=database,
         media=impl_sqlalchemy.MediaRepo(),
         prefix_size=config.prefix_size,
