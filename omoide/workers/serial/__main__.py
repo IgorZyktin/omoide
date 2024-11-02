@@ -11,6 +11,7 @@ from omoide import models
 from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy as sa
 from omoide.workers.common.mediator import WorkerMediator
+from omoide.workers.common import runtime
 from omoide.workers.serial import cfg
 from omoide.workers.serial import operations
 from omoide.workers.serial.worker import SerialWorker
@@ -30,7 +31,7 @@ def main(
 
 
 async def _main(operation: str, extras: str) -> None:
-    """ASync entry point."""
+    """Async entry point."""
     config = cfg.Config()
     mediator = WorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_admin_url.get_secret_value()),
@@ -45,7 +46,7 @@ async def _main(operation: str, extras: str) -> None:
     if operation:
         await run_manual(worker, operation, extras)
     else:
-        await run_automatic(worker)
+        await runtime.run_automatic(worker)
 
 
 async def run_manual(
@@ -83,27 +84,6 @@ async def run_manual(
             mediator=worker.mediator,
         )
         await implementation.execute()
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        LOG.warning('Stopped manually')
-    finally:
-        await worker.stop()
-
-
-async def run_automatic(worker: SerialWorker) -> None:
-    """Daemon run."""
-    await worker.start()
-
-    try:
-        while True:
-            did_something = await worker.execute()
-
-            if worker.mediator.stopping:
-                break
-
-            if did_something:
-                await asyncio.sleep(worker.config.short_delay)
-            else:
-                await asyncio.sleep(worker.config.long_delay)
     except (KeyboardInterrupt, asyncio.CancelledError):
         LOG.warning('Stopped manually')
     finally:

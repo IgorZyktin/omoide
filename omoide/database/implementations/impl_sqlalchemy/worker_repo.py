@@ -111,3 +111,28 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         )
         response = await conn.execute(query)
         return int(response.rowcount)
+
+    async def get_next_parallel_batch(
+        self,
+        conn: AsyncConnection,
+        worker_name: str,
+        names: Collection[str],
+        batch_size: int,
+    ) -> list[models.ParallelOperation]:
+        """Return next parallel operation batch."""
+        select_query = (
+            sa.select(db_models.ParallelOperation)
+            .where(
+                sa.or_(
+                    db_models.ParallelOperation.status == models.OperationStatus.CREATED,
+                    db_models.ParallelOperation.status == models.OperationStatus.PROCESSING,
+                ),
+                db_models.ParallelOperation.name.in_(tuple(names)),
+                ~db_models.ParallelOperation.processed_by.any_() == worker_name,
+            )
+            .order_by(db_models.ParallelOperation.id)
+            .limit(batch_size)
+        )
+
+        response = (await conn.execute(select_query)).fetchall()
+        return [models.ParallelOperation.from_obj(raw) for raw in response]

@@ -478,12 +478,11 @@ class OperationStatus(enum.StrEnum):
 
 
 @dataclass
-class SerialOperation(OmoideModel):
-    """Base class for all serial operations."""
+class BaseOperation(OmoideModel, abc.ABC):
+    """Base class for operations."""
 
     id: int
     name: str
-    worker_name: str | None
     status: OperationStatus
     extras: dict[str, Any]
     created_at: datetime
@@ -494,7 +493,7 @@ class SerialOperation(OmoideModel):
 
     def __str__(self) -> str:
         """Return textual representation."""
-        return f'<SerialOperation id={self.id} {self.name!r} {self.extras}>'
+        return f'<{type(self).__name__} id={self.id} {self.name!r} {self.extras}>'
 
     @property
     def duration(self) -> float:
@@ -514,6 +513,13 @@ class SerialOperation(OmoideModel):
         else:
             self.log += f'\n{text}'
 
+
+@dataclass
+class SerialOperation(BaseOperation):
+    """Base class for all serial operations."""
+
+    worker_name: str | None
+
     @classmethod
     def from_obj(
         cls,
@@ -532,4 +538,33 @@ class SerialOperation(OmoideModel):
             started_at=obj.started_at,
             ended_at=obj.ended_at,
             log=obj.log,
+        )
+
+
+@dataclass
+class ParallelOperation(BaseOperation):
+    """Base class for all parallel operations."""
+
+    payload: bytes | None
+    processed_by: set[str]
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            status=OperationStatus(obj.status),
+            extras=extras or obj.extras or {},
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            started_at=obj.started_at,
+            ended_at=obj.ended_at,
+            log=obj.log,
+            payload=obj.payload,
+            processed_by=set(obj.processed_by),
         )

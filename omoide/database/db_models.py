@@ -247,7 +247,6 @@ class Item(Base):
         pg.UUID(),
         sa.ForeignKey('items.uuid', ondelete='CASCADE'),
         nullable=True,
-        index=True,
         unique=False,
     )
 
@@ -262,8 +261,7 @@ class Item(Base):
     owner_uuid: Mapped[UUID] = mapped_column(
         pg.UUID(),
         sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-        nullable=True,
-        index=True,
+        nullable=False,
         unique=False,
     )
 
@@ -645,6 +643,46 @@ class SerialOperation(Base):
     ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
+
+
+class ParallelOperation(Base):
+    """Global operations that run in parallel."""
+
+    __tablename__ = 'parallel_operations'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
+    status: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False, index=True)
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+
+    log: Mapped[str] = mapped_column(sa.Text, nullable=True)
+
+    payload: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
+
+    # array fields ------------------------------------------------------------
+
+    processed_by: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
+
+    # other -------------------------------------------------------------------
+
+    __table_args__ = (sa.Index('ix_processed_by', processed_by, postgresql_using='gin'),)
 
 
 if __name__ == '__main__':

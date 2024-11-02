@@ -49,3 +49,13 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         operation: models.SerialOperation,
     ) -> int:
         """Save operation."""
+
+    @abc.abstractmethod
+    async def get_next_parallel_batch(
+        self,
+        conn: ConnectionT,
+        worker_name: str,
+        names: Collection[str],
+        batch_size: int,
+    ) -> list[models.ParallelOperation]:
+        """Return next parallel operation batch."""
