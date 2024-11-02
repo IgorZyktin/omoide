@@ -206,11 +206,12 @@ class GetAllUsersUseCase(BaseAPIUseCase):
             if user.is_admin:
                 users = await self.mediator.users.select(conn)
                 roots = await self.mediator.users.get_root_items_map(conn, *users)
-                for user in users:
-                    user.extras['root_item_uuid'] = roots.get(user.id, const.DUMMY_UUID)
+                for each_user in users:
+                    each_user.extras['root_item_uuid'] = roots.get(each_user.id, const.DUMMY_UUID)
             else:
                 root = await self.mediator.users.get_root_item(conn, user)
                 user.extras['root_item_uuid'] = root or const.DUMMY_UUID
+                users = [user]
 
         return users
 
