@@ -44,6 +44,8 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
+        else:
+            query = query.where(db_models.Item.is_collection == sa.false())
 
         return query
 
@@ -63,6 +65,8 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
 
         if collections:
             query = query.where(db_models.Item.is_collection == sa.true())
+        else:
+            query = query.where(db_models.Item.is_collection == sa.false())
 
         if direct:
             query = query.where(db_models.Item.parent_id == sa.null())
@@ -156,85 +160,3 @@ class SearchRepo(_SearchRepositoryBase):
             db_models.Item.permissions.any_() == user.id,
         )
         return await self._home_base(conn, condition, order, collections, direct, last_seen, limit)
-
-    async def count_all_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
-        """Return counters for known tags (anon user)."""
-        query = sa.select(
-            db_models.KnownTagsAnon.tag,
-            db_models.KnownTagsAnon.counter,
-        ).order_by(
-            sa.desc(db_models.KnownTagsAnon.counter),
-        )
-
-        response = (await conn.execute(query)).fetchall()
-        return {row.tag: row.counter for row in response}
-
-    async def count_all_tags_known(
-        self,
-        conn: AsyncConnection,
-        user: models.User,
-    ) -> dict[str, int]:
-        """Return counters for known tags (known user)."""
-        query = (
-            sa.select(
-                db_models.KnownTags.tag,
-                db_models.KnownTags.counter,
-            )
-            .where(
-                db_models.KnownTags.user_id == user.id,
-            )
-            .order_by(
-                sa.desc(db_models.KnownTags.counter),
-            )
-        )
-
-        response = (await conn.execute(query)).fetchall()
-        return {row.tag: row.counter for row in response}
-
-    async def autocomplete_tag_anon(
-        self,
-        conn: AsyncConnection,
-        tag: str,
-        limit: int,
-    ) -> list[str]:
-        """Autocomplete tag for anon user."""
-        query = (
-            sa.select(db_models.KnownTagsAnon.tag)
-            .where(
-                db_models.KnownTagsAnon.tag.ilike(f'%{tag}%'),
-                db_models.KnownTagsAnon.counter > 0,
-            )
-            .order_by(
-                sa.desc(db_models.KnownTagsAnon.counter),
-                sa.asc(db_models.KnownTagsAnon.tag),
-            )
-            .limit(limit)
-        )
-
-        response = (await conn.execute(query)).fetchall()
-        return [row.tag for row in response]
-
-    async def autocomplete_tag_known(
-        self,
-        conn: AsyncConnection,
-        user: models.User,
-        tag: str,
-        limit: int,
-    ) -> list[str]:
-        """Autocomplete tag for known user."""
-        query = (
-            sa.select(db_models.KnownTags.tag)
-            .where(
-                db_models.KnownTags.tag.ilike(f'%{tag}%'),
-                db_models.KnownTags.user_id == user.id,
-                db_models.KnownTags.counter > 0,
-            )
-            .order_by(
-                sa.desc(db_models.KnownTags.counter),
-                sa.asc(db_models.KnownTags.tag),
-            )
-            .limit(limit)
-        )
-
-        response = (await conn.execute(query)).fetchall()
-        return [row.tag for row in response]

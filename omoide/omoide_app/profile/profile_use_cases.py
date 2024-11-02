@@ -30,5 +30,5 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
     async def execute(self, user: models.User) -> dict[str, int]:
         """Return tags with their counters."""
         async with self.mediator.database.transaction() as conn:
-            known_tags = await self.mediator.search.count_all_tags_known(conn, user)
+            known_tags = await self.mediator.tags.count_all_tags_known(conn, user)
         return known_tags

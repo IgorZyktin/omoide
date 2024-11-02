@@ -25,9 +25,9 @@ class AutocompleteUseCase(BaseAPIUseCase):
 
         async with self.mediator.database.transaction() as conn:
             if user.is_anon:
-                variants = await self.mediator.search.autocomplete_tag_anon(conn, tag, limit)
+                variants = await self.mediator.tags.autocomplete_tag_anon(conn, tag, limit)
             else:
-                variants = await self.mediator.search.autocomplete_tag_known(conn, user, tag, limit)
+                variants = await self.mediator.tags.autocomplete_tag_known(conn, user, tag, limit)
         return variants
 
 

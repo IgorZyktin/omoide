@@ -102,3 +102,30 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         tags: set[str],
     ) -> None:
         """Save computed tags for given item."""
+
+    @abc.abstractmethod
+    async def count_all_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
+        """Return counters for known tags (anon user)."""
+
+    @abc.abstractmethod
+    async def count_all_tags_known(self, conn: ConnectionT, user: models.User) -> dict[str, int]:
+        """Return counters for known tags (known user)."""
+
+    @abc.abstractmethod
+    async def autocomplete_tag_anon(
+        self,
+        conn: ConnectionT,
+        tag: str,
+        limit: int,
+    ) -> list[str]:
+        """Autocomplete tag for anon user."""
+
+    @abc.abstractmethod
+    async def autocomplete_tag_known(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        tag: str,
+        limit: int,
+    ) -> list[str]:
+        """Autocomplete tag for known user."""

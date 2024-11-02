@@ -12,6 +12,7 @@ from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.parallel.worker import ParallelWorker
 from omoide.workers.parallel import cfg
 from concurrent.futures import ProcessPoolExecutor
+
 app = typer.Typer()
 
 LOG = custom_logging.get_logger(__name__)
@@ -40,7 +41,7 @@ async def _main() -> None:
     else:
         workers = config.workers
 
-    workers = min(workers, config.max_workers)
+    workers = min((workers or 1), config.max_workers)
     executor = ProcessPoolExecutor(max_workers=workers)
     worker = ParallelWorker(config, mediator, executor)
     await runtime.run_automatic(worker)

@@ -5,7 +5,7 @@ from concurrent.futures import ProcessPoolExecutor
 from omoide import custom_logging
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
-from omoide.workers.serial.cfg import Config
+from omoide.workers.parallel.cfg import Config
 
 LOG = custom_logging.get_logger(__name__)
 

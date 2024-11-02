@@ -9,6 +9,11 @@ from omoide import models
 from omoide.database import db_models
 
 
+def get_all_visible_items() -> Select:
+    """Select all non-deleted items."""
+    return sa.select(db_models.Item).where(db_models.Item.status != models.Status.DELETED)
+
+
 def public_user_ids() -> Select:
     """Select public user ids."""
     return sa.select(db_models.User.id).where(db_models.User.is_public)
@@ -22,8 +27,10 @@ def item_is_public() -> sa.BinaryExpression:
 def get_items_with_parent_names() -> Select:
     """Construct request that gathers names of item parents."""
     parents = aliased(db_models.Item)
-    return sa.select(db_models.Item, parents.name.label('parent_name')).join(
-        parents, parents.id == db_models.Item.parent_id
+    return (
+        sa.select(db_models.Item, parents.name.label('parent_name'))
+        .join(parents, parents.id == db_models.Item.parent_id)
+        .where(db_models.Item.status != models.Status.DELETED)
     )
 
 

@@ -68,7 +68,11 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return models.Item.from_obj(response)
 
-    async def get_by_uuid(self, conn: AsyncConnection, uuid: UUID,) -> models.Item:
+    async def get_by_uuid(
+        self,
+        conn: AsyncConnection,
+        uuid: UUID,
+    ) -> models.Item:
         """Return User with given UUID."""
         query = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
         response = (await conn.execute(query)).first()
@@ -208,12 +212,9 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = (
-            sa.select(db_models.Item)
-            .where(
-                queries.item_is_public(),
-                db_models.Item.status != models.Status.DELETED,
-            )
+        query = sa.select(db_models.Item).where(
+            queries.item_is_public(),
+            db_models.Item.status != models.Status.DELETED,
         )
 
         if parent_uuid is not None:

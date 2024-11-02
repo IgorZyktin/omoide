@@ -19,7 +19,8 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Adding stuff."""
-    op.create_table('parallel_operations',
+    op.create_table(
+        'parallel_operations',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('name', sa.String(length=256), nullable=False),
         sa.Column('status', sa.String(length=64), nullable=False),
@@ -31,13 +32,19 @@ def upgrade() -> None:
         sa.Column('log', sa.Text(), nullable=True),
         sa.Column('payload', postgresql.BYTEA(), nullable=False),
         sa.Column('processed_by', postgresql.ARRAY(sa.Text()), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
     )
     op.create_index(op.f('ix_parallel_operations_id'), 'parallel_operations', ['id'], unique=True)
-    op.create_index(op.f('ix_parallel_operations_status'), 'parallel_operations',
-                    ['status'], unique=False)
-    op.create_index('ix_processed_by', 'parallel_operations',
-                    ['processed_by'], unique=False, postgresql_using='gin')
+    op.create_index(
+        op.f('ix_parallel_operations_status'), 'parallel_operations', ['status'], unique=False
+    )
+    op.create_index(
+        'ix_processed_by',
+        'parallel_operations',
+        ['processed_by'],
+        unique=False,
+        postgresql_using='gin',
+    )
 
 
 def downgrade() -> None:

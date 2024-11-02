@@ -322,10 +322,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 msg = 'Root items cannot be deleted'
                 raise exceptions.NotAllowedError(msg)
 
-            if desired_switch == 'parent':
-                switch_to = await self.mediator.items.get_by_id(conn, item.parent_id)
-
-            elif desired_switch == 'sibling':
+            if desired_switch == 'sibling':
                 siblings = await self.mediator.items.get_siblings(conn, item)
                 if len(siblings) > 1:
                     index = siblings.index(item)
@@ -335,6 +332,9 @@ class DeleteItemUseCase(BaseItemUseCase):
                         switch_to = siblings[last - 1]
                     else:
                         switch_to = siblings[index + 1]
+
+            if (desired_switch == 'parent' or switch_to is None) and item.parent_id is not None:
+                switch_to = await self.mediator.items.get_by_id(conn, item.parent_id)
 
             members = await self.mediator.items.get_family(conn, item)
             for member in members:
