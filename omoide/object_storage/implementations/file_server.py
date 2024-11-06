@@ -72,34 +72,38 @@ class FileObjectStorageServer(AbsObjectStorage):
         copied_types: list[const.MEDIA_TYPE] = []
         now = utils.now()
 
-        if source_item.content_ext is not None:
-            await self.media.copy_image(
-                source_item=source_item,
-                target_item=target_item,
-                media_type=const.CONTENT,
-                ext=source_item.content_ext,
-                moment=now,
-            )
-            copied_types.append(const.CONTENT)
+        async with self.database.transaction() as conn:
+            if source_item.content_ext is not None:
+                await self.media.copy_image(
+                    conn=conn,
+                    source_item=source_item,
+                    target_item=target_item,
+                    media_type=const.CONTENT,
+                    ext=source_item.content_ext,
+                    moment=now,
+                )
+                copied_types.append(const.CONTENT)
 
-        if source_item.preview_ext is not None:
-            await self.media.copy_image(
-                source_item=source_item,
-                target_item=target_item,
-                media_type=const.PREVIEW,
-                ext=source_item.preview_ext,
-                moment=now,
-            )
-            copied_types.append(const.PREVIEW)
+            if source_item.preview_ext is not None:
+                await self.media.copy_image(
+                    conn=conn,
+                    source_item=source_item,
+                    target_item=target_item,
+                    media_type=const.PREVIEW,
+                    ext=source_item.preview_ext,
+                    moment=now,
+                )
+                copied_types.append(const.PREVIEW)
 
-        if source_item.thumbnail_ext is not None:
-            await self.media.copy_image(
-                source_item=source_item,
-                target_item=target_item,
-                media_type=const.THUMBNAIL,
-                ext=source_item.thumbnail_ext,
-                moment=now,
-            )
-            copied_types.append(const.THUMBNAIL)
+            if source_item.thumbnail_ext is not None:
+                await self.media.copy_image(
+                    conn=conn,
+                    source_item=source_item,
+                    target_item=target_item,
+                    media_type=const.THUMBNAIL,
+                    ext=source_item.thumbnail_ext,
+                    moment=now,
+                )
+                copied_types.append(const.THUMBNAIL)
 
         return copied_types

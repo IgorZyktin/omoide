@@ -128,11 +128,12 @@ class CopyImageUseCase(BaseAPIUseCase):
             self.ensure_admin_or_owner(user, source, subject='item images')
             self.ensure_admin_or_owner(user, target, subject='item images')
 
-            media_types = await self.mediator.object_storage.copy_all_objects(
-                source_item=source,
-                target_item=target,
-            )
+        media_types = await self.mediator.object_storage.copy_all_objects(
+            source_item=source,
+            target_item=target,
+        )
 
+        async with self.mediator.database.transaction() as conn:
             if media_types:
                 await self.mediator.meta.add_item_note(
                     conn=conn,
