@@ -22,4 +22,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Removing stuff."""
-    op.execute('REVOKE SELECT ON serial_operations FROM omoide_app;')
+    op.execute('REVOKE INSERT ON serial_operations FROM omoide_app;')
