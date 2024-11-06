@@ -46,7 +46,7 @@ class Album(Generic[T]):
     def __repr__(self) -> str:
         """Return string representation."""
         if len(self.sequence) > self.many_pages:
-            seq = repr(self.sequence[:self.many_pages]) + '...'
+            seq = repr(self.sequence[: self.many_pages]) + '...'
         else:
             seq = repr(self.sequence)
 

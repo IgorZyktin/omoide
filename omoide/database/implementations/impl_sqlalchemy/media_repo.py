@@ -1,4 +1,5 @@
 """Repository that perform CRUD operations on media."""
+
 from datetime import datetime
 
 import sqlalchemy as sa
