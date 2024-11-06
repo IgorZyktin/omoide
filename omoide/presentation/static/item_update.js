@@ -96,6 +96,29 @@ function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     })
 }
 
+function saveName(alertsElementId) {
+    // save item name
+    $.ajax({
+        timeout: 5000, // 5 seconds
+        type: 'PUT',
+        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/name`,
+        contentType: 'application/json',
+        data: JSON.stringify(
+            {
+                'name': newModel['name'],
+            },
+        ),
+        success: function (response) {
+            console.log('Saved item name', response)
+            oldModel['name'] = newModel['name']
+            makeAnnounce('New item name saved', alertsElementId)
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
+        },
+    })
+}
+
 function saveBasicStuff(alertsElementId) {
     // save changes
     $.ajax({

@@ -173,7 +173,7 @@ async def api_get_user_by_uuid(
 
 
 @api_users_router.put(
-    '/{uuid}/name',
+    '/{user_uuid}/name',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=user_api_models.UserOutput,
 )

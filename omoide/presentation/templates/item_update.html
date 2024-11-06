@@ -76,6 +76,14 @@
                    value="{{ item.name }}"
                    onchange="alterModelTextField(this, 'name')"
                    class="height-auto">
+                    <div id="alerts_basic">
+
+            <input id="save_name"
+                   type="button"
+                   class="button control-button"
+                   onclick="saveName('alerts_name')"
+                   value="Save item name">
+                    </div>
 
             {% if notes and notes.get('copied_image_from') %}
                 <label for="thumbnail_origin">Copied image from:</label>
