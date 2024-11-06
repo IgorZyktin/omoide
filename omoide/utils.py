@@ -299,7 +299,7 @@ def get_size(obj: Any, seen: set[int] | None = None) -> int:
     return size
 
 
-def to_simple_type(something: Any) -> Any:
+def to_simple_type(something: Any) -> Any:  # noqa: PLR0911 Too many return statements
     """Convert one item."""
     if something is None:
         return None

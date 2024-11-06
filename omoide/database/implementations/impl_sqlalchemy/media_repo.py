@@ -1,8 +1,10 @@
 """Repository that perform CRUD operations on media."""
+from datetime import datetime
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from omoide import const
 from omoide import custom_logging
 from omoide import models
 from omoide.database import db_models
@@ -46,48 +48,30 @@ class MediaRepo(AbsMediaRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return int(response.rowcount)
 
-    # async def copy_image(
-    #     self,
-    #     conn: AsyncConnection,
-    #     source_item: models.Item,
-    #     target_item: models.Item,
-    #     media_type: const.MEDIA_TYPE,
-    #     ext: str,
-    #     moment: datetime,
-    # ) -> int:
-    #     """Save intention to copy data between items."""
-    #     stmt = (
-    #         sa.insert(db_models.CommandCopy)
-    #         .values(
-    #             created_at=moment,
-    #             processed_at=None,
-    #             error=None,
-    #             owner_uuid=str(source_item.owner_uuid),
-    #             source_uuid=str(source_item.uuid),
-    #             target_uuid=str(target_item.uuid),
-    #             media_type=media_type,
-    #             ext=ext,
-    #         )
-    #         .returning(db_models.CommandCopy.id)
-    #     )
-    #
-    #     copy_id = (await conn.execute(stmt)).scalar()
-    #     return int(copy_id)
+    async def copy_image(
+        self,
+        conn: AsyncConnection,
+        source_item: models.Item,
+        target_item: models.Item,
+        media_type: const.MEDIA_TYPE,
+        ext: str,
+        moment: datetime,
+    ) -> int:
+        """Save intention to copy data between items."""
+        stmt = (
+            sa.insert(db_models.CommandCopy)
+            .values(
+                created_at=moment,
+                processed_at=None,
+                error=None,
+                owner_id=str(source_item.owner_id),
+                source_id=str(source_item.id),
+                target_id=str(target_item.id),
+                media_type=media_type,
+                ext=ext,
+            )
+            .returning(db_models.CommandCopy.id)
+        )
 
-    # async def mark_file_as_orphan(
-    #     self,
-    #     conn: AsyncConnection,
-    #     item: models.Item,
-    #     media_type: const.MEDIA_TYPE,
-    #     ext: str,
-    #     moment: datetime,
-    # ) -> None:
-    #     """Mark corresponding files as useless."""
-    #     stmt = sa.insert(db_models.OrphanFiles).values(
-    #         media_type=media_type,
-    #         owner_uuid=item.owner_uuid,
-    #         item_uuid=item.uuid,
-    #         ext=ext,
-    #         moment=moment,
-    #     )
-    #     await conn.execute(stmt)
+        copy_id = (await conn.execute(stmt)).scalar()
+        return int(copy_id) if copy_id is not None else -1

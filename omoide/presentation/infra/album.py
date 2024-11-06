@@ -27,6 +27,7 @@ class Album(Generic[T]):
         sequence: Sequence[T],
         position: T | None,
         items_on_page: int,
+        many_pages: int = 5,
     ) -> None:
         """Initialize instance."""
         try:
@@ -40,11 +41,12 @@ class Album(Generic[T]):
         self.total_items = len(sequence)
         self.items_on_page = items_on_page
         self.window = items_on_page // 2
+        self.many_pages = many_pages
 
     def __repr__(self) -> str:
         """Return string representation."""
-        if len(self.sequence) > 5:
-            seq = repr(self.sequence[:5]) + '...'
+        if len(self.sequence) > self.many_pages:
+            seq = repr(self.sequence[:self.many_pages]) + '...'
         else:
             seq = repr(self.sequence)
 

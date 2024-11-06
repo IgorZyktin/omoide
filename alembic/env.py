@@ -1,3 +1,4 @@
+"""Entry point for alembic."""
 from logging.config import fileConfig
 import os
 

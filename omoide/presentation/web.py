@@ -61,7 +61,7 @@ def raise_from_exc(
 
     code = get_corresponding_exception_code(exc)
 
-    if isinstance(exc, (exceptions.BaseOmoideError, ValidationError)):
+    if isinstance(exc, exceptions.BaseOmoideError | ValidationError):
         detail = str(exc)
     else:
         detail = 'Something bad happened on the server side'
@@ -202,7 +202,7 @@ class AimWrapper:
         else:
             params['direct'] = False
 
-        params['paged'] = cls.extract_bool(params, 'paged', False)
+        params['paged'] = cls.extract_bool(params, 'paged', default=False)
         params['page'] = cls.extract_int(params, 'page', 1)
         params['last_seen'] = cls.extract_int(params, 'last_seen', -1)
         params['items_per_page'] = cls.extract_int(params, 'items_per_page', 25)
@@ -216,6 +216,7 @@ class AimWrapper:
     def extract_bool(
         params: dict,
         key: str,
+        *,
         default: bool,
     ) -> bool:
         """Safely extract boolean value from user input."""

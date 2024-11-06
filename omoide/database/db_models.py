@@ -550,6 +550,32 @@ class CommandCopy(Base):
 
     ext: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
 
+    # relations ---------------------------------------------------------------
+
+    owner: Mapped[User] = relationship(
+        'User',
+        passive_deletes=True,
+        back_populates='owner',
+        primaryjoin='CommandCopy.owner_id==User.id',
+        uselist=False,
+    )
+
+    source: Mapped[Item] = relationship(
+        'Item',
+        passive_deletes=True,
+        back_populates='source',
+        primaryjoin='CommandCopy.source_id==Item.id',
+        uselist=False,
+    )
+
+    target: Mapped[Item] = relationship(
+        'Item',
+        passive_deletes=True,
+        back_populates='target',
+        primaryjoin='CommandCopy.target_id==Item.id',
+        uselist=False,
+    )
+
 
 class EXIF(Base):
     """EXIF information for items."""

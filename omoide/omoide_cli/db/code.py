@@ -41,7 +41,7 @@ async def copy_images_from_children(
 
     async with database.transaction() as conn:
         rows = await get_items_without_images(conn, only_users, only_items, limit)
-        for item_uuid, name, copied_image_from_uuid in rows:
+        for item_uuid, _, copied_image_from_uuid in rows:
             changed = False
             target_item = await items.get_by_uuid(conn, item_uuid)
 

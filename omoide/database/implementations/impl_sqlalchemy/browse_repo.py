@@ -273,7 +273,7 @@ class BrowseRepo(_BrowseRepoBase):
         nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
         OR nested_items.owner_id = :user_id
         OR :user_id = ANY(nested_items.permissions)
-      ) 
+      )
         """
 
         values = {

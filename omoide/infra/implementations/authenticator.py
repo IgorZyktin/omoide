@@ -27,6 +27,7 @@ class BcryptAuthenticator(AbsAuthenticator):
         auth_complexity: int,
     ) -> bool:
         """Return True if user password is correct."""
+        _ = auth_complexity
         return bcrypt.checkpw(
             password=given_password.encode('utf-8'),
             hashed_password=reference.encode('utf-8'),

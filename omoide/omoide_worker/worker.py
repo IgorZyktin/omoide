@@ -160,53 +160,53 @@ class Worker(interfaces.AbsWorker):
         if dropped:
             LOG.debug('Dropped {} rows with media', dropped)
 
-    # def copy(self) -> None:
-    #     """Perform manual copy operations."""
-    #     last_seen = None
-    #     while True:
-    #         with self._database.start_session():
-    #             batch = self._database.get_copies_batch(
-    #                 self._config.batch_size,
-    #                 last_seen,
-    #             )
-    #
-    #             LOG.debug('Got {} images to copy', len(batch))
-    #             for command in batch:
-    #                 # noinspection PyBroadException
-    #                 try:
-    #                     self._copy(command)
-    #                 except Exception:
-    #                     LOG.exception(
-    #                         'Failed to copy image for command {}',
-    #                         command.id,
-    #                     )
-    #                     command.error = traceback.format_exc()
-    #                 finally:
-    #                     self.counter += 1
-    #                     command.processed_at = utils.now()
-    #                     last_seen = command.id
-    #
-    #             self._database.session.commit()
-    #             if len(batch) < self._config.batch_size:
-    #                 break
+    def copy(self) -> None:
+        """Perform manual copy operations."""
+        last_seen = None
+        while True:
+            with self._database.start_session():
+                batch = self._database.get_copies_batch(
+                    self._config.batch_size,
+                    last_seen,
+                )
 
-    # def _copy(self, command: db_models.CommandCopy) -> None:
-    #     """Perform filesystem operation on copying."""
-    #     content = self._filesystem.load_binary(
-    #         owner_uuid=command.owner_uuid,
-    #         item_uuid=command.source_uuid,
-    #         media_type=command.media_type,
-    #         ext=command.ext,
-    #     )
-    #     media = self._database.create_media_from_copy(command, content)
-    #     self._database.session.add(media)
-    #     self._database.copy_parameters(command, len(content))
-    #     self._database.mark_origin(command)
+                LOG.debug('Got {} images to copy', len(batch))
+                for command in batch:
+                    # noinspection PyBroadException
+                    try:
+                        self._copy(command)
+                    except Exception:
+                        LOG.exception(
+                            'Failed to copy image for command {}',
+                            command.id,
+                        )
+                        command.error = traceback.format_exc()
+                    finally:
+                        self.counter += 1
+                        command.processed_at = utils.now()
+                        last_seen = command.id
 
-    # def drop_copies(self) -> None:
-    #     """Delete copy operations from the DB."""
-    #     dropped = self._database.drop_copies()
-    #     self.counter += dropped
-    #
-    #     if dropped:
-    #         LOG.debug('Dropped {} rows with copy commands', dropped)
+                self._database.session.commit()
+                if len(batch) < self._config.batch_size:
+                    break
+
+    def _copy(self, command: db_models.CommandCopy) -> None:
+        """Perform filesystem operation on copying."""
+        content = self._filesystem.load_binary(
+            owner_uuid=command.owner.uuid,
+            item_uuid=command.source.uuid,
+            media_type=command.media_type,
+            ext=command.ext,
+        )
+        media = self._database.create_media_from_copy(command, content)
+        self._database.session.add(media)
+        self._database.copy_parameters(command, len(content))
+        self._database.mark_origin(command)
+
+    def drop_copies(self) -> None:
+        """Delete copy operations from the DB."""
+        dropped = self._database.drop_copies()
+        self.counter += dropped
+
+        if dropped:
+            LOG.debug('Dropped {} rows with copy commands', dropped)

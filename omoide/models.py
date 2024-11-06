@@ -311,6 +311,8 @@ class Metainfo(OmoideModel):
         extra_keys: Collection[str] = (),
         extras: dict[str, Any] | None = None,
     ) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extra_keys
         _ = extras
         return cls(
             item_id=obj.item_id,
@@ -354,6 +356,8 @@ class Media(OmoideModel):
         extra_keys: Collection[str] = (),
         extras: dict[str, Any] | None = None,
     ) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extra_keys
         _ = extras
         return cls(
             id=obj.id,
@@ -527,6 +531,8 @@ class SerialOperation(BaseOperation):
         extra_keys: Collection[str] = (),
         extras: dict[str, Any] | None = None,
     ) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extra_keys
         return cls(
             id=obj.id,
             name=obj.name,
@@ -555,6 +561,8 @@ class ParallelOperation(BaseOperation):
         extra_keys: Collection[str] = (),
         extras: dict[str, Any] | None = None,
     ) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extra_keys
         return cls(
             id=obj.id,
             name=obj.name,
