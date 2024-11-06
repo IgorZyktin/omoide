@@ -493,6 +493,64 @@ class Media(Base):
     )
 
 
+class CommandCopy(Base):
+    """Operation of copying image from one item to another."""
+
+    __tablename__ = 'commands_copy'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False, index=True
+    )
+
+    processed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+
+    error: Mapped[str] = mapped_column(sa.Text, nullable=True)
+
+    owner_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+
+    source_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey(
+            'items.id',
+            ondelete='CASCADE',
+        ),
+        nullable=False,
+    )
+
+    target_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey(
+            'items.id',
+            ondelete='CASCADE',
+        ),
+        nullable=False,
+    )
+
+    media_type: Mapped[str] = mapped_column(
+        sa.Enum(const.CONTENT, const.PREVIEW, const.THUMBNAIL, name='media_type'),
+        nullable=False,
+    )
+
+    ext: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
+
+
 class EXIF(Base):
     """EXIF information for items."""
 
