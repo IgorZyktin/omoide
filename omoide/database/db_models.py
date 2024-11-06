@@ -97,6 +97,14 @@ class User(Base):
         uselist=True,
     )
 
+    copy_commands: Mapped['CommandCopy'] = relationship(
+        'CommandCopy',
+        passive_deletes=True,
+        primaryjoin='CommandCopy.owner_id==User.id',
+        back_populates='owner',
+        uselist=True,
+    )
+
     # methods -----------------------------------------------------------------
 
     def __repr__(self) -> str:
@@ -313,6 +321,22 @@ class Item(Base):
 
     exif: Mapped['EXIF'] = relationship(
         'EXIF', passive_deletes=True, back_populates='item', uselist=False
+    )
+
+    copy_as_source: Mapped['CommandCopy'] = relationship(
+        'CommandCopy',
+        passive_deletes=True,
+        back_populates='source',
+        primaryjoin='CommandCopy.source_id==Item.id',
+        uselist=True,
+    )
+
+    copy_as_target: Mapped['CommandCopy'] = relationship(
+        'CommandCopy',
+        passive_deletes=True,
+        back_populates='target',
+        primaryjoin='CommandCopy.target_id==Item.id',
+        uselist=True,
     )
 
     # other -------------------------------------------------------------------
@@ -555,7 +579,7 @@ class CommandCopy(Base):
     owner: Mapped[User] = relationship(
         'User',
         passive_deletes=True,
-        back_populates='owner',
+        back_populates='copy_commands',
         primaryjoin='CommandCopy.owner_id==User.id',
         uselist=False,
     )
@@ -563,7 +587,7 @@ class CommandCopy(Base):
     source: Mapped[Item] = relationship(
         'Item',
         passive_deletes=True,
-        back_populates='source',
+        back_populates='copy_as_source',
         primaryjoin='CommandCopy.source_id==Item.id',
         uselist=False,
     )
@@ -571,7 +595,7 @@ class CommandCopy(Base):
     target: Mapped[Item] = relationship(
         'Item',
         passive_deletes=True,
-        back_populates='target',
+        back_populates='copy_as_target',
         primaryjoin='CommandCopy.target_id==Item.id',
         uselist=False,
     )
