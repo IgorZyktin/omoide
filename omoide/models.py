@@ -595,3 +595,19 @@ class Plan:
     direct: bool
     last_seen: int | None
     limit: int
+
+
+@dataclass
+class Example:
+    """One duplicated inheritance line."""
+
+    item: Item
+    parents: list[Item]
+
+
+@dataclass
+class Duplication:
+    """DTO that describes item duplications."""
+
+    signature: str
+    examples: list[Example]

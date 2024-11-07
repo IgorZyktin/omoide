@@ -74,7 +74,7 @@ async function createItem(button, endpoint, parameters) {
 }
 
 
-async function deleteItem(button, uuid) {
+async function deleteItem(button, uuid, relocate=true) {
     // send command for item deletion
     let searchParams = new URLSearchParams(window.location.search)
 
@@ -86,12 +86,13 @@ async function deleteItem(button, uuid) {
             $(button).addClass('button-disabled')
         },
         success: function (response) {
-            let switch_to = response['switch_to']
-
-            if (switch_to.is_collection){
-                relocateWithAim(`/browse/${switch_to.uuid}` + '?' + searchParams.toString())
-            } else {
-                relocateWithAim(`/preview/${switch_to.uuid}` + '?' + searchParams.toString())
+            if (relocate){
+                let switch_to = response['switch_to']
+                if (switch_to.is_collection){
+                    relocateWithAim(`/browse/${switch_to.uuid}` + '?' + searchParams.toString())
+                } else {
+                    relocateWithAim(`/preview/${switch_to.uuid}` + '?' + searchParams.toString())
+                }
             }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {

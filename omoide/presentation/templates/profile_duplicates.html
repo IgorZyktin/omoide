@@ -1,0 +1,42 @@
+{% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
+{% from "macros.html" import render_lineage %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
+{% endblock %}
+
+{% block body %}
+    {% for duplication in duplicates %}
+        <div class="medium-block light-header">
+            <h2>MD5 - {{ duplication.signature }}</h2>
+        </div>
+        <div class="medium-block">
+            {% for example in duplication.examples %}
+                <div id="item_{{ example.item.uuid }}" class="light-under">
+                    {{ render_lineage(request, example.parents, example.item, aim_wrapper) }}
+                    <h3>Item {{ example.item.uuid }}</h3>
+                    {{ render_thumbnail_for_item(request, example.item, '???', aim_wrapper) }}
+                    <a href="javascript:void(0)"
+                       onclick="deleteThis('{{ example.item.uuid }}')"
+                       class="button">Delete this item</a>
+                </div>
+            {% endfor %}
+        </div>
+        <br>
+    {% endfor %}
+
+    <script>
+        function deleteThis(uuid) {
+            deleteItem(this, uuid, false)
+            let inp = document.getElementById('item_' + uuid)
+
+            if (inp !== undefined) {
+                inp.remove()
+            }
+        }
+
+    </script>
+
+{% endblock %}

@@ -582,3 +582,17 @@ table td {
     display: inline-block;
     position: absolute;
 }
+
+.light-header {
+    border-radius: var(--large-radius);
+    background-color: #a7aba7;
+    border: 1px solid #808080;
+    margin-top: 10px;
+}
+
+.light-under {
+    border-radius: var(--large-radius);
+    background-color: #939393;
+    border: 1px solid #808080;
+    margin-top: 10px;
+}
