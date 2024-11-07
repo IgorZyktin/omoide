@@ -42,11 +42,7 @@ class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
     async def get_home_items_for_anon(
         self,
         conn: ConnectionT,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        direct: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return home items for anon."""
 
@@ -55,10 +51,6 @@ class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         user: models.User,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        direct: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return home items for known user."""

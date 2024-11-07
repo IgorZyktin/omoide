@@ -75,7 +75,7 @@ async def api_get_recent_updates(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Return recently updated items.
@@ -135,7 +135,7 @@ async def api_search(  # noqa: PLR0913
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Perform search request.

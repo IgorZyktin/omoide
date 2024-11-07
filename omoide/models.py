@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import enum
 from typing import Any
+from typing import Literal
 from typing import NamedTuple
 from typing import Self
 from uuid import UUID
@@ -580,3 +581,17 @@ class ParallelOperation(BaseOperation):
             payload=obj.payload,
             processed_by=set(obj.processed_by),
         )
+
+
+@dataclass
+class Plan:
+    """Search definition according to user request."""
+
+    query: str | None
+    tags_include: set[str] | None
+    tags_exclude: set[str] | None
+    order: Literal['asc', 'desc', 'random']
+    collections: bool
+    direct: bool
+    last_seen: int | None
+    limit: int

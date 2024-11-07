@@ -31,7 +31,7 @@ async def api_browse(  # noqa: PLR0913
     direct: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
     collections: Annotated[bool, Query()] = False,
-    last_seen: Annotated[int, Query()] = limits.DEF_LAST_SEEN,
+    last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_BROWSE, lt=limits.MAX_BROWSE)] = limits.DEF_BROWSE,
 ):
     """Perform browse request.

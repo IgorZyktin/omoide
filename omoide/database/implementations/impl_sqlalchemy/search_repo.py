@@ -51,24 +51,20 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     async def _home_base(
         conn: AsyncConnection,
         condition: sa.BinaryExpression | sa.BooleanClauseList | sa.ColumnElement,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        direct: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return home items (generic)."""
         query = queries.get_items_with_parent_names().where(condition)
         query = query.where(db_models.Item.status != models.Status.DELETED)
 
-        if collections:
+        if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
 
-        if direct:
+        if plan.direct:
             query = query.where(db_models.Item.parent_id == sa.null())
 
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
+        query = queries.apply_order(query, plan.order, plan.last_seen)
+        query = query.limit(plan.limit)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
@@ -130,29 +126,21 @@ class SearchRepo(_SearchRepositoryBase):
     async def get_home_items_for_anon(
         self,
         conn: AsyncConnection,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        direct: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return home items for anon."""
         condition = queries.item_is_public()
-        return await self._home_base(conn, condition, order, collections, direct, last_seen, limit)
+        return await self._home_base(conn, condition, plan)
 
     async def get_home_items_for_known(
         self,
         conn: AsyncConnection,
         user: models.User,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        direct: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return home items for known user."""
         condition = sa.or_(
             db_models.Item.owner_id == user.id,
             db_models.Item.permissions.any_() == user.id,
         )
-        return await self._home_base(conn, condition, order, collections, direct, last_seen, limit)
+        return await self._home_base(conn, condition, plan)
