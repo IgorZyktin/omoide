@@ -1,11 +1,17 @@
 """Common code for all commands."""
 
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
+from uuid import UUID
 
 from omoide import const
 from omoide import custom_logging
+from omoide.database.implementations.impl_sqlalchemy import ItemsRepo
+from omoide.database.implementations.impl_sqlalchemy import MetaRepo
+from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
+from omoide.database.implementations.impl_sqlalchemy import UsersRepo
+from omoide.object_storage.implementations.file_client import FileObjectStorageClient
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -51,3 +57,29 @@ def loop_condition(total: int, limit: int | None, total_in_batch: int, batch_siz
         return False
 
     return not (total_in_batch != 0 and total_in_batch < batch_size)
+
+
+async def init_variables(
+    db_url: str,
+    only_users: list[UUID] | None,
+    only_items: list[UUID] | None,
+) -> tuple[
+    SqlalchemyDatabase,
+    UsersRepo,
+    ItemsRepo,
+    MetaRepo,
+    set[int],
+    set[int],
+]:
+    """Create all needed variables to start the loop."""
+    users = UsersRepo()
+    items = ItemsRepo()
+    meta = MetaRepo()
+
+    database = SqlalchemyDatabase(db_url)
+
+    async with database.transaction() as conn:
+        only_user_ids = await users.cast_uuids(conn, only_users or set())
+        only_item_ids = await items.cast_uuids(conn, only_items or set())
+
+    return database, users, items, meta, only_user_ids, only_item_ids

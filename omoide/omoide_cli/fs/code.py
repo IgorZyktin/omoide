@@ -6,46 +6,10 @@ from uuid import UUID
 from omoide import const
 from omoide import custom_logging
 from omoide import utils
-from omoide.database.implementations.impl_sqlalchemy import ItemsRepo
-from omoide.database.implementations.impl_sqlalchemy import MetaRepo
-from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
-from omoide.database.implementations.impl_sqlalchemy import UsersRepo
 from omoide.object_storage.implementations.file_client import FileObjectStorageClient
 from omoide.omoide_cli import common
 
 LOG = custom_logging.get_logger(__name__)
-
-
-async def init_variables(
-    db_url: str,
-    folder: Path,
-    only_users: list[UUID] | None,
-    only_items: list[UUID] | None,
-) -> tuple[
-    SqlalchemyDatabase,
-    UsersRepo,
-    ItemsRepo,
-    MetaRepo,
-    FileObjectStorageClient,
-    set[int],
-    set[int],
-]:
-    """Create all needed variables to start the loop."""
-    users = UsersRepo()
-    meta = MetaRepo()
-    items = ItemsRepo()
-
-    database = SqlalchemyDatabase(db_url)
-    object_storage = FileObjectStorageClient(
-        folder=folder,
-        prefix_size=const.STORAGE_PREFIX_SIZE,
-    )
-
-    async with database.transaction() as conn:
-        only_user_ids = await users.cast_uuids(conn, only_users or set())
-        only_item_ids = await items.cast_uuids(conn, only_items or set())
-
-    return database, users, items, meta, object_storage, only_user_ids, only_item_ids
 
 
 async def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function definition
@@ -64,10 +28,14 @@ async def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function de
         users,
         items,
         meta,
-        object_storage,
         only_user_ids,
         only_item_ids,
-    ) = await init_variables(db_url, folder, only_users, only_items)
+    ) = await common.init_variables(db_url, only_users, only_items)
+
+    object_storage = FileObjectStorageClient(
+        folder=folder,
+        prefix_size=const.STORAGE_PREFIX_SIZE,
+    )
 
     total = 0
     total_in_batch = 0
@@ -134,10 +102,14 @@ async def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in funct
         users,
         items,
         meta,
-        object_storage,
         only_user_ids,
         only_item_ids,
-    ) = await init_variables(db_url, folder, only_users, only_items)
+    ) = await common.init_variables(db_url, only_users, only_items)
+
+    object_storage = FileObjectStorageClient(
+        folder=folder,
+        prefix_size=const.STORAGE_PREFIX_SIZE,
+    )
 
     total = 0
     total_in_batch = 0

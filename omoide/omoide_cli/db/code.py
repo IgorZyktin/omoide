@@ -9,11 +9,9 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide.database import db_models
-from omoide.database.implementations.impl_sqlalchemy import ItemsRepo
 from omoide.database.implementations.impl_sqlalchemy import MediaRepo
-from omoide.database.implementations.impl_sqlalchemy import MetaRepo
-from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
+from omoide.omoide_cli import common
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -26,22 +24,26 @@ async def copy_images_from_children(
     limit: int | None,
 ) -> int:
     """Force items to copy images from their children."""
-    total = 0
+    (
+        database,
+        users,
+        items,
+        meta,
+        only_user_ids,
+        only_item_ids,
+    ) = await common.init_variables(db_url, only_users, only_items)
 
-    items = ItemsRepo()
-    meta = MetaRepo()
-    media = MediaRepo()
-
-    database = SqlalchemyDatabase(db_url)
     object_storage = FileObjectStorageServer(
         database=database,
-        media=media,
+        media=MediaRepo(),
         prefix_size=const.STORAGE_PREFIX_SIZE,
     )
 
+    total = 0
+
     async with database.transaction() as conn:
         rows = await get_items_without_images(conn, only_users, only_items, limit)
-        for item_uuid, _, copied_image_from_uuid in rows:
+        for item_uuid, copied_image_from_uuid in rows:
             changed = False
             target_item = await items.get_by_uuid(conn, item_uuid)
 
@@ -109,12 +111,11 @@ async def get_items_without_images(
     only_users: list[UUID] | None,
     only_items: list[UUID] | None,
     limit: int | None,
-) -> list[tuple[UUID, str, str | None]]:
+) -> list[tuple[UUID, str | None]]:
     """Return all items without images."""
     query = (
         sa.select(
             db_models.Item.uuid,
-            db_models.Item.name,
             db_models.ItemNote.value,
         )
         .where(
@@ -146,4 +147,4 @@ async def get_items_without_images(
 
     response = (await conn.execute(query)).fetchall()
 
-    return [(row.uuid, row.name, row.value) for row in response]
+    return [(row.uuid, row.value) for row in response]
