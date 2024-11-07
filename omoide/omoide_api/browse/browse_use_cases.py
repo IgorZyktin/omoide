@@ -27,7 +27,7 @@ class ApiBrowseUseCase(BaseAPIUseCase):
                     items = await self.mediator.browse.browse_direct_anon(conn, item, plan)
                 else:
                     items = await self.mediator.browse.browse_direct_known(conn, user, item, plan)
-            else:
+            else:  # noqa: PLR5501 Use `elif` instead of `else` then `if`, to reduce indentation
                 if user.is_anon:
                     items = await self.mediator.browse.browse_related_anon(conn, item, plan)
                 else:

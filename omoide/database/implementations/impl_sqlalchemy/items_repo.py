@@ -126,7 +126,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         parents: list[models.Item] = []
         parent_id = item.parent_id
 
-        while parent_id:
+        while parent_id is not None:
             query = sa.select(db_models.Item).where(db_models.Item.id == parent_id)
             raw_parent = (await conn.execute(query)).fetchone()
 
