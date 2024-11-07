@@ -48,7 +48,6 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     ) -> list[models.Item]:
         """Return home items (generic)."""
         query = queries.get_items_with_parent_names().where(condition)
-        query = query.where(db_models.Item.status != models.Status.DELETED)
 
         if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
@@ -56,8 +55,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
         if plan.direct:
             query = query.where(db_models.Item.parent_id == sa.null())
 
-        query = queries.apply_order(query, plan)
-        query = query.limit(plan.limit)
+        query = queries.finalize_query(query, plan)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
@@ -83,8 +81,7 @@ class SearchRepo(_SearchRepositoryBase):
         """Find items for dynamic load."""
         query = queries.get_items_with_parent_names()
         query = self._expand_query(query, user, plan)
-        query = queries.apply_order(query, plan)
-        query = query.limit(plan.limit)
+        query = queries.finalize_query(query, plan)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]

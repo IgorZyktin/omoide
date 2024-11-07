@@ -9,11 +9,6 @@ from omoide import models
 from omoide.database import db_models
 
 
-def get_all_visible_items() -> Select:
-    """Select all non-deleted items."""
-    return sa.select(db_models.Item).where(db_models.Item.status != models.Status.DELETED)
-
-
 def public_user_ids() -> Select:
     """Select public user ids."""
     return sa.select(db_models.User.id).where(db_models.User.is_public)
@@ -85,3 +80,8 @@ def apply_order(stmt: Select, plan: models.Plan) -> Select:
         stmt = stmt.order_by(sa.func.random())
 
     return stmt
+
+
+def finalize_query(query: Select, plan: models.Plan) -> Select:
+    """Apply all final tweaks to the query."""
+    return apply_order(query, plan).limit(plan.limit)

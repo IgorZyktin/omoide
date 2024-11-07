@@ -22,17 +22,12 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
         plan: models.Plan,
     ) -> list[models.Item]:
         """Return browse items (generic)."""
-        query = (
-            queries.get_items_with_parent_names()
-            .where(condition)
-            .where(db_models.Item.status == models.Status.AVAILABLE)
-        )
+        query = queries.get_items_with_parent_names().where(condition)
 
         if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
 
-        query = queries.apply_order(query, plan)
-        query = query.limit(plan.limit)
+        query = queries.finalize_query(query, plan)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
