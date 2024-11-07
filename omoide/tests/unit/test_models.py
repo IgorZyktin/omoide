@@ -1,17 +1,36 @@
 """Tests."""
 
 from dataclasses import dataclass
+from typing import Any
+from typing import Collection
+from typing import Self
 
 from omoide import models
 
 
-@dataclass(kw_only=True)
-class Changeable(models.ChangesMixin):
+@dataclass
+class Changeable(models.OmoideModel):
     """Demo-object."""
 
     x: str
     y: int = 2
     z: int = 3
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        _ = extra_keys
+        _ = extras
+        return cls(
+            x=obj.x,
+            y=obj.y,
+            z=obj.z,
+        )
 
 
 def test_changes_mixin_nothing():
@@ -36,7 +55,8 @@ def test_changes_mixin_field():
     assert obj.x == 'b'
     assert obj.y == 2
     assert obj.z == 3
-    assert obj.what_changed() == {'x': 'b'}
+    assert obj.what_changed() == {'x'}
+    assert obj.get_changes() == {'x': 'b'}
 
 
 def test_changes_mixin_reset():
@@ -47,6 +67,8 @@ def test_changes_mixin_reset():
     obj.x = 'b'
 
     # assert
-    assert obj.what_changed() == {'x': 'b'}
+    assert obj.what_changed() == {'x'}
+    assert obj.get_changes() == {'x': 'b'}
     obj.reset_changes()
     assert not obj.what_changed()
+    assert not obj.get_changes()
