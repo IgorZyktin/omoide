@@ -16,6 +16,7 @@ from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
 from omoide.omoide_api.search import search_use_cases
+from omoide.presentation import web
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -88,13 +89,21 @@ async def api_get_recent_updates(
     """
     use_case = search_use_cases.RecentUpdatesUseCase(mediator)
 
-    items, users = await use_case.execute(
-        user=user,
+    plan = models.Plan(
+        query=None,
+        tags_include=None,
+        tags_exclude=None,
         order=order,
         collections=collections,
+        direct=False,
         last_seen=last_seen,
         limit=limit,
     )
+
+    try:
+        items, users = await use_case.execute(user, plan)
+    except Exception as exc:
+        return web.raise_from_exc(exc)
 
     return search_api_models.RecentUpdatesOutput(
         items=common_api_models.convert_items(items, users)

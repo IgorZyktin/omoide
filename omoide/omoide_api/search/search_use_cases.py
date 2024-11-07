@@ -37,23 +37,13 @@ class RecentUpdatesUseCase(BaseAPIUseCase):
     async def execute(
         self,
         user: models.User,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to='read recently updated items')
 
         async with self.mediator.database.transaction() as conn:
-            items = await self.mediator.browse.get_recently_updated_items(
-                conn=conn,
-                user=user,
-                order=order,
-                collections=collections,
-                last_seen=last_seen,
-                limit=limit,
-            )
+            items = await self.mediator.browse.get_recently_updated_items(conn, user, plan)
             users = await self.mediator.users.get_map(conn, items)
 
         return items, users

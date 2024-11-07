@@ -78,9 +78,6 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         user: models.User,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return recently updated items."""

@@ -306,10 +306,7 @@ class BrowseRepo(_BrowseRepoBase):
         self,
         conn: AsyncConnection,
         user: models.User,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return recently updated items."""
         query = """
@@ -362,20 +359,20 @@ class BrowseRepo(_BrowseRepoBase):
         values = {
             'user_id': user.id,
             'status': models.Status.AVAILABLE.value,
-            'limit': limit,
+            'limit': plan.limit,
         }
 
-        if collections:
+        if plan.collections:
             query += ' AND valid_items.is_collection = True'
 
-        if order == const.ASC:
+        if plan.order == const.ASC:
             query += ' AND valid_items.number > :last_seen'
             query += ' ORDER BY valid_items.number'
-            values['last_seen'] = last_seen
-        elif order == const.DESC:
+            values['last_seen'] = plan.last_seen or -1
+        elif plan.order == const.DESC:
             query += ' AND valid_items.number < :last_seen'
             query += ' ORDER BY valid_items.number'
-            values['last_seen'] = last_seen
+            values['last_seen'] = plan.last_seen or -1
         else:
             query += ' ORDER BY random()'
 
