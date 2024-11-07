@@ -1,8 +1,8 @@
 """Tests."""
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Any
-from typing import Collection
 from typing import Self
 
 from omoide import models

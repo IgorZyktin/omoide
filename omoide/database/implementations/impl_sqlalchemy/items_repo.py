@@ -294,9 +294,8 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             .cte('nested_items', recursive=True)
         )
 
-        bottom_query = (
-            sa.select(db_models.Item.parent_id, db_models.Item.id)
-            .join(top_query, db_models.Item.parent_id == top_query.c.id)
+        bottom_query = sa.select(db_models.Item.parent_id, db_models.Item.id).join(
+            top_query, db_models.Item.parent_id == top_query.c.id
         )
 
         recursive_query = top_query.union_all(bottom_query)
@@ -353,10 +352,9 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             .cte('nested_items', recursive=True)
         )
 
-        bottom_query = (
-            sa.select(db_models.Item.parent_id, db_models.Item.status, db_models.Item.id)
-            .join(top_query, db_models.Item.parent_id == top_query.c.id)
-        )
+        bottom_query = sa.select(
+            db_models.Item.parent_id, db_models.Item.status, db_models.Item.id
+        ).join(top_query, db_models.Item.parent_id == top_query.c.id)
 
         recursive_query = top_query.union_all(bottom_query)
 
@@ -444,9 +442,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Get map of items."""
         items: dict[int, models.Item | None] = dict.fromkeys(ids)
 
-        query = queries.get_items_with_parent_names().where(
-            db_models.Item.id.in_(tuple(ids))
-        )
+        query = queries.get_items_with_parent_names().where(db_models.Item.id.in_(tuple(ids)))
 
         response = (await conn.execute(query)).fetchall()
 
@@ -478,17 +474,8 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                 ~db_models.Item.is_collection,
             )
             .group_by(db_models.SignatureMD5.signature)
-            .having(
-                sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1)
-                > 1
-            )
-            .order_by(
-                sa.desc(
-                    sa.func.array_length(
-                        sa.func.array_agg(db_models.Item.id), 1
-                    )
-                )
-            )
+            .having(sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1) > 1)
+            .order_by(sa.desc(sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1)))
             .limit(limit)
         )
 

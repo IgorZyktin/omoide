@@ -154,7 +154,7 @@ async def app_profile_new(
 
 
 @app_profile_router.get('/profile/duplicates')
-async def app_profile_duplicates(
+async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in function definition
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     user: Annotated[models.User, Depends(dep.get_current_user)],

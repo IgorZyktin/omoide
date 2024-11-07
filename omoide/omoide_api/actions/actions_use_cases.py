@@ -53,7 +53,7 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.mediator.policy.ensure_admin(admin, to=f'rebuild known tags for all registered users')
+        self.mediator.policy.ensure_admin(admin, to='rebuild known tags for all registered users')
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for all users', admin)
