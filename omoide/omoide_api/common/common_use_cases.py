@@ -47,34 +47,6 @@ class BaseAPIUseCase:
 
         raise exceptions.AccessDeniedError(msg)
 
-    @staticmethod
-    def ensure_admin_or_allowed_to(
-        user: models.User,
-        item: models.Item,
-        subject: str = '',
-        error_message: str = '',
-    ) -> None:
-        """Raise if one user tries to manage object of some other user."""
-        if (
-            all(
-                (
-                    item.owner_id == user.id,
-                    user.id in item.permissions,
-                )
-            )
-            or user.is_admin
-        ):
-            return
-
-        if error_message:
-            msg = error_message
-        elif subject:
-            msg = 'You are not allowed to perform ' f'such operations with {subject}'
-        else:
-            msg = 'You are not allowed to perform such operations'
-
-        raise exceptions.AccessDeniedError(msg)
-
 
 class BaseItemUseCase(BaseAPIUseCase):
     """Base class for use cases that create items."""
