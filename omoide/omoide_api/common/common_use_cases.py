@@ -21,25 +21,6 @@ class BaseAPIUseCase:
         self.mediator = mediator
 
     @staticmethod
-    def ensure_not_anon(
-        user: models.User,
-        operation: str = '',
-        error_message: str = '',
-    ) -> None:
-        """Raise if Anon requesting this."""
-        if user.is_not_anon:
-            return
-
-        if error_message:
-            msg = error_message
-        elif operation:
-            msg = f'Anonymous users are not allowed to {operation}'
-        else:
-            msg = 'Anonymous users are not allowed to perform such requests'
-
-        raise exceptions.AccessDeniedError(msg)
-
-    @staticmethod
     def ensure_admin_or_owner_or_allowed_to(
         user: models.User,
         item: models.Item,

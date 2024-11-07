@@ -83,7 +83,7 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         new_name: str,
     ) -> models.User:
         """Execute."""
-        self.ensure_not_anon(user, operation='update user name')
+        self.mediator.policy.ensure_registered(user, to='change user name')
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
@@ -126,7 +126,7 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         new_login: str,
     ) -> models.User:
         """Execute."""
-        self.ensure_not_anon(user, operation='update user login')
+        self.mediator.policy.ensure_registered(user, to='change user login')
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
@@ -151,7 +151,7 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
 class ChangeUserPasswordUseCase(BaseAPIUseCase):
     """Use case for updating a user's password."""
 
-    do_what: str = 'change password'
+    do_what: str = 'change user password'
 
     async def execute(
         self,
@@ -224,7 +224,7 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         user_uuid: UUID,
     ) -> models.User:
         """Execute."""
-        self.ensure_not_anon(user, operation='get user info')
+        self.mediator.policy.ensure_registered(user, to='get user info')
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
@@ -244,7 +244,7 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
         user_uuid: UUID,
     ) -> models.ResourceUsage:
         """Execute."""
-        self.ensure_not_anon(user, operation='get user stats')
+        self.mediator.policy.ensure_registered(user, to='get user stats')
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
