@@ -4,7 +4,6 @@ import abc
 from typing import Generic
 from typing import TypeVar
 
-from omoide import const
 from omoide import models
 
 ConnectionT = TypeVar('ConnectionT')
@@ -28,10 +27,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
 
@@ -41,10 +37,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         conn: ConnectionT,
         user: models.User,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
 
@@ -53,10 +46,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
 
@@ -66,10 +56,7 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         conn: ConnectionT,
         user: models.User,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
 

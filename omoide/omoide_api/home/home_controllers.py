@@ -40,9 +40,9 @@ async def api_home(  # noqa: PLR0913
     use_case = home_use_cases.ApiHomeUseCase(mediator)
 
     plan = models.Plan(
-        query=None,
-        tags_include=None,
-        tags_exclude=None,
+        query='',
+        tags_include=set(),
+        tags_exclude=set(),
         order=order,
         collections=collections,
         direct=direct,

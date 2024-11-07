@@ -19,10 +19,7 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
     async def _browse_base(
         conn: AsyncConnection,
         condition: sa.BinaryExpression | sa.BooleanClauseList | sa.ColumnElement,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return browse items (generic)."""
         query = (
@@ -31,11 +28,11 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
             .where(db_models.Item.status == models.Status.AVAILABLE)
         )
 
-        if collections:
+        if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
 
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
+        query = queries.apply_order(query, plan)
+        query = query.limit(plan.limit)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
@@ -73,27 +70,21 @@ class BrowseRepo(_BrowseRepoBase):
         self,
         conn: AsyncConnection,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
         condition = sa.and_(
             queries.item_is_public(),
             db_models.Item.parent_id == item.id,
         )
-        return await self._browse_base(conn, condition, order, collections, last_seen, limit)
+        return await self._browse_base(conn, condition, plan)
 
     async def browse_direct_known(
         self,
         conn: AsyncConnection,
         user: models.User,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (only direct)."""
         condition = sa.and_(
@@ -104,16 +95,13 @@ class BrowseRepo(_BrowseRepoBase):
             ),
             db_models.Item.parent_id == item.id,
         )
-        return await self._browse_base(conn, condition, order, collections, last_seen, limit)
+        return await self._browse_base(conn, condition, plan)
 
     async def browse_related_anon(
         self,
         conn: AsyncConnection,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
         query = """
@@ -178,21 +166,21 @@ class BrowseRepo(_BrowseRepoBase):
 
         values = {
             'item_id': item.id,
-            'limit': limit,
+            'limit': plan.limit,
             'status': models.Status.AVAILABLE.value,
         }
 
-        if collections:
+        if plan.collections:
             query += ' AND nested_items.is_collection = True'
 
-        if order == const.ASC:
+        if plan.order == const.ASC:
             query += ' AND nested_items.number > :last_seen'
             query += ' ORDER BY nested_items.number'
-            values['last_seen'] = last_seen
-        elif order == const.DESC:
+            values['last_seen'] = plan.last_seen or -1
+        elif plan.order == const.DESC:
             query += ' AND nested_items.number < :last_seen'
             query += ' ORDER BY nested_items.number'
-            values['last_seen'] = last_seen
+            values['last_seen'] = plan.last_seen or -1
         else:
             query += ' ORDER BY random()'
 
@@ -206,10 +194,7 @@ class BrowseRepo(_BrowseRepoBase):
         conn: AsyncConnection,
         user: models.User,
         item: models.Item,
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items to browse depending on parent (all children)."""
         query = """
@@ -280,20 +265,20 @@ class BrowseRepo(_BrowseRepoBase):
             'user_id': user.id,
             'item_id': item.id,
             'status': models.Status.AVAILABLE.value,
-            'limit': limit,
+            'limit': plan.limit,
         }
 
-        if collections:
+        if plan.collections:
             query += ' AND nested_items.is_collection = True'
 
-        if order == const.ASC:
+        if plan.order == const.ASC:
             query += ' AND nested_items.number > :last_seen'
             query += ' ORDER BY nested_items.number'
-            values['last_seen'] = last_seen
-        elif order == const.DESC:
+            values['last_seen'] = plan.last_seen or -1
+        elif plan.order == const.DESC:
             query += ' AND nested_items.number < :last_seen'
             query += ' ORDER BY nested_items.number'
-            values['last_seen'] = last_seen
+            values['last_seen'] = plan.last_seen or -1
         else:
             query += ' ORDER BY random()'
 

@@ -12,6 +12,7 @@ from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
+from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
@@ -90,9 +91,9 @@ async def api_get_recent_updates(
     use_case = search_use_cases.RecentUpdatesUseCase(mediator)
 
     plan = models.Plan(
-        query=None,
-        tags_include=None,
-        tags_exclude=None,
+        query='',
+        tags_include=set(),
+        tags_exclude=set(),
         order=order,
         collections=collections,
         direct=False,
@@ -121,14 +122,27 @@ async def api_search_total(
     collections: Annotated[bool, Query()] = False,
 ):
     """Return total amount of items that correspond to search query."""
-    use_case = search_use_cases.ApiSearchTotalUseCase(mediator)
+    if len(q) < limits.MIN_QUERY:
+        return search_api_models.SearchTotalOutput(total=0, duration=0.0)
 
-    total, duration = await use_case.execute(
-        user=user,
+    use_case = search_use_cases.ApiSearchTotalUseCase(mediator)
+    tags_include, tags_exclude = utils.parse_tags(q)
+
+    plan = models.Plan(
         query=q,
-        minimal_length=limits.MIN_QUERY,
+        tags_include=tags_include,
+        tags_exclude=tags_exclude,
+        order=const.ASC,
         collections=collections,
+        direct=False,
+        last_seen=None,
+        limit=-1,
     )
+
+    try:
+        total, duration = await use_case.execute(user, plan)
+    except Exception as exc:
+        return web.raise_from_exc(exc)
 
     return search_api_models.SearchTotalOutput(total=total, duration=duration)
 
@@ -153,17 +167,27 @@ async def api_search(  # noqa: PLR0913
     For example 'cats + dogs - frogs' will be treated as
     [must include 'cats', must include 'dogs', must not include 'frogs'].
     """
-    use_case = search_use_cases.ApiSearchUseCase(mediator)
+    if len(q) < limits.MIN_QUERY:
+        return common_api_models.ManyItemsOutput(duration=0.0, items=[])
 
-    duration, items, users = await use_case.execute(
-        user=user,
+    use_case = search_use_cases.ApiSearchUseCase(mediator)
+    tags_include, tags_exclude = utils.parse_tags(q)
+
+    plan = models.Plan(
         query=q,
-        minimal_length=limits.MIN_QUERY,
-        collections=collections,
+        tags_include=tags_include,
+        tags_exclude=tags_exclude,
         order=order,
+        collections=collections,
+        direct=False,
         last_seen=last_seen,
         limit=limit,
     )
+
+    try:
+        duration, items, users = await use_case.execute(user, plan)
+    except Exception as exc:
+        return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         duration=duration,

@@ -4,7 +4,6 @@ import abc
 from typing import Generic
 from typing import TypeVar
 
-from omoide import const
 from omoide import models
 
 ConnectionT = TypeVar('ConnectionT')
@@ -14,14 +13,7 @@ class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
-    async def count(
-        self,
-        conn: ConnectionT,
-        user: models.User,
-        tags_include: set[str],
-        tags_exclude: set[str],
-        collections: bool,
-    ) -> int:
+    async def count(self, conn: ConnectionT, user: models.User, plan: models.Plan) -> int:
         """Return total amount of items relevant to this search query."""
 
     @abc.abstractmethod
@@ -29,12 +21,7 @@ class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         user: models.User,
-        tags_include: set[str],
-        tags_exclude: set[str],
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Return matching items for search query."""
 

@@ -587,9 +587,9 @@ class ParallelOperation(BaseOperation):
 class Plan:
     """Search definition according to user request."""
 
-    query: str | None
-    tags_include: set[str] | None
-    tags_exclude: set[str] | None
+    query: str
+    tags_include: set[str]
+    tags_exclude: set[str]
     order: Literal['asc', 'desc', 'random']
     collections: bool
     direct: bool

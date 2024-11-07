@@ -6,7 +6,6 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.sql import Select
 
-from omoide import const
 from omoide import models
 from omoide.database import db_models
 from omoide.database.implementations.impl_sqlalchemy import queries
@@ -17,13 +16,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
     """Base class with helper methods."""
 
     @staticmethod
-    def _expand_query(
-        user: models.User,
-        query: Select,
-        tags_include: set[str],
-        tags_exclude: set[str],
-        collections: bool,
-    ) -> Select:
+    def _expand_query(query: Select, user: models.User, plan: models.Plan) -> Select:
         """Add access control and filtering."""
         query = query.join(
             db_models.ComputedTags,
@@ -32,17 +25,17 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
 
         query = queries.ensure_user_has_permissions(user, query)
 
-        if tags_include:
+        if plan.tags_include:
             query = query.where(
-                db_models.ComputedTags.tags.contains(tuple(tags_include)),
+                db_models.ComputedTags.tags.contains(tuple(plan.tags_include)),
             )
 
-        if tags_exclude:
+        if plan.tags_exclude:
             query = query.where(
-                ~db_models.ComputedTags.tags.overlap(tuple(tags_exclude)),
+                ~db_models.ComputedTags.tags.overlap(tuple(plan.tags_exclude)),
             )
 
-        if collections:
+        if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
 
         return query
@@ -63,7 +56,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
         if plan.direct:
             query = query.where(db_models.Item.parent_id == sa.null())
 
-        query = queries.apply_order(query, plan.order, plan.last_seen)
+        query = queries.apply_order(query, plan)
         query = query.limit(plan.limit)
 
         response = (await conn.execute(query)).fetchall()
@@ -73,24 +66,10 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
 class SearchRepo(_SearchRepositoryBase):
     """Repository that performs all search queries."""
 
-    async def count(
-        self,
-        conn: AsyncConnection,
-        user: models.User,
-        tags_include: set[str],
-        tags_exclude: set[str],
-        collections: bool,
-    ) -> int:
+    async def count(self, conn: AsyncConnection, user: models.User, plan: models.Plan) -> int:
         """Return total amount of items relevant to this search query."""
         query = sa.select(sa.func.count().label('total_items')).select_from(db_models.Item)
-
-        query = self._expand_query(
-            user=user,
-            query=query,
-            tags_include=tags_include,
-            tags_exclude=tags_exclude,
-            collections=collections,
-        )
+        query = self._expand_query(query, user, plan)
 
         response = (await conn.execute(query)).fetchone()
         return int(response.total_items) if response else 0
@@ -99,26 +78,13 @@ class SearchRepo(_SearchRepositoryBase):
         self,
         conn: AsyncConnection,
         user: models.User,
-        tags_include: set[str],
-        tags_exclude: set[str],
-        order: const.ORDER_TYPE,
-        collections: bool,
-        last_seen: int,
-        limit: int,
+        plan: models.Plan,
     ) -> list[models.Item]:
         """Find items for dynamic load."""
         query = queries.get_items_with_parent_names()
-
-        query = self._expand_query(
-            user=user,
-            query=query,
-            tags_include=tags_include,
-            tags_exclude=tags_exclude,
-            collections=collections,
-        )
-
-        query = queries.apply_order(query, order, last_seen)
-        query = query.limit(limit)
+        query = self._expand_query(query, user, plan)
+        query = queries.apply_order(query, plan)
+        query = query.limit(plan.limit)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]

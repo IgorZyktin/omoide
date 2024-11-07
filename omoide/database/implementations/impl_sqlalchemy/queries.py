@@ -67,19 +67,19 @@ def ensure_user_has_permissions(
     return ensure_registered_user_has_permissions(user, stmt)
 
 
-def apply_order(stmt: Select, order: const.ORDER_TYPE, last_seen: int | None) -> Select:
+def apply_order(stmt: Select, plan: models.Plan) -> Select:
     """Limit query if user demands it."""
-    if order == const.ASC:
+    if plan.order == const.ASC:
         stmt = stmt.order_by(db_models.Item.number)
 
-        if last_seen is not None and last_seen > 0:
-            stmt = stmt.where(db_models.Item.number > last_seen)
+        if plan.last_seen is not None and plan.last_seen > 0:
+            stmt = stmt.where(db_models.Item.number > plan.last_seen)
 
-    elif order == const.DESC:
+    elif plan.order == const.DESC:
         stmt = stmt.order_by(sa.desc(db_models.Item.number))
 
-        if last_seen is not None and last_seen > 0:
-            stmt = stmt.where(db_models.Item.number < last_seen)
+        if plan.last_seen is not None and plan.last_seen > 0:
+            stmt = stmt.where(db_models.Item.number < plan.last_seen)
 
     else:
         stmt = stmt.order_by(sa.func.random())

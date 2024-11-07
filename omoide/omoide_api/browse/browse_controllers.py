@@ -15,6 +15,7 @@ from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
+from omoide.presentation import web
 
 api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 
@@ -40,15 +41,21 @@ async def api_browse(  # noqa: PLR0913
     """
     use_case = browse_use_cases.ApiBrowseUseCase(mediator)
 
-    duration, items, users = await use_case.execute(
-        user=user,
-        item_uuid=item_uuid,
+    plan = models.Plan(
+        query='',
+        tags_include=set(),
+        tags_exclude=set(),
+        order=order,
         collections=collections,
         direct=direct,
-        order=order,
         last_seen=last_seen,
         limit=limit,
     )
+
+    try:
+        duration, items, users = await use_case.execute(user, item_uuid, plan)
+    except Exception as exc:
+        return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         duration=duration,

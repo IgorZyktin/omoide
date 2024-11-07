@@ -330,3 +330,30 @@ def serialize(payload: dict[str, Any]) -> dict[str, str | None]:
 def exc_to_str(exc: Exception) -> str:
     """Convert exception into readable string."""
     return f'{type(exc).__name__}: {exc}'
+
+
+TAGS_PATTERN = re.compile(r'(\s+\+\s+|\s+-\s+)')
+
+
+def parse_tags(query: str) -> tuple[set[str], set[str]]:
+    """Split  user query into tags."""
+    tags_include: set[str] = set()
+    tags_exclude: set[str] = set()
+
+    parts = TAGS_PATTERN.split(query)
+    clean_parts = [x.strip() for x in parts if x.strip()]
+
+    if not clean_parts:
+        return tags_include, tags_exclude
+
+    if clean_parts[0] not in ('+', '-'):
+        clean_parts.insert(0, '+')
+
+    for operator, tag in group_to_size(clean_parts):
+        _tag = str(tag).lower()
+        if operator == '+':
+            tags_include.add(_tag)
+        else:
+            tags_exclude.add(_tag)
+
+    return tags_include, tags_exclude
