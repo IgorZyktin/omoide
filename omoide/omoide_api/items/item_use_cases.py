@@ -245,15 +245,29 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             operation_id_old_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
                 name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                extras={'user_id': old_parent.id},
+                extras={'user_id': old_parent.owner_id},
             )
 
             operation_id_new_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
                 name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                extras={'user_id': new_parent.id},
+                extras={'user_id': new_parent.owner_id},
             )
-            # TODO - need to copy image from the item to new parent
+
+        if new_parent.has_incomplete_media():
+            media_types = await self.mediator.object_storage.copy_all_objects(
+                source_item=item,
+                target_item=new_parent,
+            )
+
+            if media_types:
+                async with self.mediator.database.transaction() as conn:
+                    await self.mediator.meta.add_item_note(
+                        conn=conn,
+                        item=new_parent,
+                        key='copied_image_from',
+                        value=str(item.uuid),
+                    )
 
         return [operation_id_tags, operation_id_old_parent, operation_id_new_parent]
 

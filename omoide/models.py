@@ -223,6 +223,10 @@ class Item(OmoideModel):
             return f'<Item id={self.id} {self.uuid} {self.name}>'
         return f'<Item id={self.id} {self.uuid}>'
 
+    def has_incomplete_media(self) -> bool:
+        """Return True if not media types are present for this item."""
+        return None in (self.content_ext, self.preview_ext, self.thumbnail_ext)
+
     def get_computed_tags(self, parent_tags: set[str]) -> set[str]:
         """Return computed tags.
 
