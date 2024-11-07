@@ -15,7 +15,7 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.ensure_admin(admin, subject='known tags for anon')
+        self.mediator.policy.ensure_admin(admin, to='rebuild known tags for anon')
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for anon', admin)
@@ -33,7 +33,7 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User, user_uuid: UUID) -> int:
         """Initiate serial operation execution."""
-        self.ensure_admin(admin, subject=f'known tags for user {user_uuid}')
+        self.mediator.policy.ensure_admin(admin, to=f'rebuild known tags for user {user_uuid}')
 
         async with self.mediator.database.transaction() as conn:
             user = await self.mediator.users.get_by_uuid(conn, user_uuid)
@@ -53,7 +53,7 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.ensure_admin(admin, subject='known tags for all registered users')
+        self.mediator.policy.ensure_admin(admin, to=f'rebuild known tags for all registered users')
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for all users', admin)
@@ -69,24 +69,22 @@ class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
 class RebuildComputedTagsUseCase(BaseAPIUseCase):
     """Use case for rebuilding computed tags."""
 
-    affected_target = 'computed tags'
-
     async def execute(
         self,
         admin: models.User,
         user_uuid: UUID,
     ) -> tuple[models.User, models.Item, int]:
         """Prepare for execution."""
-        self.ensure_admin(admin, subject=self.affected_target)
+        # TODO - are we really need to rebuild it via user and not via item?
+        self.mediator.policy.ensure_admin(admin, to=f'rebuild computed tags for user {user_uuid}')
 
         async with self.mediator.database.transaction() as conn:
             owner = await self.mediator.users.get_by_uuid(conn, user_uuid)
             item = await self.mediator.users.get_root_item(conn, owner)
 
             LOG.info(
-                '{} is rebuilding {} for item {} (owner is {})',
+                '{} is rebuilding computed tags for item {} (owner is {})',
                 admin,
-                self.affected_target,
                 item,
                 owner,
             )
@@ -116,7 +114,7 @@ class CopyImageUseCase(BaseAPIUseCase):
         target_uuid: UUID,
     ) -> list[const.MEDIA_TYPE]:
         """Execute."""
-        self.ensure_not_anon(user, operation='copy image for item')
+        self.mediator.policy.ensure_registered(user, to='copy image for item')
 
         if source_uuid == target_uuid:
             return []

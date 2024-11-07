@@ -11,7 +11,7 @@ class AbsPolicy(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def ensure_registered(user: models.User, to: str, error_message: str | None = None) -> None:
-        """Raise if Anon requesting this."""
+        """Raise if user is anon."""
 
     @staticmethod
     @abc.abstractmethod
@@ -22,6 +22,15 @@ class AbsPolicy(abc.ABC):
         error_message: str | None = None,
     ) -> None:
         """Raise if one user tries to modify object of some other user."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def ensure_admin(
+        user: models.User,
+        to: str,
+        error_message: str | None = None,
+    ) -> None:
+        """Raise if user is not admin."""
 
     @staticmethod
     @abc.abstractmethod

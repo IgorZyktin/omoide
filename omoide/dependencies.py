@@ -93,13 +93,11 @@ def get_credentials(request: Request) -> HTTPBasicCredentials:
     return anon
 
 
-@utils.memorize
 def get_authenticator() -> AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator()
 
 
-@utils.memorize
 def get_policy() -> AbsPolicy:
     """Get policy instance."""
     return infra.Policy()
@@ -130,7 +128,7 @@ def get_mediator(
         authenticator=authenticator,
         policy=policy,
         database=database,
-        browse=impl_sqlalchemy.BrowseRepo(),  # FIXME - app-related dependency
+        browse=impl_sqlalchemy.BrowseRepo(),
         exif=impl_sqlalchemy.EXIFRepo(),
         items=impl_sqlalchemy.ItemsRepo(),
         meta=impl_sqlalchemy.MetaRepo(),
