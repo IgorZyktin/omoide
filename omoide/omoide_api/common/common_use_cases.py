@@ -120,25 +120,6 @@ class BaseAPIUseCase:
 
         raise exceptions.AccessDeniedError(msg)
 
-    @staticmethod
-    def ensure_admin(
-        user: models.User,
-        subject: str = '',
-        error_message: str = '',
-    ) -> None:
-        """Raise if user is not admin."""
-        if user.is_admin:
-            return
-
-        if error_message:
-            msg = error_message
-        elif subject:
-            msg = 'You are not allowed to perform ' f'such operations with {subject}'
-        else:
-            msg = 'You are not allowed to perform such operations'
-
-        raise exceptions.AccessDeniedError(msg)
-
 
 class BaseItemUseCase(BaseAPIUseCase):
     """Base class for use cases that create items."""

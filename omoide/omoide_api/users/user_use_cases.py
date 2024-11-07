@@ -25,8 +25,7 @@ class CreateUserUseCase(BaseItemUseCase):
         password: str,
     ) -> models.User:
         """Execute."""
-        self.ensure_admin(admin, subject='users')
-
+        self.mediator.policy.ensure_admin(admin, to='create users')
         LOG.info('Admin {} is creating new user {}', admin, name)
 
         user = models.User(
