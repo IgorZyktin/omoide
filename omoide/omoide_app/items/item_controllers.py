@@ -145,7 +145,7 @@ async def app_update_item(  # noqa: PLR0913
 
 
 @app_items_router.get('/delete/{item_uuid}')
-async def app_delete_item(
+async def app_delete_item(  # noqa: PLR0913 Too many arguments in function definition
     request: Request,
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],

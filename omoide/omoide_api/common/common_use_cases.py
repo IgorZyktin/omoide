@@ -183,7 +183,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         self._computed_tags_cache[item.id] = tags
         return tags
 
-    async def create_one_item(
+    async def create_one_item(  # noqa: PLR0913 Too many arguments in function definition
         self,
         conn: Any,  # TODO - find a way to skip this argument
         user: models.User,

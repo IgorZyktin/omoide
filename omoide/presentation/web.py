@@ -237,7 +237,7 @@ class AimWrapper:
     ) -> int:
         """Safely extract int value from user input."""
         try:
-            result = int(params.get(key))  # type: ignore
+            result = int(params[key])
         except (ValueError, TypeError):
             result = default
         return result

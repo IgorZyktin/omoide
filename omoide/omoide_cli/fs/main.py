@@ -16,7 +16,7 @@ LOG = custom_logging.get_logger(__name__)
 
 
 @app.command()
-def refresh_file_sizes(
+def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function definition
     db_url: str | None = None,
     folder: str | None = None,
     verbose: bool = True,
@@ -51,7 +51,7 @@ def refresh_file_sizes(
 
 
 @app.command()
-def refresh_image_dimensions(
+def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in function definition
     db_url: str | None = None,
     folder: str | None = None,
     verbose: bool = True,

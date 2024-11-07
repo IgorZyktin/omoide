@@ -43,3 +43,11 @@ def extract_folder(folder: str | None) -> Path:
         sys.exit(1)
 
     return folder_path
+
+
+def loop_condition(total: int, limit: int | None, total_in_batch: int, batch_size: int) -> bool:
+    """Cycle stop condition."""
+    if limit is not None and total == limit:
+        return False
+
+    return not (total_in_batch != 0 and total_in_batch < batch_size)
