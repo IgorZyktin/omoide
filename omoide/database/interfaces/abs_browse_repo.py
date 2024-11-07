@@ -13,16 +13,6 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod
-    async def get_children(
-        self,
-        conn: ConnectionT,
-        item: models.Item,
-        offset: int | None,
-        limit: int | None,
-    ) -> list[models.Item]:
-        """Load all children of given item."""
-
-    @abc.abstractmethod
     async def browse_direct_anon(
         self,
         conn: ConnectionT,

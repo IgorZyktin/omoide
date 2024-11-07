@@ -87,7 +87,7 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
             await self._ensure_allowed_to(user, item, public_users)
 
             parents = await self.mediator.items.get_parents(conn, item)
-            children = await self.mediator.browse.get_children(
+            children = await self.mediator.items.get_children(
                 conn=conn,
                 item=item,
                 offset=aim.offset,

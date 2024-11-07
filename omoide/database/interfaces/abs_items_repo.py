@@ -31,7 +31,13 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return Item with given name."""
 
     @abc.abstractmethod
-    async def get_children(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
+    async def get_children(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[models.Item]:
         """Return list of children for given item."""
 
     @abc.abstractmethod
@@ -100,7 +106,7 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
 
     @abc.abstractmethod
     async def count_family(self, conn: ConnectionT, item: models.Item) -> int:
-        """Count all descendants for given item (including item itself)."""
+        """Count all descendants for given item (including the item itself)."""
 
     @abc.abstractmethod
     async def get_parent_names(

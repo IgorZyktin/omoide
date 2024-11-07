@@ -36,26 +36,6 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
 class BrowseRepo(_BrowseRepoBase):
     """Repository that performs all browse queries."""
 
-    async def get_children(
-        self,
-        conn: AsyncConnection,
-        item: models.Item,
-        offset: int | None,
-        limit: int | None,
-    ) -> list[models.Item]:
-        """Load all children of given item."""
-        query = queries.get_items_with_parent_names()
-        query = query.where(db_models.Item.parent_id == item.id).order_by(db_models.Item.number)
-
-        if offset:
-            query = query.offset(offset)
-
-        if limit is not None:
-            query = query.limit(limit)
-
-        response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
-
     async def browse_direct_anon(
         self,
         conn: AsyncConnection,
