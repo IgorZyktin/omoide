@@ -22,16 +22,14 @@ class ApiBrowseUseCase(BaseAPIUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
 
-            if plan.direct:
-                if user.is_anon:
-                    items = await self.mediator.browse.browse_direct_anon(conn, item, plan)
-                else:
-                    items = await self.mediator.browse.browse_direct_known(conn, user, item, plan)
-            else:  # noqa: PLR5501 Use `elif` instead of `else` then `if`, to reduce indentation
-                if user.is_anon:
-                    items = await self.mediator.browse.browse_related_anon(conn, item, plan)
-                else:
-                    items = await self.mediator.browse.browse_related_known(conn, user, item, plan)
+            if user.is_anon and plan.direct:
+                items = await self.mediator.browse.browse_direct_anon(conn, item, plan)
+            elif user.is_anon and not plan.direct:
+                items = await self.mediator.browse.browse_related_anon(conn, item, plan)
+            elif user.is_not_anon and plan.direct:
+                items = await self.mediator.browse.browse_direct_known(conn, user, item, plan)
+            else:
+                items = await self.mediator.browse.browse_related_known(conn, user, item, plan)
 
             users = await self.mediator.users.get_map(conn, items)
 
