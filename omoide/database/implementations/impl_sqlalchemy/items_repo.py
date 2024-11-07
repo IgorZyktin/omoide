@@ -274,49 +274,41 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row) for row in response]
 
-    async def check_child(
+    async def is_child(
         self,
         conn: AsyncConnection,
-        possible_parent_uuid: UUID,
-        possible_child_uuid: UUID,
+        parent: models.Item,
+        child: models.Item,
     ) -> bool:
-        """Return True if given item is actually a child.
+        """Return True if given item is a child of given parent.
 
-        Before checking ensure that UUIDs are not equal. Item is considered
-        of being child of itself. This check initially was added to ensure that
-        we could not create circular link when setting new parent for the item.
+        Item is considered of being child of itself. This check initially was added to ensure that
+        we could not create circular links when setting new parent for the item.
         """
-        if possible_parent_uuid == possible_child_uuid:
+        if parent.id == child.id:
             return True
 
-        query = """
-        WITH RECURSIVE nested_items AS (
-            SELECT parent_uuid,
-                   uuid
-            FROM items
-            WHERE uuid = :possible_parent_uuid
-            UNION ALL
-            SELECT i.parent_uuid,
-                   i.uuid
-            FROM items i
-                     INNER JOIN nested_items it2 ON i.parent_uuid = it2.uuid
+        top_query = (
+            sa.select(db_models.Item.parent_id, db_models.Item.id)
+            .where(db_models.Item.id == parent.id)
+            .cte('nested_items', recursive=True)
         )
-        SELECT count(*) AS total
-        FROM nested_items
-        WHERE uuid = :possible_child_uuid;
-        """
 
-        values = {
-            'possible_parent_uuid': str(possible_parent_uuid),
-            'possible_child_uuid': str(possible_child_uuid),
-        }
+        bottom_query = (
+            sa.select(db_models.Item.parent_id, db_models.Item.id)
+            .join(top_query, db_models.Item.parent_id == top_query.c.id)
+        )
 
-        response = (await conn.execute(sa.text(query), values)).fetchone()
+        recursive_query = top_query.union_all(bottom_query)
 
-        if response is None:
-            return False
+        total_query = (
+            sa.select(sa.func.count().label('total'))
+            .select_from(recursive_query)
+            .where(recursive_query.c.id == child.id)
+        )
 
-        return bool(response.total >= 1)
+        response = (await conn.execute(total_query)).fetchone()
+        return bool(response.total >= 1) if response else False
 
     async def save(self, conn: AsyncConnection, item: models.Item) -> bool:
         """Save the given item."""

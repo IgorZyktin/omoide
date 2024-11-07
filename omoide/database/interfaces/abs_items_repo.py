@@ -80,13 +80,13 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Return Items."""
 
     @abc.abstractmethod
-    async def check_child(
+    async def is_child(
         self,
         conn: ConnectionT,
-        possible_parent_uuid: UUID,
-        possible_child_uuid: UUID,
+        parent: models.Item,
+        child: models.Item,
     ) -> bool:
-        """Return True if given item is actually a child."""
+        """Return True if given item is a child of given parent."""
 
     @abc.abstractmethod
     async def save(self, conn: ConnectionT, item: models.Item) -> bool:

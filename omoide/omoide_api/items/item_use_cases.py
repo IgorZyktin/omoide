@@ -210,10 +210,13 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             old_parent = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
             new_parent = await self.mediator.items.get_by_uuid(conn, new_parent_uuid)
-            is_child = await self.mediator.items.check_child(conn, new_parent_uuid, item.uuid)
+            is_child = await self.mediator.items.is_child(conn, item, new_parent)
 
             if is_child:
-                msg = 'Item {new_parent_uuid} is actually a child of {item_uuid}'
+                msg = (
+                    'Item {new_parent_uuid} is actually a child of {item_uuid}, '
+                    'you will get circular link this way'
+                )
                 raise exceptions.InvalidInputError(
                     msg, new_parent_uuid=new_parent_uuid, item_uuid=item_uuid
                 )
