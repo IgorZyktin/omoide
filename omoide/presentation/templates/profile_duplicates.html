@@ -8,15 +8,19 @@
 {% endblock %}
 
 {% block body %}
-    {% for signature, items in groups %}
-        <h2>MD5 - {{ signature }}</h2>
-        <div style="display: flex; flex-direction: column; align-items: center">
-            {% for item, parents in items %}
-                {{ render_lineage(request, parents, item, aim_wrapper) }}
-                <div id="item_{{ item.uuid }}" style="display: flex; flex-direction: row; align-items: center">
-                    <h3>Item {{ item.uuid }}</h3>
-                    {{ render_thumbnail_for_item(request, item, '???', aim_wrapper) }}
-                    <a href="javascript:void(0)" onclick="deleteThis('{{ item.uuid }}')" class="button">Delete this item</a>
+    {% for duplication in duplicates %}
+        <div class="medium-block light-header">
+            <h2>MD5 - {{ duplication.signature }}</h2>
+        </div>
+        <div class="medium-block">
+            {% for example in duplication.examples %}
+                <div id="item_{{ example.item.uuid }}" class="light-under">
+                    {{ render_lineage(request, example.parents, example.item, aim_wrapper) }}
+                    <h3>Item {{ example.item.uuid }}</h3>
+                    {{ render_thumbnail_for_item(request, example.item, '???', aim_wrapper) }}
+                    <a href="javascript:void(0)"
+                       onclick="deleteThis('{{ example.item.uuid }}')"
+                       class="button">Delete this item</a>
                 </div>
             {% endfor %}
         </div>

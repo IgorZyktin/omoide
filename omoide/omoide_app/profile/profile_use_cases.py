@@ -41,11 +41,8 @@ class AppProfileDuplicatesUseCase(BaseAPPUseCase):
         self,
         user: models.User,
         limit: int,
-    ) -> list[tuple[str, list[models.Item]]]:
+    ) -> list[models.Duplication]:
         """Return groups of items with same hash."""
-        async with self.mediator.storage.transaction():
-            groups = await self.mediator.items_repo.get_duplicated_items(
-                user=user,
-                limit=limit,
-            )
-        return groups
+        async with self.mediator.database.transaction() as conn:
+            duplicates = await self.mediator.items.get_duplicates(conn, user, limit)
+        return duplicates

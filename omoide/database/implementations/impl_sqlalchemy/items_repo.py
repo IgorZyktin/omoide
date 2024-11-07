@@ -435,3 +435,88 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         query = sa.select(db_models.Item.id).where(db_models.Item.uuid.in_(tuple(uuids)))
         response = (await conn.execute(query)).fetchall()
         return {row.id for row in response}
+
+    async def get_map(
+        self,
+        conn: AsyncConnection,
+        ids: Collection[int],
+    ) -> dict[int, models.Item | None]:
+        """Get map of items."""
+        items: dict[int, models.Item | None] = dict.fromkeys(ids)
+
+        query = queries.get_items_with_parent_names().where(
+            db_models.Item.id.in_(tuple(ids))
+        )
+
+        response = (await conn.execute(query)).fetchall()
+
+        for row in response:
+            item = models.Item.from_obj(row, extra_keys=['parent_name'])
+            items[item.id] = item
+
+        return items
+
+    async def get_duplicates(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        limit: int,
+    ) -> list[models.Duplication]:
+        """Return groups of items with same hash."""
+        query = (
+            sa.select(
+                db_models.SignatureMD5.signature,
+                sa.func.array_agg(db_models.Item.id).label('ids'),
+            )
+            .join(
+                db_models.SignatureMD5,
+                db_models.Item.id == db_models.SignatureMD5.item_id,
+            )
+            .where(
+                db_models.Item.owner_id == user.id,
+                db_models.Item.status != models.Status.DELETED,
+                ~db_models.Item.is_collection,
+            )
+            .group_by(db_models.SignatureMD5.signature)
+            .having(
+                sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1)
+                > 1
+            )
+            .order_by(
+                sa.desc(
+                    sa.func.array_length(
+                        sa.func.array_agg(db_models.Item.id), 1
+                    )
+                )
+            )
+            .limit(limit)
+        )
+
+        response = (await conn.execute(query)).fetchall()
+
+        all_ids: set[int] = set()
+        signatures_to_groups: list[tuple[str, list[int]]] = []
+
+        for row in response:
+            ids = sorted(row.ids)
+            signatures_to_groups.append((row.signature, ids))
+            all_ids.update(ids)
+
+        all_items = await self.get_map(conn, all_ids)
+        result: list[models.Duplication] = []
+
+        for signature, ids in signatures_to_groups:
+            duplication = models.Duplication(signature=signature, examples=[])
+
+            for item_id in ids:
+                item = all_items.get(item_id)
+
+                if not item:
+                    continue
+
+                parents = await self.get_parents(conn, item)
+                duplication.examples.append(models.Example(item, parents))
+
+            result.append(duplication)
+
+        return result

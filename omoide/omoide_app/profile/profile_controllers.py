@@ -4,6 +4,7 @@ from typing import Annotated
 
 import fastapi
 from fastapi import Depends
+from fastapi import Query
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
@@ -12,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import custom_logging
 from omoide import dependencies as dep
+from omoide import limits
 from omoide import models
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.profile import profile_use_cases
@@ -159,18 +161,17 @@ async def app_profile_duplicates(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
     """Show duplicated items."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    # TODO - put it into config
-    limit = 10
     use_case = profile_use_cases.AppProfileDuplicatesUseCase(mediator)
 
     try:
-        groups = await use_case.execute(user, limit)
+        duplicates = await use_case.execute(user, limit)
     except Exception as exc:
         return web.redirect_from_exc(request, exc)
 
@@ -178,7 +179,7 @@ async def app_profile_duplicates(
         'request': request,
         'config': config,
         'user': user,
-        'groups': groups,
+        'duplicates': duplicates,
         'aim_wrapper': aim_wrapper,
         'block_direct': True,
         'block_ordered': True,

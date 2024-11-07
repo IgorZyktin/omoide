@@ -131,3 +131,20 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
     @abc.abstractmethod
     async def cast_uuids(self, conn: ConnectionT, uuids: Collection[UUID]) -> set[int]:
         """Convert collection of `item_uuid` into set of `item_id`."""
+
+    @abc.abstractmethod
+    async def get_map(
+        self,
+        conn: ConnectionT,
+        ids: Collection[int],
+    ) -> dict[int, models.Item | None]:
+        """Get map of items."""
+
+    @abc.abstractmethod
+    async def get_duplicates(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        limit: int,
+    ) -> list[models.Duplication]:
+        """Return groups of items with same hash."""
