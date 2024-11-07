@@ -238,7 +238,7 @@ class AimWrapper:
         """Safely extract int value from user input."""
         try:
             result = int(params[key])
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, KeyError):
             result = default
         return result
 
