@@ -21,32 +21,6 @@ class BaseAPIUseCase:
         self.mediator = mediator
 
     @staticmethod
-    def ensure_admin_or_owner_or_allowed_to(
-        user: models.User,
-        item: models.Item,
-        subject: str = '',
-        error_message: str = '',
-    ) -> None:
-        """Raise if one user tries to manage object of some other user."""
-        if any(
-            (
-                user.is_admin,
-                item.owner_id == user.id,
-                user.id in item.permissions,
-            )
-        ):
-            return
-
-        if error_message:
-            msg = error_message
-        elif subject:
-            msg = 'You are not allowed to perform ' f'such operations with {subject}'
-        else:
-            msg = 'You are not allowed to perform such operations'
-
-        raise exceptions.AccessDeniedError(msg)
-
-    @staticmethod
     def ensure_admin_or_owner(
         user: models.User,
         target: models.Item | models.User,
