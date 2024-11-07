@@ -1,8 +1,8 @@
 """Common code for all commands."""
 
 import os
-import sys
 from pathlib import Path
+import sys
 from uuid import UUID
 
 from omoide import const
@@ -11,7 +11,6 @@ from omoide.database.implementations.impl_sqlalchemy import ItemsRepo
 from omoide.database.implementations.impl_sqlalchemy import MetaRepo
 from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
 from omoide.database.implementations.impl_sqlalchemy import UsersRepo
-from omoide.object_storage.implementations.file_client import FileObjectStorageClient
 
 LOG = custom_logging.get_logger(__name__)
 

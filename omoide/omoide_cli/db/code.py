@@ -16,7 +16,7 @@ from omoide.omoide_cli import common
 LOG = custom_logging.get_logger(__name__)
 
 
-async def copy_images_from_children(
+async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` is too complex
     db_url: str,
     verbose: bool,
     only_users: list[UUID] | None,

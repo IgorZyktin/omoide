@@ -51,7 +51,7 @@ class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
         """Get map of users for given items."""
 
     @abc.abstractmethod
-    async def select(
+    async def select(  # noqa: PLR0913 Too many arguments in function definition
         self,
         conn: ConnectionT,
         user_id: int | None = None,

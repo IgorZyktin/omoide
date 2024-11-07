@@ -114,7 +114,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         return users
 
-    async def select(
+    async def select(  # noqa: PLR0913 Too many arguments in function definition
         self,
         conn: AsyncConnection,
         user_id: int | None = None,
