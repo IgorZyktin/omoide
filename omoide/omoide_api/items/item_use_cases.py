@@ -554,7 +554,7 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.ensure_admin_or_owner(user, item, subject='item permissions')
+            self.mediator.policy.ensure_can_change(user, item, to='change item permissions')
 
             LOG.info('{} is updating permissions of {}', user, item)
 

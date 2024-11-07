@@ -20,33 +20,6 @@ class BaseAPIUseCase:
         """Initialize instance."""
         self.mediator = mediator
 
-    @staticmethod
-    def ensure_admin_or_owner(
-        user: models.User,
-        target: models.Item | models.User,
-        subject: str = '',
-        error_message: str = '',
-    ) -> None:
-        """Raise if one user tries to manage object of some other user."""
-        conditions: list[bool] = []
-
-        if isinstance(target, models.User):
-            conditions.append(user.id == target.id)
-        else:
-            conditions.append(target.owner_id == user.id)
-
-        if all(conditions) or user.is_admin:
-            return
-
-        if error_message:
-            msg = error_message
-        elif subject:
-            msg = 'You are not allowed to perform ' f'such operations with {subject}'
-        else:
-            msg = 'You are not allowed to perform this operation'
-
-        raise exceptions.AccessDeniedError(msg)
-
 
 class BaseItemUseCase(BaseAPIUseCase):
     """Base class for use cases that create items."""

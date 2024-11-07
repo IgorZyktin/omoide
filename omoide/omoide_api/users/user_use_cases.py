@@ -76,6 +76,8 @@ class CreateUserUseCase(BaseItemUseCase):
 class ChangeUserNameUseCase(BaseAPIUseCase):
     """Use case for updating a user's name."""
 
+    do_what: str = 'change user name'
+
     async def execute(
         self,
         user: models.User,
@@ -83,11 +85,11 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         new_name: str,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='change user name')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.ensure_admin_or_owner(user, target_user, 'users')
+            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
 
             LOG.info(
                 '{} is updating {} name to {}',
@@ -119,6 +121,8 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
 class ChangeUserLoginUseCase(BaseAPIUseCase):
     """Use case for updating a user's login."""
 
+    do_what: str = 'change user login'
+
     async def execute(
         self,
         user: models.User,
@@ -126,11 +130,11 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         new_login: str,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='change user login')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.ensure_admin_or_owner(user, target_user, 'users')
+            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
 
             LOG.info(
                 'User {} is updating user {} login to {!r}',
@@ -218,17 +222,19 @@ class GetAllUsersUseCase(BaseAPIUseCase):
 class GetUserByUUIDUseCase(BaseAPIUseCase):
     """Use case for getting user by UUID."""
 
+    do_what: str = 'get user info'
+
     async def execute(
         self,
         user: models.User,
         user_uuid: UUID,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='get user info')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.ensure_admin_or_owner(user, target_user, 'users')
+            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
             root = await self.mediator.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
 
@@ -238,17 +244,19 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
 class GetUserResourceUsageUseCase(BaseAPIUseCase):
     """Use case for getting current user stats."""
 
+    do_what: str = 'get user stats'
+
     async def execute(
         self,
         user: models.User,
         user_uuid: UUID,
     ) -> models.ResourceUsage:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='get user stats')
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.ensure_admin_or_owner(user, target_user, 'users')
+            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
 
             disk_usage = await self.mediator.meta.get_total_disk_usage(conn, target_user)
 
@@ -281,10 +289,14 @@ class GetAnonUserTagsUseCase(BaseAPIUseCase):
 class GetKnownUserTagsUseCase(BaseAPIUseCase):
     """Use case for getting tags available to specific user."""
 
+    do_what: str = 'get known tags for user'
+
     async def execute(self, user: models.User, user_uuid: UUID) -> dict[str, int]:
         """Execute."""
+        self.mediator.policy.ensure_registered(user, to=self.do_what)
+
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.ensure_admin_or_owner(user, target_user, 'user tags')
+            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
             tags = await self.mediator.tags.count_all_tags_known(conn, user=target_user)
         return tags
