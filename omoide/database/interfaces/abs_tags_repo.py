@@ -13,7 +13,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on tags."""
 
     @abc.abstractmethod
-    async def get_known_tags_anon(self, conn: ConnectionT, batch_size: int) -> dict[str, int]:
+    async def get_known_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
         """Return known tags for anon."""
 
     @abc.abstractmethod

@@ -17,7 +17,7 @@ class RebuildKnownTagsAnonOperation(SerialOperationImplementation):
     async def execute(self) -> None:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            tags = await self.mediator.tags.get_known_tags_anon(conn, self.config.input_batch)
+            tags = await self.mediator.tags.get_known_tags_anon(conn)
             await self.mediator.tags.drop_known_tags_anon(conn)
             await self.mediator.tags.insert_known_tags_anon(
                 conn, tags, batch_size=self.config.output_batch

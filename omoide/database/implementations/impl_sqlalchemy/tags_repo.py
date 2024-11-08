@@ -15,21 +15,23 @@ from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 class TagsRepo(AbsTagsRepo[AsyncConnection]):
     """Repository that performs operations on tags."""
 
-    async def get_known_tags_anon(self, conn: AsyncConnection, batch_size: int) -> dict[str, int]:
+    async def get_known_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
         """Return known tags for anon."""
-
-        def get_conditions(_marker: int) -> list[sa.ColumnElement]:
-            """Return list of filtering conditions."""
-            return [
-                db_models.Item.owner_id.in_(queries.public_user_ids()),
-                db_models.Item.id > _marker,
-            ]
-
-        return await self._process_batch_of_tags(
-            conn=conn,
-            get_conditions=get_conditions,
-            batch_size=batch_size,
+        query_ids = sa.select(db_models.Item.id).where(
+            db_models.Item.owner_id.in_(queries.public_user_ids())
         )
+
+        query_tags = sa.select(sa.func.unnest(db_models.ComputedTags.tags).label('tag')).where(
+            db_models.ComputedTags.item_id.in_(query_ids)
+        )
+
+        query = (
+            sa.select(query_tags.c.tag, sa.func.count().label('total'))
+            .group_by(query_tags.c.tag)
+        )
+
+        response = (await conn.execute(query)).fetchall()
+        return {row.tag: row.total for row in response}
 
     async def drop_known_tags_anon(self, conn: AsyncConnection) -> int:
         """Drop all known tags for anon user."""
@@ -102,24 +104,19 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
 
     async def get_known_tags_user(self, conn: AsyncConnection, user: models.User) -> dict[str, int]:
         """Return known tags for specific user."""
-        query_ids = (
-            sa.select(db_models.Item.id)
-            .where(
-                sa.or_(
-                    db_models.Item.owner_id == user.id,
-                    db_models.Item.permissions.any_() == user.id,
-                )
+        query_ids = sa.select(db_models.Item.id).where(
+            sa.or_(
+                db_models.Item.owner_id == user.id,
+                db_models.Item.permissions.any_() == user.id,
             )
         )
 
-        query_tags = (
-            sa.select(sa.func.unnest(db_models.ComputedTags.tags).label('tag'))
-            .where(db_models.ComputedTags.item_id.in_(query_ids))
+        query_tags = sa.select(sa.func.unnest(db_models.ComputedTags.tags).label('tag')).where(
+            db_models.ComputedTags.item_id.in_(query_ids)
         )
 
         query = (
             sa.select(query_tags.c.tag, sa.func.count().label('total'))
-            .select_from(query_tags)
             .group_by(query_tags.c.tag)
         )
 
