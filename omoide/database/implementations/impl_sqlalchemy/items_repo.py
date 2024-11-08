@@ -460,6 +460,16 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Duplicate]:
         """Return groups of items with same hash."""
+        conditions = [
+            db_models.Item.owner_id == user.id,
+            db_models.Item.status != models.Status.DELETED,
+            ~db_models.Item.is_collection,
+        ]
+
+        if item is not None:
+            family = await self.get_family(conn, item)
+            conditions.append(db_models.Item.id.in_(tuple(item.id for item in family)))
+
         query = (
             sa.select(
                 db_models.SignatureMD5.signature,
@@ -469,19 +479,12 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                 db_models.SignatureMD5,
                 db_models.Item.id == db_models.SignatureMD5.item_id,
             )
-            .where(
-                db_models.Item.owner_id == user.id,
-                db_models.Item.status != models.Status.DELETED,
-                ~db_models.Item.is_collection,
-            )
+            .where(*conditions)
             .group_by(db_models.SignatureMD5.signature)
             .having(sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1) > 1)
             .order_by(sa.desc(sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1)))
             .limit(limit)
         )
-
-        if item is not None:
-            query = query.where(db_models.Item.parent_id == item.id)
 
         response = (await conn.execute(query)).fetchall()
 

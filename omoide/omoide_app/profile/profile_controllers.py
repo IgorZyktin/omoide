@@ -1,7 +1,6 @@
 """User profile page related routes."""
 
 from typing import Annotated
-from uuid import UUID
 
 import fastapi
 from fastapi import Depends
@@ -162,7 +161,7 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    item_uuid: Annotated[UUID | None, Query()] = None,
+    item_uuid: Annotated[str | None, Query()] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
