@@ -1,11 +1,12 @@
 """Use case for user profile."""
 
 from omoide import models
+from omoide import utils
 from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
 
 
 class AppProfileUsageUseCase(BaseAPPUseCase):
-    """Use case for user profile usage."""
+    """Use case that returns info about total space usage by current user."""
 
     async def execute(
         self,
@@ -25,24 +26,23 @@ class AppProfileUsageUseCase(BaseAPPUseCase):
 
 
 class AppProfileTagsUseCase(BaseAPPUseCase):
-    """Use case for user profile tags."""
+    """Use case that return all known tags for current user."""
 
     async def execute(self, user: models.User) -> dict[str, int]:
-        """Return tags with their counters."""
+        """Execute."""
         async with self.mediator.database.transaction() as conn:
-            known_tags = await self.mediator.tags.count_all_tags_known(conn, user)
-        return known_tags
+            known_tags = await self.mediator.tags.get_known_tags_user(conn, user)
+            clean_tags = {
+                tag: counter for tag, counter in known_tags.items() if not utils.is_valid_uuid(tag)
+            }
+        return clean_tags
 
 
 class AppProfileDuplicatesUseCase(BaseAPPUseCase):
-    """Use case for duplicated items search."""
+    """Use case that returns duplicated items for current user."""
 
-    async def execute(
-        self,
-        user: models.User,
-        limit: int,
-    ) -> list[models.Duplication]:
-        """Return groups of items with same hash."""
+    async def execute(self, user: models.User, limit: int) -> list[models.Duplicate]:
+        """Execute."""
         async with self.mediator.database.transaction() as conn:
             duplicates = await self.mediator.items.get_duplicates(conn, user, limit)
         return duplicates

@@ -598,7 +598,7 @@ class Plan:
 
 
 @dataclass
-class Example:
+class DuplicateExample:
     """One duplicated inheritance line."""
 
     item: Item
@@ -606,8 +606,8 @@ class Example:
 
 
 @dataclass
-class Duplication:
-    """DTO that describes item duplications."""
+class Duplicate:
+    """DTO that describes group of items with same image signature."""
 
     signature: str
-    examples: list[Example]
+    examples: list[DuplicateExample]

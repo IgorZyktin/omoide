@@ -15,7 +15,7 @@ from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 class TagsRepo(AbsTagsRepo[AsyncConnection]):
     """Repository that performs operations on tags."""
 
-    async def get_known_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
+    async def calculate_known_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
         """Return known tags for anon."""
         query_ids = sa.select(db_models.Item.id).where(
             db_models.Item.owner_id.in_(queries.public_user_ids())
@@ -25,9 +25,8 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             db_models.ComputedTags.item_id.in_(query_ids)
         )
 
-        query = (
-            sa.select(query_tags.c.tag, sa.func.count().label('total'))
-            .group_by(query_tags.c.tag)
+        query = sa.select(query_tags.c.tag, sa.func.count().label('total')).group_by(
+            query_tags.c.tag
         )
 
         response = (await conn.execute(query)).fetchall()
@@ -102,7 +101,9 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             )
             await conn.execute(stmt)
 
-    async def get_known_tags_user(self, conn: AsyncConnection, user: models.User) -> dict[str, int]:
+    async def calculate_known_tags_user(
+        self, conn: AsyncConnection, user: models.User
+    ) -> dict[str, int]:
         """Return known tags for specific user."""
         query_ids = sa.select(db_models.Item.id).where(
             sa.or_(
@@ -115,9 +116,8 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             db_models.ComputedTags.item_id.in_(query_ids)
         )
 
-        query = (
-            sa.select(query_tags.c.tag, sa.func.count().label('total'))
-            .group_by(query_tags.c.tag)
+        query = sa.select(query_tags.c.tag, sa.func.count().label('total')).group_by(
+            query_tags.c.tag
         )
 
         response = (await conn.execute(query)).fetchall()
@@ -170,35 +170,25 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
 
         await conn.execute(stmt)
 
-    async def count_all_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
-        """Return counters for known tags (anon user)."""
-        query = sa.select(
-            db_models.KnownTagsAnon.tag,
-            db_models.KnownTagsAnon.counter,
-        ).order_by(
-            sa.desc(db_models.KnownTagsAnon.counter),
+    async def get_known_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
+        """Return known tags for anon."""
+        query = sa.select(db_models.KnownTagsAnon.tag, db_models.KnownTagsAnon.counter).order_by(
+            sa.desc(db_models.KnownTagsAnon.counter)
         )
 
         response = (await conn.execute(query)).fetchall()
         return {row.tag: row.counter for row in response}
 
-    async def count_all_tags_known(
+    async def get_known_tags_user(
         self,
         conn: AsyncConnection,
         user: models.User,
     ) -> dict[str, int]:
-        """Return counters for known tags (known user)."""
+        """Return known tags for specific user."""
         query = (
-            sa.select(
-                db_models.KnownTags.tag,
-                db_models.KnownTags.counter,
-            )
-            .where(
-                db_models.KnownTags.user_id == user.id,
-            )
-            .order_by(
-                sa.desc(db_models.KnownTags.counter),
-            )
+            sa.select(db_models.KnownTags.tag, db_models.KnownTags.counter)
+            .where(db_models.KnownTags.user_id == user.id)
+            .order_by(sa.desc(db_models.KnownTags.counter))
         )
 
         response = (await conn.execute(query)).fetchall()
@@ -227,7 +217,7 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
         response = (await conn.execute(query)).fetchall()
         return [row.tag for row in response]
 
-    async def autocomplete_tag_known(
+    async def autocomplete_tag_user(
         self,
         conn: AsyncConnection,
         user: models.User,

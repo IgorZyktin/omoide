@@ -24,7 +24,7 @@ class AutocompleteUseCase(BaseAPIUseCase):
             if user.is_anon:
                 variants = await self.mediator.tags.autocomplete_tag_anon(conn, tag, limit)
             else:
-                variants = await self.mediator.tags.autocomplete_tag_known(conn, user, tag, limit)
+                variants = await self.mediator.tags.autocomplete_tag_user(conn, user, tag, limit)
         return variants
 
 

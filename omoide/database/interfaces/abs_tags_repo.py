@@ -13,7 +13,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on tags."""
 
     @abc.abstractmethod
-    async def get_known_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
+    async def calculate_known_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
         """Return known tags for anon."""
 
     @abc.abstractmethod
@@ -56,7 +56,9 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Decrease counter for given tags."""
 
     @abc.abstractmethod
-    async def get_known_tags_user(self, conn: ConnectionT, user: models.User) -> dict[str, int]:
+    async def calculate_known_tags_user(
+        self, conn: ConnectionT, user: models.User
+    ) -> dict[str, int]:
         """Return known tags for specific user."""
 
     @abc.abstractmethod
@@ -87,12 +89,12 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Save computed tags for given item."""
 
     @abc.abstractmethod
-    async def count_all_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
-        """Return counters for known tags (anon user)."""
+    async def get_known_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
+        """Return known tags for anon."""
 
     @abc.abstractmethod
-    async def count_all_tags_known(self, conn: ConnectionT, user: models.User) -> dict[str, int]:
-        """Return counters for known tags (known user)."""
+    async def get_known_tags_user(self, conn: ConnectionT, user: models.User) -> dict[str, int]:
+        """Return known tags for specific user."""
 
     @abc.abstractmethod
     async def autocomplete_tag_anon(
@@ -104,7 +106,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Autocomplete tag for anon user."""
 
     @abc.abstractmethod
-    async def autocomplete_tag_known(
+    async def autocomplete_tag_user(
         self,
         conn: ConnectionT,
         user: models.User,

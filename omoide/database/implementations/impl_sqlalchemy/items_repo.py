@@ -457,7 +457,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         conn: AsyncConnection,
         user: models.User,
         limit: int,
-    ) -> list[models.Duplication]:
+    ) -> list[models.Duplicate]:
         """Return groups of items with same hash."""
         query = (
             sa.select(
@@ -490,10 +490,10 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             all_ids.update(ids)
 
         all_items = await self.get_map(conn, all_ids)
-        result: list[models.Duplication] = []
+        result: list[models.Duplicate] = []
 
         for signature, ids in signatures_to_groups:
-            duplication = models.Duplication(signature=signature, examples=[])
+            duplication = models.Duplicate(signature=signature, examples=[])
 
             for item_id in ids:
                 item = all_items.get(item_id)
@@ -502,7 +502,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                     continue
 
                 parents = await self.get_parents(conn, item)
-                duplication.examples.append(models.Example(item, parents))
+                duplication.examples.append(models.DuplicateExample(item, parents))
 
             result.append(duplication)
 

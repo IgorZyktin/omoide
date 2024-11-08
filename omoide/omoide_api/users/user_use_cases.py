@@ -282,7 +282,7 @@ class GetAnonUserTagsUseCase(BaseAPIUseCase):
     async def execute(self) -> dict[str, int]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
-            tags = await self.mediator.tags.count_all_tags_anon(conn)
+            tags = await self.mediator.tags.get_known_tags_anon(conn)
         return tags
 
 
@@ -298,5 +298,5 @@ class GetKnownUserTagsUseCase(BaseAPIUseCase):
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
-            tags = await self.mediator.tags.count_all_tags_known(conn, user=target_user)
+            tags = await self.mediator.tags.get_known_tags_user(conn, user=target_user)
         return tags
