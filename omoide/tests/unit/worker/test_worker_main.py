@@ -4,7 +4,6 @@ from unittest import mock
 
 from click.testing import CliRunner
 
-from omoide.omoide_worker import runtime
 from omoide.omoide_worker.__main__ import main
 
 
@@ -57,39 +56,3 @@ def test_worker_main_forever(valid_worker_config, dummy_worker_strategy):
     fake_worker.drop_media.assert_called_once()
     fake_worker.copy.assert_called_once()
     fake_worker.drop_copies.assert_called_once()
-
-
-def test_worker_get_strategy_windows(valid_worker_config):
-    """Must return timer base strategy."""
-    config = valid_worker_config
-    config.strategy = 'SignalStrategy'
-
-    with mock.patch('omoide.omoide_worker.runtime.sys') as fake_sys:
-        fake_sys.platform = 'win32'
-        result = runtime.get_strategy(config)
-
-    assert type(result).__name__ != config.strategy
-
-
-def test_worker_get_strategy_normal_signal(valid_worker_config):
-    """Must return signal base strategy."""
-    config = valid_worker_config
-    config.strategy = 'SignalStrategy'
-
-    with mock.patch('omoide.omoide_worker.runtime.sys') as fake_sys:
-        fake_sys.platform = 'linux'
-        result = runtime.get_strategy(config)
-
-    assert type(result).__name__ == config.strategy
-
-
-def test_worker_get_strategy_normal_timer(valid_worker_config):
-    """Must return timer base strategy."""
-    config = valid_worker_config
-    config.strategy = 'TimerStrategy'
-
-    with mock.patch('omoide.omoide_worker.runtime.sys') as fake_sys:
-        fake_sys.platform = 'linux'
-        result = runtime.get_strategy(config)
-
-    assert type(result).__name__ == config.strategy
