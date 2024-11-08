@@ -24,7 +24,7 @@ class RebuildKnownTagsAnonOperation(SerialOperationImplementation):
             )
 
 
-class RebuildKnownTagsRegisteredOperation(SerialOperationImplementation):
+class RebuildKnownTagsUserOperation(SerialOperationImplementation):
     """Rebuild known tags for specific user."""
 
     def __init__(
