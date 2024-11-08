@@ -456,6 +456,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         self,
         conn: AsyncConnection,
         user: models.User,
+        item: models.Item | None,
         limit: int,
     ) -> list[models.Duplicate]:
         """Return groups of items with same hash."""
@@ -478,6 +479,9 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             .order_by(sa.desc(sa.func.array_length(sa.func.array_agg(db_models.Item.id), 1)))
             .limit(limit)
         )
+
+        if item is not None:
+            query = query.where(db_models.Item.parent_id == item.id)
 
         response = (await conn.execute(query)).fetchall()
 

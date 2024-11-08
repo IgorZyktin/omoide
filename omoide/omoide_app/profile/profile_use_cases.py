@@ -1,4 +1,5 @@
 """Use case for user profile."""
+from uuid import UUID
 
 from omoide import models
 from omoide import utils
@@ -41,8 +42,19 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
 class AppProfileDuplicatesUseCase(BaseAPPUseCase):
     """Use case that returns duplicated items for current user."""
 
-    async def execute(self, user: models.User, limit: int) -> list[models.Duplicate]:
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID | None,
+        limit: int,
+    ) -> tuple[models.Item | None, list[models.Duplicate]]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
-            duplicates = await self.mediator.items.get_duplicates(conn, user, limit)
-        return duplicates
+            if item_uuid is not None:
+                item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            else:
+                item = None
+
+            duplicates = await self.mediator.items.get_duplicates(conn, user, item, limit)
+
+        return item, duplicates

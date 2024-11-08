@@ -8,26 +8,72 @@
 {% endblock %}
 
 {% block body %}
-    {% for duplication in duplicates %}
-        <div class="medium-block light-header">
-            <h2>MD5 - {{ duplication.signature }}</h2>
-        </div>
-        <div class="medium-block">
-            {% for example in duplication.examples %}
-                <div id="item_{{ example.item.uuid }}" class="light-under">
-                    {{ render_lineage(request, example.parents, example.item, aim_wrapper) }}
-                    <h3>Item {{ example.item.uuid }}</h3>
-                    {{ render_thumbnail_for_item(request, example.item, '???', aim_wrapper) }}
-                    <a href="javascript:void(0)"
-                       onclick="deleteThis('{{ example.item.uuid }}')"
-                       class="button">Delete this item</a>
+
+    <div class="narrow-block">
+        <h1>Duplicates</h1>
+        <hr>
+
+        <div>
+            {% if item %}
+                <h3>Checking only item</h3>
+                <div class="envelope-container">
+                    {{ render_thumbnail_for_item(request, item, item.extras.parent_name, aim_wrapper) }}
                 </div>
-            {% endfor %}
+            {% endif %}
+
+            <label for="item_next">Go to item: </label>
+            <input id="item_next"
+                   type="text"
+                   value="{{ item.uuid if item else ''}}"
+                   class="height-auto">
+            <input type="button"
+                   class="button control-button"
+                   onclick="relocate()"
+                   value="Check duplicates">
         </div>
-        <br>
-    {% endfor %}
+   </div>
+
+    {% if duplicates %}
+        {% for duplication in duplicates %}
+
+            <div class="medium-block light-header">
+                <h2>MD5 - {{ duplication.signature }}</h2>
+            </div>
+
+            <div class="narrow-block">
+                {% for example in duplication.examples %}
+                    <div id="item_{{ example.item.uuid }}" class="light-under">
+                        {{ render_lineage(request, example.parents, example.item, aim_wrapper) }}
+                        <h3>Item {{ example.item.uuid }}</h3>
+                        {{ render_thumbnail_for_item(request, example.item, '???', aim_wrapper) }}
+                        <a href="javascript:void(0)"
+                           onclick="deleteThis('{{ example.item.uuid }}')"
+                           class="button">Delete this item</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="medium-block light-header">
+            <h2>No duplicates found.</h2>
+        </div>
+    {% endif %}
 
     <script>
+        function relocate() {
+            // Go see duplicates for another item
+            const baseUrl = '{{ request.url_for('app_profile_duplicates') }}'
+            let element = document.getElementById('item_next')
+            if (!element) {
+                console.error('Got no element with new UUID!')
+                return
+            }
+
+            let searchParams = new URLSearchParams(window.location.search)
+            searchParams.set('item_uuid', element.value)
+            window.location.href = baseUrl + '?' + searchParams.toString();
+        }
+
         function deleteThis(uuid) {
             deleteItem(this, uuid, false)
             let inp = document.getElementById('item_' + uuid)

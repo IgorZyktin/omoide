@@ -145,6 +145,7 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         user: models.User,
+        item: models.Item | None,
         limit: int,
     ) -> list[models.Duplicate]:
         """Return groups of items with same hash."""

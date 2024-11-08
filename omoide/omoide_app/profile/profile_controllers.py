@@ -1,6 +1,7 @@
 """User profile page related routes."""
 
 from typing import Annotated
+from uuid import UUID
 
 import fastapi
 from fastapi import Depends
@@ -161,6 +162,7 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    item_uuid: Annotated[UUID | None, Query()] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
@@ -171,7 +173,7 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
     use_case = profile_use_cases.AppProfileDuplicatesUseCase(mediator)
 
     try:
-        duplicates = await use_case.execute(user, limit)
+        item, duplicates = await use_case.execute(user, item_uuid, limit)
     except Exception as exc:
         return web.redirect_from_exc(request, exc)
 
@@ -181,6 +183,7 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
         'user': user,
         'duplicates': duplicates,
         'aim_wrapper': aim_wrapper,
+        'item': item,
         'block_direct': True,
         'block_ordered': True,
         'block_collections': True,
