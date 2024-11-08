@@ -10,7 +10,7 @@ from omoide.workers.serial.operations.op_rebuild_known_tags import RebuildKnownT
 from omoide.workers.serial.operations.op_rebuild_known_tags import RebuildKnownTagsAnonOperation
 from omoide.workers.serial.operations.op_rebuild_known_tags import RebuildKnownTagsUserOperation
 from omoide.workers.serial.operations.op_rebuild_permissions import RebuildItemPermissionsOperation
-from omoide.workers.serial.operations.op_rebuild_tags import RebuildItemTagsOperation
+from omoide.workers.serial.operations.op_rebuild_item_tags import RebuildItemTagsOperation
 
 NAME_MAP = {
     const.AllSerialOperations.REBUILD_KNOWN_TAGS_ANON: RebuildKnownTagsAnonOperation,
