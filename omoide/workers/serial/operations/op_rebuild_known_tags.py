@@ -41,11 +41,7 @@ class RebuildKnownTagsUserOperation(SerialOperationImplementation):
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
             user = await self.mediator.users.get_by_id(conn, self.user_id)
-            tags = await self.mediator.tags.get_known_tags_user(
-                conn,
-                user,
-                batch_size=self.config.input_batch,
-            )
+            tags = await self.mediator.tags.get_known_tags_user(conn, user)
             await self.mediator.tags.drop_known_tags_user(conn, user)
             await self.mediator.tags.insert_known_tags_user(
                 conn, user, tags, batch_size=self.config.output_batch
@@ -65,11 +61,7 @@ class RebuildKnownTagsAllOperation(SerialOperationImplementation):
         for step, user in enumerate(users, start=1):
             async with self.mediator.database.transaction() as conn:
                 start = time.monotonic()
-                tags = await self.mediator.tags.get_known_tags_user(
-                    conn,
-                    user,
-                    batch_size=self.config.input_batch,
-                )
+                tags = await self.mediator.tags.get_known_tags_user(conn, user)
                 await self.mediator.tags.drop_known_tags_user(conn, user)
                 await self.mediator.tags.insert_known_tags_user(
                     conn, user, tags, batch_size=self.config.output_batch

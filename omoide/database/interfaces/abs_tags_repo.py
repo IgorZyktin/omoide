@@ -64,20 +64,11 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Decrease counter for given tags."""
 
     @abc.abstractmethod
-    async def get_known_tags_user(
-        self,
-        conn: ConnectionT,
-        user: models.User,
-        batch_size: int,
-    ) -> dict[str, int]:
+    async def get_known_tags_user(self, conn: ConnectionT, user: models.User) -> dict[str, int]:
         """Return known tags for specific user."""
 
     @abc.abstractmethod
-    async def drop_known_tags_user(
-        self,
-        conn: ConnectionT,
-        user: models.User,
-    ) -> int:
+    async def drop_known_tags_user(self, conn: ConnectionT, user: models.User) -> int:
         """Drop all known tags for specific user."""
 
     @abc.abstractmethod

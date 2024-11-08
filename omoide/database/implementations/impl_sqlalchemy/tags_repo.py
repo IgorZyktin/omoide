@@ -15,50 +15,7 @@ from omoide.database.implementations.impl_sqlalchemy import queries
 from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 
 
-class _TagsRepoHelper(AbsTagsRepo[AsyncConnection], abc.ABC):
-    """Helper class."""
-
-    @staticmethod
-    async def _process_batch_of_tags(
-        conn: AsyncConnection,
-        get_conditions: Callable[[int], list[sa.ColumnElement]],
-        batch_size: int,
-    ) -> dict[str, int]:
-        """Process batch of tags load."""
-        known_tags: dict[str, int] = defaultdict(int)
-        marker = -1
-
-        while True:
-            stmt = (
-                (
-                    sa.select(
-                        db_models.Item.id,
-                        db_models.ComputedTags.tags,
-                    )
-                    .join(
-                        db_models.ComputedTags,
-                        db_models.ComputedTags.item_id == db_models.Item.id,
-                    )
-                    .where(*get_conditions(marker))
-                )
-                .order_by(db_models.Item.id)
-                .limit(batch_size)
-            )
-
-            response = (await conn.execute(stmt)).fetchall()
-
-            for item_id, item_tags in response:
-                for item_tag in item_tags:
-                    known_tags[item_tag.casefold()] += 1
-                marker = item_id
-
-            if len(response) < batch_size:
-                break
-
-        return dict(known_tags)
-
-
-class TagsRepo(_TagsRepoHelper):
+class TagsRepo(AbsTagsRepo[AsyncConnection]):
     """Repository that performs operations on tags."""
 
     async def get_known_tags_anon(self, conn: AsyncConnection, batch_size: int) -> dict[str, int]:
@@ -154,35 +111,33 @@ class TagsRepo(_TagsRepoHelper):
             )
             await conn.execute(stmt)
 
-    async def get_known_tags_user(
-        self,
-        conn: AsyncConnection,
-        user: models.User,
-        batch_size: int,
-    ) -> dict[str, int]:
+    async def get_known_tags_user(self, conn: AsyncConnection, user: models.User) -> dict[str, int]:
         """Return known tags for specific user."""
-
-        def get_conditions(_marker: int) -> list[sa.ColumnElement]:
-            """Return list of filtering conditions."""
-            return [
+        query_ids = (
+            sa.select(db_models.Item.id)
+            .where(
                 sa.or_(
                     db_models.Item.owner_id == user.id,
                     db_models.Item.permissions.any_() == user.id,
-                ),
-                db_models.Item.id > _marker,
-            ]
-
-        return await self._process_batch_of_tags(
-            conn=conn,
-            get_conditions=get_conditions,
-            batch_size=batch_size,
+                )
+            )
         )
 
-    async def drop_known_tags_user(
-        self,
-        conn: AsyncConnection,
-        user: models.User,
-    ) -> int:
+        query_tags = (
+            sa.select(sa.func.unnest(db_models.ComputedTags.tags).label('tag'))
+            .where(db_models.ComputedTags.item_id.in_(query_ids))
+        )
+
+        query = (
+            sa.select(query_tags.c.tag, sa.func.count().label('total'))
+            .select_from(query_tags)
+            .group_by(query_tags.c.tag)
+        )
+
+        response = (await conn.execute(query)).fetchall()
+        return {row.tag: row.total for row in response}
+
+    async def drop_known_tags_user(self, conn: AsyncConnection, user: models.User) -> int:
         """Drop all known tags for specific user."""
         stmt = sa.delete(db_models.KnownTags).where(db_models.KnownTags.user_id == user.id)
         response = await conn.execute(stmt)
