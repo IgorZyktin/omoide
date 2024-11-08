@@ -4,6 +4,7 @@ import abc
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.orm import aliased
 
 from omoide import const
 from omoide import models
@@ -264,74 +265,34 @@ class BrowseRepo(_BrowseRepoBase):
         plan: models.Plan,
     ) -> list[models.Item]:
         """Return recently updated items."""
-        query = """
-        WITH valid_items AS (
-            SELECT id,
-                   uuid,
-                   parent_id,
-                   parent_uuid,
-                   owner_id,
-                   owner_uuid,
-                   number,
-                   name,
-                   status,
-                   is_collection,
-                   content_ext,
-                   preview_ext,
-                   thumbnail_ext,
-                   tags,
-                   permissions,
-                   im.updated_at
-            FROM items
-            LEFT JOIN item_metainfo im on id = im.item_id
-            WHERE (owner_id = :user_id OR :user_id = ANY(permissions))
-        )
-        SELECT valid_items.id,
-               valid_items.uuid,
-               valid_items.parent_id,
-               valid_items.parent_uuid,
-               valid_items.owner_id,
-               valid_items.owner_uuid,
-               valid_items.number,
-               valid_items.name,
-               valid_items.status,
-               valid_items.is_collection,
-               valid_items.content_ext,
-               valid_items.preview_ext,
-               valid_items.thumbnail_ext,
-               valid_items.tags,
-               valid_items.permissions,
-               i2.name as parent_name
-        FROM valid_items
-        LEFT JOIN items i2 ON valid_items.parent_id = i2.id
-        WHERE
-            date(valid_items.updated_at) = (
-                SELECT max(date(updated_at)) FROM valid_items
+        parents = aliased(db_models.Item)
+        query = (
+            sa.select(
+                db_models.Item,
+                db_models.Metainfo.updated_at,
+                sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name'),
             )
-            AND valid_items.status = :status
-        """
-
-        values = {
-            'user_id': user.id,
-            'status': models.Status.AVAILABLE.value,
-            'limit': plan.limit,
-        }
+            .join(parents, parents.id == db_models.Item.parent_id, isouter=True)
+            .join(db_models.Metainfo, db_models.Metainfo.item_id == db_models.Item.id)
+            .where(
+                sa.or_(
+                    db_models.Item.owner_id == user.id,
+                    db_models.Item.permissions.any_() == user.id,
+                ),
+                db_models.Item.status != models.Status.DELETED,
+            )
+        )
 
         if plan.collections:
-            query += ' AND valid_items.is_collection = True'
+            query = query.where(db_models.Item.is_collection == sa.true())
 
-        if plan.order == const.ASC:
-            query += ' AND valid_items.number > :last_seen'
-            query += ' ORDER BY valid_items.number'
-            values['last_seen'] = plan.last_seen or -1
-        elif plan.order == const.DESC:
-            query += ' AND valid_items.number < :last_seen'
-            query += ' ORDER BY valid_items.number'
-            values['last_seen'] = plan.last_seen or -1
-        else:
-            query += ' ORDER BY random()'
+        if plan.last_seen and plan.last_seen != -1:
+            query = query.where(db_models.Item.number < plan.last_seen)
 
-        query += ' LIMIT :limit;'
+        query = query.order_by(
+            sa.desc(db_models.Metainfo.updated_at),
+            sa.desc(db_models.Item.number),
+        ).limit(plan.limit)
 
-        response = (await conn.execute(sa.text(query), values)).fetchall()
+        response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]

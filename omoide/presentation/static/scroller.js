@@ -88,7 +88,7 @@ class Scroller {
         for (const item of items) {
             last_item = item
 
-            this.lastSeen = Math.max(this.lastSeen, item['number'] || -1)
+            this.lastSeen = item['number']
 
             if (this.alreadySeen.has(item['uuid'])) {
                 continue

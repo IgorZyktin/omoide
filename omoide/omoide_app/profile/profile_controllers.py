@@ -145,7 +145,7 @@ async def app_profile_new(
         'user': user,
         'aim_wrapper': aim_wrapper,
         'block_direct': True,
-        'block_ordered': False,
+        'block_ordered': True,
         'block_collections': False,
         'block_paginated': True,
         'endpoint': request.url_for('api_get_recent_updates'),

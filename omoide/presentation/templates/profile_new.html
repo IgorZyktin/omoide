@@ -1,6 +1,7 @@
 {% extends "base_search.html" %}
 
 {% block head %}
+    {{ super() }}
     <script type="text/javascript"
             src="{{ request.url_for('static', path='scroller.js?' + version) }}"></script>
 {% endblock %}
@@ -19,6 +20,9 @@
             window.addEventListener('scroll', callback)
             scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)
             callback()
+
+            activateFloatingHeader()
+            updateHeaderPadding()
         });
     </script>
 {% endblock %}
