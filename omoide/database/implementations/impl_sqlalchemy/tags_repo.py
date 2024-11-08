@@ -1,8 +1,5 @@
 """Repository that performs operations on tags."""
 
-import abc
-from collections import defaultdict
-from collections.abc import Callable
 import itertools
 
 import sqlalchemy as sa
@@ -68,11 +65,7 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             )
             await conn.execute(stmt)
 
-    async def increment_known_tags_anon(
-        self,
-        conn: AsyncConnection,
-        tags: set[str],
-    ) -> None:
+    async def increment_known_tags_anon(self, conn: AsyncConnection, tags: set[str]) -> None:
         """Increase counter for given tags."""
         for tag in tags:
             stmt = (
@@ -97,11 +90,7 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             )
             await conn.execute(stmt)
 
-    async def decrement_known_tags_anon(
-        self,
-        conn: AsyncConnection,
-        tags: set[str],
-    ) -> None:
+    async def decrement_known_tags_anon(self, conn: AsyncConnection, tags: set[str]) -> None:
         """Decrease counter for given tags."""
         for tag in tags:
             stmt = (

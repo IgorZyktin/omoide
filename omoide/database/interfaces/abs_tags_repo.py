@@ -39,11 +39,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Increase counter for given tags."""
 
     @abc.abstractmethod
-    async def increment_known_tags_anon(
-        self,
-        conn: ConnectionT,
-        tags: set[str],
-    ) -> None:
+    async def increment_known_tags_anon(self, conn: ConnectionT, tags: set[str]) -> None:
         """Increase counter for given tags."""
 
     @abc.abstractmethod
@@ -56,11 +52,7 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
         """Decrease counter for given tags."""
 
     @abc.abstractmethod
-    async def decrement_known_tags_anon(
-        self,
-        conn: ConnectionT,
-        tags: set[str],
-    ) -> None:
+    async def decrement_known_tags_anon(self, conn: ConnectionT, tags: set[str]) -> None:
         """Decrease counter for given tags."""
 
     @abc.abstractmethod
