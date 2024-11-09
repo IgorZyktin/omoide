@@ -91,7 +91,7 @@ async def sync(  # noqa: C901, PLR0912
                     LOG.warning('Will copy {} to {}', src, dst)
                 else:
                     LOG.warning('Copying {} to {}', src, dst)
-                    shutil.copytree(
+                    shutil.copy(
                         src=str(src.absolute()),
                         dst=str(dst.absolute()),
                     )
