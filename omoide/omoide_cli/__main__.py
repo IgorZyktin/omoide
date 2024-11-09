@@ -11,7 +11,7 @@ app = typer.Typer()
 
 app.add_typer(db.app, name='db')
 app.add_typer(display.app, name='display')
-app.add_typer(filesystem.app, name='db')
+app.add_typer(filesystem.app, name='fs')
 app.add_typer(signatures.app, name='signatures')
 
 if __name__ == '__main__':
