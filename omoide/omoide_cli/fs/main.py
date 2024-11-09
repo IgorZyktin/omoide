@@ -92,8 +92,10 @@ def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in function de
 def sync(
     main_folder: Path,
     replica_folder: Path,
+    only_users: list[UUID] | None = None,
     verbose: bool = True,
     dry_run: bool = True,
+    limit: int = -1,
 ) -> None:
     """Synchronize files in different content folders."""
     if not main_folder.exists():
@@ -107,12 +109,17 @@ def sync(
     coro = code_sync.sync(
         main_folder=main_folder,
         replica_folder=replica_folder,
+        only_users=only_users,
         verbose=verbose,
         dry_run=dry_run,
+        limit=limit,
     )
     total = asyncio.run(coro)
 
-    LOG.info('Synchronized {total} files', total=total)
+    if dry_run:
+        LOG.warning('Will perform {total} operations during sync', total=total)
+    else:
+        LOG.info('Performed {total} operations during sync', total=total)
 
 
 if __name__ == '__main__':
