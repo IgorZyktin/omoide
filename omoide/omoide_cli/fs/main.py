@@ -10,6 +10,7 @@ import typer
 from omoide import const
 from omoide import custom_logging
 from omoide.omoide_cli import common
+from omoide.omoide_cli.fs import code_hard_delete
 from omoide.omoide_cli.fs import code_refresh
 from omoide.omoide_cli.fs import code_sync
 
@@ -120,6 +121,32 @@ def sync(
         LOG.warning('Will perform {total} operations during sync', total=total)
     else:
         LOG.info('Performed {total} operations during sync', total=total)
+
+
+@app.command()
+def hard_delete(
+    folder: str,
+    only_users: list[UUID] | None = None,
+    dry_run: bool = True,
+    limit: int = -1,
+) -> None:
+    """Delete files that looks soft-deleted."""
+    valid_folder = common.extract_folder(folder)
+
+    coro = code_hard_delete.hard_delete(
+        folder=valid_folder,
+        only_users=only_users,
+        dry_run=dry_run,
+        limit=limit,
+    )
+
+    LOG.info('Performing hard delete for files in folder {}', folder)
+    total = asyncio.run(coro)
+
+    if dry_run:
+        LOG.warning('Will delete {total} files', total=total)
+    else:
+        LOG.info('Deleted {total} files', total=total)
 
 
 if __name__ == '__main__':

@@ -30,7 +30,7 @@ def get_bucket(uuid: UUID | str, length: int = 2) -> str:
     return str(uuid)[:length]
 
 
-UUID_TEMPLATE = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+UUID_TEMPLATE = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 
 
 def is_valid_uuid(uuid: UUID | str) -> bool:
