@@ -17,9 +17,11 @@ async def hard_delete(
     only_users: list[UUID] | None,
     dry_run: bool,
     limit: int,
-) -> int:
+) -> tuple[int, int]:
     """Delete all files that look soft-deleted."""
-    total = 0
+    total_files = 0
+    total_bytes = 0
+
     sequence = [const.CONTENT, const.PREVIEW, const.THUMBNAIL]
     for target in sequence:
         LOG.info('Hard deleting files in {}', target)
@@ -34,27 +36,36 @@ async def hard_delete(
                 continue
 
             for prefix in user.iterdir():
-                total += process_prefix(prefix, dry_run, limit)
+                local_files, local_bytes = process_prefix(prefix, dry_run, limit)
+                total_files += local_files
+                total_bytes += local_bytes
 
-    return total
+                if total_files >= limit != -1:
+                    return total_files, total_bytes
+
+    return total_files, total_bytes
 
 
-def process_prefix(prefix: Path, dry_run: bool, limit: int) -> int:
+def process_prefix(prefix: Path, dry_run: bool, limit: int) -> tuple[int, int]:
     """Process single item prefix."""
-    total = 0
+    total_files = 0
+    total_bytes = 0
+
     for file in prefix.iterdir():
         if look_like_soft_deleted(file.stem, file.suffix):
-            total += 1
+            total_files += 1
+            total_bytes += file.stat().st_size
+
             if dry_run:
-                LOG.warning('Will delete {}', file)
+                LOG.info('Will delete {}', file)
             else:
                 LOG.warning('Deleting {}', file)
                 os.remove(file)
 
-            if total >= limit != -1:
-                return total
+            if total_files >= limit != -1:
+                return total_files, total_bytes
 
-    return total
+    return total_files, total_bytes
 
 
 def look_like_soft_deleted(filename: str, suffix: str) -> bool:

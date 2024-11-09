@@ -9,6 +9,7 @@ import typer
 
 from omoide import const
 from omoide import custom_logging
+from omoide import utils
 from omoide.omoide_cli import common
 from omoide.omoide_cli.fs import code_hard_delete
 from omoide.omoide_cli.fs import code_refresh
@@ -140,13 +141,21 @@ def hard_delete(
         limit=limit,
     )
 
-    LOG.info('Performing hard delete for files in folder {}', folder)
-    total = asyncio.run(coro)
+    LOG.info('Performing hard delete for files in {}', folder)
+    total_files, total_bytes = asyncio.run(coro)
 
     if dry_run:
-        LOG.warning('Will delete {total} files', total=total)
+        LOG.info(
+            'Will delete {total_files} files and free {total_size} of space',
+            total_files=utils.sep_digits(total_files),
+            total_size=utils.human_readable_size(total_bytes),
+        )
     else:
-        LOG.info('Deleted {total} files', total=total)
+        LOG.info(
+            'Deleted {total_files} files and free {total_size} of space',
+            total_files=utils.sep_digits(total_files),
+            total_size=utils.human_readable_size(total_bytes),
+        )
 
 
 if __name__ == '__main__':
