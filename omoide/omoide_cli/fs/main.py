@@ -1,6 +1,8 @@
 """Operations related to filesystem."""
 
 import asyncio
+from pathlib import Path
+import sys
 from uuid import UUID
 
 import typer
@@ -9,6 +11,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide.omoide_cli import common
 from omoide.omoide_cli.fs import code_refresh
+from omoide.omoide_cli.fs import code_sync
 
 app = typer.Typer()
 
@@ -83,6 +86,33 @@ def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in function de
     total = asyncio.run(coro)
 
     LOG.info('Updated image dimensions for {total} items', total=total)
+
+
+@app.command()
+def sync(
+    main_folder: Path,
+    replica_folder: Path,
+    verbose: bool = True,
+    dry_run: bool = True,
+) -> None:
+    """Synchronize files in different content folders."""
+    if not main_folder.exists():
+        LOG.error('Main folder does not exist: {}', main_folder.absolute())
+        sys.exit(1)
+
+    if not replica_folder.exists():
+        LOG.error('Replica folder does not exist: {}', replica_folder.absolute())
+        sys.exit(1)
+
+    coro = code_sync.sync(
+        main_folder=main_folder,
+        replica_folder=replica_folder,
+        verbose=verbose,
+        dry_run=dry_run,
+    )
+    total = asyncio.run(coro)
+
+    LOG.info('Synchronized {total} files', total=total)
 
 
 if __name__ == '__main__':
