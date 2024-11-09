@@ -53,7 +53,9 @@ async def sync(  # noqa: C901, PLR0912
             if only_users is not None and user.uuid not in only_users:
                 continue
 
-            if user not in replica_branch.users:
+            replica_uuids = {user.uuid for user in replica_branch.users}
+
+            if user.uuid not in replica_uuids:
                 total_operations += 1
                 src = main.folder / target / str(user.uuid)
                 dst = replica.folder / target / str(user.uuid)
