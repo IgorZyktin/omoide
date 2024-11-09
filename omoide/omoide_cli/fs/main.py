@@ -8,7 +8,7 @@ import typer
 from omoide import const
 from omoide import custom_logging
 from omoide.omoide_cli import common
-from omoide.omoide_cli.fs import code
+from omoide.omoide_cli.fs import code_refresh
 
 app = typer.Typer()
 
@@ -35,7 +35,7 @@ def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function definiti
 
     valid_folder = common.extract_folder(folder)
 
-    coro = code.refresh_file_sizes(
+    coro = code_refresh.refresh_file_sizes(
         db_url=valid_db_url,
         folder=valid_folder,
         verbose=verbose,
@@ -70,7 +70,7 @@ def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in function de
 
     valid_folder = common.extract_folder(folder)
 
-    coro = code.refresh_image_dimensions(
+    coro = code_refresh.refresh_image_dimensions(
         db_url=valid_db_url,
         folder=valid_folder,
         verbose=verbose,
