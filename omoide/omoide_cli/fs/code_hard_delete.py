@@ -43,9 +43,6 @@ def process_prefix(prefix: Path, dry_run: bool, limit: int) -> int:
     """Process single item prefix."""
     total = 0
     for file in prefix.iterdir():
-        if total >= limit != -1:
-            return total
-
         if look_like_soft_deleted(file.stem, file.suffix):
             total += 1
             if dry_run:
@@ -53,6 +50,9 @@ def process_prefix(prefix: Path, dry_run: bool, limit: int) -> int:
             else:
                 LOG.warning('Deleting {}', file)
                 os.remove(file)
+
+            if total >= limit != -1:
+                return total
 
     return total
 
@@ -66,4 +66,5 @@ def look_like_soft_deleted(filename: str, suffix: str) -> bool:
         return False
 
     # TODO - change template to a more strict one
+    # TODO - add filtering for removal date
     return '___' in filename
