@@ -276,7 +276,7 @@ class Item(OmoideModel):
             content_ext=obj.content_ext,
             preview_ext=obj.preview_ext,
             thumbnail_ext=obj.thumbnail_ext,
-            status=obj.status,
+            status=Status(obj.status),
             tags=set(obj.tags),
             permissions=set(obj.permissions),
             extras=_extras,

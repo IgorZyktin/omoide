@@ -44,6 +44,7 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals['get_thumbnail_href'] = web.get_thumbnail_href
     templates.env.globals['human_readable_size'] = utils.human_readable_size
     templates.env.globals['sep_digits'] = utils.sep_digits
+    templates.env.globals['Status'] = models.Status
     return templates
 
 

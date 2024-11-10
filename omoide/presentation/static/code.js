@@ -2,6 +2,7 @@ const UUID_PREFIX_LENGTH = 2
 const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
 const EMPTY_FILE = '/static/empty.png'
+const CREATED_FILE = '/static/created.png'
 
 const EXIF_ENDPOINT = '/api/v1/exif'
 const METAINFO_ENDPOINT = '/api/v1/metainfo'
@@ -415,8 +416,11 @@ function updateHeaderPadding() {
 
 function getThumbnailContentUrl(item) {
     // generate thumbnail content url for the item
-    if (!item.thumbnail_ext)
+    if (!item.thumbnail_ext) {
+        if (item.status === 'created')
+            return CREATED_FILE
         return EMPTY_FILE
+    }
 
     let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
     return `/content/thumbnail/${item.owner_uuid}/${prefix}/${item.uuid}.${item.thumbnail_ext}`
@@ -424,8 +428,11 @@ function getThumbnailContentUrl(item) {
 
 function getPreviewContentUrl(item) {
     // generate preview content url for the item
-    if (!item.preview_ext)
+    if (!item.preview_ext) {
+        if (item.status === 'created')
+            return CREATED_FILE
         return EMPTY_FILE
+    }
 
     let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
     return `/content/preview/${item.owner_uuid}/${prefix}/${item.uuid}.${item.preview_ext}`
@@ -433,8 +440,11 @@ function getPreviewContentUrl(item) {
 
 function getContentUrl(item) {
     // generate preview content url for the item
-    if (!item.content_ext)
+    if (!item.content_ext) {
+        if (item.status === 'created')
+            return CREATED_FILE
         return EMPTY_FILE
+    }
 
     let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
     return `/content/content/${item.owner_uuid}/${prefix}/${item.uuid}.${item.content_ext}`

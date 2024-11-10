@@ -58,6 +58,7 @@ class ItemOutput(BaseModel):
     uuid: UUID
     parent_uuid: UUID | None
     owner_uuid: UUID
+    status: str
     number: int
     name: str
     is_collection: bool
@@ -74,6 +75,7 @@ DEFAULT_ITEM_EXAMPLE: JsonDict = {
     'parent_uuid': '30f37bec-4e1b-430d-bbfb-80b3f41f2b44',
     'owner_uuid': 'fec6e0ac-9142-4ccd-bbae-af0fc9037b1a',
     'number': 129324,
+    'status': 'available',
     'name': '',
     'is_collection': False,
     'content_ext': 'jpg',
@@ -137,7 +139,8 @@ def convert_items(
     """Convert domain-level items into API format."""
     return [
         ItemOutput(
-            **item.model_dump(exclude={'permissions'}),
+            **item.model_dump(exclude={'permissions', 'status'}),
+            status=item.status.name.lower(),
             permissions=[
                 Permission(
                     uuid=user.uuid,

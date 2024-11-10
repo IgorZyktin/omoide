@@ -264,9 +264,15 @@
         {%- endif -%}
 
         {%- if item.thumbnail_ext is none -%}
-            <img src="{{ request.url_for('static', path='empty.png') }}"
-                 alt="thumbnail for the item"
-                 title="{{ name }}"/>
+            {%- if item.status == Status.CREATED -%}
+                <img src="{{ request.url_for('static', path='empty.png') }}"
+                     alt="thumbnail for the item"
+                     title="{{ name }}"/>
+            {%- else -%}
+                <img src="{{ get_thumbnail_href(request, current_item) }}"
+                     alt="thumbnail for the item"
+                     title="{{ name }}"/>
+            {%- endif -%}
         {%- else -%}
             <img src="{{ get_thumbnail_href(request, item) }}"
                  alt="thumbnail for the item"
