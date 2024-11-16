@@ -181,9 +181,10 @@ class Worker(interfaces.AbsWorker):
                 )
                 raise
             else:
-                exif = db_models.EXIF(item_id=media.item.id, exif=data)
-                self._database.session.merge(exif)
-                self._database.session.commit()
+                if data:
+                    exif = db_models.EXIF(item_id=media.item.id, exif=data)
+                    self._database.session.merge(exif)
+                    self._database.session.commit()
                 return
 
         problem = db_models.Problem(

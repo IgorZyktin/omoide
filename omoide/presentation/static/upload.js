@@ -1040,15 +1040,14 @@ async function preprocessMedia(button, uploadState) {
 async function uploadMedia(button, uploadState) {
     // upload given media to the backend
     let targets = getTargets()
-    let handleEXIF = $('#feature-exif').is(':checked')
 
     if (!targets)
         return
 
-    let upload_as = $('#upload_as')
+    let uploadAsValue = $('#upload_as').val()
 
     $(button).addClass('button-disabled')
-    if (upload_as.val() !== 'target') {
+    if (uploadAsValue !== 'target') {
         await createItemsForProxy(targets, uploadState)
     }
     await doIf(targets, uploadMetainfoForProxy, uploadState,
@@ -1069,7 +1068,7 @@ async function uploadMedia(button, uploadState) {
         if (parent) {
             await ensureParentHasThumbnail(parent, targets[0])
 
-            if (upload_as.val() === 'children') {
+            if (uploadAsValue === 'children') {
                 await ensureParentIsCollection(parent)
             }
             parentProcessed = true
@@ -1081,10 +1080,10 @@ async function uploadMedia(button, uploadState) {
         uploadState.setAction('Done uploading')
         uploadState.markDone()
 
-        let uploadSelector = $('#after_upload')
+        let uploadSelectorValue = $('#after_upload').val()
 
-        if (uploadSelector.val() === 'parent') {
-            if (upload_as.val() === 'target') {
+        if (uploadSelectorValue === 'parent') {
+            if (uploadAsValue === 'target') {
                 let itemItself = await getItem(targets[0].uuid)
                 let parentItself = await getItem(itemItself.parent_uuid)
 
@@ -1092,11 +1091,10 @@ async function uploadMedia(button, uploadState) {
                     return
 
                 relocateWithAim(`/browse/${parentItself.uuid}`)
-            } else if (uploadSelector.val() === 'children'
-                && parentUUID !== null) {
+            } else if (uploadAsValue === 'children' && parentUUID !== null) {
                 relocateWithAim(`/browse/${parentUUID}`)
             }
-        } else if (uploadSelector.val() === 'again') {
+        } else if (uploadSelectorValue === 'again') {
             clearProxies()
             uploadState.reset()
             uploadState.setStatus('init')
