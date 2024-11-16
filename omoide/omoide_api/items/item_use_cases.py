@@ -230,7 +230,8 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                 old_parent=old_parent,
             )
 
-            item.parent_uuid = new_parent_uuid
+            item.parent_id = new_parent.id
+            item.parent_uuid = new_parent.uuid
             await self.mediator.items.save(conn, item)
 
             operation_id_tags = await self.mediator.misc.create_serial_operation(
