@@ -190,7 +190,7 @@ async def api_rename_item(
 @api_items_router.put(
     '/{item_uuid}/parent/{new_parent_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | int | None],
+    response_model=dict[str, str | int | list[int]],
 )
 async def api_change_parent_item(
     item_uuid: UUID,
@@ -214,7 +214,7 @@ async def api_change_parent_item(
         'result': 'changed parent',
         'item_uuid': str(item_uuid),
         'new_parent_uuid': str(new_parent_uuid),
-        'operation': operations,
+        'operations': operations,
     }
 
 
