@@ -52,7 +52,7 @@
         <hr>
 
         <div>
-            <h3>Basic parameters</h3>
+            <h3>Parameters</h3>
             <label for="item_uuid">Item UUID:</label>
             <div style="display: flex; flex-direction: row; align-items: center">
                 <input id="item_uuid"
@@ -76,14 +76,12 @@
                    value="{{ item.name }}"
                    onchange="alterModelTextField(this, 'name')"
                    class="height-auto">
-                    <div id="alerts_basic">
-
             <input id="save_name"
                    type="button"
                    class="button control-button"
                    onclick="saveName('alerts_name')"
                    value="Save item name">
-                    </div>
+            <div id="alerts_name"></div>
 
             {% if notes and notes.get('copied_image_from') %}
                 <label for="thumbnail_origin">Copied image from:</label>
