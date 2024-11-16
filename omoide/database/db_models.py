@@ -793,6 +793,31 @@ class ParallelOperation(Base):
     __table_args__ = (sa.Index('ix_processed_by', processed_by, postgresql_using='gin'),)
 
 
+class Problem(Base):
+    """Something that requires human support."""
+
+    __tablename__ = 'problems'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), index=True, unique=False, nullable=False
+    )
+    message: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+
+
 if __name__ == '__main__':
     db_url = os.environ[const.ENV_DB_URL_ADMIN]
     engine = sa.create_engine(db_url, echo=True)

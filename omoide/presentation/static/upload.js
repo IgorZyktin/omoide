@@ -746,35 +746,6 @@ async function _extractMonthRUFeature(proxy, useBackoff) {
     }
 }
 
-async function uploadEXIFProxy(proxy) {
-    // upload exif data
-    if (proxy.exif === null || Object.keys(proxy.exif).length === 0)
-        return
-
-    let exif = JSON.parse(clearNullTerminator(JSON.stringify(proxy.exif)))
-
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            timeout: 10000, // 10 seconds
-            type: 'POST',
-            url: `${EXIF_ENDPOINT}/${proxy.uuid}`,
-            contentType: 'application/json',
-            data: JSON.stringify({
-                exif: exif,
-            }),
-            success: function (response) {
-                proxy.exifUploaded = true
-                proxy.actualSteps.add('uploadEXIFProxy')
-                resolve('ok')
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                describeFail(XMLHttpRequest.responseJSON)
-                reject('fail')
-            },
-        })
-    })
-}
-
 async function saveContentForProxy(proxy) {
     // save content of the proxy on the server
     if (!proxy.content || proxy.contentUploaded)
@@ -1082,8 +1053,6 @@ async function uploadMedia(button, uploadState) {
     }
     await doIf(targets, uploadMetainfoForProxy, uploadState,
         p => !p.metainfo.uploaded && p.uuid && p.isValid)
-    await doIf(targets, uploadEXIFProxy, uploadState,
-        p => !p.exifUploaded && p.uuid && p.isValid && handleEXIF)
     await doIf(targets, saveContentForProxy, uploadState,
         p => !p.contentUploaded && p.uuid && p.isValid)
     await doIf(targets, savePreviewForProxy, uploadState,

@@ -355,6 +355,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pyexiv2" },
     { name = "pytz" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "typer" },
@@ -403,6 +404,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.9" },
     { name = "pydantic", specifier = ">=2.9.2" },
     { name = "pydantic-settings", specifier = ">=2.5.2" },
+    { name = "pyexiv2", specifier = ">=2.15.3" },
     { name = "python-multipart", marker = "extra == 'web'", specifier = ">=0.0.12" },
     { name = "pytz", specifier = ">=2024.2" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
@@ -572,6 +574,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/68/27/0bed9dd26b93328b60a1402febc780e7be72b42847fa8b5c94b7d0aeb6d1/pydantic_settings-2.5.2.tar.gz", hash = "sha256:f90b139682bee4d2065273d5185d71d37ea46cfe57e1b5ae184fc6a0b2484ca0", size = 70938 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/29/8d/29e82e333f32d9e2051c10764b906c2a6cd140992910b5f49762790911ba/pydantic_settings-2.5.2-py3-none-any.whl", hash = "sha256:2c912e55fd5794a59bf8c832b9de832dcfdf4778d79ff79b708744eed499a907", size = 26864 },
+]
+
+[[package]]
+name = "pyexiv2"
+version = "2.15.3"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/b7/09b5cb7f1ac298a5b11828f6aa0239abf763d930bcdcd8a91e103400559e/pyexiv2-2.15.3-cp312-none-macosx_14_0_arm64.whl", hash = "sha256:0cf6a0033dd1ce19cb16e35ca7a1b6f30837713b6680c2b7368a69afedda6b5d", size = 1423387 },
+    { url = "https://files.pythonhosted.org/packages/ce/26/2242efc225bc4a2829addcc81eb6be4915f366aaa6caa4f1de49adabee65/pyexiv2-2.15.3-cp312-none-manylinux2014_x86_64.whl", hash = "sha256:9f6dcc5191d1eb0cdc349dfcdcc5b9c37d18b6247241ce9bb6e1e5d1af5735fd", size = 1566248 },
+    { url = "https://files.pythonhosted.org/packages/2c/12/4abd3cca420fd27e9b5986988abbe4c7a37e36827dbe083fdd50ed4ff4a4/pyexiv2-2.15.3-cp312-none-win_amd64.whl", hash = "sha256:39c1f772674a1255f766ecdf1102dce316918a95a099703a32906b7433be94e8", size = 1186082 },
+    { url = "https://files.pythonhosted.org/packages/ef/74/ddb423fb1c604942fe6eff511c28370dbb59ed4a57b45bf5685040081c72/pyexiv2-2.15.3-cp313-none-macosx_14_0_arm64.whl", hash = "sha256:33d5a9d1ab1885d2e22ac7e70aa8847ba5ae3fa491856e5ce26736e46d5188c7", size = 1424037 },
+    { url = "https://files.pythonhosted.org/packages/54/f0/8726bcbd38595e53f1be5104211a80c6856a73183d2ae37eb1e110006da8/pyexiv2-2.15.3-cp313-none-manylinux2014_x86_64.whl", hash = "sha256:69f16fd3afae3b4710e779ddf5a1c899dce82c2b421c5bf9e3ab51f93d4721ec", size = 1566240 },
+    { url = "https://files.pythonhosted.org/packages/70/7d/00238fb13efbc8279d59895d898c06955b224b7f00bdb7e37a368c3976ec/pyexiv2-2.15.3-cp313-none-win_amd64.whl", hash = "sha256:23294a873320c41472852ffd0495710a63243576b1cb6b99b5e60cdade0602cb", size = 1186087 },
 ]
 
 [[package]]

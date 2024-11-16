@@ -6,6 +6,7 @@ import traceback
 import zlib
 
 from PIL import Image
+import pyexiv2
 
 from omoide import const
 from omoide import custom_logging
@@ -88,6 +89,7 @@ class Worker(interfaces.AbsWorker):
 
         self._save_md5_signature(media)
         self._save_cr32_signature(media)
+        self._save_exif(media)
         self._alter_item_corresponding_to_media(media, width, height)
 
     @staticmethod
@@ -150,6 +152,49 @@ class Worker(interfaces.AbsWorker):
             signature=zlib.crc32(media.content),
         )
         self._database.session.merge(signature)
+        self._database.session.commit()
+
+    def _save_exif(
+        self,
+        media: db_models.Media,
+        encodings: tuple[str, ...] = ('utf-8', 'cp1251'),
+    ) -> None:
+        """Save EXIF info."""
+        if media.media_type != const.CONTENT:
+            return
+
+        for encoding in encodings:
+            try:
+                with pyexiv2.ImageData(media.content) as img:
+                    data = img.read_exif(encoding=encoding)
+            except UnicodeDecodeError:
+                LOG.exception(
+                    'Failed to decode EXIF for media id={}, item_id={} because of unknown encoding',
+                    media.id,
+                    media.item_id,
+                )
+            except Exception:
+                LOG.exception(
+                    'Unexpectedly failed to decode EXIF for media id={}, item_id={}',
+                    media.id,
+                    media.item_id,
+                )
+                raise
+            else:
+                exif = db_models.EXIF(item_id=media.item.id, exif=data)
+                self._database.session.merge(exif)
+                self._database.session.commit()
+                return
+
+        problem = db_models.Problem(
+            created_at=utils.now(),
+            message='Failed all known encodings to process EXIF',
+            extras={
+                'media_id': media.id,
+                'item_id': media.item_id,
+            },
+        )
+        self._database.session.merge(problem)
         self._database.session.commit()
 
     def drop_media(self) -> None:
