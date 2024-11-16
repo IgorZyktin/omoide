@@ -65,9 +65,9 @@ class MediaRepo(AbsMediaRepo[AsyncConnection]):
                 created_at=moment,
                 processed_at=None,
                 error=None,
-                owner_id=str(source_item.owner_id),
-                source_id=str(source_item.id),
-                target_id=str(target_item.id),
+                owner_id=source_item.owner_id,
+                source_id=source_item.id,
+                target_id=target_item.id,
                 media_type=media_type,
                 ext=ext,
             )
