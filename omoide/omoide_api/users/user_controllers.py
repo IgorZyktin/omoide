@@ -83,7 +83,7 @@ async def api_get_all_users(
 
 
 @api_users_router.get(
-    '/{uuid}/resource_usage',
+    '/{user_uuid}/resource_usage',
     status_code=status.HTTP_200_OK,
     response_model=user_api_models.UserResourceUsageOutput,
 )
@@ -131,7 +131,7 @@ async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediat
 
 
 @api_users_router.get(
-    '/{uuid}/known_tags',
+    '/{user_uuid}/known_tags',
     status_code=status.HTTP_200_OK,
     response_model=dict[str, int],
 )
@@ -152,7 +152,7 @@ async def api_get_user_tags(
 
 
 @api_users_router.get(
-    '/{uuid}',
+    '/{user_uuid}',
     status_code=status.HTTP_200_OK,
     response_model=user_api_models.UserOutput,
 )
@@ -195,7 +195,7 @@ async def api_change_user_name(
 
 
 @api_users_router.put(
-    '/{uuid}/login',
+    '/{user_uuid}/login',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=user_api_models.UserOutput,
 )
@@ -217,7 +217,7 @@ async def api_change_user_login(
 
 
 @api_users_router.put(
-    '/{uuid}/password',
+    '/{user_uuid}/password',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=user_api_models.UserOutput,
 )
