@@ -162,7 +162,7 @@ async def get_known_user(
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail='You are not allowed to perform this operation',
+        detail='You must be registered to do this',
     )
 
 
@@ -175,5 +175,5 @@ async def get_admin_user(
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail='You are not allowed to perform this operation',
+        detail='You must be an admin to do this',
     )

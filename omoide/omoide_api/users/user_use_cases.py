@@ -66,11 +66,12 @@ class CreateUserUseCase(BaseItemUseCase):
                 number=None,
                 tags=[user.name],
                 permissions=[],
+                top_level=True,
             )
 
             user.extras['root_item_uuid'] = item.uuid
 
-        return admin
+        return user
 
 
 class ChangeUserNameUseCase(BaseAPIUseCase):

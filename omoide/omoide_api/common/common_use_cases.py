@@ -75,6 +75,7 @@ class BaseItemUseCase(BaseAPIUseCase):
         is_collection: bool,
         tags: list[str],
         permissions: list[dict[str, UUID | str]],
+        top_level: bool = False,
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -84,7 +85,9 @@ class BaseItemUseCase(BaseAPIUseCase):
 
         msg = 'You are not allowed to create items for other users'
 
-        if parent_uuid is None:
+        if top_level:
+            parent = None
+        elif parent_uuid is None:
             parent = await self.mediator.users.get_root_item(conn, user)
         else:
             parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
@@ -102,10 +105,10 @@ class BaseItemUseCase(BaseAPIUseCase):
         item = models.Item(
             id=-1,
             uuid=valid_uuid,
-            parent_id=parent.id,
-            parent_uuid=parent.uuid,
-            owner_id=parent.owner_id,
-            owner_uuid=parent.owner_uuid,
+            parent_id=parent.id if parent is not None else None,
+            parent_uuid=parent.uuid if parent is not None else None,
+            owner_id=user.id,
+            owner_uuid=user.uuid,
             name=name,
             status=models.Status.AVAILABLE if is_collection else models.Status.CREATED,
             number=number or -1,

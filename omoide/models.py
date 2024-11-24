@@ -112,22 +112,22 @@ class User(OmoideModel):
     @property
     def is_admin(self) -> bool:
         """Return True if user is an administrator."""
-        return self.role is Role.ADMIN
+        return self.role == Role.ADMIN
 
     @property
     def is_not_admin(self) -> bool:
         """Return True if user is not an administrator."""
-        return self.role is not Role.ADMIN
+        return self.role != Role.ADMIN
 
     @property
     def is_anon(self) -> bool:
         """Return True if user is anonymous."""
-        return self.role is Role.ANON
+        return self.role == Role.ANON
 
     @property
     def is_not_anon(self) -> bool:
         """Return True if user is registered one."""
-        return self.role is not Role.ANON
+        return self.role != Role.ANON
 
     @classmethod
     def new_anon(cls) -> Self:
