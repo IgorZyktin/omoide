@@ -82,9 +82,6 @@ async def api_get_recent_updates(
 ):
     """Return recently updated items.
 
-    Request will find when newest item was updated.
-    And then return all items uploaded at that day.
-
     This endpoint can be used by any registered user,
     but each will get tailored output.
     """
