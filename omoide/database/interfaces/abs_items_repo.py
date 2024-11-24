@@ -19,15 +19,30 @@ class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
         """Create new item."""
 
     @abc.abstractmethod
-    async def get_by_id(self, conn: ConnectionT, item_id: int) -> models.Item:
+    async def get_by_id(
+        self,
+        conn: ConnectionT,
+        item_id: int,
+        read_deleted: bool = False,
+    ) -> models.Item:
         """Return Item with given id."""
 
     @abc.abstractmethod
-    async def get_by_uuid(self, conn: ConnectionT, uuid: UUID) -> models.Item:
+    async def get_by_uuid(
+        self,
+        conn: ConnectionT,
+        uuid: UUID,
+        read_deleted: bool = False,
+    ) -> models.Item:
         """Return Item with given UUID."""
 
     @abc.abstractmethod
-    async def get_by_name(self, conn: ConnectionT, name: str) -> models.Item:
+    async def get_by_name(
+        self,
+        conn: ConnectionT,
+        name: str,
+        read_deleted: bool = False,
+    ) -> models.Item:
         """Return Item with given name."""
 
     @abc.abstractmethod

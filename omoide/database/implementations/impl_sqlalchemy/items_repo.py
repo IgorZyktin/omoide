@@ -57,9 +57,18 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         await conn.execute(update_stmt)
         return item_id
 
-    async def get_by_id(self, conn: AsyncConnection, item_id: int) -> models.Item:
+    async def get_by_id(
+        self,
+        conn: AsyncConnection,
+        item_id: int,
+        read_deleted: bool = False,
+    ) -> models.Item:
         """Return Item with given id."""
         query = sa.select(db_models.Item).where(db_models.Item.id == item_id)
+
+        if not read_deleted:
+            query = query.where(db_models.Item.status != models.Status.DELETED)
+
         response = (await conn.execute(query)).first()
 
         if response is None:
@@ -72,9 +81,14 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         self,
         conn: AsyncConnection,
         uuid: UUID,
+        read_deleted: bool = False,
     ) -> models.Item:
         """Return User with given UUID."""
         query = sa.select(db_models.Item).where(db_models.Item.uuid == uuid)
+
+        if not read_deleted:
+            query = query.where(db_models.Item.status != models.Status.DELETED)
+
         response = (await conn.execute(query)).first()
 
         if response is None:
@@ -83,9 +97,18 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return models.Item.from_obj(response)
 
-    async def get_by_name(self, conn: AsyncConnection, name: str) -> models.Item:
+    async def get_by_name(
+        self,
+        conn: AsyncConnection,
+        name: str,
+        read_deleted: bool = False,
+    ) -> models.Item:
         """Return Item with given name."""
         query = sa.select(db_models.Item).where(db_models.Item.name == name)
+
+        if not read_deleted:
+            query = query.where(db_models.Item.status != models.Status.DELETED)
+
         response = (await conn.execute(query)).first()
 
         if response is None:
