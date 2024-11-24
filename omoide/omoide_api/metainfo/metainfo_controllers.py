@@ -37,14 +37,14 @@ async def api_read_metainfo(
         return web.raise_from_exc(exc)
 
     if user.timezone is None:
-        created_at = (metainfo.created_at.isoformat(),)
-        updated_at = (metainfo.updated_at.isoformat(),)
+        created_at = metainfo.created_at.isoformat()
+        updated_at = metainfo.updated_at.isoformat()
         deleted_at = metainfo.deleted_at.isoformat() if metainfo.deleted_at else None
         user_time = metainfo.user_time.isoformat() if metainfo.user_time else None
     else:
         tz = pytz.timezone(user.timezone or 'UTC')
-        created_at = (metainfo.created_at.astimezone(tz).isoformat(),)
-        updated_at = (metainfo.updated_at.astimezone(tz).isoformat(),)
+        created_at = metainfo.created_at.astimezone(tz).isoformat()
+        updated_at = metainfo.updated_at.astimezone(tz).isoformat()
         deleted_at = metainfo.deleted_at.astimezone(tz).isoformat() if metainfo.deleted_at else None
         user_time = metainfo.user_time.astimezone(tz).isoformat() if metainfo.user_time else None
 

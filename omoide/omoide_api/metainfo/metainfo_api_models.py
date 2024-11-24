@@ -28,7 +28,7 @@ class MetainfoInput(BaseModel):
             hr_size = utils.human_readable_size(size)
             hr_limit = utils.human_readable_size(MAXIMUM_EXTRAS_SIZE)
             msg = (
-                f'Given item extras are too big (got {hr_size}), ' f'allowed maximum is {hr_limit}'
+                f'Given item extras are too big (got {hr_size}), allowed maximum is {hr_limit}'
             )
             raise ValueError(msg)
         return self
