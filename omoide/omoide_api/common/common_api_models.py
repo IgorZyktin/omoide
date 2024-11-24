@@ -152,3 +152,27 @@ def convert_items(
         )
         for item in items
     ]
+
+
+class VersionOutput(BaseModel):
+    """API version response."""
+
+    version: str
+
+    model_config = {'json_schema_extra': {'examples': [{'version': '0.3.10'}]}}
+
+
+class WhoAmIOutput(BaseModel):
+    """WhoAmI response."""
+
+    uuid: str | None
+    name: str
+
+    model_config = {
+        'json_schema_extra': {
+            'examples': [
+                {'uuid': None, 'name': 'anon'},
+                {'uuid': '0b48b013-d538-469a-9db7-38db6a8fbab4', 'name': 'John Smith'},
+            ]
+        }
+    }
