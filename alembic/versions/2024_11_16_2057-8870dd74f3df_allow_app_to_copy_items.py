@@ -5,10 +5,9 @@ Revises: b86f52f0bf00
 Create Date: 2024-11-16 20:57:03.499838+03:00
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from alembic import op
-
 
 revision: str = '8870dd74f3df'
 down_revision: str | None = 'b86f52f0bf00'
