@@ -104,17 +104,11 @@ class OneItemOutput(BaseModel):
 class ManyItemsOutput(BaseModel):
     """Response with many items."""
 
-    duration: float
     items: list[ItemOutput]
 
     model_config = {
         'json_schema_extra': {
-            'examples': [
-                {
-                    'duration': 0.025,
-                    'items': [DEFAULT_ITEM_EXAMPLE],
-                }
-            ],
+            'examples': [{'items': [DEFAULT_ITEM_EXAMPLE]}],
         }
     }
 

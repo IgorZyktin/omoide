@@ -99,8 +99,8 @@ class BaseItemUseCase(BaseAPIUseCase):
             user_uuid = human_readable_user.get('uuid')
             if not isinstance(user_uuid, UUID):
                 continue
-            user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            _permissions.add(user.id)
+            local_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+            _permissions.add(local_user.id)
 
         item = models.Item(
             id=-1,

@@ -37,18 +37,16 @@ async def api_create_item(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_in: common_api_models.ItemInput,
 ):
-    """Get exising item."""
+    """Create single item."""
     use_case = item_use_cases.CreateItemsUseCase(mediator)
 
     try:
-        _, items = await use_case.execute(user, [item_in.model_dump()])
+        items = await use_case.execute(user, [item_in.model_dump()])
     except Exception as exc:
         return web.raise_from_exc(exc)
 
     item = items[0]
-
     response.headers['Location'] = str(request.url_for('api_read_item', item_uuid=item.uuid))
-
     return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, {}))
 
 

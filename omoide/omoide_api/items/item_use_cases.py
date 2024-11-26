@@ -21,15 +21,10 @@ class CreateItemsUseCase(BaseItemUseCase):
 
     do_what: str = 'create items'
 
-    async def execute(
-        self,
-        user: models.User,
-        items_in: list[dict[str, Any]],
-    ) -> tuple[float, list[models.Item]]:
+    async def execute(self, user: models.User, items_in: list[dict[str, Any]]) -> list[models.Item]:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
 
-        start = time.perf_counter()
         items: list[models.Item] = []
 
         async with self.mediator.database.transaction() as conn:
@@ -39,30 +34,40 @@ class CreateItemsUseCase(BaseItemUseCase):
 
                 if item.parent_id is not None:
                     parent = await self._get_cached_item(conn, item.parent_id)
-                    computed_tags = await self._get_cached_computed_tags(conn, parent)
+                    parent_tags = await self._get_cached_computed_tags(conn, parent)
                 else:
-                    computed_tags = set()
+                    parent_tags = set()
 
-                all_tags = item.get_computed_tags(computed_tags)
-                await self.mediator.tags.save_computed_tags(conn, item, all_tags)
+                computed_tags = item.get_computed_tags(parent_tags)
 
-                await self.mediator.tags.increment_known_tags_user(conn, user, all_tags)
+                # for item itself
+                await self.mediator.tags.save_computed_tags(conn, item, computed_tags)
+
+                # for owner
+                await self.mediator.tags.increment_known_tags_user(conn, user, computed_tags)
+
+                # for anons
                 if user.is_public:
-                    await self.mediator.tags.increment_known_tags_anon(conn, all_tags)
+                    await self.mediator.tags.increment_known_tags_anon(conn, computed_tags)
 
+                # for everyone, who can see this item
                 for user_id in item.permissions:
-                    other_user = await self._get_cached_user(conn, user_id)
-                    await self.mediator.tags.increment_known_tags_user(conn, other_user, all_tags)
+                    user_that_can_see_it = await self._get_cached_user(conn, user_id)
+                    await self.mediator.tags.increment_known_tags_user(
+                        conn, user_that_can_see_it, computed_tags
+                    )
 
-        LOG.info(
-            'User {} created {} items: {}',
-            user,
-            len(items),
-            sorted(str(item.uuid) for item in items),
-        )
+        if len(items) == 1:
+            LOG.info('User {user} created item: {item}', user=user, item=items[0])
+        else:
+            LOG.info(
+                'User {user} created {total} items: {items}',
+                user=user,
+                total=len(items),
+                items=items,
+            )
 
-        duration = time.perf_counter() - start
-        return duration, items
+        return items
 
 
 class ReadItemUseCase(BaseAPIUseCase):
