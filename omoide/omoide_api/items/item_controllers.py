@@ -60,20 +60,18 @@ async def api_create_many_items(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     items_in: list[common_api_models.ItemInput],
 ):
-    """Get exising item."""
+    """Create many items in one request."""
     use_case = item_use_cases.CreateItemsUseCase(mediator)
 
     try:
-        duration, items = await use_case.execute(
+        items = await use_case.execute(
             user=user,
             items_in=[item_in.model_dump() for item_in in items_in],
         )
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return common_api_models.ManyItemsOutput(
-        duration=duration, items=common_api_models.convert_items(items, {})
-    )
+    return common_api_models.ManyItemsOutput(items=common_api_models.convert_items(items, {}))
 
 
 @api_items_router.get(
