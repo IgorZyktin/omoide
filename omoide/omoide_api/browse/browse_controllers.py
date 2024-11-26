@@ -30,8 +30,8 @@ async def api_browse(  # noqa: PLR0913
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_uuid: UUID,
     direct: Annotated[bool, Query()] = False,
-    order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
-    collections: Annotated[bool, Query()] = False,
+    order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
+    collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_BROWSE, lt=limits.MAX_BROWSE)] = limits.DEF_BROWSE,
 ):

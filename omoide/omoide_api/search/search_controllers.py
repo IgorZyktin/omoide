@@ -75,8 +75,8 @@ async def api_autocomplete(
 async def api_get_recent_updates(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
-    collections: Annotated[bool, Query()] = False,
+    order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
+    collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
@@ -153,8 +153,8 @@ async def api_search(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
-    order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
-    collections: Annotated[bool, Query()] = False,
+    order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
+    collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):

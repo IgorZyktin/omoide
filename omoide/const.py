@@ -29,6 +29,10 @@ DESC: Literal['desc'] = 'desc'
 RANDOM: Literal['random'] = 'random'
 ORDER_TYPE: TypeAlias = Literal['asc', 'desc', 'random']
 
+DEF_COLLECTIONS = False
+DEF_DIRECT = False
+DEF_ORDER = RANDOM
+
 PAGES_IN_ALBUM_AT_ONCE = 10
 
 # for path generation i.e.

@@ -1,6 +1,5 @@
 """API operations that return detailed info on specific item groups."""
 
-import time
 from typing import Annotated
 
 from fastapi import APIRouter
@@ -26,9 +25,9 @@ api_home_router = APIRouter(prefix='/home', tags=['Home'])
 async def api_home(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    order: Annotated[const.ORDER_TYPE, Query()] = const.RANDOM,
-    collections: Annotated[bool, Query()] = False,
-    direct: Annotated[bool, Query()] = False,
+    order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
+    collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
+    direct: Annotated[bool, Query()] = const.DEF_DIRECT,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
@@ -36,7 +35,6 @@ async def api_home(  # noqa: PLR0913
 
     Combined collections of all available users.
     """
-    start = time.perf_counter()
     use_case = home_use_cases.ApiHomeUseCase(mediator)
 
     plan = models.Plan(
@@ -55,9 +53,4 @@ async def api_home(  # noqa: PLR0913
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    response = common_api_models.ManyItemsOutput(
-        duration=0.0,
-        items=common_api_models.convert_items(items, users),
-    )
-    response.duration = time.perf_counter() - start
-    return response
+    return common_api_models.ManyItemsOutput(items=common_api_models.convert_items(items, users))
