@@ -38,16 +38,16 @@ async def api_create_item(
     item_in: common_api_models.ItemInput,
 ):
     """Create single item."""
-    use_case = item_use_cases.CreateItemsUseCase(mediator)
+    use_case = item_use_cases.CreateManyItemsUseCase(mediator)
 
     try:
-        items = await use_case.execute(user, [item_in.model_dump()])
+        items, users_map = await use_case.execute(user, item_in.model_dump())
     except Exception as exc:
         return web.raise_from_exc(exc)
 
     item = items[0]
     response.headers['Location'] = str(request.url_for('api_read_item', item_uuid=item.uuid))
-    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, {}))
+    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, users_map))
 
 
 @api_items_router.post(
@@ -61,17 +61,19 @@ async def api_create_many_items(
     items_in: list[common_api_models.ItemInput],
 ):
     """Create many items in one request."""
-    use_case = item_use_cases.CreateItemsUseCase(mediator)
+    use_case = item_use_cases.CreateManyItemsUseCase(mediator)
 
     try:
-        items = await use_case.execute(
-            user=user,
-            items_in=[item_in.model_dump() for item_in in items_in],
+        items, users_map = await use_case.execute(
+            user,
+            *(item_in.model_dump() for item_in in items_in),
         )
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return common_api_models.ManyItemsOutput(items=common_api_models.convert_items(items, {}))
+    return common_api_models.ManyItemsOutput(
+        items=common_api_models.convert_items(items, users_map),
+    )
 
 
 @api_items_router.get(

@@ -16,34 +16,39 @@ from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 LOG = custom_logging.get_logger(__name__)
 
 
-class CreateItemsUseCase(BaseItemUseCase):
+class CreateManyItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
 
     do_what: str = 'create items'
 
-    async def execute(self, user: models.User, items_in: list[dict[str, Any]]) -> list[models.Item]:
+    async def execute(
+        self,
+        user: models.User,
+        *items_in: dict[str, Any],
+    ) -> tuple[list[models.Item], dict[int, models.User]]:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         items: list[models.Item] = []
+        users_map: dict[int, models.User] = {user.id: user}
 
         async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
                 item = await self.create_one_item(conn, user, **raw_item)
                 items.append(item)
 
-                if item.parent_id is not None:
+                if item.parent_id is None:
+                    parent_tags = set()
+                else:
                     parent = await self._get_cached_item(conn, item.parent_id)
                     parent_tags = await self._get_cached_computed_tags(conn, parent)
-                else:
-                    parent_tags = set()
 
                 computed_tags = item.get_computed_tags(parent_tags)
 
-                # for item itself
+                # for the item itself
                 await self.mediator.tags.save_computed_tags(conn, item, computed_tags)
 
-                # for owner
+                # for the owner
                 await self.mediator.tags.increment_known_tags_user(conn, user, computed_tags)
 
                 # for anons
@@ -52,9 +57,10 @@ class CreateItemsUseCase(BaseItemUseCase):
 
                 # for everyone, who can see this item
                 for user_id in item.permissions:
-                    user_that_can_see_it = await self._get_cached_user(conn, user_id)
+                    other_user = await self._get_cached_user(conn, user_id)
+                    users_map[user_id] = other_user
                     await self.mediator.tags.increment_known_tags_user(
-                        conn, user_that_can_see_it, computed_tags
+                        conn, other_user, computed_tags
                     )
 
         if len(items) == 1:
@@ -67,7 +73,7 @@ class CreateItemsUseCase(BaseItemUseCase):
                 items=items,
             )
 
-        return items
+        return items, users_map
 
 
 class ReadItemUseCase(BaseAPIUseCase):
