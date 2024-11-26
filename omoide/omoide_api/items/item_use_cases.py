@@ -76,14 +76,19 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         return items, users_map
 
 
-class ReadItemUseCase(BaseAPIUseCase):
+class GetItemUseCase(BaseAPIUseCase):
     """Use case for item getting."""
 
-    async def execute(self, user: models.User, item_uuid: UUID) -> models.Item:
+    async def execute(
+        self,
+        user: models.User,
+        item_uuid: UUID,
+    ) -> tuple[models.Item, dict[int, models.User]]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
+            users_map: dict[int, models.User] = {user.id: user}
 
             if not any(
                 (
@@ -96,7 +101,11 @@ class ReadItemUseCase(BaseAPIUseCase):
                 msg = 'Item {item_uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-        return item
+            for user_id in item.permissions:
+                other_user = await self.mediator.users.get_by_id(conn, user_id)
+                users_map[user_id] = other_user
+
+        return item, users_map
 
 
 class ReadManyItemsUseCase(BaseAPIUseCase):

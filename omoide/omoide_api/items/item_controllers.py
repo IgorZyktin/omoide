@@ -46,7 +46,7 @@ async def api_create_item(
         return web.raise_from_exc(exc)
 
     item = items[0]
-    response.headers['Location'] = str(request.url_for('api_read_item', item_uuid=item.uuid))
+    response.headers['Location'] = str(request.url_for('api_get_item', item_uuid=item.uuid))
     return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, users_map))
 
 
@@ -81,20 +81,20 @@ async def api_create_many_items(
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.OneItemOutput,
 )
-async def api_read_item(
+async def api_get_item(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Get exising item."""
-    use_case = item_use_cases.ReadItemUseCase(mediator)
+    use_case = item_use_cases.GetItemUseCase(mediator)
 
     try:
-        item = await use_case.execute(user, item_uuid)
+        item, users_map = await use_case.execute(user, item_uuid)
     except Exception as exc:
         return web.raise_from_exc(exc)
 
-    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, {}))
+    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, users_map))
 
 
 @api_items_router.get(
