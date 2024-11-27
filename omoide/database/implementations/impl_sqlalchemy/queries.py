@@ -1,5 +1,7 @@
 """Common database queries."""
 
+from uuid import UUID
+
 import sqlalchemy as sa
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import Select
@@ -17,6 +19,27 @@ def public_user_ids() -> Select:
 def item_is_public() -> sa.BinaryExpression:
     """Return condition that check that owner of the item is public."""
     return db_models.Item.owner_id.in_(public_user_ids())
+
+
+def extend_item_select(
+    query: Select,
+    owner_uuid: UUID | None,
+    parent_uuid: UUID | None,
+    name: str | None,
+    limit: int,
+) -> Select:
+    """Add filters for item selection."""
+    if parent_uuid is not None:
+        query = query.where(db_models.Item.parent_uuid == parent_uuid)
+
+    if owner_uuid is not None:
+        query = query.where(db_models.Item.owner_uuid == owner_uuid)
+
+    if name is not None:
+        query = query.where(db_models.Item.name == name)
+
+    query = query.limit(limit)
+    return query
 
 
 def get_items_with_parent_names() -> Select:

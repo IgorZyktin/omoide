@@ -245,24 +245,13 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = sa.select(db_models.Item).where(
+        query = queries.get_items_with_parent_names().where(
             queries.item_is_public(),
-            db_models.Item.status != models.Status.DELETED,
         )
-
-        if parent_uuid is not None:
-            query = query.where(db_models.Item.parent_uuid == parent_uuid)
-
-        if owner_uuid is not None:
-            query = query.where(db_models.Item.owner_uuid == owner_uuid)
-
-        if name is not None:
-            query = query.where(db_models.Item.name == name)
-
-        query = query.limit(limit)
+        query = queries.extend_item_select(query, owner_uuid, parent_uuid, name, limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
     async def get_items_known(
         self,
@@ -274,28 +263,17 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = sa.select(db_models.Item).where(
+        query = queries.get_items_with_parent_names().where(
             sa.or_(
                 db_models.Item.permissions.any_() == user.id,
                 db_models.Item.owner_id == user.id,
                 queries.item_is_public(),
-                db_models.Item.status != models.Status.DELETED,
             )
         )
 
-        if parent_uuid is not None:
-            query = query.where(db_models.Item.parent_uuid == parent_uuid)
-
-        if owner_uuid is not None:
-            query = query.where(db_models.Item.owner_uuid == owner_uuid)
-
-        if name is not None:
-            query = query.where(db_models.Item.name == name)
-
-        query = query.limit(limit)
-
+        query = queries.extend_item_select(query, owner_uuid, parent_uuid, name, limit)
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row) for row in response]
+        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
     async def is_child(
         self,

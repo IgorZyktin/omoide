@@ -1,6 +1,5 @@
 """Use cases for Item-related operations."""
 
-import time
 from typing import Any
 from typing import Literal
 from uuid import UUID
@@ -25,12 +24,12 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         self,
         user: models.User,
         *items_in: dict[str, Any],
-    ) -> tuple[list[models.Item], dict[int, models.User]]:
+    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
 
         items: list[models.Item] = []
-        users_map: dict[int, models.User] = {user.id: user}
+        users_map: dict[int, models.User | None] = {user.id: user}
 
         async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
@@ -76,19 +75,19 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         return items, users_map
 
 
-class GetItemUseCase(BaseAPIUseCase):
+class GetItemUseCase(BaseItemUseCase):
     """Use case for item getting."""
 
     async def execute(
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[models.Item, dict[int, models.User]]:
+    ) -> tuple[models.Item, dict[int, models.User | None]]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
-            users_map: dict[int, models.User] = {user.id: user}
+            users_map: dict[int, models.User | None] = {user.id: user}
 
             if not any(
                 (
@@ -108,7 +107,7 @@ class GetItemUseCase(BaseAPIUseCase):
         return item, users_map
 
 
-class ReadManyItemsUseCase(BaseAPIUseCase):
+class GetManyItemsUseCase(BaseAPIUseCase):
     """Use case for item getting."""
 
     async def execute(
@@ -118,9 +117,8 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
         parent_uuid: UUID | None,
         name: str | None,
         limit: int,
-    ) -> tuple[float, list[models.Item]]:
+    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
-        start = time.perf_counter()
         async with self.mediator.database.transaction() as conn:
             if user.is_anon:
                 items = await self.mediator.items.get_items_anon(
@@ -131,8 +129,15 @@ class ReadManyItemsUseCase(BaseAPIUseCase):
                     conn, user, owner_uuid, parent_uuid, name, limit
                 )
 
-        duration = time.perf_counter() - start
-        return duration, items
+            users_map: dict[int, models.User | None] = {user.id: user}
+            for item in items:
+                for user_id in item.permissions:
+                    if user_id in users_map:
+                        continue
+                    other_user = await self.mediator.users.get_by_id(conn, user_id)
+                    users_map[user_id] = other_user
+
+        return items, users_map
 
 
 class UpdateItemUseCase(BaseItemUseCase):

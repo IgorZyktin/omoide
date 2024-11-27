@@ -102,7 +102,7 @@ async def api_get_item(
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
-async def api_read_many_items(
+async def api_get_many_items(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     owner_uuid: Annotated[UUID | None, Query()] = None,
@@ -111,10 +111,10 @@ async def api_read_many_items(
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Get exising items."""
-    use_case = item_use_cases.ReadManyItemsUseCase(mediator)
+    use_case = item_use_cases.GetManyItemsUseCase(mediator)
 
     try:
-        duration, items = await use_case.execute(
+        items, users_map = await use_case.execute(
             user=user,
             owner_uuid=owner_uuid,
             parent_uuid=parent_uuid,
@@ -125,7 +125,7 @@ async def api_read_many_items(
         return web.raise_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
-        duration=duration, items=common_api_models.convert_items(items, {})
+        items=common_api_models.convert_items(items, users_map),
     )
 
 
