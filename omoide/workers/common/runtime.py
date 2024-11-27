@@ -25,6 +25,6 @@ async def run_automatic(worker: SerialWorker | ParallelWorker) -> None:
             else:
                 await asyncio.sleep(worker.config.long_delay)
     except (KeyboardInterrupt, asyncio.CancelledError):
-        LOG.warning('Worker {!r} manually', worker.config.name)
+        LOG.warning('Worker {!r} stopped manually', worker.config.name)
     finally:
         await worker.stop()
