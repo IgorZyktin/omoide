@@ -76,7 +76,7 @@ def organize(  # noqa: PLR0913
                     timezone=timezone,
                 )
 
-                if total_files > limit > -1:
+                if total_files >= limit > -1:
                     return total_files, total_bytes
 
     return total_files, total_bytes
