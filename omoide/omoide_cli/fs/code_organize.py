@@ -21,12 +21,13 @@ USERS_CACHE: dict[int, models.User] = {}
 ALREADY_SEEN: set[str] = set()
 
 
-def organize(
+def organize(  # noqa: PLR0913
     source: Path,
     archive: Path,
     db_url: str,
     inject_year: bool,
     dry_run: bool,
+    timezone: str,
     limit: int,
 ) -> tuple[int, int]:
     """Move files from source folder to archive folder according to item structure."""
@@ -72,6 +73,7 @@ def organize(
                     item=item,
                     inject_year=inject_year,
                     dry_run=dry_run,
+                    timezone=timezone,
                 )
 
                 if total_files > limit > -1:
@@ -144,13 +146,14 @@ def get_parents(conn: Connection, item: models.Item) -> list[models.Item]:
     return list(reversed(parents))
 
 
-def move_single_image(
+def move_single_image(  # noqa: PLR0913
     conn: Connection,
     archive: Path,
     path: Path,
     item: models.Item,
     inject_year: bool,
     dry_run: bool,
+    timezone: str,
 ) -> None:
     """Put image into archive."""
     owner = get_user(conn, item.owner_id)
@@ -159,7 +162,7 @@ def move_single_image(
 
     if inject_year:
         timestamp = min(path.stat().st_ctime, path.stat().st_mtime)
-        year = datetime.fromtimestamp(timestamp, tz=pytz.timezone('UTC')).date().year
+        year = datetime.fromtimestamp(timestamp, tz=pytz.timezone(timezone)).date().year
         resulting_path = resulting_path / str(year)
 
     parents = get_parents(conn, item)

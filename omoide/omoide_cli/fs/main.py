@@ -160,12 +160,13 @@ def hard_delete(
 
 
 @app.command()
-def organize(
+def organize(  # noqa: PLR0913
     source: Path,
     archive: Path,
     db_url: str | None = None,
     inject_year: bool = True,
     dry_run: bool = False,
+    timezone: str = 'UTC',
     limit: int = -1,
 ) -> None:
     """Move files from source folder to archive folder according to item structure."""
@@ -193,6 +194,7 @@ def organize(
         db_url=valid_db_url,
         inject_year=inject_year,
         dry_run=dry_run,
+        timezone=timezone,
         limit=limit,
     )
 
