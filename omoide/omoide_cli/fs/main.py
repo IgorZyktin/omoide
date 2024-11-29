@@ -177,12 +177,10 @@ def organize(  # noqa: PLR0913
     )
 
     if not source.exists():
-        msg = f'Source folder does not exist: {source}'
-        raise RuntimeError(msg)
+        sys.exit(f'Source folder does not exist: {source}')
 
     if not archive.exists():
-        msg = f'Archive folder does not exist: {archive}'
-        raise RuntimeError(msg)
+        sys.exit(f'Archive folder does not exist: {archive}')
 
     LOG.info('Organizing image files according to item structure')
     LOG.info(' Source folder: {}', source)
