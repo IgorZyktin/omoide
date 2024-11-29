@@ -12,6 +12,7 @@ from omoide import custom_logging
 from omoide import utils
 from omoide.omoide_cli import common
 from omoide.omoide_cli.fs import code_hard_delete
+from omoide.omoide_cli.fs import code_organize
 from omoide.omoide_cli.fs import code_refresh
 from omoide.omoide_cli.fs import code_sync
 
@@ -153,6 +154,57 @@ def hard_delete(
     else:
         LOG.info(
             'Deleted {total_files} files and free {total_size} of space',
+            total_files=utils.sep_digits(total_files),
+            total_size=utils.human_readable_size(total_bytes),
+        )
+
+
+@app.command()
+def organize(
+    source: Path,
+    archive: Path,
+    db_url: str | None = None,
+    inject_year: bool = True,
+    dry_run: bool = False,
+    limit: int = -1,
+) -> None:
+    """Move files from source folder to archive folder according to item structure."""
+    valid_db_url = common.extract_env(
+        what='Database URL',
+        variable=db_url,
+        env_variable=const.ENV_DB_URL_ADMIN,
+    )
+
+    if not source.exists():
+        msg = f'Source folder does not exist: {source}'
+        raise RuntimeError(msg)
+
+    if not archive.exists():
+        msg = f'Archive folder does not exist: {archive}'
+        raise RuntimeError(msg)
+
+    LOG.info('Organizing image files according to item structure')
+    LOG.info(' Source folder: {}', source)
+    LOG.info('Archive folder: {}', archive)
+
+    total_files, total_bytes = code_organize.organize(
+        source=source,
+        archive=archive,
+        db_url=valid_db_url,
+        inject_year=inject_year,
+        dry_run=dry_run,
+        limit=limit,
+    )
+
+    if dry_run:
+        LOG.info(
+            'Will move {total_files} files ({total_size})',
+            total_files=utils.sep_digits(total_files),
+            total_size=utils.human_readable_size(total_bytes),
+        )
+    else:
+        LOG.info(
+            'Moved {total_files} files ({total_size})',
             total_files=utils.sep_digits(total_files),
             total_size=utils.human_readable_size(total_bytes),
         )
