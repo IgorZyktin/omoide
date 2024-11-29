@@ -87,7 +87,15 @@ def get_item_id(conn: Connection, signature: str) -> int | None:
     query = sa.select(db_models.SignatureMD5.item_id).where(
         db_models.SignatureMD5.signature == signature
     )
-    return conn.execute(query).scalar()
+    response = conn.execute(query).fetchall()
+
+    for item_id, in response:
+        # some signatures are belong to collections, not item themselves
+        item = get_item(conn, item_id)
+        if not item.is_collection:
+            return item.id
+
+    return None
 
 
 def get_item(conn: Connection, item_id: int) -> models.Item | None:
@@ -133,13 +141,11 @@ def get_parents(conn: Connection, item: models.Item) -> list[models.Item]:
     parent_id = item.parent_id
 
     while parent_id is not None:
-        query = sa.select(db_models.Item).where(db_models.Item.id == parent_id)
-        raw_parent = conn.execute(query).fetchone()
+        parent = get_item(conn, parent_id)
 
-        if raw_parent is None:
+        if parent is None:
             break
 
-        parent = models.Item.from_obj(raw_parent)
         parents.append(parent)
         parent_id = parent.parent_id
 
@@ -167,14 +173,21 @@ def move_single_image(  # noqa: PLR0913
 
     parents = get_parents(conn, item)
 
-    for parent in parents[1:]:
+    for parent in parents:
+        if parent.name == owner.name:
+            continue
         resulting_path = resulting_path / parent.name
 
-    LOG.info('Moving {} -> {}', path, resulting_path / path.name)
-
-    if not dry_run:
+    if dry_run:
+        LOG.warning('Will move {} -> {}', path, resulting_path / path.name)
+    else:
+        LOG.info('Moving {} -> {}', path, resulting_path / path.name)
         resulting_path.mkdir(parents=True, exist_ok=True)
         shutil.move(
             src=path,
             dst=resulting_path / path.name,
         )
+
+        if not list(path.parent.iterdir()):
+            LOG.warning('Removing empty {}', path.parent)
+            shutil.rmtree(path.parent)
