@@ -56,7 +56,7 @@ def organize(  # noqa: PLR0913
                 item_id = get_item_id(conn, signature)
 
                 if item_id is None:
-                    LOG.warning('Skipping: {}, got no item for signature for {}', path, signature)
+                    LOG.warning('Skipping: {}, no item for signature {}', path, signature)
                     continue
 
                 item = get_item(conn, item_id)
@@ -191,6 +191,22 @@ def move_single_image(  # noqa: PLR0913
             dst=resulting_path / path.name,
         )
 
-        if not list(path.parent.iterdir()) and delete_empty_folders:
-            LOG.warning('Removing empty {}', path.parent)
+        if delete_empty_folders:
+            do_delete_empty_folders(archive, path)
+
+
+def do_delete_empty_folders(archive: Path, path: Path) -> None:
+    """Remove directories without files."""
+    if path == archive:
+        return
+
+    parent = path.parent
+
+    while not list(parent.iterdir()):
+        LOG.warning('Removing empty {}', path.parent)
+        answer = input('Press y to delete')
+        if answer.strip() == 'y':
             shutil.rmtree(path.parent)
+            parent = parent.parent
+        else:
+            break
