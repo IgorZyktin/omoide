@@ -168,6 +168,7 @@ def organize(  # noqa: PLR0913
     dry_run: bool = False,
     timezone: str = 'UTC',
     limit: int = -1,
+    delete_empty_folders: bool = True,
 ) -> None:
     """Move files from source folder to archive folder according to item structure."""
     valid_db_url = common.extract_env(
@@ -194,6 +195,7 @@ def organize(  # noqa: PLR0913
         dry_run=dry_run,
         timezone=timezone,
         limit=limit,
+        delete_empty_folders=delete_empty_folders,
     )
 
     if dry_run:

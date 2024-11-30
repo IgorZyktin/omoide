@@ -29,6 +29,7 @@ def organize(  # noqa: PLR0913
     dry_run: bool,
     timezone: str,
     limit: int,
+    delete_empty_folders: bool,
 ) -> tuple[int, int]:
     """Move files from source folder to archive folder according to item structure."""
     total_files = 0
@@ -74,6 +75,7 @@ def organize(  # noqa: PLR0913
                     inject_year=inject_year,
                     dry_run=dry_run,
                     timezone=timezone,
+                    delete_empty_folders=delete_empty_folders,
                 )
 
                 if total_files >= limit > -1:
@@ -160,6 +162,7 @@ def move_single_image(  # noqa: PLR0913
     inject_year: bool,
     dry_run: bool,
     timezone: str,
+    delete_empty_folders: bool,
 ) -> None:
     """Put image into archive."""
     owner = get_user(conn, item.owner_id)
@@ -188,6 +191,6 @@ def move_single_image(  # noqa: PLR0913
             dst=resulting_path / path.name,
         )
 
-        if not list(path.parent.iterdir()):
+        if not list(path.parent.iterdir()) and delete_empty_folders:
             LOG.warning('Removing empty {}', path.parent)
             shutil.rmtree(path.parent)
