@@ -55,7 +55,7 @@ def organize(  # noqa: PLR0913
                 item_id = get_item_id(conn, signature)
 
                 if item_id is None:
-                    LOG.warning('Skipping: {}', path)
+                    LOG.warning('Skipping: {}, got no item for signature for {}', path, signature)
                     continue
 
                 item = get_item(conn, item_id)
