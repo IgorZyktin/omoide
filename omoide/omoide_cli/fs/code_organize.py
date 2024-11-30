@@ -91,10 +91,10 @@ def get_item_id(conn: Connection, signature: str) -> int | None:
     )
     response = conn.execute(query).fetchall()
 
-    for item_id, in response:
+    for (item_id,) in response:
         # some signatures are belong to collections, not item themselves
         item = get_item(conn, item_id)
-        if not item.is_collection:
+        if item is not None and not item.is_collection:
             return item.id
 
     return None
