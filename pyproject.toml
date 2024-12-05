@@ -11,6 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.13.3",
     "asyncpg>=0.30.0",
+    "httptools>=0.6.4",
     "loguru>=0.7.2",
     "pillow>=11.0.0",
     "psycopg2-binary>=2.9.9",
@@ -22,6 +23,7 @@ dependencies = [
     "typer>=0.12.5",
     "tzdata>=2024.2",
     "ujson>=5.10.0",
+    'uvloop>=0.21.0;platform_system != "Windows"',
 ]
 
 [project.optional-dependencies]
