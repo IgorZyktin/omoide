@@ -351,7 +351,7 @@ class DeleteItemUseCase(BaseItemUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-        desired_switch: Literal['parent', 'sibling'] | None,
+        desired_switch: Literal['parent', 'sibling'],
     ) -> models.Item | None:
         """Execute."""
         self.mediator.policy.ensure_registered(user, to=self.do_what)
@@ -362,8 +362,8 @@ class DeleteItemUseCase(BaseItemUseCase):
             self.mediator.policy.ensure_owner(user, item, to=self.do_what)
 
             if item.parent_uuid is None:
-                msg = 'Root items cannot be deleted'
                 LOG.warning('{} tried to delete root {}', user, item)
+                msg = 'Root items cannot be deleted'
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'sibling':
