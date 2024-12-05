@@ -57,7 +57,9 @@ def raise_from_exc(
 ) -> NoReturn:
     """Cast exception into HTTP response."""
     _ = lang  # TODO - add localization
-    LOG.exception('Failed to perform API request')
+
+    if not isinstance(exc, exceptions.BaseOmoideError):
+        LOG.exception('Failed to perform API request')
 
     code = get_corresponding_exception_code(exc)
 
