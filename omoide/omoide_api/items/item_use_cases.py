@@ -363,6 +363,7 @@ class DeleteItemUseCase(BaseItemUseCase):
 
             if item.parent_uuid is None:
                 msg = 'Root items cannot be deleted'
+                LOG.warning('{} tried to delete root {}', user, item)
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'sibling':
