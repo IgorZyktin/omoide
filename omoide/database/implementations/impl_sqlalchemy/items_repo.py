@@ -50,11 +50,13 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         if not item_id:
             return -1
 
-        # NOTE: Initially user id as a number
-        update_stmt = (
-            sa.update(db_models.Item).where(db_models.Item.id == item_id).values(number=item_id)
-        )
-        await conn.execute(update_stmt)
+        if values.get('number') is None:
+            # NOTE: Initially use item id as a number if it was not given initially
+            update_stmt = (
+                sa.update(db_models.Item).where(db_models.Item.id == item_id).values(number=item_id)
+            )
+            await conn.execute(update_stmt)
+            item.number = item_id
         return item_id
 
     async def get_by_id(
