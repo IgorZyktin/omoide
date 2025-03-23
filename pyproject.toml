@@ -25,6 +25,7 @@ dependencies = [
     "ujson>=5.10.0",
     'uvloop>=0.21.0;platform_system != "Windows"',
     "python-utilz>=0.1.0",
+    "setuptools>=77.0.3",
 ]
 
 [project.optional-dependencies]
