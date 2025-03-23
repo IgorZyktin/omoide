@@ -9,11 +9,11 @@ from uuid import UUID
 
 import colorama
 from prettytable import PrettyTable
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
-from omoide import utils
 from omoide.database import db_models
 
 
@@ -171,7 +171,7 @@ def print_results(stats: list[Stats], threshold: float = 0.1) -> None:
     ) -> str:
         """Format multiline summary."""
         lines = [
-            _highlight(utils.sep_digits(getattr(_stat, f'{what}_total'))),
+            _highlight(pu.sep_digits(getattr(_stat, f'{what}_total'))),
             _stat.percent(what, 'total', total[f'{what}_total']) + '% of files',
             _stat.percent(what, 'size', total[f'{what}_size']) + '% of size',
         ]
@@ -192,15 +192,15 @@ def print_results(stats: list[Stats], threshold: float = 0.1) -> None:
                 _format(stat, 'preview', position == len(stats)),
                 _format(stat, 'thumbnail', position == len(stats)),
                 (
-                    _highlight(utils.sep_digits(stat.total_files) + ' files')
+                    _highlight(pu.sep_digits(stat.total_files) + ' files')
                     + '\n'
-                    + utils.human_readable_size(stat.total_size)
+                    + pu.human_readable_size(stat.total_size)
                 ),
             ]
         )
 
     print(table.get_string())  # noqa: T201
     print('Total:')  # noqa: T201
-    print('\t' + utils.sep_digits(total['items']) + ' items')  # noqa: T201
-    print('\t' + utils.sep_digits(total['files']) + ' files')  # noqa: T201
-    print('\t' + utils.human_readable_size(total['size']))  # noqa: T201
+    print('\t' + pu.sep_digits(total['items']) + ' items')  # noqa: T201
+    print('\t' + pu.sep_digits(total['files']) + ' files')  # noqa: T201
+    print('\t' + pu.human_readable_size(total['size']))  # noqa: T201

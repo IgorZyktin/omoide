@@ -3,12 +3,12 @@
 from collections.abc import Collection
 from uuid import UUID
 
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_users_repo import AbsUsersRepo
 
@@ -32,7 +32,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             'auth_complexity': auth_complexity,
             'role': user.role,
             'is_public': user.is_public,
-            'registered_at': utils.now(),
+            'registered_at': pu.now(),
             'last_login': None,
         }
 

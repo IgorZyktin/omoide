@@ -4,10 +4,11 @@ from typing import Any
 from uuid import UUID
 from uuid import uuid4
 
+import python_utilz as pu
+
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide.infra.mediator import Mediator
 
 LOG = custom_logging.get_logger(__name__)
@@ -125,8 +126,8 @@ class BaseItemUseCase(BaseAPIUseCase):
 
         metainfo = models.Metainfo(
             item_id=item.id,
-            created_at=utils.now(),
-            updated_at=utils.now(),
+            created_at=pu.now(),
+            updated_at=pu.now(),
             deleted_at=None,
             user_time=None,
             content_type=None,

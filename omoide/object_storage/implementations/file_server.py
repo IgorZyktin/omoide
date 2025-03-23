@@ -1,8 +1,9 @@
 """Object storage that saves data into files."""
 
+import python_utilz as pu
+
 from omoide import const
 from omoide import models
-from omoide import utils
 from omoide.database.interfaces import AbsDatabase
 from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
 from omoide.object_storage.interfaces.abs_object_storage import AbsObjectStorage
@@ -32,7 +33,7 @@ class FileObjectStorageServer(AbsObjectStorage):
         """Save object of specific content type."""
         media = models.Media(
             id=-1,
-            created_at=utils.now(),
+            created_at=pu.now(),
             processed_at=None,
             error=None,
             owner_id=item.owner_id,
@@ -70,7 +71,7 @@ class FileObjectStorageServer(AbsObjectStorage):
     ) -> list[const.MEDIA_TYPE]:
         """Copy all objects from one item to another."""
         copied_types: list[const.MEDIA_TYPE] = []
-        now = utils.now()
+        now = pu.now()
 
         async with self.database.transaction() as conn:
             if source_item.content_ext is not None:

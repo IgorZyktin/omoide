@@ -10,12 +10,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
+import python_utilz as pu
 import ujson
 
 from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import models
-from omoide import utils
 from omoide.infra.mediator import Mediator
 from omoide.omoide_app.items import item_use_cases
 from omoide.presentation import web
@@ -117,7 +117,7 @@ async def app_update_item(  # noqa: PLR0913
 
     lower_tags = [tag.lower() for tag in item.tags]
     external_tags = [
-        tag for tag in computed_tags if tag not in lower_tags and not utils.is_valid_uuid(tag)
+        tag for tag in computed_tags if tag not in lower_tags and not pu.is_valid_uuid(tag)
     ]
 
     model = serialize_item(item)
@@ -131,7 +131,7 @@ async def app_update_item(  # noqa: PLR0913
         'item': item,
         'metainfo': metainfo,
         'notes': notes,
-        'total': utils.sep_digits(total),
+        'total': pu.sep_digits(total),
         'permissions': permissions,
         'external_tags': external_tags,
         'url': request.url_for('app_search'),
@@ -175,7 +175,7 @@ async def app_delete_item(  # noqa: PLR0913 Too many arguments in function defin
         'item': item,
         'url': request.url_for('app_search'),
         'uuid': item_uuid,
-        'total': utils.sep_digits(total),
+        'total': pu.sep_digits(total),
     }
 
     return templates.TemplateResponse('item_delete.html', context)

@@ -4,10 +4,11 @@ import os
 from pathlib import Path
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import const
 from omoide import custom_logging
 from omoide import limits
-from omoide import utils
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -27,7 +28,7 @@ async def hard_delete(
         LOG.info('Hard deleting files in {}', target)
 
         for user in (folder / target).iterdir():
-            if not utils.is_valid_uuid(user.name):
+            if not pu.is_valid_uuid(user.name):
                 continue
 
             uuid = UUID(user.name)
@@ -70,7 +71,7 @@ def process_prefix(prefix: Path, dry_run: bool, limit: int) -> tuple[int, int]:
 
 def look_like_soft_deleted(filename: str, suffix: str) -> bool:
     """Return True if file looks like soft-deleted."""
-    if utils.is_valid_uuid(filename):
+    if pu.is_valid_uuid(filename):
         return False
 
     if suffix.casefold().lstrip('.') not in limits.SUPPORTED_EXTENSION:

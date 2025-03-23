@@ -7,11 +7,11 @@ import zlib
 
 from PIL import Image
 import pyexiv2
+import python_utilz as pu
 
 from omoide import const
 from omoide import custom_logging
 from omoide import models
-from omoide import utils
 from omoide.database import db_models
 from omoide.omoide_worker import interfaces
 from omoide.omoide_worker.database import WorkerDatabase
@@ -64,7 +64,7 @@ class Worker(interfaces.AbsWorker):
                         media.error = traceback.format_exc()
                     finally:
                         self.counter += 1
-                        media.processed_at = utils.now()
+                        media.processed_at = pu.now()
                         last_seen = media.id
 
                 self._database.session.commit()
@@ -133,7 +133,7 @@ class Worker(interfaces.AbsWorker):
             msg = f'Got unknown media_type {media.media_type} for media {media.id}'
             raise ValueError(msg)
 
-        media.item.metainfo.updated_at = utils.now()
+        media.item.metainfo.updated_at = pu.now()
         media.item.status = models.Status.AVAILABLE
 
     def _save_md5_signature(self, media: db_models.Media) -> None:
@@ -188,7 +188,7 @@ class Worker(interfaces.AbsWorker):
                 return
 
         problem = db_models.Problem(
-            created_at=utils.now(),
+            created_at=pu.now(),
             message='Failed all known encodings to process EXIF',
             extras={
                 'media_id': media.id,
@@ -229,7 +229,7 @@ class Worker(interfaces.AbsWorker):
                         command.error = traceback.format_exc()
                     finally:
                         self.counter += 1
-                        command.processed_at = utils.now()
+                        command.processed_at = pu.now()
                         last_seen = command.id
 
                 self._database.session.commit()

@@ -3,9 +3,10 @@
 from pathlib import Path
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import const
 from omoide import custom_logging
-from omoide import utils
 from omoide.object_storage.implementations.file_client import FileObjectStorageClient
 from omoide.omoide_cli import common
 
@@ -69,7 +70,7 @@ async def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function de
                 metainfo.content_size = sizes.content_size
                 metainfo.preview_size = sizes.preview_size
                 metainfo.thumbnail_size = sizes.thumbnail_size
-                metainfo.updated_at = utils.now()
+                metainfo.updated_at = pu.now()
                 await meta.save(conn, metainfo)
 
                 if verbose:
@@ -78,7 +79,7 @@ async def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function de
                         + (sizes.preview_size or 0)
                         + (sizes.thumbnail_size or 0)
                     )
-                    total_hr = utils.human_readable_size(total_bytes)
+                    total_hr = pu.human_readable_size(total_bytes)
                     LOG.info('Updated {}, total {}', item, total_hr)
 
             batch_number += 1
@@ -146,7 +147,7 @@ async def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in funct
                 metainfo.preview_height = dimensions.preview.height
                 metainfo.thumbnail_width = dimensions.thumbnail.width
                 metainfo.thumbnail_height = dimensions.thumbnail.height
-                metainfo.updated_at = utils.now()
+                metainfo.updated_at = pu.now()
                 await meta.save(conn, metainfo)
 
                 if verbose:

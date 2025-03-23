@@ -1,7 +1,8 @@
 """Use cases for auth-related APP operations."""
 
+import python_utilz as pu
+
 from omoide import models
-from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 
@@ -23,7 +24,7 @@ class LoginUserUseCase(BaseAPIUseCase):
                 reference=reference_password,
                 auth_complexity=auth_complexity,
             ):
-                user.last_login = utils.now()
+                user.last_login = pu.now()
                 await self.mediator.users.save(conn, user)
                 return user
 

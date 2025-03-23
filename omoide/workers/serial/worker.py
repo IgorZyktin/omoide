@@ -1,8 +1,9 @@
 """Worker that performs operations one by one."""
 
+import python_utilz as pu
+
 from omoide import custom_logging
 from omoide import models
-from omoide import utils
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial import operations
@@ -79,8 +80,8 @@ class SerialWorker(BaseWorker[Config]):
             )
             await implementation.execute()
         except Exception as exc:
-            error = utils.exc_to_str(exc)
-            now = utils.now()
+            error = pu.exc_to_str(exc)
+            now = pu.now()
             operation.updated_at = now
             operation.ended_at = now
             operation.add_to_log(error)
@@ -92,7 +93,7 @@ class SerialWorker(BaseWorker[Config]):
                 error=error,
             )
         else:
-            now = utils.now()
+            now = pu.now()
             operation.updated_at = now
             operation.ended_at = now
             operation.status = models.OperationStatus.DONE

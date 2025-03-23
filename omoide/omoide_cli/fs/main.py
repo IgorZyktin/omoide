@@ -5,11 +5,11 @@ from pathlib import Path
 import sys
 from uuid import UUID
 
+import python_utilz as pu
 import typer
 
 from omoide import const
 from omoide import custom_logging
-from omoide import utils
 from omoide.omoide_cli import common
 from omoide.omoide_cli.fs import code_hard_delete
 from omoide.omoide_cli.fs import code_organize
@@ -148,14 +148,14 @@ def hard_delete(
     if dry_run:
         LOG.info(
             'Will delete {total_files} files and free {total_size} of space',
-            total_files=utils.sep_digits(total_files),
-            total_size=utils.human_readable_size(total_bytes),
+            total_files=pu.sep_digits(total_files),
+            total_size=pu.human_readable_size(total_bytes),
         )
     else:
         LOG.info(
             'Deleted {total_files} files and free {total_size} of space',
-            total_files=utils.sep_digits(total_files),
-            total_size=utils.human_readable_size(total_bytes),
+            total_files=pu.sep_digits(total_files),
+            total_size=pu.human_readable_size(total_bytes),
         )
 
 
@@ -201,14 +201,14 @@ def organize(  # noqa: PLR0913
     if dry_run:
         LOG.info(
             'Will move {total_files} files ({total_size})',
-            total_files=utils.sep_digits(total_files),
-            total_size=utils.human_readable_size(total_bytes),
+            total_files=pu.sep_digits(total_files),
+            total_size=pu.human_readable_size(total_bytes),
         )
     else:
         LOG.info(
             'Moved {total_files} files ({total_size})',
-            total_files=utils.sep_digits(total_files),
-            total_size=utils.human_readable_size(total_bytes),
+            total_files=pu.sep_digits(total_files),
+            total_size=pu.human_readable_size(total_bytes),
         )
 
 

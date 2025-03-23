@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
+import python_utilz as pu
 from starlette.requests import Request
 
 from omoide import const
@@ -42,8 +43,8 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals['get_content_href'] = web.get_content_href
     templates.env.globals['get_preview_href'] = web.get_preview_href
     templates.env.globals['get_thumbnail_href'] = web.get_thumbnail_href
-    templates.env.globals['human_readable_size'] = utils.human_readable_size
-    templates.env.globals['sep_digits'] = utils.sep_digits
+    templates.env.globals['human_readable_size'] = pu.human_readable_size
+    templates.env.globals['sep_digits'] = pu.sep_digits
     templates.env.globals['Status'] = models.Status
     return templates
 

@@ -12,8 +12,9 @@ from typing import NamedTuple
 from typing import Self
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import const
-from omoide import utils
 
 
 class OmoideModel(abc.ABC):
@@ -139,7 +140,7 @@ class User(OmoideModel):
             login='',
             role=Role.ANON,
             is_public=False,
-            registered_at=utils.now(),
+            registered_at=pu.now(),
             last_login=None,
             timezone=None,
             lang=None,
@@ -419,17 +420,17 @@ class SpaceUsage:
     @property
     def content_size_hr(self) -> str:
         """Return human-readable value."""
-        return utils.human_readable_size(self.content_size)
+        return pu.human_readable_size(self.content_size)
 
     @property
     def preview_size_hr(self) -> str:
         """Return human-readable value."""
-        return utils.human_readable_size(self.preview_size)
+        return pu.human_readable_size(self.preview_size)
 
     @property
     def thumbnail_size_hr(self) -> str:
         """Return human-readable value."""
-        return utils.human_readable_size(self.thumbnail_size)
+        return pu.human_readable_size(self.thumbnail_size)
 
 
 @dataclass
@@ -443,17 +444,17 @@ class DiskUsage:
     @property
     def content_hr(self) -> str:
         """Return human-readable value."""
-        return utils.human_readable_size(self.content_bytes)
+        return pu.human_readable_size(self.content_bytes)
 
     @property
     def preview_hr(self) -> str:
         """Return human-readable value."""
-        return utils.human_readable_size(self.preview_bytes)
+        return pu.human_readable_size(self.preview_bytes)
 
     @property
     def thumbnail_hr(self) -> str:
         """Return human-readable value."""
-        return utils.human_readable_size(self.thumbnail_bytes)
+        return pu.human_readable_size(self.thumbnail_bytes)
 
 
 @dataclass

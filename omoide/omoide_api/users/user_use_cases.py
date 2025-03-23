@@ -3,11 +3,12 @@
 from uuid import UUID
 from uuid import uuid4
 
+import python_utilz as pu
+
 from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
@@ -35,7 +36,7 @@ class CreateUserUseCase(BaseItemUseCase):
             login=login,
             role=models.Role.USER,
             is_public=False,
-            registered_at=utils.now(),
+            registered_at=pu.now(),
             last_login=None,
             timezone=None,
             lang=None,

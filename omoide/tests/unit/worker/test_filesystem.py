@@ -44,7 +44,7 @@ def test_filesystem_safely_save(valid_worker_config, worker_dt):
         with open(path / 'a.txt', mode='wb') as file:
             file.write(b'initial')
 
-        with mock.patch('omoide.utils.now') as fake_now:
+        with mock.patch('omoide.pu.now') as fake_now:
             fake_now.side_effect = [
                 worker_dt,
                 worker_dt,
@@ -74,7 +74,7 @@ def test_filesystem_make_new_filename(filename, reference, worker_dt, valid_work
     """Must alter filename without overwriting it."""
     filesystem = Filesystem(valid_worker_config)
 
-    with mock.patch('omoide.utils.now') as fake_now:
+    with mock.patch('omoide.pu.now') as fake_now:
         fake_now.side_effect = [worker_dt, worker_dt + timedelta(seconds=1)]
         new_filename = filesystem.make_new_filename(filename)
         assert new_filename == reference

@@ -1,11 +1,11 @@
 """Database helper class for Worker."""
 
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from omoide import const
 from omoide import custom_logging
-from omoide import utils
 from omoide.database import db_models
 from omoide.storage.database.sync_db import SyncDatabase
 
@@ -61,7 +61,7 @@ class WorkerDatabase(SyncDatabase):
             owner_uuid=command.owner.uuid,
             item_uuid=command.target.uuid,
             media_type=command.media_type,
-            created_at=utils.now(),
+            created_at=pu.now(),
             processed_at=None,
             content=content,
             ext=command.ext,

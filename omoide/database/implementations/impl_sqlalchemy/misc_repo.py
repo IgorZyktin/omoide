@@ -2,11 +2,11 @@
 
 from typing import Any
 
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import models
-from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo
 
@@ -28,8 +28,8 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
                 worker_name=None,
                 status=models.OperationStatus.CREATED,
                 extras=extras or {},
-                created_at=utils.now(),
-                updated_at=utils.now(),
+                created_at=pu.now(),
+                updated_at=pu.now(),
                 started_at=None,
                 ended_at=None,
                 log=None,

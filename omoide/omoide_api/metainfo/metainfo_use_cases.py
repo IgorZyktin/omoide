@@ -4,9 +4,10 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import custom_logging
 from omoide import models
-from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
@@ -57,7 +58,7 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
             LOG.info('{} is updating metainfo for {}', user, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
 
-            metainfo.updated_at = utils.now()
+            metainfo.updated_at = pu.now()
             metainfo.user_time = user_time
             metainfo.content_type = content_type
             await self.mediator.meta.save(conn, metainfo)

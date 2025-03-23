@@ -5,9 +5,10 @@ from pathlib import Path
 import shutil
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import const
 from omoide import custom_logging
-from omoide import utils
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -212,7 +213,7 @@ class OriginBranch:
             return users
 
         for folder in self.root.iterdir():
-            if folder.is_dir() and utils.is_valid_uuid(folder.name):
+            if folder.is_dir() and pu.is_valid_uuid(folder.name):
                 users.append(User(uuid=UUID(folder.name), folder=folder))
 
         return users

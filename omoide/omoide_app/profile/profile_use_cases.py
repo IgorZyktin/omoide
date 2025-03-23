@@ -2,8 +2,9 @@
 
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import models
-from omoide import utils
 from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
 
 
@@ -35,7 +36,7 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
         async with self.mediator.database.transaction() as conn:
             known_tags = await self.mediator.tags.get_known_tags_user(conn, user)
             clean_tags = {
-                tag: counter for tag, counter in known_tags.items() if not utils.is_valid_uuid(tag)
+                tag: counter for tag, counter in known_tags.items() if not pu.is_valid_uuid(tag)
             }
         return clean_tags
 
@@ -51,7 +52,7 @@ class AppProfileDuplicatesUseCase(BaseAPPUseCase):
     ) -> tuple[models.Item | None, list[models.Duplicate]]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
-            if item_uuid is not None and utils.is_valid_uuid(item_uuid):
+            if item_uuid is not None and pu.is_valid_uuid(item_uuid):
                 item = await self.mediator.items.get_by_uuid(conn, UUID(item_uuid))
             else:
                 item = None

@@ -2,12 +2,12 @@
 
 from collections.abc import Collection
 
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
 
@@ -19,7 +19,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         """Ensure we're allowed to run and update starting time."""
         stmt = (
             sa.update(db_models.RegisteredWorkers)
-            .values(last_restart=utils.now())
+            .values(last_restart=pu.now())
             .where(db_models.RegisteredWorkers.worker_name == worker_name)
         )
 
@@ -32,7 +32,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         """Try acquiring the lock, return True on success."""
         stmt = sa.update(db_models.SerialLock).values(
             worker_name=worker_name,
-            last_update=utils.now(),
+            last_update=pu.now(),
         )
         response = await conn.execute(stmt)
         return bool(response.rowcount)
@@ -43,7 +43,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             sa.update(db_models.SerialLock)
             .values(
                 worker_name=None,
-                last_update=utils.now(),
+                last_update=pu.now(),
             )
             .where(
                 db_models.SerialLock.worker_name == worker_name,
@@ -82,7 +82,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         worker_name: str,
     ) -> bool:
         """Lock operation, return True on success."""
-        now = utils.now()
+        now = pu.now()
 
         update_query = (
             sa.update(db_models.SerialOperation)

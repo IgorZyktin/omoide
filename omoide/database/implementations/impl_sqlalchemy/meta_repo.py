@@ -2,13 +2,13 @@
 
 from collections.abc import Collection
 
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
 from omoide import models
-from omoide import utils
 from omoide.database import db_models
 from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo
 
@@ -73,8 +73,8 @@ class MetaRepo(AbsMetaRepo[AsyncConnection]):
             sa.update(db_models.Metainfo)
             .where(db_models.Metainfo.item_id == metainfo.item_id)
             .values(
-                updated_at=utils.now(),
-                deleted_at=utils.now(),
+                updated_at=pu.now(),
+                deleted_at=pu.now(),
             )
         )
 

@@ -1,6 +1,6 @@
 """Global limitation constants."""
 
-from omoide import utils
+import python_utilz as pu
 
 # Search query
 DEF_QUERY = ''
@@ -27,11 +27,11 @@ MAX_PERMISSIONS = 100
 
 # EXIF
 MAX_EXIF_SIZE = 1024 * 1024 * 5  # 5 MiB
-MAX_EXIF_SIZE_HR = utils.human_readable_size(MAX_EXIF_SIZE)
+MAX_EXIF_SIZE_HR = pu.human_readable_size(MAX_EXIF_SIZE)
 
 # Media
 MAX_MEDIA_SIZE = 1024 * 1024 * 50  # 50 MiB
-MAX_MEDIA_SIZE_HR = utils.human_readable_size(MAX_MEDIA_SIZE)
+MAX_MEDIA_SIZE_HR = pu.human_readable_size(MAX_MEDIA_SIZE)
 
 SUPPORTED_EXTENSION = frozenset(
     (

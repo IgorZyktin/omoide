@@ -5,6 +5,8 @@ import os.path
 from pathlib import Path
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import custom_logging
 from omoide import utils
 from omoide.omoide_worker.worker_config import Config
@@ -122,5 +124,5 @@ class Filesystem:
         """Generate new name using old name."""
         name, ext = os.path.splitext(filename)
         left_segment, *_ = name.split(separator)
-        moment = utils.now().isoformat().replace(':', '-').replace('T', '_')
+        moment = pu.now().isoformat().replace(':', '-').replace('T', '_')
         return f'{left_segment}{separator}{moment}{ext}'

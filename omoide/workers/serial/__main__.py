@@ -3,12 +3,12 @@
 import asyncio
 from typing import Annotated
 
+import python_utilz as pu
 import typer
 import ujson
 
 from omoide import custom_logging
 from omoide import models
-from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy as sa
 from omoide.workers.common import runtime
 from omoide.workers.common.mediator import WorkerMediator
@@ -72,8 +72,8 @@ async def run_manual(
             worker_name='dev',
             status=models.OperationStatus.CREATED,
             extras=extras_dict,
-            created_at=utils.now(),
-            updated_at=utils.now(),
+            created_at=pu.now(),
+            updated_at=pu.now(),
             started_at=None,
             ended_at=None,
             log=None,
