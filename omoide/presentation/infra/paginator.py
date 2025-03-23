@@ -34,7 +34,7 @@ class Paginator:
         self.items_per_page = items_per_page
         self.pages_in_block = pages_in_block
 
-        self.total_pages = int(math.ceil(self.total_items / self.items_per_page))
+        self.total_pages = int(math.ceil(self.total_items / self.items_per_page))  # noqa: RUF046
         self.window = pages_in_block // 2
 
     def __repr__(self) -> str:

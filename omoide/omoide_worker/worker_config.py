@@ -55,7 +55,7 @@ class TimerStrategy(pydantic.BaseModel):
     def check_max_interval(self) -> 'TimerStrategy':
         """Check."""
         if self.max_interval <= self.min_interval:
-            msg = 'Max interval must be bigger ' f'than min interval (limit is {self.min_interval})'
+            msg = f'Max interval must be bigger than min interval (limit is {self.min_interval})'
             raise ValueError(msg)
 
         if self.max_interval >= SECONDS_IN_DAY:
@@ -72,7 +72,7 @@ class TimerStrategy(pydantic.BaseModel):
             raise ValueError(msg)
 
         if self.warm_up_coefficient >= MAX_WARM_UP_COEFFICIENT:
-            msg = 'Warm up coefficient is too big ' f'(limit is {MAX_WARM_UP_COEFFICIENT})'
+            msg = f'Warm up coefficient is too big (limit is {MAX_WARM_UP_COEFFICIENT})'
             raise ValueError(msg)
 
         return self
@@ -120,7 +120,7 @@ class Config(pydantic_settings.BaseSettings):
     def check_at_least_one_folder_given(self) -> 'Config':
         """Check."""
         if not any((self.hot_folder, self.cold_folder)):
-            msg = 'At least one of hot-folder/cold-folder ' 'variables must be given'
+            msg = 'At least one of hot-folder/cold-folder variables must be given'
             raise ValueError(msg)
 
         return self
@@ -129,11 +129,11 @@ class Config(pydantic_settings.BaseSettings):
     def check_folders_are_adequate(self) -> 'Config':
         """Check."""
         if self.save_hot and not self.hot_folder:
-            msg = 'You have to specify location ' 'of the hot folder to save there'
+            msg = 'You have to specify location of the hot folder to save there'
             raise ValueError(msg)
 
         if self.save_cold and not self.cold_folder:
-            msg = 'You have to specify location ' 'of the cold folder to save there'
+            msg = 'You have to specify location of the cold folder to save there'
             raise ValueError(msg)
 
         return self

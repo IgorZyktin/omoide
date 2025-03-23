@@ -25,7 +25,7 @@ def test_paginator_str():
     )
 
     assert str(paginator) == (
-        'Paginator(page=3, total_items=25, ' 'items_per_page=5, pages_in_block=5)'
+        'Paginator(page=3, total_items=25, items_per_page=5, pages_in_block=5)'
     )
 
 

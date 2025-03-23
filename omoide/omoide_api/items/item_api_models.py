@@ -61,7 +61,7 @@ class MediaInput(BaseModel):
     def check_size(self) -> Self:
         """Raise if content is too big."""
         if self.expected_binary_size > limits.MAX_MEDIA_SIZE:
-            msg = 'Sent content is too big, ' f'maximum allowed size is {limits.MAX_MEDIA_SIZE_HR}'
+            msg = f'Sent content is too big, maximum allowed size is {limits.MAX_MEDIA_SIZE_HR}'
             raise ValueError(msg)
         return self
 
