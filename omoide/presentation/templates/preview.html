@@ -4,8 +4,7 @@
 {% block head %}
     {{ super() }}
     {% if current_item.preview_ext %}
-        <meta property="og:image"
-              content="{{ get_preview_href(request, current_item) }}"/>
+        <meta property="og:image" content="{{ get_preview_url(current_item) }}"/>
     {% endif %}
 
     {%- if metainfo.preview_width %}
@@ -56,17 +55,17 @@
                                 <img src="{{ request.url_for('static', path='empty.png') }}"
                                      alt="{{ current_item.name }}"/>
                             {%- else -%}
-                                <img src="{{ get_thumbnail_href(request, current_item) }}"
+                                <img src="{{ get_thumbnail_url(current_item) }}"
                                      alt="{{ current_item.name }}"/>
                             {%- endif -%}
                         {%- else -%}
-                            <img src="{{ get_thumbnail_href(request, current_item) }}"
+                            <img src="{{ get_thumbnail_url(current_item) }}"
                                  alt="{{ current_item.name }}"/>
                         {%- endif -%}
                     </a>
                 </div>
             {% else %}
-                <a href="{{ get_content_href(request, current_item) }}">
+                <a href="{{ get_content_url(current_item) }}">
                     {%- if current_item.preview_ext is none -%}
                         {%- if current_item.status == Status.CREATED -%}
                             <img src="{{ request.url_for('static', path='created.png') }}"
@@ -76,7 +75,7 @@
                                  alt="{{ current_item.name }}"/>
                         {% endif %}
                     {%- else -%}
-                        <img src="{{ get_preview_href(request, current_item) }}"
+                        <img src="{{ get_preview_url(current_item) }}"
                              alt="{{ current_item.name }}"/>
                     {%- endif -%}
                 </a>

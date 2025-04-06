@@ -15,6 +15,7 @@ class Config(pu.BaseConfig):
     db_url: pu.SecretStr
     data_folder: Path
     static_folder: Path = Path('omoide/presentation/static')
+    templates_folder: Path = Path('omoide/presentation/templates')
     env: str = 'dev'
     host: str = '0.0.0.0'
     port: int = 8080

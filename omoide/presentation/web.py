@@ -17,7 +17,6 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import exceptions as api_exceptions
-from omoide import models
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -263,31 +262,3 @@ class AimWrapper:
         """Create same url but without query."""
         kwargs['q'] = ''
         return self.to_url(**kwargs)
-
-
-def _get_href(request: Request, item: models.Item) -> str:
-    """Return base for HREF formation."""
-    base = request.scope.get('root_path')
-    prefix = str(item.uuid)[: const.STORAGE_PREFIX_SIZE]
-    return f'{base}/content/{{media_type}}/{item.owner_uuid}/{prefix}/{item.uuid}'
-
-
-def get_content_href(request: Request, item: models.Item) -> str:
-    """Return URL to the file."""
-    base = _get_href(request, item)
-    ext = f'.{item.content_ext}' if item.content_ext else ''
-    return base.format(media_type='content') + ext
-
-
-def get_preview_href(request: Request, item: models.Item) -> str:
-    """Return URL to the file."""
-    base = _get_href(request, item)
-    ext = f'.{item.preview_ext}' if item.preview_ext else ''
-    return base.format(media_type='preview') + ext
-
-
-def get_thumbnail_href(request: Request, item: models.Item) -> str:
-    """Return URL to the file."""
-    base = _get_href(request, item)
-    ext = f'.{item.thumbnail_ext}' if item.thumbnail_ext else ''
-    return base.format(media_type='thumbnail') + ext

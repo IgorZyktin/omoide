@@ -12,8 +12,7 @@
     {% endif %}
 
     {% if current_item.preview_ext %}
-        <meta property="og:image"
-              content="{{ get_preview_href(request, current_item) }}"/>
+        <meta property="og:image" content="{{ get_preview_url(current_item) }}"/>
     {% endif %}
 
     {%- if metainfo.preview_width %}
