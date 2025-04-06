@@ -101,7 +101,7 @@ class SerialWorker(BaseWorker[Config]):
             if operation.duration > 1:
                 duration = pu.human_readable_time(operation.duration)
             else:
-                duration = '{duration:0.3f} sec.'.format(duration=operation.duration)
+                duration = f'{operation.duration:0.3f} sec.'
 
             LOG.info(
                 '{operation} completed in {duration}',
