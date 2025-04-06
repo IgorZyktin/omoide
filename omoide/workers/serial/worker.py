@@ -97,10 +97,16 @@ class SerialWorker(BaseWorker[Config]):
             operation.updated_at = now
             operation.ended_at = now
             operation.status = models.OperationStatus.DONE
+
+            if operation.duration > 1:
+                duration = pu.human_readable_time(operation.duration)
+            else:
+                duration = '{duration:0.3f} sec.'.format(duration=operation.duration)
+
             LOG.info(
-                '{operation} completed in {duration:0.3f} sec.',
+                '{operation} completed in {duration}',
                 operation=operation,
-                duration=operation.duration,
+                duration=duration,
             )
         finally:
             async with self.mediator.database.transaction() as conn:
