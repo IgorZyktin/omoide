@@ -479,7 +479,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.5.2" },
     { name = "pyexiv2", specifier = ">=2.15.3" },
     { name = "python-multipart", marker = "extra == 'web'", specifier = ">=0.0.12" },
-    { name = "python-utilz", specifier = ">=0.1.0" },
+    { name = "python-utilz", specifier = ">=0.1.5" },
     { name = "pytz", specifier = ">=2024.2" },
     { name = "setuptools", specifier = ">=77.0.3" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
@@ -737,11 +737,11 @@ wheels = [
 
 [[package]]
 name = "python-utilz"
-version = "0.1.1"
+version = "0.1.5"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/84/4d/c382a3ff64141f5d68d00381dba7b8bf9f1edbe3a2b4523ab0c00739b025/python_utilz-0.1.1.tar.gz", hash = "sha256:a6b841f2651fb62d817c805ba8609c8b6c4ef5e0042fc9567426e45af0c60da1", size = 26490 }
+sdist = { url = "https://files.pythonhosted.org/packages/82/bf/e0fa393e0281116746f8d3ee38de3378bbd17a9de2563c184f39e09f32a3/python_utilz-0.1.5.tar.gz", hash = "sha256:cf1d925d9ef0d9a6058d2b8b346c4b2d18d3a3f84806faa8407a01b0c51e2a05", size = 30456 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/19/e6265b09d27246cc9295c46035f39108165dc2069c3c6635fad9eb356182/python_utilz-0.1.1-py3-none-any.whl", hash = "sha256:d0ea52560ca7800ce9e5eb60a7251695442a00a7b9ad46cb7bc70084b9e9039a", size = 7405 },
+    { url = "https://files.pythonhosted.org/packages/78/50/ada24308e7605a4bc6e539f5eef3f5537ff03a2f58cbb8b9ee4d7d7eccdb/python_utilz-0.1.5-py3-none-any.whl", hash = "sha256:a5b3de18cf6a5f56bc42e2482e97d1029bc4fe08cff866a85b2562df2d145a60", size = 11531 },
 ]
 
 [[package]]

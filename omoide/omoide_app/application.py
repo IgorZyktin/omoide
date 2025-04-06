@@ -6,10 +6,10 @@ All interactions with user are here.
 from collections.abc import AsyncGenerator
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
-import os
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from omoide import dependencies as dep
@@ -22,7 +22,6 @@ from omoide.omoide_app.profile import profile_controllers
 from omoide.omoide_app.search import search_controllers
 from omoide.omoide_app.special import special_controllers
 from omoide.omoide_app.upload import upload_controllers
-from omoide.presentation import app_config
 
 
 def get_app() -> FastAPI:
@@ -43,18 +42,18 @@ def get_app() -> FastAPI:
         redoc_url=None,
     )
 
-    # TODO - use only during development
-    new_app.mount(
-        '/static',
-        StaticFiles(directory='omoide/presentation/static'),
-        name='static',
-    )
+    config = dep.get_config()
 
-    # TODO - stop using two folders for the application
-    if app_config.Config().env != 'prod':
+    if config.env != 'prod':
+        new_app.mount(
+            '/static',
+            StaticFiles(directory=config.static_folder),
+            name='static',
+        )
+
         new_app.mount(
             '/content',
-            StaticFiles(directory=os.environ['OMOIDE_COLD_FOLDER']),
+            StaticFiles(directory=config.data_folder),
             name='content',
         )
 
@@ -76,11 +75,16 @@ def apply_app_routes(current_app: FastAPI) -> None:
 
 def get_middlewares() -> Iterator[tuple[Any, dict[str, Any]]]:
     """Return list of needed middlewares."""
-    for description in app_config.Config().middlewares:
-        if description.name.casefold() == 'CORSMiddleware'.casefold():
-            from fastapi.middleware.cors import CORSMiddleware
-
-            yield CORSMiddleware, description.config
+    config = dep.get_config()
+    yield (
+        CORSMiddleware,
+        {
+            'allow_origins': config.allowed_origins,
+            'allow_credentials': True,
+            'allow_methods': ['*'],
+            'allow_headers': ['*'],
+        },
+    )
 
 
 def apply_middlewares(current_app: FastAPI) -> None:

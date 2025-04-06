@@ -3,15 +3,16 @@
 import os
 
 from fastapi import Request
+import python_utilz as pu
 import uvicorn
 
+from omoide import cfg
 from omoide.application import app
-from omoide.presentation import app_config
 
 
 def main() -> None:
     """Entry point."""
-    config = app_config.Config()
+    config = pu.from_env(cfg.Config, env_prefix='omoide_app')
 
     @app.get('/all_routes')
     def get_all_urls_from_request(
@@ -32,7 +33,7 @@ def main() -> None:
     uvicorn.run(
         app,
         host=host,
-        port=8080,
+        port=config.port,
     )
 
 

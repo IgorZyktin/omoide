@@ -24,7 +24,7 @@ dependencies = [
     "tzdata>=2024.2",
     "ujson>=5.10.0",
     'uvloop>=0.21.0;platform_system != "Windows"',
-    "python-utilz>=0.1.0",
+    "python-utilz>=0.1.5",
     "setuptools>=77.0.3",
 ]
 

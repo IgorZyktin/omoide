@@ -2,6 +2,7 @@
 
 from base64 import b64decode
 import binascii
+import functools
 from typing import Annotated
 
 from fastapi import Depends
@@ -12,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 import python_utilz as pu
 from starlette.requests import Request
 
+from omoide import cfg
 from omoide import const
 from omoide import infra
 from omoide import models
@@ -24,14 +26,13 @@ from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
-from omoide.presentation import app_config
 from omoide.presentation import web
 
 
-@utils.memorize
-def get_config() -> app_config.Config:
+@functools.lru_cache
+def get_config() -> cfg.Config:
     """Get config instance."""
-    return app_config.Config()
+    return pu.from_env(cfg.Config, env_prefix='omoide_app')
 
 
 @utils.memorize
@@ -54,7 +55,7 @@ def get_database() -> impl_sqlalchemy.SqlalchemyDatabase:
     """Get database instance."""
     config = get_config()
     return impl_sqlalchemy.SqlalchemyDatabase(
-        db_url=config.db_url_app.get_secret_value(),
+        db_url=config.db_url.get_secret_value(),
         echo=False,
     )
 
