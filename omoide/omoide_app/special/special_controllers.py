@@ -10,10 +10,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from omoide import cfg
 from omoide import dependencies as dep
 from omoide import models
 from omoide.presentation import web
-from omoide.presentation.app_config import Config
 
 app_special_router = fastapi.APIRouter()
 
@@ -26,7 +26,7 @@ async def app_not_found(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    config: Annotated[Config, Depends(dep.get_config)],
+    config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
@@ -48,7 +48,7 @@ async def app_forbidden(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    config: Annotated[Config, Depends(dep.get_config)],
+    config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
@@ -70,7 +70,7 @@ async def app_bad_request(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    config: Annotated[Config, Depends(dep.get_config)],
+    config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
