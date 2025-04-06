@@ -1,9 +1,13 @@
 """Development runner, do not use in production."""
 
+from collections.abc import Iterator
 import os
 
+from fastapi import FastAPI
 from fastapi import Request
+from fastapi.routing import APIRoute
 import python_utilz as pu
+from starlette.routing import Mount
 import uvicorn
 
 from omoide import cfg
@@ -18,16 +22,21 @@ def main() -> None:
 
     config = pu.from_env(cfg.Config, env_prefix='omoide_app')
 
+    def route_iter(current_app: FastAPI, mount: str = '') -> Iterator[dict[str, str]]:
+        """Iterate on all routes, including nested applications."""
+        for route in current_app.routes:
+            if isinstance(route, APIRoute):
+                yield {'path': mount + route.path, 'name': route.name}
+            elif isinstance(route, Mount) and isinstance(route.app, FastAPI):
+                yield from route_iter(route.app, mount=mount + route.path)
+
     @app.get('/all_routes')
-    def get_all_urls_from_request(
-        request: Request,
-    ) -> list[dict[str, str]]:
+    def get_all_urls_from_request(request: Request) -> list[dict[str, str]]:
         """List all URLs for this Fastapi instance.
 
         Use only for debugging!
         """
-        url_list = [{'path': route.path, 'name': route.name} for route in request.app.routes]
-        return url_list
+        return list(route_iter(request.app))
 
     if os.name == 'nt':
         host = '127.0.0.1'
