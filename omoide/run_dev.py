@@ -12,6 +12,10 @@ from omoide.application import app
 
 def main() -> None:
     """Entry point."""
+    log_config = uvicorn.config.LOGGING_CONFIG
+    log_config['formatters']['access']['fmt'] = '%(asctime)s - %(levelname)s - %(message)s'
+    log_config['formatters']['default']['fmt'] = '%(asctime)s - %(levelname)s - %(message)s'
+
     config = pu.from_env(cfg.Config, env_prefix='omoide_app')
 
     @app.get('/all_routes')
