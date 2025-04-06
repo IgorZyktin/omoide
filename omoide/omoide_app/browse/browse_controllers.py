@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from omoide import cfg
 from omoide import const
 from omoide import custom_logging
 from omoide import dependencies as dep
@@ -18,7 +19,6 @@ from omoide.infra.mediator import Mediator
 from omoide.omoide_app.browse import browse_use_cases
 from omoide.presentation import infra
 from omoide.presentation import web
-from omoide.presentation.app_config import Config
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -32,7 +32,7 @@ async def app_browse(  # noqa: PLR0913
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    config: Annotated[Config, Depends(dep.get_config)],
+    config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):

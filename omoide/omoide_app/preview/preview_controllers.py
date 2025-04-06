@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from omoide import cfg
 from omoide import const
 from omoide import dependencies as dep
 from omoide import models
@@ -17,7 +18,6 @@ from omoide.infra.mediator import Mediator
 from omoide.omoide_app.preview import preview_use_cases
 from omoide.presentation import infra
 from omoide.presentation import web
-from omoide.presentation.app_config import Config
 
 app_preview_router = fastapi.APIRouter()
 
@@ -29,7 +29,7 @@ async def app_preview(  # noqa: PLR0913
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    config: Annotated[Config, Depends(dep.get_config)],
+    config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ):
