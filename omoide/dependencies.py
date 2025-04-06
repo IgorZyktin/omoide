@@ -17,7 +17,6 @@ from omoide import cfg
 from omoide import const
 from omoide import infra
 from omoide import models
-from omoide import utils
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
