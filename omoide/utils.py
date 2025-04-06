@@ -1,11 +1,9 @@
 """Common utils."""
 
-from collections.abc import Callable
 from collections.abc import Collection
 from collections.abc import Iterable
 from collections.abc import Iterator
 import datetime
-import functools
 from itertools import zip_longest
 import re
 from typing import Any
@@ -48,29 +46,6 @@ def get_delta(
     added = after_set - before_set
     deleted = before_set - after_set
     return added, deleted
-
-
-RT = TypeVar('RT')  # return type
-
-
-def memorize(func: Callable[..., RT]) -> Callable[..., RT]:
-    """Strict cache. Does not care about arguments.
-
-    Can be used for functions that always return same result.
-    """
-    sentinel = object()
-    objects: dict[str, Any] = {}
-
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> RT:
-        """Wrap original function."""
-        result = objects.get(func.__name__, sentinel)
-        if result is sentinel:
-            result = func(*args, **kwargs)
-            objects[func.__name__] = result
-        return result  # type: ignore [no-any-return]
-
-    return wrapper
 
 
 def serialize_model(model: Any, do_not_serialize: Collection[str] = frozenset()) -> str:

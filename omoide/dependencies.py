@@ -55,7 +55,7 @@ def get_templates() -> Jinja2Templates:
     return templates
 
 
-@utils.memorize
+@functools.cache
 def get_database() -> impl_sqlalchemy.SqlalchemyDatabase:
     """Get database instance."""
     config = get_config()
@@ -111,7 +111,7 @@ def get_policy() -> AbsPolicy:
     return infra.Policy()
 
 
-@utils.memorize
+@functools.cache
 def get_object_storage(
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> object_interfaces.AbsObjectStorage:
@@ -124,7 +124,7 @@ def get_object_storage(
     )
 
 
-@utils.memorize
+@functools.cache
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
     policy: Annotated[AbsPolicy, Depends(get_policy)],
