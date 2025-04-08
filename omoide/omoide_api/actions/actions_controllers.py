@@ -27,7 +27,7 @@ async def api_action_rebuild_known_tags_anon(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Recalculate all known tags for anon user."""
-    use_case = actions_use_cases.RebuildKnownTagsAnonUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForAnonUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin)
@@ -51,7 +51,7 @@ async def api_action_rebuild_known_tags_user(
     user_uuid: UUID,
 ):
     """Recalculate all known tags for registered user."""
-    use_case = actions_use_cases.RebuildKnownTagsUserUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForUserUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin, user_uuid)
@@ -75,7 +75,7 @@ async def api_action_rebuild_known_tags_all(
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
     """Recalculate all known tags for registered user."""
-    use_case = actions_use_cases.RebuildKnownTagsAllUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(mediator)
 
     try:
         operation_id = await use_case.execute(admin)
@@ -83,7 +83,7 @@ async def api_action_rebuild_known_tags_all(
         return web.raise_from_exc(exc)
 
     return {
-        'result': 'rebuilding known tags for all registered users',
+        'result': 'rebuilding known tags for all users',
         'operation_id': operation_id,
     }
 
@@ -104,10 +104,10 @@ async def api_action_rebuild_computed_tags(
     If `including_children` is set to True, this will also affect all
     descendants of the item. This operation potentially can take a lot of time.
     """
-    use_case = actions_use_cases.RebuildComputedTagsUseCase(mediator)
+    use_case = actions_use_cases.RebuildComputedTagsForItemUseCase(mediator)
 
     try:
-        owner, item, job_id = await use_case.execute(admin, target.user_uuid)
+        owner, item, job_id = await use_case.execute(admin, target.item_uuid)
     except Exception as exc:
         return web.raise_from_exc(exc)
 

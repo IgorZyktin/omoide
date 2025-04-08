@@ -229,7 +229,7 @@ class Item(OmoideModel):
         """Return True if not media types are present for this item."""
         return None in (self.content_ext, self.preview_ext, self.thumbnail_ext)
 
-    def get_computed_tags(self, parent_tags: set[str]) -> set[str]:
+    def get_computed_tags(self, parent_name: str, parent_tags: set[str]) -> set[str]:
         """Return computed tags.
 
         Resulting collection is not visible for users and includes
@@ -237,15 +237,18 @@ class Item(OmoideModel):
         """
         computed_tags: set[str] = {tag.casefold() for tag in self.tags}
 
-        computed_tags.add(str(self.uuid).casefold())
+        if _parent_name := parent_name.strip():
+            computed_tags.add(_parent_name.casefold())
 
-        if self.name.strip():
-            computed_tags.add(self.name.strip().casefold())
+        if _name := self.name.strip():
+            computed_tags.add(_name.casefold())
 
         computed_tags.update(parent_tags)
 
         if self.parent_uuid is not None:
             computed_tags.add(str(self.parent_uuid))
+
+        computed_tags.add(str(self.uuid).casefold())
 
         return computed_tags
 
@@ -612,3 +615,112 @@ class Duplicate:
 
     signature: str
     examples: list[DuplicateExample]
+
+
+@dataclass
+class RebuildKnownTagsForAnonRequest(OmoideModel):
+    """Request for tags rebuilding."""
+
+    requested_by_user_id: int
+    name: str = 'rebuild_known_tags_for_anon'
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        del extras
+        del extra_keys
+        return cls(**(obj or {}))
+
+
+@dataclass
+class RebuildKnownTagsForUserRequest(OmoideModel):
+    """Request for tags rebuilding."""
+
+    requested_by_user_id: int
+    user_id: int
+    name: str = 'rebuild_known_tags_for_user'
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        del extras
+        del extra_keys
+        return cls(**(obj or {}))
+
+
+@dataclass
+class RebuildKnownTagsForAllRequest(OmoideModel):
+    """Request for tags rebuilding."""
+
+    requested_by_user_id: int
+    name: str = 'rebuild_known_tags_for_all'
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        del extras
+        del extra_keys
+        return cls(**(obj or {}))
+
+
+@dataclass
+class RebuildComputedTagsForItemRequest(OmoideModel):
+    """Request for tags rebuilding."""
+
+    requested_by_user_id: int
+    item_id: int
+    name: str = 'rebuild_computed_tags_for_item'
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        del extras
+        del extra_keys
+        return cls(**(obj or {}))
+
+
+@dataclass
+class RebuildPermissionsForItemRequest(OmoideModel):
+    """Request for permissions rebuilding."""
+
+    requested_by_user_id: int
+    item_id: int
+    added: list[int]
+    deleted: list[int]
+    original: list[int]
+    apply_to_parents: bool
+    apply_to_children: bool
+    apply_to_children_as: str
+    name: str = 'rebuild_permissions_for_item'
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        del extras
+        del extra_keys
+        return cls(**(obj or {}))

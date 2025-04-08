@@ -38,11 +38,13 @@ class CreateManyItemsUseCase(BaseItemUseCase):
 
                 if item.parent_id is None:
                     parent_tags = set()
+                    parent_name = ''
                 else:
                     parent = await self._get_cached_item(conn, item.parent_id)
                     parent_tags = await self._get_cached_computed_tags(conn, parent)
+                    parent_name = parent.name
 
-                computed_tags = item.get_computed_tags(parent_tags)
+                computed_tags = item.get_computed_tags(parent_name, parent_tags)
 
                 # for the item itself
                 await self.mediator.tags.save_computed_tags(conn, item, computed_tags)
@@ -195,14 +197,10 @@ class RenameItemUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
-                extras={
-                    'item_id': item.id,
-                    'apply_to_children': True,
-                    'apply_to_owner': True,
-                    'apply_to_permissions': True,
-                    'apply_to_anon': True,
-                },
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=user.id,
+                    item_id=item.id,
+                ),
             )
 
         return operation_id
@@ -261,26 +259,26 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             operation_id_tags = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
-                extras={
-                    'item_id': item.id,
-                    'apply_to_children': True,
-                    'apply_to_owner': True,
-                    'apply_to_permissions': True,
-                    'apply_to_anon': True,
-                },
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=user.id,
+                    item_id=item.id,
+                ),
             )
 
             operation_id_old_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                extras={'user_id': old_parent.owner_id},
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=user.id,
+                    item_id=old_parent.id,
+                ),
             )
 
             operation_id_new_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                extras={'user_id': new_parent.owner_id},
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=user.id,
+                    item_id=new_parent.id,
+                ),
             )
 
         if new_parent.has_incomplete_media():
@@ -329,14 +327,10 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
-                extras={
-                    'item_id': item.id,
-                    'apply_to_children': True,
-                    'apply_to_owner': True,
-                    'apply_to_permissions': True,
-                    'apply_to_anon': True,
-                },
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=user.id,
+                    item_id=item.id,
+                ),
             )
 
         return operation_id
@@ -601,16 +595,16 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
 
                 operation_id = await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    name=const.AllSerialOperations.REBUILD_ITEM_PERMISSIONS,
-                    extras={
-                        'item_id': item.id,
-                        'added': list(added),
-                        'deleted': list(deleted),
-                        'original': list(item.permissions),
-                        'apply_to_parents': apply_to_parents,
-                        'apply_to_children': apply_to_children,
-                        'apply_to_children_as': apply_to_children_as.value,
-                    },
+                    request=models.RebuildPermissionsForItemRequest(
+                        requested_by_user_id=user.id,
+                        item_id=item.id,
+                        added=list(added),
+                        deleted=list(deleted),
+                        original=list(item.permissions),
+                        apply_to_parents=apply_to_parents,
+                        apply_to_children=apply_to_children,
+                        apply_to_children_as=str(apply_to_children_as.value),
+                    ),
                 )
 
             item.permissions = user_ids

@@ -5,25 +5,21 @@ import asyncio
 import functools
 import os
 import signal
-from typing import Generic
-from typing import TypeVar
 
 from omoide import custom_logging
-from omoide.workers.common.base_cfg import BaseWorkerConfig
 from omoide.workers.common.mediator import WorkerMediator
 
 LOG = custom_logging.get_logger(__name__)
 
-ConfigT = TypeVar('ConfigT', bound=BaseWorkerConfig)
 
-
-class BaseWorker(Generic[ConfigT], abc.ABC):
+class BaseWorker(abc.ABC):
     """General worker class for all workers."""
 
-    def __init__(self, config: ConfigT, mediator: WorkerMediator) -> None:
+    def __init__(self, mediator: WorkerMediator, name: str) -> None:
         """Initialize instance."""
-        self.config = config
         self.mediator = mediator
+        self.name = name
+        self.stopping = False
 
     async def start(self, register: bool = True) -> None:
         """Start worker."""
@@ -34,15 +30,15 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
             async with self.mediator.database.transaction() as conn:
                 await self.mediator.workers.register_worker(
                     conn=conn,
-                    worker_name=self.config.name,
+                    worker_name=self.name,
                 )
 
-        LOG.info('Worker {!r} started', self.config.name)
+        LOG.info('Worker {!r} started', self.name)
 
     async def stop(self) -> None:
         """Start worker."""
         await self.mediator.database.disconnect()
-        LOG.info('Worker {!r} stopped', self.config.name)
+        LOG.info('Worker {!r} stopped', self.name)
 
     async def register_signals(self) -> None:
         """Decide how we will stop."""
@@ -55,7 +51,7 @@ class BaseWorker(Generic[ConfigT], abc.ABC):
         def signal_handler(sig: int) -> None:
             """Handle signal."""
             string = signal.strsignal(sig)
-            LOG.info('Worker {!r} caught signal {}, stopping', self.config.name, string)
+            LOG.info('Worker {!r} caught signal {}, stopping', self.name, string)
             loop.remove_signal_handler(sig)
             self.mediator.stopping = True
 

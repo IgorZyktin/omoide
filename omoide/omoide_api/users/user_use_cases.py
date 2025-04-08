@@ -107,14 +107,10 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
             target_user.extras['root_item_uuid'] = root.uuid
             await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
-                extras={
-                    'item_id': root.id,
-                    'apply_to_children': True,
-                    'apply_to_owner': True,
-                    'apply_to_permissions': True,
-                    'apply_to_anon': True,
-                },
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=user.id,
+                    item_id=root.id,
+                ),
             )
 
         return target_user

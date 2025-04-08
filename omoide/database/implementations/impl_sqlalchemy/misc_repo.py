@@ -17,17 +17,16 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
     async def create_serial_operation(
         self,
         conn: AsyncConnection,
-        name: str,
-        extras: dict[str, Any] | None = None,
+        request: Any,
     ) -> int:
         """Create serial operation."""
         stmt = (
             sa.insert(db_models.SerialOperation)
             .values(
-                name=name,
+                name=request.name,
                 worker_name=None,
                 status=models.OperationStatus.CREATED,
-                extras=extras or {},
+                extras=request.model_dump(),
                 created_at=pu.now(),
                 updated_at=pu.now(),
                 started_at=None,

@@ -10,7 +10,7 @@ from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
+class RebuildKnownTagsForAnonUseCase(BaseAPIUseCase):
     """Use case for rebuilding known tags for anon."""
 
     async def execute(self, admin: models.User) -> int:
@@ -22,13 +22,13 @@ class RebuildKnownTagsAnonUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_ANON,
+                request=models.RebuildKnownTagsForAnonRequest(requested_by_user_id=admin.id),
             )
 
         return operation_id
 
 
-class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
+class RebuildKnownTagsForUserUseCase(BaseAPIUseCase):
     """Use case for rebuilding known tags for known user."""
 
     async def execute(self, admin: models.User, user_uuid: UUID) -> int:
@@ -41,46 +41,47 @@ class RebuildKnownTagsUserUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_USER,
-                extras={'user_id': user.id},
+                request=models.RebuildKnownTagsForUserRequest(
+                    requested_by_user_id=admin.id,
+                    user_id=user.id,
+                ),
             )
 
         return operation_id
 
 
-class RebuildKnownTagsAllUseCase(BaseAPIUseCase):
-    """Use case for rebuilding known tags for all registered users."""
+class RebuildKnownTagsForAllUseCase(BaseAPIUseCase):
+    """Use case for rebuilding known tags for all users."""
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.mediator.policy.ensure_admin(admin, to='rebuild known tags for all registered users')
+        self.mediator.policy.ensure_admin(admin, to='rebuild known tags for all users')
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for all users', admin)
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_KNOWN_TAGS_ALL,
+                request=models.RebuildKnownTagsForAllRequest(requested_by_user_id=admin.id),
             )
 
         return operation_id
 
 
-class RebuildComputedTagsUseCase(BaseAPIUseCase):
+class RebuildComputedTagsForItemUseCase(BaseAPIUseCase):
     """Use case for rebuilding computed tags."""
 
     async def execute(
         self,
         admin: models.User,
-        user_uuid: UUID,
+        item_uuid: UUID,
     ) -> tuple[models.User, models.Item, int]:
         """Prepare for execution."""
-        # TODO - are we really need to rebuild it via user and not via item?
-        self.mediator.policy.ensure_admin(admin, to=f'rebuild computed tags for user {user_uuid}')
+        self.mediator.policy.ensure_admin(admin, to=f'rebuild computed tags for item {item_uuid}')
 
         async with self.mediator.database.transaction() as conn:
-            owner = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            item = await self.mediator.users.get_root_item(conn, owner)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            owner = await self.mediator.users.get_by_uuid(conn, item.owner_uuid)
 
             LOG.info(
                 '{} is rebuilding computed tags for item {} (owner is {})',
@@ -91,14 +92,10 @@ class RebuildComputedTagsUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name=const.AllSerialOperations.REBUILD_ITEM_TAGS,
-                extras={
-                    'item_id': item.id,
-                    'apply_to_children': True,
-                    'apply_to_owner': True,
-                    'apply_to_permissions': True,
-                    'apply_to_anon': True,
-                },
+                request=models.RebuildComputedTagsForItemRequest(
+                    requested_by_user_id=admin.id,
+                    item_id=item.id,
+                ),
             )
 
         return owner, item, operation_id

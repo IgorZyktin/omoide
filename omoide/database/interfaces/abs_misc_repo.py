@@ -15,7 +15,6 @@ class AbsMiscRepo(Generic[ConnectionT], abc.ABC):
     async def create_serial_operation(
         self,
         conn: ConnectionT,
-        name: str,
-        extras: dict[str, Any] | None = None,
+        request: Any,
     ) -> int:
         """Create serial operation."""

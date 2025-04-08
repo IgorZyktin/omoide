@@ -1,19 +1,22 @@
 """Worker configuration."""
 
+from dataclasses import dataclass
 from pathlib import Path
 
-from pydantic_settings import SettingsConfigDict
-
-from omoide.workers.common.base_cfg import BaseWorkerConfig
+import python_utilz as pu
 
 
-class Config(BaseWorkerConfig):
+@dataclass
+class ParallelWorkerConfig(pu.BaseConfig):
     """Worker configuration."""
 
-    folder: Path
-    workers: int | None = None
+    db_url: pu.SecretStr
+    name: str = 'dev'
+    short_delay: float = 0.0
+    long_delay: float = 5.0
+    input_batch: int = 100
+    output_batch: int = 100
+    supported_operations: frozenset[str] = frozenset()
+    data_folder: Path = Path('.')
+    workers: int = -1
     max_workers: int = 5
-
-    model_config = SettingsConfigDict(
-        env_prefix='omoide_worker_parallel__',
-    )

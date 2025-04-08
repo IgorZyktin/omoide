@@ -1,13 +1,18 @@
 """Worker configuration."""
 
-from pydantic_settings import SettingsConfigDict
+from dataclasses import dataclass
 
-from omoide.workers.common.base_cfg import BaseWorkerConfig
+import python_utilz as pu
 
 
-class Config(BaseWorkerConfig):
+@dataclass
+class SerialWorkerConfig(pu.BaseConfig):
     """Worker configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix='omoide_worker_serial__',
-    )
+    db_url: pu.SecretStr
+    name: str = 'dev'
+    short_delay: float = 0.0
+    long_delay: float = 5.0
+    input_batch: int = 100
+    output_batch: int = 100
+    supported_operations: frozenset[str] = frozenset()

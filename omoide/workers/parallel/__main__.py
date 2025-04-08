@@ -4,13 +4,14 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import os
 
+import python_utilz as pu
 import typer
 
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
 from omoide.workers.common import runtime
 from omoide.workers.common.mediator import WorkerMediator
-from omoide.workers.parallel import cfg
+from omoide.workers.parallel.cfg import ParallelWorkerConfig
 from omoide.workers.parallel.worker import ParallelWorker
 
 app = typer.Typer()
@@ -26,9 +27,10 @@ def main() -> None:
 
 async def _main() -> None:
     """Async entry point."""
-    config = cfg.Config()
+    config = pu.from_env(ParallelWorkerConfig, env_prefix='omoide_parallel_worker')
+
     mediator = WorkerMediator(
-        database=sa.SqlalchemyDatabase(config.db_admin_url.get_secret_value()),
+        database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
         items=sa.ItemsRepo(),
         tags=sa.TagsRepo(),
         users=sa.UsersRepo(),
@@ -44,7 +46,11 @@ async def _main() -> None:
     workers = min((workers or 1), config.max_workers)
     executor = ProcessPoolExecutor(max_workers=workers)
     worker = ParallelWorker(config, mediator, executor)
-    await runtime.run_automatic(worker)
+    await runtime.run_automatic(
+        worker=worker,
+        short_delay=config.short_delay,
+        long_delay=config.long_delay,
+    )
 
 
 if __name__ == '__main__':

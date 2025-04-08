@@ -14,7 +14,7 @@ from omoide import cfg
 from omoide.application import app
 
 
-def setup_uvicorn_logging():
+def setup_uvicorn_logging() -> None:
     """Make uvicorn logs more verbose."""
     log_config = uvicorn.config.LOGGING_CONFIG
     log_config['formatters']['access']['fmt'] = '%(asctime)s - %(levelname)s - %(message)s'
