@@ -1,8 +1,10 @@
 """Worker configuration."""
 
 from dataclasses import dataclass
+from typing import Annotated
 
 import python_utilz as pu
+import ujson
 
 
 @dataclass
@@ -15,4 +17,4 @@ class SerialWorkerConfig(pu.BaseConfig):
     long_delay: float = 5.0
     input_batch: int = 100
     output_batch: int = 100
-    supported_operations: frozenset[str] = frozenset()
+    supported_operations: Annotated[frozenset[str], ujson.loads, frozenset] = frozenset()

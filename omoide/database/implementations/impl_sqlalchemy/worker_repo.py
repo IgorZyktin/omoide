@@ -123,12 +123,9 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         select_query = (
             sa.select(db_models.ParallelOperation)
             .where(
-                sa.or_(
-                    db_models.ParallelOperation.status == models.OperationStatus.CREATED,
-                    db_models.ParallelOperation.status == models.OperationStatus.PROCESSING,
-                ),
+                db_models.ParallelOperation.status == models.OperationStatus.CREATED,
                 db_models.ParallelOperation.name.in_(tuple(names)),
-                ~db_models.ParallelOperation.processed_by.any_() == worker_name,
+                sa.not_(db_models.ParallelOperation.processed_by.any_() == worker_name),
             )
             .order_by(db_models.ParallelOperation.id)
             .limit(batch_size)

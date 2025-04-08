@@ -38,14 +38,14 @@ async def _main() -> None:
         misc=sa.MiscRepo(),
     )
 
-    if config.workers is None:
-        workers = os.cpu_count()
-    else:
+    if config.workers:
         workers = config.workers
+    else:
+        workers = os.cpu_count()
 
     workers = min((workers or 1), config.max_workers)
     executor = ProcessPoolExecutor(max_workers=workers)
-    worker = ParallelWorker(config, mediator, executor)
+    worker = ParallelWorker(config, mediator, name=config.name, executor=executor)
     await runtime.run_automatic(
         worker=worker,
         short_delay=config.short_delay,

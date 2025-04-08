@@ -3,9 +3,9 @@
 from concurrent.futures import ProcessPoolExecutor
 
 from omoide import custom_logging
-from omoide.workers.common.base_cfg import WorkerConfig
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
+from omoide.workers.parallel.cfg import ParallelWorkerConfig
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -15,12 +15,14 @@ class ParallelWorker(BaseWorker):
 
     def __init__(
         self,
-        config: WorkerConfig,
+        config: ParallelWorkerConfig,
         mediator: WorkerMediator,
+        name: str,
         executor: ProcessPoolExecutor,
     ) -> None:
         """Initialize instance."""
-        super().__init__(config, mediator)
+        super().__init__(mediator, name)
+        self.config = config
         self.executor = executor
 
     async def execute(self) -> bool:
@@ -38,6 +40,7 @@ class ParallelWorker(BaseWorker):
 
         for operation in batch:
             # TODO - pass it to the executor
+            print(operation)  # noqa: T201
             _ = operation
 
         return True
