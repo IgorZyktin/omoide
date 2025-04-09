@@ -41,7 +41,7 @@ async def _main() -> None:
     if config.workers:
         workers = config.workers
     else:
-        workers = os.cpu_count()
+        workers = os.cpu_count() or 1
 
     workers = min((workers or 1), config.max_workers)
     executor = ProcessPoolExecutor(max_workers=workers)

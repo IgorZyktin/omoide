@@ -102,10 +102,16 @@ class SerialWorker(BaseWorker):
             operation.ended_at = now
             operation.add_to_log(error)
             operation.status = models.OperationStatus.FAILED
+
+            if operation.duration > 1:
+                duration = pu.human_readable_time(operation.duration)
+            else:
+                duration = f'{operation.duration:0.3f} sec.'
+
             LOG.exception(
                 '{operation} failed in {duration:0.3f} sec. because of {error}',
                 operation=operation,
-                duration=operation.duration,
+                duration=duration,
                 error=error,
             )
         else:

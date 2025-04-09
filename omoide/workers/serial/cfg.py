@@ -12,7 +12,7 @@ class SerialWorkerConfig(pu.BaseConfig):
     """Worker configuration."""
 
     db_url: pu.SecretStr
-    name: str = 'dev'
+    name: str = 'serial-dev'
     short_delay: float = 0.0
     long_delay: float = 5.0
     input_batch: int = 100

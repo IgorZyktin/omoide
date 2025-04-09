@@ -3,6 +3,8 @@
 from typing import NamedTuple
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import exceptions
 from omoide import models
 from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
@@ -15,7 +17,7 @@ class PreviewResult(NamedTuple):
     parents: list[models.Item]
     metainfo: models.Metainfo
     siblings: list[models.Item]
-    all_tags: set[str]
+    all_tags: list[str]
 
 
 class AppPreviewUseCase(BaseAPPUseCase):
@@ -47,18 +49,14 @@ class AppPreviewUseCase(BaseAPPUseCase):
             metainfo = await self.mediator.meta.get_by_item(conn, item)
             parents = await self.mediator.items.get_parents(conn, item)
             siblings = await self.mediator.items.get_siblings(conn, item)
-
-            all_tags: set[str] = set()
-            all_tags.update(item.tags)
-            for parent in parents:
-                all_tags.update(parent.tags)
+            computed_tags = await self.mediator.tags.get_computed_tags(conn, item)
 
         result = PreviewResult(
             item=item,
             parents=parents,
             metainfo=metainfo,
             siblings=siblings,
-            all_tags=all_tags,
+            all_tags=[tag for tag in sorted(computed_tags) if not pu.is_valid_uuid(tag)],
         )
 
         return result

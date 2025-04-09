@@ -52,11 +52,7 @@ async def _main(operation: str, extras: str) -> None:
         )
 
 
-async def run_manual(
-    worker: SerialWorker,
-    operation_name: str,
-    extras: str,
-) -> None:
+async def run_manual(worker: SerialWorker, operation_name: str, extras: str) -> None:
     """Oneshot run."""
     await worker.start(register=False)
 
