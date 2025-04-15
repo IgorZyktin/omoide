@@ -9,10 +9,19 @@ import ujson
 
 
 @dataclass
+class Metrics(ns.BaseConfig):
+    """Metrics settings."""
+
+    enabled: Annotated[bool, ns.looks_like_boolean] = False
+    server_name: str = 'omoide'
+
+
+@dataclass
 class Config(ns.BaseConfig):
     """Application settings."""
 
     db_url: ns.SecretStr
+    metrics: Metrics
     data_folder: Path
     static_folder: Path = Path('omoide/presentation/static')
     templates_folder: Path = Path('omoide/presentation/templates')

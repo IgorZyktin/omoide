@@ -6,7 +6,7 @@ import os
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.routing import APIRoute
-import python_utilz as pu
+import nano_settings as ns
 from starlette.routing import Mount
 import uvicorn
 
@@ -32,7 +32,7 @@ def route_iter(current_app: FastAPI, mount: str = '') -> Iterator[dict[str, str]
 
 def main() -> None:
     """Entry point."""
-    config = pu.from_env(cfg.Config, env_prefix='omoide_app')
+    config = ns.from_env(cfg.Config, env_prefix='omoide_app')
 
     setup_uvicorn_logging()
 

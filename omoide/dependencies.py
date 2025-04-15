@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
+import nano_settings as ns
 import python_utilz as pu
 from starlette.requests import Request
 
@@ -32,7 +33,7 @@ from omoide.presentation import web
 @functools.cache
 def get_config() -> cfg.Config:
     """Get config instance."""
-    return pu.from_env(cfg.Config, env_prefix='omoide_app')
+    return ns.from_env(cfg.Config, env_prefix='omoide_app')
 
 
 @functools.cache
