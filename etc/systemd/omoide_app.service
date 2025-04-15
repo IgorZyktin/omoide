@@ -1,0 +1,14 @@
+[Unit]
+Description=Omoide web server
+After=network.target
+
+[Service]
+User=omoide_user
+WorkingDirectory=/home/omoide_user/omoide
+ExecStart=/home/omoide_user/omoide/.venv/bin/gunicorn omoide.application:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080
+EnvironmentFile=/etc/omoide/omoide_app_env
+CPUAccounting=true
+MemoryAccounting=true
+
+[Install]
+WantedBy=multi-user.target

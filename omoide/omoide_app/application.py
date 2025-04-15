@@ -44,13 +44,13 @@ def get_app() -> FastAPI:
 
     config = dep.get_config()
 
-    if config.env != 'prod':
-        new_app.mount(
-            '/static',
-            StaticFiles(directory=config.static_folder),
-            name='static',
-        )
+    new_app.mount(
+        '/static',
+        StaticFiles(directory=config.static_folder),
+        name='static',
+    )
 
+    if config.env != 'prod':
         new_app.mount(
             '/content',
             StaticFiles(directory=config.data_folder),
