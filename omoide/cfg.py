@@ -4,15 +4,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
-import python_utilz as pu
+import nano_settings as ns
 import ujson
 
 
 @dataclass
-class Config(pu.BaseConfig):
+class Config(ns.BaseConfig):
     """Application settings."""
 
-    db_url: pu.SecretStr
+    db_url: ns.SecretStr
     data_folder: Path
     static_folder: Path = Path('omoide/presentation/static')
     templates_folder: Path = Path('omoide/presentation/templates')

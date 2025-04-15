@@ -412,6 +412,15 @@ wheels = [
 ]
 
 [[package]]
+name = "nano-settings"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8c/0e/a7be26c628b3a243a1e9351d70243bdda5b363fa8d4b552249873684ea57/nano_settings-0.1.0.tar.gz", hash = "sha256:0a06a6eea3dc8cb910905d77c6490f8df26381aa42ee8fcc354e414f1d1cb510", size = 7285 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/36/d02ec97ece8256271c13fcb090f5e860e821e208db50a9008dd883b4fc20/nano_settings-0.1.0-py3-none-any.whl", hash = "sha256:53fbd834007044a3ffda807be9b40d423ba4b0820172ff9992688dc5a8d65e17", size = 6756 },
+]
+
+[[package]]
 name = "omoide"
 version = "0.3.11"
 source = { virtual = "." }
@@ -420,6 +429,7 @@ dependencies = [
     { name = "asyncpg" },
     { name = "httptools" },
     { name = "loguru" },
+    { name = "nano-settings" },
     { name = "pillow" },
     { name = "psycopg2-binary" },
     { name = "pydantic" },
@@ -473,6 +483,7 @@ requires-dist = [
     { name = "httptools", specifier = ">=0.6.4" },
     { name = "jinja2", marker = "extra == 'web'", specifier = ">=3.1.4" },
     { name = "loguru", specifier = ">=0.7.2" },
+    { name = "nano-settings", specifier = ">=0.1.0" },
     { name = "pillow", specifier = ">=11.0.0" },
     { name = "prettytable", marker = "extra == 'cli'", specifier = ">=3.11.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.9" },
