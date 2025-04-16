@@ -1,0 +1,108 @@
+{% extends "base_search.html" %}{% from "macros.html" import render_thumbnail_for_item %}
+
+{% block body %}
+    <div class="narrow-block">
+        <h1>Admin page</h1>
+
+        <hr>
+
+        <div>
+            <h3>Create user</h3>
+            <div style="display: flex; flex-direction: row; align-items: center">
+                <label for="user_name">Name:</label>
+                <input id="user_name" type="text" value="" class="height-auto">
+            </div>
+            <div style="display: flex; flex-direction: row; align-items: center">
+                <label for="user_login">Login:</label>
+                <input id="user_login" type="text" value="" class="height-auto">
+            </div>
+            <div style="display: flex; flex-direction: row; align-items: center">
+                <label for="user_password">Password:</label>
+                <input id="user_password" type="text" value="" class="height-auto">
+            </div>
+            <div id="create_user_alerts"></div>
+            <input id="create_user" type="button" class="button control-button" onclick="createUser('create_user_alerts')" value="Create user">
+        </div>
+
+        <hr>
+
+        <div>
+            <h3>Rebuild computed tags</h3>
+            <div style="display: flex; flex-direction: row; align-items: center">
+                <label for="rebuild_computed_tags_item_uuid">UUID:</label>
+                <input id="rebuild_computed_tags_item_uuid" type="text" value="" class="height-auto">
+            </div>
+            <div id="rebuild_known_tags_alerts"></div>
+            <input id="rebuild_known_tags" type="button" class="button control-button" onclick="rebuildComputedTags('rebuild_known_tags_alerts')" value="Rebuild">
+        </div>
+
+    </div>
+
+    <script>
+        function createUser(alertsElementId) {
+            let user_name_element = document.getElementById('user_name')
+            let user_login = document.getElementById('user_login')
+            let user_password = document.getElementById('user_password')
+
+            if (!user_name_element || !user_login || !user_password)
+                return
+
+            let json = JSON.stringify({
+                name: user_name_element.value,
+                login: user_login.value,
+                password: user_password.value,
+            });
+
+            let xhr = new XMLHttpRequest()
+            xhr.open('POST', '{{ create_user_endpoint }}')
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            xhr.responseType = 'json'
+
+            xhr.onload = function () {
+                if (xhr.status !== 200) {
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`)
+                } else {
+                    alert(`Ok`)
+                }
+            };
+
+            xhr.onerror = function () {
+                console.log('Error: ' + xhr.response)
+            };
+
+            xhr.send(json);
+        }
+
+        function rebuildComputedTags(alertsElementId) {
+            let rebuild_computed_tags_item_uuid_element = document.getElementById('rebuild_computed_tags_item_uuid')
+
+            if (!rebuild_computed_tags_item_uuid_element)
+                return
+
+            let json = JSON.stringify({
+                item_uuid: rebuild_computed_tags_item_uuid_element.value,
+            });
+
+            let xhr = new XMLHttpRequest()
+            xhr.open('POST', '{{ rebuild_computed_tags_endpoint }}')
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            xhr.responseType = 'json'
+
+            xhr.onload = function () {
+                if (xhr.status !== 200) {
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`)
+                } else {
+                    alert(`Ok`)
+                }
+            };
+
+            xhr.onerror = function () {
+                console.log('Error: ' + xhr.response)
+            };
+
+            xhr.send(json);
+        }
+    </script>
+    <br>
+
+{% endblock %}

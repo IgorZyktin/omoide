@@ -22,6 +22,7 @@ from omoide.omoide_app.profile import profile_controllers
 from omoide.omoide_app.search import search_controllers
 from omoide.omoide_app.special import special_controllers
 from omoide.omoide_app.upload import upload_controllers
+from omoide.omoide_app.admin import admin_controllers
 
 
 def get_app() -> FastAPI:
@@ -62,6 +63,7 @@ def get_app() -> FastAPI:
 
 def apply_app_routes(current_app: FastAPI) -> None:
     """Register APP routes."""
+    current_app.include_router(admin_controllers.app_admin_router)
     current_app.include_router(auth_controllers.app_auth_router)
     current_app.include_router(browse_controllers.app_browse_router)
     current_app.include_router(home_controllers.app_home_router)
