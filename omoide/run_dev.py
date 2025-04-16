@@ -9,6 +9,8 @@ from fastapi.routing import APIRoute
 import nano_settings as ns
 from starlette.routing import Mount
 import uvicorn
+from starlette_exporter import PrometheusMiddleware
+from starlette_exporter import handle_metrics
 
 from omoide import cfg
 from omoide.application import app
@@ -43,6 +45,10 @@ def main() -> None:
         Use only for debugging!
         """
         return list(route_iter(request.app))
+
+    if config.metrics.enabled:
+        app.add_middleware(PrometheusMiddleware, app_name=config.metrics.server_name)
+        app.add_route('/metrics', handle_metrics)
 
     if os.name == 'nt':
         host = '127.0.0.1'

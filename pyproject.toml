@@ -28,6 +28,7 @@ dependencies = [
     "setuptools>=77.0.3",
     "ruff>=0.11.2",
     "nano-settings>=0.1.0",
+    "starlette-exporter>=0.23.0",
 ]
 
 [project.optional-dependencies]
