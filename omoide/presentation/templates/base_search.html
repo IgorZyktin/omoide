@@ -68,7 +68,7 @@
                title="Press to perform search"
                onclick="goSearch()"
                class="button qc-search">
-                <img src="{{ request.url_for('static', path='ic_search_24px.svg') }}"
+                <img src="{{ request.url_for('static', path='ic_search.svg') }}"
                      alt="Looking glass icon"/>
                 <span>Search</span>
             </a>
@@ -79,11 +79,11 @@
                 <span class="button-disabled qc-order">
 
                 {% if request.query_params.get('order') == 'random' %}
-                    <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
+                    <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
                          alt="Order is not supported in this section"/>
                     <span title="Change view mode to see items ordered">Random</span>
                 {% else %}
-                    <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
+                    <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
                          alt="Order is not supported in this section"/>
                     <span title="Change view mode to see items in random order">Ordered</span>
                 {% endif %}
@@ -94,7 +94,7 @@
                        title="Change view mode to see items ordered"
                        onclick="toggleOrder()"
                        class="button qc-order">
-                        <img src="{{ request.url_for('static', path='ic_random_24px.svg') }}"
+                        <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
                              alt="Change view mode to see items ordered"/>
                         <span title="Change view mode to see items ordered">Random</span>
                     </a>
@@ -103,7 +103,7 @@
                        title="Change view mode to see items in random order"
                        onclick="toggleOrder()"
                        class="button qc-order">
-                        <img src="{{ request.url_for('static', path='ic_sort_24px.svg') }}"
+                        <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
                              alt="Change view mode to see items ordered"/>
                         <span>Ordered</span>
                     </a>
