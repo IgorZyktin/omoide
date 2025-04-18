@@ -47,9 +47,23 @@ def upgrade() -> None:
         postgresql_using='gin',
     )
 
+    op.execute('GRANT ALL ON parallel_operations TO omoide_app;')
+    op.execute('GRANT ALL ON parallel_operations_id_seq TO omoide_app;')
+    op.execute('GRANT ALL ON parallel_operations TO omoide_worker;')
+    op.execute('GRANT ALL ON parallel_operations_id_seq TO omoide_app;')
+    op.execute('GRANT SELECT ON parallel_operations TO omoide_monitoring;')
+    op.execute('GRANT SELECT ON parallel_operations_id_seq TO omoide_app;')
+
 
 def downgrade() -> None:
     """Removing stuff."""
+    op.execute('REVOKE ALL PRIVILEGES ON parallel_operations FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON parallel_operations_id_seq FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON parallel_operations FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON parallel_operations_id_seq FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON parallel_operations FROM omoide_monitoring;')
+    op.execute('REVOKE ALL PRIVILEGES ON parallel_operations_id_seq FROM omoide_monitoring;')
+
     op.drop_index('ix_processed_by', table_name='parallel_operations', postgresql_using='gin')
     op.drop_index(op.f('ix_parallel_operations_status'), table_name='parallel_operations')
     op.drop_index(op.f('ix_parallel_operations_id'), table_name='parallel_operations')

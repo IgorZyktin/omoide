@@ -74,27 +74,20 @@ class SerialWorker(BaseWorker):
         await self.execute_operation(operation)
         return True
 
-    async def run_use_case(self, operation_name: str, extras: dict[str, Any]) -> None:
+    async def run_use_case(self, operation: models.SerialOperation) -> None:
         """Create and run use case."""
-        pair = NAMES_TO_USE_CASES.get(operation_name)
+        use_case_type = NAMES_TO_USE_CASES.get(operation.name)
 
-        if pair is None:
-            raise exceptions.UnknownSerialOperationError(name=operation_name)
+        if use_case_type is None:
+            raise exceptions.UnknownSerialOperationError(name=operation.name)
 
-        request_type = pair['request_type']
-        use_case_type = pair['use_case_type']
-
-        request = request_type.from_obj(extras)  # type: ignore [attr-defined]
         use_case = use_case_type(self.config, self.mediator)
-        await use_case.execute(request)
+        await use_case.execute(operation)
 
     async def execute_operation(self, operation: models.SerialOperation) -> None:
         """Perform workload."""
         try:
-            await self.run_use_case(
-                operation_name=operation.name,
-                extras=operation.extras,
-            )
+            await self.run_use_case(operation)
         except Exception as exc:
             error = pu.exc_to_str(exc)
             now = pu.now()

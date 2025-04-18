@@ -724,3 +724,27 @@ class RebuildPermissionsForItemRequest(OmoideModel):
         del extras
         del extra_keys
         return cls(**(obj or {}))
+
+
+@dataclass
+class SoftDeleteMediaRequest(OmoideModel):
+    """Request for object deletion."""
+
+    requested_by_user_id: int
+    owner_uuid: UUID
+    item_uuid: UUID
+    media_type: str
+    payload: bytes = b''
+    name: str = 'soft_delete_media'
+
+    @classmethod
+    def from_obj(
+        cls,
+        obj: Any,
+        extra_keys: Collection[str] = (),
+        extras: dict[str, Any] | None = None,
+    ) -> Self:
+        """Create instance from arbitrary object."""
+        del extras
+        del extra_keys
+        return cls(**(obj or {}))

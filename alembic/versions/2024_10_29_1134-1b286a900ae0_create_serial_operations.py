@@ -37,16 +37,22 @@ def upgrade() -> None:
 
     op.create_index(op.f('ix_serial_operations_id'), 'serial_operations', ['id'], unique=True)
 
-    op.execute('GRANT SELECT ON serial_operations TO omoide_app;')
+    op.execute('GRANT ALL ON serial_operations TO omoide_app;')
+    op.execute('GRANT ALL ON serial_operations_id_seq TO omoide_app;')
     op.execute('GRANT ALL ON serial_operations TO omoide_worker;')
+    op.execute('GRANT ALL ON serial_operations_id_seq TO omoide_app;')
     op.execute('GRANT SELECT ON serial_operations TO omoide_monitoring;')
+    op.execute('GRANT SELECT ON serial_operations_id_seq TO omoide_app;')
 
 
 def downgrade() -> None:
     """Removing stuff."""
     op.execute('REVOKE ALL PRIVILEGES ON serial_operations FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_operations_id_seq FROM omoide_app;')
     op.execute('REVOKE ALL PRIVILEGES ON serial_operations FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_operations_id_seq FROM omoide_worker;')
     op.execute('REVOKE ALL PRIVILEGES ON serial_operations FROM omoide_monitoring;')
+    op.execute('REVOKE ALL PRIVILEGES ON serial_operations_id_seq FROM omoide_monitoring;')
 
     op.drop_index(op.f('ix_serial_operations_id'), table_name='serial_operations')
     op.drop_table('serial_operations')

@@ -5,8 +5,10 @@ import python_utilz as pu
 from omoide import const
 from omoide import models
 from omoide.database.interfaces import AbsDatabase
-from omoide.database.interfaces.abs_media_repo import AbsMediaRepo
+from omoide.database.interfaces import AbsMediaRepo
+from omoide.database.interfaces import AbsMiscRepo
 from omoide.object_storage.interfaces.abs_object_storage import AbsObjectStorage
+from omoide.object_storage.interfaces.abs_object_storage import SoftDeleteEntry
 
 
 class FileObjectStorageServer(AbsObjectStorage):
@@ -17,10 +19,17 @@ class FileObjectStorageServer(AbsObjectStorage):
     only operate with media records on the database.
     """
 
-    def __init__(self, database: AbsDatabase, media: AbsMediaRepo, prefix_size: int) -> None:
+    def __init__(
+        self,
+        database: AbsDatabase,
+        media: AbsMediaRepo,
+        misc: AbsMiscRepo,
+        prefix_size: int,
+    ) -> None:
         """Initialize instance."""
         self.database = database
         self.media = media
+        self.misc = misc
         self.prefix_size = prefix_size
 
     async def save(
@@ -46,21 +55,50 @@ class FileObjectStorageServer(AbsObjectStorage):
         async with self.database.transaction() as conn:
             await self.media.create_media(conn, media)
 
-    async def soft_delete(self, item: models.Item) -> list[const.MEDIA_TYPE]:
+    async def soft_delete(
+        self,
+        requested_by: models.User,
+        item: models.Item,
+    ) -> list[SoftDeleteEntry]:
         """Mark all objects as deleted."""
-        deleted_types: list[const.MEDIA_TYPE] = []
+        deleted_types: list[SoftDeleteEntry] = []
 
-        if item.content_ext:
-            pass
-            # TODO: create parallel operation for object renaming
+        async with self.database.transaction() as conn:
+            if item.content_ext:
+                operation_id = await self.misc.create_parallel_operation(
+                    conn=conn,
+                    request=models.SoftDeleteMediaRequest(
+                        requested_by_user_id=requested_by.id,
+                        owner_uuid=item.owner_uuid,
+                        item_uuid=item.uuid,
+                        media_type=const.CONTENT,
+                    ),
+                )
+                deleted_types.append({'media_type': const.CONTENT, 'operation_id': operation_id})
 
-        if item.preview_ext:
-            pass
-            # TODO: create parallel operation for object renaming
+            if item.preview_ext:
+                operation_id = await self.misc.create_parallel_operation(
+                    conn=conn,
+                    request=models.SoftDeleteMediaRequest(
+                        requested_by_user_id=requested_by.id,
+                        owner_uuid=item.owner_uuid,
+                        item_uuid=item.uuid,
+                        media_type=const.PREVIEW,
+                    ),
+                )
+                deleted_types.append({'media_type': const.PREVIEW, 'operation_id': operation_id})
 
-        if item.thumbnail_ext:
-            pass
-            # TODO: create parallel operation for object renaming
+            if item.thumbnail_ext:
+                operation_id = await self.misc.create_parallel_operation(
+                    conn=conn,
+                    request=models.SoftDeleteMediaRequest(
+                        requested_by_user_id=requested_by.id,
+                        owner_uuid=item.owner_uuid,
+                        item_uuid=item.uuid,
+                        media_type=const.THUMBNAIL,
+                    ),
+                )
+                deleted_types.append({'media_type': const.THUMBNAIL, 'operation_id': operation_id})
 
         return deleted_types
 

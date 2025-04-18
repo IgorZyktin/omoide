@@ -38,3 +38,30 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
 
         operation_id = (await conn.execute(stmt)).scalar()
         return operation_id if operation_id is not None else -1
+
+    async def create_parallel_operation(
+        self,
+        conn: AsyncConnection,
+        request: Any,
+        payload: bytes = b'',
+    ) -> int:
+        """Create parallel operation."""
+        stmt = (
+            sa.insert(db_models.ParallelOperation)
+            .values(
+                name=request.name,
+                status=models.OperationStatus.CREATED,
+                extras=request.model_dump(),
+                created_at=pu.now(),
+                updated_at=pu.now(),
+                started_at=None,
+                ended_at=None,
+                log=None,
+                payload=payload,
+                processed_by=[],
+            )
+            .returning(db_models.ParallelOperation.id)
+        )
+
+        operation_id = (await conn.execute(stmt)).scalar()
+        return operation_id if operation_id is not None else -1

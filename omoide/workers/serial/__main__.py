@@ -3,17 +3,19 @@
 import asyncio
 from typing import Annotated
 
-import python_utilz as pu
+import nano_settings as ns
 import typer
 import ujson
 
 from omoide import custom_logging
+from omoide import models
 from omoide.database.implementations import impl_sqlalchemy as sa
+from omoide.models import OperationStatus
 from omoide.workers.common import runtime
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
 from omoide.workers.serial.worker import SerialWorker
-
+import python_utilz as pu
 app = typer.Typer()
 
 LOG = custom_logging.get_logger(__name__)
@@ -30,7 +32,7 @@ def main(
 
 async def _main(operation: str, extras: str) -> None:
     """Async entry point."""
-    config = pu.from_env(SerialWorkerConfig, env_prefix='omoide_serial_worker')
+    config = ns.from_env(SerialWorkerConfig, env_prefix='omoide_serial_worker')
 
     mediator = WorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
@@ -60,7 +62,19 @@ async def run_manual(worker: SerialWorker, operation_name: str, extras: str) -> 
     LOG.info('Manually running {!r} with extras {!r}', operation_name, extras_dict)
 
     try:
-        await worker.run_use_case(operation_name, extras_dict)
+        operation = models.SerialOperation(
+            id=-1,
+            worker_name=None,
+            name=operation_name,
+            status=OperationStatus.CREATED,
+            extras=extras_dict,
+            created_at=pu.now(),
+            updated_at=pu.now(),
+            started_at=pu.now(),
+            ended_at=None,
+            log=None,
+        )
+        await worker.run_use_case(operation)
     except (KeyboardInterrupt, asyncio.CancelledError):
         LOG.warning('Stopped manually')
     finally:

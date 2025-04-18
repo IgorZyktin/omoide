@@ -377,7 +377,7 @@ class DeleteItemUseCase(BaseItemUseCase):
             members = await self.mediator.items.get_family(conn, item)
             for member in members:
                 if member.id == item.id:
-                    LOG.info('{} is deleting {}', user, item)
+                    LOG.info('{} is soft deleting {}', user, item)
                 else:
                     LOG.info('Deletion of {} caused deletion of {}', item, member)
 
@@ -394,7 +394,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                     await self.mediator.tags.decrement_known_tags_user(conn, user, computed_tags)
 
                 member_metainfo = await self.mediator.meta.get_by_item(conn, member)
-                await self.mediator.object_storage.soft_delete(member)
+                await self.mediator.object_storage.soft_delete(user, member)
                 await self.mediator.meta.soft_delete(conn, member_metainfo)
                 await self.mediator.items.soft_delete(conn, member)
 

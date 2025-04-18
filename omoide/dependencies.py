@@ -120,6 +120,7 @@ def get_object_storage(
     return FileObjectStorageServer(
         database=database,
         media=impl_sqlalchemy.MediaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
         prefix_size=config.prefix_size,
     )
 

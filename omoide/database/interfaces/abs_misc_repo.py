@@ -18,3 +18,12 @@ class AbsMiscRepo(Generic[ConnectionT], abc.ABC):
         request: Any,
     ) -> int:
         """Create serial operation."""
+
+    @abc.abstractmethod
+    async def create_parallel_operation(
+        self,
+        conn: ConnectionT,
+        request: Any,
+        payload: bytes = b'',
+    ) -> int:
+        """Create parallel operation."""

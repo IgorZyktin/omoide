@@ -89,5 +89,9 @@ class UnknownSerialOperationError(BaseOmoideError):
     """There is no operation of type {name!r}."""
 
 
+class UnknownParallelOperationError(BaseOmoideError):
+    """There is no operation of type {name!r}."""
+
+
 class BadSerialOperationError(BaseOmoideError):
     """Operation has problem: {problem}."""

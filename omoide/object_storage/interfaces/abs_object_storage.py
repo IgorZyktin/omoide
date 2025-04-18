@@ -1,9 +1,17 @@
 """Abstract base object storage."""
 
 import abc
+from typing import TypedDict
 
 from omoide import const
 from omoide import models
+
+
+class SoftDeleteEntry(TypedDict):
+    """DTO for deletion."""
+
+    media_type: str
+    operation_id: int
 
 
 class AbsObjectStorage(abc.ABC):
@@ -20,7 +28,11 @@ class AbsObjectStorage(abc.ABC):
         """Save object of specific content type."""
 
     @abc.abstractmethod
-    async def soft_delete(self, item: models.Item) -> list[const.MEDIA_TYPE]:
+    async def soft_delete(
+        self,
+        requested_by: models.User,
+        item: models.Item,
+    ) -> list[SoftDeleteEntry]:
         """Mark all objects as deleted."""
 
     @abc.abstractmethod

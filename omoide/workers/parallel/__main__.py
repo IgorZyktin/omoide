@@ -3,9 +3,11 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import os
+from typing import Annotated
 
-import python_utilz as pu
+import nano_settings as ns
 import typer
+import ujson
 
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
@@ -20,14 +22,17 @@ LOG = custom_logging.get_logger(__name__)
 
 
 @app.command()
-def main() -> None:
+def main(
+    operation: Annotated[str, typer.Option(help='Run this operation and then stop')] = '',
+    extras: Annotated[str, typer.Option(help='JSON formatted extra parameters')] = '',
+) -> None:
     """Entry point."""
-    asyncio.run(_main())
+    asyncio.run(_main(operation, extras))
 
 
-async def _main() -> None:
+async def _main(operation: str, extras: str) -> None:
     """Async entry point."""
-    config = pu.from_env(ParallelWorkerConfig, env_prefix='omoide_parallel_worker')
+    config = ns.from_env(ParallelWorkerConfig, env_prefix='omoide_parallel_worker')
 
     mediator = WorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
@@ -46,11 +51,30 @@ async def _main() -> None:
     workers = min((workers or 1), config.max_workers)
     executor = ProcessPoolExecutor(max_workers=workers)
     worker = ParallelWorker(config, mediator, name=config.name, executor=executor)
-    await runtime.run_automatic(
-        worker=worker,
-        short_delay=config.short_delay,
-        long_delay=config.long_delay,
-    )
+
+    if operation:
+        await run_manual(worker, operation, extras)
+    else:
+        await runtime.run_automatic(
+            worker=worker,
+            short_delay=config.short_delay,
+            long_delay=config.long_delay,
+        )
+
+
+async def run_manual(worker: ParallelWorker, operation_name: str, extras: str) -> None:
+    """Oneshot run."""
+    await worker.start(register=False)
+
+    extras_dict = ujson.loads(extras) if extras else {}
+    LOG.info('Manually running {!r} with extras {!r}', operation_name, extras_dict)
+
+    try:
+        await worker.run_use_case(operation_name, extras_dict)
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        LOG.warning('Stopped manually')
+    finally:
+        await worker.stop()
 
 
 if __name__ == '__main__':
