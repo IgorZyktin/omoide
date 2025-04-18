@@ -8,38 +8,79 @@
 
         <div>
             <h3>Create user</h3>
-            <div style="display: flex; flex-direction: row; align-items: center">
+            <div>
                 <label for="user_name">Name:</label>
                 <input id="user_name" type="text" value="" class="height-auto">
             </div>
-            <div style="display: flex; flex-direction: row; align-items: center">
+            <div>
                 <label for="user_login">Login:</label>
                 <input id="user_login" type="text" value="" class="height-auto">
             </div>
-            <div style="display: flex; flex-direction: row; align-items: center">
+            <div>
                 <label for="user_password">Password:</label>
                 <input id="user_password" type="text" value="" class="height-auto">
             </div>
-            <div id="create_user_alerts"></div>
-            <input id="create_user" type="button" class="button control-button" onclick="createUser('create_user_alerts')" value="Create user">
+            <input type="button" class="button control-button" onclick="createUser()" value="Create user">
         </div>
 
         <hr>
 
         <div>
-            <h3>Rebuild computed tags</h3>
-            <div style="display: flex; flex-direction: row; align-items: center">
-                <label for="rebuild_computed_tags_item_uuid">UUID:</label>
+            <h3>Rebuild known tags for anon</h3>
+            <input type="button" class="button control-button" onclick="rebuildKnownTagsAnon()" value="Rebuild">
+        </div>
+
+        <div>
+            <h3>Rebuild known tags for user</h3>
+            <div>
+                <label for="rebuild_known_tags_user_uuid">User UUID:</label>
+                <input id="rebuild_known_tags_user_uuid" type="text" value="" class="height-auto">
+            </div>
+            <input type="button" class="button control-button" onclick="rebuildKnownTagsUser()" value="Rebuild">
+        </div>
+
+        <hr>
+
+        <div>
+            <h3>Rebuild known tags for all</h3>
+            <input type="button" class="button control-button" onclick="rebuildKnownTagsAll()" value="Rebuild">
+        </div>
+
+        <hr>
+
+        <div>
+            <h3>Rebuild computed tags for item</h3>
+            <div>
+                <label for="rebuild_computed_tags_item_uuid">Item UUID:</label>
                 <input id="rebuild_computed_tags_item_uuid" type="text" value="" class="height-auto">
             </div>
-            <div id="rebuild_known_tags_alerts"></div>
-            <input id="rebuild_known_tags" type="button" class="button control-button" onclick="rebuildComputedTags('rebuild_known_tags_alerts')" value="Rebuild">
+            <input type="button" class="button control-button" onclick="rebuildComputedTags()" value="Rebuild">
         </div>
 
     </div>
 
     <script>
-        function createUser(alertsElementId) {
+        function getXHR(url) {
+            let xhr = new XMLHttpRequest()
+            xhr.open('POST', url)
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            xhr.responseType = 'json'
+
+            xhr.onload = function () {
+                if (xhr.status !== 200) {
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`)
+                } else {
+                    alert(`Ok`)
+                }
+            };
+
+            xhr.onerror = function () {
+                console.log('Error: ' + xhr.response)
+            };
+            return xhr
+        }
+
+        function createUser() {
             let user_name_element = document.getElementById('user_name')
             let user_login = document.getElementById('user_login')
             let user_password = document.getElementById('user_password')
@@ -47,60 +88,39 @@
             if (!user_name_element || !user_login || !user_password)
                 return
 
-            let json = JSON.stringify({
+            let payload = JSON.stringify({
                 name: user_name_element.value,
                 login: user_login.value,
                 password: user_password.value,
             });
 
-            let xhr = new XMLHttpRequest()
-            xhr.open('POST', '{{ create_user_endpoint }}')
-            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-            xhr.responseType = 'json'
+            getXHR('/api/v1/users').send(payload)
+        }
 
-            xhr.onload = function () {
-                if (xhr.status !== 200) {
-                    alert(`Error ${xhr.status}: ${xhr.statusText}`)
-                } else {
-                    alert(`Ok`)
-                }
-            };
+        function rebuildKnownTagsAnon() {
+            getXHR('/api/v1/actions/rebuild_known_tags_anon').send()
+        }
 
-            xhr.onerror = function () {
-                console.log('Error: ' + xhr.response)
-            };
+        function rebuildKnownTagsUser() {
+            let element = document.getElementById('rebuild_known_tags_user_uuid')
 
-            xhr.send(json);
+            if (!element)
+                return
+
+            getXHR(`/api/v1/actions/rebuild_known_tags_user/${element.value}`).send()
+        }
+
+        function rebuildKnownTagsAll() {
+            getXHR('/api/v1/actions/rebuild_known_tags_all').send()
         }
 
         function rebuildComputedTags(alertsElementId) {
-            let rebuild_computed_tags_item_uuid_element = document.getElementById('rebuild_computed_tags_item_uuid')
+            let element = document.getElementById('rebuild_computed_tags_item_uuid')
 
-            if (!rebuild_computed_tags_item_uuid_element)
+            if (!element)
                 return
 
-            let json = JSON.stringify({
-                item_uuid: rebuild_computed_tags_item_uuid_element.value,
-            });
-
-            let xhr = new XMLHttpRequest()
-            xhr.open('POST', '{{ rebuild_computed_tags_endpoint }}')
-            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-            xhr.responseType = 'json'
-
-            xhr.onload = function () {
-                if (xhr.status !== 200) {
-                    alert(`Error ${xhr.status}: ${xhr.statusText}`)
-                } else {
-                    alert(`Ok`)
-                }
-            };
-
-            xhr.onerror = function () {
-                console.log('Error: ' + xhr.response)
-            };
-
-            xhr.send(json);
+            getXHR(`/api/v1/actions/rebuild_computed_tags/${element.value}`).send()
         }
     </script>
     <br>

@@ -8,9 +8,9 @@ from fastapi import Request
 from fastapi.routing import APIRoute
 import nano_settings as ns
 from starlette.routing import Mount
-import uvicorn
 from starlette_exporter import PrometheusMiddleware
 from starlette_exporter import handle_metrics
+import uvicorn
 
 from omoide import cfg
 from omoide.application import app

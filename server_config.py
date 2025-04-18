@@ -1,4 +1,5 @@
 """Gunicorn configuration."""
+
 import os
 
 from gunicorn.arbiter import Arbiter

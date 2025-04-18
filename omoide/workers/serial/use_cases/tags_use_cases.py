@@ -60,7 +60,7 @@ class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
                 ),
             )
             LOG.debug(
-                'Created serial operation {} (rebuilding tags for user {})',
+                'Created serial operation {} (rebuilding known tags for user {})',
                 operation_id,
                 user,
             )
@@ -71,7 +71,7 @@ class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
                 requested_by_user_id=request.requested_by_user_id,
             ),
         )
-        LOG.debug('Created serial operation {} (rebuilding tags for anon)', operation_id)
+        LOG.debug('Created serial operation {} (rebuilding known tags for anon)', operation_id)
 
 
 class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
@@ -131,7 +131,7 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
                         ),
                     )
                     LOG.debug(
-                        'Created serial operation {} (rebuilding tags for user {})',
+                        'Created serial operation {} (rebuilding known tags for user {})',
                         operation_id,
                         user_id,
                     )
@@ -145,7 +145,7 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
                         ),
                     )
                     LOG.debug(
-                        'Created serial operation {} (rebuilding tags for anon)',
+                        'Created serial operation {} (rebuilding known tags for anon)',
                         operation_id,
                     )
 

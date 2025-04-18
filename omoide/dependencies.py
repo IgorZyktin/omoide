@@ -47,7 +47,7 @@ def get_templates() -> Jinja2Templates:
     object_storage = ObjectStorageWeb(prefix_size=config.prefix_size)
     templates.env.globals['get_content_url'] = object_storage.get_content_url
     templates.env.globals['get_preview_url'] = object_storage.get_preview_url
-    templates.env.globals['get_thumbnail_href'] = object_storage.get_thumbnail_url
+    templates.env.globals['get_thumbnail_url'] = object_storage.get_thumbnail_url
 
     templates.env.globals['human_readable_size'] = pu.human_readable_size
     templates.env.globals['sep_digits'] = pu.sep_digits

@@ -183,6 +183,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = [
     "omoide.omoide_api.actions.actions_controllers",
+    "omoide.omoide_api.actions.admin_controllers",
     "omoide.omoide_api.browse.browse_controllers",
     "omoide.omoide_api.exif.exif_controllers",
     "omoide.omoide_api.home.home_controllers",
@@ -190,16 +191,16 @@ module = [
     "omoide.omoide_api.items.item_controllers",
     "omoide.omoide_api.metainfo.metainfo_controllers",
     "omoide.omoide_api.search.search_controllers",
-    "omoide.omoide_app.search.search_controllers",
     "omoide.omoide_api.users.user_controllers",
     "omoide.omoide_app.auth.auth_controllers",
     "omoide.omoide_app.browse.browse_controllers",
-    "omoide.omoide_app.items.item_controllers",
-    "omoide.omoide_app.special.special_controllers",
-    "omoide.omoide_app.profile.profile_controllers",
-    "omoide.omoide_app.preview.preview_controllers",
-    "omoide.omoide_app.upload.upload_controllers",
     "omoide.omoide_app.home.home_controllers",
+    "omoide.omoide_app.items.item_controllers",
+    "omoide.omoide_app.preview.preview_controllers",
+    "omoide.omoide_app.profile.profile_controllers",
+    "omoide.omoide_app.search.search_controllers",
+    "omoide.omoide_app.special.special_controllers",
+    "omoide.omoide_app.upload.upload_controllers",
 ]
 disallow_untyped_defs = false
 

@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from omoide import dependencies as dep
+from omoide.omoide_app.admin import admin_controllers
 from omoide.omoide_app.auth import auth_controllers
 from omoide.omoide_app.browse import browse_controllers
 from omoide.omoide_app.home import home_controllers
@@ -22,7 +23,6 @@ from omoide.omoide_app.profile import profile_controllers
 from omoide.omoide_app.search import search_controllers
 from omoide.omoide_app.special import special_controllers
 from omoide.omoide_app.upload import upload_controllers
-from omoide.omoide_app.admin import admin_controllers
 
 
 def get_app() -> FastAPI:

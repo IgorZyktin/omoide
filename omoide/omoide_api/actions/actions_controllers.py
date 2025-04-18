@@ -10,7 +10,6 @@ from fastapi import status
 from omoide import dependencies as dep
 from omoide import models
 from omoide.infra.mediator import Mediator
-from omoide.omoide_api.actions import actions_api_models
 from omoide.omoide_api.actions import actions_use_cases
 from omoide.presentation import web
 
@@ -89,25 +88,24 @@ async def api_action_rebuild_known_tags_all(
 
 
 @api_actions_router.post(
-    '/rebuild_computed_tags',
+    '/rebuild_computed_tags/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str | None],
 )
 async def api_action_rebuild_computed_tags(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.RebuildComputedTagsInput,
+    item_uuid: UUID,
 ):
     """Recalculate all computed tags for specific user.
 
-    As a starting point we will take root item for this user.
     If `including_children` is set to True, this will also affect all
     descendants of the item. This operation potentially can take a lot of time.
     """
     use_case = actions_use_cases.RebuildComputedTagsForItemUseCase(mediator)
 
     try:
-        owner, item, job_id = await use_case.execute(admin, target.item_uuid)
+        owner, item, job_id = await use_case.execute(admin, item_uuid)
     except Exception as exc:
         return web.raise_from_exc(exc)
 
@@ -120,14 +118,15 @@ async def api_action_rebuild_computed_tags(
 
 
 @api_actions_router.post(
-    '/copy_image',
+    '/copy_image/{source_item_uuid}/to/{target_item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | list[str]],
 )
 async def api_action_copy_image(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-    target: actions_api_models.CopyImageInput,
+    source_item_uuid: UUID,
+    target_item_uuid: UUID,
 ):
     """Copy image from one item to another.
 
@@ -138,8 +137,8 @@ async def api_action_copy_image(
     try:
         media_types = await use_case.execute(
             user=user,
-            source_uuid=target.source_item_uuid,
-            target_uuid=target.target_item_uuid,
+            source_uuid=source_item_uuid,
+            target_uuid=target_item_uuid,
         )
     except Exception as exc:
         return web.raise_from_exc(exc)

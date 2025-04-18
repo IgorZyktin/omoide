@@ -40,8 +40,6 @@ async def app_admin(
         'user': admin,
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
-        'create_user_endpoint': request.url_for('api_create_user'),
-        'rebuild_computed_tags_endpoint': request.url_for('api_action_rebuild_computed_tags'),
     }
 
     return templates.TemplateResponse('admin.html', context)
