@@ -5,7 +5,7 @@ from collections.abc import Collection
 from typing import Generic
 from typing import TypeVar
 
-from omoide import models
+from omoide import operations
 
 ConnectionT = TypeVar('ConnectionT')
 
@@ -30,14 +30,14 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         names: Collection[str],
-    ) -> models.SerialOperation | None:
+    ) -> operations.BaseSerialOperation | None:
         """Return next serial operation."""
 
     @abc.abstractmethod
     async def lock_serial_operation(
         self,
         conn: ConnectionT,
-        operation: models.SerialOperation,
+        operation: operations.BaseSerialOperation,
         worker_name: str,
     ) -> bool:
         """Lock operation, return True on success."""
@@ -46,7 +46,15 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     async def save_serial_operation(
         self,
         conn: ConnectionT,
-        operation: models.SerialOperation,
+        operation: operations.BaseSerialOperation,
+    ) -> int:
+        """Save operation."""
+
+    @abc.abstractmethod
+    async def save_parallel_operation(
+        self,
+        conn: ConnectionT,
+        operation: operations.BaseParallelOperation,
     ) -> int:
         """Save operation."""
 
@@ -57,5 +65,5 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         worker_name: str,
         names: Collection[str],
         batch_size: int,
-    ) -> list[models.ParallelOperation]:
+    ) -> list[operations.BaseParallelOperation]:
         """Return next parallel operation batch."""

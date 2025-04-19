@@ -1,20 +1,22 @@
 """Use cases for tags-related operations."""
 
 from typing import Any
+from uuid import UUID
 
 from omoide import custom_logging
 from omoide import models
+from omoide import operations
+from omoide.workers.common.base_use_case import BaseWorkerUseCase
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
-from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildKnownTagsForAnonUseCase(BaseSerialWorkerUseCase):
+class RebuildKnownTagsForAnonUseCase(BaseWorkerUseCase):
     """Use case for rebuilding known tags for anon."""
 
-    async def execute(self, request: models.RebuildKnownTagsForAnonRequest) -> None:
+    async def execute(self, request: operations.RebuildKnownTagsForAnonOp) -> None:
         """Perform workload."""
         _ = request
 
@@ -28,13 +30,13 @@ class RebuildKnownTagsForAnonUseCase(BaseSerialWorkerUseCase):
             )
 
 
-class RebuildKnownTagsForUserUseCase(BaseSerialWorkerUseCase):
+class RebuildKnownTagsForUserUseCase(BaseWorkerUseCase):
     """Use case for rebuilding known tags for known user."""
 
-    async def execute(self, request: models.RebuildKnownTagsForUserRequest) -> None:
+    async def execute(self, operation: operations.RebuildKnownTagsForUserOp) -> None:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            user = await self.mediator.users.get_by_id(conn, request.user_id)
+            user = await self.mediator.users.get_by_uuid(conn, operation.user_uuid)
             tags = await self.mediator.tags.calculate_known_tags_user(conn, user)
             LOG.debug('Got {} tags for {}', len(tags), user)
             dropped = await self.mediator.tags.drop_known_tags_user(conn, user)
@@ -44,10 +46,10 @@ class RebuildKnownTagsForUserUseCase(BaseSerialWorkerUseCase):
             )
 
 
-class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
+class RebuildKnownTagsForAllUseCase(BaseWorkerUseCase):
     """Use case for rebuilding known tags for all users."""
 
-    async def execute(self, request: models.RebuildKnownTagsForAllRequest) -> None:
+    async def execute(self, operation: operations.RebuildKnownTagsForAllOp) -> None:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
             users = await self.mediator.users.select(conn)
@@ -55,8 +57,8 @@ class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
         for user in users:
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildKnownTagsForUserRequest(
-                    requested_by_user_id=request.requested_by_user_id, user_id=user.id
+                operation=operations.RebuildKnownTagsForUserOp(
+                    requested_by=operation.requested_by, user_uuid=user.uuid
                 ),
             )
             LOG.debug(
@@ -67,31 +69,31 @@ class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
 
         operation_id = await self.mediator.misc.create_serial_operation(
             conn=conn,
-            request=models.RebuildKnownTagsForAnonRequest(
-                requested_by_user_id=request.requested_by_user_id,
+            operation=operations.RebuildKnownTagsForAnonOp(
+                requested_by=operation.requested_by,
             ),
         )
         LOG.debug('Created serial operation {} (rebuilding known tags for anon)', operation_id)
 
 
-class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
+class RebuildComputedTagsForItemUseCase(BaseWorkerUseCase):
     """Update tags for item."""
 
     def __init__(self, config: SerialWorkerConfig, mediator: WorkerMediator) -> None:
         """Initialize instance."""
         super().__init__(config, mediator)
-        self._items_cache: dict[int, models.Item] = {}
+        self._items_cache: dict[UUID, models.Item] = {}
         self._computed_tags_cache: dict[int, set[str]] = {}
 
-    async def _get_cached_item(self, conn: Any, item_id: int) -> models.Item:
+    async def _get_cached_item(self, conn: Any, item_uuid: UUID) -> models.Item:
         """Perform cached request."""
-        item = self._items_cache.get(item_id)
+        item = self._items_cache.get(item_uuid)
 
         if item is not None:
             return item
 
-        item = await self.mediator.items.get_by_id(conn, item_id)
-        self._items_cache[item.id] = item
+        item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        self._items_cache[item.uuid] = item
         return item
 
     async def _get_cached_computed_tags(self, conn: Any, item: models.Item) -> set[str]:
@@ -105,12 +107,12 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
         self._computed_tags_cache[item.id] = tags
         return tags
 
-    async def execute(self, request: models.RebuildComputedTagsForItemRequest) -> None:
+    async def execute(self, operation: operations.RebuildComputedTagsForItemOp) -> None:
         """Perform workload."""
         affected_users: set[int] = set()
 
         async with self.mediator.database.transaction() as conn:
-            item = await self._get_cached_item(conn, request.item_id)
+            item = await self._get_cached_item(conn, operation.item_uuid)
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
             is_public = owner.is_public
 
@@ -123,11 +125,12 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
         if affected_users:
             for user_id in affected_users:
                 async with self.mediator.database.transaction() as conn:
+                    user = await self.mediator.users.get_by_id(conn, user_id)
                     operation_id = await self.mediator.misc.create_serial_operation(
                         conn=conn,
-                        request=models.RebuildKnownTagsForUserRequest(
-                            requested_by_user_id=request.requested_by_user_id,
-                            user_id=user_id,
+                        operation=operations.RebuildKnownTagsForUserOp(
+                            requested_by=operation.requested_by,
+                            user_uuid=user.uuid,
                         ),
                     )
                     LOG.debug(
@@ -140,8 +143,8 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
                 if is_public:
                     operation_id = await self.mediator.misc.create_serial_operation(
                         conn=conn,
-                        request=models.RebuildKnownTagsForAnonRequest(
-                            requested_by_user_id=request.requested_by_user_id
+                        operation=operations.RebuildKnownTagsForAnonOp(
+                            requested_by=operation.requested_by
                         ),
                     )
                     LOG.debug(
@@ -158,8 +161,8 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
                 parent_tags: set[str] = set()
 
                 parent_name = ''
-                if current_item.parent_id is not None:
-                    parent = await self._get_cached_item(conn, current_item.parent_id)
+                if current_item.parent_uuid is not None:
+                    parent = await self._get_cached_item(conn, current_item.parent_uuid)
                     parent_tags = await self._get_cached_computed_tags(conn, parent)
                     parent_name = parent.name
 

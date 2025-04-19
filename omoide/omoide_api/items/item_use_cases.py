@@ -8,6 +8,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
+from omoide import operations
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
@@ -197,9 +198,9 @@ class RenameItemUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=user.id,
-                    item_id=item.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=item.uuid,
                 ),
             )
 
@@ -259,25 +260,25 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             operation_id_tags = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=user.id,
-                    item_id=item.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=item.uuid,
                 ),
             )
 
             operation_id_old_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=user.id,
-                    item_id=old_parent.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=old_parent.uuid,
                 ),
             )
 
             operation_id_new_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=user.id,
-                    item_id=new_parent.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=new_parent.uuid,
                 ),
             )
 
@@ -327,9 +328,9 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=user.id,
-                    item_id=item.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=item.uuid,
                 ),
             )
 
@@ -595,12 +596,12 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
 
                 operation_id = await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    request=models.RebuildPermissionsForItemRequest(
-                        requested_by_user_id=user.id,
-                        item_id=item.id,
-                        added=list(added),
-                        deleted=list(deleted),
-                        original=list(item.permissions),
+                    operation=operations.RebuildPermissionsForItemOp(
+                        requested_by=user.uuid,
+                        item_uuid=item.uuid,
+                        added=set(added),
+                        deleted=set(deleted),
+                        original=set(item.permissions),
                         apply_to_parents=apply_to_parents,
                         apply_to_children=apply_to_children,
                         apply_to_children_as=str(apply_to_children_as.value),

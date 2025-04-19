@@ -14,7 +14,7 @@ async def run_automatic(worker: BaseWorker, short_delay: float, long_delay: floa
 
     try:
         while True:
-            did_something = await worker.execute()
+            did_something = await worker.execute()  # type: ignore [attr-defined]
 
             if worker.stopping:
                 break
@@ -24,6 +24,6 @@ async def run_automatic(worker: BaseWorker, short_delay: float, long_delay: floa
             else:
                 await asyncio.sleep(long_delay)
     except (KeyboardInterrupt, asyncio.CancelledError):
-        LOG.warning('Worker {!r} is requested to stop manually', worker.name)
+        LOG.warning('Worker {!r} is requested to stop', worker.name)
     finally:
         await worker.stop()

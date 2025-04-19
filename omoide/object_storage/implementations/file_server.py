@@ -4,6 +4,7 @@ import python_utilz as pu
 
 from omoide import const
 from omoide import models
+from omoide import operations
 from omoide.database.interfaces import AbsDatabase
 from omoide.database.interfaces import AbsMediaRepo
 from omoide.database.interfaces import AbsMiscRepo
@@ -67,11 +68,9 @@ class FileObjectStorageServer(AbsObjectStorage):
             if item.content_ext:
                 operation_id = await self.misc.create_parallel_operation(
                     conn=conn,
-                    request=models.SoftDeleteMediaRequest(
-                        requested_by_user_id=requested_by.id,
-                        owner_uuid=item.owner_uuid,
+                    operation=operations.SoftDeleteMediaOp(
+                        requested_by=requested_by.uuid,
                         item_uuid=item.uuid,
-                        media_type=const.CONTENT,
                     ),
                 )
                 deleted_types.append({'media_type': const.CONTENT, 'operation_id': operation_id})
@@ -79,11 +78,9 @@ class FileObjectStorageServer(AbsObjectStorage):
             if item.preview_ext:
                 operation_id = await self.misc.create_parallel_operation(
                     conn=conn,
-                    request=models.SoftDeleteMediaRequest(
-                        requested_by_user_id=requested_by.id,
-                        owner_uuid=item.owner_uuid,
+                    operation=operations.SoftDeleteMediaOp(
+                        requested_by=requested_by.uuid,
                         item_uuid=item.uuid,
-                        media_type=const.PREVIEW,
                     ),
                 )
                 deleted_types.append({'media_type': const.PREVIEW, 'operation_id': operation_id})
@@ -91,11 +88,9 @@ class FileObjectStorageServer(AbsObjectStorage):
             if item.thumbnail_ext:
                 operation_id = await self.misc.create_parallel_operation(
                     conn=conn,
-                    request=models.SoftDeleteMediaRequest(
-                        requested_by_user_id=requested_by.id,
-                        owner_uuid=item.owner_uuid,
+                    operation=operations.SoftDeleteMediaOp(
+                        requested_by=requested_by.uuid,
                         item_uuid=item.uuid,
-                        media_type=const.THUMBNAIL,
                     ),
                 )
                 deleted_types.append({'media_type': const.THUMBNAIL, 'operation_id': operation_id})

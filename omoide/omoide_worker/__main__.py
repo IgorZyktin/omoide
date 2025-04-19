@@ -22,7 +22,12 @@ from omoide.omoide_worker.worker import Worker
 def main(once: bool) -> None:
     """Entry point."""
     config = worker_config.get_config()
-    custom_logging.init_logging(config.log_level, diagnose=config.log_debug)
+    custom_logging.init_logging(
+        level=config.log_level,
+        diagnose=config.log_debug,
+        path='',
+        rotation='',
+    )
 
     logger = custom_logging.get_logger(__name__)
     logger.info('Started Omoide Worker Daemon')

@@ -9,6 +9,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
+from omoide import operations
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
@@ -107,9 +108,9 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
             target_user.extras['root_item_uuid'] = root.uuid
             await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=user.id,
-                    item_id=root.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=root.uuid,
                 ),
             )
 

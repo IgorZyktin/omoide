@@ -10,6 +10,7 @@ from omoide import custom_logging
 from omoide import exceptions
 from omoide.database import db_models
 from omoide.database.implementations.impl_sqlalchemy import MediaRepo
+from omoide.database.implementations.impl_sqlalchemy import MiscRepo
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 from omoide.omoide_cli import common
 
@@ -36,6 +37,7 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
     object_storage = FileObjectStorageServer(
         database=database,
         media=MediaRepo(),
+        misc=MiscRepo(),
         prefix_size=const.STORAGE_PREFIX_SIZE,
     )
 

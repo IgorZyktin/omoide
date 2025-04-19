@@ -7,7 +7,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
-from omoide import models
+from omoide import operations
 from omoide.database import db_models
 from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
 
@@ -56,12 +56,12 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         self,
         conn: AsyncConnection,
         names: Collection[str],
-    ) -> models.SerialOperation | None:
+    ) -> operations.BaseSerialOperation | None:
         """Try locking next serial operation."""
         select_query = (
             sa.select(db_models.SerialOperation)
             .where(
-                db_models.SerialOperation.status == models.OperationStatus.CREATED,
+                db_models.SerialOperation.status == operations.OperationStatus.CREATED,
                 db_models.SerialOperation.name.in_(tuple(names)),
             )
             .order_by(db_models.SerialOperation.id)
@@ -73,12 +73,27 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         if response is None:
             return None
 
-        return models.SerialOperation.from_obj(response)
+        for cls in operations.BaseSerialOperation.__subclasses__():
+            if cls.name == response.name and issubclass(cls, operations.BaseSerialOperation):
+                return cls.from_extras(  # type: ignore [return-value]
+                    id=response.id,
+                    name=response.name,
+                    worker_name=response.worker_name,
+                    status=operations.OperationStatus(response.status),
+                    extras=response.extras,
+                    created_at=response.created_at,
+                    updated_at=response.updated_at,
+                    started_at=response.started_at,
+                    ended_at=response.ended_at,
+                    log=response.log,
+                )
+
+        raise exceptions.UnknownSerialOperationError(name=response.name)
 
     async def lock_serial_operation(
         self,
         conn: AsyncConnection,
-        operation: models.SerialOperation,
+        operation: operations.BaseSerialOperation,
         worker_name: str,
     ) -> bool:
         """Lock operation, return True on success."""
@@ -88,7 +103,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             sa.update(db_models.SerialOperation)
             .values(
                 worker_name=worker_name,
-                status=models.OperationStatus.PROCESSING,
+                status=operations.OperationStatus.PROCESSING,
                 updated_at=now,
                 started_at=now,
             )
@@ -101,13 +116,46 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
     async def save_serial_operation(
         self,
         conn: AsyncConnection,
-        operation: models.SerialOperation,
+        operation: operations.BaseSerialOperation,
     ) -> int:
         """Save operation."""
         query = (
             sa.update(db_models.SerialOperation)
             .where(db_models.SerialOperation.id == operation.id)
-            .values(**operation.get_changes())
+            .values(
+                worker_name=operation.worker_name,
+                status=operation.status,
+                extras=operation.extras,
+                created_at=operation.created_at,
+                updated_at=operation.updated_at,
+                started_at=operation.started_at,
+                ended_at=operation.ended_at,
+                log=operation.log,
+            )
+        )
+        response = await conn.execute(query)
+        return int(response.rowcount)
+
+    async def save_parallel_operation(
+        self,
+        conn: AsyncConnection,
+        operation: operations.BaseParallelOperation,
+    ) -> int:
+        """Save operation."""
+        query = (
+            sa.update(db_models.ParallelOperation)
+            .where(db_models.ParallelOperation.id == operation.id)
+            .values(
+                status=operation.status,
+                extras=operation.extras,
+                created_at=operation.created_at,
+                updated_at=operation.updated_at,
+                started_at=operation.started_at,
+                ended_at=operation.ended_at,
+                log=operation.log,
+                payload=b'',
+                processed_by=list(operation.processed_by),
+            )
         )
         response = await conn.execute(query)
         return int(response.rowcount)
@@ -118,12 +166,12 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         worker_name: str,
         names: Collection[str],
         batch_size: int,
-    ) -> list[models.ParallelOperation]:
+    ) -> list[operations.BaseParallelOperation]:
         """Return next parallel operation batch."""
         select_query = (
             sa.select(db_models.ParallelOperation)
             .where(
-                db_models.ParallelOperation.status == models.OperationStatus.CREATED,
+                db_models.ParallelOperation.status == operations.OperationStatus.CREATED,
                 db_models.ParallelOperation.name.in_(tuple(names)),
                 sa.not_(db_models.ParallelOperation.processed_by.any_() == worker_name),
             )
@@ -132,4 +180,40 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         )
 
         response = (await conn.execute(select_query)).fetchall()
-        return [models.ParallelOperation.from_obj(raw) for raw in response]
+
+        cls_cache: dict[str, type[operations.BaseParallelOperation]] = {}
+        instances: list[operations.BaseParallelOperation] = []
+
+        for each in response:
+            cls = cls_cache.get(each.name)
+
+            if cls is None:
+                for each_cls in operations.BaseParallelOperation.__subclasses__():
+                    if (
+                        issubclass(each_cls, operations.BaseParallelOperation)
+                        and each_cls.name == each.name
+                    ):
+                        cls_cache[each.name] = each_cls
+                        cls = each_cls
+
+            if cls is None:
+                raise exceptions.UnknownParallelOperationError(name=each.name)
+
+            if issubclass(cls, operations.BaseParallelOperation):
+                instance = cls.from_extras(
+                    id=each.id,
+                    name=each.name,
+                    status=operations.OperationStatus(each.status),
+                    extras=each.extras,
+                    created_at=each.created_at,
+                    updated_at=each.updated_at,
+                    started_at=each.started_at,
+                    ended_at=each.ended_at,
+                    log=each.log,
+                    payload=each.payload,
+                    processed_by=set(each.processed_by),
+                )
+
+                instances.append(instance)  # type: ignore [arg-type]
+
+        return instances

@@ -3,32 +3,34 @@
 from omoide import const
 from omoide import custom_logging
 from omoide import models
+from omoide import operations
 from omoide import utils
-from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
+from omoide.workers.common.base_use_case import BaseWorkerUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildPermissionsForItemUseCase(BaseSerialWorkerUseCase):
+class RebuildPermissionsForItemUseCase(BaseWorkerUseCase):
     """Use case for rebuilding permissions for an item."""
 
-    async def execute(self, request: models.RebuildPermissionsForItemRequest) -> None:
+    async def execute(self, operation: operations.RebuildPermissionsForItemOp) -> None:
         """Perform workload."""
         affected_users: set[int] = set()
 
-        if request.apply_to_parents:
-            await self.do_apply_to_parents(request, affected_users)
+        if operation.apply_to_parents:
+            await self.do_apply_to_parents(operation, affected_users)
 
-        if request.apply_to_children:
-            await self.do_apply_to_children(request, affected_users)
+        if operation.apply_to_children:
+            await self.do_apply_to_children(operation, affected_users)
 
         async with self.mediator.database.transaction() as conn:
             for user_id in affected_users:
+                user = await self.mediator.users.get_by_id(conn, user_id)
                 await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    request=models.RebuildKnownTagsForUserRequest(
-                        requested_by_user_id=request.requested_by_user_id,
-                        user_id=user_id,
+                    operation=operations.RebuildKnownTagsForUserOp(
+                        requested_by=operation.requested_by,
+                        user_uuid=user.uuid,
                     ),
                 )
 
@@ -36,29 +38,29 @@ class RebuildPermissionsForItemUseCase(BaseSerialWorkerUseCase):
             if public_users & affected_users:
                 await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    request=models.RebuildKnownTagsForAnonRequest(
-                        requested_by_user_id=request.requested_by_user_id,
+                    operation=operations.RebuildKnownTagsForAnonOp(
+                        requested_by=operation.requested_by,
                     ),
                 )
 
     async def do_apply_to_parents(
         self,
-        request: models.RebuildPermissionsForItemRequest,
+        operation: operations.RebuildPermissionsForItemOp,
         affected_users: set[int],
     ) -> None:
         """Change permissions in parents."""
-        affected_users.update(request.added)
+        affected_users.update(operation.added)
 
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_id(conn, request.item_id)
+            item = await self.mediator.items.get_by_uuid(conn, operation.item_uuid)
             parents = await self.mediator.items.get_parents(conn, item)
 
             for parent in reversed(parents):
                 if parent.status is models.Status.DELETED:
                     return
 
-                parent.permissions = parent.permissions | set(request.added)
-                parent.permissions = parent.permissions - set(request.deleted)
+                parent.permissions = parent.permissions | set(operation.added)
+                parent.permissions = parent.permissions - set(operation.deleted)
                 await self.mediator.items.save(conn, parent)
                 LOG.info(
                     'Permissions change in child {child} affected parent {parent}',
@@ -68,12 +70,12 @@ class RebuildPermissionsForItemUseCase(BaseSerialWorkerUseCase):
 
     async def do_apply_to_children(
         self,
-        request: models.RebuildPermissionsForItemRequest,
+        operation: operations.RebuildPermissionsForItemOp,
         affected_users: set[int],
     ) -> None:
         """Change permissions in children."""
         async with self.mediator.database.transaction() as conn:
-            top_item = await self.mediator.items.get_by_id(conn, request.item_id)
+            top_item = await self.mediator.items.get_by_uuid(conn, operation.item_uuid)
             top_children = await self.mediator.items.get_children(conn=conn, item=top_item)
 
             async def _recursively_apply(
@@ -84,17 +86,17 @@ class RebuildPermissionsForItemUseCase(BaseSerialWorkerUseCase):
                 if child.status is models.Status.DELETED:
                     return
 
-                if request.apply_to_children_as == const.ApplyAs.COPY:
+                if operation.apply_to_children_as == const.ApplyAs.COPY:
                     sub_added, sub_deleted = utils.get_delta(
                         before=child.permissions,
-                        after=request.original,
+                        after=operation.original,
                     )
-                    child.permissions = set(request.original)
+                    child.permissions = set(operation.original)
                     affected_users.update(sub_added | sub_deleted)
 
-                elif request.apply_to_children_as == const.ApplyAs.DELTA:
-                    added = set(request.added)
-                    deleted = set(request.deleted)
+                elif operation.apply_to_children_as == const.ApplyAs.DELTA:
+                    added = set(operation.added)
+                    deleted = set(operation.deleted)
                     child.permissions = child.permissions | added
                     child.permissions = child.permissions - deleted
                     affected_users.update(added | deleted)

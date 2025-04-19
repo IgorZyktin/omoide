@@ -1,6 +1,5 @@
 """General worker class for all workers."""
 
-import abc
 import asyncio
 import functools
 import os
@@ -12,7 +11,7 @@ from omoide.workers.common.mediator import WorkerMediator
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseWorker(abc.ABC):
+class BaseWorker:
     """General worker class for all workers."""
 
     def __init__(self, mediator: WorkerMediator, name: str) -> None:
@@ -64,7 +63,3 @@ class BaseWorker(abc.ABC):
             signal.SIGTERM,
             functools.partial(signal_handler, sig=signal.SIGTERM),
         )
-
-    @abc.abstractmethod
-    async def execute(self) -> bool:
-        """Perform workload."""

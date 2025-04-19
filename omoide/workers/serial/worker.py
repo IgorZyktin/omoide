@@ -1,15 +1,14 @@
 """Worker that performs operations one by one."""
 
-from typing import Any
-
 import python_utilz as pu
 
 from omoide import custom_logging
 from omoide import exceptions
-from omoide import models
+from omoide import operations
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
+from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 from omoide.workers.serial.use_cases.mapping import NAMES_TO_USE_CASES
 
 LOG = custom_logging.get_logger(__name__)
@@ -74,27 +73,30 @@ class SerialWorker(BaseWorker):
         await self.execute_operation(operation)
         return True
 
-    async def run_use_case(self, operation: models.SerialOperation) -> None:
+    def get_use_case(
+        self,
+        operation: operations.BaseSerialOperation,
+    ) -> BaseSerialWorkerUseCase:
         """Create and run use case."""
         use_case_type = NAMES_TO_USE_CASES.get(operation.name)
 
         if use_case_type is None:
             raise exceptions.UnknownSerialOperationError(name=operation.name)
 
-        use_case = use_case_type(self.config, self.mediator)
-        await use_case.execute(operation)
+        return use_case_type(self.config, self.mediator)  # type: ignore [no-any-return, override]
 
-    async def execute_operation(self, operation: models.SerialOperation) -> None:
+    async def execute_operation(self, operation: operations.BaseSerialOperation) -> None:
         """Perform workload."""
         try:
-            await self.run_use_case(operation)
+            use_case = self.get_use_case(operation)
+            await use_case.execute(operation)
         except Exception as exc:
             error = pu.exc_to_str(exc)
             now = pu.now()
             operation.updated_at = now
             operation.ended_at = now
             operation.add_to_log(error)
-            operation.status = models.OperationStatus.FAILED
+            operation.status = operations.OperationStatus.FAILED
 
             if operation.duration > 1:
                 duration = pu.human_readable_time(operation.duration)
@@ -102,7 +104,7 @@ class SerialWorker(BaseWorker):
                 duration = f'{operation.duration:0.3f} sec.'
 
             LOG.exception(
-                '{operation} failed in {duration:0.3f} sec. because of {error}',
+                '{operation} failed in {duration} because of {error}',
                 operation=operation,
                 duration=duration,
                 error=error,
@@ -111,7 +113,7 @@ class SerialWorker(BaseWorker):
             now = pu.now()
             operation.updated_at = now
             operation.ended_at = now
-            operation.status = models.OperationStatus.DONE
+            operation.status = operations.OperationStatus.DONE
 
             if operation.duration > 1:
                 duration = pu.human_readable_time(operation.duration)

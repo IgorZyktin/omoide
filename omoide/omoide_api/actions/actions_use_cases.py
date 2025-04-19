@@ -5,6 +5,7 @@ from uuid import UUID
 from omoide import const
 from omoide import custom_logging
 from omoide import models
+from omoide import operations
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
@@ -22,7 +23,7 @@ class RebuildKnownTagsForAnonUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildKnownTagsForAnonRequest(requested_by_user_id=admin.id),
+                operation=operations.RebuildKnownTagsForAnonOp(requested_by=admin.uuid),
             )
 
         return operation_id
@@ -41,9 +42,9 @@ class RebuildKnownTagsForUserUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildKnownTagsForUserRequest(
-                    requested_by_user_id=admin.id,
-                    user_id=user.id,
+                operation=operations.RebuildKnownTagsForUserOp(
+                    requested_by=admin.uuid,
+                    user_uuid=user.uuid,
                 ),
             )
 
@@ -62,7 +63,7 @@ class RebuildKnownTagsForAllUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildKnownTagsForAllRequest(requested_by_user_id=admin.id),
+                operation=operations.RebuildKnownTagsForAllOp(requested_by=admin.uuid),
             )
 
         return operation_id
@@ -92,9 +93,9 @@ class RebuildComputedTagsForItemUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                request=models.RebuildComputedTagsForItemRequest(
-                    requested_by_user_id=admin.id,
-                    item_id=item.id,
+                operation=operations.RebuildComputedTagsForItemOp(
+                    requested_by=admin.uuid,
+                    item_uuid=item.uuid,
                 ),
             )
 
