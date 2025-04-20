@@ -295,3 +295,10 @@ class HardDeleteMediaOp(SoftDeleteMediaOp):
     """Hard media deletion."""
 
     name: str = 'hard_delete_media'
+
+
+@dataclass
+class DownloadMediaOp(SoftDeleteMediaOp):
+    """Save media to the storage."""
+
+    name: str = 'download_media'
