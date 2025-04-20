@@ -23,8 +23,11 @@ class ParallelWorkerConfig(ns.BaseConfig):
     fork_type: str = 'process'
     short_delay: float = 0.0
     long_delay: float = 5.0
+    operation_delay: float = 0.1
+    operation_deadline: float = 300.0
     input_batch: int = 100
     supported_operations: Annotated[frozenset[str], frozenset, ujson.loads] = frozenset()
     data_folder: Path = Path('.')
     workers: int = 0
     max_workers: int = 5
+    prefix_size: int = 2

@@ -71,6 +71,7 @@ class FileObjectStorageServer(AbsObjectStorage):
                     operation=operations.SoftDeleteMediaOp(
                         requested_by=requested_by.uuid,
                         item_uuid=item.uuid,
+                        media_type=const.CONTENT,
                     ),
                 )
                 deleted_types.append({'media_type': const.CONTENT, 'operation_id': operation_id})
@@ -81,6 +82,7 @@ class FileObjectStorageServer(AbsObjectStorage):
                     operation=operations.SoftDeleteMediaOp(
                         requested_by=requested_by.uuid,
                         item_uuid=item.uuid,
+                        media_type=const.PREVIEW,
                     ),
                 )
                 deleted_types.append({'media_type': const.PREVIEW, 'operation_id': operation_id})
@@ -91,6 +93,7 @@ class FileObjectStorageServer(AbsObjectStorage):
                     operation=operations.SoftDeleteMediaOp(
                         requested_by=requested_by.uuid,
                         item_uuid=item.uuid,
+                        media_type=const.THUMBNAIL,
                     ),
                 )
                 deleted_types.append({'media_type': const.THUMBNAIL, 'operation_id': operation_id})

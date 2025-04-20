@@ -1,10 +1,10 @@
 """Worker that performs operations in parallel."""
 
-import concurrent
+import asyncio
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-
-import python_utilz as pu
+import time
 
 from omoide import custom_logging
 from omoide import exceptions
@@ -12,7 +12,6 @@ from omoide import operations
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
-from omoide.workers.parallel.use_cases.base_use_case import BaseParallelWorkerUseCase
 from omoide.workers.parallel.use_cases.mapping import NAMES_TO_USE_CASES
 
 LOG = custom_logging.get_logger(__name__)
@@ -54,79 +53,52 @@ class ParallelWorker(BaseWorker):
         await self.execute_batch(batch)
         return True
 
-    def get_use_case(
-        self,
-        operation: operations.BaseParallelOperation,
-    ) -> BaseParallelWorkerUseCase:
-        """Return use case."""
-        use_case_type = NAMES_TO_USE_CASES.get(operation.name)
-
-        if use_case_type is None:
-            raise exceptions.UnknownParallelOperationError(name=operation.name)
-
-        return use_case_type(self.config, self.mediator)
-
     async def execute_batch(self, batch: list[operations.BaseParallelOperation]) -> None:
         """Perform workload."""
         for operation in batch:
             try:
-                use_case = self.get_use_case(operation)
-                await self.run_callables(use_case, operation)
+                use_case_type = NAMES_TO_USE_CASES.get(operation.name)
+
+                if use_case_type is None:
+                    raise exceptions.UnknownParallelOperationError(name=operation.name)  # noqa: TRY301
+
+                use_case = use_case_type(self.config, self.mediator)
+                new_callable = await use_case.execute(operation)  # type: ignore [attr-defined]
+                await self.run_callable(new_callable)
             except Exception as exc:
-                error = pu.exc_to_str(exc)
-                operation.add_to_log(error)
-                operation.status = operations.OperationStatus.FAILED
-
-                if operation.duration > 1:
-                    duration = pu.human_readable_time(operation.duration)
-                else:
-                    duration = f'{operation.duration:0.3f} sec.'
-
+                error = operation.mark_failed(exc)
                 LOG.exception(
                     '{operation} failed in {duration} because of {error}',
                     operation=operation,
-                    duration=duration,
+                    duration=operation.hr_duration,
                     error=error,
                 )
             else:
-                operation.status = operations.OperationStatus.DONE
-
-                if operation.duration > 1:
-                    duration = pu.human_readable_time(operation.duration)
-                else:
-                    duration = f'{operation.duration:0.3f} sec.'
-
+                operation.mark_done()
                 LOG.info(
                     '{operation} completed in {duration}',
                     operation=operation,
-                    duration=duration,
+                    duration=operation.hr_duration,
                 )
             finally:
-                now = pu.now()
-                operation.updated_at = now
-                operation.ended_at = now
                 operation.processed_by.add(self.name)
                 async with self.mediator.database.transaction() as conn:
                     await self.mediator.workers.save_parallel_operation(conn, operation)
 
-    async def run_callables(
-        self,
-        use_case: BaseParallelWorkerUseCase,
-        operation: operations.BaseParallelOperation,
-    ) -> None:
-        """Run all nested commands."""
-        futures = []
-        try:
-            callables = await use_case.execute(operation)  # type: ignore [attr-defined]
-        except Exception:
-            LOG.exception('Failed to get callables for {}', operation)
-            raise
-        else:
-            for each_callable in callables:
-                future = self.executor.submit(each_callable)
-                futures.append(future)
+    async def run_callable(self, new_callable: Callable) -> None:
+        """Run operation in separate thread/process."""
+        deadline = time.monotonic() + self.config.operation_deadline
+        future = self.executor.submit(new_callable)
 
-            for future in concurrent.futures.as_completed(futures):
-                exc = future.exception()
-                if exc is not None:
-                    raise exc
+        while True:
+            if time.monotonic() > deadline:
+                raise exceptions.BadParallelOperationError(
+                    problem=f'running longer than {self.config.operation_deadline} sec',
+                )
+
+            if future.done():
+                break
+
+            await asyncio.sleep(self.config.operation_delay)
+
+        _ = future.result()

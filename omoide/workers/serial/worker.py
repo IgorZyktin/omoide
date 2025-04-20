@@ -1,14 +1,11 @@
 """Worker that performs operations one by one."""
 
-import python_utilz as pu
-
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import operations
 from omoide.workers.common.base_worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
-from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 from omoide.workers.serial.use_cases.mapping import NAMES_TO_USE_CASES
 
 LOG = custom_logging.get_logger(__name__)
@@ -73,57 +70,30 @@ class SerialWorker(BaseWorker):
         await self.execute_operation(operation)
         return True
 
-    def get_use_case(
-        self,
-        operation: operations.BaseSerialOperation,
-    ) -> BaseSerialWorkerUseCase:
-        """Create and run use case."""
-        use_case_type = NAMES_TO_USE_CASES.get(operation.name)
-
-        if use_case_type is None:
-            raise exceptions.UnknownSerialOperationError(name=operation.name)
-
-        return use_case_type(self.config, self.mediator)  # type: ignore [no-any-return, override]
-
     async def execute_operation(self, operation: operations.BaseSerialOperation) -> None:
         """Perform workload."""
         try:
-            use_case = self.get_use_case(operation)
+            use_case_type = NAMES_TO_USE_CASES.get(operation.name)
+
+            if use_case_type is None:
+                raise exceptions.UnknownSerialOperationError(name=operation.name)  # noqa: TRY301
+
+            use_case = use_case_type(operation)
             await use_case.execute(operation)
         except Exception as exc:
-            error = pu.exc_to_str(exc)
-            now = pu.now()
-            operation.updated_at = now
-            operation.ended_at = now
-            operation.add_to_log(error)
-            operation.status = operations.OperationStatus.FAILED
-
-            if operation.duration > 1:
-                duration = pu.human_readable_time(operation.duration)
-            else:
-                duration = f'{operation.duration:0.3f} sec.'
-
+            error = operation.mark_failed(exc)
             LOG.exception(
                 '{operation} failed in {duration} because of {error}',
                 operation=operation,
-                duration=duration,
+                duration=operation.hr_duration,
                 error=error,
             )
         else:
-            now = pu.now()
-            operation.updated_at = now
-            operation.ended_at = now
-            operation.status = operations.OperationStatus.DONE
-
-            if operation.duration > 1:
-                duration = pu.human_readable_time(operation.duration)
-            else:
-                duration = f'{operation.duration:0.3f} sec.'
-
+            operation.mark_done()
             LOG.info(
                 '{operation} completed in {duration}',
                 operation=operation,
-                duration=duration,
+                duration=operation.hr_duration,
             )
         finally:
             async with self.mediator.database.transaction() as conn:

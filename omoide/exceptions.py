@@ -95,3 +95,7 @@ class UnknownParallelOperationError(BaseOmoideError):
 
 class BadSerialOperationError(BaseOmoideError):
     """Operation has problem: {problem}."""
+
+
+class BadParallelOperationError(BaseOmoideError):
+    """Operation has problem: {problem}."""

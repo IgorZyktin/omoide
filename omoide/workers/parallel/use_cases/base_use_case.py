@@ -1,10 +1,12 @@
 """Common use case elements for workers."""
 
+import abc
+
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
 
 
-class BaseParallelWorkerUseCase:
+class BaseParallelWorkerUseCase(abc.ABC):
     """Base use case class for workers."""
 
     def __init__(self, config: ParallelWorkerConfig, mediator: WorkerMediator) -> None:

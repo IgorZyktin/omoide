@@ -1,5 +1,6 @@
 """General worker class for all workers."""
 
+import abc
 import asyncio
 import functools
 import os
@@ -11,7 +12,7 @@ from omoide.workers.common.mediator import WorkerMediator
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseWorker:
+class BaseWorker(abc.ABC):
     """General worker class for all workers."""
 
     def __init__(self, mediator: WorkerMediator, name: str) -> None:
@@ -63,3 +64,27 @@ class BaseWorker:
             signal.SIGTERM,
             functools.partial(signal_handler, sig=signal.SIGTERM),
         )
+
+    async def run(self, short_delay: float, long_delay: float) -> None:
+        """Daemon run."""
+        await self.start()
+
+        try:
+            while True:
+                did_something = await self.execute()
+
+                if self.stopping:
+                    break
+
+                if did_something:
+                    await asyncio.sleep(short_delay)
+                else:
+                    await asyncio.sleep(long_delay)
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            LOG.warning('Worker {!r} stopping', self.name)
+        finally:
+            await self.stop()
+
+    @abc.abstractmethod
+    async def execute(self) -> bool:
+        """Perform workload."""

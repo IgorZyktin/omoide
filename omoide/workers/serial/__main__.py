@@ -7,7 +7,6 @@ import typer
 
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
-from omoide.workers.common import runtime
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
 from omoide.workers.serial.worker import SerialWorker
@@ -42,12 +41,7 @@ async def _main() -> None:
     )
 
     worker = SerialWorker(config, mediator, name=config.name)
-
-    await runtime.run_automatic(
-        worker=worker,
-        short_delay=config.short_delay,
-        long_delay=config.long_delay,
-    )
+    await worker.run(short_delay=config.short_delay, long_delay=config.long_delay)
 
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@ from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
+from typing import Literal
 from uuid import UUID
 
 import python_utilz as pu
@@ -73,12 +74,38 @@ class BaseOperation:
             seconds = (self.ended_at - self.created_at).total_seconds()
         return seconds
 
+    @property
+    def hr_duration(self) -> str:
+        """Return human-readable duration."""
+        if (seconds := self.duration) > 1:
+            duration = pu.human_readable_time(seconds)
+        else:
+            duration = f'{seconds:0.3f} sec.'
+        return duration
+
     def add_to_log(self, text: str) -> None:
         """Store additional text."""
         if self.log is None:
             self.log = text
         else:
             self.log += f'\n{text}'
+
+    def mark_done(self) -> None:
+        """Alter state to `done`."""
+        now = pu.now()
+        self.updated_at = now
+        self.ended_at = now
+        self.status = OperationStatus.DONE
+
+    def mark_failed(self, exc: Exception) -> str:
+        """Alter state to `failed`."""
+        now = pu.now()
+        self.updated_at = now
+        self.ended_at = now
+        self.status = OperationStatus.FAILED
+        error = pu.exc_to_str(exc)
+        self.add_to_log(error)
+        return error
 
 
 @dataclass
@@ -227,9 +254,10 @@ class BaseParallelOperation(BaseOperation):
 
 @dataclass
 class SoftDeleteMediaOp(BaseParallelOperation):
-    """Request for object deletion."""
+    """Soft media deletion."""
 
     item_uuid: UUID = DUMMY_UUID
+    media_type: Literal['content', 'preview', 'thumbnail', ''] = ''
     payload: bytes = b''
     name: str = 'soft_delete_media'
 
@@ -244,6 +272,7 @@ class SoftDeleteMediaOp(BaseParallelOperation):
             {
                 'requested_by': UUID(extras['requested_by']),
                 'item_uuid': UUID(extras['item_uuid']),
+                'media_type': extras['media_type'],
                 'extras': extras,
             }
         )
@@ -255,6 +284,14 @@ class SoftDeleteMediaOp(BaseParallelOperation):
         extras.update(
             {
                 'item_uuid': str(self.item_uuid),
+                'media_type': self.media_type,
             }
         )
         return extras
+
+
+@dataclass
+class HardDeleteMediaOp(SoftDeleteMediaOp):
+    """Hard media deletion."""
+
+    name: str = 'hard_delete_media'
