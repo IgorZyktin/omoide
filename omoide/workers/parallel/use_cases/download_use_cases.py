@@ -13,7 +13,7 @@ from omoide.workers.parallel.use_cases.base_use_case import BaseParallelWorkerUs
 LOG = custom_logging.get_logger(__name__)
 
 
-def download_media(
+def download_media(  # noqa: PLR0913
     data_folder: Path,
     media_type: str,
     owner_uuid: str,

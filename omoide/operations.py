@@ -97,14 +97,20 @@ class BaseOperation:
         self.ended_at = now
         self.status = OperationStatus.DONE
 
-    def mark_failed(self, exc: Exception) -> str:
+    def mark_updated(self) -> None:
+        """Update, but do not finish yet."""
+        now = pu.now()
+        self.updated_at = now
+        self.ended_at = now
+
+    def mark_failed(self, worker_name: str, exc: Exception) -> str:
         """Alter state to `failed`."""
         now = pu.now()
         self.updated_at = now
         self.ended_at = now
         self.status = OperationStatus.FAILED
         error = pu.exc_to_str(exc)
-        self.add_to_log(error)
+        self.add_to_log(f'Worker {worker_name}: {error}')
         return error
 
 

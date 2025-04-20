@@ -5,7 +5,11 @@ from pathlib import Path
 from typing import Annotated
 
 import nano_settings as ns
-import ujson
+
+
+def comma_separated(value: str) -> list[str]:
+    """Split value by commas."""
+    return [x.strip() for x in value.split(',')]
 
 
 @dataclass
@@ -13,6 +17,7 @@ class ParallelWorkerConfig(ns.BaseConfig):
     """Worker configuration."""
 
     db_url: ns.SecretStr
+    minimal_completion: Annotated[set[str], set, comma_separated]
 
     log_path: str = ''
     log_level: str = 'DEBUG'
@@ -26,7 +31,7 @@ class ParallelWorkerConfig(ns.BaseConfig):
     operation_delay: float = 0.1
     operation_deadline: float = 300.0
     input_batch: int = 100
-    supported_operations: Annotated[frozenset[str], frozenset, ujson.loads] = frozenset()
+    supported_operations: Annotated[frozenset[str], frozenset, comma_separated] = frozenset()
     data_folder: Path = Path('.')
     workers: int = 0
     max_workers: int = 5

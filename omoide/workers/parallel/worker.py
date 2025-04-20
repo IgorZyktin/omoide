@@ -66,7 +66,7 @@ class ParallelWorker(BaseWorker):
                 new_callable = await use_case.execute(operation)  # type: ignore [attr-defined]
                 await self.run_callable(new_callable)
             except Exception as exc:
-                error = operation.mark_failed(exc)
+                error = operation.mark_failed(self.name, exc)
                 LOG.exception(
                     '{operation} failed in {duration} because of {error}',
                     operation=operation,
@@ -74,7 +74,7 @@ class ParallelWorker(BaseWorker):
                     error=error,
                 )
             else:
-                operation.mark_done()
+                operation.mark_updated()
                 LOG.info(
                     '{operation} completed in {duration}',
                     operation=operation,
@@ -83,7 +83,11 @@ class ParallelWorker(BaseWorker):
             finally:
                 operation.processed_by.add(self.name)
                 async with self.mediator.database.transaction() as conn:
-                    await self.mediator.workers.save_parallel_operation(conn, operation)
+                    await self.mediator.workers.save_parallel_operation(
+                        conn=conn,
+                        operation=operation,
+                        minimal_completion=self.config.minimal_completion,
+                    )
 
     async def run_callable(self, new_callable: Callable) -> None:
         """Run operation in separate thread/process."""

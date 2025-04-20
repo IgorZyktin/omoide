@@ -81,7 +81,7 @@ class SerialWorker(BaseWorker):
             use_case = use_case_type(operation)
             await use_case.execute(operation)
         except Exception as exc:
-            error = operation.mark_failed(exc)
+            error = operation.mark_failed(self.name, exc)
             LOG.exception(
                 '{operation} failed in {duration} because of {error}',
                 operation=operation,

@@ -55,6 +55,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         operation: operations.BaseParallelOperation,
+        minimal_completion: set[str],
     ) -> int:
         """Save operation."""
 

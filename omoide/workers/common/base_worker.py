@@ -33,12 +33,12 @@ class BaseWorker(abc.ABC):
                     worker_name=self.name,
                 )
 
-        LOG.info('Worker {!r} started', self.name)
+        LOG.warning('Worker {!r} started', self.name)
 
     async def stop(self) -> None:
         """Start worker."""
         await self.mediator.database.disconnect()
-        LOG.info('Worker {!r} stopped', self.name)
+        LOG.warning('Worker {!r} stopped', self.name)
 
     async def register_signals(self) -> None:
         """Decide how we will stop."""
