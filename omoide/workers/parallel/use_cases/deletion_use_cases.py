@@ -38,7 +38,11 @@ class SoftDeleteMediaUseCase(BaseParallelWorkerUseCase):
     async def execute(self, operation: operations.SoftDeleteMediaOp) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, operation.item_uuid)
+            item = await self.mediator.items.get_by_uuid(
+                conn=conn,
+                uuid=operation.item_uuid,
+                read_deleted=True,
+            )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
 
             return partial(

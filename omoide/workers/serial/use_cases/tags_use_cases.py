@@ -6,14 +6,14 @@ from uuid import UUID
 from omoide import custom_logging
 from omoide import models
 from omoide import operations
-from omoide.workers.common.base_use_case import BaseWorkerUseCase
+from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildKnownTagsForAnonUseCase(BaseWorkerUseCase):
+class RebuildKnownTagsForAnonUseCase(BaseSerialWorkerUseCase):
     """Use case for rebuilding known tags for anon."""
 
     async def execute(self, request: operations.RebuildKnownTagsForAnonOp) -> None:
@@ -30,7 +30,7 @@ class RebuildKnownTagsForAnonUseCase(BaseWorkerUseCase):
             )
 
 
-class RebuildKnownTagsForUserUseCase(BaseWorkerUseCase):
+class RebuildKnownTagsForUserUseCase(BaseSerialWorkerUseCase):
     """Use case for rebuilding known tags for known user."""
 
     async def execute(self, operation: operations.RebuildKnownTagsForUserOp) -> None:
@@ -46,7 +46,7 @@ class RebuildKnownTagsForUserUseCase(BaseWorkerUseCase):
             )
 
 
-class RebuildKnownTagsForAllUseCase(BaseWorkerUseCase):
+class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
     """Use case for rebuilding known tags for all users."""
 
     async def execute(self, operation: operations.RebuildKnownTagsForAllOp) -> None:
@@ -76,7 +76,7 @@ class RebuildKnownTagsForAllUseCase(BaseWorkerUseCase):
         LOG.debug('Created serial operation {} (rebuilding known tags for anon)', operation_id)
 
 
-class RebuildComputedTagsForItemUseCase(BaseWorkerUseCase):
+class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
     """Update tags for item."""
 
     def __init__(self, config: SerialWorkerConfig, mediator: WorkerMediator) -> None:

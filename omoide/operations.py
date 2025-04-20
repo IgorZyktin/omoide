@@ -42,6 +42,7 @@ class BaseOperation:
     started_at: datetime | None = None
     ended_at: datetime | None = None
     log: str | None = None
+    payload: bytes = b''
 
     @classmethod
     def from_extras(
@@ -235,10 +236,38 @@ class RebuildPermissionsForItemOp(BaseSerialOperation):
 
 
 @dataclass
+class IntroduceItemOp(BaseSerialOperation):
+    """Operation for item introduction (adding into the system)."""
+
+    name: str = 'introduce_item'
+    item_uuid: UUID = DUMMY_UUID
+
+    @classmethod
+    def from_extras(
+        cls,
+        extras: dict[str, Any],
+        **kwargs: Any,
+    ) -> 'BaseOperation':
+        """Create from database record."""
+        kwargs.update(
+            {
+                'requested_by': UUID(extras['requested_by']),
+                'item_uuid': UUID(extras['item_uuid']),
+            }
+        )
+        return cls(**kwargs)
+
+    def dump_extras(self) -> dict[str, Any]:
+        """Convert extras to JSON."""
+        extras = super().dump_extras()
+        extras['item_uuid'] = str(self.item_uuid)
+        return extras
+
+
+@dataclass
 class BaseParallelOperation(BaseOperation):
     """Base class."""
 
-    payload: bytes = b''
     processed_by: set[str] = field(default_factory=set)
 
     @classmethod
@@ -264,7 +293,6 @@ class SoftDeleteMediaOp(BaseParallelOperation):
 
     item_uuid: UUID = DUMMY_UUID
     media_type: Literal['content', 'preview', 'thumbnail', ''] = ''
-    payload: bytes = b''
     name: str = 'soft_delete_media'
 
     @classmethod

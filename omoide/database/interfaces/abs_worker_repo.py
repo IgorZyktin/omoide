@@ -30,6 +30,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         names: Collection[str],
+        skip: set[int],
     ) -> operations.BaseSerialOperation | None:
         """Return next serial operation."""
 

@@ -5,12 +5,12 @@ from omoide import custom_logging
 from omoide import models
 from omoide import operations
 from omoide import utils
-from omoide.workers.common.base_use_case import BaseWorkerUseCase
+from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class RebuildPermissionsForItemUseCase(BaseWorkerUseCase):
+class RebuildPermissionsForItemUseCase(BaseSerialWorkerUseCase):
     """Use case for rebuilding permissions for an item."""
 
     async def execute(self, operation: operations.RebuildPermissionsForItemOp) -> None:

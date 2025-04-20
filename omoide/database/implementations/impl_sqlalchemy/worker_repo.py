@@ -56,6 +56,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         self,
         conn: AsyncConnection,
         names: Collection[str],
+        skip: set[int],
     ) -> operations.BaseSerialOperation | None:
         """Try locking next serial operation."""
         select_query = (
@@ -63,6 +64,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             .where(
                 db_models.SerialOperation.status == operations.OperationStatus.CREATED,
                 db_models.SerialOperation.name.in_(tuple(names)),
+                sa.not_(db_models.SerialOperation.name.in_(tuple(skip))),
             )
             .order_by(db_models.SerialOperation.id)
             .limit(1)

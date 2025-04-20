@@ -1,8 +1,5 @@
 """Repository that performs various operations on different objects."""
 
-from typing import Any
-
-import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -32,6 +29,7 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
                 started_at=operation.started_at,
                 ended_at=operation.ended_at,
                 log=operation.log,
+                payload=operation.payload,
             )
             .returning(db_models.SerialOperation.id)
         )
@@ -42,7 +40,7 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
     async def create_parallel_operation(
         self,
         conn: AsyncConnection,
-        operation: Any,
+        operation: operations.BaseParallelOperation,
         payload: bytes = b'',
     ) -> int:
         """Create parallel operation."""
@@ -51,14 +49,14 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
             .values(
                 name=operation.name,
                 status=operations.OperationStatus.CREATED,
-                extras=operation.model_dump(),
-                created_at=pu.now(),
-                updated_at=pu.now(),
-                started_at=None,
-                ended_at=None,
-                log=None,
-                payload=payload,
-                processed_by=[],
+                extras=operation.dump_extras(),
+                created_at=operation.created_at,
+                updated_at=operation.updated_at,
+                started_at=operation.started_at,
+                ended_at=operation.ended_at,
+                log=operation.log,
+                payload=operation.payload,
+                processed_by=operation.processed_by,
             )
             .returning(db_models.ParallelOperation.id)
         )

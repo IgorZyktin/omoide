@@ -21,5 +21,6 @@ class SerialWorkerConfig(ns.BaseConfig):
     name: str = 'serial-dev'
     short_delay: float = 0.0
     long_delay: float = 5.0
+    input_batch: int = 10
     output_batch: int = 100
     supported_operations: Annotated[frozenset[str], frozenset, ujson.loads] = frozenset()

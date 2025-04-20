@@ -751,6 +751,7 @@ class SerialOperation(Base):
     ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
+    payload: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
 
 
 class ParallelOperation(Base):
@@ -781,7 +782,6 @@ class ParallelOperation(Base):
     ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
-
     payload: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
 
     # array fields ------------------------------------------------------------

@@ -32,6 +32,7 @@ def upgrade() -> None:
         sa.Column('started_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('ended_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('log', sa.Text(), nullable=True),
+        sa.Column('payload', postgresql.BYTEA(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
     )
 

@@ -1,5 +1,7 @@
 """Worker that performs operations one by one."""
 
+import python_utilz as pu
+
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import operations
@@ -35,6 +37,13 @@ class SerialWorker(BaseWorker):
 
     async def execute(self) -> bool:
         """Perform workload."""
+        try:
+            return await self._execute()
+        except Exception as exc:
+            LOG.exception('Serial worker failed because of {error}', error=pu.exc_to_str(exc))
+
+    async def _execute(self) -> bool:
+        """Perform workload."""
         if not self.has_lock:
             async with self.mediator.database.transaction() as conn:
                 lock = await self.mediator.workers.take_serial_lock(
@@ -48,24 +57,29 @@ class SerialWorker(BaseWorker):
             LOG.info('Worker {!r} took serial lock', self.config.name)
             self.has_lock = True
 
-        async with self.mediator.database.transaction() as conn:
-            operation = await self.mediator.workers.get_next_serial_operation(
-                conn=conn,
-                names=self.config.supported_operations,
-            )
+        skip: set[int] = set()
+        for _ in range(self.config.input_batch):
+            async with self.mediator.database.transaction() as conn:
+                operation = await self.mediator.workers.get_next_serial_operation(
+                    conn=conn,
+                    names=self.config.supported_operations,
+                    skip=skip,
+                )
 
-        if not operation:
-            return False
+            if not operation:
+                return False
 
-        async with self.mediator.database.transaction() as conn:
-            locked = await self.mediator.workers.lock_serial_operation(
-                conn=conn,
-                operation=operation,
-                worker_name=self.config.name,
-            )
+            async with self.mediator.database.transaction() as conn:
+                locked = await self.mediator.workers.lock_serial_operation(
+                    conn=conn,
+                    operation=operation,
+                    worker_name=self.config.name,
+                )
 
-        if not locked:
-            return False
+            if locked:
+                break
+
+            skip.add(operation.id)
 
         await self.execute_operation(operation)
         return True
@@ -78,7 +92,7 @@ class SerialWorker(BaseWorker):
             if use_case_type is None:
                 raise exceptions.UnknownSerialOperationError(name=operation.name)  # noqa: TRY301
 
-            use_case = use_case_type(operation)
+            use_case = use_case_type(self.config, self.mediator)
             await use_case.execute(operation)
         except Exception as exc:
             error = operation.mark_failed(self.name, exc)
