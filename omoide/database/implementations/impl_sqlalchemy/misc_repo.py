@@ -41,7 +41,6 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
         self,
         conn: AsyncConnection,
         operation: operations.BaseParallelOperation,
-        payload: bytes = b'',
     ) -> int:
         """Create parallel operation."""
         stmt = (

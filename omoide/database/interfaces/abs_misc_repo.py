@@ -24,6 +24,5 @@ class AbsMiscRepo(Generic[ConnectionT], abc.ABC):
         self,
         conn: ConnectionT,
         operation: Any,
-        payload: bytes = b'',
     ) -> int:
         """Create parallel operation."""

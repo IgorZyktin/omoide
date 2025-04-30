@@ -2,7 +2,6 @@
 
 import abc
 
-from omoide import operations
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
 
@@ -14,7 +13,3 @@ class BaseSerialWorkerUseCase(abc.ABC):
         """Initialize instance."""
         self.config = config
         self.mediator = mediator
-
-    @abc.abstractmethod
-    async def execute(self, operation: operations.BaseSerialOperation) -> None:
-        """Perform workload."""

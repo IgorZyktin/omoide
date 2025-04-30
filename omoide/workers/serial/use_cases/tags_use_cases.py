@@ -6,9 +6,9 @@ from uuid import UUID
 from omoide import custom_logging
 from omoide import models
 from omoide import operations
-from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
+from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 
 LOG = custom_logging.get_logger(__name__)
 

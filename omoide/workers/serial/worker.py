@@ -41,6 +41,7 @@ class SerialWorker(BaseWorker):
             return await self._execute()
         except Exception as exc:
             LOG.exception('Serial worker failed because of {error}', error=pu.exc_to_str(exc))
+        return False
 
     async def _execute(self) -> bool:
         """Perform workload."""
@@ -81,7 +82,7 @@ class SerialWorker(BaseWorker):
 
             skip.add(operation.id)
 
-        await self.execute_operation(operation)
+        await self.execute_operation(operation)  # type: ignore [arg-type]
         return True
 
     async def execute_operation(self, operation: operations.BaseSerialOperation) -> None:
@@ -93,7 +94,7 @@ class SerialWorker(BaseWorker):
                 raise exceptions.UnknownSerialOperationError(name=operation.name)  # noqa: TRY301
 
             use_case = use_case_type(self.config, self.mediator)
-            await use_case.execute(operation)
+            await use_case.execute(operation)  # type: ignore [attr-defined]
         except Exception as exc:
             error = operation.mark_failed(self.name, exc)
             LOG.exception(
