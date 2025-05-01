@@ -1,16 +1,24 @@
 """Web level API models."""
 
 import base64
+from dataclasses import fields
+from datetime import datetime
 import math
+from typing import Any
 from typing import Self
 from uuid import UUID
 
+from fastapi import Request
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
 from omoide import const
+from omoide import custom_logging
 from omoide import limits
+from omoide import models
+
+LOG = custom_logging.get_logger(__name__)
 
 
 class ItemUpdateInput(BaseModel):
@@ -85,3 +93,33 @@ class PermissionsInput(BaseModel):
     apply_to_parents: bool = False
     apply_to_children: bool = True
     apply_to_children_as: const.ApplyAs = const.ApplyAs.DELTA
+
+
+def extract_features(request: Request) -> models.Features:
+    """Extract features from headers."""
+    headers = {key.lower(): value for key, value in request.headers.items()}
+    params: dict[str, Any] = {}
+
+    for field in fields(models.Features):
+        suffix = field.name.replace('_', '-')
+        name = f'x-feature-{suffix}'
+        value = headers.get(name)
+
+        if value is None:
+            params[field.name] = None
+        elif value.lower() == 'true':
+            params[field.name] = True
+        elif value.lower() == 'false':
+            params[field.name] = False
+        elif value.lower() == 'null':
+            params[field.name] = None
+        elif field.name == 'last_modified':
+            try:
+                params[field.name] = datetime.fromisoformat(value)
+            except ValueError:
+                LOG.exception('Incorrect format for `last_modified` header')
+                params[field.name] = None
+        else:
+            params[field.name] = value
+
+    return models.Features(**params)

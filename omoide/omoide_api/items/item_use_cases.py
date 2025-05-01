@@ -402,52 +402,28 @@ class DeleteItemUseCase(BaseItemUseCase):
         return switch_to
 
 
-class BaseUploadUseCase(BaseAPIUseCase):
-    """Base class for uploading."""
-
-    media_type: const.MEDIA_TYPE
+class UploadItemUseCase(BaseAPIUseCase):
+    """Use case for processing image binary content."""
 
     async def execute(
         self,
         user: models.User,
         item_uuid: UUID,
-        binary_content: bytes,
-        ext: str,
-    ) -> None:
+        file: models.NewFile,
+    ) -> int | None:
         """Execute."""
-        do_what = f'upload {self.media_type}'
-        self.mediator.policy.ensure_registered(user, to=do_what)
+        operation_id = None
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=do_what)
+            self.mediator.policy.ensure_owner(user, item, to='upload media to this item')
 
-            LOG.info('{} is uploading {} for {}', user, self.media_type, item)
+            print(file.filename)  # noqa: T201
+            print(file.features)  # noqa: T201
+            print(file.content_type)  # noqa: T201
+            print(file.ext)  # noqa: T201
 
-            await self.mediator.object_storage.save(
-                item=item,
-                media_type=self.media_type,
-                binary_content=binary_content,
-                ext=ext,
-            )
-
-
-class UploadContentForItemUseCase(BaseUploadUseCase):
-    """Use case for content uploading."""
-
-    media_type: const.MEDIA_TYPE = const.CONTENT
-
-
-class UploadPreviewForItemUseCase(BaseUploadUseCase):
-    """Use case for preview uploading."""
-
-    media_type: const.MEDIA_TYPE = const.PREVIEW
-
-
-class UploadThumbnailForItemUseCase(BaseUploadUseCase):
-    """Use case for thumbnail uploading."""
-
-    media_type: const.MEDIA_TYPE = const.THUMBNAIL
+        return operation_id
 
 
 class DownloadCollectionUseCase(BaseItemUseCase):

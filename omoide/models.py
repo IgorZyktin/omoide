@@ -505,3 +505,26 @@ class Duplicate:
 
     signature: str
     examples: list[DuplicateExample]
+
+
+@dataclass
+class Features:
+    """Special parameters for upload."""
+
+    extract_exif: bool | None = None
+    exif_time_backoff: bool | None = None
+    exif_year: bool | None = None
+    exif_month_en: bool | None = None
+    exif_month_ru: bool | None = None
+    last_modified: datetime | None = None
+
+
+@dataclass
+class NewFile:
+    """Raw file uploaded by user."""
+
+    content: bytes
+    content_type: str
+    filename: str
+    ext: str
+    features: Features

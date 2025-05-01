@@ -49,7 +49,6 @@ async def app_upload(  # noqa: PLR0913
         'user': user,
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
-        'endpoint': request.url_for('api_upload_item', parent_uuid=parent_uuid),
         'current_item': item,
         'users_with_permission': users_with_permission,
     }

@@ -250,13 +250,13 @@ function getNonEmptyValues(array) {
 }
 
 function jumpToBottom() {
-    // scroll to the bottom
+    // Scroll to the bottom of the page
     const scrollingElement = (document.scrollingElement || document.body);
     scrollingElement.scrollTop = scrollingElement.scrollHeight;
 }
 
 function jumpToTop(targetId) {
-    // scroll to the top
+    // Scroll to the top of the page or to given element
     const scrollingElement = (document.scrollingElement || document.body);
     if (!targetId) {
         scrollingElement.scrollTop = 0;
