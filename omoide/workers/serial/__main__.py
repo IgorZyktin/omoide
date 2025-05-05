@@ -12,12 +12,7 @@ from omoide.workers.serial.cfg import SerialWorkerConfig
 from omoide.workers.serial.worker import SerialWorker
 
 
-def main() -> None:
-    """Entry point."""
-    asyncio.run(_main())
-
-
-async def _main() -> None:
+async def main() -> None:
     """Async entry point."""
     config = ns.from_env(SerialWorkerConfig, env_prefix='omoide_serial_worker')
 
@@ -46,4 +41,4 @@ async def _main() -> None:
 
 
 if __name__ == '__main__':
-    asyncio.run(_main())
+    asyncio.run(main())

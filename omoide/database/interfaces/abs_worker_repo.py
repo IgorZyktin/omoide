@@ -52,13 +52,23 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Save operation."""
 
     @abc.abstractmethod
-    async def save_parallel_operation(
+    async def save_parallel_operation_as_complete(
         self,
         conn: ConnectionT,
-        operation: operations.BaseParallelOperation,
+        operation: operations.Operation,
         minimal_completion: set[str],
+        processed_by: str,
     ) -> int:
-        """Save operation."""
+        """Finish operation."""
+
+    @abc.abstractmethod
+    async def save_parallel_operation_as_failed(
+        self,
+        conn: ConnectionT,
+        operation: operations.Operation,
+        error: str,
+    ) -> int:
+        """Finish operation."""
 
     @abc.abstractmethod
     async def get_next_parallel_batch(

@@ -30,7 +30,7 @@ class OperationStatus(enum.StrEnum):
 
 
 @dataclass
-class BaseOperation:
+class Operation:
     """Base class."""
 
     requested_by: UUID
@@ -50,7 +50,7 @@ class BaseOperation:
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         requested_by = UUID(extras['requested_by'])
         return cls(requested_by=requested_by, extras=extras, **kwargs)
@@ -105,19 +105,9 @@ class BaseOperation:
         self.updated_at = now
         self.ended_at = now
 
-    def mark_failed(self, worker_name: str, exc: Exception) -> str:
-        """Alter state to `failed`."""
-        now = pu.now()
-        self.updated_at = now
-        self.ended_at = now
-        self.status = OperationStatus.FAILED
-        error = pu.exc_to_str(exc)
-        self.add_to_log(f'Worker {worker_name}: {error}')
-        return error
-
 
 @dataclass
-class BaseSerialOperation(BaseOperation):
+class BaseSerialOperation(Operation):
     """Base class."""
 
     worker_name: str | None = None
@@ -142,7 +132,7 @@ class RebuildKnownTagsForUserOp(BaseSerialOperation):
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         requested_by = UUID(extras['requested_by'])
         user_uuid = UUID(extras['user_uuid'])
@@ -172,7 +162,7 @@ class RebuildComputedTagsForItemOp(BaseSerialOperation):
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         requested_by = UUID(extras['requested_by'])
         item_uuid = UUID(extras['item_uuid'])
@@ -203,7 +193,7 @@ class RebuildPermissionsForItemOp(BaseSerialOperation):
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         kwargs.update(
             {
@@ -249,7 +239,7 @@ class UploadItemOp(BaseSerialOperation):
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         kwargs.update(
             {
@@ -298,7 +288,7 @@ class UploadItemOp(BaseSerialOperation):
 
 
 @dataclass
-class BaseParallelOperation(BaseOperation):
+class BaseParallelOperation(Operation):
     """Base class."""
 
     processed_by: set[str] = field(default_factory=set)
@@ -308,7 +298,7 @@ class BaseParallelOperation(BaseOperation):
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         requested_by = UUID(extras['requested_by'])
         return cls(requested_by=requested_by, extras=extras, **kwargs)
@@ -333,7 +323,7 @@ class SoftDeleteMediaOp(BaseParallelOperation):
         cls,
         extras: dict[str, Any],
         **kwargs: Any,
-    ) -> 'BaseOperation':
+    ) -> 'Operation':
         """Create from database record."""
         kwargs.update(
             {

@@ -1,31 +1,23 @@
 """Worker that performs operations in parallel."""
 
 import asyncio
+import os
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-import os
 
 import nano_settings as ns
-import typer
 
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
-from omoide.workers.common.mediator import WorkerMediator
+from omoide.workers.common.worker import Worker
+from omoide.workers.parallel import loop_logic
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
-from omoide.workers.parallel.worker import ParallelWorker
-
-app = typer.Typer()
+from omoide.workers.parallel.mediator import ParallelWorkerMediator
 
 LOG = custom_logging.get_logger(__name__)
 
 
-@app.command()
-def main() -> None:
-    """Entry point."""
-    asyncio.run(_main())
-
-
-async def _main() -> None:
+async def main() -> None:
     """Async entry point."""
     config = ns.from_env(ParallelWorkerConfig, env_prefix='omoide_parallel_worker')
 
@@ -36,27 +28,36 @@ async def _main() -> None:
         rotation=config.log_rotation,
     )
 
-    mediator = WorkerMediator(
+    mediator = ParallelWorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
         items=sa.ItemsRepo(),
-        tags=sa.TagsRepo(),
         users=sa.UsersRepo(),
         workers=sa.WorkersRepo(),
         misc=sa.MiscRepo(),
+        signatures=sa.SignaturesRepo(),
     )
 
-    workers = config.workers or os.cpu_count() or 1
-    workers = min(workers, config.max_workers)
+    cores = config.workers or os.cpu_count() or 1
+    cores = min(cores, config.max_workers)
 
     executor: ProcessPoolExecutor | ThreadPoolExecutor
     if config.fork_type == 'process':
-        executor = ProcessPoolExecutor(max_workers=workers)
+        executor = ProcessPoolExecutor(max_workers=cores)
     else:
-        executor = ThreadPoolExecutor(max_workers=workers)
+        executor = ThreadPoolExecutor(max_workers=cores)
 
-    worker = ParallelWorker(config, mediator, name=config.name, executor=executor)
-    await worker.run(short_delay=config.short_delay, long_delay=config.long_delay)
+    worker = Worker(
+        database=mediator.database,
+        workers=mediator.workers,
+        name=config.name,
+        loop_callable=loop_logic.ParallelOperationsProcessor(config, mediator, executor),
+    )
+
+    try:
+        await worker.run(short_delay=config.short_delay, long_delay=config.long_delay)
+    finally:
+        executor.shutdown()
 
 
 if __name__ == '__main__':
-    app()
+    asyncio.run(main())

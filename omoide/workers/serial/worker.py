@@ -5,7 +5,7 @@ import python_utilz as pu
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import operations
-from omoide.workers.common.base_worker import BaseWorker
+from omoide.workers.common.worker import BaseWorker
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
 from omoide.workers.serial.use_cases.mapping import NAMES_TO_USE_CASES

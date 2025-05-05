@@ -1,34 +1,43 @@
 """General worker class for all workers."""
 
-import abc
 import asyncio
 import functools
 import os
 import signal
+from typing import Callable
 
 from omoide import custom_logging
-from omoide.workers.common.mediator import WorkerMediator
+from omoide.database.interfaces import AbsDatabase
+from omoide.database.interfaces.abs_worker_repo import AbsWorkersRepo
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseWorker(abc.ABC):
+class Worker:
     """General worker class for all workers."""
 
-    def __init__(self, mediator: WorkerMediator, name: str) -> None:
+    def __init__(
+        self,
+        database: AbsDatabase,
+        workers: AbsWorkersRepo,
+        name: str,
+        loop_callable: Callable,
+    ) -> None:
         """Initialize instance."""
-        self.mediator = mediator
+        self.database = database
+        self.workers = workers
         self.name = name
+        self.loop_callable = loop_callable
         self.stopping = False
 
     async def start(self, register: bool = True) -> None:
         """Start worker."""
         await self.register_signals()
-        await self.mediator.database.connect()
+        await self.database.connect()
 
         if register:
-            async with self.mediator.database.transaction() as conn:
-                await self.mediator.workers.register_worker(
+            async with self.database.transaction() as conn:
+                await self.workers.register_worker(
                     conn=conn,
                     worker_name=self.name,
                 )
@@ -37,7 +46,7 @@ class BaseWorker(abc.ABC):
 
     async def stop(self) -> None:
         """Start worker."""
-        await self.mediator.database.disconnect()
+        await self.database.disconnect()
         LOG.warning('Worker {!r} stopped', self.name)
 
     async def register_signals(self) -> None:
@@ -53,7 +62,7 @@ class BaseWorker(abc.ABC):
             string = signal.strsignal(sig)
             LOG.info('Worker {!r} caught signal {}, stopping', self.name, string)
             loop.remove_signal_handler(sig)
-            self.mediator.stopping = True
+            self.stopping = True
 
         loop.add_signal_handler(
             signal.SIGINT,
@@ -85,6 +94,6 @@ class BaseWorker(abc.ABC):
         finally:
             await self.stop()
 
-    @abc.abstractmethod
     async def execute(self) -> bool:
         """Perform workload."""
+        return await self.loop_callable()
