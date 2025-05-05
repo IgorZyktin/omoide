@@ -11,6 +11,13 @@ const SCROLL_TOP_ID = "scroll-top"
 const SCROLL_BOTTOM_ID = "scroll-bottom"
 const MEDIA_ID = "media"
 
+const OWNER_UUID_ID = "owner-uuid"
+const PARENT_UUID_ID = "parent-uuid"
+const GLOBAL_TAGS_ID = "item-tags"
+const GLOBAL_PERMISSIONS_ID = "item-permissions"
+const GLOBAL_PROGRESS_ID = "global-progress"
+const AFTER_UPLOAD_ID = "after-upload"
+
 const SEND_TIMEOUT = 20000 // 20 seconds
 
 function toggleExif(checkbox) {
@@ -86,62 +93,77 @@ function addNewFiles(source, parentUUid) {
     }
 }
 
-function createFileCard(file, parentUUid, number) {
+function createFileCard(file, parentUUID, number) {
     // Create new card that stores file upload progress
-    return {
-        uuid: "c43d3b1c-e726-4ed6-b8b9-03cb10841c1e",  // FIXME - make this dynamic
-        parentUuid: parentUUid,
+    let card = {
+        uuid: null,
+        parentUuid: parentUUID,
         file: file,
         element: new FileCardElement(file, number),
         number: number,
         previewIsVisible: false,
+        localTags: [],
+        localPermissions: [],
 
-        send: function () {
-            const xhr = new XMLHttpRequest()
-            xhr.timeout = SEND_TIMEOUT
+        send: async function (thisCard) {
+            let promise = new Promise(resolve => {
+                const xhr = new XMLHttpRequest()
+                xhr.timeout = SEND_TIMEOUT
 
-            xhr.upload.addEventListener('loadstart', (event) => {
-                this.element.progress.value = 0
-                this.element.progress.max = event.total
-            });
+                xhr.upload.addEventListener('loadstart', (event) => {
+                    this.element.progress.value = 0
+                    this.element.progress.max = event.total
+                });
 
-            xhr.upload.addEventListener('progress', (event) => {
-                this.element.progress.value = event.loaded;
-                this.element.progress.textContent = `Uploading (${(
-                 (event.loaded / event.total) *
-                 100
-                ).toFixed(2)}%)…`;
-            });
+                xhr.upload.addEventListener('progress', (event) => {
+                    this.element.progress.value = event.loaded;
+                    this.element.progress.textContent = `Uploading (${(
+                        (event.loaded / event.total) *
+                        100
+                    ).toFixed(2)}%)…`;
+                });
 
-            xhr.upload.addEventListener("loaded", (event) => {
-                this.element.progress.value = 100
-                this.element.progress.max = 100
-            });
+                xhr.upload.addEventListener("loaded", (event) => {
+                    this.element.progress.value = 100
+                    this.element.progress.max = 100
+                });
 
-            function errorAction(event) {
-                alert('Failed!')
-                //{#progressBar.classList.remove("visible");#}
-                //{#log.textContent = `Upload failed: ${event.type}`;#}
-            }
+               xhr.onload = function(e) {
+                 resolve(xhr.response);
+               };
+               xhr.onerror = function () {
+                 resolve(undefined);
+                 thisCard.element.log.textContent = "Upload failed"
+                 console.error(`An error occurred during the XMLHttpRequest for ${thisCard.uuid}`)
+               };
 
-            xhr.upload.addEventListener('error', errorAction);
-            xhr.upload.addEventListener('abort', errorAction);
-            xhr.upload.addEventListener('timeout', errorAction);
+                const fileData = new FormData();
+                fileData.append("file", file);
 
-            const fileData = new FormData();
-            fileData.append("file", file);
+                xhr.open("PUT", `${ITEMS_ENDPOINT}/${this.uuid}/upload`, true)
 
-            xhr.open("PUT", `${ITEMS_ENDPOINT}/${this.uuid}/upload`, true);
-
-            let features = getFeatures()
-            for (const [key, value] of Object.entries(features)) {
-                xhr.setRequestHeader(`X-Feature-${key.replaceAll('_', '-')}`, value)
-            }
-            xhr.setRequestHeader('X-Feature-Last-Modified', this.file.lastModifiedDate.toISOString())
-            xhr.send(fileData);
-            return xhr
+                let features = getFeatures()
+                for (const [key, value] of Object.entries(features)) {
+                    xhr.setRequestHeader(`X-Feature-${key.replaceAll('_', '-')}`, value)
+                }
+                xhr.setRequestHeader('X-Feature-Last-Modified', this.file.lastModifiedDate.toISOString())
+                xhr.send(fileData);
+                return xhr
+            })
+            return await promise
         },
     }
+
+    card.element.tagsArea.addEventListener("change", function () {
+        card.localTags = splitLines(card.element.tagsArea.value)
+    })
+
+    card.element.permissionsArea.addEventListener("change", function () {
+        card.localPermissions = extractAllUUIDs(splitLines(
+            card.element.permissionsArea.value
+        ))
+    })
+    return card
 }
 
 class FileCardElement {
@@ -169,7 +191,7 @@ class FileCardElement {
         this.right.classList.add("upload-lines")
         this.div.append(this.right)
 
-        this.label = document.createElement("p")
+        this.label = document.createElement("h4")
         this.label.innerHTML = file.name
         this.right.append(this.label)
 
@@ -191,6 +213,9 @@ class FileCardElement {
         this.permissionsArea.rows = 5
         this.permissionsLabel.append(this.permissionsArea)
         this.right.append(this.permissionsLabel)
+
+        this.log = document.createElement("div");
+        this.div.append(this.log)
 
         this.delete = document.createElement("a")
         this.delete.innerHTML = "Delete"
@@ -222,17 +247,97 @@ class FileCardElement {
         }
         this.previewIsVisible = !this.previewIsVisible
     }
+
+    disable () {
+        // Make nested elements disabled
+        this.tagsArea.disabled = true
+        this.permissionsArea.disabled = true
+        this.delete.style.display = "none"
+    }
 }
 
-function uploadAllFiles() {
-    // Perform uploading
-    // TODO - get uuid for every item
+async function createItems() {
+    // Bulk item creation
+    let ownerUUID = document.getElementById(OWNER_UUID_ID).value
+    let parentUUID = document.getElementById(PARENT_UUID_ID).value
+    let globalTags = splitLines(document.getElementById(GLOBAL_TAGS_ID).value)
+    let globalPermissions = extractAllUUIDs(
+        splitLines(document.getElementById(GLOBAL_PERMISSIONS_ID).value)
+    )
+
+    let arrayForSending = []
     for (let card of CARDS) {
-        card.send()
+        let localPermissions = []
+        for (const uuid of [...globalPermissions, ...card.localPermissions]) {
+            localPermissions.push({uuid: uuid, name: ''})
+        }
+        arrayForSending.push({
+            uuid: null,
+            owner_uuid: ownerUUID,
+            parent_uuid: parentUUID,
+            name: '',
+            is_collection: false,
+            tags: [...globalTags, ...card.localTags],
+            permissions: localPermissions,
+        })
+    }
+
+    let promise = new Promise(resolve => {
+        const xhr = new XMLHttpRequest()
+        xhr.timeout = SEND_TIMEOUT
+        xhr.responseType = "json";
+
+       xhr.onload = function(e) {
+         resolve(xhr.response);
+         for (let i = 0; i < xhr.response["items"].length; i ++) {
+            CARDS[i].uuid = xhr.response["items"][i]["uuid"]
+         }
+       };
+
+       xhr.onerror = function () {
+         resolve(undefined);
+         console.error("Failed to create items")
+       };
+
+        xhr.open("POST", `${ITEMS_ENDPOINT}/bulk`, true)
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify(arrayForSending))
+        return xhr
+    })
+    return await promise
+}
+
+async function uploadAllFiles() {
+    // Perform uploading
+    let globalProgress = document.getElementById(GLOBAL_PROGRESS_ID).value
+    let parentUUID = document.getElementById(PARENT_UUID_ID).value
+
+    let step = 0
+    let progress = 0
+    if (CARDS.length) {
+        step = CARDS.length / 100
+    }
+
+    await createItems()
+
+    for (let card of CARDS) {
+        if (card.uuid) {
+            await card.send(card)
+            progress += step
+            globalProgress.value = progress
+        } else {
+            console.log(`Failed to upload ${card.file.name}, no UUID set`)
+        }
+    }
+
+    globalProgress.value = 0
+
+    for (let card of CARDS) {
+        card.element.disable()
     }
     CARDS.length = 0
-    document.getElementById(MEDIA_ID).replaceChildren()
-    hideNavButtons()
-    document.getElementById("upload-input").value = null;
-    // TODO - move to uploaded items or stay here
+    document.getElementById("upload-input").value = null
+    if (document.getElementById(AFTER_UPLOAD_ID).value === 'parent') {
+        relocateWithAim(`/browse/${parentUUID}`)
+    }
 }

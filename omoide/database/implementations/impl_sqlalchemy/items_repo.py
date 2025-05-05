@@ -50,7 +50,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         if not item_id:
             return -1
 
-        if values.get('number') is None:
+        if values.get('number', -1) < 0:
             # NOTE: Initially use item id as a number if it was not given initially
             update_stmt = (
                 sa.update(db_models.Item).where(db_models.Item.id == item_id).values(number=item_id)

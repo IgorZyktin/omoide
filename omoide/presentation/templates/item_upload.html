@@ -5,10 +5,6 @@
     <script type="text/javascript"
             src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
     <script type="text/javascript"
-            src="{{ request.url_for('static', path='thirdparty/image-blob-reduce.min.js') }}"></script>
-    <script type="text/javascript"
-            src="{{ request.url_for('static', path='thirdparty/exif-js.min.js') }}"></script>
-    <script type="text/javascript"
             src="{{ request.url_for('static', path='item_upload.js?' + version) }}"></script>
 {% endblock %}
 
@@ -16,9 +12,9 @@
     <div class="narrow-block">
         <h1>Uploading media</h1>
 
-        <label for="parent_uuid">Owner of the item:</label>
+        <label for="owner-uuid">Owner of the item:</label>
         <div style="display: flex; flex-direction: row; align-items: center">
-            <input id="owner_uuid"
+            <input id="owner-uuid"
                    type="text"
                    value="{{ current_item.owner_uuid }}"
                    disabled
@@ -33,9 +29,9 @@
         </div>
         <div id="copy-alerts-owner"></div>
 
-        <label for="parent_uuid">Parent item:</label>
+        <label for="parent-uuid">Parent item:</label>
         <div style="display: flex; flex-direction: row; align-items: center">
-            <input id="parent_uuid"
+            <input id="parent-uuid"
                    type="text"
                    value="{{ current_item.uuid }}"
                    disabled
@@ -50,22 +46,22 @@
         </div>
         <div id="copy-alerts-parent"></div>
 
-        <div id="parent_thumbnail" class="parent_thumbnail">
+        <div id="parent-thumbnail" class="parent_thumbnail">
             {{ render_thumbnail_for_item(request, current_item, "", aim_wrapper) }}
         </div>
 
-        <label for="after_upload">After upload:</label>
-        <select id="after_upload">
+        <label for="after-upload">After upload:</label>
+        <select id="after-upload">
             <option value="parent">Go browse result</option>
             <option value="nothing">Do nothing (stay here)</option>
         </select>
 
-        <label for="item_tags">Tags for every new item (one tag per line):<br>
-            <textarea id="item_tags" rows="10"></textarea>
+        <label for="item-tags">Tags for every new item (one tag per line):<br>
+            <textarea id="item-tags" rows="10"></textarea>
         </label>
 
-        <label for="item_permissions">Permissions (one user per line):<br>
-            <textarea id="item_permissions" rows="10">
+        <label for="item-permissions">Permissions (one user per line):<br>
+            <textarea id="item-permissions" rows="10">
                 {%- for user in users_with_permission -%}
                     {{ user.uuid | string + ' ' + user.name + '\n' }}{% endfor -%}</textarea>
         </label>
@@ -111,6 +107,7 @@
                onclick="uploadAllFiles()"
                value="Process media">
 
+        <progress id="global-progress" value=0 max=100></progress>
         <div id="global-status"></div>
 
     </div>
