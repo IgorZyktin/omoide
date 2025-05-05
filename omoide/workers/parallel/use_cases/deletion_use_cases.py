@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
+from uuid import UUID
 
 import python_utilz as pu
 
@@ -32,15 +33,15 @@ def soft_delete_media(
         old_path.rename(new_path)
 
 
-class SoftDeleteMediaUseCase(BaseParallelWorkerUseCase):
+class SoftDeleteUseCase(BaseParallelWorkerUseCase):
     """Use case for soft deleting media."""
 
-    async def execute(self, operation: operations.SoftDeleteMediaOp) -> Callable:
+    async def execute(self, operation: operations.ParallelOperation) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(
                 conn=conn,
-                uuid=operation.item_uuid,
+                uuid=UUID(operation.extras['item_uuid']),
                 read_deleted=True,
             )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
@@ -48,7 +49,7 @@ class SoftDeleteMediaUseCase(BaseParallelWorkerUseCase):
             return partial(
                 soft_delete_media,
                 self.config.data_folder,
-                operation.media_type,
+                operation.extras['media_type'],
                 str(owner.uuid),
                 str(item.uuid),
                 item.content_ext or '',
@@ -70,19 +71,23 @@ def hard_delete_media(
     old_path.unlink()
 
 
-class HardDeleteMediaUseCase(BaseParallelWorkerUseCase):
+class HardDeleteUseCase(BaseParallelWorkerUseCase):
     """Use case for hard deleting media."""
 
-    async def execute(self, operation: operations.SoftDeleteMediaOp) -> Callable:
+    async def execute(self, operation: operations.ParallelOperation) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, operation.item_uuid)
+            item = await self.mediator.items.get_by_uuid(
+                conn=conn,
+                uuid=UUID(operation.extras['item_uuid']),
+                read_deleted=True,
+            )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
 
             return partial(
                 hard_delete_media,
                 self.config.data_folder,
-                operation.media_type,
+                operation.extras['media_type'],
                 str(owner.uuid),
                 str(item.uuid),
                 item.content_ext or '',

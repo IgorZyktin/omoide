@@ -44,10 +44,10 @@ class ParallelOperationsProcessor:
 
         return await self.execute_batch(batch)
 
-    async def execute_batch(self, batch: list[operations.Operation]) -> bool:
+    async def execute_batch(self, batch: list[operations.ParallelOperation]) -> bool:
         """Perform workload."""
         did_something = False
-        futures: dict[concurrent.futures.Future, operations.Operation] = {}
+        futures: dict[concurrent.futures.Future, operations.ParallelOperation] = {}
 
         for operation in batch:
             use_case_type = NAMES_TO_USE_CASES.get(operation.name)
@@ -56,27 +56,30 @@ class ParallelOperationsProcessor:
                 LOG.error('Unknown parallel operation type: {!r}', operation.name)
                 continue
 
-            try:
-                use_case = use_case_type(self.config, self.mediator)
-                new_callable = await use_case.execute(operation)
-                future = self.executor.submit(new_callable)
-            except Exception as exc:
-                error = pu.exc_to_str(exc)
-                LOG.exception(
-                    '{operation} failed in {duration} because of {error}',
-                    operation=operation,
-                    duration=operation.hr_duration,
-                    error=error,
-                )
-                async with self.mediator.database.transaction() as conn:
+            async with self.mediator.database.transaction() as conn:
+                try:
+                    use_case = use_case_type(self.config, self.mediator)
+                    new_callable = await use_case.execute(operation)
+                    future = self.executor.submit(new_callable)
+                except Exception as exc:
+                    error = pu.exc_to_str(exc)
+                    LOG.exception(
+                        'Failed operation after {duration} because of {error}: {operation}',
+                        operation=operation,
+                        duration=operation.hr_duration,
+                        error=error,
+                    )
                     await self.mediator.workers.save_parallel_operation_as_failed(
                         conn=conn,
                         operation=operation,
                         error=error,
                     )
-
-            else:
-                futures[future] = operation
+                else:
+                    futures[future] = operation
+                    await self.mediator.workers.save_parallel_operation_as_started(
+                        conn=conn,
+                        operation=operation,
+                    )
 
         for future in concurrent.futures.as_completed(futures):
             operation = futures.get(future)
@@ -88,6 +91,12 @@ class ParallelOperationsProcessor:
                 _ = future.result()
             except Exception as exc:
                 error = pu.exc_to_str(exc)
+                LOG.exception(
+                    'Failed operation after {duration} because of {error}: {operation}',
+                    operation=operation,
+                    duration=operation.hr_duration,
+                    error=error,
+                )
                 async with self.mediator.database.transaction() as conn:
                     await self.mediator.workers.save_parallel_operation_as_failed(
                         conn=conn,
@@ -95,6 +104,11 @@ class ParallelOperationsProcessor:
                         error=error,
                     )
             else:
+                LOG.info(
+                    'Finished operation in {duration}: {operation}',
+                    operation=operation,
+                    duration=operation.hr_duration,
+                )
                 async with self.mediator.database.transaction() as conn:
                     await self.mediator.workers.save_parallel_operation_as_complete(
                         conn=conn,

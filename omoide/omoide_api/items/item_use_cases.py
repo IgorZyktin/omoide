@@ -395,7 +395,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                     await self.mediator.tags.decrement_known_tags_user(conn, user, computed_tags)
 
                 member_metainfo = await self.mediator.meta.get_by_item(conn, member)
-                await self.mediator.object_storage.soft_delete(user, member)
+                await self.mediator.object_storage.soft_delete(user, owner, member)
                 await self.mediator.meta.soft_delete(conn, member_metainfo)
                 await self.mediator.items.soft_delete(conn, member)
 

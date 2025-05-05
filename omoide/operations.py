@@ -61,29 +61,6 @@ class Operation:
         extras.update(self.extras)
         return extras
 
-    def __str__(self) -> str:
-        """Return textual representation."""
-        return f'<{type(self).__name__} id={self.id} {self.name!r} {self.extras}>'
-
-    @property
-    def duration(self) -> float:
-        """Get execution duration."""
-        if self.started_at is None:
-            seconds = (self.updated_at - self.created_at).total_seconds()
-        elif self.ended_at is None:
-            seconds = (self.started_at - self.created_at).total_seconds()
-        else:
-            seconds = (self.ended_at - self.created_at).total_seconds()
-        return seconds
-
-    @property
-    def hr_duration(self) -> str:
-        """Return human-readable duration."""
-        if (seconds := self.duration) > 1:
-            duration = pu.human_readable_time(seconds)
-        else:
-            duration = f'{seconds:0.3f} sec.'
-        return duration
 
     def add_to_log(self, text: str) -> None:
         """Store additional text."""
@@ -287,75 +264,54 @@ class UploadItemOp(BaseSerialOperation):
         return extras
 
 
-@dataclass
-class BaseParallelOperation(Operation):
-    """Base class."""
+class OperationsMixin:
+    """Mixin that adds handi features."""
 
-    processed_by: set[str] = field(default_factory=set)
+    id: int
+    name: str
+    extras: dict[str, Any]
+    created_at: datetime
+    started_at: datetime
+    updated_at: datetime
+    ended_at: datetime
 
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        requested_by = UUID(extras['requested_by'])
-        return cls(requested_by=requested_by, extras=extras, **kwargs)
+    def __str__(self) -> str:
+        """Return textual representation."""
+        return f'<{type(self).__name__} id={self.id} {self.name!r} {self.extras}>'
 
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras: dict[str, Any] = {'requested_by': str(self.requested_by)}
-        extras.update(self.extras)
-        return extras
+    @property
+    def duration(self) -> float:
+        """Get execution duration."""
+        if self.started_at is None:
+            seconds = (self.updated_at - self.created_at).total_seconds()
+        elif self.ended_at is None:
+            seconds = (self.started_at - self.created_at).total_seconds()
+        else:
+            seconds = (self.ended_at - self.created_at).total_seconds()
+        return seconds
 
-
-@dataclass
-class SoftDeleteMediaOp(BaseParallelOperation):
-    """Soft media deletion."""
-
-    item_uuid: UUID = DUMMY_UUID
-    media_type: Literal['content', 'preview', 'thumbnail', ''] = ''
-    name: str = 'soft_delete_media'
-
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        kwargs.update(
-            {
-                'requested_by': UUID(extras['requested_by']),
-                'item_uuid': UUID(extras['item_uuid']),
-                'media_type': extras['media_type'],
-                'extras': extras,
-            }
-        )
-        return cls(**kwargs)
-
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras = super().dump_extras()
-        extras.update(
-            {
-                'item_uuid': str(self.item_uuid),
-                'media_type': self.media_type,
-            }
-        )
-        return extras
+    @property
+    def hr_duration(self) -> str:
+        """Return human-readable duration."""
+        if (seconds := self.duration) > 1:
+            duration = pu.human_readable_time(seconds)
+        else:
+            duration = f'{seconds: 0.3f} sec.'
+        return duration
 
 
 @dataclass
-class HardDeleteMediaOp(SoftDeleteMediaOp):
-    """Hard media deletion."""
+class ParallelOperation(OperationsMixin):
+    """ParallelOperation."""
 
-    name: str = 'hard_delete_media'
-
-
-@dataclass
-class DownloadMediaOp(SoftDeleteMediaOp):
-    """Save media to the storage."""
-
-    name: str = 'download_media'
+    id: int
+    name: str
+    status: OperationStatus
+    extras: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    started_at: datetime | None
+    ended_at: datetime | None
+    log: str | None
+    payload: bytes
+    processed_by: set[str]

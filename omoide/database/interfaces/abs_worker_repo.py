@@ -52,10 +52,18 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         """Save operation."""
 
     @abc.abstractmethod
+    async def save_parallel_operation_as_started(
+        self,
+        conn: ConnectionT,
+        operation: operations.ParallelOperation,
+    ) -> int:
+        """Start operation."""
+
+    @abc.abstractmethod
     async def save_parallel_operation_as_complete(
         self,
         conn: ConnectionT,
-        operation: operations.Operation,
+        operation: operations.ParallelOperation,
         minimal_completion: set[str],
         processed_by: str,
     ) -> int:
@@ -65,7 +73,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
     async def save_parallel_operation_as_failed(
         self,
         conn: ConnectionT,
-        operation: operations.Operation,
+        operation: operations.ParallelOperation,
         error: str,
     ) -> int:
         """Finish operation."""
@@ -77,5 +85,5 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         worker_name: str,
         names: Collection[str],
         batch_size: int,
-    ) -> list[operations.BaseParallelOperation]:
+    ) -> list[operations.ParallelOperation]:
         """Return next parallel operation batch."""

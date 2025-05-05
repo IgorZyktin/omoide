@@ -144,10 +144,55 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         response = await conn.execute(query)
         return int(response.rowcount)
 
+    async def save_parallel_operation_as_started(
+        self,
+        conn: AsyncConnection,
+        operation: operations.ParallelOperation,
+    ) -> int:
+        """Start operation."""
+        select_query = sa.select(db_models.ParallelOperation).where(
+            db_models.ParallelOperation.id == operation.id
+        )
+
+        actual_operation = (await conn.execute(select_query)).fetchone()
+
+        if actual_operation is None:
+            LOG.warning('Lost track of parallel operation {}', operation)
+            return 0
+
+        if actual_operation.status == operations.OperationStatus.FAILED:
+            return 0
+
+        if actual_operation.status not in (operations.OperationStatus.DONE,
+                                           operations.OperationStatus.FAILED):
+            status = operations.OperationStatus.PROCESSING
+        else:
+            status = actual_operation.status
+
+        now = pu.now()
+
+        query = (
+            sa.update(db_models.ParallelOperation)
+            .where(db_models.ParallelOperation.id == operation.id)
+            .values(
+                status=status,
+                started_at=now,
+                updated_at=now,
+            )
+        )
+        response = await conn.execute(query)
+        rows_changed = int(response.rowcount)
+
+        if not rows_changed:
+            LOG.warning('Lost track of parallel operation {}', operation)
+            return 0
+
+        return rows_changed
+
     async def save_parallel_operation_as_complete(
         self,
         conn: AsyncConnection,
-        operation: operations.Operation,
+        operation: operations.ParallelOperation,
         minimal_completion: set[str],
         processed_by: str,
     ) -> int:
@@ -162,14 +207,15 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             LOG.warning('Lost track of parallel operation {}', operation)
             return 0
 
-        if actual_operation.status == operations.OperationStatus.FAILED:
+        if actual_operation.status == operations.OperationStatus.FAILED.value:
             return 0
 
         processed_by = set(actual_operation.processed_by) | {processed_by}
 
-        if (actual_operation == operations.OperationStatus.CREATED
+        if (actual_operation.status in (operations.OperationStatus.CREATED.value,
+                                        operations.OperationStatus.PROCESSING.value)
                 and processed_by >= minimal_completion):
-            status = operations.OperationStatus.DONE
+            status = operations.OperationStatus.DONE.value
         else:
             status = actual_operation.status
 
@@ -197,7 +243,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
     async def save_parallel_operation_as_failed(
         self,
         conn: AsyncConnection,
-        operation: operations.Operation,
+        operation: operations.ParallelOperation,
         error: str,
     ) -> int:
         select_query = sa.select(db_models.ParallelOperation).where(
@@ -210,7 +256,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             LOG.warning('Lost track of parallel operation {}', operation)
             return 0
 
-        if actual_operation.status == operations.OperationStatus.FAILED:
+        if actual_operation.status == operations.OperationStatus.FAILED.value:
             return 0
 
         now = pu.now()
@@ -240,12 +286,16 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         worker_name: str,
         names: Collection[str],
         batch_size: int,
-    ) -> list[operations.Operation]:
+    ) -> list[operations.ParallelOperation]:
         """Return next parallel operation batch."""
         select_query = (
             sa.select(db_models.ParallelOperation)
             .where(
-                db_models.ParallelOperation.status == operations.OperationStatus.CREATED,
+                sa.or_(
+                    db_models.ParallelOperation.status == operations.OperationStatus.CREATED.value,
+                    db_models.ParallelOperation.status
+                    == operations.OperationStatus.PROCESSING.value,
+                ),
                 db_models.ParallelOperation.name.in_(tuple(names)),
                 sa.not_(db_models.ParallelOperation.processed_by.any_() == worker_name),
             )
@@ -256,8 +306,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         response = (await conn.execute(select_query)).fetchall()
 
         return [
-            operations.Operation(
-                requested_by=UUID(each.extras['requested_by']),
+            operations.ParallelOperation(
                 id=each.id,
                 name=each.name,
                 status=operations.OperationStatus(each.status),
@@ -268,5 +317,6 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
                 ended_at=each.ended_at,
                 log=each.log,
                 payload=each.payload,
+                processed_by=each.processed_by,
             ) for each in response
         ]

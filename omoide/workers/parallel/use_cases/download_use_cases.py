@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
+from uuid import UUID
 
 import python_utilz as pu
 
@@ -40,19 +41,23 @@ def download_media(  # noqa: PLR0913
     path.write_bytes(payload)
 
 
-class DownloadMediaUseCase(BaseParallelWorkerUseCase):
+class DownloadUseCase(BaseParallelWorkerUseCase):
     """Use case for media downloading."""
 
-    async def execute(self, operation: operations.SoftDeleteMediaOp) -> Callable:
+    async def execute(self, operation: operations.ParallelOperation) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, operation.item_uuid)
+            item = await self.mediator.items.get_by_uuid(
+                conn=conn,
+                uuid=UUID(operation.extras['item_uuid']),
+                read_deleted=True,
+            )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
 
             return partial(
                 download_media,
                 self.config.data_folder,
-                operation.media_type,
+                operation.extras['media_type'],
                 str(owner.uuid),
                 str(item.uuid),
                 item.content_ext or '',

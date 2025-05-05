@@ -23,6 +23,8 @@ class AbsMiscRepo(Generic[ConnectionT], abc.ABC):
     async def create_parallel_operation(
         self,
         conn: ConnectionT,
-        operation: Any,
+        name: str,
+        extras: dict[str, Any],
+        payload: bytes = b'',
     ) -> int:
         """Create parallel operation."""

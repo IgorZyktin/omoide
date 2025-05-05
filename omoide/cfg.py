@@ -12,7 +12,7 @@ import ujson
 class Metrics(ns.BaseConfig):
     """Metrics settings."""
 
-    enabled: Annotated[bool, ns.looks_like_boolean] = False
+    enabled: Annotated[bool, ns.Boolean()] = False
     server_name: str = 'omoide'
 
 
