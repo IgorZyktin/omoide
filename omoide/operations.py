@@ -1,8 +1,9 @@
 """Remote operations."""
-import enum
+
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+import enum
 from typing import Any
 from typing import Literal
 from uuid import UUID
@@ -254,6 +255,7 @@ class UploadItemOp(BaseSerialOperation):
             {
                 'requested_by': UUID(extras['requested_by']),
                 'item_uuid': UUID(extras['item_uuid']),
+                'extras': extras,
                 'file': models.NewFile(
                     content=b'',
                     content_type=extras['file']['content_type'],
@@ -269,7 +271,7 @@ class UploadItemOp(BaseSerialOperation):
                             extras['file']['features']['last_modified']
                         ),
                     ),
-                )
+                ),
             }
         )
         return cls(**kwargs)

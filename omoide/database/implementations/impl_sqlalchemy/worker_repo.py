@@ -89,6 +89,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
                     started_at=response.started_at,
                     ended_at=response.ended_at,
                     log=response.log,
+                    payload=response.payload,
                 )
 
         raise exceptions.UnknownSerialOperationError(name=response.name)

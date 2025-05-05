@@ -3,18 +3,15 @@
 import asyncio
 
 import nano_settings as ns
-import typer
 
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
+from omoide.object_storage.implementations.file_client import FileObjectStorageClient
 from omoide.workers.common.mediator import WorkerMediator
 from omoide.workers.serial.cfg import SerialWorkerConfig
 from omoide.workers.serial.worker import SerialWorker
 
-app = typer.Typer()
 
-
-@app.command()
 def main() -> None:
     """Entry point."""
     asyncio.run(_main())
@@ -33,11 +30,15 @@ async def _main() -> None:
 
     mediator = WorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
+        exif=sa.EXIFRepo(),
         items=sa.ItemsRepo(),
+        meta=sa.MetaRepo(),
+        misc=sa.MiscRepo(),
+        object_storage=FileObjectStorageClient(config.data_folder, config.prefix_size),
+        signatures=sa.SignaturesRepo(),
         tags=sa.TagsRepo(),
         users=sa.UsersRepo(),
         workers=sa.WorkersRepo(),
-        misc=sa.MiscRepo(),
     )
 
     worker = SerialWorker(config, mediator, name=config.name)
@@ -45,4 +46,4 @@ async def _main() -> None:
 
 
 if __name__ == '__main__':
-    app()
+    asyncio.run(_main())

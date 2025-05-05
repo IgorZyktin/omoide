@@ -87,6 +87,11 @@ class SerialWorker(BaseWorker):
 
     async def execute_operation(self, operation: operations.BaseSerialOperation) -> None:
         """Perform workload."""
+        LOG.info(
+            '{operation} started',
+            operation=operation,
+            duration=operation.hr_duration,
+        )
         try:
             use_case_type = NAMES_TO_USE_CASES.get(operation.name)
 

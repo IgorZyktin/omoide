@@ -1,6 +1,7 @@
 """Worker configuration."""
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Annotated
 
 import nano_settings as ns
@@ -12,6 +13,9 @@ class SerialWorkerConfig(ns.BaseConfig):
     """Worker configuration."""
 
     db_url: ns.SecretStr
+
+    data_folder: Path
+    prefix_size: int
 
     log_path: str = ''
     log_level: str = 'DEBUG'

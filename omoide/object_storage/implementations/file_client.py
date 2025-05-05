@@ -108,6 +108,10 @@ class FileObjectStorageClient:
             / f'{item.uuid}.{item.content_ext}'
         )
 
+    def save_content(self, item: models.Item, payload: bytes) -> None:
+        """Save data."""
+        self._save_data(self.get_content_path(item), payload)
+
     def get_preview_path(self, item: models.Item) -> Path | None:
         """Return path co content."""
         if item.preview_ext is None:
@@ -120,6 +124,10 @@ class FileObjectStorageClient:
             / f'{item.uuid}.{item.preview_ext}'
         )
 
+    def save_preview(self, item: models.Item, payload: bytes) -> None:
+        """Save data."""
+        self._save_data(self.get_preview_path(item), payload)
+
     def get_thumbnail_path(self, item: models.Item) -> Path | None:
         """Return path co content."""
         if item.thumbnail_ext is None:
@@ -131,3 +139,15 @@ class FileObjectStorageClient:
             / str(item.uuid)[: self.prefix_size]
             / f'{item.uuid}.{item.thumbnail_ext}'
         )
+
+    def save_thumbnail(self, item: models.Item, payload: bytes) -> None:
+        """Save data."""
+        self._save_data(self.get_thumbnail_path(item), payload)
+
+    @staticmethod
+    def _save_data(path: Path | None, payload: bytes) -> None:
+        """Save data."""
+        if path:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, mode='wb') as fd:
+                fd.write(payload)
