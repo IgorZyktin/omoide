@@ -1,9 +1,8 @@
 """Remote operations."""
-
+import enum
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
-import enum
 from typing import Any
 from typing import Literal
 from uuid import UUID
@@ -11,6 +10,7 @@ from uuid import UUID
 import python_utilz as pu
 
 from omoide import const
+from omoide import models
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 
@@ -236,11 +236,12 @@ class RebuildPermissionsForItemOp(BaseSerialOperation):
 
 
 @dataclass
-class IntroduceItemOp(BaseSerialOperation):
-    """Operation for item introduction (adding into the system)."""
+class UploadItemOp(BaseSerialOperation):
+    """Operation for item upload."""
 
-    name: str = 'introduce_item'
+    name: str = 'upload_item'
     item_uuid: UUID = DUMMY_UUID
+    file: models.NewFile = field(default_factory=models.NewFile)
 
     @classmethod
     def from_extras(
@@ -253,6 +254,22 @@ class IntroduceItemOp(BaseSerialOperation):
             {
                 'requested_by': UUID(extras['requested_by']),
                 'item_uuid': UUID(extras['item_uuid']),
+                'file': models.NewFile(
+                    content=b'',
+                    content_type=extras['file']['content_type'],
+                    filename=extras['file']['filename'],
+                    ext=extras['file']['ext'],
+                    features=models.Features(
+                        extract_exif=extras['file']['features']['extract_exif'],
+                        exif_time_backoff=extras['file']['features']['exif_time_backoff'],
+                        exif_year=extras['file']['features']['exif_year'],
+                        exif_month_en=extras['file']['features']['exif_month_en'],
+                        exif_month_ru=extras['file']['features']['exif_month_ru'],
+                        last_modified=datetime.fromisoformat(
+                            extras['file']['features']['last_modified']
+                        ),
+                    ),
+                )
             }
         )
         return cls(**kwargs)
@@ -261,6 +278,20 @@ class IntroduceItemOp(BaseSerialOperation):
         """Convert extras to JSON."""
         extras = super().dump_extras()
         extras['item_uuid'] = str(self.item_uuid)
+        extras['file'] = {
+            'content': '',
+            'content_type': self.file.content_type,
+            'filename': self.file.filename,
+            'ext': self.file.ext,
+            'features': {
+                'extract_exif': self.file.features.extract_exif,
+                'exif_time_backoff': self.file.features.exif_time_backoff,
+                'exif_year': self.file.features.exif_year,
+                'exif_month_en': self.file.features.exif_month_en,
+                'exif_month_ru': self.file.features.exif_month_ru,
+                'last_modified': self.file.features.last_modified.isoformat(),
+            },
+        }
         return extras
 
 

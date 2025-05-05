@@ -4,6 +4,7 @@ import abc
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
@@ -523,8 +524,8 @@ class Features:
 class NewFile:
     """Raw file uploaded by user."""
 
-    content: bytes
-    content_type: str
-    filename: str
-    ext: str
-    features: Features
+    content: bytes = b''
+    content_type: str = ''
+    filename: str = ''
+    ext: str = ''
+    features: Features = field(default_factory=Features)

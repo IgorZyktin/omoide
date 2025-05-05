@@ -412,16 +412,19 @@ class UploadItemUseCase(BaseAPIUseCase):
         file: models.NewFile,
     ) -> int | None:
         """Execute."""
-        operation_id = None
-
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             self.mediator.policy.ensure_owner(user, item, to='upload media to this item')
 
-            print(file.filename)  # noqa: T201
-            print(file.features)  # noqa: T201
-            print(file.content_type)  # noqa: T201
-            print(file.ext)  # noqa: T201
+            operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                operation=operations.UploadItemOp(
+                    requested_by=user.uuid,
+                    item_uuid=item.uuid,
+                    file=file,
+                    payload=file.content,
+                ),
+            )
 
         return operation_id
 
