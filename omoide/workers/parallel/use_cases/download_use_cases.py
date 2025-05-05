@@ -7,6 +7,7 @@ from uuid import UUID
 
 import python_utilz as pu
 
+from omoide import const
 from omoide import custom_logging
 from omoide import operations
 from omoide.workers.parallel.use_cases.base_use_case import BaseParallelWorkerUseCase
@@ -54,13 +55,20 @@ class DownloadUseCase(BaseParallelWorkerUseCase):
             )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
 
+            if operation.extras['media_type'] == const.CONTENT:
+                ext = item.content_ext or ''
+            elif operation.extras['media_type'] == const.PREVIEW:
+                ext = item.preview_ext or ''
+            else:
+                ext = item.thumbnail_ext or ''
+
             return partial(
                 download_media,
                 self.config.data_folder,
                 operation.extras['media_type'],
                 str(owner.uuid),
                 str(item.uuid),
-                item.content_ext or '',
+                ext,
                 self.config.prefix_size,
                 operation.payload,
             )

@@ -270,7 +270,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
                 status=status,
                 updated_at=now,
                 ended_at=now,
-                processed_by=sorted(processed_by),
+                processed_by=sorted(processed_by_set),
             )
         )
         response = await conn.execute(query)

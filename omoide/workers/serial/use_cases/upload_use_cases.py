@@ -68,6 +68,8 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             signature_md5 = hashlib.md5(operation.payload).hexdigest()
             await self.mediator.signatures.save_md5_signature(conn, item, signature_md5)
 
+            await self.mediator.items.save(conn, item)
+
     async def process_content(
         self,
         conn: Any,
