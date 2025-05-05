@@ -150,6 +150,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
                 updated_at=now,
                 ended_at=now,
                 processed_by=[processed_by],
+                payload=b'',
             )
         )
         response = await conn.execute(query)
@@ -271,6 +272,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
                 updated_at=now,
                 ended_at=now,
                 processed_by=sorted(processed_by_set),
+                payload=b'',
             )
         )
         response = await conn.execute(query)
