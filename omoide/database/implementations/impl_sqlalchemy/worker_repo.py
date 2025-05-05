@@ -60,7 +60,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         conn: AsyncConnection,
         names: Collection[str],
         skip: set[int],
-    ) -> operations.BaseSerialOperation | None:
+    ) -> operations.Operation | None:
         """Try locking next serial operation."""
         select_query = (
             sa.select(db_models.SerialOperation)
@@ -78,30 +78,24 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         if response is None:
             return None
 
-        for cls in operations.BaseSerialOperation.__subclasses__():
-            if cls.name == response.name and issubclass(cls, operations.BaseSerialOperation):
-                # TODO - mark operation as failed if got an exception here
-                return cls.from_extras(  # type: ignore [return-value]
-                    id=response.id,
-                    name=response.name,
-                    worker_name=response.worker_name,
-                    status=operations.OperationStatus(response.status),
-                    extras=response.extras,
-                    created_at=response.created_at,
-                    updated_at=response.updated_at,
-                    started_at=response.started_at,
-                    ended_at=response.ended_at,
-                    log=response.log,
-                    payload=response.payload,
-                )
-
-        raise exceptions.UnknownSerialOperationError(name=response.name)
+        return operations.Operation(
+            id=response.id,
+            name=response.name,
+            status=operations.OperationStatus(response.status),
+            extras=response.extras,
+            created_at=response.created_at,
+            updated_at=response.updated_at,
+            started_at=response.started_at,
+            ended_at=response.ended_at,
+            log=response.log,
+            payload=response.payload,
+            processed_by=response.processed_by,
+        )
 
     async def lock_serial_operation(
         self,
         conn: AsyncConnection,
-        operation: operations.BaseSerialOperation,
-        worker_name: str,
+        operation: operations.Operation,
     ) -> bool:
         """Lock operation, return True on success."""
         now = pu.now()
@@ -109,7 +103,6 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         update_query = (
             sa.update(db_models.SerialOperation)
             .values(
-                worker_name=worker_name,
                 status=operations.OperationStatus.PROCESSING,
                 updated_at=now,
                 started_at=now,
@@ -120,24 +113,65 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         response = await conn.execute(update_query)
         return bool(response.rowcount)
 
-    async def save_serial_operation(
+    async def save_serial_operation_as_started(
         self,
         conn: AsyncConnection,
-        operation: operations.BaseSerialOperation,
+        operation: operations.Operation,
     ) -> int:
         """Save operation."""
+        now = pu.now()
+
         query = (
             sa.update(db_models.SerialOperation)
             .where(db_models.SerialOperation.id == operation.id)
             .values(
-                worker_name=operation.worker_name,
-                status=operation.status,
-                extras=operation.extras,
-                created_at=operation.created_at,
-                updated_at=operation.updated_at,
-                started_at=operation.started_at,
-                ended_at=operation.ended_at,
-                log=operation.log,
+                status=operations.OperationStatus.PROCESSING.value,
+                updated_at=now,
+                started_at=now,
+            )
+        )
+        response = await conn.execute(query)
+        return int(response.rowcount)
+
+    async def save_serial_operation_as_completed(
+        self,
+        conn: AsyncConnection,
+        operation: operations.Operation,
+        processed_by: str,
+    ) -> int:
+        """Save operation."""
+        now = pu.now()
+
+        query = (
+            sa.update(db_models.SerialOperation)
+            .where(db_models.SerialOperation.id == operation.id)
+            .values(
+                status=operations.OperationStatus.DONE.value,
+                updated_at=now,
+                ended_at=now,
+                processed_by=[processed_by],
+            )
+        )
+        response = await conn.execute(query)
+        return int(response.rowcount)
+
+    async def save_serial_operation_as_failed(
+        self,
+        conn: AsyncConnection,
+        operation: operations.Operation,
+        error: str,
+    ) -> int:
+        """Save operation."""
+        now = pu.now()
+
+        query = (
+            sa.update(db_models.SerialOperation)
+            .where(db_models.SerialOperation.id == operation.id)
+            .values(
+                status=operations.OperationStatus.FAILED.value,
+                updated_at=now,
+                ended_at=now,
+                log=error,
             )
         )
         response = await conn.execute(query)
@@ -146,7 +180,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
     async def save_parallel_operation_as_started(
         self,
         conn: AsyncConnection,
-        operation: operations.ParallelOperation,
+        operation: operations.Operation,
     ) -> int:
         """Start operation."""
         select_query = sa.select(db_models.ParallelOperation).where(
@@ -177,8 +211,8 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             .where(db_models.ParallelOperation.id == operation.id)
             .values(
                 status=status,
-                started_at=now,
                 updated_at=now,
+                started_at=now,
             )
         )
         response = await conn.execute(query)
@@ -193,10 +227,10 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
     async def save_parallel_operation_as_complete(
         self,
         conn: AsyncConnection,
-        operation: operations.ParallelOperation,
+        operation: operations.Operation,
         minimal_completion: set[str],
         processed_by: str,
-    ) -> int:
+    ) -> tuple[int, bool]:
         """Save operation."""
         select_query = sa.select(db_models.ParallelOperation).where(
             db_models.ParallelOperation.id == operation.id
@@ -206,13 +240,14 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
 
         if actual_operation is None:
             LOG.warning('Lost track of parallel operation {}', operation)
-            return 0
+            return 0, False
 
         if actual_operation.status == operations.OperationStatus.FAILED.value:
-            return 0
+            return 0, False
 
         processed_by_set = set(actual_operation.processed_by) | {processed_by}
 
+        is_done = False
         if (
             actual_operation.status
             in (
@@ -222,6 +257,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             and processed_by_set >= minimal_completion
         ):
             status = operations.OperationStatus.DONE.value
+            is_done = True
         else:
             status = actual_operation.status
 
@@ -242,14 +278,14 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
 
         if not rows_changed:
             LOG.warning('Lost track of parallel operation {}', operation)
-            return 0
+            return 0, False
 
-        return rows_changed
+        return rows_changed, is_done
 
     async def save_parallel_operation_as_failed(
         self,
         conn: AsyncConnection,
-        operation: operations.ParallelOperation,
+        operation: operations.Operation,
         error: str,
     ) -> int:
         """Save operation."""
@@ -293,7 +329,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         worker_name: str,
         names: Collection[str],
         batch_size: int,
-    ) -> list[operations.ParallelOperation]:
+    ) -> list[operations.Operation]:
         """Return next parallel operation batch."""
         select_query = (
             sa.select(db_models.ParallelOperation)
@@ -313,7 +349,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         response = (await conn.execute(select_query)).fetchall()
 
         return [
-            operations.ParallelOperation(
+            operations.Operation(
                 id=each.id,
                 name=each.name,
                 status=operations.OperationStatus(each.status),

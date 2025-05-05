@@ -1,7 +1,10 @@
 """Use cases for item introduction."""
 
 import hashlib
+from io import BytesIO
 import math
+from typing import Any
+from uuid import UUID
 import zlib
 
 from PIL import Image
@@ -38,22 +41,23 @@ def get_new_image_dimensions(
 class UploadItemUseCase(BaseSerialWorkerUseCase):
     """Use case for introducing an item."""
 
-    async def execute(self, operation: operations.UploadItemOp) -> None:
+    async def execute(self, operation: operations.Operation) -> None:
         """Perform workload."""
+        item_uuid = UUID(operation.extras['item_uuid'])
+
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, operation.item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
 
-            self.process_content(item, metainfo, operation)
-            self.process_preview(item, metainfo)
-            self.process_thumbnail(item, metainfo)
+            await self.process_content(conn, owner, item, metainfo, operation)
+            await self.process_preview(conn, owner, item, metainfo, operation)
+            await self.process_thumbnail(conn, owner, item, metainfo, operation)
 
-            if operation.file.features.extract_exif:
-                exif = self.process_exif(item, operation)
+            if operation.extras['features']['extract_exif']:
+                exif = await self.process_exif(item, operation)
                 if exif:
                     await self.mediator.exif.create(conn, item, exif)
-
-            # TODO - set file creation time
 
             metainfo.updated_at = pu.now()
             await self.mediator.meta.save(conn, metainfo)
@@ -64,84 +68,117 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             signature_md5 = hashlib.md5(operation.payload).hexdigest()
             await self.mediator.signatures.save_md5_signature(conn, item, signature_md5)
 
-            item.status = models.Status.AVAILABLE
-            await self.mediator.items.save(conn, item)
-
-    def process_content(
+    async def process_content(
         self,
+        conn: Any,
+        owner: models.User,
         item: models.Item,
         metainfo: models.Metainfo,
-        operation: operations.UploadItemOp,
+        operation: operations.Operation,
     ) -> None:
         """Process and save content."""
-        item.content_ext = operation.file.ext
+        item.content_ext = operation.extras['ext']
 
-        self.mediator.object_storage.save_content(item, operation.payload)
-        path = self.mediator.object_storage.get_content_path(item)
+        stream = BytesIO(operation.payload)
+        with Image.open(stream) as img:
+            metainfo.content_width, metainfo.content_height = img.size
+            metainfo.content_size = len(operation.payload)
+            metainfo.content_type = operation.extras['content_type']
 
-        if path:
-            LOG.info('Saving content: {}', path)
-            with Image.open(path) as img:
-                metainfo.content_width, metainfo.content_height = img.size
-                metainfo.content_size = len(operation.payload)
-                metainfo.content_type = operation.file.content_type
+        await self.mediator.misc.create_parallel_operation(
+            conn=conn,
+            name='download',
+            extras={
+                'requested_by': operation.extras['requested_by'],
+                'owner_uuid': str(owner.uuid),
+                'item_uuid': str(item.uuid),
+                'media_type': const.CONTENT,
+            },
+            payload=operation.payload,
+        )
 
-    def process_preview(
+    async def process_preview(
         self,
+        conn: Any,
+        owner: models.User,
         item: models.Item,
         metainfo: models.Metainfo,
+        operation: operations.Operation,
     ) -> None:
         """Process and save preview."""
         item.preview_ext = 'jpg'
-        content_path = self.mediator.object_storage.get_content_path(item)
-        preview_path = self.mediator.object_storage.get_preview_path(item)
 
-        if content_path and preview_path:
-            LOG.info('Saving preview: {}', content_path)
-            with Image.open(content_path) as img:
-                old_width, old_height = img.size
-                new_width, new_height = get_new_image_dimensions(
-                    old_width, old_height, const.PREVIEW_SIZE
-                )
-                new_img = img.resize((new_width, new_height))
-                new_img = new_img.filter(ImageFilter.SHARPEN)
-                preview_path.parent.mkdir(parents=True, exist_ok=True)
-                new_img.save(preview_path)
+        stream = BytesIO(operation.payload)
+        with Image.open(stream) as img:
+            old_width, old_height = img.size
+            new_width, new_height = get_new_image_dimensions(
+                old_width, old_height, const.PREVIEW_SIZE
+            )
+            new_img = img.resize((new_width, new_height))
+            new_img = new_img.filter(ImageFilter.SHARPEN)
 
-                metainfo.preview_width, metainfo.preview_height = new_width, new_height
-                new_payload = new_img.tobytes()
-                metainfo.preview_size = len(new_payload)
+            if not new_img.mode == 'RGB':
+                new_img = new_img.convert('RGB')
 
-    def process_thumbnail(
+            metainfo.preview_width, metainfo.preview_height = new_width, new_height
+            new_payload = new_img.tobytes()
+            metainfo.preview_size = len(new_payload)
+
+        await self.mediator.misc.create_parallel_operation(
+            conn=conn,
+            name='download',
+            extras={
+                'requested_by': operation.extras['requested_by'],
+                'owner_uuid': str(owner.uuid),
+                'item_uuid': str(item.uuid),
+                'media_type': const.PREVIEW,
+            },
+            payload=new_payload,
+        )
+
+    async def process_thumbnail(
         self,
+        conn: Any,
+        owner: models.User,
         item: models.Item,
         metainfo: models.Metainfo,
+        operation: operations.Operation,
     ) -> None:
         """Process and save thumbnail."""
         item.thumbnail_ext = 'jpg'
-        content_path = self.mediator.object_storage.get_content_path(item)
-        thumbnail_path = self.mediator.object_storage.get_thumbnail_path(item)
 
-        if content_path and thumbnail_path:
-            LOG.info('Saving thumbnail: {}', content_path)
-            with Image.open(content_path) as img:
-                old_width, old_height = img.size
-                new_width, new_height = get_new_image_dimensions(
-                    old_width, old_height, const.THUMBNAIL_SIZE
-                )
-                new_img = img.resize((new_width, new_height))
-                new_img = new_img.filter(ImageFilter.SHARPEN)
-                thumbnail_path.parent.mkdir(parents=True, exist_ok=True)
-                new_img.save(thumbnail_path)
+        stream = BytesIO(operation.payload)
+        with Image.open(stream) as img:
+            old_width, old_height = img.size
+            new_width, new_height = get_new_image_dimensions(
+                old_width, old_height, const.THUMBNAIL_SIZE
+            )
+            new_img = img.resize((new_width, new_height))
+            new_img = new_img.filter(ImageFilter.SHARPEN)
 
-                metainfo.thumbnail_width, metainfo.thumbnail_height = new_width, new_height
-                new_payload = new_img.tobytes()
-                metainfo.thumbnail_size = len(new_payload)
+            if not new_img.mode == 'RGB':
+                new_img = new_img.convert('RGB')
 
-    def process_exif(
+            metainfo.thumbnail_width, metainfo.thumbnail_height = new_width, new_height
+            new_payload = new_img.tobytes()
+            metainfo.thumbnail_size = len(new_payload)
+
+        await self.mediator.misc.create_parallel_operation(
+            conn=conn,
+            name='download',
+            extras={
+                'requested_by': operation.extras['requested_by'],
+                'owner_uuid': str(owner.uuid),
+                'item_uuid': str(item.uuid),
+                'media_type': const.THUMBNAIL,
+            },
+            payload=new_payload,
+        )
+
+    async def process_exif(
         self,
         item: models.Item,
-        operation: operations.UploadItemOp,
+        operation: operations.Operation,
     ) -> dict[str, str]:
         """Extract exif data from content."""
         del item

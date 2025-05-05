@@ -741,7 +741,6 @@ class SerialOperation(Base):
     # fields ------------------------------------------------------------------
 
     name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
-    worker_name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=True)
     status: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
 
@@ -752,6 +751,10 @@ class SerialOperation(Base):
 
     log: Mapped[str] = mapped_column(sa.Text, nullable=True)
     payload: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
+
+    # array fields ------------------------------------------------------------
+
+    processed_by: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
 
 
 class ParallelOperation(Base):

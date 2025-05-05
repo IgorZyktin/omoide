@@ -44,7 +44,7 @@ def download_media(  # noqa: PLR0913
 class DownloadUseCase(BaseParallelWorkerUseCase):
     """Use case for media downloading."""
 
-    async def execute(self, operation: operations.ParallelOperation) -> Callable:
+    async def execute(self, operation: operations.Operation) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(

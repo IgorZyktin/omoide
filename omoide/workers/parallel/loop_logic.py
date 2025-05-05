@@ -1,12 +1,14 @@
-"""Worker that performs operations in parallel."""
+"""Class that does actual work for parallel operations."""
 
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
+from uuid import UUID
 
 import python_utilz as pu
 
 from omoide import custom_logging
+from omoide import models
 from omoide import operations
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
 from omoide.workers.parallel.mediator import ParallelWorkerMediator
@@ -44,10 +46,10 @@ class ParallelOperationsProcessor:
 
         return await self.execute_batch(batch)
 
-    async def execute_batch(self, batch: list[operations.ParallelOperation]) -> bool:
+    async def execute_batch(self, batch: list[operations.Operation]) -> bool:
         """Perform workload."""
         did_something = False
-        futures: dict[concurrent.futures.Future, operations.ParallelOperation] = {}
+        futures: dict[concurrent.futures.Future, operations.Operation] = {}
 
         for operation in batch:
             use_case_type = NAMES_TO_USE_CASES.get(operation.name)
@@ -110,12 +112,18 @@ class ParallelOperationsProcessor:
                     duration=operation_after.hr_duration,
                 )
                 async with self.mediator.database.transaction() as conn:
-                    await self.mediator.workers.save_parallel_operation_as_complete(
+                    _, is_done = await self.mediator.workers.save_parallel_operation_as_complete(
                         conn=conn,
                         operation=operation_after,
                         minimal_completion=self.config.minimal_completion,
                         processed_by=self.config.name,
                     )
+
+                    item_uuid = UUID(operation_after.extras['item_uuid'])
+                    item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+                    item.status = models.Status.AVAILABLE
+                    await self.mediator.items.save(conn, item)
+
                 did_something = True
 
         return did_something

@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Annotated
 
 import nano_settings as ns
-import ujson
 
 
 @dataclass
@@ -20,11 +19,11 @@ class SerialWorkerConfig(ns.BaseConfig):
     log_path: str = ''
     log_level: str = 'DEBUG'
     log_rotation: str = '1 week'
-    log_diagnose: Annotated[bool, ns.looks_like_boolean] = True
+    log_diagnose: Annotated[bool, ns.Boolean()] = True
 
     name: str = 'serial-dev'
     short_delay: float = 0.0
     long_delay: float = 5.0
     input_batch: int = 10
     output_batch: int = 100
-    supported_operations: Annotated[frozenset[str], frozenset, ujson.loads] = frozenset()
+    supported_operations: Annotated[frozenset[str], frozenset, ns.Separated()] = frozenset()

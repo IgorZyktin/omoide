@@ -15,7 +15,11 @@ from omoide.database.interfaces.abs_tags_repo import AbsTagsRepo
 class TagsRepo(AbsTagsRepo[AsyncConnection]):
     """Repository that performs operations on tags."""
 
-    async def calculate_known_tags_anon(self, conn: AsyncConnection) -> dict[str, int]:
+    async def calculate_known_tags_anon(
+        self,
+        conn: AsyncConnection,
+        only_tags: list[str] | None,
+    ) -> dict[str, int]:
         """Return known tags for anon."""
         query_ids = sa.select(db_models.Item.id).where(
             db_models.Item.owner_id.in_(queries.public_user_ids())
@@ -29,12 +33,19 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             query_tags.c.tag
         )
 
+        if only_tags:
+            query = query.where(query_tags.c.tag.in_(tuple(only_tags)))
+
         response = (await conn.execute(query)).fetchall()
         return {row.tag: row.total for row in response}
 
-    async def drop_known_tags_anon(self, conn: AsyncConnection) -> int:
+    async def drop_known_tags_anon(self, conn: AsyncConnection, only_tags: list[str] | None) -> int:
         """Drop all known tags for anon user."""
         stmt = sa.delete(db_models.KnownTagsAnon)
+
+        if only_tags:
+            stmt = stmt.where(db_models.KnownTagsAnon.tag.in_(tuple(only_tags)))
+
         response = await conn.execute(stmt)
         return int(response.rowcount)
 
@@ -102,7 +113,10 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             await conn.execute(stmt)
 
     async def calculate_known_tags_user(
-        self, conn: AsyncConnection, user: models.User
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        only_tags: list[str] | None,
     ) -> dict[str, int]:
         """Return known tags for specific user."""
         query_ids = sa.select(db_models.Item.id).where(
@@ -120,12 +134,24 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             query_tags.c.tag
         )
 
+        if only_tags:
+            query = query.where(query_tags.c.tag.in_(tuple(only_tags)))
+
         response = (await conn.execute(query)).fetchall()
         return {row.tag: row.total for row in response}
 
-    async def drop_known_tags_user(self, conn: AsyncConnection, user: models.User) -> int:
+    async def drop_known_tags_user(
+        self,
+        conn: AsyncConnection,
+        user: models.User,
+        only_tags: list[str] | None,
+    ) -> int:
         """Drop all known tags for specific user."""
         stmt = sa.delete(db_models.KnownTags).where(db_models.KnownTags.user_id == user.id)
+
+        if only_tags:
+            stmt = stmt.where(db_models.KnownTagsAnon.tag.in_(tuple(only_tags)))
+
         response = await conn.execute(stmt)
         return int(response.rowcount)
 

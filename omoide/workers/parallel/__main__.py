@@ -14,8 +14,6 @@ from omoide.workers.parallel import loop_logic
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
 from omoide.workers.parallel.mediator import ParallelWorkerMediator
 
-LOG = custom_logging.get_logger(__name__)
-
 
 async def main() -> None:
     """Async entry point."""
@@ -54,9 +52,11 @@ async def main() -> None:
     )
 
     try:
+        await worker.start()
         await worker.run(short_delay=config.short_delay, long_delay=config.long_delay)
     finally:
         executor.shutdown()
+        await worker.stop()
 
 
 if __name__ == '__main__':

@@ -76,8 +76,6 @@ class Worker:
 
     async def run(self, short_delay: float, long_delay: float) -> None:
         """Daemon run."""
-        await self.start()
-
         try:
             while True:
                 did_something = await self.execute()
@@ -91,8 +89,6 @@ class Worker:
                     await asyncio.sleep(long_delay)
         except (KeyboardInterrupt, asyncio.CancelledError):
             LOG.warning('Worker {!r} stopping', self.name)
-        finally:
-            await self.stop()
 
     async def execute(self) -> bool:
         """Perform workload."""

@@ -1,18 +1,11 @@
 """Remote operations."""
 
 from dataclasses import dataclass
-from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
-from uuid import UUID
 
 import python_utilz as pu
-
-from omoide import const
-from omoide import models
-
-DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 
 
 class OperationStatus(enum.StrEnum):
@@ -30,248 +23,19 @@ class OperationStatus(enum.StrEnum):
 
 @dataclass
 class Operation:
-    """Base class."""
-
-    requested_by: UUID
-    id: int = -1
-    name: str = 'base_serial_operation'
-    status: OperationStatus = OperationStatus.CREATED
-    extras: dict[str, Any] = field(default_factory=dict)
-    created_at: datetime = field(default_factory=pu.now)
-    updated_at: datetime = field(default_factory=pu.now)
-    started_at: datetime | None = None
-    ended_at: datetime | None = None
-    log: str | None = None
-    payload: bytes = b''
-
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        requested_by = UUID(extras['requested_by'])
-        return cls(requested_by=requested_by, extras=extras, **kwargs)
-
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras: dict[str, Any] = {'requested_by': str(self.requested_by)}
-        extras.update(self.extras)
-        return extras
-
-    def add_to_log(self, text: str) -> None:
-        """Store additional text."""
-        if self.log is None:
-            self.log = text
-        else:
-            self.log += f'\n{text}'
-
-    def mark_done(self) -> None:
-        """Alter state to `done`."""
-        now = pu.now()
-        self.updated_at = now
-        self.ended_at = now
-        self.status = OperationStatus.DONE
-
-    def mark_updated(self) -> None:
-        """Update, but do not finish yet."""
-        now = pu.now()
-        self.updated_at = now
-        self.ended_at = now
-
-
-@dataclass
-class BaseSerialOperation(Operation):
-    """Base class."""
-
-    worker_name: str | None = None
-
-
-@dataclass
-class RebuildKnownTagsForAnonOp(BaseSerialOperation):
-    """Request for tags rebuilding."""
-
-    name: str = 'rebuild_known_tags_for_anon'
-
-
-@dataclass
-class RebuildKnownTagsForUserOp(BaseSerialOperation):
-    """Request for tags rebuilding."""
-
-    name: str = 'rebuild_known_tags_for_user'
-    user_uuid: UUID = DUMMY_UUID
-
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        requested_by = UUID(extras['requested_by'])
-        user_uuid = UUID(extras['user_uuid'])
-        return cls(requested_by=requested_by, user_uuid=user_uuid, extras=extras, **kwargs)
-
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras = super().dump_extras()
-        extras['user_uuid'] = str(self.user_uuid)
-        return extras
-
-
-@dataclass
-class RebuildKnownTagsForAllOp(BaseSerialOperation):
-    """Request for tags rebuilding."""
-
-
-@dataclass
-class RebuildComputedTagsForItemOp(BaseSerialOperation):
-    """Request for tags rebuilding."""
-
-    name: str = 'rebuild_computed_tags_for_item'
-    item_uuid: UUID = DUMMY_UUID
-
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        requested_by = UUID(extras['requested_by'])
-        item_uuid = UUID(extras['item_uuid'])
-        return cls(requested_by=requested_by, item_uuid=item_uuid, extras=extras, **kwargs)
-
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras = super().dump_extras()
-        extras['item_uuid'] = str(self.item_uuid)
-        return extras
-
-
-@dataclass
-class RebuildPermissionsForItemOp(BaseSerialOperation):
-    """Request for permissions rebuilding."""
-
-    name: str = 'rebuild_permissions_for_item'
-    item_uuid: UUID = DUMMY_UUID
-    added: set[int] = field(default_factory=set)
-    deleted: set[int] = field(default_factory=set)
-    original: set[int] = field(default_factory=set)
-    apply_to_parents: bool = False
-    apply_to_children: bool = False
-    apply_to_children_as: str = const.ApplyAs.DELTA
-
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        kwargs.update(
-            {
-                'requested_by': UUID(extras['requested_by']),
-                'item_uuid': UUID(extras['item_uuid']),
-                'added': set(extras['added']),
-                'deleted': set(extras['deleted']),
-                'original': set(extras['original']),
-                'apply_to_parents': extras['apply_to_parents'],
-                'apply_to_children': extras['apply_to_children'],
-                'apply_to_children_as': extras['apply_to_children_as'],
-            }
-        )
-        return cls(**kwargs)
-
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras = super().dump_extras()
-        extras.update(
-            {
-                'item_uuid': str(self.item_uuid),
-                'added': list(self.added),
-                'deleted': list(self.deleted),
-                'original': list(self.original),
-                'apply_to_parents': self.apply_to_parents,
-                'apply_to_children': self.apply_to_children,
-                'apply_to_children_as': self.apply_to_children_as,
-            }
-        )
-        return extras
-
-
-@dataclass
-class UploadItemOp(BaseSerialOperation):
-    """Operation for item upload."""
-
-    name: str = 'upload_item'
-    item_uuid: UUID = DUMMY_UUID
-    file: models.NewFile = field(default_factory=models.NewFile)
-
-    @classmethod
-    def from_extras(
-        cls,
-        extras: dict[str, Any],
-        **kwargs: Any,
-    ) -> 'Operation':
-        """Create from database record."""
-        kwargs.update(
-            {
-                'requested_by': UUID(extras['requested_by']),
-                'item_uuid': UUID(extras['item_uuid']),
-                'extras': extras,
-                'file': models.NewFile(
-                    content=b'',
-                    content_type=extras['file']['content_type'],
-                    filename=extras['file']['filename'],
-                    ext=extras['file']['ext'],
-                    features=models.Features(
-                        extract_exif=extras['file']['features']['extract_exif'],
-                        exif_time_backoff=extras['file']['features']['exif_time_backoff'],
-                        exif_year=extras['file']['features']['exif_year'],
-                        exif_month_en=extras['file']['features']['exif_month_en'],
-                        exif_month_ru=extras['file']['features']['exif_month_ru'],
-                        last_modified=datetime.fromisoformat(
-                            extras['file']['features']['last_modified']
-                        ),
-                    ),
-                ),
-            }
-        )
-        return cls(**kwargs)
-
-    def dump_extras(self) -> dict[str, Any]:
-        """Convert extras to JSON."""
-        extras = super().dump_extras()
-        extras['item_uuid'] = str(self.item_uuid)
-        extras['file'] = {
-            'content': '',
-            'content_type': self.file.content_type,
-            'filename': self.file.filename,
-            'ext': self.file.ext,
-            'features': {
-                'extract_exif': self.file.features.extract_exif,
-                'exif_time_backoff': self.file.features.exif_time_backoff,
-                'exif_year': self.file.features.exif_year,
-                'exif_month_en': self.file.features.exif_month_en,
-                'exif_month_ru': self.file.features.exif_month_ru,
-                'last_modified': self.file.features.last_modified.isoformat(),
-            },
-        }
-        return extras
-
-
-class OperationsMixin:
-    """Mixin that adds handi features."""
+    """ParallelOperation."""
 
     id: int
     name: str
+    status: OperationStatus
     extras: dict[str, Any]
     created_at: datetime
-    started_at: datetime | None
     updated_at: datetime
+    started_at: datetime | None
     ended_at: datetime | None
+    log: str | None
+    payload: bytes
+    processed_by: set[str]
 
     def __str__(self) -> str:
         """Return textual representation."""
@@ -296,20 +60,3 @@ class OperationsMixin:
         else:
             duration = f'{seconds: 0.3f} sec.'
         return duration
-
-
-@dataclass
-class ParallelOperation(OperationsMixin):
-    """ParallelOperation."""
-
-    id: int
-    name: str
-    status: OperationStatus
-    extras: dict[str, Any]
-    created_at: datetime
-    updated_at: datetime
-    started_at: datetime | None
-    ended_at: datetime | None
-    log: str | None
-    payload: bytes
-    processed_by: set[str]

@@ -13,11 +13,15 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
     """Repository that perform operations on tags."""
 
     @abc.abstractmethod
-    async def calculate_known_tags_anon(self, conn: ConnectionT) -> dict[str, int]:
+    async def calculate_known_tags_anon(
+        self,
+        conn: ConnectionT,
+        only_tags: list[str] | None,
+    ) -> dict[str, int]:
         """Return known tags for anon."""
 
     @abc.abstractmethod
-    async def drop_known_tags_anon(self, conn: ConnectionT) -> int:
+    async def drop_known_tags_anon(self, conn: ConnectionT, only_tags: list[str] | None) -> int:
         """Drop all known tags for anon user."""
 
     @abc.abstractmethod
@@ -57,12 +61,20 @@ class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
 
     @abc.abstractmethod
     async def calculate_known_tags_user(
-        self, conn: ConnectionT, user: models.User
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        only_tags: list[str] | None,
     ) -> dict[str, int]:
         """Return known tags for specific user."""
 
     @abc.abstractmethod
-    async def drop_known_tags_user(self, conn: ConnectionT, user: models.User) -> int:
+    async def drop_known_tags_user(
+        self,
+        conn: ConnectionT,
+        user: models.User,
+        only_tags: list[str] | None,
+    ) -> int:
         """Drop all known tags for specific user."""
 
     @abc.abstractmethod

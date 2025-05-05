@@ -15,5 +15,5 @@ class BaseParallelWorkerUseCase:
         self.config = config
         self.mediator = mediator
 
-    async def execute(self, operation: operations.ParallelOperation) -> Callable:
+    async def execute(self, operation: operations.Operation) -> Callable:
         """Perform workload."""

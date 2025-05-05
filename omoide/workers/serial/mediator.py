@@ -15,7 +15,7 @@ from omoide.object_storage.implementations.file_client import FileObjectStorageC
 
 
 @dataclass
-class WorkerMediator:
+class SerialWorkerMediator:
     """Class that ties all components together."""
 
     database: abs_database.AbsDatabase

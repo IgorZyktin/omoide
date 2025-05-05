@@ -36,7 +36,7 @@ def soft_delete_media(
 class SoftDeleteUseCase(BaseParallelWorkerUseCase):
     """Use case for soft deleting media."""
 
-    async def execute(self, operation: operations.ParallelOperation) -> Callable:
+    async def execute(self, operation: operations.Operation) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(
@@ -74,7 +74,7 @@ def hard_delete_media(
 class HardDeleteUseCase(BaseParallelWorkerUseCase):
     """Use case for hard deleting media."""
 
-    async def execute(self, operation: operations.ParallelOperation) -> Callable:
+    async def execute(self, operation: operations.Operation) -> Callable:
         """Perform workload."""
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(

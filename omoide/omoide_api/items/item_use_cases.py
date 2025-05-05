@@ -8,7 +8,6 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide import operations
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
@@ -198,10 +197,11 @@ class RenameItemUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                },
             )
 
         return operation_id
@@ -260,26 +260,29 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             operation_id_tags = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                },
             )
 
             operation_id_old_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=old_parent.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(old_parent.uuid),
+                },
             )
 
             operation_id_new_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=new_parent.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(new_parent.uuid),
+                },
             )
 
         if new_parent.has_incomplete_media():
@@ -328,10 +331,11 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                },
             )
 
         return operation_id
@@ -418,12 +422,27 @@ class UploadItemUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.UploadItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                    file=file,
-                    payload=file.content,
-                ),
+                name='upload',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                    'content_type': file.content_type,
+                    'filename': file.filename,
+                    'ext': file.ext,
+                    'features': {
+                        'extract_exif': file.features.extract_exif,
+                        'exif_time_backoff': file.features.exif_time_backoff,
+                        'exif_year': file.features.exif_year,
+                        'exif_month_en': file.features.exif_month_en,
+                        'exif_month_ru': file.features.exif_month_ru,
+                        'last_modified': (
+                            file.features.last_modified.isoformat()
+                            if file.features.last_modified
+                            else None
+                        ),
+                    },
+                },
+                payload=file.content,
             )
 
         return operation_id
@@ -575,16 +594,17 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
 
                 operation_id = await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    operation=operations.RebuildPermissionsForItemOp(
-                        requested_by=user.uuid,
-                        item_uuid=item.uuid,
-                        added=set(added),
-                        deleted=set(deleted),
-                        original=set(item.permissions),
-                        apply_to_parents=apply_to_parents,
-                        apply_to_children=apply_to_children,
-                        apply_to_children_as=str(apply_to_children_as.value),
-                    ),
+                    name='rebuild_permissions',
+                    extras={
+                        'requested_by': str(user.uuid),
+                        'item_uuid': str(item.uuid),
+                        'added': list(added),
+                        'deleted': list(deleted),
+                        'original': list(item.permissions),
+                        'apply_to_parents': apply_to_parents,
+                        'apply_to_children': apply_to_children,
+                        'apply_to_children_as': apply_to_children_as.value,
+                    },
                 )
 
             item.permissions = user_ids
