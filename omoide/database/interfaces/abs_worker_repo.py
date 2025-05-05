@@ -83,7 +83,7 @@ class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
         operation: operations.Operation,
         minimal_completion: set[str],
         processed_by: str,
-    ) -> int:
+    ) -> tuple[int, bool]:
         """Finish operation."""
 
     @abc.abstractmethod

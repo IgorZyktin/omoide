@@ -56,15 +56,13 @@ class SerialOperationsProcessor:
 
             skip.add(operation.id)
 
-        return await self.execute_operation(operation)
+        if operation:
+            return await self.execute_operation(operation)
+        return False
 
     async def execute_operation(self, operation: operations.Operation) -> bool:
         """Perform workload."""
-        LOG.info(
-            '{operation} started',
-            operation=operation,
-            duration=operation.hr_duration,
-        )
+        LOG.info('Started operation: {operation}', operation=operation)
 
         use_case_type = NAMES_TO_USE_CASES.get(operation.name)
         if use_case_type is None:
@@ -74,13 +72,13 @@ class SerialOperationsProcessor:
             try:
                 await self.mediator.workers.save_serial_operation_as_started(conn, operation)
                 use_case = use_case_type(self.config, self.mediator)
-                await use_case.execute(operation)
+                await use_case.execute(operation)  # type: ignore [attr-defined]
             except Exception as exc:
                 error = pu.exc_to_str(exc)
                 LOG.exception(
-                    '{operation} failed in {duration} because of {error}',
+                    'Failed operation after {duration} because of {error}: {operation}',
                     operation=operation,
-                    duration=operation.hr_duration,
+                    duration=operation.hr_duration.strip(),
                     error=error,
                 )
                 await self.mediator.workers.save_serial_operation_as_failed(
@@ -90,9 +88,9 @@ class SerialOperationsProcessor:
                 )
             else:
                 LOG.info(
-                    '{operation} completed in {duration}',
+                    'Finished operation in {duration}: {operation}',
                     operation=operation,
-                    duration=operation.hr_duration,
+                    duration=operation.hr_duration.strip(),
                 )
                 await self.mediator.workers.save_serial_operation_as_completed(
                     conn=conn,

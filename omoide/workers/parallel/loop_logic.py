@@ -61,7 +61,7 @@ class ParallelOperationsProcessor:
             async with self.mediator.database.transaction() as conn:
                 try:
                     use_case = use_case_type(self.config, self.mediator)
-                    new_callable = await use_case.execute(operation)
+                    new_callable = await use_case.execute(operation)  # type: ignore [attr-defined]
                     future = self.executor.submit(new_callable)
                 except Exception as exc:
                     error = pu.exc_to_str(exc)
@@ -96,7 +96,7 @@ class ParallelOperationsProcessor:
                 LOG.exception(
                     'Failed operation after {duration} because of {error}: {operation}',
                     operation=operation_after,
-                    duration=operation_after.hr_duration,
+                    duration=operation_after.hr_duration.strip(),
                     error=error,
                 )
                 async with self.mediator.database.transaction() as conn:
@@ -109,7 +109,7 @@ class ParallelOperationsProcessor:
                 LOG.info(
                     'Finished operation in {duration}: {operation}',
                     operation=operation_after,
-                    duration=operation_after.hr_duration,
+                    duration=operation_after.hr_duration.strip(),
                 )
                 async with self.mediator.database.transaction() as conn:
                     _, is_done = await self.mediator.workers.save_parallel_operation_as_complete(

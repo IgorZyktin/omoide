@@ -107,8 +107,8 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
     ) -> None:
         """Process and save preview."""
         item.preview_ext = 'jpg'
-
         stream = BytesIO(operation.payload)
+
         with Image.open(stream) as img:
             old_width, old_height = img.size
             new_width, new_height = get_new_image_dimensions(
@@ -117,11 +117,12 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             new_img = img.resize((new_width, new_height))
             new_img = new_img.filter(ImageFilter.SHARPEN)
 
-            if not new_img.mode == 'RGB':
-                new_img = new_img.convert('RGB')
-
             metainfo.preview_width, metainfo.preview_height = new_width, new_height
-            new_payload = new_img.tobytes()
+
+            buffer = BytesIO()
+            new_img.save(buffer, 'JPEG', quality=const.IMAGE_QUALITY, optimize=True)
+            new_payload = buffer.getvalue()
+
             metainfo.preview_size = len(new_payload)
 
         await self.mediator.misc.create_parallel_operation(
@@ -146,8 +147,8 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
     ) -> None:
         """Process and save thumbnail."""
         item.thumbnail_ext = 'jpg'
-
         stream = BytesIO(operation.payload)
+
         with Image.open(stream) as img:
             old_width, old_height = img.size
             new_width, new_height = get_new_image_dimensions(
@@ -156,11 +157,12 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             new_img = img.resize((new_width, new_height))
             new_img = new_img.filter(ImageFilter.SHARPEN)
 
-            if not new_img.mode == 'RGB':
-                new_img = new_img.convert('RGB')
-
             metainfo.thumbnail_width, metainfo.thumbnail_height = new_width, new_height
-            new_payload = new_img.tobytes()
+
+            buffer = BytesIO()
+            new_img.save(buffer, 'JPEG', quality=const.IMAGE_QUALITY, optimize=True)
+            new_payload = buffer.getvalue()
+
             metainfo.thumbnail_size = len(new_payload)
 
         await self.mediator.misc.create_parallel_operation(

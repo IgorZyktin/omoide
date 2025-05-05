@@ -63,4 +63,4 @@ class AllSerialOperations(enum.StrEnum):
 
 PREVIEW_SIZE = 1024
 THUMBNAIL_SIZE = 384
-IMAGE_QUALITY = 0.8
+IMAGE_QUALITY = 80

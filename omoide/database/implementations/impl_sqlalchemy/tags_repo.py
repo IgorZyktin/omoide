@@ -33,10 +33,9 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             query_tags.c.tag
         )
 
-        if only_tags:
-            query = query.where(query_tags.c.tag.in_(tuple(only_tags)))
-
         response = (await conn.execute(query)).fetchall()
+        if only_tags:
+            return {row.tag: row.total for row in response if row.tag in only_tags}
         return {row.tag: row.total for row in response}
 
     async def drop_known_tags_anon(self, conn: AsyncConnection, only_tags: list[str] | None) -> int:
@@ -59,7 +58,11 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
         payload = [{'tag': str(tag), 'counter': counter} for tag, counter in tags.items()]
 
         for batch in itertools.batched(payload, batch_size):
-            stmt = sa.insert(db_models.KnownTagsAnon).values(batch)
+            insert = pg_insert(db_models.KnownTagsAnon).values(batch)
+            stmt = insert.on_conflict_do_update(
+                index_elements=[db_models.KnownTagsAnon.tag],
+                set_={'counter': insert.excluded.counter},
+            )
             await conn.execute(stmt)
 
     async def increment_known_tags_user(
@@ -134,10 +137,10 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
             query_tags.c.tag
         )
 
-        if only_tags:
-            query = query.where(query_tags.c.tag.in_(tuple(only_tags)))
-
         response = (await conn.execute(query)).fetchall()
+
+        if only_tags:
+            return {row.tag: row.total for row in response if row.tag in only_tags}
         return {row.tag: row.total for row in response}
 
     async def drop_known_tags_user(
@@ -150,7 +153,7 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
         stmt = sa.delete(db_models.KnownTags).where(db_models.KnownTags.user_id == user.id)
 
         if only_tags:
-            stmt = stmt.where(db_models.KnownTagsAnon.tag.in_(tuple(only_tags)))
+            stmt = stmt.where(db_models.KnownTags.tag.in_(tuple(only_tags)))
 
         response = await conn.execute(stmt)
         return int(response.rowcount)
@@ -169,7 +172,11 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
         ]
 
         for batch in itertools.batched(payload, batch_size):
-            stmt = sa.insert(db_models.KnownTags).values(batch)
+            insert = pg_insert(db_models.KnownTags).values(batch)
+            stmt = insert.on_conflict_do_update(
+                index_elements=[db_models.KnownTags.user_id, db_models.KnownTags.tag],
+                set_={'counter': insert.excluded.counter},
+            )
             await conn.execute(stmt)
 
     async def get_computed_tags(self, conn: AsyncConnection, item: models.Item) -> set[str]:

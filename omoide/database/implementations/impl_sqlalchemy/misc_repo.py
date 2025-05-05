@@ -28,7 +28,7 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
             sa.insert(db_models.SerialOperation)
             .values(
                 name=name,
-                status=operations.OperationStatus.CREATED,
+                status=operations.OperationStatus.CREATED.value,
                 extras=extras,
                 created_at=now,
                 updated_at=now,

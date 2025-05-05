@@ -140,7 +140,7 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
                         name='rebuild_known_tags_for_user',
                         extras={
                             'requested_by': operation.extras['requested_by'],
-                            'user_uuid': user.uuid,
+                            'user_uuid': str(user.uuid),
                             'only_tags': list(affected_tags),
                         },
                     )

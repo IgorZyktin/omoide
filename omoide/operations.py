@@ -58,5 +58,5 @@ class Operation:
         if (seconds := self.duration) > 1:
             duration = pu.human_readable_time(seconds)
         else:
-            duration = f'{seconds: 0.3f} sec.'
+            duration = f'{seconds:0.3f} sec.'
         return duration
