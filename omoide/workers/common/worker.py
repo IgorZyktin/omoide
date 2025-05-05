@@ -1,10 +1,10 @@
 """General worker class for all workers."""
 
 import asyncio
+from collections.abc import Callable
 import functools
 import os
 import signal
-from typing import Callable
 
 from omoide import custom_logging
 from omoide.database.interfaces import AbsDatabase
@@ -96,4 +96,4 @@ class Worker:
 
     async def execute(self) -> bool:
         """Perform workload."""
-        return await self.loop_callable()
+        return await self.loop_callable()  # type: ignore [no-any-return]

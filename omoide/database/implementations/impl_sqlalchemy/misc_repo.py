@@ -1,9 +1,11 @@
 """Repository that performs various operations on different objects."""
+
 from typing import Any
 
+import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
-import python_utilz as pu
+
 from omoide import operations
 from omoide.database import db_models
 from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo

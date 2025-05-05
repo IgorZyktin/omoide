@@ -24,7 +24,7 @@ def get_new_image_dimensions(
 ) -> tuple[int, int]:
     """Calculate new size while maintaining proportions."""
     if old_width >= old_height:
-        new_width = min(old_width, new_size)
+        new_width = float(min(old_width, new_size))
         coefficient = new_width / old_width
         new_height = old_height * coefficient
     else:
@@ -122,7 +122,7 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
         content_path = self.mediator.object_storage.get_content_path(item)
         thumbnail_path = self.mediator.object_storage.get_thumbnail_path(item)
 
-        if content_path:
+        if content_path and thumbnail_path:
             LOG.info('Saving thumbnail: {}', content_path)
             with Image.open(content_path) as img:
                 old_width, old_height = img.size

@@ -1,7 +1,6 @@
 """Repository that perform worker-related operations."""
 
 from collections.abc import Collection
-from uuid import UUID
 
 import python_utilz as pu
 import sqlalchemy as sa
@@ -163,8 +162,10 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         if actual_operation.status == operations.OperationStatus.FAILED:
             return 0
 
-        if actual_operation.status not in (operations.OperationStatus.DONE,
-                                           operations.OperationStatus.FAILED):
+        if actual_operation.status not in (
+            operations.OperationStatus.DONE,
+            operations.OperationStatus.FAILED,
+        ):
             status = operations.OperationStatus.PROCESSING
         else:
             status = actual_operation.status
@@ -210,11 +211,16 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         if actual_operation.status == operations.OperationStatus.FAILED.value:
             return 0
 
-        processed_by = set(actual_operation.processed_by) | {processed_by}
+        processed_by_set = set(actual_operation.processed_by) | {processed_by}
 
-        if (actual_operation.status in (operations.OperationStatus.CREATED.value,
-                                        operations.OperationStatus.PROCESSING.value)
-                and processed_by >= minimal_completion):
+        if (
+            actual_operation.status
+            in (
+                operations.OperationStatus.CREATED.value,
+                operations.OperationStatus.PROCESSING.value,
+            )
+            and processed_by_set >= minimal_completion
+        ):
             status = operations.OperationStatus.DONE.value
         else:
             status = actual_operation.status
@@ -246,6 +252,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
         operation: operations.ParallelOperation,
         error: str,
     ) -> int:
+        """Save operation."""
         select_query = sa.select(db_models.ParallelOperation).where(
             db_models.ParallelOperation.id == operation.id
         )
@@ -318,5 +325,6 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
                 log=each.log,
                 payload=each.payload,
                 processed_by=each.processed_by,
-            ) for each in response
+            )
+            for each in response
         ]

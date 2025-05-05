@@ -39,7 +39,7 @@ class FileLocator(AbsLocator):
         owner_uuid: UUID,
         item_uuid: UUID,
         category: Literal['content', 'preview', 'thumbnail'],
-        ext: str,
+        ext: str | None,
     ) -> str:
         """Return generic location."""
         return str(

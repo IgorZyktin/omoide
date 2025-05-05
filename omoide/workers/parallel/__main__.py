@@ -1,9 +1,9 @@
 """Worker that performs operations in parallel."""
 
 import asyncio
-import os
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
+import os
 
 import nano_settings as ns
 

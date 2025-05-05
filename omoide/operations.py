@@ -5,7 +5,6 @@ from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
-from typing import Literal
 from uuid import UUID
 
 import python_utilz as pu
@@ -60,7 +59,6 @@ class Operation:
         extras: dict[str, Any] = {'requested_by': str(self.requested_by)}
         extras.update(self.extras)
         return extras
-
 
     def add_to_log(self, text: str) -> None:
         """Store additional text."""
@@ -271,9 +269,9 @@ class OperationsMixin:
     name: str
     extras: dict[str, Any]
     created_at: datetime
-    started_at: datetime
+    started_at: datetime | None
     updated_at: datetime
-    ended_at: datetime
+    ended_at: datetime | None
 
     def __str__(self) -> str:
         """Return textual representation."""

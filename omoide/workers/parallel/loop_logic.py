@@ -82,9 +82,9 @@ class ParallelOperationsProcessor:
                     )
 
         for future in concurrent.futures.as_completed(futures):
-            operation = futures.get(future)
+            operation_after = futures.get(future)
 
-            if operation is None:
+            if operation_after is None:
                 continue
 
             try:
@@ -93,26 +93,26 @@ class ParallelOperationsProcessor:
                 error = pu.exc_to_str(exc)
                 LOG.exception(
                     'Failed operation after {duration} because of {error}: {operation}',
-                    operation=operation,
-                    duration=operation.hr_duration,
+                    operation=operation_after,
+                    duration=operation_after.hr_duration,
                     error=error,
                 )
                 async with self.mediator.database.transaction() as conn:
                     await self.mediator.workers.save_parallel_operation_as_failed(
                         conn=conn,
-                        operation=operation,
+                        operation=operation_after,
                         error=error,
                     )
             else:
                 LOG.info(
                     'Finished operation in {duration}: {operation}',
-                    operation=operation,
-                    duration=operation.hr_duration,
+                    operation=operation_after,
+                    duration=operation_after.hr_duration,
                 )
                 async with self.mediator.database.transaction() as conn:
                     await self.mediator.workers.save_parallel_operation_as_complete(
                         conn=conn,
-                        operation=operation,
+                        operation=operation_after,
                         minimal_completion=self.config.minimal_completion,
                         processed_by=self.config.name,
                     )
