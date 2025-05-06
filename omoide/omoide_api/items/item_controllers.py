@@ -10,6 +10,7 @@ from fastapi import Depends
 from fastapi import Query
 from fastapi import Request
 from fastapi import Response
+from fastapi import UploadFile
 from fastapi import status
 from fastapi.responses import PlainTextResponse
 
@@ -320,107 +321,56 @@ async def api_item_update_permissions(
     }
 
 
-# TODO - instead of sending data as base64 encoded string
-#  we need to switch to file sending
 @api_items_router.put(
-    '/{item_uuid}/content',
+    '/{item_uuid}/upload',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
 )
-async def api_upload_item_content(
+async def api_upload_item(
+    request: Request,
     item_uuid: UUID,
-    media: item_api_models.MediaInput,
+    file: UploadFile,
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Store content data for given item.
+    """Store content data for given item."""
+    ext = str(file.filename).lower().split('.')[-1]
+    if ext not in limits.SUPPORTED_EXTENSION:
+        extensions = ', '.join(sorted(limits.SUPPORTED_EXTENSION))
+        return Response(
+            content=f'Only support extensions {extensions}, got {ext!r}',
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
 
-    Operation is asynchronous, you will get job_id in response.
-    """
-    use_case = item_use_cases.UploadContentForItemUseCase(mediator)
+    if ext == 'pdf':
+        # TODO - have separate use case for pdf
+        return Response(
+            content='PDF is not yet supported',
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    else:
+        use_case = item_use_cases.UploadItemUseCase(mediator)
+
+    features = item_api_models.extract_features(request)
+    content = await file.read()
 
     try:
         await use_case.execute(
             user=user,
             item_uuid=item_uuid,
-            binary_content=media.binary_content,
-            ext=media.ext,
+            file=models.NewFile(
+                content=content,
+                content_type=str(file.content_type),
+                filename=str(file.filename),
+                ext=ext,
+                features=features,
+            ),
         )
     except Exception as exc:
         return web.raise_from_exc(exc)
 
     return {
         'result': 'enqueued content adding',
-        'item_uuid': str(item_uuid),
-    }
-
-
-# TODO - previews are not supposed to be sent.
-#  They must be generated on the backend
-@api_items_router.put(
-    '/{item_uuid}/preview',
-    status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str],
-)
-async def api_upload_item_preview(
-    item_uuid: UUID,
-    media: item_api_models.MediaInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-):
-    """Store preview data for given item.
-
-    Operation is asynchronous, you will get job_id in response.
-    """
-    use_case = item_use_cases.UploadPreviewForItemUseCase(mediator)
-
-    try:
-        await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            binary_content=media.binary_content,
-            ext=media.ext,
-        )
-    except Exception as exc:
-        return web.raise_from_exc(exc)
-
-    return {
-        'result': 'enqueued preview adding',
-        'item_uuid': str(item_uuid),
-    }
-
-
-# TODO - previews are not supposed to be sent.
-#  They must be generated on the backend
-@api_items_router.put(
-    '/{item_uuid}/thumbnail',
-    status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str],
-)
-async def api_upload_item_thumbnail(
-    item_uuid: UUID,
-    media: item_api_models.MediaInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
-):
-    """Store thumbnail data for given item.
-
-    Operation is asynchronous, you will get job_id in response.
-    """
-    use_case = item_use_cases.UploadThumbnailForItemUseCase(mediator)
-
-    try:
-        await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            binary_content=media.binary_content,
-            ext=media.ext,
-        )
-    except Exception as exc:
-        return web.raise_from_exc(exc)
-
-    return {
-        'result': 'enqueued thumbnail adding',
         'item_uuid': str(item_uuid),
     }
 

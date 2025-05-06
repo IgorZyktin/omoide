@@ -5,7 +5,6 @@ from uuid import UUID
 from omoide import const
 from omoide import custom_logging
 from omoide import models
-from omoide import operations
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
@@ -23,7 +22,8 @@ class RebuildKnownTagsForAnonUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildKnownTagsForAnonOp(requested_by=admin.uuid),
+                name='rebuild_known_tags_for_anon',
+                extras={'requested_by': str(admin.uuid)},
             )
 
         return operation_id
@@ -42,10 +42,11 @@ class RebuildKnownTagsForUserUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildKnownTagsForUserOp(
-                    requested_by=admin.uuid,
-                    user_uuid=user.uuid,
-                ),
+                name='rebuild_known_tags_for_user',
+                extras={
+                    'requested_by': str(admin.uuid),
+                    'user_uuid': str(user.uuid),
+                },
             )
 
         return operation_id
@@ -63,7 +64,8 @@ class RebuildKnownTagsForAllUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildKnownTagsForAllOp(requested_by=admin.uuid),
+                name='rebuild_known_tags_fo_all',
+                extras={'requested_by': str(admin.uuid)},
             )
 
         return operation_id
@@ -93,10 +95,11 @@ class RebuildComputedTagsForItemUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=admin.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(admin.uuid),
+                    'item_uuid': str(item_uuid),
+                },
             )
 
         return owner, item, operation_id

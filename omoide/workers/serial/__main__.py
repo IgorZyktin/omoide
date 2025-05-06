@@ -3,24 +3,19 @@
 import asyncio
 
 import nano_settings as ns
-import typer
 
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy as sa
-from omoide.workers.common.mediator import WorkerMediator
+from omoide.object_storage.implementations.file_client import FileObjectStorageClient
+from omoide.workers.common.worker import Worker
+from omoide.workers.serial import loop_logic
 from omoide.workers.serial.cfg import SerialWorkerConfig
-from omoide.workers.serial.worker import SerialWorker
+from omoide.workers.serial.mediator import SerialWorkerMediator
 
-app = typer.Typer()
-
-
-@app.command()
-def main() -> None:
-    """Entry point."""
-    asyncio.run(_main())
+LOG = custom_logging.get_logger(__name__)
 
 
-async def _main() -> None:
+async def main() -> None:
     """Async entry point."""
     config = ns.from_env(SerialWorkerConfig, env_prefix='omoide_serial_worker')
 
@@ -31,18 +26,40 @@ async def _main() -> None:
         rotation=config.log_rotation,
     )
 
-    mediator = WorkerMediator(
+    mediator = SerialWorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
+        exif=sa.EXIFRepo(),
         items=sa.ItemsRepo(),
+        meta=sa.MetaRepo(),
+        misc=sa.MiscRepo(),
+        object_storage=FileObjectStorageClient(config.data_folder, config.prefix_size),
+        signatures=sa.SignaturesRepo(),
         tags=sa.TagsRepo(),
         users=sa.UsersRepo(),
         workers=sa.WorkersRepo(),
-        misc=sa.MiscRepo(),
     )
 
-    worker = SerialWorker(config, mediator, name=config.name)
-    await worker.run(short_delay=config.short_delay, long_delay=config.long_delay)
+    worker = Worker(
+        database=mediator.database,
+        workers=mediator.workers,
+        name=config.name,
+        loop_callable=loop_logic.SerialOperationsProcessor(config, mediator),
+    )
+
+    try:
+        await worker.start()
+        await worker.run(short_delay=config.short_delay, long_delay=config.long_delay)
+    finally:
+        async with mediator.database.transaction() as conn:
+            lock = await mediator.workers.release_serial_lock(
+                conn=conn,
+                worker_name=config.name,
+            )
+            if lock:
+                LOG.info('Worker {!r} released lock', config.name)
+
+        await worker.stop()
 
 
 if __name__ == '__main__':
-    app()
+    asyncio.run(main())

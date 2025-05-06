@@ -4,6 +4,7 @@ import abc
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 import enum
 from typing import Any
@@ -505,3 +506,22 @@ class Duplicate:
 
     signature: str
     examples: list[DuplicateExample]
+
+
+@dataclass
+class Features:
+    """Special parameters for upload."""
+
+    extract_exif: bool | None = None
+    last_modified: datetime | None = None
+
+
+@dataclass
+class NewFile:
+    """Raw file uploaded by user."""
+
+    content: bytes = b''
+    content_type: str = ''
+    filename: str = ''
+    ext: str = ''
+    features: Features = field(default_factory=Features)

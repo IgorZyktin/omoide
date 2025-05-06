@@ -25,7 +25,7 @@ from omoide.infra.interfaces import AbsPolicy
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
-from omoide.object_storage.implementations.object_storage_web import ObjectStorageWeb
+from omoide.object_storage.implementations.locators import WebLocator
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import web
 
@@ -44,10 +44,10 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals['version'] = str(const.FRONTEND_VERSION)
 
     config = get_config()
-    object_storage = ObjectStorageWeb(prefix_size=config.prefix_size)
-    templates.env.globals['get_content_url'] = object_storage.get_content_url
-    templates.env.globals['get_preview_url'] = object_storage.get_preview_url
-    templates.env.globals['get_thumbnail_url'] = object_storage.get_thumbnail_url
+    locator = WebLocator(root='content', prefix_size=config.prefix_size)
+    templates.env.globals['get_content_url'] = locator.get_thumbnail_location
+    templates.env.globals['get_preview_url'] = locator.get_thumbnail_location
+    templates.env.globals['get_thumbnail_url'] = locator.get_thumbnail_location
 
     templates.env.globals['human_readable_size'] = pu.human_readable_size
     templates.env.globals['sep_digits'] = pu.sep_digits

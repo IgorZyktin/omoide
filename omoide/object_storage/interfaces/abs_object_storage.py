@@ -31,6 +31,7 @@ class AbsObjectStorage(abc.ABC):
     async def soft_delete(
         self,
         requested_by: models.User,
+        owner: models.User,
         item: models.Item,
     ) -> list[SoftDeleteEntry]:
         """Mark all objects as deleted."""

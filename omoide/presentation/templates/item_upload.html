@@ -1,0 +1,133 @@
+{% extends "base_search.html" %}
+{% from "macros.html" import render_thumbnail_for_item %}
+
+{% block head %}
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='item_upload.js?' + version) }}"></script>
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='thirdparty/exif-js.min.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="narrow-block">
+        <h1>Uploading media</h1>
+
+        <label for="owner-uuid">Owner of the item:</label>
+        <div style="display: flex; flex-direction: row; align-items: center">
+            <input id="owner-uuid"
+                   type="text"
+                   value="{{ current_item.owner_uuid }}"
+                   disabled
+                   class="height-auto"/>
+            <a href="javascript:void(0)"
+               onclick="copyText('{{ current_item.owner_uuid }}', 'owner ID', 'copy-alerts-owner')"
+               style="height: 100%">
+                <img class="icon-big"
+                     src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
+                     alt="Copy ID"
+                     title="Copy ID"/></a>
+        </div>
+        <div id="copy-alerts-owner"></div>
+
+        <label for="parent-uuid">Parent item:</label>
+        <div style="display: flex; flex-direction: row; align-items: center">
+            <input id="parent-uuid"
+                   type="text"
+                   value="{{ current_item.uuid }}"
+                   disabled
+                   class="height-auto"/>
+            <a href="javascript:void(0)"
+               onclick="copyText('{{ current_item.uuid }}', 'parent ID', 'copy-alerts-parent')"
+               style="height: 100%">
+                <img class="icon-big"
+                     src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
+                     alt="Copy ID"
+                     title="Copy ID"/></a>
+        </div>
+        <div id="copy-alerts-parent"></div>
+
+        <div id="parent-thumbnail" class="parent_thumbnail">
+            {{ render_thumbnail_for_item(request, current_item, "", aim_wrapper) }}
+        </div>
+
+        <label for="after-upload">After upload:</label>
+        <select id="after-upload">
+            <option value="parent">Go browse result</option>
+            <option value="nothing">Do nothing (stay here)</option>
+        </select>
+
+        <label for="item-tags">Tags for every new item (one tag per line):<br>
+            <textarea id="item-tags" rows="10"></textarea>
+        </label>
+
+        <label for="item-permissions">Permissions (one user per line):<br>
+            <textarea id="item-permissions" rows="10">
+                {%- for user in users_with_permission -%}
+                    {{ user.uuid | string + ' ' + user.name + '\n' }}{% endfor -%}</textarea>
+        </label>
+
+        <div>
+            <input type="checkbox" id="feature-exif" onchange="toggleExif(this)">
+            <label for="feature-exif">Extract EXIF info</label>
+        </div>
+        <div id="all-features-exif" style="display: none;">
+            <div>
+                <input type="checkbox" id="feature-exif-time-backoff" disabled>
+                <label for="feature-exif-time-backoff">Get time info from file if
+                    there is no EXIF</label>
+            </div>
+            <div>
+                <input type="checkbox" id="feature-exif-year" checked disabled>
+                <label for="feature-exif-year">Extract year from EXIF, like
+                    "2022"</label>
+            </div>
+            <div>
+                <input type="checkbox" id="feature-exif-month-en" disabled>
+                <label for="feature-exif-month-en">Extract month from EXIF in
+                    english, like "10 january"</label>
+            </div>
+            <div>
+                <input type="checkbox" id="feature-exif-month-ru" checked disabled>
+                <label for="feature-exif-month-ru">Extract month from EXIF in
+                    russian, like "10 января"</label>
+            </div>
+        </div>
+
+        <input type="file"
+               id="upload-input"
+               multiple
+               accept=".jpg, .jpeg, .png, .webp"
+               onchange="addNewFiles(this, '{{ current_item.uuid }}')"/>
+
+        <div id="alerts"></div>
+
+        <input id="media_button"
+               type="button"
+               class="button"
+               onclick="uploadAllFiles()"
+               value="Process media">
+
+        <progress id="global-progress" value=0 max=100></progress>
+        <div id="global-status"></div>
+
+    </div>
+
+    <br/>
+    <div id="media-log" class="upload-container medium-block"></div>
+    <br/>
+
+    <div id="scroll-bottom" style="display: none" class="narrow-block">
+        <input type="button" class="button-nav" onclick="jumpToBottom()" value="Jump to bottom">
+    </div>
+
+    <div id="media" class="upload-container medium-block"></div>
+
+    <div id="scroll-top" style="display: none" class="narrow-block">
+        <input type="button" class="button-nav" onclick="jumpToTop()" value="Jump to top">
+    </div>
+
+    <br/>
+
+{% endblock %}

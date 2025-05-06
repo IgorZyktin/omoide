@@ -8,7 +8,6 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide import operations
 from omoide import utils
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
@@ -198,10 +197,11 @@ class RenameItemUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                },
             )
 
         return operation_id
@@ -260,26 +260,29 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             operation_id_tags = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                },
             )
 
             operation_id_old_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=old_parent.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(old_parent.uuid),
+                },
             )
 
             operation_id_new_parent = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=new_parent.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(new_parent.uuid),
+                },
             )
 
         if new_parent.has_incomplete_media():
@@ -328,10 +331,11 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                operation=operations.RebuildComputedTagsForItemOp(
-                    requested_by=user.uuid,
-                    item_uuid=item.uuid,
-                ),
+                name='rebuild_computed_tags',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                },
             )
 
         return operation_id
@@ -395,59 +399,49 @@ class DeleteItemUseCase(BaseItemUseCase):
                     await self.mediator.tags.decrement_known_tags_user(conn, user, computed_tags)
 
                 member_metainfo = await self.mediator.meta.get_by_item(conn, member)
-                await self.mediator.object_storage.soft_delete(user, member)
+                await self.mediator.object_storage.soft_delete(user, owner, member)
                 await self.mediator.meta.soft_delete(conn, member_metainfo)
                 await self.mediator.items.soft_delete(conn, member)
 
         return switch_to
 
 
-class BaseUploadUseCase(BaseAPIUseCase):
-    """Base class for uploading."""
-
-    media_type: const.MEDIA_TYPE
+class UploadItemUseCase(BaseAPIUseCase):
+    """Use case for processing image binary content."""
 
     async def execute(
         self,
         user: models.User,
         item_uuid: UUID,
-        binary_content: bytes,
-        ext: str,
-    ) -> None:
+        file: models.NewFile,
+    ) -> int | None:
         """Execute."""
-        do_what = f'upload {self.media_type}'
-        self.mediator.policy.ensure_registered(user, to=do_what)
-
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=do_what)
+            self.mediator.policy.ensure_owner(user, item, to='upload media to this item')
 
-            LOG.info('{} is uploading {} for {}', user, self.media_type, item)
-
-            await self.mediator.object_storage.save(
-                item=item,
-                media_type=self.media_type,
-                binary_content=binary_content,
-                ext=ext,
+            operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name='upload',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                    'content_type': file.content_type,
+                    'filename': file.filename,
+                    'ext': file.ext,
+                    'features': {
+                        'extract_exif': file.features.extract_exif,
+                        'last_modified': (
+                            file.features.last_modified.isoformat()
+                            if file.features.last_modified
+                            else None
+                        ),
+                    },
+                },
+                payload=file.content,
             )
 
-
-class UploadContentForItemUseCase(BaseUploadUseCase):
-    """Use case for content uploading."""
-
-    media_type: const.MEDIA_TYPE = const.CONTENT
-
-
-class UploadPreviewForItemUseCase(BaseUploadUseCase):
-    """Use case for preview uploading."""
-
-    media_type: const.MEDIA_TYPE = const.PREVIEW
-
-
-class UploadThumbnailForItemUseCase(BaseUploadUseCase):
-    """Use case for thumbnail uploading."""
-
-    media_type: const.MEDIA_TYPE = const.THUMBNAIL
+        return operation_id
 
 
 class DownloadCollectionUseCase(BaseItemUseCase):
@@ -596,16 +590,17 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
 
                 operation_id = await self.mediator.misc.create_serial_operation(
                     conn=conn,
-                    operation=operations.RebuildPermissionsForItemOp(
-                        requested_by=user.uuid,
-                        item_uuid=item.uuid,
-                        added=set(added),
-                        deleted=set(deleted),
-                        original=set(item.permissions),
-                        apply_to_parents=apply_to_parents,
-                        apply_to_children=apply_to_children,
-                        apply_to_children_as=str(apply_to_children_as.value),
-                    ),
+                    name='rebuild_permissions',
+                    extras={
+                        'requested_by': str(user.uuid),
+                        'item_uuid': str(item.uuid),
+                        'added': list(added),
+                        'deleted': list(deleted),
+                        'original': list(item.permissions),
+                        'apply_to_parents': apply_to_parents,
+                        'apply_to_children': apply_to_children,
+                        'apply_to_children_as': apply_to_children_as.value,
+                    },
                 )
 
             item.permissions = user_ids

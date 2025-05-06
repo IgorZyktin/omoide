@@ -24,7 +24,6 @@ def upgrade() -> None:
         'serial_operations',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('name', sa.String(length=256), nullable=False),
-        sa.Column('worker_name', sa.String(length=256), nullable=True),
         sa.Column('status', sa.String(length=64), nullable=False),
         sa.Column('extras', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
@@ -33,6 +32,7 @@ def upgrade() -> None:
         sa.Column('ended_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('log', sa.Text(), nullable=True),
         sa.Column('payload', postgresql.BYTEA(), nullable=False),
+        sa.Column('processed_by', postgresql.ARRAY(sa.Text()), nullable=False),
         sa.PrimaryKeyConstraint('id'),
     )
 

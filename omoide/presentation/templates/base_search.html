@@ -254,7 +254,7 @@
                     <span>Create</span>
                 </a>
 
-                <a href="{{ request.url_for('app_upload', item_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+                <a href="{{ request.url_for('app_upload', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                    title="Upload media"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"

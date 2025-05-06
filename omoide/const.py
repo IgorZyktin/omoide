@@ -59,3 +59,8 @@ class AllSerialOperations(enum.StrEnum):
     REBUILD_KNOWN_TAGS_ALL = 'rebuild_known_tags_all'
     REBUILD_KNOWN_TAGS_USER = 'rebuild_known_tags_user'
     REBUILD_KNOWN_TAGS_ANON = 'rebuild_known_tags_anon'
+
+
+PREVIEW_SIZE = 1024
+THUMBNAIL_SIZE = 384
+IMAGE_QUALITY = 80

@@ -7,22 +7,17 @@ from typing import Annotated
 import nano_settings as ns
 
 
-def comma_separated(value: str) -> list[str]:
-    """Split value by commas."""
-    return [x.strip() for x in value.split(',')]
-
-
 @dataclass
 class ParallelWorkerConfig(ns.BaseConfig):
     """Worker configuration."""
 
     db_url: ns.SecretStr
-    minimal_completion: Annotated[set[str], set, comma_separated]
+    minimal_completion: Annotated[set[str], set, ns.Separated()]
 
     log_path: str = ''
     log_level: str = 'DEBUG'
     log_rotation: str = '1 week'
-    log_diagnose: Annotated[bool, ns.looks_like_boolean] = True
+    log_diagnose: Annotated[bool, ns.Boolean()] = True
 
     name: str = 'parallel-dev'
     fork_type: str = 'process'
@@ -31,7 +26,7 @@ class ParallelWorkerConfig(ns.BaseConfig):
     operation_delay: float = 0.1
     operation_deadline: float = 300.0
     input_batch: int = 100
-    supported_operations: Annotated[frozenset[str], frozenset, comma_separated] = frozenset()
+    supported_operations: Annotated[frozenset[str], frozenset, ns.Separated()] = frozenset()
     data_folder: Path = Path('.')
     workers: int = 0
     max_workers: int = 5

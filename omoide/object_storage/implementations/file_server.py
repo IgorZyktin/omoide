@@ -4,7 +4,6 @@ import python_utilz as pu
 
 from omoide import const
 from omoide import models
-from omoide import operations
 from omoide.database.interfaces import AbsDatabase
 from omoide.database.interfaces import AbsMediaRepo
 from omoide.database.interfaces import AbsMiscRepo
@@ -59,6 +58,7 @@ class FileObjectStorageServer(AbsObjectStorage):
     async def soft_delete(
         self,
         requested_by: models.User,
+        owner: models.User,
         item: models.Item,
     ) -> list[SoftDeleteEntry]:
         """Mark all objects as deleted."""
@@ -68,33 +68,39 @@ class FileObjectStorageServer(AbsObjectStorage):
             if item.content_ext:
                 operation_id = await self.misc.create_parallel_operation(
                     conn=conn,
-                    operation=operations.SoftDeleteMediaOp(
-                        requested_by=requested_by.uuid,
-                        item_uuid=item.uuid,
-                        media_type=const.CONTENT,
-                    ),
+                    name='soft_delete',
+                    extras={
+                        'requested_by': str(requested_by.uuid),
+                        'owner_uuid': str(owner.uuid),
+                        'item_uuid': str(item.uuid),
+                        'media_type': const.CONTENT,
+                    },
                 )
                 deleted_types.append({'media_type': const.CONTENT, 'operation_id': operation_id})
 
             if item.preview_ext:
                 operation_id = await self.misc.create_parallel_operation(
                     conn=conn,
-                    operation=operations.SoftDeleteMediaOp(
-                        requested_by=requested_by.uuid,
-                        item_uuid=item.uuid,
-                        media_type=const.PREVIEW,
-                    ),
+                    name='soft_delete',
+                    extras={
+                        'requested_by': str(requested_by.uuid),
+                        'owner_uuid': str(owner.uuid),
+                        'item_uuid': str(item.uuid),
+                        'media_type': const.PREVIEW,
+                    },
                 )
                 deleted_types.append({'media_type': const.PREVIEW, 'operation_id': operation_id})
 
             if item.thumbnail_ext:
                 operation_id = await self.misc.create_parallel_operation(
                     conn=conn,
-                    operation=operations.SoftDeleteMediaOp(
-                        requested_by=requested_by.uuid,
-                        item_uuid=item.uuid,
-                        media_type=const.THUMBNAIL,
-                    ),
+                    name='soft_delete',
+                    extras={
+                        'requested_by': str(requested_by.uuid),
+                        'owner_uuid': str(owner.uuid),
+                        'item_uuid': str(item.uuid),
+                        'media_type': const.THUMBNAIL,
+                    },
                 )
                 deleted_types.append({'media_type': const.THUMBNAIL, 'operation_id': operation_id})
 

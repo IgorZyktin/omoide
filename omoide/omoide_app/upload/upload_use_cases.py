@@ -13,11 +13,11 @@ class AppUploadUseCase(BaseAPPUseCase):
     async def execute(
         self,
         user: models.User,
-        item_uuid: UUID,
+        parent_uuid: UUID,
     ) -> tuple[models.Item, list[models.User]]:
         """Execute."""
         async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+            item = await self.mediator.items.get_by_uuid(conn, parent_uuid)
 
             if item.owner_uuid != user.uuid and not user.is_admin:
                 msg = 'You are not allowed to upload for different user'
