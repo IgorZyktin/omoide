@@ -1,5 +1,6 @@
 """Use cases for item introduction."""
 
+from datetime import datetime
 import hashlib
 from io import BytesIO
 import math
@@ -7,6 +8,7 @@ from typing import Any
 from uuid import UUID
 import zlib
 
+from PIL import ExifTags
 from PIL import Image
 from PIL import ImageFilter
 import python_utilz as pu
@@ -17,6 +19,7 @@ from omoide import models
 from omoide import operations
 from omoide.workers.serial.use_cases.base_use_case import BaseSerialWorkerUseCase
 
+IFD_CODE_LOOKUP = {i.value: i.name for i in ExifTags.IFD}
 LOG = custom_logging.get_logger(__name__)
 
 
@@ -55,9 +58,12 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             await self.process_thumbnail(conn, owner, item, metainfo, operation)
 
             if operation.extras['features']['extract_exif']:
-                exif = await self.process_exif(item, operation)
+                exif = await self.process_exif(operation)
                 if exif:
                     await self.mediator.exif.create(conn, item, exif)
+
+            if last_modified := operation.extras['features']['last_modified']:
+                metainfo.user_time = datetime.fromisoformat(last_modified).replace(tzinfo=None)
 
             metainfo.updated_at = pu.now()
             await self.mediator.meta.save(conn, metainfo)
@@ -179,13 +185,32 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             payload=new_payload,
         )
 
-    async def process_exif(
-        self,
-        item: models.Item,
-        operation: operations.Operation,
-    ) -> dict[str, str]:
+    @staticmethod
+    async def process_exif(operation: operations.Operation) -> dict[str, str]:
         """Extract exif data from content."""
-        del item
-        del operation
-        # TODO
-        return {}
+        exif = {}
+        stream = BytesIO(operation.payload)
+        with Image.open(stream) as img:
+            img_exif = img.getexif()
+
+            for tag_code, value in img_exif.items():
+                if tag_code in IFD_CODE_LOOKUP:
+                    ifd_tag_name = str(IFD_CODE_LOOKUP[tag_code])
+
+                    if ifd_tag_name not in exif:
+                        exif[ifd_tag_name] = {}
+
+                    ifd_data = img_exif.get_ifd(tag_code).items()
+
+                    for nested_key, nested_value in ifd_data:
+                        nested_tag_name = (
+                            ExifTags.GPSTAGS.get(nested_key, None)
+                            or ExifTags.TAGS.get(nested_key, None)
+                            or nested_key
+                        )
+                        exif[ifd_tag_name][str(nested_tag_name)] = str(nested_value)
+
+                else:
+                    exif[ExifTags.TAGS.get(tag_code)] = str(value)
+
+        return exif

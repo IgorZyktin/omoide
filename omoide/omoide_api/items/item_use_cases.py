@@ -431,10 +431,6 @@ class UploadItemUseCase(BaseAPIUseCase):
                     'ext': file.ext,
                     'features': {
                         'extract_exif': file.features.extract_exif,
-                        'exif_time_backoff': file.features.exif_time_backoff,
-                        'exif_year': file.features.exif_year,
-                        'exif_month_en': file.features.exif_month_en,
-                        'exif_month_ru': file.features.exif_month_ru,
                         'last_modified': (
                             file.features.last_modified.isoformat()
                             if file.features.last_modified
