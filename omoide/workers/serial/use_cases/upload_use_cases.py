@@ -67,6 +67,12 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
 
             metainfo.updated_at = pu.now()
             await self.mediator.meta.save(conn, metainfo)
+            await self.mediator.meta.add_item_note(
+                conn,
+                item=item,
+                key='original_filename',
+                value=operation.extras['filename'],
+            )
 
             signature_crc32 = zlib.crc32(operation.payload)
             await self.mediator.signatures.save_cr32_signature(conn, item, signature_crc32)
