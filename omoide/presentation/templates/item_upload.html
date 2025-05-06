@@ -6,6 +6,8 @@
             src="{{ request.url_for('static', path='crud.js?' + version) }}"></script>
     <script type="text/javascript"
             src="{{ request.url_for('static', path='item_upload.js?' + version) }}"></script>
+    <script type="text/javascript"
+            src="{{ request.url_for('static', path='thirdparty/exif-js.min.js') }}"></script>
 {% endblock %}
 
 {% block body %}

@@ -37,6 +37,105 @@ function toggleExif(checkbox) {
     }
 }
 
+async function extractEXIFTags(file) {
+    // Extract tags from file
+    return new Promise(function (resolve, _) {
+        EXIF.getData(file, function () {
+            resolve(EXIF.getAllTags(this))
+        })
+    })
+}
+
+function extractDatetime(rawString) {
+    // try to extract datetime from string
+    if (!rawString)
+        return null
+
+    let parsed = Date.parse(rawString)
+
+    if (isNaN(parsed)) {
+        // datetime could be in format "2022:10:29 20:39:00"
+        rawString = rawString.replace(':', '-')
+        rawString = rawString.replace(':', '-')
+    }
+
+    let parsed2 = Date.parse(rawString)
+    if (isNaN(parsed2))
+        return null
+
+    return rawString
+}
+
+function extractYearNumberStr(string) {
+    // get year from textual DateTime
+    return string.slice(0, 4)
+}
+
+function extractMonthNumberStr(string) {
+    // get month from textual DateTime
+    return string.slice(5, 7)
+}
+
+function extractDayNumberStr(string) {
+    // get day from textual DateTime
+    return string.slice(8, 10)
+}
+
+function getMonthNameByNumberEN(number) {
+    // Return month name by its number in english
+    return {
+        '01': 'january',
+        '02': 'february',
+        '03': 'march',
+        '04': 'april',
+        '05': 'may',
+        '06': 'june',
+        '07': 'july',
+        '08': 'august',
+        '09': 'september',
+        '10': 'october',
+        '11': 'november',
+        '12': 'december',
+    }[number] || '???'
+}
+
+function extractMonthEN(dt) {
+    // Extract month from EXIF tags as a string (english)
+    let monthName = getMonthNameByNumberEN(extractMonthNumberStr(dt))
+    let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
+    return `${monthName} ${dayNumber}`
+}
+
+function getMonthNameByNumberRU(number) {
+    // Return month name by its number in russian
+    return {
+        '01': 'января',
+        '02': 'февраля',
+        '03': 'марта',
+        '04': 'апреля',
+        '05': 'мая',
+        '06': 'июня',
+        '07': 'июля',
+        '08': 'августа',
+        '09': 'сентября',
+        '10': 'октября',
+        '11': 'ноября',
+        '12': 'декабря',
+    }[number] || '???'
+}
+
+function extractMonthRU(dt) {
+    // Extract month from EXIF tags as a string (russian)
+    let monthName = getMonthNameByNumberRU(extractMonthNumberStr(dt))
+    let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
+    return `${dayNumber} ${monthName}`
+}
+
+function splitLines(text) {
+    // split string by line separators and return only non-empty
+    return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
+}
+
 function getFeatures() {
     // Read feature checkboxes and return their values
     let exif = document.getElementById(FEATURE_EXIF_ID)
@@ -77,15 +176,40 @@ function hideNavButtons() {
     document.getElementById(SCROLL_BOTTOM_ID).style.display = "none"
 }
 
-function addNewFiles(source, parentUUid) {
+async function addNewFiles(source, parentUUid) {
     // Create placeholders for added files
     showNavButtons()
     let media = document.getElementById(MEDIA_ID)
+    let features = getFeatures()
     CARDS.length = 0
     media.replaceChildren()
     let number = 1
     for (let file of Object.values(source.files)) {
-        let card = createFileCard(file, parentUUid, number)
+        let tags = []
+        let exif
+        if (features.extract_exif) {
+            await extractEXIFTags(file).then(function (result) {
+                exif = result
+            })
+            let dt = extractDatetime(exif['DateTimeOriginal'])
+
+            if (!dt && features.exif_time_backoff) {
+                dt = new Date(file.lastModified).toISOString()
+            }
+
+            if (dt && features.exif_year) {
+                tags.push(extractYearNumberStr(dt))
+            }
+
+            if (dt && features.exif_month_ru) {
+                tags.push(extractMonthRU(dt))
+            }
+
+            if (dt && features.exif_month_en) {
+                tags.push(extractMonthEN(dt))
+            }
+        }
+        let card = createFileCard(file, parentUUid, number, tags)
         number += 1
         CARDS.push(card)
         console.log(`Added file ${file.name}`)
@@ -93,16 +217,16 @@ function addNewFiles(source, parentUUid) {
     }
 }
 
-function createFileCard(file, parentUUID, number) {
+function createFileCard(file, parentUUID, number, tags) {
     // Create new card that stores file upload progress
     let card = {
         uuid: null,
         parentUuid: parentUUID,
         file: file,
-        element: new FileCardElement(file, number),
+        element: new FileCardElement(file, number, tags),
         number: number,
         previewIsVisible: false,
-        localTags: [],
+        localTags: [...tags],
         localPermissions: [],
 
         send: async function (thisCard) {
@@ -110,12 +234,12 @@ function createFileCard(file, parentUUID, number) {
                 const xhr = new XMLHttpRequest()
                 xhr.timeout = SEND_TIMEOUT
 
-                xhr.upload.addEventListener('loadstart', (event) => {
+                xhr.upload.addEventListener("loadstart", (event) => {
                     this.element.progress.value = 0
                     this.element.progress.max = event.total
                 });
 
-                xhr.upload.addEventListener('progress', (event) => {
+                xhr.upload.addEventListener("progress", (event) => {
                     this.element.progress.value = event.loaded;
                     this.element.progress.textContent = `Uploading (${(
                         (event.loaded / event.total) *
@@ -128,14 +252,14 @@ function createFileCard(file, parentUUID, number) {
                     this.element.progress.max = 100
                 });
 
-               xhr.onload = function(e) {
-                 resolve(xhr.response);
-               };
-               xhr.onerror = function () {
-                 resolve(undefined);
-                 thisCard.element.log.textContent = "Upload failed"
-                 console.error(`An error occurred during the XMLHttpRequest for ${thisCard.uuid}`)
-               };
+                xhr.onload = function (e) {
+                    resolve(xhr.response);
+                };
+                xhr.onerror = function () {
+                    resolve(undefined);
+                    thisCard.element.log.textContent = "Upload failed"
+                    console.error(`An error occurred during the XMLHttpRequest for ${thisCard.uuid}`)
+                };
 
                 const fileData = new FormData();
                 fileData.append("file", file);
@@ -168,7 +292,7 @@ function createFileCard(file, parentUUID, number) {
 
 class FileCardElement {
     // Helper object that displays file card
-    constructor(file, number) {
+    constructor(file, number, tags) {
         this.previewIsVisible = false
 
         // div itself
@@ -204,6 +328,7 @@ class FileCardElement {
         this.tagsLabel.innerHTML = "Additional tags for this item (one tag per line):"
         this.tagsArea = document.createElement("textarea")
         this.tagsArea.rows = 5
+        this.tagsArea.innerHTML = tags.join('\n')
         this.tagsLabel.append(this.tagsArea)
         this.right.append(this.tagsLabel)
 
@@ -248,7 +373,7 @@ class FileCardElement {
         this.previewIsVisible = !this.previewIsVisible
     }
 
-    disable () {
+    disable() {
         // Make nested elements disabled
         this.tagsArea.disabled = true
         this.permissionsArea.disabled = true
@@ -287,17 +412,17 @@ async function createItems() {
         xhr.timeout = SEND_TIMEOUT
         xhr.responseType = "json";
 
-       xhr.onload = function(e) {
-         resolve(xhr.response);
-         for (let i = 0; i < xhr.response["items"].length; i ++) {
-            CARDS[i].uuid = xhr.response["items"][i]["uuid"]
-         }
-       };
+        xhr.onload = function (e) {
+            resolve(xhr.response);
+            for (let i = 0; i < xhr.response["items"].length; i++) {
+                CARDS[i].uuid = xhr.response["items"][i]["uuid"]
+            }
+        };
 
-       xhr.onerror = function () {
-         resolve(undefined);
-         console.error("Failed to create items")
-       };
+        xhr.onerror = function () {
+            resolve(undefined);
+            console.error("Failed to create items")
+        };
 
         xhr.open("POST", `${ITEMS_ENDPOINT}/bulk`, true)
         xhr.setRequestHeader("Content-Type", "application/json");
