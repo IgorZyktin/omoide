@@ -194,7 +194,7 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
     @staticmethod
     async def process_exif(operation: operations.Operation) -> dict[str, str]:
         """Extract exif data from content."""
-        exif = {}
+        exif: dict[str, Any] = {}
         stream = BytesIO(operation.payload)
         with Image.open(stream) as img:
             img_exif = img.getexif()
@@ -217,6 +217,6 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
                         exif[ifd_tag_name][str(nested_tag_name)] = str(nested_value)
 
                 else:
-                    exif[ExifTags.TAGS.get(tag_code)] = str(value)
+                    exif[str(ExifTags.TAGS.get(tag_code))] = str(value)
 
         return exif
