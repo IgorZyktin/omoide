@@ -44,7 +44,13 @@ class ParallelOperationsProcessor:
         if not batch:
             return False
 
-        return await self.execute_batch(batch)
+        try:
+            result = await self.execute_batch(batch)
+        except Exception:
+            LOG.exception('Failed to execute batch: {}', batch)
+            result = False
+
+        return result
 
     async def execute_batch(self, batch: list[operations.Operation]) -> bool:
         """Perform workload."""
@@ -119,10 +125,12 @@ class ParallelOperationsProcessor:
                         processed_by=self.config.name,
                     )
 
-                    item_uuid = UUID(operation_after.extras['item_uuid'])
-                    item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-                    item.status = models.Status.AVAILABLE
-                    await self.mediator.items.save(conn, item)
+                    # TODO - make it more dependant on operation, not just manual check
+                    if operation_after.name == 'download':
+                        item_uuid = UUID(operation_after.extras['item_uuid'])
+                        item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+                        item.status = models.Status.AVAILABLE
+                        await self.mediator.items.save(conn, item)
 
                 did_something = True
 
