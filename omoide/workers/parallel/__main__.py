@@ -29,10 +29,11 @@ async def main() -> None:
     mediator = ParallelWorkerMediator(
         database=sa.SqlalchemyDatabase(config.db_url.get_secret_value()),
         items=sa.ItemsRepo(),
-        users=sa.UsersRepo(),
-        workers=sa.WorkersRepo(),
+        meta=sa.MetaRepo(),
         misc=sa.MiscRepo(),
         signatures=sa.SignaturesRepo(),
+        users=sa.UsersRepo(),
+        workers=sa.WorkersRepo(),
     )
 
     cores = config.workers or os.cpu_count() or 1

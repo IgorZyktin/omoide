@@ -1,7 +1,9 @@
 """Use cases for parallel operations."""
 
 from collections.abc import Callable
+from datetime import datetime
 from functools import partial
+import os
 from pathlib import Path
 from uuid import UUID
 
@@ -23,6 +25,7 @@ def download_media(  # noqa: PLR0913
     ext: str,
     prefix_size: int,
     payload: bytes,
+    user_time: datetime | None,
 ) -> None:
     """Soft-delete single file."""
     if not payload:
@@ -41,6 +44,10 @@ def download_media(  # noqa: PLR0913
 
     path.write_bytes(payload)
 
+    if user_time:
+        ts = user_time.timestamp()
+        os.utime(path, times=(ts, ts))
+
 
 class DownloadUseCase(BaseParallelWorkerUseCase):
     """Use case for media downloading."""
@@ -54,6 +61,7 @@ class DownloadUseCase(BaseParallelWorkerUseCase):
                 read_deleted=True,
             )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
+            metainfo = await self.mediator.meta.get_by_item(conn, item)
 
             if operation.extras['media_type'] == const.CONTENT:
                 ext = item.content_ext or ''
@@ -71,4 +79,5 @@ class DownloadUseCase(BaseParallelWorkerUseCase):
                 ext,
                 self.config.prefix_size,
                 operation.payload,
+                metainfo.user_time,
             )

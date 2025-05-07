@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from omoide.database.interfaces import abs_database
 from omoide.database.interfaces import abs_items_repo
+from omoide.database.interfaces import abs_meta_repo
 from omoide.database.interfaces import abs_misc_repo
 from omoide.database.interfaces import abs_signatures_repo
 from omoide.database.interfaces import abs_users_repo
@@ -16,6 +17,7 @@ class ParallelWorkerMediator:
 
     database: abs_database.AbsDatabase
     items: abs_items_repo.AbsItemsRepo
+    meta: abs_meta_repo.AbsMetaRepo
     misc: abs_misc_repo.AbsMiscRepo
     signatures: abs_signatures_repo.AbsSignaturesRepo
     users: abs_users_repo.AbsUsersRepo
