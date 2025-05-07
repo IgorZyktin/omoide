@@ -17,7 +17,7 @@ LOG = custom_logging.get_logger(__name__)
 
 async def main() -> None:
     """Async entry point."""
-    config = ns.from_env(SerialWorkerConfig, env_prefix='omoide_serial_worker')
+    config = ns.from_env(SerialWorkerConfig, env_prefix='omoide_worker_serial')
 
     custom_logging.init_logging(
         level=config.log_level,

@@ -17,7 +17,7 @@ from omoide.workers.parallel.mediator import ParallelWorkerMediator
 
 async def main() -> None:
     """Async entry point."""
-    config = ns.from_env(ParallelWorkerConfig, env_prefix='omoide_parallel_worker')
+    config = ns.from_env(ParallelWorkerConfig, env_prefix='omoide_worker_parallel')
 
     custom_logging.init_logging(
         level=config.log_level,
