@@ -1,11 +1,11 @@
 [Unit]
-Description=Omoide serial worker daemon
+Description=Omoide parallel worker daemon
 After=network.target
 
 [Service]
 User=omoide_user
 WorkingDirectory=/home/omoide_user/omoide
-ExecStart=/home/omoide_user/omoide/.venv/bin/python -m omoide.workers.parallel
+ExecStart=/home/omoide_user/omoide/.venv/bin/python -m omoide.workers.serial
 EnvironmentFile=/etc/omoide/env
 CPUAccounting=true
 MemoryAccounting=true
