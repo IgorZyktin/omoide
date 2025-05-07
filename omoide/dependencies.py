@@ -45,8 +45,8 @@ def get_templates() -> Jinja2Templates:
 
     config = get_config()
     locator = WebLocator(root='content', prefix_size=config.prefix_size)
-    templates.env.globals['get_content_url'] = locator.get_thumbnail_location
-    templates.env.globals['get_preview_url'] = locator.get_thumbnail_location
+    templates.env.globals['get_content_url'] = locator.get_content_location
+    templates.env.globals['get_preview_url'] = locator.get_preview_location
     templates.env.globals['get_thumbnail_url'] = locator.get_thumbnail_location
 
     templates.env.globals['human_readable_size'] = pu.human_readable_size
