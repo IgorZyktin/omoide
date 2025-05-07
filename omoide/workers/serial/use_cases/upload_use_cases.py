@@ -130,6 +130,7 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             )
             new_img = img.resize((new_width, new_height))
             new_img = new_img.filter(ImageFilter.SHARPEN)
+            new_img = new_img.convert('RGB')
 
             metainfo.preview_width, metainfo.preview_height = new_width, new_height
 
@@ -170,6 +171,7 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
             )
             new_img = img.resize((new_width, new_height))
             new_img = new_img.filter(ImageFilter.SHARPEN)
+            new_img = new_img.convert('RGB')
 
             metainfo.thumbnail_width, metainfo.thumbnail_height = new_width, new_height
 
