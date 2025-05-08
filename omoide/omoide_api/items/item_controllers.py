@@ -342,15 +342,7 @@ async def api_upload_item(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    if ext == 'pdf':
-        # TODO - have separate use case for pdf
-        return Response(
-            content='PDF is not yet supported',
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
-    else:
-        use_case = item_use_cases.UploadItemUseCase(mediator)
-
+    use_case = item_use_cases.UploadItemUseCase(mediator)
     features = item_api_models.extract_features(request)
     content = await file.read()
 
