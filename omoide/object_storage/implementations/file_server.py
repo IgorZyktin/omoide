@@ -108,44 +108,54 @@ class FileObjectStorageServer(AbsObjectStorage):
 
     async def copy_all_objects(
         self,
+        requested_by: models.User,
+        owner: models.User,
         source_item: models.Item,
         target_item: models.Item,
     ) -> list[const.MEDIA_TYPE]:
         """Copy all objects from one item to another."""
         copied_types: list[const.MEDIA_TYPE] = []
-        now = pu.now()
 
         async with self.database.transaction() as conn:
             if source_item.content_ext is not None:
-                await self.media.copy_image(
+                await self.misc.create_parallel_operation(
                     conn=conn,
-                    source_item=source_item,
-                    target_item=target_item,
-                    media_type=const.CONTENT,
-                    ext=source_item.content_ext,
-                    moment=now,
+                    name='copy',
+                    extras={
+                        'requested_by': str(requested_by.uuid),
+                        'owner_uuid': str(owner.uuid),
+                        'source_item_uuid': str(source_item.uuid),
+                        'target_item_uuid': str(target_item.uuid),
+                        'media_type': const.CONTENT,
+                    },
                 )
                 copied_types.append(const.CONTENT)
 
             if source_item.preview_ext is not None:
-                await self.media.copy_image(
+                await self.misc.create_parallel_operation(
                     conn=conn,
-                    source_item=source_item,
-                    target_item=target_item,
-                    media_type=const.PREVIEW,
-                    ext=source_item.preview_ext,
-                    moment=now,
+                    name='copy',
+                    extras={
+                        'requested_by': str(requested_by.uuid),
+                        'owner_uuid': str(owner.uuid),
+                        'source_item_uuid': str(source_item.uuid),
+                        'target_item_uuid': str(target_item.uuid),
+                        'media_type': const.PREVIEW,
+                    },
                 )
                 copied_types.append(const.PREVIEW)
 
             if source_item.thumbnail_ext is not None:
-                await self.media.copy_image(
+                await self.misc.create_parallel_operation(
                     conn=conn,
-                    source_item=source_item,
-                    target_item=target_item,
-                    media_type=const.THUMBNAIL,
-                    ext=source_item.thumbnail_ext,
-                    moment=now,
+                    name='copy',
+                    extras={
+                        'requested_by': str(requested_by.uuid),
+                        'owner_uuid': str(owner.uuid),
+                        'source_item_uuid': str(source_item.uuid),
+                        'target_item_uuid': str(target_item.uuid),
+                        'media_type': const.PREVIEW,
+                    },
                 )
                 copied_types.append(const.THUMBNAIL)
 

@@ -1,5 +1,6 @@
 """Implementation for database commands."""
 
+import sys
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -44,10 +45,17 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
     total = 0
 
     async with database.transaction() as conn:
+        resp = await users.get_by_login(conn, 'admin')
+        if resp:
+            admin, _, _ = resp
+        else:
+            sys.exit(1)
+
         rows = await get_items_without_images(conn, only_users, only_items, limit)
         for item_uuid, copied_image_from_uuid in rows:
             changed = False
             target_item = await items.get_by_uuid(conn, item_uuid)
+            owner = await users.get_by_id(conn, target_item.owner_id)
 
             if copied_image_from_uuid is not None:
                 try:
@@ -63,6 +71,8 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
                         )
 
                     await object_storage.copy_all_objects(
+                        requested_by=admin,
+                        owner=owner,
                         source_item=source_item,
                         target_item=target_item,
                     )
@@ -90,6 +100,8 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
                         source_item=child,
                     )
                 await object_storage.copy_all_objects(
+                    requested_by=admin,
+                    owner=owner,
                     source_item=child,
                     target_item=target_item,
                 )

@@ -48,20 +48,6 @@ class CreateManyItemsUseCase(BaseItemUseCase):
                         parent.is_collection = True
                         await self.mediator.items.save(conn, parent)
 
-                    if parent.has_incomplete_media():
-                        media_types = await self.mediator.object_storage.copy_all_objects(
-                            source_item=item,
-                            target_item=parent,
-                        )
-
-                        if media_types:
-                            await self.mediator.meta.add_item_note(
-                                conn=conn,
-                                item=parent,
-                                key='copied_image_from',
-                                value=str(item.uuid),
-                            )
-
                 computed_tags = item.get_computed_tags(parent_name, parent_tags)
 
                 # for the item itself
@@ -263,6 +249,10 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                     msg, new_parent_uuid=new_parent_uuid, item_uuid=item_uuid
                 )
 
+            if old_parent.owner_id != new_parent.owner_id:
+                msg = 'Currently you cannot move an item from one owner to another'
+                raise exceptions.InvalidInputError(msg)
+
             LOG.info(
                 '{user} is setting {new_parent} as a parent '
                 'for {item} (previous parent is {old_parent})',
@@ -306,9 +296,12 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                     'item_uuid': str(new_parent.uuid),
                 },
             )
+            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
 
         if new_parent.has_incomplete_media():
             media_types = await self.mediator.object_storage.copy_all_objects(
+                requested_by=user,
+                owner=owner,
                 source_item=item,
                 target_item=new_parent,
             )
@@ -463,22 +456,28 @@ class UploadItemUseCase(BaseAPIUseCase):
                 payload=file.content,
             )
 
+            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
+
+            parent = None
             if item.parent_id is not None:
                 parent = await self.mediator.items.get_by_id(conn, item.parent_id)
 
-                if parent.has_incomplete_media():
-                    media_types = await self.mediator.object_storage.copy_all_objects(
-                        source_item=item,
-                        target_item=parent,
-                    )
+        if parent is not None and parent.has_incomplete_media():
+            media_types = await self.mediator.object_storage.copy_all_objects(
+                requested_by=user,
+                owner=owner,
+                source_item=item,
+                target_item=parent,
+            )
 
-                    if media_types:
-                        await self.mediator.meta.add_item_note(
-                            conn=conn,
-                            item=parent,
-                            key='copied_image_from',
-                            value=str(item.uuid),
-                        )
+            if media_types:
+                async with self.mediator.database.transaction() as conn:
+                    await self.mediator.meta.add_item_note(
+                        conn=conn,
+                        item=parent,
+                        key='copied_image_from',
+                        value=str(item.uuid),
+                    )
 
         return operation_id
 

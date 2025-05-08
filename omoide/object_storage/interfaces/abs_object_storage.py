@@ -39,6 +39,8 @@ class AbsObjectStorage(abc.ABC):
     @abc.abstractmethod
     async def copy_all_objects(
         self,
+        requested_by: models.User,
+        owner: models.User,
         source_item: models.Item,
         target_item: models.Item,
     ) -> list[const.MEDIA_TYPE]:

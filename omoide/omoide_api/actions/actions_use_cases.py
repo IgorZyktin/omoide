@@ -121,22 +121,26 @@ class CopyImageUseCase(BaseAPIUseCase):
             return []
 
         async with self.mediator.database.transaction() as conn:
-            source = await self.mediator.items.get_by_uuid(conn, source_uuid)
-            target = await self.mediator.items.get_by_uuid(conn, target_uuid)
+            source_item = await self.mediator.items.get_by_uuid(conn, source_uuid)
+            target_item = await self.mediator.items.get_by_uuid(conn, target_uuid)
 
-            self.mediator.policy.ensure_can_change(user, source, to='copy images')
-            self.mediator.policy.ensure_can_change(user, target, to='copy images')
+            self.mediator.policy.ensure_can_change(user, source_item, to='copy images')
+            self.mediator.policy.ensure_can_change(user, target_item, to='copy images')
+
+            owner = await self.mediator.users.get_by_id(conn, source_item.owner_id)
 
         media_types = await self.mediator.object_storage.copy_all_objects(
-            source_item=source,
-            target_item=target,
+            requested_by=user,
+            owner=owner,
+            source_item=source_item,
+            target_item=target_item,
         )
 
         async with self.mediator.database.transaction() as conn:
             if media_types:
                 await self.mediator.meta.add_item_note(
                     conn=conn,
-                    item=target,
+                    item=target_item,
                     key='copied_image_from',
                     value=str(source_uuid),
                 )
