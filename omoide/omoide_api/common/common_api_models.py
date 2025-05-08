@@ -153,7 +153,7 @@ class VersionOutput(BaseModel):
 
     version: str
 
-    model_config = {'json_schema_extra': {'examples': [{'version': '0.3.10'}]}}
+    model_config = {'json_schema_extra': {'examples': [{'version': '0.3.11'}]}}
 
 
 class WhoAmIOutput(BaseModel):
