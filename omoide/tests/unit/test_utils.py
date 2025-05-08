@@ -17,11 +17,3 @@ from omoide import utils
 def test_get_bucket(uuid, length, result):
     """Must cut symbols from the start, but only if input is UUID."""
     assert utils.get_bucket(uuid, length) == result
-
-
-def test_split():
-    """Must separate string and filter out empty values."""
-    reference = ['a', 'b', 'c']
-    result = utils.split(',a,b,,c,')
-
-    assert result == reference
