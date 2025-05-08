@@ -44,6 +44,24 @@ class CreateManyItemsUseCase(BaseItemUseCase):
                     parent_tags = await self._get_cached_computed_tags(conn, parent)
                     parent_name = parent.name
 
+                    if not parent.is_collection:
+                        parent.is_collection = True
+                        await self.mediator.items.save(conn, parent)
+
+                    if parent.has_incomplete_media():
+                        media_types = await self.mediator.object_storage.copy_all_objects(
+                            source_item=item,
+                            target_item=parent,
+                        )
+
+                        if media_types:
+                            await self.mediator.meta.add_item_note(
+                                conn=conn,
+                                item=parent,
+                                key='copied_image_from',
+                                value=str(item.uuid),
+                            )
+
                 computed_tags = item.get_computed_tags(parent_name, parent_tags)
 
                 # for the item itself
@@ -258,6 +276,10 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             item.parent_uuid = new_parent.uuid
             await self.mediator.items.save(conn, item)
 
+            if not new_parent.is_collection:
+                new_parent.is_collection = True
+                await self.mediator.items.save(conn, new_parent)
+
             operation_id_tags = await self.mediator.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
@@ -440,6 +462,23 @@ class UploadItemUseCase(BaseAPIUseCase):
                 },
                 payload=file.content,
             )
+
+            if item.parent_id is not None:
+                parent = await self.mediator.items.get_by_id(conn, item.parent_id)
+
+                if parent.has_incomplete_media():
+                    media_types = await self.mediator.object_storage.copy_all_objects(
+                        source_item=item,
+                        target_item=parent,
+                    )
+
+                    if media_types:
+                        await self.mediator.meta.add_item_note(
+                            conn=conn,
+                            item=parent,
+                            key='copied_image_from',
+                            value=str(item.uuid),
+                        )
 
         return operation_id
 
