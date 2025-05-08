@@ -18,16 +18,6 @@ class AbsObjectStorage(abc.ABC):
     """Abstract base object storage."""
 
     @abc.abstractmethod
-    async def save(
-        self,
-        item: models.Item,
-        media_type: const.MEDIA_TYPE,
-        binary_content: bytes,
-        ext: str,
-    ) -> None:
-        """Save object of specific content type."""
-
-    @abc.abstractmethod
     async def soft_delete(
         self,
         requested_by: models.User,

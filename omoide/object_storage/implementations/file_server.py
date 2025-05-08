@@ -1,7 +1,5 @@
 """Object storage that saves data into files."""
 
-import python_utilz as pu
-
 from omoide import const
 from omoide import models
 from omoide.database.interfaces import AbsDatabase
@@ -31,29 +29,6 @@ class FileObjectStorageServer(AbsObjectStorage):
         self.media = media
         self.misc = misc
         self.prefix_size = prefix_size
-
-    async def save(
-        self,
-        item: models.Item,
-        media_type: const.MEDIA_TYPE,
-        binary_content: bytes,
-        ext: str,
-    ) -> None:
-        """Save object of specific content type."""
-        media = models.Media(
-            id=-1,
-            created_at=pu.now(),
-            processed_at=None,
-            error=None,
-            owner_id=item.owner_id,
-            item_id=item.id,
-            media_type=media_type,
-            content=binary_content,
-            ext=ext,
-        )
-
-        async with self.database.transaction() as conn:
-            await self.media.create_media(conn, media)
 
     async def soft_delete(
         self,
