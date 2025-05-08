@@ -2,7 +2,7 @@
 const SCROLLER_INTERVAL = 500
 
 // pixels
-const SCROLLER_HEIGHT = 100
+const SCROLLER_HEIGHT = 1000
 
 // items to be loaded in one request
 const DEFAULT_LOAD_AMOUNT = 10
