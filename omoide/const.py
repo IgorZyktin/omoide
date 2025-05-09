@@ -9,7 +9,7 @@ from uuid import UUID
 
 VERSION = '0.3.11'
 
-FRONTEND_VERSION = 20
+FRONTEND_VERSION = 21
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
@@ -49,16 +49,6 @@ class ApplyAs(enum.StrEnum):
 
     DELTA = 'delta'
     COPY = 'copy'
-
-
-class AllSerialOperations(enum.StrEnum):
-    """All possible serial operations."""
-
-    REBUILD_ITEM_TAGS = 'rebuild_item_tags'
-    REBUILD_ITEM_PERMISSIONS = 'rebuild_item_permissions'
-    REBUILD_KNOWN_TAGS_ALL = 'rebuild_known_tags_all'
-    REBUILD_KNOWN_TAGS_USER = 'rebuild_known_tags_user'
-    REBUILD_KNOWN_TAGS_ANON = 'rebuild_known_tags_anon'
 
 
 PREVIEW_SIZE = 1024

@@ -236,15 +236,13 @@ function createFileCard(file, parentUUID, number, tags) {
 
                 xhr.upload.addEventListener("loadstart", (event) => {
                     this.element.progress.value = 0
-                    this.element.progress.max = event.total
+                    this.element.progress.max = 100
                 });
 
                 xhr.upload.addEventListener("progress", (event) => {
-                    this.element.progress.value = event.loaded;
-                    this.element.progress.textContent = `Uploading (${(
-                        (event.loaded / event.total) *
-                        100
-                    ).toFixed(2)}%)…`;
+                    let loaded = (event.loaded / event.total) * 100
+                    this.element.progress.value = loaded;
+                    this.element.progress.textContent = `Uploading (${loaded.toFixed(2)}%)…`;
                 });
 
                 xhr.upload.addEventListener("loaded", (event) => {
@@ -434,13 +432,13 @@ async function createItems() {
 
 async function uploadAllFiles() {
     // Perform uploading
-    let globalProgress = document.getElementById(GLOBAL_PROGRESS_ID).value
+    let globalProgress = document.getElementById(GLOBAL_PROGRESS_ID)
     let parentUUID = document.getElementById(PARENT_UUID_ID).value
 
     let step = 0
     let progress = 0
     if (CARDS.length) {
-        step = CARDS.length / 100
+        step = 100 / CARDS.length
     }
 
     await createItems()
@@ -455,7 +453,7 @@ async function uploadAllFiles() {
         }
     }
 
-    globalProgress.value = 0
+    globalProgress.value = 100
 
     for (let card of CARDS) {
         card.element.disable()
