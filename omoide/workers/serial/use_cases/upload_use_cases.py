@@ -220,5 +220,6 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
 
                 else:
                     exif[str(ExifTags.TAGS.get(tag_code))] = str(value)
-
+        # FIXME
+        LOG.warning('[TMP] Got exif: {}', exif)
         return exif

@@ -326,7 +326,7 @@ class FileCardElement {
         this.tagsLabel.innerHTML = "Additional tags for this item (one tag per line):"
         this.tagsArea = document.createElement("textarea")
         this.tagsArea.rows = 5
-        this.tagsArea.innerHTML = tags.join('\n')
+        this.tagsArea.innerHTML = tags.join('\n') + '\n'
         this.tagsLabel.append(this.tagsArea)
         this.right.append(this.tagsLabel)
 
