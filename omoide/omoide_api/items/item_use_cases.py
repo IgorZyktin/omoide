@@ -461,6 +461,9 @@ class UploadItemUseCase(BaseAPIUseCase):
             parent = None
             if item.parent_id is not None:
                 parent = await self.mediator.items.get_by_id(conn, item.parent_id)
+                if not parent.is_collection:
+                    parent.is_collection = True
+                    await self.mediator.items.save(conn, parent)
 
         if parent is not None and parent.has_incomplete_media():
             media_types = await self.mediator.object_storage.copy_all_objects(
