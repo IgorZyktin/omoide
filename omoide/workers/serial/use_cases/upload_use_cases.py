@@ -198,12 +198,17 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
         """Extract exif data from content."""
         exif: dict[str, Any] = {}
         stream = BytesIO(operation.payload)
+
+        def cast(maybe_string: Any) -> str:
+            """Convert to string. Also strip unicode \u0000."""
+            return str(maybe_string).replace('\u0000', '')
+
         with Image.open(stream) as img:
             img_exif = img.getexif()
 
             for tag_code, value in img_exif.items():
                 if tag_code in IFD_CODE_LOOKUP:
-                    ifd_tag_name = str(IFD_CODE_LOOKUP[tag_code])
+                    ifd_tag_name = cast(IFD_CODE_LOOKUP[tag_code])
 
                     if ifd_tag_name not in exif:
                         exif[ifd_tag_name] = {}
@@ -216,10 +221,9 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
                             or ExifTags.TAGS.get(nested_key, None)
                             or nested_key
                         )
-                        exif[ifd_tag_name][str(nested_tag_name)] = str(nested_value)
+                        exif[ifd_tag_name][cast(nested_tag_name)] = cast(nested_value)
 
                 else:
-                    exif[str(ExifTags.TAGS.get(tag_code))] = str(value)
-        # FIXME
-        LOG.warning('[TMP] Got exif: {}', exif)
+                    exif[cast(ExifTags.TAGS.get(tag_code))] = cast(value)
+
         return exif
