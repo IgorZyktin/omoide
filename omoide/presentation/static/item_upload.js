@@ -228,6 +228,7 @@ function createFileCard(file, parentUUID, number, tags) {
         previewIsVisible: false,
         localTags: [...tags],
         localPermissions: [],
+        isFolded: false,
 
         send: async function (thisCard) {
             let promise = new Promise(resolve => {
@@ -285,6 +286,22 @@ function createFileCard(file, parentUUID, number, tags) {
             card.element.permissionsArea.value
         ))
     })
+
+    card.element.fold.addEventListener("click", function () {
+        if (card.isFolded) {
+            card.element.foldImg.src = "/static/ic_unfold_more_24px.svg"
+            card.element.left.style.display = "flex"
+            card.element.right.style.display = "flex"
+            card.element.foldLabel.style.display = "none"
+        } else {
+            card.element.foldImg.src = "/static/ic_unfold_less_24px.svg"
+            card.element.left.style.display = "none"
+            card.element.right.style.display = "none"
+            card.element.foldLabel.style.display = "flex"
+        }
+        card.isFolded = !card.isFolded
+    })
+
     return card
 }
 
@@ -297,6 +314,11 @@ class FileCardElement {
         this.div = document.createElement("div")
         this.div.id = `upload-element-${number}`
         this.div.classList.add("upload-element")
+
+        this.foldLabel = document.createElement("h4")
+        this.foldLabel.innerHTML = file.name
+        this.foldLabel.style.display = "none"
+        this.div.append(this.foldLabel)
 
         // left side
         this.left = document.createElement("div");
@@ -313,6 +335,20 @@ class FileCardElement {
         this.right.classList.add("upload-lines")
         this.div.append(this.right)
 
+        this.foldArea = document.createElement("div")
+        this.foldArea.classList.add("float-button-container")
+        this.div.append(this.foldArea)
+
+        this.fold = document.createElement("a")
+        this.fold.classList.add("float-button")
+        this.fold.classList.add("button")
+        this.foldArea.append(this.fold)
+
+        this.foldImg = document.createElement("img")
+        this.foldImg.src = "/static/ic_unfold_less_24px.svg"
+        this.foldImg.style.margin = '0'
+        this.fold.append(this.foldImg)
+
         this.label = document.createElement("h4")
         this.label.innerHTML = file.name
         this.right.append(this.label)
@@ -326,7 +362,11 @@ class FileCardElement {
         this.tagsLabel.innerHTML = "Additional tags for this item (one tag per line):"
         this.tagsArea = document.createElement("textarea")
         this.tagsArea.rows = 5
-        this.tagsArea.innerHTML = tags.join('\n') + '\n'
+        if (tags.length) {
+            this.tagsArea.innerHTML = tags.join('\n') + '\n'
+        } else {
+            this.tagsArea.innerHTML = ""
+        }
         this.tagsLabel.append(this.tagsArea)
         this.right.append(this.tagsLabel)
 

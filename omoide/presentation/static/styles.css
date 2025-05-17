@@ -448,6 +448,7 @@ select {
 }
 
 .upload-element {
+    position: relative;
     background-color: #c1c1c1;
     border-radius: 5px;
     border: 1px solid #414141;
@@ -466,6 +467,19 @@ select {
     flex-direction: column;
     margin: 0.5em;
     justify-content: center;
+}
+
+.float-button-container {
+    position: absolute;
+    right: -4.5em;
+}
+
+.float-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4em;
+    height: 4em;
 }
 
 .notification {
