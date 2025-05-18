@@ -241,7 +241,7 @@ class Item(OmoideModel):
         if _parent_name := parent_name.strip():
             computed_tags.add(_parent_name.casefold())
 
-        if _name := self.name.strip():
+        if self.is_collection and (_name := self.name.strip()):
             computed_tags.add(_name.casefold())
 
         computed_tags.update(parent_tags)
