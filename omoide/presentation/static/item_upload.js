@@ -1,4 +1,7 @@
 const CARDS = []
+let ALL_TAGS = {
+    foo: 0
+}
 
 const FEATURE_EXIF_ID = "feature-exif"
 const ALL_FEATURES_EXIF_ID = "all-features-exif"
@@ -34,6 +37,34 @@ function toggleExif(checkbox) {
         document.getElementById(FEATURE_EXIF_YEAR_ID).disabled = true
         document.getElementById(FEATURE_EXIF_MONTH_EN_ID).disabled = true
         document.getElementById(FEATURE_EXIF_MONTH_RU_ID).disabled = true
+    }
+}
+
+function getAllTags() {
+    // Return keys of ALL_TAGS sorted by their values
+    return Object.keys(ALL_TAGS).sort((a, b) => ALL_TAGS[b] - ALL_TAGS[a])
+}
+
+function refreshAllTags() {
+    // Clear and rebuild variable with all known tags
+    ALL_TAGS = {}
+    let globalTags = splitLines(document.getElementById(GLOBAL_TAGS_ID).value)
+    for (let tag of globalTags) {
+        if (ALL_TAGS[tag]) {
+            ALL_TAGS[tag] ++
+        } else {
+            ALL_TAGS[tag] = 1
+        }
+    }
+
+    for (let card of CARDS) {
+        for (let tag of card.localTags) {
+            if (ALL_TAGS[tag]) {
+                ALL_TAGS[tag] ++
+            } else {
+                ALL_TAGS[tag] = 1
+            }
+        }
     }
 }
 
@@ -179,6 +210,7 @@ function hideNavButtons() {
 async function addNewFiles(source, parentUUid) {
     // Create placeholders for added files
     showNavButtons()
+    refreshAllTags()
     let media = document.getElementById(MEDIA_ID)
     let features = getFeatures()
     CARDS.length = 0
@@ -302,6 +334,33 @@ function createFileCard(file, parentUUID, number, tags) {
         card.isFolded = !card.isFolded
     })
 
+    card.element.tagsInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            let textValue = card.element.tagsInput.value.trim()
+            card.localTags.push(textValue)
+            card.element.tagsArea.value += `${textValue}\n`
+            card.element.tagsInput.value = ""
+            refreshAllTags()
+        }
+        card.element.tagsInputDatalist.innerHTML = ""
+        for (let tag of getAllTags()) {
+            let newVariant = document.createElement('option')
+            newVariant.value = tag
+            card.element.tagsInputDatalist.append(newVariant)
+        }
+    })
+
+    card.element.tagsInput.addEventListener("click", function (e) {
+        if (card.element.tagsInputDatalist.innerHTML === "") {
+            for (let tag of getAllTags()) {
+                let newVariant = document.createElement('option')
+                newVariant.value = tag
+                card.element.tagsInputDatalist.append(newVariant)
+            }
+        }
+    })
+
     return card
 }
 
@@ -360,15 +419,25 @@ class FileCardElement {
 
         this.tagsLabel = document.createElement("label")
         this.tagsLabel.innerHTML = "Additional tags for this item (one tag per line):"
+        this.tagsInput = document.createElement("input")
+        this.tagsInput.type = "text"
+        this.tagsInput.placeholder = "Add tag here"
+        this.tagsInput.autocomplete = "on"
+        this.tagsInputDatalist = document.createElement("datalist")
+        this.tagsInputDatalist.id = `upload-element-${number}-tags-list`
+        this.tagsInputDatalist.innerHTML = ""
+        this.tagsInput.setAttribute('list',`upload-element-${number}-tags-list`)
+        this.tagsInput.append(this.tagsInputDatalist)
         this.tagsArea = document.createElement("textarea")
         this.tagsArea.rows = 5
         if (tags.length) {
-            this.tagsArea.innerHTML = tags.join('\n') + '\n'
+            this.tagsArea.innerHTML = tags.join("\n") + "\n"
         } else {
             this.tagsArea.innerHTML = ""
         }
         this.tagsLabel.append(this.tagsArea)
         this.right.append(this.tagsLabel)
+        this.right.append(this.tagsInput)
 
         this.permissionsLabel = document.createElement("label")
         this.permissionsLabel.innerHTML = "Additional permissions for this item (one user per line):"
