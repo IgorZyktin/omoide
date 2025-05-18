@@ -17,11 +17,11 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 
 
 @api_actions_router.post(
-    '/rebuild_known_tags_anon',
+    '/rebuild_known_tags_for_anon',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
-async def api_action_rebuild_known_tags_anon(
+async def api_action_rebuild_known_tags_for_anon(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
@@ -40,11 +40,11 @@ async def api_action_rebuild_known_tags_anon(
 
 
 @api_actions_router.post(
-    '/rebuild_known_tags_user/{user_uuid}',
+    '/rebuild_known_tags_for_user/{user_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
-async def api_action_rebuild_known_tags_user(
+async def api_action_rebuild_known_tags_for_user(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_uuid: UUID,
@@ -65,11 +65,11 @@ async def api_action_rebuild_known_tags_user(
 
 
 @api_actions_router.post(
-    '/rebuild_known_tags_all',
+    '/rebuild_known_tags_for_all',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
-async def api_action_rebuild_known_tags_all(
+async def api_action_rebuild_known_tags_for_all(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):

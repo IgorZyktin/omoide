@@ -27,7 +27,7 @@
 
         <div>
             <h3>Rebuild known tags for anon</h3>
-            <input type="button" class="button control-button" onclick="rebuildKnownTagsAnon()" value="Rebuild">
+            <input type="button" class="button control-button" onclick="rebuildKnownTagsForAnon()" value="Rebuild">
         </div>
 
         <div>
@@ -36,14 +36,14 @@
                 <label for="rebuild_known_tags_user_uuid">User UUID:</label>
                 <input id="rebuild_known_tags_user_uuid" type="text" value="" class="height-auto">
             </div>
-            <input type="button" class="button control-button" onclick="rebuildKnownTagsUser()" value="Rebuild">
+            <input type="button" class="button control-button" onclick="rebuildKnownTagsForUser()" value="Rebuild">
         </div>
 
         <hr>
 
         <div>
             <h3>Rebuild known tags for all</h3>
-            <input type="button" class="button control-button" onclick="rebuildKnownTagsAll()" value="Rebuild">
+            <input type="button" class="button control-button" onclick="rebuildKnownTagsForAll()" value="Rebuild">
         </div>
 
         <hr>
@@ -97,21 +97,21 @@
             getXHR('/api/v1/users').send(payload)
         }
 
-        function rebuildKnownTagsAnon() {
-            getXHR('/api/v1/actions/rebuild_known_tags_anon').send()
+        function rebuildKnownTagsForAnon() {
+            getXHR('/api/v1/actions/rebuild_known_tags_for_anon').send()
         }
 
-        function rebuildKnownTagsUser() {
+        function rebuildKnownTagsForUser() {
             let element = document.getElementById('rebuild_known_tags_user_uuid')
 
             if (!element)
                 return
 
-            getXHR(`/api/v1/actions/rebuild_known_tags_user/${element.value}`).send()
+            getXHR(`/api/v1/actions/rebuild_known_tags_for_user/${element.value}`).send()
         }
 
-        function rebuildKnownTagsAll() {
-            getXHR('/api/v1/actions/rebuild_known_tags_all').send()
+        function rebuildKnownTagsForAll() {
+            getXHR('/api/v1/actions/rebuild_known_tags_for_all').send()
         }
 
         function rebuildComputedTags(alertsElementId) {
