@@ -240,9 +240,9 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
 
         return models.SpaceUsage(
             uuid=user.uuid,
-            content_size=response.content_size if response else 0,
-            preview_size=response.preview_size if response else 0,
-            thumbnail_size=response.thumbnail_size if response else 0,
+            content_size=response.content_size or 0 if response else 0,
+            preview_size=response.preview_size or 0 if response else 0,
+            thumbnail_size=response.thumbnail_size or 0 if response else 0,
         )
 
     async def count_items_by_owner(
