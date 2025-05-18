@@ -57,31 +57,31 @@ class RebuildKnownTagsForAllUseCase(BaseSerialWorkerUseCase):
         async with self.mediator.database.transaction() as conn:
             users = await self.mediator.users.select(conn)
 
-        for user in users:
+            for user in users:
+                operation_id = await self.mediator.misc.create_serial_operation(
+                    conn=conn,
+                    name='rebuild_known_tags_for_user',
+                    extras={
+                        'requested_by': operation.extras['requested_by'],
+                        'user_uuid': user.uuid,
+                        'only_tags': None,
+                    },
+                )
+                LOG.debug(
+                    'Created serial operation {} (rebuilding known tags for user {})',
+                    operation_id,
+                    user,
+                )
+
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name='rebuild_known_tags_for_user',
+                name='rebuild_known_tags_for_anon',
                 extras={
                     'requested_by': operation.extras['requested_by'],
-                    'user_uuid': user.uuid,
                     'only_tags': None,
                 },
             )
-            LOG.debug(
-                'Created serial operation {} (rebuilding known tags for user {})',
-                operation_id,
-                user,
-            )
-
-        operation_id = await self.mediator.misc.create_serial_operation(
-            conn=conn,
-            name='rebuild_known_tags_for_anon',
-            extras={
-                'requested_by': operation.extras['requested_by'],
-                'only_tags': None,
-            },
-        )
-        LOG.debug('Created serial operation {} (rebuilding known tags for anon)', operation_id)
+            LOG.debug('Created serial operation {} (rebuilding known tags for anon)', operation_id)
 
 
 class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
