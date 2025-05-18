@@ -64,7 +64,7 @@ class RebuildKnownTagsForAllUseCase(BaseAPIUseCase):
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
-                name='rebuild_known_tags_fo_all',
+                name='rebuild_known_tags_for_all',
                 extras={'requested_by': str(admin.uuid)},
             )
 
