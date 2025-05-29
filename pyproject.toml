@@ -1,6 +1,6 @@
 [project]
 name = "omoide"
-version = "0.3.11"
+version = "0.3.12"
 description = "Web application for image storage and fast search"
 authors = [
     { name = "Igor Zyktin", email = "nicord@yandex.ru" },
