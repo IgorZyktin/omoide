@@ -11,6 +11,7 @@ import zlib
 from PIL import ExifTags
 from PIL import Image
 from PIL import ImageFilter
+from PIL import ImageOps
 import python_utilz as pu
 
 from omoide import const
@@ -94,7 +95,8 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
         item.content_ext = operation.extras['ext']
 
         stream = BytesIO(operation.payload)
-        with Image.open(stream) as img:
+        with Image.open(stream) as original_image:
+            img = ImageOps.exif_transpose(original_image)
             metainfo.content_width, metainfo.content_height = img.size
             metainfo.content_size = len(operation.payload)
             metainfo.content_type = operation.extras['content_type']
@@ -123,7 +125,8 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
         item.preview_ext = 'jpg'
         stream = BytesIO(operation.payload)
 
-        with Image.open(stream) as img:
+        with Image.open(stream) as original_image:
+            img = ImageOps.exif_transpose(original_image)
             old_width, old_height = img.size
             new_width, new_height = get_new_image_dimensions(
                 old_width, old_height, const.PREVIEW_SIZE
@@ -164,7 +167,8 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
         item.thumbnail_ext = 'jpg'
         stream = BytesIO(operation.payload)
 
-        with Image.open(stream) as img:
+        with Image.open(stream) as original_image:
+            img = ImageOps.exif_transpose(original_image)
             old_width, old_height = img.size
             new_width, new_height = get_new_image_dimensions(
                 old_width, old_height, const.THUMBNAIL_SIZE
