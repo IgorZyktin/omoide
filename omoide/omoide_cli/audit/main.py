@@ -9,18 +9,18 @@ from omoide import custom_logging
 from omoide.omoide_cli import common
 from omoide.omoide_cli.audit.base_plugin import BasePlugin
 from omoide.omoide_cli.audit.database import AuditDatabase
+from omoide.omoide_cli.audit.plugins.users_to_root_items import UsersToRootItems
 
 app = typer.Typer()
 
 LOG = custom_logging.get_logger(__name__)
 
 
-def audit(db_url: str | None = None) -> None:
+def audit(db_url: str | None = None, *, fix: bool = False) -> None:
     """Perform audit.
 
     Checks all invariants.
     """
-
     db_url = common.extract_env(
         what='Database URL',
         variable=db_url,
@@ -30,7 +30,7 @@ def audit(db_url: str | None = None) -> None:
     database = AuditDatabase(db_url)
 
     plugins: list[BasePlugin] = [
-
+        UsersToRootItems(database, fix=fix),
     ]
 
     asyncio.run(actually_perform_audit(database, plugins))
