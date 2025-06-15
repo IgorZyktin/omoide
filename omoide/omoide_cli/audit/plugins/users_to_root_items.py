@@ -24,26 +24,33 @@ class UsersToRootItems(BasePlugin):
             for user, items in mapping.items():
                 match len(items):
                     case 0:
-                        LOG.warning(
-                            'User {id} {name} ({uuid}) has no root items',
-                            id=user.id,
-                            name=user.name,
-                            uuid=user.uuid,
-                        )
                         if self.fix:
                             await self.database.fix_root_item(conn, user)
+                            LOG.info(
+                                'User {id} {name!r} ({uuid}) has no root items --- FIXED',
+                                id=user.id,
+                                name=user.name,
+                                uuid=user.uuid,
+                            )
+                        else:
+                            LOG.warning(
+                                'User {id} {name!r} ({uuid}) has no root items',
+                                id=user.id,
+                                name=user.name,
+                                uuid=user.uuid,
+                            )
                     case 1:
                         # everything is okay
                         pass
                     case _:
                         readable_items = '\n'.join(
                             [
-                                f'<id={item.id}, uuid={item.uuid}, name={item.name}>'
+                                f'<id={item.id}, name={item.name!r}, uuid={item.uuid}>'
                                 for item in items
                             ]
                         )
                         LOG.error(
-                            'User {id} {name} ({uuid}) has more '
+                            'User {id} {name!r} ({uuid}) has more '
                             'than one root item (cannot be fixed automatically)\n'
                             '{readable_items}',
                             id=user.id,

@@ -1,5 +1,6 @@
 """Common code for all commands."""
 
+from dataclasses import dataclass
 import os
 from pathlib import Path
 import sys
@@ -82,3 +83,12 @@ async def init_variables(
         only_item_ids = await items.cast_uuids(conn, only_items or set())
 
     return database, users, items, meta, only_user_ids, only_item_ids
+
+
+@dataclass(frozen=True, eq=True)
+class Triplet:
+    """DTO for users and items."""
+
+    id: int
+    uuid: UUID
+    name: str

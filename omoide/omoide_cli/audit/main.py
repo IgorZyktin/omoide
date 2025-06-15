@@ -9,6 +9,7 @@ from omoide import custom_logging
 from omoide.omoide_cli import common
 from omoide.omoide_cli.audit.base_plugin import BasePlugin
 from omoide.omoide_cli.audit.database import AuditDatabase
+from omoide.omoide_cli.audit.plugins.itesm_to_metainfo import ItemsToMetainfo
 from omoide.omoide_cli.audit.plugins.users_to_root_items import UsersToRootItems
 
 app = typer.Typer()
@@ -31,6 +32,7 @@ def audit(db_url: str | None = None, *, fix: bool = False) -> None:
 
     plugins: list[BasePlugin] = [
         UsersToRootItems(database, fix=fix),
+        ItemsToMetainfo(database, fix=fix),
     ]
 
     asyncio.run(actually_perform_audit(database, plugins))
