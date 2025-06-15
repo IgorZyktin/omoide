@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
+from omoide import models
 from omoide.database import db_models
 from omoide.database.implementations.impl_sqlalchemy import MediaRepo
 from omoide.database.implementations.impl_sqlalchemy import MiscRepo
@@ -142,6 +143,7 @@ async def get_items_without_images(
                 db_models.ItemNote.key == sa.null(),
                 db_models.ItemNote.key == 'copied_image_from',
             ),
+            db_models.Item.status != models.Status.DELETED,
         )
         .join(
             db_models.ItemNote,

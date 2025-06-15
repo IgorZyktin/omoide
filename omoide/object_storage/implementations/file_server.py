@@ -129,7 +129,7 @@ class FileObjectStorageServer(AbsObjectStorage):
                         'owner_uuid': str(owner.uuid),
                         'source_item_uuid': str(source_item.uuid),
                         'target_item_uuid': str(target_item.uuid),
-                        'media_type': const.PREVIEW,
+                        'media_type': const.THUMBNAIL,
                     },
                 )
                 copied_types.append(const.THUMBNAIL)
