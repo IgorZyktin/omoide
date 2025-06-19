@@ -443,7 +443,7 @@ class UploadItemUseCase(BaseAPIUseCase):
                     'item_uuid': str(item.uuid),
                     'content_type': file.content_type,
                     'filename': file.filename,
-                    'ext': file.ext,
+                    'ext': 'jpg' if file.ext == 'jpeg' else file.ext,
                     'features': {
                         'extract_exif': file.features.extract_exif,
                         'last_modified': (
