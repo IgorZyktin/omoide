@@ -78,7 +78,7 @@
             {% if block_ordered %}
                 <span class="button-disabled qc-order">
 
-                {% if request.query_params.get('order') == 'random' %}
+                {% if aim_wrapper.order == 'random' %}
                     <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
                          alt="Order is not supported in this section"/>
                     <span title="Change view mode to see items ordered">Random</span>
@@ -89,7 +89,7 @@
                 {% endif %}
             </span>
             {% else %}
-                {% if request.query_params.get('order') == 'random' %}
+                {% if aim_wrapper.order == 'random' %}
                     <a href="javascript:void(0)"
                        title="Change view mode to see items ordered"
                        onclick="toggleOrder()"

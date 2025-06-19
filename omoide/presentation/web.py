@@ -173,32 +173,20 @@ class AimWrapper:
         params: dict,
     ) -> None:
         """Add default values if they were not supplied."""
-        # NOTE: backward compatibility for legacy endpoints
-        order = params.get('order')
-        ordering = params.get('ordering')
-
-        order_final = order or ordering or 'random'
-        if order_final.lower() == 'on':
-            params['order'] = const.ASC
-        else:
+        order = params.get('order') or 'random'
+        if order.lower() == 'random':
             params['order'] = const.RANDOM
+        else:
+            params['order'] = const.ASC
 
-        # NOTE: backward compatibility for legacy endpoints
-        collections = params.get('collections')
-        only_collections = params.get('only_collections')
-        collections_final = collections or only_collections or 'off'
-
-        if collections_final.lower() == 'on':
+        collections = params.get('collections') or 'off'
+        if collections.lower() == 'on':
             params['collections'] = True
         else:
             params['collections'] = False
 
-        # NOTE: backward compatibility for legacy endpoints
-        direct = params.get('direct')
-        nested = params.get('nested')
-        direct_final = direct or nested or 'off'
-
-        if direct_final.lower() == 'on':
+        direct = params.get('direct') or 'off'
+        if direct.lower() == 'on':
             params['direct'] = True
         else:
             params['direct'] = False
