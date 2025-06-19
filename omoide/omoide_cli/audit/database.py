@@ -75,3 +75,14 @@ class AuditDatabase(SqlalchemyDatabase):
             updated_at=now,
         )
         await conn.execute(stmt)
+
+    @staticmethod
+    async def get_items_without_images(conn: AsyncConnection) -> list[Triplet]:
+        """Return items without images."""
+        query = sa.select(
+            db_models.Item.id,
+            db_models.Item.uuid,
+            db_models.Item.name,
+        ).where(db_models.Item.content_ext.is_(None))
+        response = (await conn.execute(query)).all()
+        return [Triplet(*row) for row in response]

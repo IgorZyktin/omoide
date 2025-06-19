@@ -4,6 +4,7 @@ import os
 
 from gunicorn.arbiter import Arbiter
 from gunicorn.workers.base import Worker
+from prometheus_client import multiprocess
 
 _host = os.getenv('OMOIDE_APP__HOST', '0.0.0.0')
 _port = os.getenv('OMOIDE_APP__PORT', '8080')
@@ -32,3 +33,9 @@ def post_worker_init(worker: Worker) -> None:
 def when_ready(server: Arbiter) -> None:
     """Gunicorn callable."""
     server.log.info('Server is ready. Spawning workers')
+
+
+def child_exit(server, worker):
+    """Add special tuning for metrics collector."""
+    _ = server
+    multiprocess.mark_process_dead(worker.pid)

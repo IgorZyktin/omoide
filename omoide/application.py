@@ -3,6 +3,11 @@
 Here we're only gluing two components together.
 """
 
+import os
+
+from fastapi import FastAPI
+from prometheus_client import CollectorRegistry
+from prometheus_client.multiprocess import MultiProcessCollector
 from starlette_exporter import PrometheusMiddleware
 from starlette_exporter import handle_metrics
 
@@ -20,6 +25,18 @@ app_application.apply_app_routes(app)
 app_application.apply_middlewares(app)
 
 config = dependencies.get_config()
+
+
+def add_metrics(current_app: FastAPI):
+    """Add metrics instrumentation."""
+    if 'PROMETHEUS_MULTIPROC_DIR' in os.environ:
+        registry = CollectorRegistry()
+        path = os.environ['PROMETHEUS_MULTIPROC_DIR']
+        MultiProcessCollector(registry, path=path)
+
+    current_app.add_middleware(PrometheusMiddleware, app_name=config.metrics.server_name)
+    current_app.add_route('/metrics', handle_metrics)
+
+
 if config.metrics.enabled:
-    app.add_middleware(PrometheusMiddleware, app_name=config.metrics.server_name)
-    app.add_route('/metrics', handle_metrics)
+    add_metrics(app)
