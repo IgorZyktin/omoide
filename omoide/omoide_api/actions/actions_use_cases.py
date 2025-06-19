@@ -62,6 +62,7 @@ class RebuildKnownTagsForAllUseCase(BaseAPIUseCase):
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for all users', admin)
 
+            # TODO - actual action is not yet implemented
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_known_tags_for_all',
@@ -103,6 +104,25 @@ class RebuildComputedTagsForItemUseCase(BaseAPIUseCase):
             )
 
         return owner, item, operation_id
+
+
+class RebuildComputedTagsForAllUseCase(BaseAPIUseCase):
+    """Use case for rebuilding computed tags for all users."""
+
+    async def execute(self, admin: models.User) -> int:
+        """Initiate serial operation execution."""
+        self.mediator.policy.ensure_admin(admin, to='rebuild computed tags for all users')
+
+        async with self.mediator.database.transaction() as conn:
+            LOG.info('{} is rebuilding computed tags for all users', admin)
+
+            operation_id = await self.mediator.misc.create_serial_operation(
+                conn=conn,
+                name='rebuild_computed_tags_for_all',
+                extras={'requested_by': str(admin.uuid)},
+            )
+
+        return operation_id
 
 
 class CopyImageUseCase(BaseAPIUseCase):

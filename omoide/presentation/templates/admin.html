@@ -57,6 +57,13 @@
             <input type="button" class="button control-button" onclick="rebuildComputedTags()" value="Rebuild">
         </div>
 
+        <hr>
+
+        <div>
+            <h3>Rebuild computed tags for all items (not yet implemented)</h3>
+             <input type="button" class="button control-button" onclick="rebuildComputedTagsForAll()" value="Rebuild">
+        </div>
+
     </div>
 
     <script>
@@ -121,6 +128,10 @@
                 return
 
             getXHR(`/api/v1/actions/rebuild_computed_tags/${element.value}`).send()
+        }
+
+        function rebuildKnownComputedTagsForAll() {
+            getXHR('/api/v1/actions/rebuild_computed_tags_for_all').send()
         }
     </script>
     <br>

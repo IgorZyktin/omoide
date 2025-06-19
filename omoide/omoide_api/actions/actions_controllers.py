@@ -73,7 +73,7 @@ async def api_action_rebuild_known_tags_for_all(
     admin: Annotated[models.User, Depends(dep.get_admin_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Recalculate all known tags for registered user."""
+    """Recalculate all known tags for all users."""
     use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(mediator)
 
     try:
@@ -114,6 +114,29 @@ async def api_action_rebuild_computed_tags(
         'target_user': owner.name or str(owner.uuid),
         'target_item': item.name or str(item.uuid),
         'job_id': job_id,
+    }
+
+
+@api_actions_router.post(
+    '/rebuild_computed_tags_for_all',
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=dict[str, int | str],
+)
+async def api_action_rebuild_computed_tags_for_all(
+    admin: Annotated[models.User, Depends(dep.get_admin_user)],
+    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+):
+    """Recalculate all computed tags for all users."""
+    use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(mediator)
+
+    try:
+        operation_id = await use_case.execute(admin)
+    except Exception as exc:
+        return web.raise_from_exc(exc)
+
+    return {
+        'result': 'rebuilding known tags for all users',
+        'operation_id': operation_id,
     }
 
 
