@@ -456,31 +456,45 @@ class UploadItemUseCase(BaseAPIUseCase):
                 payload=file.content,
             )
 
-            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
-
-            parent = None
             if item.parent_id is not None:
                 parent = await self.mediator.items.get_by_id(conn, item.parent_id)
-                if not parent.is_collection:
-                    parent.is_collection = True
-                    await self.mediator.items.save(conn, parent)
+                parent.is_collection = True
 
-        if parent is not None and parent.has_incomplete_media():
-            media_types = await self.mediator.object_storage.copy_all_objects(
-                requested_by=user,
-                owner=owner,
-                source_item=item,
-                target_item=parent,
-            )
+                if parent.has_incomplete_media():
+                    # NOTE - temporarily setting parent metainfo,
+                    # so next upload will not copy again
+                    parent.content_ext = 'tmp'
+                    parent.preview_ext = 'tmp'
+                    parent.thumbnail_ext = 'tmp'
+                    await self.mediator.misc.create_serial_operation(
+                        conn=conn,
+                        name='upload',
+                        extras={
+                            'requested_by': str(user.uuid),
+                            'item_uuid': str(parent.uuid),
+                            'content_type': file.content_type,
+                            'filename': file.filename,
+                            'ext': 'jpg' if file.ext == 'jpeg' else file.ext,
+                            'features': {
+                                'extract_exif': file.features.extract_exif,
+                                'last_modified': (
+                                    file.features.last_modified.isoformat()
+                                    if file.features.last_modified
+                                    else None
+                                ),
+                            },
+                        },
+                        payload=file.content,
+                    )
 
-            if media_types:
-                async with self.mediator.database.transaction() as conn:
                     await self.mediator.meta.add_item_note(
                         conn=conn,
                         item=parent,
                         key='copied_image_from',
                         value=str(item.uuid),
                     )
+
+                await self.mediator.items.save(conn, parent)
 
         return operation_id
 
