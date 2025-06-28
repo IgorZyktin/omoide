@@ -27,7 +27,7 @@ app_application.apply_middlewares(app)
 config = dependencies.get_config()
 
 
-def add_metrics(current_app: FastAPI):
+def add_metrics(current_app: FastAPI) -> None:
     """Add metrics instrumentation."""
     if 'PROMETHEUS_MULTIPROC_DIR' in os.environ:
         registry = CollectorRegistry()

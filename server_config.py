@@ -35,7 +35,7 @@ def when_ready(server: Arbiter) -> None:
     server.log.info('Server is ready. Spawning workers')
 
 
-def child_exit(server, worker):
+def child_exit(server, worker) -> None:
     """Add special tuning for metrics collector."""
     _ = server
     multiprocess.mark_process_dead(worker.pid)
