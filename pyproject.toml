@@ -165,7 +165,7 @@ multiline-quotes = "double"
 docstring-quotes = "double"
 
 [tool.ruff.lint.pylint]
-max-args = 6
+max-args = 8
 
 [tool.mypy]
 disallow_untyped_defs = true

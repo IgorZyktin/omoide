@@ -1,6 +1,7 @@
 """Gunicorn configuration."""
 
 import os
+from typing import Any
 
 from gunicorn.arbiter import Arbiter
 from gunicorn.workers.base import Worker
@@ -35,7 +36,7 @@ def when_ready(server: Arbiter) -> None:
     server.log.info('Server is ready. Spawning workers')
 
 
-def child_exit(server, worker) -> None:
+def child_exit(server: Any, worker: Any) -> None:
     """Add special tuning for metrics collector."""
     _ = server
     multiprocess.mark_process_dead(worker.pid)

@@ -7,10 +7,11 @@ from pydantic import BaseModel
 from pydantic import model_validator
 import python_utilz as pu
 
-from omoide import limits
+MAX_EXIF_SIZE = 1024 * 1024 * 5  # 5 MiB
+MAX_EXIF_SIZE_HR = pu.human_readable_size(MAX_EXIF_SIZE)
 
 
-class EXIFModel(BaseModel):
+class EXIFIn(BaseModel):
     """Input info for EXIF creation."""
 
     exif: dict[str, Any]
@@ -36,11 +37,10 @@ class EXIFModel(BaseModel):
 
     @model_validator(mode='after')
     def ensure_exif_is_not_too_big(self) -> Self:
-        """Raise if given string is too big."""
+        """Raise if given object is too big."""
         size = pu.get_size(self.exif)
-        if size > limits.MAX_EXIF_SIZE:
+        if size > MAX_EXIF_SIZE:
             hr_size = pu.human_readable_size(size)
-            hr_limit = pu.human_readable_size(limits.MAX_EXIF_SIZE)
-            msg = f'Given EXIF is too big (got {hr_size}), allowed maximum is {hr_limit}'
+            msg = f'Given EXIF is too big (got {hr_size}), allowed maximum is {MAX_EXIF_SIZE_HR}'
             raise ValueError(msg)
         return self
