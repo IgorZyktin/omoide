@@ -8,37 +8,47 @@ import python_utilz as pu
 
 from omoide import custom_logging
 from omoide import models
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
+from omoide.database import interfaces as db_interfaces
+from omoide.domain import ensure
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class ReadMetainfoUseCase(BaseAPIUseCase):
+class BaseMetainfoUseCase:
+    """Base use case class."""
+
+    def __init__(
+        self,
+        database: db_interfaces.AbsDatabase,
+        items_repo: db_interfaces.AbsItemsRepo,
+        meta_repo: db_interfaces.AbsMetaRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.items_repo = items_repo
+        self.meta_repo = meta_repo
+
+
+class ReadMetainfoUseCase(BaseMetainfoUseCase):
     """Use case for getting Metainfo."""
 
-    do_what: str = 'read metainfo'
-
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> models.Metainfo:
+    async def execute(self, user: models.User, item_uuid: UUID) -> models.Metainfo:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        async with self.database.transaction() as conn:
+            item = await self.items_repo.get_by_uuid(conn, item_uuid)
+            ensure.can_see(
+                user,
+                item,
+                f'You are not allowed to see item {item_uuid} and its metadata',
+            )
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_can_see(user, item, to=self.do_what)
-
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            metainfo = await self.meta_repo.get_by_item(conn, item)
 
         return metainfo
 
 
-class UpdateMetainfoUseCase(BaseAPIUseCase):
+class UpdateMetainfoUseCase(BaseMetainfoUseCase):
     """Use case for updating Metainfo."""
-
-    do_what: str = 'update metainfo'
 
     async def execute(
         self,
@@ -49,19 +59,26 @@ class UpdateMetainfoUseCase(BaseAPIUseCase):
         extras: dict[str, Any],
     ) -> None:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to update item metadata',
+        )
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
+        async with self.database.transaction() as conn:
+            item = await self.items_repo.get_by_uuid(conn, item_uuid)
+            ensure.owner(
+                user,
+                item,
+                f'You must own item {item_uuid} to update its metadata',
+            )
 
             LOG.info('{} is updating metainfo for {}', user, item)
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            metainfo = await self.meta_repo.get_by_item(conn, item)
 
             metainfo.updated_at = pu.now()
             metainfo.user_time = user_time
             metainfo.content_type = content_type
-            await self.mediator.meta.save(conn, metainfo)
+            await self.meta_repo.save(conn, metainfo)
 
             for key, value in extras.items():
-                await self.mediator.meta.add_item_note(conn, item, key, value)
+                await self.meta_repo.add_item_note(conn, item, key, value)

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from omoide import custom_logging
 from omoide import models
-from omoide.database import interfaces as database_interfaces
+from omoide.database import interfaces as db_interfaces
 from omoide.domain import ensure
 
 LOG = custom_logging.get_logger(__name__)
@@ -15,9 +15,9 @@ class BaseEXIFUseCase:
 
     def __init__(
         self,
-        database: database_interfaces.AbsDatabase,
-        items_repo: database_interfaces.AbsItemsRepo,
-        exif_repo: database_interfaces.AbsEXIFRepo,
+        database: db_interfaces.AbsDatabase,
+        items_repo: db_interfaces.AbsItemsRepo,
+        exif_repo: db_interfaces.AbsEXIFRepo,
     ) -> None:
         """Initialize instance."""
         self.database = database

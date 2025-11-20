@@ -136,6 +136,11 @@ def get_exif_repo() -> db_interfaces.AbsEXIFRepo:
     return impl_sqlalchemy.EXIFRepo()
 
 
+def get_meta_repo() -> db_interfaces.AbsMetaRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.MetaRepo()
+
+
 @functools.cache
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
