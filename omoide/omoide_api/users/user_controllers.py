@@ -32,7 +32,7 @@ api_users_router = APIRouter(prefix='/users', tags=['Users'])
 async def api_create_user(
     request: Request,
     response: Response,
-    admin: Annotated[models.User, Depends(dep.get_admin_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     user_in: user_api_models.UserInput,
 ):
@@ -44,7 +44,7 @@ async def api_create_user(
 
     try:
         user_out = await use_case.execute(
-            admin=admin,
+            user=user,
             name=user_in.name,
             login=user_in.login,
             password=user_in.password,

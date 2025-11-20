@@ -9,6 +9,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
+from omoide.domain import ensure
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
@@ -20,16 +21,19 @@ class CreateUserUseCase(BaseItemUseCase):
 
     async def execute(
         self,
-        admin: models.User,
+        user: models.User,
         name: str,
         login: str,
         password: str,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_admin(admin, to='create users')
-        LOG.info('Admin {} is creating new user {}', admin, name)
+        ensure.admin(
+            user,
+            'Only admins can create users',
+        )
+        LOG.info('Admin {} is creating new user {}', user, name)
 
-        user = models.User(
+        new_user = models.User(
             id=-1,
             uuid=uuid4(),
             name=name,
@@ -51,7 +55,7 @@ class CreateUserUseCase(BaseItemUseCase):
         async with self.mediator.database.transaction() as conn:
             await self.mediator.users.create(
                 conn=conn,
-                user=user,
+                user=new_user,
                 encoded_password=encoded_password,
                 auth_complexity=const.AUTH_COMPLEXITY,
             )
@@ -59,26 +63,24 @@ class CreateUserUseCase(BaseItemUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.create_one_item(
                 conn=conn,
-                user=user,
+                user=new_user,
                 uuid=None,
                 parent_uuid=None,
-                name=user.name,
+                name=new_user.name,
                 is_collection=True,
                 number=None,
-                tags=[user.name],
+                tags=[new_user.name],
                 permissions=[],
                 top_level=True,
             )
 
-            user.extras['root_item_uuid'] = item.uuid
+            new_user.extras['root_item_uuid'] = item.uuid
 
-        return user
+        return new_user
 
 
 class ChangeUserNameUseCase(BaseAPIUseCase):
     """Use case for updating a user's name."""
-
-    do_what: str = 'change user name'
 
     async def execute(
         self,
@@ -87,11 +89,18 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         new_name: str,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to change user name',
+        )
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
+            ensure.represents(
+                user,
+                target_user,
+                "You cannot change someone else's name",
+            )
 
             LOG.info(
                 '{} is updating {} name to {}',
@@ -120,8 +129,6 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
 class ChangeUserLoginUseCase(BaseAPIUseCase):
     """Use case for updating a user's login."""
 
-    do_what: str = 'change user login'
-
     async def execute(
         self,
         user: models.User,
@@ -129,11 +136,18 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         new_login: str,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to change user login',
+        )
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
+            ensure.represents(
+                user,
+                target_user,
+                "You cannot change someone else's login",
+            )
 
             LOG.info(
                 'User {} is updating user {} login to {!r}',
@@ -154,8 +168,6 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
 class ChangeUserPasswordUseCase(BaseAPIUseCase):
     """Use case for updating a user's password."""
 
-    do_what: str = 'change user password'
-
     async def execute(
         self,
         user: models.User,
@@ -163,11 +175,18 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
         new_password: str,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to change user password',
+        )
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
+            ensure.represents(
+                user,
+                target_user,
+                "You cannot change someone else's password",
+            )
 
             LOG.info('User {} is updating user {} password', user, target_user)
 
@@ -195,14 +214,15 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
 class GetAllUsersUseCase(BaseAPIUseCase):
     """Use case for getting all users."""
 
-    do_what: str = 'get list of users'
-
     async def execute(
         self,
         user: models.User,
     ) -> list[models.User]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to get list of users',
+        )
 
         async with self.mediator.database.transaction() as conn:
             if user.is_admin:
@@ -233,7 +253,11 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
+            ensure.represents(
+                user,
+                target_user,
+                "You cannot change someone else's info",
+            )
             root = await self.mediator.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
 
@@ -243,19 +267,24 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
 class GetUserResourceUsageUseCase(BaseAPIUseCase):
     """Use case for getting current user stats."""
 
-    do_what: str = 'get user stats'
-
     async def execute(
         self,
         user: models.User,
         user_uuid: UUID,
     ) -> models.ResourceUsage:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to get user stats',
+        )
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
+            ensure.represents(
+                user,
+                target_user,
+                "You cannot change someone else's resource usage",
+            )
 
             disk_usage = await self.mediator.meta.get_total_disk_usage(conn, target_user)
 
@@ -288,14 +317,19 @@ class GetAnonUserTagsUseCase(BaseAPIUseCase):
 class GetKnownUserTagsUseCase(BaseAPIUseCase):
     """Use case for getting tags available to specific user."""
 
-    do_what: str = 'get known tags for user'
-
     async def execute(self, user: models.User, user_uuid: UUID) -> dict[str, int]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to get known tags for user',
+        )
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            self.mediator.policy.ensure_represents(user, target_user, to=self.do_what)
+            ensure.represents(
+                user,
+                target_user,
+                "You cannot change someone else's known tags",
+            )
             tags = await self.mediator.tags.get_known_tags_user(conn, user=target_user)
         return tags
