@@ -18,6 +18,7 @@ from omoide import cfg
 from omoide import const
 from omoide import infra
 from omoide import models
+from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
@@ -123,6 +124,16 @@ def get_object_storage(
         misc=impl_sqlalchemy.MiscRepo(),
         prefix_size=config.prefix_size,
     )
+
+
+def get_items_repo() -> db_interfaces.AbsItemsRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.ItemsRepo()
+
+
+def get_exif_repo() -> db_interfaces.AbsEXIFRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.EXIFRepo()
 
 
 @functools.cache

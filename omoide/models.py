@@ -525,3 +525,10 @@ class NewFile:
     filename: str = ''
     ext: str = ''
     features: Features = field(default_factory=Features)
+
+
+@dataclass
+class Exif:
+    """Exchangeable Image File Format data."""
+
+    exif: dict[str, Any]

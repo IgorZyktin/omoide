@@ -41,9 +41,6 @@ class EXIFIn(BaseModel):
         size = pu.get_size(self.exif)
         if size > MAX_EXIF_SIZE:
             hr_size = pu.human_readable_size(size)
-            msg = (
-                f'Given EXIF is too big (got {hr_size}), '
-                f'allowed maximum is {MAX_EXIF_SIZE_HR}'
-            )
+            msg = f'Given EXIF is too big (got {hr_size}), allowed maximum is {MAX_EXIF_SIZE_HR}'
             raise ValueError(msg)
         return self

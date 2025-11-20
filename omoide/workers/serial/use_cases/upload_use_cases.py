@@ -198,7 +198,7 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
         )
 
     @staticmethod
-    async def process_exif(operation: operations.Operation) -> dict[str, str]:
+    async def process_exif(operation: operations.Operation) -> models.Exif:
         """Extract exif data from content."""
         exif: dict[str, Any] = {}
         stream = BytesIO(operation.payload)
@@ -230,4 +230,4 @@ class UploadItemUseCase(BaseSerialWorkerUseCase):
                 else:
                     exif[cast(ExifTags.TAGS.get(tag_code))] = cast(value)
 
-        return exif
+        return models.Exif(exif=exif)
