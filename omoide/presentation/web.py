@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydantic import ValidationError
 from starlette.requests import Request
@@ -48,6 +49,12 @@ def get_corresponding_exception_code(exc: Exception) -> int:
         type(exc),
         http.HTTPStatus.INTERNAL_SERVER_ERROR,
     )
+
+
+def response_from_exc(exc: Exception) -> JSONResponse:
+    """Return response."""
+    code = get_corresponding_exception_code(exc)
+    return JSONResponse({'message': str(exc)}, status_code=code)
 
 
 def raise_from_exc(

@@ -22,6 +22,12 @@ api_exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
 @api_exif_router.post(
     '/{item_uuid}',
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_201_CREATED: {'description': 'Created'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+        status.HTTP_409_CONFLICT: {'description': 'Object already exists'},
+    },
     response_model=dict[str, str],
 )
 async def api_create_exif(
@@ -42,7 +48,7 @@ async def api_create_exif(
     try:
         await use_case.execute(user, item_uuid, exif)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     response.headers['Location'] = str(request.url_for('api_read_exif', item_uuid=item_uuid))
 
@@ -52,6 +58,11 @@ async def api_create_exif(
 @api_exif_router.get(
     '/{item_uuid}',
     status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {'description': 'Ok'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=exif_api_models.EXIFIn,
 )
 async def api_read_exif(
@@ -67,7 +78,7 @@ async def api_read_exif(
     try:
         exif = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return exif_api_models.EXIFIn(exif=exif)
 
@@ -75,6 +86,12 @@ async def api_read_exif(
 @api_exif_router.put(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+        status.HTTP_409_CONFLICT: {'description': 'Object already exists'},
+    },
     response_model=dict[str, str],
 )
 async def api_update_exif(
@@ -96,7 +113,7 @@ async def api_update_exif(
     try:
         await use_case.execute(user, item_uuid, exif)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {'result': 'updated exif', 'item_uuid': str(item_uuid)}
 
@@ -104,6 +121,11 @@ async def api_update_exif(
 @api_exif_router.delete(
     '/{item_uuid}',
     status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=dict[str, str],
 )
 async def api_delete_exif(
@@ -119,6 +141,6 @@ async def api_delete_exif(
     try:
         await use_case.execute(user, item_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {'result': 'deleted exif', 'item_uuid': str(item_uuid)}
