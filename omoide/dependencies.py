@@ -126,6 +126,11 @@ def get_object_storage(
     )
 
 
+def get_users_repo() -> db_interfaces.AbsUsersRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.UsersRepo()
+
+
 def get_items_repo() -> db_interfaces.AbsItemsRepo:
     """Get repo instance."""
     return impl_sqlalchemy.ItemsRepo()

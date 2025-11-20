@@ -23,6 +23,10 @@ api_users_router = APIRouter(prefix='/users', tags=['Users'])
 @api_users_router.post(
     '',
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_201_CREATED: {'description': 'Created'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+    },
     response_model=user_api_models.UserOutput,
 )
 async def api_create_user(
@@ -46,7 +50,7 @@ async def api_create_user(
             password=user_in.password,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     response.headers['Location'] = str(
         request.url_for('api_get_user_by_uuid', user_uuid=user_out.uuid)
@@ -58,6 +62,9 @@ async def api_create_user(
 @api_users_router.get(
     '',
     status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {'description': 'Ok'},
+    },
     response_model=user_api_models.UserCollectionOutput,
 )
 async def api_get_all_users(
@@ -73,7 +80,7 @@ async def api_get_all_users(
     try:
         users = await use_case.execute(user)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'users': [
@@ -85,6 +92,10 @@ async def api_get_all_users(
 @api_users_router.get(
     '/{user_uuid}/resource_usage',
     status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {'description': 'Ok'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=user_api_models.UserResourceUsageOutput,
 )
 async def api_get_user_resource_usage(
@@ -98,7 +109,7 @@ async def api_get_user_resource_usage(
     try:
         output = await use_case.execute(user, user_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return user_api_models.UserResourceUsageOutput(
         user_uuid=str(output.user_uuid),
@@ -116,6 +127,9 @@ async def api_get_user_resource_usage(
 @api_users_router.get(
     '/anon/known_tags',
     status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {'description': 'Ok'},
+    },
     response_model=dict[str, int],
 )
 async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediator)]):
@@ -133,6 +147,11 @@ async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediat
 @api_users_router.get(
     '/{user_uuid}/known_tags',
     status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {'description': 'Ok'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=dict[str, int],
 )
 async def api_get_user_tags(
@@ -154,6 +173,11 @@ async def api_get_user_tags(
 @api_users_router.get(
     '/{user_uuid}',
     status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {'description': 'Ok'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=user_api_models.UserOutput,
 )
 async def api_get_user_by_uuid(
@@ -175,6 +199,11 @@ async def api_get_user_by_uuid(
 @api_users_router.put(
     '/{user_uuid}/name',
     status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=user_api_models.UserOutput,
 )
 async def api_change_user_name(
@@ -189,7 +218,7 @@ async def api_change_user_name(
     try:
         user = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
@@ -197,6 +226,11 @@ async def api_change_user_name(
 @api_users_router.put(
     '/{user_uuid}/login',
     status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=user_api_models.UserOutput,
 )
 async def api_change_user_login(
@@ -211,7 +245,7 @@ async def api_change_user_login(
     try:
         user = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
@@ -219,6 +253,11 @@ async def api_change_user_login(
 @api_users_router.put(
     '/{user_uuid}/password',
     status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+        status.HTTP_404_NOT_FOUND: {'description': 'Object does not exist'},
+    },
     response_model=user_api_models.UserOutput,
 )
 async def api_change_user_password(
