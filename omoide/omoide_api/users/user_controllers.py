@@ -22,6 +22,7 @@ api_users_router = APIRouter(prefix='/users', tags=['Users'])
 
 @api_users_router.post(
     '',
+    description='Create new user',
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {'description': 'Created'},
@@ -61,6 +62,7 @@ async def api_create_user(
 
 @api_users_router.get(
     '',
+    description='Get list of users',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -91,6 +93,7 @@ async def api_get_all_users(
 
 @api_users_router.get(
     '/{user_uuid}/resource_usage',
+    description='Get resource usage info for specific user',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -126,6 +129,7 @@ async def api_get_user_resource_usage(
 
 @api_users_router.get(
     '/anon/known_tags',
+    description='Get all known tags for anon user',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -146,6 +150,7 @@ async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediat
 
 @api_users_router.get(
     '/{user_uuid}/known_tags',
+    description='Get all known tags for specific user',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -172,6 +177,7 @@ async def api_get_user_tags(
 
 @api_users_router.get(
     '/{user_uuid}',
+    description='Get user by UUID',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -198,6 +204,7 @@ async def api_get_user_by_uuid(
 
 @api_users_router.put(
     '/{user_uuid}/name',
+    description='Update name of existing user',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
@@ -225,6 +232,7 @@ async def api_change_user_name(
 
 @api_users_router.put(
     '/{user_uuid}/login',
+    description='Update login of existing user',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
@@ -252,6 +260,7 @@ async def api_change_user_login(
 
 @api_users_router.put(
     '/{user_uuid}/password',
+    description='Update password of existing user',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
