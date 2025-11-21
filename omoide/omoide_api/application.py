@@ -31,6 +31,8 @@ def get_api() -> FastAPI:
             'name': 'MIT',
             'url': 'https://opensource.org/license/mit',
         },
+        # Removing models from docs because the look too verbose
+        swagger_ui_parameters={'defaultModelsExpandDepth': -1},
     )
 
 
