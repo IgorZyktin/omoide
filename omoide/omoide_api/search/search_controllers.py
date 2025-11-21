@@ -26,6 +26,7 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
 
 @api_search_router.get(
     '/autocomplete',
+    description='Return tags that match supplied string',
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.AutocompleteOutput,
 )
@@ -69,6 +70,7 @@ async def api_autocomplete(
 
 @api_search_router.get(
     '/recent_updates',
+    description='Return recently updated items',
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.RecentUpdatesOutput,
 )
@@ -100,7 +102,7 @@ async def api_get_recent_updates(
     try:
         items, users = await use_case.execute(user, plan)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return search_api_models.RecentUpdatesOutput(
         items=common_api_models.convert_items(items, users)
@@ -109,6 +111,7 @@ async def api_get_recent_updates(
 
 @api_search_router.get(
     '/total',
+    description='Return total amount of items that correspond to search query',
     response_model=search_api_models.SearchTotalOutput,
 )
 async def api_search_total(
@@ -138,13 +141,14 @@ async def api_search_total(
     try:
         total, duration = await use_case.execute(user, plan)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return search_api_models.SearchTotalOutput(total=total, duration=duration)
 
 
 @api_search_router.get(
     '',
+    description='Perform search request',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -183,7 +187,7 @@ async def api_search(  # noqa: PLR0913
     try:
         duration, items, users = await use_case.execute(user, plan)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
