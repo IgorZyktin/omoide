@@ -3,20 +3,16 @@
 import copy
 import http
 from typing import Any
-from typing import NoReturn
 from urllib.parse import urlencode
 
-from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from omoide import const
 from omoide import custom_logging
-from omoide import exceptions
 from omoide import exceptions as api_exceptions
 
 LOG = custom_logging.get_logger(__name__)
@@ -55,26 +51,6 @@ def response_from_exc(exc: Exception) -> JSONResponse:
     """Return response."""
     code = get_corresponding_exception_code(exc)
     return JSONResponse({'message': str(exc)}, status_code=code)
-
-
-def raise_from_exc(
-    exc: Exception,
-    lang: str | None = None,
-) -> NoReturn:
-    """Cast exception into HTTP response."""
-    _ = lang  # TODO - add localization
-
-    if not isinstance(exc, exceptions.BaseOmoideError):
-        LOG.exception('Failed to perform API request')
-
-    code = get_corresponding_exception_code(exc)
-
-    if isinstance(exc, exceptions.BaseOmoideError | ValidationError):
-        detail = str(exc)
-    else:
-        detail = 'Something bad happened on the server side'
-
-    raise HTTPException(status_code=code, detail=detail)
 
 
 def redirect_from_exc(request: Request, exc: Exception) -> RedirectResponse:

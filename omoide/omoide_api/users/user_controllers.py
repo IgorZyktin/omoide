@@ -143,7 +143,7 @@ async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediat
     try:
         tags = await use_case.execute()
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return tags
 
@@ -170,7 +170,7 @@ async def api_get_user_tags(
     try:
         tags = await use_case.execute(user, user_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return tags
 
@@ -197,7 +197,7 @@ async def api_get_user_by_uuid(
     try:
         user = await use_case.execute(user, user_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
@@ -281,6 +281,6 @@ async def api_change_user_password(
     try:
         user = await use_case.execute(user, user_uuid, payload.value)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
