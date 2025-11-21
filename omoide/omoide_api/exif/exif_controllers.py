@@ -21,6 +21,7 @@ api_exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
 
 @api_exif_router.post(
     '/{item_uuid}',
+    description='Add EXIF data to existing item',
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {'description': 'Created'},
@@ -57,6 +58,7 @@ async def api_create_exif(
 
 @api_exif_router.get(
     '/{item_uuid}',
+    description='Read EXIF data of existing item',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -72,7 +74,7 @@ async def api_read_exif(
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     exif_repo: Annotated[db_interfaces.AbsEXIFRepo, Depends(dep.get_exif_repo)],
 ):
-    """Read EXIF data for existing item."""
+    """Read EXIF data of existing item."""
     use_case = exif_use_cases.ReadEXIFUseCase(database, items_repo, exif_repo)
 
     try:
@@ -85,6 +87,7 @@ async def api_read_exif(
 
 @api_exif_router.put(
     '/{item_uuid}',
+    description='Update EXIF data of existing item',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
@@ -102,7 +105,7 @@ async def api_update_exif(
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     exif_repo: Annotated[db_interfaces.AbsEXIFRepo, Depends(dep.get_exif_repo)],
 ):
-    """Update EXIF data for existing item.
+    """Update EXIF data of existing item.
 
     If item has no EXIF data at the moment, it will be created.
     """
@@ -120,6 +123,7 @@ async def api_update_exif(
 
 @api_exif_router.delete(
     '/{item_uuid}',
+    description='Delete EXIF data of exising item',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
@@ -135,7 +139,7 @@ async def api_delete_exif(
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     exif_repo: Annotated[db_interfaces.AbsEXIFRepo, Depends(dep.get_exif_repo)],
 ):
-    """Delete EXIF data from exising item."""
+    """Delete EXIF data of exising item."""
     use_case = exif_use_cases.DeleteEXIFUseCase(database, items_repo, exif_repo)
 
     try:
