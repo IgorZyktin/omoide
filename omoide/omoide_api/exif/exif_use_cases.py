@@ -30,18 +30,11 @@ class CreateEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(self, user: models.User, item_uuid: UUID, exif: models.Exif) -> None:
         """Execute."""
-        ensure.registered(
-            user,
-            'Anonymous users are not allowed to create EXIF data',
-        )
+        ensure.registered(user, 'Anonymous users are not allowed to create EXIF data')
 
         async with self.database.transaction() as conn:
             item = await self.items_repo.get_by_uuid(conn, item_uuid)
-            ensure.owner(
-                user,
-                item,
-                f'You must own item {item_uuid} to create EXIF data for it',
-            )
+            ensure.owner(user, item, f'You must own item {item_uuid} to create EXIF data for it')
 
             LOG.info('{} is creating EXIF for {}', user, item)
             await self.exif_repo.create(conn, item, exif)
@@ -73,10 +66,7 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(self, user: models.User, item_uuid: UUID, exif: models.Exif) -> None:
         """Execute."""
-        ensure.registered(
-            user,
-            'Anonymous users are not allowed to update EXIF data',
-        )
+        ensure.registered(user, 'Anonymous users are not allowed to update EXIF data')
 
         async with self.database.transaction() as conn:
             item = await self.items_repo.get_by_uuid(conn, item_uuid)
@@ -95,10 +85,7 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(self, user: models.User, item_uuid: UUID) -> None:
         """Execute."""
-        ensure.registered(
-            user,
-            'Anonymous users are not allowed to delete EXIF data',
-        )
+        ensure.registered(user, 'Anonymous users are not allowed to delete EXIF data')
 
         async with self.database.transaction() as conn:
             item = await self.items_repo.get_by_uuid(conn, item_uuid)

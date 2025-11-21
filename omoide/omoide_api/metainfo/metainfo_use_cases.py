@@ -59,10 +59,7 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
         extras: dict[str, Any],
     ) -> None:
         """Execute."""
-        ensure.registered(
-            user,
-            'Anonymous users are not allowed to update item metadata',
-        )
+        ensure.registered(user, 'Anonymous users are not allowed to update item metadata')
 
         async with self.database.transaction() as conn:
             item = await self.items_repo.get_by_uuid(conn, item_uuid)
