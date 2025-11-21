@@ -31,13 +31,3 @@ class AbsPolicy(abc.ABC):
         error_message: str | None = None,
     ) -> None:
         """Raise if user is not admin."""
-
-    @staticmethod
-    @abc.abstractmethod
-    def ensure_can_change(
-        user: models.User,
-        item: models.Item,
-        to: str,
-        error_message: str | None = None,
-    ) -> None:
-        """Continue execution only if user is allowed to edit given item (or is admin)."""

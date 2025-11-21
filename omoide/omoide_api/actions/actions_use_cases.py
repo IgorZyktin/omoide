@@ -144,8 +144,8 @@ class CopyImageUseCase(BaseAPIUseCase):
             source_item = await self.mediator.items.get_by_uuid(conn, source_uuid)
             target_item = await self.mediator.items.get_by_uuid(conn, target_uuid)
 
-            self.mediator.policy.ensure_can_change(user, source_item, to='copy images')
-            self.mediator.policy.ensure_can_change(user, target_item, to='copy images')
+            self.mediator.policy.ensure_owner(user, source_item, to='copy images')
+            self.mediator.policy.ensure_owner(user, target_item, to='copy images')
 
             owner = await self.mediator.users.get_by_id(conn, source_item.owner_id)
 
