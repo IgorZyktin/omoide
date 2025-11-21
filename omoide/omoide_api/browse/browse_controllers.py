@@ -22,6 +22,7 @@ api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 
 @api_browse_router.get(
     '/{item_uuid}',
+    description='Perform browse request',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -55,7 +56,7 @@ async def api_browse(  # noqa: PLR0913
     try:
         duration, items, users = await use_case.execute(user, item_uuid, plan)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         duration=duration,
