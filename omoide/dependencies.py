@@ -22,7 +22,6 @@ from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
-from omoide.infra.interfaces import AbsPolicy
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
@@ -107,11 +106,6 @@ def get_authenticator() -> AbsAuthenticator:
     return infra.BcryptAuthenticator()
 
 
-def get_policy() -> AbsPolicy:
-    """Get policy instance."""
-    return infra.Policy()
-
-
 @functools.cache
 def get_object_storage(
     database: Annotated[AbsDatabase, Depends(get_database)],
@@ -149,14 +143,12 @@ def get_meta_repo() -> db_interfaces.AbsMetaRepo:
 @functools.cache
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
-    policy: Annotated[AbsPolicy, Depends(get_policy)],
     object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> Mediator:
     """Get mediator instance."""
     return Mediator(
         authenticator=authenticator,
-        policy=policy,
         database=database,
         browse=impl_sqlalchemy.BrowseRepo(),
         exif=impl_sqlalchemy.EXIFRepo(),
