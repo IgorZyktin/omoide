@@ -18,6 +18,7 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 
 @api_actions_router.post(
     '/rebuild_known_tags_for_anon',
+    description='Recalculate all known tags for anon user',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -31,7 +32,7 @@ async def api_action_rebuild_known_tags_for_anon(
     try:
         operation_id = await use_case.execute(admin)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for anon',
@@ -41,6 +42,7 @@ async def api_action_rebuild_known_tags_for_anon(
 
 @api_actions_router.post(
     '/rebuild_known_tags_for_user/{user_uuid}',
+    description='Recalculate all known tags for registered user',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -55,7 +57,7 @@ async def api_action_rebuild_known_tags_for_user(
     try:
         operation_id = await use_case.execute(admin, user_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for user',
@@ -66,6 +68,7 @@ async def api_action_rebuild_known_tags_for_user(
 
 @api_actions_router.post(
     '/rebuild_known_tags_for_all',
+    description='Recalculate all known tags for all users',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -79,7 +82,7 @@ async def api_action_rebuild_known_tags_for_all(
     try:
         operation_id = await use_case.execute(admin)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for all users',
@@ -89,6 +92,7 @@ async def api_action_rebuild_known_tags_for_all(
 
 @api_actions_router.post(
     '/rebuild_computed_tags/{item_uuid}',
+    description='Recalculate all computed tags for specific user',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str | None],
 )
@@ -107,7 +111,7 @@ async def api_action_rebuild_computed_tags(
     try:
         owner, item, job_id = await use_case.execute(admin, item_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'Rebuilding computed tags',
@@ -119,6 +123,7 @@ async def api_action_rebuild_computed_tags(
 
 @api_actions_router.post(
     '/rebuild_computed_tags_for_all',
+    description='Recalculate all computed tags for all users',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -132,7 +137,7 @@ async def api_action_rebuild_computed_tags_for_all(
     try:
         operation_id = await use_case.execute(admin)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'rebuilding known tags for all users',
@@ -142,6 +147,7 @@ async def api_action_rebuild_computed_tags_for_all(
 
 @api_actions_router.post(
     '/copy_image/{source_item_uuid}/to/{target_item_uuid}',
+    description='Copy image from one item to another',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | list[str]],
 )
@@ -164,9 +170,6 @@ async def api_action_copy_image(
             target_uuid=target_item_uuid,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
-    return {
-        'result': 'Copying image',
-        'will_copy': media_types,
-    }
+    return {'result': 'Copying image', 'will_copy': media_types}
