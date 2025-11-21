@@ -38,20 +38,3 @@ class Policy(AbsPolicy):
             msg = error_message
 
         raise exceptions.NotAllowedError(msg)
-
-    @staticmethod
-    def ensure_admin(
-        user: models.User,
-        to: str,
-        error_message: str | None = None,
-    ) -> None:
-        """Raise if user is not admin."""
-        if user.is_admin:
-            return
-
-        if error_message is None:
-            msg = f'You have to be admin to {to}'
-        else:
-            msg = error_message
-
-        raise exceptions.AccessDeniedError(msg)

@@ -22,12 +22,3 @@ class AbsPolicy(abc.ABC):
         error_message: str | None = None,
     ) -> None:
         """Raise if one user tries to modify object of some other user."""
-
-    @staticmethod
-    @abc.abstractmethod
-    def ensure_admin(
-        user: models.User,
-        to: str,
-        error_message: str | None = None,
-    ) -> None:
-        """Raise if user is not admin."""

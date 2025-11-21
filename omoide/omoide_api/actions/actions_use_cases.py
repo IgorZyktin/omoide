@@ -6,6 +6,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import models
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
+from omoide.domain import ensure
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -15,7 +16,10 @@ class RebuildKnownTagsForAnonUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.mediator.policy.ensure_admin(admin, to='rebuild known tags for anon')
+        ensure.admin(
+            admin,
+            'Only admins can rebuild known tags for anon',
+        )
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for anon', admin)
@@ -34,7 +38,10 @@ class RebuildKnownTagsForUserUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User, user_uuid: UUID) -> int:
         """Initiate serial operation execution."""
-        self.mediator.policy.ensure_admin(admin, to=f'rebuild known tags for user {user_uuid}')
+        ensure.admin(
+            admin,
+            'Only admins can rebuild known tags for user',
+        )
 
         async with self.mediator.database.transaction() as conn:
             user = await self.mediator.users.get_by_uuid(conn, user_uuid)
@@ -57,7 +64,10 @@ class RebuildKnownTagsForAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.mediator.policy.ensure_admin(admin, to='rebuild known tags for all users')
+        ensure.admin(
+            admin,
+            'Only admins can rebuild known tags for all users',
+        )
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding known tags for all users', admin)
@@ -81,7 +91,10 @@ class RebuildComputedTagsForItemUseCase(BaseAPIUseCase):
         item_uuid: UUID,
     ) -> tuple[models.User, models.Item, int]:
         """Prepare for execution."""
-        self.mediator.policy.ensure_admin(admin, to=f'rebuild computed tags for item {item_uuid}')
+        ensure.admin(
+            admin,
+            'Only admins can rebuild computed tags for items',
+        )
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
@@ -111,7 +124,10 @@ class RebuildComputedTagsForAllUseCase(BaseAPIUseCase):
 
     async def execute(self, admin: models.User) -> int:
         """Initiate serial operation execution."""
-        self.mediator.policy.ensure_admin(admin, to='rebuild computed tags for all users')
+        ensure.admin(
+            admin,
+            'Only admins can rebuild computed tags for all users',
+        )
 
         async with self.mediator.database.transaction() as conn:
             LOG.info('{} is rebuilding computed tags for all users', admin)
@@ -135,7 +151,10 @@ class CopyImageUseCase(BaseAPIUseCase):
         target_uuid: UUID,
     ) -> list[const.MEDIA_TYPE]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='copy image for item')
+        ensure.registered(
+            user,
+            'Only registered users can copy images',
+        )
 
         if source_uuid == target_uuid:
             return []
