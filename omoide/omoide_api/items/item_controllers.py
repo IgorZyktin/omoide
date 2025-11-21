@@ -28,6 +28,7 @@ api_items_router = APIRouter(prefix='/items', tags=['Items'])
 
 @api_items_router.post(
     '',
+    description='Create single item',
     status_code=status.HTTP_201_CREATED,
     response_model=common_api_models.OneItemOutput,
 )
@@ -44,7 +45,7 @@ async def api_create_item(
     try:
         items, users_map = await use_case.execute(user, item_in.model_dump())
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     item = items[0]
     response.headers['Location'] = str(request.url_for('api_get_item', item_uuid=item.uuid))
@@ -53,6 +54,7 @@ async def api_create_item(
 
 @api_items_router.post(
     '/bulk',
+    description='Create many items in one request',
     status_code=status.HTTP_201_CREATED,
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -70,7 +72,7 @@ async def api_create_many_items(
             *(item_in.model_dump() for item_in in items_in),
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         items=common_api_models.convert_items(items, users_map),
@@ -79,6 +81,7 @@ async def api_create_many_items(
 
 @api_items_router.get(
     '/{item_uuid}',
+    description='Get exising item',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.OneItemOutput,
 )
@@ -93,13 +96,14 @@ async def api_get_item(
     try:
         item, users_map = await use_case.execute(user, item_uuid)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, users_map))
 
 
 @api_items_router.get(
     '',
+    description='Get list of exising items',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -111,7 +115,7 @@ async def api_get_many_items(
     name: Annotated[str | None, Query(max_length=limits.MAX_QUERY)] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
-    """Get exising items."""
+    """Get list of exising items."""
     use_case = item_use_cases.GetManyItemsUseCase(mediator)
 
     try:
@@ -123,7 +127,7 @@ async def api_get_many_items(
             limit=limit,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
         items=common_api_models.convert_items(items, users_map),
@@ -132,6 +136,7 @@ async def api_get_many_items(
 
 @api_items_router.patch(
     '/{item_uuid}',
+    description='Update exising item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
 )
@@ -151,13 +156,14 @@ async def api_update_item(
             is_collection=item_update_in.is_collection,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {'result': 'updated item', 'item_uuid': str(item_uuid)}
 
 
 @api_items_router.put(
     '/{item_uuid}/name',
+    description='Rename exising item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
@@ -177,7 +183,7 @@ async def api_rename_item(
             name=item_rename_in.name,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'enqueued name change',
@@ -188,6 +194,7 @@ async def api_rename_item(
 
 @api_items_router.put(
     '/{item_uuid}/parent/{new_parent_uuid}',
+    description='Change parent of the item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | list[int]],
 )
@@ -197,7 +204,7 @@ async def api_change_parent_item(
     user: Annotated[models.User, Depends(dep.get_known_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
 ):
-    """Rename exising item."""
+    """Change parent of the item."""
     use_case = item_use_cases.ChangeParentItemUseCase(mediator)
 
     try:
@@ -207,7 +214,7 @@ async def api_change_parent_item(
             new_parent_uuid=new_parent_uuid,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc, lang=user.lang)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'changed parent',
@@ -219,6 +226,7 @@ async def api_change_parent_item(
 
 @api_items_router.put(
     '/{item_uuid}/tags',
+    description='Update item tags',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
@@ -238,7 +246,7 @@ async def api_update_item_tags(
             tags=item_tags_in.tags,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'enqueued tags update',
@@ -249,6 +257,7 @@ async def api_update_item_tags(
 
 @api_items_router.delete(
     '/{item_uuid}',
+    description='Delete exising item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=common_api_models.ItemDeleteOutput,
 )
@@ -268,7 +277,7 @@ async def api_delete_item(
             desired_switch=desired_switch,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     if item is None:
         switch_to = None
@@ -284,6 +293,7 @@ async def api_delete_item(
 
 @api_items_router.put(
     '/{item_uuid}/permissions',
+    description='Change permissions for given item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, bool | str | int | None],
 )
@@ -309,7 +319,7 @@ async def api_item_update_permissions(
             apply_to_children_as=permissions_in.apply_to_children_as,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return {
         'result': 'enqueued permissions change',
@@ -323,6 +333,7 @@ async def api_item_update_permissions(
 
 @api_items_router.put(
     '/{item_uuid}/upload',
+    description='Store content data for given item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
 )
@@ -359,22 +370,22 @@ async def api_upload_item(
             ),
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
-    return {
-        'result': 'enqueued content adding',
-        'item_uuid': str(item_uuid),
-    }
+    return {'result': 'enqueued content adding', 'item_uuid': str(item_uuid)}
 
 
-@api_items_router.get('/download/{item_uuid}')
+@api_items_router.get(
+    '/download/{item_uuid}',
+    description='Return all child items as a zip archive',
+)
 async def api_download_collection(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
     mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
 ):
-    """Return all children as a zip archive.
+    """Return all child items as a zip archive.
 
     WARNING - this endpoint works only behind NGINX with mod_zip installed.
     """
@@ -386,7 +397,7 @@ async def api_download_collection(
             item_uuid=item_uuid,
         )
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     if item and item.name:
         filename = urllib.parse.quote(item.name)
