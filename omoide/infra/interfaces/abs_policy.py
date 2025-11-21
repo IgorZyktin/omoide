@@ -34,16 +34,6 @@ class AbsPolicy(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def ensure_can_see(
-        user: models.User,
-        item: models.Item,
-        to: str,
-        error_message: str | None = None,
-    ) -> None:
-        """Continue execution only if user is allowed to see given item (or is admin)."""
-
-    @staticmethod
-    @abc.abstractmethod
     def ensure_can_change(
         user: models.User,
         item: models.Item,
