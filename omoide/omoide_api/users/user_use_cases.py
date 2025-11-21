@@ -241,22 +241,23 @@ class GetAllUsersUseCase(BaseAPIUseCase):
 class GetUserByUUIDUseCase(BaseAPIUseCase):
     """Use case for getting user by UUID."""
 
-    do_what: str = 'get user info'
-
     async def execute(
         self,
         user: models.User,
         user_uuid: UUID,
     ) -> models.User:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to get registered users',
+        )
 
         async with self.mediator.database.transaction() as conn:
             target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
             ensure.represents(
                 user,
                 target_user,
-                "You cannot change someone else's info",
+                "You cannot get someone else's info",
             )
             root = await self.mediator.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
