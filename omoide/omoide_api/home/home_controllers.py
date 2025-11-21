@@ -20,7 +20,7 @@ api_home_router = APIRouter(prefix='/home', tags=['Home'])
 
 @api_home_router.get(
     '',
-    description='Return items for user home page',
+    summary='Return items for user home page',
     response_model=common_api_models.ManyItemsOutput,
 )
 async def api_home(  # noqa: PLR0913

@@ -26,7 +26,7 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
 
 @api_search_router.get(
     '/autocomplete',
-    description='Return tags that match supplied string',
+    summary='Return tags that match supplied string',
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.AutocompleteOutput,
 )
@@ -70,7 +70,7 @@ async def api_autocomplete(
 
 @api_search_router.get(
     '/recent_updates',
-    description='Return recently updated items',
+    summary='Return recently updated items',
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.RecentUpdatesOutput,
 )
@@ -111,7 +111,7 @@ async def api_get_recent_updates(
 
 @api_search_router.get(
     '/total',
-    description='Return total amount of items that correspond to search query',
+    summary='Return total amount of items that correspond to search query',
     response_model=search_api_models.SearchTotalOutput,
 )
 async def api_search_total(
@@ -148,7 +148,7 @@ async def api_search_total(
 
 @api_search_router.get(
     '',
-    description='Perform search request',
+    summary='Perform search request',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )

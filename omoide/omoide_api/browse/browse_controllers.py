@@ -22,7 +22,7 @@ api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 
 @api_browse_router.get(
     '/{item_uuid}',
-    description='Perform browse request',
+    summary='Perform browse request',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )

@@ -16,7 +16,7 @@ api_info_router = APIRouter(prefix='/info', tags=['Info'])
 
 @api_info_router.get(
     '/version',
-    description='Get current version of the API',
+    summary='Get current version of the API',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.VersionOutput,
 )
@@ -27,7 +27,7 @@ async def api_get_version():
 
 @api_info_router.get(
     '/whoami',
-    description='Return current user as API sees it',
+    summary='Return current user as API sees it',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.WhoAmIOutput,
 )

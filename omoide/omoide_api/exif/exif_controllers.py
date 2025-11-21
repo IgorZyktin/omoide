@@ -21,7 +21,7 @@ api_exif_router = APIRouter(prefix='/exif', tags=['EXIF'])
 
 @api_exif_router.post(
     '/{item_uuid}',
-    description='Add EXIF data to existing item',
+    summary='Add EXIF data to existing item',
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {'description': 'Created'},
@@ -58,7 +58,7 @@ async def api_create_exif(
 
 @api_exif_router.get(
     '/{item_uuid}',
-    description='Read EXIF data of existing item',
+    summary='Read EXIF data of existing item',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -87,7 +87,7 @@ async def api_read_exif(
 
 @api_exif_router.put(
     '/{item_uuid}',
-    description='Update EXIF data of existing item',
+    summary='Update EXIF data of existing item',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
@@ -123,7 +123,7 @@ async def api_update_exif(
 
 @api_exif_router.delete(
     '/{item_uuid}',
-    description='Delete EXIF data of exising item',
+    summary='Delete EXIF data of exising item',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},

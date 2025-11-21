@@ -18,7 +18,7 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
 
 @api_actions_router.post(
     '/rebuild_known_tags_for_anon',
-    description='Recalculate all known tags for anon user',
+    summary='Recalculate all known tags for anon user',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -42,7 +42,7 @@ async def api_action_rebuild_known_tags_for_anon(
 
 @api_actions_router.post(
     '/rebuild_known_tags_for_user/{user_uuid}',
-    description='Recalculate all known tags for registered user',
+    summary='Recalculate all known tags for registered user',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -68,7 +68,7 @@ async def api_action_rebuild_known_tags_for_user(
 
 @api_actions_router.post(
     '/rebuild_known_tags_for_all',
-    description='Recalculate all known tags for all users',
+    summary='Recalculate all known tags for all users',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -92,7 +92,7 @@ async def api_action_rebuild_known_tags_for_all(
 
 @api_actions_router.post(
     '/rebuild_computed_tags/{item_uuid}',
-    description='Recalculate all computed tags for specific user',
+    summary='Recalculate all computed tags for specific user',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str | None],
 )
@@ -123,7 +123,7 @@ async def api_action_rebuild_computed_tags(
 
 @api_actions_router.post(
     '/rebuild_computed_tags_for_all',
-    description='Recalculate all computed tags for all users',
+    summary='Recalculate all computed tags for all users',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, int | str],
 )
@@ -147,7 +147,7 @@ async def api_action_rebuild_computed_tags_for_all(
 
 @api_actions_router.post(
     '/copy_image/{source_item_uuid}/to/{target_item_uuid}',
-    description='Copy image from one item to another',
+    summary='Copy image from one item to another',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | list[str]],
 )

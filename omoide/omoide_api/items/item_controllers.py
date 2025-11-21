@@ -28,7 +28,7 @@ api_items_router = APIRouter(prefix='/items', tags=['Items'])
 
 @api_items_router.post(
     '',
-    description='Create single item',
+    summary='Create single item',
     status_code=status.HTTP_201_CREATED,
     response_model=common_api_models.OneItemOutput,
 )
@@ -54,7 +54,7 @@ async def api_create_item(
 
 @api_items_router.post(
     '/bulk',
-    description='Create many items in one request',
+    summary='Create many items in one request',
     status_code=status.HTTP_201_CREATED,
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -81,7 +81,7 @@ async def api_create_many_items(
 
 @api_items_router.get(
     '/{item_uuid}',
-    description='Get exising item',
+    summary='Get exising item',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.OneItemOutput,
 )
@@ -103,7 +103,7 @@ async def api_get_item(
 
 @api_items_router.get(
     '',
-    description='Get list of exising items',
+    summary='Get list of exising items',
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
@@ -136,7 +136,7 @@ async def api_get_many_items(
 
 @api_items_router.patch(
     '/{item_uuid}',
-    description='Update exising item',
+    summary='Update exising item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
 )
@@ -163,7 +163,7 @@ async def api_update_item(
 
 @api_items_router.put(
     '/{item_uuid}/name',
-    description='Rename exising item',
+    summary='Rename exising item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
@@ -194,7 +194,7 @@ async def api_rename_item(
 
 @api_items_router.put(
     '/{item_uuid}/parent/{new_parent_uuid}',
-    description='Change parent of the item',
+    summary='Change parent of the item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | list[int]],
 )
@@ -226,7 +226,7 @@ async def api_change_parent_item(
 
 @api_items_router.put(
     '/{item_uuid}/tags',
-    description='Update item tags',
+    summary='Update item tags',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
@@ -257,7 +257,7 @@ async def api_update_item_tags(
 
 @api_items_router.delete(
     '/{item_uuid}',
-    description='Delete exising item',
+    summary='Delete exising item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=common_api_models.ItemDeleteOutput,
 )
@@ -293,7 +293,7 @@ async def api_delete_item(
 
 @api_items_router.put(
     '/{item_uuid}/permissions',
-    description='Change permissions for given item',
+    summary='Change permissions for given item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, bool | str | int | None],
 )
@@ -333,7 +333,7 @@ async def api_item_update_permissions(
 
 @api_items_router.put(
     '/{item_uuid}/upload',
-    description='Store content data for given item',
+    summary='Store content data for given item',
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
 )
@@ -377,7 +377,7 @@ async def api_upload_item(
 
 @api_items_router.get(
     '/download/{item_uuid}',
-    description='Return all child items as a zip archive',
+    summary='Return all child items as a zip archive',
 )
 async def api_download_collection(
     item_uuid: UUID,
