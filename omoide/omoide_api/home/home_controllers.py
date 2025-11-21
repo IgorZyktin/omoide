@@ -20,6 +20,7 @@ api_home_router = APIRouter(prefix='/home', tags=['Home'])
 
 @api_home_router.get(
     '',
+    description='Return items for user home page',
     response_model=common_api_models.ManyItemsOutput,
 )
 async def api_home(  # noqa: PLR0913
@@ -51,6 +52,6 @@ async def api_home(  # noqa: PLR0913
     try:
         items, users = await use_case.execute(user, plan)
     except Exception as exc:
-        return web.raise_from_exc(exc)
+        return web.response_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(items=common_api_models.convert_items(items, users))
