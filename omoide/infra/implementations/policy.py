@@ -20,21 +20,3 @@ class Policy(AbsPolicy):
             msg = f'Anonymous users are not allowed to {to}'
 
         raise exceptions.AccessDeniedError(msg)
-
-    @staticmethod
-    def ensure_owner(
-        user: models.User,
-        item: models.Item,
-        to: str,
-        error_message: str | None = None,
-    ) -> None:
-        """Continue execution only if user owns given item (or is admin)."""
-        if user.is_admin or item.owner_id == user.id:
-            return
-
-        if error_message is None:
-            msg = f'You are not allowed to {to} for the item {item.uuid}'
-        else:
-            msg = error_message
-
-        raise exceptions.NotAllowedError(msg)

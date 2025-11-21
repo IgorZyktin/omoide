@@ -9,6 +9,7 @@ from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
 from omoide import utils
+from omoide.domain import ensure
 from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
 
@@ -18,15 +19,13 @@ LOG = custom_logging.get_logger(__name__)
 class CreateManyItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
 
-    do_what: str = 'create items'
-
     async def execute(
         self,
         user: models.User,
         *items_in: dict[str, Any],
     ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(user, 'Anonymous users are not allowed to create items')
 
         items: list[models.Item] = []
         users_map: dict[int, models.User | None] = {user.id: user}
@@ -149,8 +148,6 @@ class GetManyItemsUseCase(BaseAPIUseCase):
 class UpdateItemUseCase(BaseItemUseCase):
     """Use case for item update."""
 
-    do_what: str = 'update items'
-
     async def execute(
         self,
         user: models.User,
@@ -158,11 +155,11 @@ class UpdateItemUseCase(BaseItemUseCase):
         is_collection: bool,
     ) -> None:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(user, 'Anonymous users are not allowed to update items')
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
+            ensure.owner(user, item, "You cannot update someone else's item")
 
             if item.is_collection == is_collection:
                 return
@@ -176,8 +173,6 @@ class UpdateItemUseCase(BaseItemUseCase):
 class RenameItemUseCase(BaseItemUseCase):
     """Use case for item rename."""
 
-    do_what: str = 'rename items'
-
     async def execute(
         self,
         user: models.User,
@@ -185,11 +180,11 @@ class RenameItemUseCase(BaseItemUseCase):
         name: str,
     ) -> int | None:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(user, 'Anonymous users are not allowed to rename items')
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
+            ensure.owner(user, item, "You cannot rename someone else's item")
 
             if item.name == name:
                 return None
@@ -214,8 +209,6 @@ class RenameItemUseCase(BaseItemUseCase):
 class ChangeParentItemUseCase(BaseItemUseCase):
     """Use case for setting new parent item."""
 
-    do_what: str = 'change item parent'
-
     async def execute(
         self,
         user: models.User,
@@ -223,11 +216,11 @@ class ChangeParentItemUseCase(BaseItemUseCase):
         new_parent_uuid: UUID,
     ) -> list[int]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(user, 'Anonymous users are not allowed to change item parents')
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
+            ensure.owner(user, item, "You cannot change someone else's item parents")
 
             if item.parent_uuid == new_parent_uuid:
                 return []
@@ -321,8 +314,6 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 class UpdateItemTagsUseCase(BaseItemUseCase):
     """Use case for item tags update."""
 
-    do_what: str = 'change item tags'
-
     async def execute(
         self,
         user: models.User,
@@ -330,11 +321,11 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
         tags: set[str],
     ) -> int | None:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(user, 'Anonymous users are not allowed to change item tags')
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
+            ensure.owner(user, item, "You cannot update someone else's item's tags")
 
             if item.tags == tags:
                 return None
@@ -359,8 +350,6 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 
-    do_what: str = 'delete items'
-
     async def execute(
         self,
         user: models.User,
@@ -368,12 +357,12 @@ class DeleteItemUseCase(BaseItemUseCase):
         desired_switch: Literal['parent', 'sibling'],
     ) -> models.Item | None:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to=self.do_what)
+        ensure.registered(user, 'Anonymous users are not allowed to delete items')
         switch_to = None
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to=self.do_what)
+            ensure.owner(user, item, "You cannot delete someone else's item")
 
             if item.parent_uuid is None:
                 LOG.warning('{} tried to delete root {}', user, item)
@@ -431,9 +420,11 @@ class UploadItemUseCase(BaseAPIUseCase):
         file: models.NewFile,
     ) -> int | None:
         """Execute."""
+        ensure.registered(user, 'Anonymous users are not allowed to upload items')
+
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to='upload media to this item')
+            ensure.owner(user, item, "You cannot upload media to someone else's item")
 
             operation_id = await self.mediator.misc.create_serial_operation(
                 conn=conn,
@@ -624,11 +615,13 @@ class ChangePermissionsUseCase(BaseAPIUseCase):
         apply_to_children_as: const.ApplyAs,
     ) -> int | None:
         """Execute."""
+        ensure.registered(user, 'Anonymous users are not allowed to change item permissions')
+
         operation_id = None
 
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            self.mediator.policy.ensure_owner(user, item, to='change item permissions')
+            ensure.owner(user, item, "You cannot change someone else's item's permissions")
 
             LOG.info('{} is updating permissions of {}', user, item)
 
