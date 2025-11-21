@@ -20,6 +20,7 @@ api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 
 @api_metainfo_router.get(
     '/{item_uuid}',
+    description='Get metainfo of existing item',
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {'description': 'Ok'},
@@ -35,7 +36,7 @@ async def api_read_metainfo(
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
 ):
-    """Get metainfo."""
+    """Get metainfo of existing item."""
     use_case = metainfo_use_cases.ReadMetainfoUseCase(database, items_repo, meta_repo)
 
     try:
@@ -68,6 +69,7 @@ async def api_read_metainfo(
 
 @api_metainfo_router.put(
     '/{item_uuid}',
+    description='Update metainfo entry for existing item',
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
@@ -84,7 +86,7 @@ async def api_update_metainfo(
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
 ):
-    """Update metainfo entry."""
+    """Update metainfo entry for existing item."""
     use_case = metainfo_use_cases.UpdateMetainfoUseCase(database, items_repo, meta_repo)
 
     try:
