@@ -57,24 +57,6 @@ class Policy(AbsPolicy):
         raise exceptions.AccessDeniedError(msg)
 
     @staticmethod
-    def ensure_represents(
-        user: models.User,
-        other_user: models.User,
-        to: str,
-        error_message: str | None = None,
-    ) -> None:
-        """Raise if one user tries to modify data of some other user."""
-        if user.is_admin or user.id == other_user.id:
-            return
-
-        if error_message is None:
-            msg = f'You are not allowed to {to} for the user {other_user.uuid}'
-        else:
-            msg = error_message
-
-        raise exceptions.NotAllowedError(msg)
-
-    @staticmethod
     def ensure_can_see(
         user: models.User,
         item: models.Item,
