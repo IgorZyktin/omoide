@@ -51,7 +51,15 @@ class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
         """Find items to browse depending on parent (all children)."""
 
     @abc.abstractmethod
-    async def get_recently_updated_items(
+    async def get_recently_updated_items_anon(
+        self,
+        conn: ConnectionT,
+        plan: models.Plan,
+    ) -> list[models.Item]:
+        """Return recently updated items."""
+
+    @abc.abstractmethod
+    async def get_recently_updated_items_known(
         self,
         conn: ConnectionT,
         user: models.User,

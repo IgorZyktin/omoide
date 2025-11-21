@@ -37,10 +37,13 @@ class RecentUpdatesUseCase(BaseAPIUseCase):
         plan: models.Plan,
     ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
-        self.mediator.policy.ensure_registered(user, to='read recently updated items')
-
         async with self.mediator.database.transaction() as conn:
-            items = await self.mediator.browse.get_recently_updated_items(conn, user, plan)
+            if user.is_anon:
+                items = await self.mediator.browse.get_recently_updated_items_anon(conn, plan)
+            else:
+                items = await self.mediator.browse.get_recently_updated_items_known(
+                    conn, user, plan
+                )
             users = await self.mediator.users.get_map(conn, items)
 
         return items, users

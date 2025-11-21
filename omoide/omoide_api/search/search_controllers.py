@@ -82,8 +82,7 @@ async def api_get_recent_updates(
 ):
     """Return recently updated items.
 
-    This endpoint can be used by any registered user,
-    but each will get tailored output.
+    This endpoint can be used by any user, but each will get tailored output.
     """
     use_case = search_use_cases.RecentUpdatesUseCase(mediator)
 

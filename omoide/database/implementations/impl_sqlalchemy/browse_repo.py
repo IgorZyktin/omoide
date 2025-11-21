@@ -258,14 +258,37 @@ class BrowseRepo(_BrowseRepoBase):
         response = (await conn.execute(sa.text(query), values)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
-    async def get_recently_updated_items(
+    async def get_recently_updated_items_known(
         self,
         conn: AsyncConnection,
         user: models.User,
         plan: models.Plan,
     ) -> list[models.Item]:
         """Return recently updated items."""
+        condition = sa.or_(
+            db_models.Item.owner_id == user.id,
+            db_models.Item.permissions.any_() == user.id,
+        )
+        return await self._get_recently_updated_items(conn, plan, condition)
+
+    async def get_recently_updated_items_anon(
+        self,
+        conn: AsyncConnection,
+        plan: models.Plan,
+    ) -> list[models.Item]:
+        """Return recently updated items."""
+        condition = queries.item_is_public()
+        return await self._get_recently_updated_items(conn, plan, condition)
+
+    @staticmethod
+    async def _get_recently_updated_items(
+        conn: AsyncConnection,
+        plan: models.Plan,
+        condition: sa.BinaryExpression | sa.ColumnElement,
+    ) -> list[models.Item]:
+        """Return recently updated items."""
         parents = aliased(db_models.Item)
+
         query = (
             sa.select(
                 db_models.Item,
@@ -275,10 +298,7 @@ class BrowseRepo(_BrowseRepoBase):
             .join(parents, parents.id == db_models.Item.parent_id, isouter=True)
             .join(db_models.Metainfo, db_models.Metainfo.item_id == db_models.Item.id)
             .where(
-                sa.or_(
-                    db_models.Item.owner_id == user.id,
-                    db_models.Item.permissions.any_() == user.id,
-                ),
+                condition,
                 db_models.Item.status != models.Status.DELETED,
             )
         )
