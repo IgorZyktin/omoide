@@ -1,1 +1,1 @@
-from omoide.infra.implementations.authenticator import BcryptAuthenticator  # noqa: F401
+from omoide.infra.implementations.bcrypt_authenticator import BcryptAuthenticator  # noqa: F401
