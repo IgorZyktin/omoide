@@ -1,54 +1,7 @@
 """Pathfinders."""
 
-from pathlib import Path
-from typing import Literal
-from uuid import UUID
-
 from omoide import models
 from omoide.object_storage.interfaces.abs_locator import AbsLocator
-
-
-class FileLocator(AbsLocator):
-    """Filesystem locator."""
-
-    def __init__(self, data_folder: Path, prefix_size: int) -> None:
-        """Initialize instance."""
-        self.data_folder = data_folder
-        self.prefix_size = prefix_size
-
-    def get_content_location(self, item: models.Item) -> str | None:
-        """Return location of the content."""
-        if item.content_ext is None:
-            return None
-        return self._get_location(item.owner_uuid, item.uuid, 'content', item.content_ext)
-
-    def get_preview_location(self, item: models.Item) -> str | None:
-        """Return location of the preview."""
-        if item.preview_ext is None:
-            return None
-        return self._get_location(item.owner_uuid, item.uuid, 'preview', item.content_ext)
-
-    def get_thumbnail_location(self, item: models.Item) -> str | None:
-        """Return location of the thumbnail."""
-        if item.thumbnail_ext is None:
-            return None
-        return self._get_location(item.owner_uuid, item.uuid, 'thumbnail', item.content_ext)
-
-    def _get_location(
-        self,
-        owner_uuid: UUID,
-        item_uuid: UUID,
-        category: Literal['content', 'preview', 'thumbnail'],
-        ext: str | None,
-    ) -> str:
-        """Return generic location."""
-        return str(
-            self.data_folder
-            / category
-            / str(owner_uuid)
-            / str(item_uuid)[: self.prefix_size]
-            / f'{item_uuid}.{ext}'
-        )
 
 
 class WebLocator(AbsLocator):
