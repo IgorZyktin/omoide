@@ -23,9 +23,9 @@ from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.mediator import Mediator
+from omoide.infra.web_locator import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
-from omoide.infra.implementations.web_locator import WebLocator
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import web
 

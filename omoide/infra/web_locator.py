@@ -1,10 +1,9 @@
 """Pathfinders."""
 
 from omoide import models
-from omoide.infra.interfaces.abs_locator import AbsLocator
 
 
-class WebLocator(AbsLocator):
+class WebLocator:
     """Web locator."""
 
     def __init__(self, root: str, prefix_size: int) -> None:
