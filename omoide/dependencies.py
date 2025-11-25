@@ -25,7 +25,7 @@ from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.mediator import Mediator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
-from omoide.object_storage.implementations.locators import WebLocator
+from omoide.infra.implementations.web_locator import WebLocator
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import web
 

@@ -1,7 +1,7 @@
 """Pathfinders."""
 
 from omoide import models
-from omoide.object_storage.interfaces.abs_locator import AbsLocator
+from omoide.infra.interfaces.abs_locator import AbsLocator
 
 
 class WebLocator(AbsLocator):
