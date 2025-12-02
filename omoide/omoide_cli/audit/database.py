@@ -4,7 +4,7 @@ import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from omoide import custom_logging
+from omoide import custom_logging, models
 from omoide.database import db_models
 from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
 from omoide.omoide_cli.common import Triplet
@@ -83,6 +83,11 @@ class AuditDatabase(SqlalchemyDatabase):
             db_models.Item.id,
             db_models.Item.uuid,
             db_models.Item.name,
-        ).where(db_models.Item.content_ext.is_(None))
+        ).where(
+            sa.and_(
+                db_models.Item.content_ext.is_(None),
+                db_models.Item.status == models.Status.AVAILABLE,
+            )
+        )
         response = (await conn.execute(query)).all()
         return [Triplet(*row) for row in response]
