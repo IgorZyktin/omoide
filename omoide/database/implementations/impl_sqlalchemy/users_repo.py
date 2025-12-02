@@ -233,7 +233,12 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
                 db_models.Item,
                 db_models.Item.id == db_models.Metainfo.item_id,
             )
-            .where(db_models.Item.owner_id == user.id)
+            .where(
+                sa.and_(
+                    db_models.Item.owner_id == user.id,
+                    db_models.Item.status == models.Status.AVAILABLE,
+                )
+            )
         )
 
         response = (await conn.execute(query)).fetchone()
@@ -255,7 +260,12 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
         query = (
             sa.select(sa.func.count().label('total_items'))
             .select_from(db_models.Item)
-            .where(db_models.Item.owner_uuid == user.uuid)
+            .where(
+                sa.and_(
+                    db_models.Item.owner_uuid == user.uuid,
+                    db_models.Item.status == models.Status.AVAILABLE,
+                )
+            )
         )
 
         if collections:
