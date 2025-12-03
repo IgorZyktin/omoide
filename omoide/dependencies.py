@@ -140,6 +140,11 @@ def get_meta_repo() -> db_interfaces.AbsMetaRepo:
     return impl_sqlalchemy.MetaRepo()
 
 
+def get_misc_repo() -> db_interfaces.AbsMiscRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.MiscRepo()
+
+
 @functools.cache
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],

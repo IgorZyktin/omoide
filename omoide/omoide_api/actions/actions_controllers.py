@@ -9,7 +9,8 @@ from fastapi import status
 
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.database import interfaces as db_interfaces
+from omoide.object_storage import interfaces as os_interfaces
 from omoide.omoide_api.actions import actions_use_cases
 from omoide.presentation import web
 
@@ -23,14 +24,15 @@ api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
     response_model=dict[str, int | str],
 )
 async def api_action_rebuild_known_tags_for_anon(
-    admin: Annotated[models.User, Depends(dep.get_admin_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
 ):
     """Recalculate all known tags for anon user."""
-    use_case = actions_use_cases.RebuildKnownTagsForAnonUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForAnonUseCase(database, misc_repo)
 
     try:
-        operation_id = await use_case.execute(admin)
+        operation_id = await use_case.execute(user)
     except Exception as exc:
         return web.response_from_exc(exc)
 
@@ -47,15 +49,17 @@ async def api_action_rebuild_known_tags_for_anon(
     response_model=dict[str, int | str],
 )
 async def api_action_rebuild_known_tags_for_user(
-    admin: Annotated[models.User, Depends(dep.get_admin_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
+    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
     user_uuid: UUID,
 ):
     """Recalculate all known tags for registered user."""
-    use_case = actions_use_cases.RebuildKnownTagsForUserUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForUserUseCase(database, misc_repo, users_repo)
 
     try:
-        operation_id = await use_case.execute(admin, user_uuid)
+        operation_id = await use_case.execute(user, user_uuid)
     except Exception as exc:
         return web.response_from_exc(exc)
 
@@ -73,14 +77,15 @@ async def api_action_rebuild_known_tags_for_user(
     response_model=dict[str, int | str],
 )
 async def api_action_rebuild_known_tags_for_all(
-    admin: Annotated[models.User, Depends(dep.get_admin_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
 ):
     """Recalculate all known tags for all users."""
-    use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(database, misc_repo)
 
     try:
-        operation_id = await use_case.execute(admin)
+        operation_id = await use_case.execute(user)
     except Exception as exc:
         return web.response_from_exc(exc)
 
@@ -97,8 +102,11 @@ async def api_action_rebuild_known_tags_for_all(
     response_model=dict[str, int | str | None],
 )
 async def api_action_rebuild_computed_tags(
-    admin: Annotated[models.User, Depends(dep.get_admin_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
+    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
+    items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     item_uuid: UUID,
 ):
     """Recalculate all computed tags for specific user.
@@ -106,10 +114,12 @@ async def api_action_rebuild_computed_tags(
     If `including_children` is set to True, this will also affect all
     descendants of the item. This operation potentially can take a lot of time.
     """
-    use_case = actions_use_cases.RebuildComputedTagsForItemUseCase(mediator)
+    use_case = actions_use_cases.RebuildComputedTagsForItemUseCase(
+        database, misc_repo, users_repo, items_repo
+    )
 
     try:
-        owner, item, job_id = await use_case.execute(admin, item_uuid)
+        owner, item, job_id = await use_case.execute(user, item_uuid)
     except Exception as exc:
         return web.response_from_exc(exc)
 
@@ -128,14 +138,15 @@ async def api_action_rebuild_computed_tags(
     response_model=dict[str, int | str],
 )
 async def api_action_rebuild_computed_tags_for_all(
-    admin: Annotated[models.User, Depends(dep.get_admin_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
 ):
     """Recalculate all computed tags for all users."""
-    use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(mediator)
+    use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(database, misc_repo)
 
     try:
-        operation_id = await use_case.execute(admin)
+        operation_id = await use_case.execute(user)
     except Exception as exc:
         return web.response_from_exc(exc)
 
@@ -152,8 +163,13 @@ async def api_action_rebuild_computed_tags_for_all(
     response_model=dict[str, str | list[str]],
 )
 async def api_action_copy_image(
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
+    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
+    items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
+    meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
+    object_storage: Annotated[os_interfaces.AbsObjectStorage, Depends(dep.get_object_storage)],
     source_item_uuid: UUID,
     target_item_uuid: UUID,
 ):
@@ -161,7 +177,9 @@ async def api_action_copy_image(
 
     This will invoke copying of content, preview and a thumbnail.
     """
-    use_case = actions_use_cases.CopyImageUseCase(mediator)
+    use_case = actions_use_cases.CopyImageUseCase(
+        database, misc_repo, users_repo, items_repo, meta_repo, object_storage
+    )
 
     try:
         media_types = await use_case.execute(
