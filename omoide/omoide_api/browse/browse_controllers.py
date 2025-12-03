@@ -12,7 +12,7 @@ from omoide import const
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.database import interfaces as db_interfaces
 from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
 from omoide.presentation import web
@@ -28,7 +28,10 @@ api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 )
 async def api_browse(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
+    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
+    items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
+    browse_repo: Annotated[db_interfaces.AbsBrowseRepo, Depends(dep.get_browse_repo)],
     item_uuid: UUID,
     direct: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
@@ -40,7 +43,7 @@ async def api_browse(  # noqa: PLR0913
 
     Returns all descendants of a specified item.
     """
-    use_case = browse_use_cases.ApiBrowseUseCase(mediator)
+    use_case = browse_use_cases.ApiBrowseUseCase(database, users_repo, items_repo, browse_repo)
 
     plan = models.Plan(
         query='',
