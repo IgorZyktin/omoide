@@ -9,7 +9,7 @@ from typing import TypeVar
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsDatabase(Generic[ConnectionT], abc.ABC):
+class AbsDatabase(abc.ABC, Generic[ConnectionT]):
     """Base class for all databases."""
 
     @abc.abstractmethod

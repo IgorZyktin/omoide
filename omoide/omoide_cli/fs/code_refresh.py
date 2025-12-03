@@ -26,7 +26,7 @@ async def refresh_file_sizes(  # noqa: PLR0913 Too many arguments in function de
     """Get actual file size for every image and save them into DB."""
     (
         database,
-        users,
+        _,
         items,
         meta,
         only_user_ids,
@@ -100,7 +100,7 @@ async def refresh_image_dimensions(  # noqa: PLR0913 Too many arguments in funct
     """Get actual image size for every image and save them into DB."""
     (
         database,
-        users,
+        _,
         items,
         meta,
         only_user_ids,

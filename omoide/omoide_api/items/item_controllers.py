@@ -392,7 +392,7 @@ async def api_download_collection(
     use_case = item_use_cases.DownloadCollectionUseCase(mediator)
 
     try:
-        lines, owner, item = await use_case.execute(
+        lines, _, item = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
         )

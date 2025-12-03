@@ -10,7 +10,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsMetaRepo(Generic[ConnectionT], abc.ABC):
+class AbsMetaRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that perform CRUD operations on metainfo records."""
 
     @abc.abstractmethod

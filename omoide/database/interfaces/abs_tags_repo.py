@@ -9,7 +9,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsTagsRepo(Generic[ConnectionT], abc.ABC):
+class AbsTagsRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that perform operations on tags."""
 
     @abc.abstractmethod

@@ -118,7 +118,7 @@ class ParallelOperationsProcessor:
                     duration=operation_after.hr_duration.strip(),
                 )
                 async with self.mediator.database.transaction() as conn:
-                    _, is_done = await self.mediator.workers.save_parallel_operation_as_complete(
+                    await self.mediator.workers.save_parallel_operation_as_complete(
                         conn=conn,
                         operation=operation_after,
                         minimal_completion=self.config.minimal_completion,

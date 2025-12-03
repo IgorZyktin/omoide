@@ -9,7 +9,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsBrowseRepo(Generic[ConnectionT], abc.ABC):
+class AbsBrowseRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that performs all browse queries."""
 
     @abc.abstractmethod

@@ -9,7 +9,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsSignaturesRepo(Generic[ConnectionT], abc.ABC):
+class AbsSignaturesRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that performs operations with signatures."""
 
     @abc.abstractmethod

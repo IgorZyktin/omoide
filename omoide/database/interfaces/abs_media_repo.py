@@ -11,7 +11,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsMediaRepo(Generic[ConnectionT], abc.ABC):
+class AbsMediaRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that perform CRUD operations on media records."""
 
     @abc.abstractmethod

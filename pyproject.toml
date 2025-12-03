@@ -132,6 +132,7 @@ lint.ignore = [
     "SIM108", # Use ternary operator instead of `if`-`else`-block
     "TRY401", # Redundant exception object included in logging.exception call
     "UP040", # Type alias ... uses `TypeAlias` annotation instead of the `type` keyword
+    "UP046", # Generic class `Album` uses `Generic` subclass instead of type parameters
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -165,7 +166,7 @@ multiline-quotes = "double"
 docstring-quotes = "double"
 
 [tool.ruff.lint.pylint]
-max-args = 8
+max-args = 9
 
 [tool.mypy]
 disallow_untyped_defs = true

@@ -11,7 +11,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsItemsRepo(Generic[ConnectionT], abc.ABC):
+class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that perform operations on items."""
 
     @abc.abstractmethod

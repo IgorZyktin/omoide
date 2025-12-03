@@ -8,7 +8,7 @@ from typing import TypeVar
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsMiscRepo(Generic[ConnectionT], abc.ABC):
+class AbsMiscRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that performs various operations on different objects."""
 
     @abc.abstractmethod

@@ -11,7 +11,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsUsersRepo(Generic[ConnectionT], abc.ABC):
+class AbsUsersRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that perform operations on users."""
 
     @abc.abstractmethod

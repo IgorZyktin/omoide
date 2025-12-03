@@ -10,7 +10,7 @@ from omoide import operations
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsWorkersRepo(Generic[ConnectionT], abc.ABC):
+class AbsWorkersRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that perform worker-related operations."""
 
     @abc.abstractmethod

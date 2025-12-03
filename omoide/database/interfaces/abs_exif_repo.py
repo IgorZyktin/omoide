@@ -9,7 +9,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsEXIFRepo(Generic[ConnectionT], abc.ABC):
+class AbsEXIFRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that performs operations on EXIF data."""
 
     @abc.abstractmethod

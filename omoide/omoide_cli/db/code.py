@@ -32,8 +32,8 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
         users,
         items,
         meta,
-        only_user_ids,
-        only_item_ids,
+        _,
+        _,
     ) = await common.init_variables(db_url, only_users, only_items)
 
     object_storage = FileObjectStorageServer(

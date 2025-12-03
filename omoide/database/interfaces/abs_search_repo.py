@@ -9,7 +9,7 @@ from omoide import models
 ConnectionT = TypeVar('ConnectionT')
 
 
-class AbsSearchRepo(Generic[ConnectionT], abc.ABC):
+class AbsSearchRepo(abc.ABC, Generic[ConnectionT]):
     """Repository that performs all search queries."""
 
     @abc.abstractmethod
