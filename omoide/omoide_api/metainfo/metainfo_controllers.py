@@ -31,7 +31,7 @@ api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 )
 async def api_read_metainfo(
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
@@ -81,7 +81,7 @@ async def api_read_metainfo(
 async def api_update_metainfo(
     item_uuid: UUID,
     metainfo_input: metainfo_api_models.MetainfoInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
