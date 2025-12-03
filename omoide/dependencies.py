@@ -155,6 +155,11 @@ def get_search_repo() -> db_interfaces.AbsSearchRepo:
     return impl_sqlalchemy.SearchRepo()
 
 
+def get_tags_repo() -> db_interfaces.AbsTagsRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.TagsRepo()
+
+
 @functools.cache
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
