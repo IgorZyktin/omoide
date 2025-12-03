@@ -200,16 +200,3 @@ async def get_known_user(
         status_code=status.HTTP_403_FORBIDDEN,
         detail='You must be registered to do this',
     )
-
-
-async def get_admin_user(
-    current_user: Annotated[models.User, Depends(get_known_user)],
-) -> models.User:
-    """Return current user, raise if user is not admin."""
-    if current_user.is_admin:
-        return current_user
-
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail='You must be an admin to do this',
-    )
