@@ -48,7 +48,7 @@ class AppPreviewUseCase(BaseAPPUseCase):
 
             metainfo = await self.mediator.meta.get_by_item(conn, item)
             parents = await self.mediator.items.get_parents(conn, item)
-            siblings = await self.mediator.items.get_siblings(conn, item)
+            siblings = await self.mediator.items.get_siblings(conn, item, collections=False)
             computed_tags = await self.mediator.tags.get_computed_tags(conn, item)
 
         result = PreviewResult(

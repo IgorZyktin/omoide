@@ -64,7 +64,12 @@ class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
         """Return list of parents for given item."""
 
     @abc.abstractmethod
-    async def get_siblings(self, conn: ConnectionT, item: models.Item) -> list[models.Item]:
+    async def get_siblings(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+        collections: bool | None = None,
+    ) -> list[models.Item]:
         """Return list of siblings for given item."""
 
     @abc.abstractmethod

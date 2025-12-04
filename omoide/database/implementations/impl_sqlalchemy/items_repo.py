@@ -174,16 +174,24 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         return list(reversed(parents))
 
-    async def get_siblings(self, conn: AsyncConnection, item: models.Item) -> list[models.Item]:
+    async def get_siblings(
+        self,
+        conn: AsyncConnection,
+        item: models.Item,
+        collections: bool | None = None,
+    ) -> list[models.Item]:
         """Return list of siblings for given item."""
         query = (
             sa.select(db_models.Item)
             .where(
                 db_models.Item.parent_uuid == item.parent_uuid,
-                db_models.Item.status != models.Status.DELETED,
+                db_models.Item.status == models.Status.AVAILABLE,
             )
             .order_by(db_models.Item.number)
         )
+
+        if collections is not None:
+            query = query.where(db_models.Item.is_collection == collections)
 
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row) for row in response]

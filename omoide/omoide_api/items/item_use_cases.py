@@ -370,7 +370,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'sibling':
-                siblings = await self.mediator.items.get_siblings(conn, item)
+                siblings = await self.mediator.items.get_siblings(conn, item, collections=False)
                 if len(siblings) > 1:
                     index = siblings.index(item)
                     last = len(siblings) - 1
@@ -379,6 +379,10 @@ class DeleteItemUseCase(BaseItemUseCase):
                         switch_to = siblings[last - 1]
                     else:
                         switch_to = siblings[index + 1]
+                elif len(siblings) == 1:
+                    switch_to = siblings[0]
+                else:
+                    desired_switch = 'parent'
 
             if (desired_switch == 'parent' or switch_to is None) and item.parent_id is not None:
                 switch_to = await self.mediator.items.get_by_id(conn, item.parent_id)
