@@ -4,7 +4,6 @@ import time
 
 from omoide import models
 from omoide.database import interfaces as db_interfaces
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 
 class AutocompleteUseCase:
@@ -66,10 +65,6 @@ class RecentUpdatesUseCase:
             users = await self.users_repo.get_map(conn, items)
 
         return items, users
-
-
-class BaseSearchUseCase(BaseAPIUseCase):
-    """Base class for search queries."""
 
 
 class ApiSearchTotalUseCase:
