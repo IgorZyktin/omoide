@@ -350,7 +350,7 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 
-    async def execute(
+    async def execute(  # noqa: C901,PLR0912
         self,
         user: models.User,
         item_uuid: UUID,
