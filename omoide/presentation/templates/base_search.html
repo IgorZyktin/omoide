@@ -57,8 +57,7 @@
                        value="{{ request.query_params.get('q', '') }}"
                        class="query_input"
                        autocomplete="off"
-                       placeholder="Search (for example it + movie)"
-                       autofocus/>
+                       placeholder="Search (for example it + movie)"/>
             </div>
             {# ------------------------------------------------------------- #}
 
@@ -312,7 +311,6 @@
     $(document).ready(function () {
         let input = document.getElementById('query_element');
         let currentFocus = -1;
-        setFocusAtTheEnd(input)
 
         input.addEventListener('keyup', function (e) {
             if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
