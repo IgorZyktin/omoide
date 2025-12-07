@@ -45,7 +45,7 @@
                 <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"
                      class="invert"
                      alt="Home icon"/>
-                <span>Home</span>
+                <span>{{ _('Home', user) }}</span>
             </a>
             {# ------------------------------------------------------------- #}
 
@@ -69,7 +69,7 @@
                class="button qc-search">
                 <img src="{{ request.url_for('static', path='ic_search.svg') }}"
                      alt="Looking glass icon"/>
-                <span>Search</span>
+                <span>{{ _('Search', user) }}</span>
             </a>
             {# ------------------------------------------------------------- #}
 
@@ -95,7 +95,7 @@
                        class="button qc-order">
                         <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
                              alt="Change view mode to see items ordered"/>
-                        <span title="Change view mode to see items ordered">Random</span>
+                        <span title="Change view mode to see items ordered">{{ _('Random', user) }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -104,7 +104,7 @@
                        class="button qc-order">
                         <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
                              alt="Change view mode to see items ordered"/>
-                        <span>Ordered</span>
+                        <span>{{ _('Ordered', user) }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -116,11 +116,11 @@
                 {% if aim_wrapper.collections %}
                     <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see all items">Collections</span>
+                    <span title="Change view mode to see all items">{{ _('Collections', user) }}</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see only collections">All items</span>
+                    <span title="Change view mode to see only collections">{{ _('All items', user) }}</span>
                 {% endif %}
             </span>
             {% else %}
@@ -131,7 +131,7 @@
                        class="button qc-collections">
                         <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                              alt="Change view mode to see all items"/>
-                        <span title="Change view mode to see all items">Collections</span>
+                        <span title="Change view mode to see all items">{{ _('Collections', user) }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -140,7 +140,7 @@
                        class="button qc-collections">
                         <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                              alt="Change view mode to see only collections"/>
-                        <span title="Change view mode to see only collections">All items</span>
+                        <span title="Change view mode to see only collections">{{ _('All items', user) }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -152,11 +152,11 @@
                 {% if aim_wrapper.direct %}
                     <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see all related items">Direct</span>
+                    <span title="Change view mode to see all related items">{{ _('Direct', user) }}</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see only directly connected items">Related</span>
+                    <span title="Change view mode to see only directly connected items">{{ _('Related', user) }}</span>
                 {% endif %}
             </span>
             {% else %}
@@ -167,7 +167,7 @@
                        class="button qc-toggleDirect">
                         <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                              alt="Change view mode to see all related items"/>
-                        <span title="Change view mode to see all related items">Direct</span>
+                        <span title="Change view mode to see all related items">{{ _('Direct', user) }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -176,7 +176,7 @@
                        class="button qc-toggleDirect">
                         <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                              alt="Change view mode to see only directly connected items"/>
-                        <span>Related</span>
+                        <span>{{ _('Related', user) }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -188,9 +188,9 @@
                 <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
                      alt="Pagination is not supported in this section"/>
                     {% if aim_wrapper.paged %}
-                        <span title="Change view mode to see items with dynamic load">Paged load</span>
+                        <span title="Change view mode to see items with dynamic load">{{ _('Paged load', user) }}</span>
                     {% else %}
-                        <span title="Change view mode to see items paged load">Dynamic load</span>
+                        <span title="Change view mode to see items paged load">{{ _('Dynamic load', user) }}</span>
                     {% endif %}
             </span>
             {% else %}
@@ -201,7 +201,7 @@
                        class="button qc-paged">
                         <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
                              alt="Change view mode to see items with dynamic load"/>
-                        <span>Paged load</span>
+                        <span>{{ _('Paged load', user) }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -210,7 +210,7 @@
                        class="button qc-paged">
                         <img src="{{ request.url_for('static', path='ic_paginated_off.svg') }}"
                              alt="Change view mode to see items with paged load"/>
-                        <span>Dynamic load</span>
+                        <span>{{ _('Dynamic load', user) }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -223,7 +223,7 @@
                    class="button qc-login">
                     <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
                          alt="Enter credentials to log in"/>
-                    <span>Login</span>
+                    <span>{{ _('Login', user) }}</span>
                 </a>
             {% else %}
                 <a href="{{ request.url_for('app_profile') }}"

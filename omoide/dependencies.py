@@ -17,6 +17,7 @@ from starlette.requests import Request
 from omoide import cfg
 from omoide import const
 from omoide import infra
+from omoide import localization
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
@@ -52,6 +53,8 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals['human_readable_size'] = pu.human_readable_size
     templates.env.globals['sep_digits'] = pu.sep_digits
     templates.env.globals['Status'] = models.Status
+
+    templates.env.globals['_'] = localization.gettext
     return templates
 
 
