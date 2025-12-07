@@ -87,6 +87,36 @@ VOCABULARY = {
     'You have successfully logged out': {
         'ru': 'Вы успешно вышли с сайта',
     },
+    'All tags': {
+        'ru': 'Все теги',
+    },
+    'Tag': {
+        'ru': 'Тег',
+    },
+    'Times used': {
+        'ru': 'Сколько раз использован',
+    },
+    'Items by number': {
+        'ru': 'Записей по количеству',
+    },
+    'Total items': {
+        'ru': 'Всего записей',
+    },
+    'Total collections': {
+        'ru': 'Из них коллекций',
+    },
+    'Items by size': {
+        'ru': 'Записей по размеру',
+    },
+    'Content': {
+        'ru': 'Контент',
+    },
+    'Previews': {
+        'ru': 'Предпросмотр',
+    },
+    'Thumbnails': {
+        'ru': 'Иконки',
+    },
 }
 
 

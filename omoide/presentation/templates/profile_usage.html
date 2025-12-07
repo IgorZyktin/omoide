@@ -4,29 +4,29 @@
     <div class="narrow-block">
         <table>
             <tr>
-                <th colspan="2">Items by number</th>
+                <th colspan="2">{{ _('Items by number') }}</th>
             </tr>
             <tr>
-                <td>Total items</td>
+                <td>{{ _('Total items') }}</td>
                 <td>{{ sep_digits(total_items) }}</td>
             </tr>
             <tr>
-                <td>Total collections</td>
+                <td>{{ _('Total collections') }}</td>
                 <td>{{ sep_digits(total_collections) }}</td>
             </tr>
             <tr>
-                <th colspan="2">Items by size</th>
+                <th colspan="2">{{ _('Items by size') }}</th>
             </tr>
             <tr>
-                <td>Content</td>
+                <td>{{ _('Content') }}</td>
                 <td>{{ human_readable_size(size.content_size) }}</td>
             </tr>
             <tr>
-                <td>Previews</td>
+                <td>{{ _('Previews') }}</td>
                 <td>{{ human_readable_size(size.preview_size) }}</td>
             </tr>
             <tr>
-                <td>Thumbnails</td>
+                <td>{{ _('Thumbnails') }}</td>
                 <td>{{ human_readable_size(size.thumbnail_size) }}</td>
             </tr>
             <tr>
