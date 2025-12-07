@@ -22,8 +22,8 @@
                style="height: 100%">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
-                     alt="Copy ID"
-                     title="Copy ID"/></a>
+                     alt="{{ _('Copy ID') }}"
+                     title="{{ _('Copy ID') }}"/></a>
         </div>
         <div id="copy-alerts-parent"></div>
         <div id="parent_thumbnail" class="parent_thumbnail">
@@ -69,7 +69,7 @@
            href="javascript:void(0)"
            title="Create item"
            onclick="createItem(this, '{{ endpoint }}', gatherItemParameters('{{ parent_item.owner_uuid | string }}'))"
-           class="button">Create</a>
+           class="button">{{ _('Create') }}</a>
         <br>
     </div>
     <br>

@@ -26,8 +26,8 @@
                style="height: 100%">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
-                     alt="Copy ID"
-                     title="Copy ID"/></a>
+                     alt="{{ _('Copy ID') }}"
+                     title="{{ _('Copy ID') }}"/></a>
         </div>
         <div id="copy-alerts-owner"></div>
 
@@ -43,8 +43,8 @@
                style="height: 100%">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
-                     alt="Copy ID"
-                     title="Copy ID"/></a>
+                     alt="{{ _('Copy ID') }}"
+                     title="{{ _('Copy ID') }}"/></a>
         </div>
         <div id="copy-alerts-parent"></div>
 
@@ -107,7 +107,7 @@
                type="button"
                class="button"
                onclick="uploadAllFiles()"
-               value="Process media">
+               value="{{ _('Process media') }}">
 
         <progress id="global-progress" value="0" max="100"></progress>
         <div id="global-status"></div>
@@ -119,13 +119,13 @@
     <br/>
 
     <div id="scroll-bottom" style="display: none" class="narrow-block">
-        <input type="button" class="button-nav" onclick="jumpToBottom()" value="Jump to bottom">
+        <input type="button" class="button-nav" onclick="jumpToBottom()" value="{{ _('Jump to bottom') }}">
     </div>
 
     <div id="media" class="upload-container medium-block"></div>
 
     <div id="scroll-top" style="display: none" class="narrow-block">
-        <input type="button" class="button-nav" onclick="jumpToTop()" value="Jump to top">
+        <input type="button" class="button-nav" onclick="jumpToTop()" value="{{ _('Jump to top') }}">
     </div>
 
     <br/>

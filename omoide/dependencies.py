@@ -38,27 +38,6 @@ def get_config() -> cfg.Config:
 
 
 @functools.cache
-def get_templates() -> Jinja2Templates:
-    """Get templates instance."""
-    templates = Jinja2Templates(directory='omoide/presentation/templates')
-    templates.env.globals['zip'] = zip
-    templates.env.globals['version'] = str(const.FRONTEND_VERSION)
-
-    config = get_config()
-    locator = WebLocator(root='content', prefix_size=config.prefix_size)
-    templates.env.globals['get_content_url'] = locator.get_content_location
-    templates.env.globals['get_preview_url'] = locator.get_preview_location
-    templates.env.globals['get_thumbnail_url'] = locator.get_thumbnail_location
-
-    templates.env.globals['human_readable_size'] = pu.human_readable_size
-    templates.env.globals['sep_digits'] = pu.sep_digits
-    templates.env.globals['Status'] = models.Status
-
-    templates.env.globals['_'] = localization.gettext
-    return templates
-
-
-@functools.cache
 def get_database() -> impl_sqlalchemy.SqlalchemyDatabase:
     """Get database instance."""
     config = get_config()
@@ -208,3 +187,26 @@ async def get_known_user(
         status_code=status.HTTP_403_FORBIDDEN,
         detail='You must be registered to do this',
     )
+
+
+@functools.cache
+def get_templates(
+    user: Annotated[models.User, Depends(get_current_user)],
+) -> Jinja2Templates:
+    """Get templates instance."""
+    templates = Jinja2Templates(directory='omoide/presentation/templates')
+    templates.env.globals['zip'] = zip
+    templates.env.globals['version'] = str(const.FRONTEND_VERSION)
+
+    config = get_config()
+    locator = WebLocator(root='content', prefix_size=config.prefix_size)
+    templates.env.globals['get_content_url'] = locator.get_content_location
+    templates.env.globals['get_preview_url'] = locator.get_preview_location
+    templates.env.globals['get_thumbnail_url'] = locator.get_thumbnail_location
+
+    templates.env.globals['human_readable_size'] = pu.human_readable_size
+    templates.env.globals['sep_digits'] = pu.sep_digits
+    templates.env.globals['Status'] = models.Status
+
+    templates.env.globals['_'] = functools.partial(localization.gettext, user=user)
+    return templates

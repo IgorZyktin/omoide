@@ -45,7 +45,7 @@
                 <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"
                      class="invert"
                      alt="Home icon"/>
-                <span>{{ _('Home', user) }}</span>
+                <span>{{ _('Home') }}</span>
             </a>
             {# ------------------------------------------------------------- #}
 
@@ -69,7 +69,7 @@
                class="button qc-search">
                 <img src="{{ request.url_for('static', path='ic_search.svg') }}"
                      alt="Looking glass icon"/>
-                <span>{{ _('Search', user) }}</span>
+                <span>{{ _('Search') }}</span>
             </a>
             {# ------------------------------------------------------------- #}
 
@@ -95,7 +95,7 @@
                        class="button qc-order">
                         <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
                              alt="Change view mode to see items ordered"/>
-                        <span title="Change view mode to see items ordered">{{ _('Random', user) }}</span>
+                        <span title="Change view mode to see items ordered">{{ _('Random') }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -104,7 +104,7 @@
                        class="button qc-order">
                         <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
                              alt="Change view mode to see items ordered"/>
-                        <span>{{ _('Ordered', user) }}</span>
+                        <span>{{ _('Ordered') }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -116,11 +116,11 @@
                 {% if aim_wrapper.collections %}
                     <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see all items">{{ _('Collections', user) }}</span>
+                    <span title="Change view mode to see all items">{{ _('Collections') }}</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                          alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see only collections">{{ _('All items', user) }}</span>
+                    <span title="Change view mode to see only collections">{{ _('All items') }}</span>
                 {% endif %}
             </span>
             {% else %}
@@ -131,7 +131,7 @@
                        class="button qc-collections">
                         <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                              alt="Change view mode to see all items"/>
-                        <span title="Change view mode to see all items">{{ _('Collections', user) }}</span>
+                        <span title="Change view mode to see all items">{{ _('Collections') }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -140,7 +140,7 @@
                        class="button qc-collections">
                         <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                              alt="Change view mode to see only collections"/>
-                        <span title="Change view mode to see only collections">{{ _('All items', user) }}</span>
+                        <span title="Change view mode to see only collections">{{ _('All items') }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -152,11 +152,11 @@
                 {% if aim_wrapper.direct %}
                     <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see all related items">{{ _('Direct', user) }}</span>
+                    <span title="Change view mode to see all related items">{{ _('Direct') }}</span>
                 {% else %}
                     <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                          alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see only directly connected items">{{ _('Related', user) }}</span>
+                    <span title="Change view mode to see only directly connected items">{{ _('Related') }}</span>
                 {% endif %}
             </span>
             {% else %}
@@ -167,7 +167,7 @@
                        class="button qc-toggleDirect">
                         <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
                              alt="Change view mode to see all related items"/>
-                        <span title="Change view mode to see all related items">{{ _('Direct', user) }}</span>
+                        <span title="Change view mode to see all related items">{{ _('Direct') }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -176,7 +176,7 @@
                        class="button qc-toggleDirect">
                         <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
                              alt="Change view mode to see only directly connected items"/>
-                        <span>{{ _('Related', user) }}</span>
+                        <span>{{ _('Related') }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -188,9 +188,9 @@
                 <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
                      alt="Pagination is not supported in this section"/>
                     {% if aim_wrapper.paged %}
-                        <span title="Change view mode to see items with dynamic load">{{ _('Paged load', user) }}</span>
+                        <span title="Change view mode to see items with dynamic load">{{ _('Paged load') }}</span>
                     {% else %}
-                        <span title="Change view mode to see items paged load">{{ _('Dynamic load', user) }}</span>
+                        <span title="Change view mode to see items paged load">{{ _('Dynamic load') }}</span>
                     {% endif %}
             </span>
             {% else %}
@@ -201,7 +201,7 @@
                        class="button qc-paged">
                         <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
                              alt="Change view mode to see items with dynamic load"/>
-                        <span>{{ _('Paged load', user) }}</span>
+                        <span>{{ _('Paged load') }}</span>
                     </a>
                 {% else %}
                     <a href="javascript:void(0)"
@@ -210,7 +210,7 @@
                        class="button qc-paged">
                         <img src="{{ request.url_for('static', path='ic_paginated_off.svg') }}"
                              alt="Change view mode to see items with paged load"/>
-                        <span>{{ _('Dynamic load', user) }}</span>
+                        <span>{{ _('Dynamic load') }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -223,7 +223,7 @@
                    class="button qc-login">
                     <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
                          alt="Enter credentials to log in"/>
-                    <span>{{ _('Login', user) }}</span>
+                    <span>{{ _('Login') }}</span>
                 </a>
             {% else %}
                 <a href="{{ request.url_for('app_profile') }}"
@@ -250,7 +250,7 @@
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
                          alt="Create"/>
-                    <span>Create</span>
+                    <span>{{ _('Create') }}</span>
                 </a>
 
                 <a href="{{ request.url_for('app_upload', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
@@ -258,7 +258,7 @@
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"
                          alt="Upload media"/>
-                    <span>Upload</span>
+                    <span>{{ _('Upload') }}</span>
                 </a>
 
                 {% if current_item and current_item.owner_uuid | string == user.uuid | string %}
@@ -267,7 +267,7 @@
                        class="button">
                         <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
                              alt="Edit current item"/>
-                        <span>Edit</span>
+                        <span>{{ _('Edit') }}</span>
                     </a>
 
                     <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
@@ -275,7 +275,7 @@
                        class="button">
                         <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
                              alt="Delete current item"/>
-                        <span>Delete</span>
+                        <span>{{ _('Delete') }}</span>
                     </a>
                 {% else %}
                     <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
@@ -283,7 +283,7 @@
                        class="button-disabled">
                         <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
                              alt="Edit current item"/>
-                        <span>Edit</span>
+                        <span>{{ _('Edit') }}</span>
                     </a>
 
                     <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
@@ -291,7 +291,7 @@
                        class="button-disabled">
                         <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
                              alt="Delete current item"/>
-                        <span>Delete</span>
+                        <span>{{ _('Delete') }}</span>
                     </a>
                 {% endif %}
             </div>

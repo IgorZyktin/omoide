@@ -209,8 +209,8 @@
                onclick="copyText('{{ item.uuid }}', 'ID')">
                 <img class="icon"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
-                     alt="Copy ID"
-                     title="Copy ID"/>
+                     alt="{{ _('Copy ID') }}"
+                     title="{{ _('Copy ID') }}"/>
             </a>
 
             {% if item.is_collection %}
@@ -218,21 +218,21 @@
                    onclick="copyText('{{ request.url_for('app_browse', item_uuid=item.uuid) }}', 'Link')">
                     <img class="icon"
                          src="{{ request.url_for('static', path='ic_link.svg') }}"
-                         alt="Copy link"
-                         title="Copy link"/></a>
+                         alt="{{ _('Copy link') }}"
+                         title="{{ _('Copy link') }}"/></a>
                 <a href="{{ request.url_for('api_download_collection', item_uuid=item.uuid) }}">
                     <img class="icon"
                          src="{{ request.url_for('static', path='download_48.svg') }}"
-                         alt="Download button"
-                         title="Download all"/>
+                         alt="{{ _('Download all') }}"
+                         title="{{ _('Download all') }}"/>
                 </a>
             {% else %}
                 <a href="javascript:void(0)"
                    onclick="copyText('{{ request.url_for('app_preview', item_uuid=item.uuid) }}', 'Link')">
                     <img class="icon"
                          src="{{ request.url_for('static', path='ic_link.svg') }}"
-                         alt="Copy link"
-                         title="Copy link"/>
+                         alt="{{ _('Copy link') }}"
+                         title="{{ _('Copy link') }}"/>
                 </a>
             {% endif %}
 

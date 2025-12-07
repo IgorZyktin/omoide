@@ -2,30 +2,30 @@
 
 {% block body %}
     <br>
-    <h5>Current user: {{ user.name }}</h5>
+    <h5>{{ _('Current user') }}: {{ user.name }}</h5>
     <br>
 
     <div class="narrow-block">
 
         <a href="{{ request.url_for('app_profile_new') }}"
-           class="button">Whats new?</a>
+           class="button">{{ _('Whats new?') }}</a>
 
         <a href="{{ request.url_for('app_profile_tags') }}"
-           class="button">Show all tags</a>
+           class="button">{{ _('Show all tags') }}</a>
 
         <a href="{{ request.url_for('app_profile_usage') }}"
-           class="button">Show used space</a>
+           class="button">{{ _('Show used space') }}</a>
 
         <a href="{{ request.url_for('app_profile_duplicates') }}"
-           class="button">Show duplicated items</a>
+           class="button">{{ _('Show duplicated items') }}</a>
 
         <a href="{{ request.url_for('app_logout') }}"
-           title="Log out"
+           title="{{ _('Log out') }}"
            class="button">
             <img src="{{ request.url_for('static', path='ic_exit.svg') }}"
                  class="invert"
-                 alt="Log out icon"/>
-            <span>Log out</span>
+                 alt="{{ _('Log out') }}"/>
+            <span>{{ _('Log out') }}</span>
         </a>
 
     </div>
