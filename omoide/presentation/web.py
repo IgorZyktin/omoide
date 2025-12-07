@@ -49,6 +49,7 @@ def get_corresponding_exception_code(exc: Exception) -> int:
 
 def response_from_exc(exc: Exception) -> JSONResponse:
     """Return response."""
+    LOG.exception(str(exc), exc_info=exc)
     code = get_corresponding_exception_code(exc)
     return JSONResponse({'message': str(exc)}, status_code=code)
 
