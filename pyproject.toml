@@ -151,6 +151,9 @@ lint.ignore = [
     "D401", # First line of docstring should be in imperative mood
     "D415", # First line should end with a period, question mark, or exclamation point
 ]
+"omoide/localization.py" = [
+    "RUF001", # String contains ambiguous symbol
+]
 
 [tool.ruff.format]
 quote-style = "single"
@@ -232,6 +235,7 @@ exclude_also = [
     "if __name__ == .__main__.:",
     # Don't complain about abstract methods, they aren't run:
     "@(abc\\.)?abstractmethod",
+    "if TYPE_CHECKING:",
 ]
 
 ignore_errors = true
