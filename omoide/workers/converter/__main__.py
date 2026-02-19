@@ -71,16 +71,12 @@ def do_work(config: WorkerConverterConfig, storage: AbsStorage) -> bool:
     """Perform workload."""
     candidates = storage.get_candidates(config.input_batch)
     for target_id in candidates:
-        took_lock = storage.lock(target_id)
+        took_lock = storage.lock(target_id, config.name)
 
         if not took_lock:
             continue
 
         model = storage.load_model(target_id)
-
-        if not model:
-            continue
-
         converter = conversions.CONVERTERS.get(model.content_type.lower())
 
         if converter is None:

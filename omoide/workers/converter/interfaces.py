@@ -11,7 +11,7 @@ class AbsStorage(ABC):
     def get_candidates(self, batch_size: int) -> list[int]:
         """Return candidates to operate on."""
 
-    def lock(self, target_id: int) -> bool:
+    def lock(self, target_id: int, name: str) -> bool:
         """Lock specific object."""
 
     def load_model(self, target_id: int) -> models.InputMedia:
