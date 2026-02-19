@@ -1,4 +1,4 @@
-"""Worker that convert media files."""
+"""Worker that converts media files."""
 
 import os
 import signal
@@ -7,7 +7,10 @@ import time
 import nano_settings as ns
 
 from omoide import custom_logging
+from omoide.workers.converter import conversions
+from omoide.workers.converter import dependencies as dep
 from omoide.workers.converter.cfg import WorkerConverterConfig
+from omoide.workers.converter.interfaces import AbsStorage
 
 LOG = custom_logging.get_logger(__name__)
 WORKING = True
@@ -44,21 +47,59 @@ def main():
 
     signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 
-    while WORKING:
-        done_something = do_work()
+    storage = dep.get_storage(
+        url=config.db.url.get_secret_value(),
+        echo=config.db.echo,
+    )
 
-        if done_something:
-            time.sleep(config.short_delay)
+    while WORKING:
+        try:
+            done_something = do_work(config, storage)
+        except Exception:
+            LOG.exception('Failed to perform work cycle')
+            time.sleep(config.exc_delay)
         else:
-            time.sleep(config.long_delay)
+            if done_something:
+                time.sleep(config.short_delay)
+            else:
+                time.sleep(config.long_delay)
 
     LOG.info('Stopped converter worker: {}', config.name)
 
 
-def do_work() -> bool:
+def do_work(config: WorkerConverterConfig, storage: AbsStorage) -> bool:
     """Perform workload."""
-    time.sleep(1)
-    return True
+    candidates = storage.get_candidates(config.input_batch)
+    for target_id in candidates:
+        took_lock = storage.lock(target_id)
+
+        if not took_lock:
+            continue
+
+        model = storage.load_model(target_id)
+
+        if not model:
+            continue
+
+        converter = conversions.CONVERTERS.get(model.content_type.lower())
+
+        if converter is None:
+            message = f'Unknown content type: {model.content_type!r}'
+            storage.mark_failed_and_release_lock(target_id, error=message)
+            continue
+
+        try:
+            converter(config, storage, model)
+        except Exception:
+            traceback = custom_logging.capture_exception_output('Failed to perform conversion')
+            storage.mark_failed_and_release_lock(target_id, error=traceback)
+            return False
+        else:
+            storage.delete(target_id)
+            del model
+            return True
+
+    return False
 
 
 if __name__ == '__main__':

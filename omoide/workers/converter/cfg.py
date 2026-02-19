@@ -17,4 +17,5 @@ class WorkerConverterConfig(ns.BaseConfig):
     name: str = 'converter-dev'
     short_delay: float = 0.0
     long_delay: float = 1.0
+    exc_delay: float = 10.0
     input_batch: int = 10

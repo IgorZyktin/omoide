@@ -821,6 +821,43 @@ class Problem(Base):
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
 
 
+class QueueInputMedia(Base):
+    """Data loaded by users."""
+
+    __tablename__ = 'queue_input_media'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
+    )
+
+    item_id: Mapped[int] = mapped_column(
+        sa.Integer,
+        sa.ForeignKey('items.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+        unique=False,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), index=True, unique=False, nullable=False
+    )
+    lock: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
+    filename: Mapped[str] = mapped_column(sa.String(HUGE), nullable=False)
+    content_type: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+    error: Mapped[str] = mapped_column(sa.Text, nullable=True)
+    content: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
+
+
 if __name__ == '__main__':
     db_url = os.environ[const.ENV_DB_URL_ADMIN]
     engine = sa.create_engine(db_url, echo=True)

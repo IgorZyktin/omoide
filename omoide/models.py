@@ -532,3 +532,17 @@ class Exif:
     """Exchangeable Image File Format data."""
 
     exif: dict[str, Any]
+
+
+@dataclass
+class InputMedia:
+    """What we received from user."""
+
+    id: int
+    item_id: int
+    created_at: datetime
+    filename: str
+    content_type: str
+    extras: dict
+    error: str | None
+    content: bytes
