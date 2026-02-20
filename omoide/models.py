@@ -541,7 +541,7 @@ class InputMedia:
     id: int
     item_id: int
     created_at: datetime
-    filename: str
+    ext: str
     content_type: str
     extras: dict
     error: str | None

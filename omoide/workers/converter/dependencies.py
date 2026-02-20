@@ -1,12 +1,9 @@
 """Application dependencies."""
 
-from omoide.workers.converter.interfaces import AbsStorage
-from omoide.workers.converter.storage import PostgreSQLStorage
+from omoide.workers.converter.database import PostgreSQLDatabase
+from omoide.workers.converter.interfaces import AbsDatabase
 
 
-def get_storage(url: str, *, echo: bool) -> AbsStorage:
+def get_database(url: str, *, echo: bool) -> AbsDatabase:
     """Get storage instance."""
-    return PostgreSQLStorage(
-        url=url,
-        echo=echo,
-    )
+    return PostgreSQLDatabase(url=url, echo=echo)

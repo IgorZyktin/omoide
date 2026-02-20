@@ -1,27 +1,30 @@
 """Media conversion operations."""
-import math
+
 from collections.abc import Callable
-from PIL import ExifTags
-from PIL import Image
 from io import BytesIO
+import math
+from typing import Final
+
+from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageOps
 
 from omoide import const
 from omoide import models
 from omoide.workers.converter.cfg import WorkerConverterConfig
-from omoide.workers.converter.interfaces import AbsStorage
+from omoide.workers.converter.interfaces import AbsDatabase
 
 
 def convert_static_image(
     config: WorkerConverterConfig,
-    storage: AbsStorage,
+    database: AbsDatabase,
     model: models.InputMedia,
 ) -> None:
     """Convert image (without animation)."""
-    _convert_and_save_static_image_content(config, storage, model)
-    _convert_and_save_static_image_preview(config, storage, model)
-    _convert_and_save_static_image_thumbnail(config, storage, model)
+    _ = config
+    _convert_and_save_static_image_content(database, model)
+    _convert_and_save_static_image_preview(database, model)
+    _convert_and_save_static_image_thumbnail(database, model)
 
 
 def get_new_image_dimensions(
@@ -43,54 +46,61 @@ def get_new_image_dimensions(
 
 
 def _convert_and_save_static_image_content(
-    config: WorkerConverterConfig,
-    storage: AbsStorage,
+    database: AbsDatabase,
     model: models.InputMedia,
 ) -> None:
     """Save content."""
-    _ = config
-    storage.save_model(model, media_type='content')
+    database.save_media(model, media_type='content')
 
 
-def _convert_and_save_static_image_preview(
-    config: WorkerConverterConfig,
-    storage: AbsStorage,
-    model: models.InputMedia,
-) -> None:
-    """Save preview."""
-    _ = config
+def _resize(model: models.InputMedia, size: int) -> bytes:
+    """Resize to given dimensions."""
     stream = BytesIO(model.content)
 
     with Image.open(stream) as original_image:
         img = ImageOps.exif_transpose(original_image)
         old_width, old_height = img.size
-        new_width, new_height = get_new_image_dimensions(
-            old_width, old_height, const.THUMBNAIL_SIZE
-        )
+        new_width, new_height = get_new_image_dimensions(old_width, old_height, size)
         new_img = img.resize((new_width, new_height))
         new_img = new_img.convert('RGB')
         new_img = new_img.filter(ImageFilter.SHARPEN)
 
         buffer = BytesIO()
-        new_img.save(buffer, 'JPEG', quality=const.IMAGE_QUALITY, optimize=True)
+        new_img.save(
+            buffer,
+            'JPEG',
+            quality=const.IMAGE_QUALITY,
+            optimize=True,
+        )
         new_payload = buffer.getvalue()
-        model.content = new_payload
 
-    storage.save_model(model, media_type='preview')
+    return new_payload
+
+
+def _convert_and_save_static_image_preview(
+    database: AbsDatabase,
+    model: models.InputMedia,
+) -> None:
+    """Save preview."""
+    model.ext = 'jpg'
+    model.content = _resize(model, const.PREVIEW_SIZE)
+    database.save_media(model, media_type='preview')
 
 
 def _convert_and_save_static_image_thumbnail(
-    config: WorkerConverterConfig,
-    storage: AbsStorage,
+    database: AbsDatabase,
     model: models.InputMedia,
 ) -> None:
     """Save thumbnail."""
-    _ = config
-    storage.save_model(model, media_type='thumbnail')
+    model.ext = 'jpg'
+    model.content = _resize(model, const.THUMBNAIL_SIZE)
+    database.save_media(model, media_type='thumbnail')
 
 
 CONVERTERS: dict[str, Callable] = {
-    'image/png': convert_static_image,
-    'image/jpeg': convert_static_image,
-    'image/webp': convert_static_image,
+    const.CONTENT_TYPE_PNG: convert_static_image,
+    const.CONTENT_TYPE_JPEG: convert_static_image,
+    const.CONTENT_TYPE_WEBP: convert_static_image,
 }
+
+SUPPORTED_CONTENT_TYPES: Final = tuple(frozenset(CONVERTERS.keys()))

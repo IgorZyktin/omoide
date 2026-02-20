@@ -3,6 +3,7 @@
 from datetime import UTC
 from datetime import datetime
 import enum
+from typing import Final
 from typing import Literal
 from typing import TypeAlias
 from uuid import UUID
@@ -54,3 +55,7 @@ class ApplyAs(enum.StrEnum):
 PREVIEW_SIZE = 1024
 THUMBNAIL_SIZE = 384
 IMAGE_QUALITY = 80
+
+CONTENT_TYPE_PNG: Final = 'image/png'
+CONTENT_TYPE_JPEG: Final = 'image/jpeg'
+CONTENT_TYPE_WEBP: Final = 'image/webp'

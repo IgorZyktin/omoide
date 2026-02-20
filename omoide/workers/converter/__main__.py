@@ -3,6 +3,7 @@
 import os
 import signal
 import time
+from typing import Any
 
 import nano_settings as ns
 
@@ -10,13 +11,13 @@ from omoide import custom_logging
 from omoide.workers.converter import conversions
 from omoide.workers.converter import dependencies as dep
 from omoide.workers.converter.cfg import WorkerConverterConfig
-from omoide.workers.converter.interfaces import AbsStorage
+from omoide.workers.converter.interfaces import AbsDatabase
 
 LOG = custom_logging.get_logger(__name__)
 WORKING = True
 
 
-def signal_handler(signum, frame):
+def signal_handler(signum: int, frame: Any) -> None:
     """Handle shutdown signals."""
     _ = frame
     global WORKING  # noqa: PLW0603
@@ -28,7 +29,7 @@ def signal_handler(signum, frame):
     WORKING = False
 
 
-def main():
+def main() -> None:
     """Entry point."""
     config = ns.from_env(
         WorkerConverterConfig,
@@ -47,14 +48,16 @@ def main():
 
     signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 
-    storage = dep.get_storage(
+    database = dep.get_database(
         url=config.db.url.get_secret_value(),
         echo=config.db.echo,
     )
 
+    database.connect()
+
     while WORKING:
         try:
-            done_something = do_work(config, storage)
+            done_something = do_work(config, database)
         except Exception:
             LOG.exception('Failed to perform work cycle')
             time.sleep(config.exc_delay)
@@ -64,34 +67,37 @@ def main():
             else:
                 time.sleep(config.long_delay)
 
+    database.disconnect()
+
     LOG.info('Stopped converter worker: {}', config.name)
 
 
-def do_work(config: WorkerConverterConfig, storage: AbsStorage) -> bool:
+def do_work(config: WorkerConverterConfig, database: AbsDatabase) -> bool:
     """Perform workload."""
-    candidates = storage.get_candidates(config.input_batch)
+    candidates = database.get_media_candidates(
+        batch_size=config.input_batch,
+        content_types=conversions.SUPPORTED_CONTENT_TYPES,
+    )
+
     for target_id in candidates:
-        took_lock = storage.lock(target_id, config.name)
+        took_lock = database.lock(target_id, config.name)
 
         if not took_lock:
             continue
 
-        model = storage.load_model(target_id)
-        converter = conversions.CONVERTERS.get(model.content_type.lower())
-
-        if converter is None:
-            message = f'Unknown content type: {model.content_type!r}'
-            storage.mark_failed_and_release_lock(target_id, error=message)
-            continue
+        model = database.load_media(target_id)
+        converter = conversions.CONVERTERS[model.content_type.lower()]
 
         try:
-            converter(config, storage, model)
+            converter(config, database, model)
         except Exception:
             traceback = custom_logging.capture_exception_output('Failed to perform conversion')
-            storage.mark_failed_and_release_lock(target_id, error=traceback)
+            database.mark_failed_and_release_lock(target_id, error=traceback or '???')
+            LOG.exception('Failed to convert input media {}', target_id)
             return False
         else:
-            storage.delete(target_id)
+            LOG.info('Converted input media {}', target_id)
+            database.delete_media(target_id)
             del model
             return True
 

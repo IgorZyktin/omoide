@@ -851,7 +851,7 @@ class QueueInputMedia(Base):
         sa.DateTime(timezone=True), index=True, unique=False, nullable=False
     )
     lock: Mapped[str] = mapped_column(sa.String(SMALL), nullable=True)
-    filename: Mapped[str] = mapped_column(sa.String(HUGE), nullable=False)
+    ext: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
     content_type: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
     error: Mapped[str] = mapped_column(sa.Text, nullable=True)
@@ -888,7 +888,7 @@ class QueueOutputMedia(Base):
         sa.DateTime(timezone=True), index=True, unique=False, nullable=False
     )
     lock: Mapped[str] = mapped_column(sa.String(SMALL), nullable=True)
-    filename: Mapped[str] = mapped_column(sa.String(HUGE), nullable=False)
+    ext: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
     content_type: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
     media_type: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
