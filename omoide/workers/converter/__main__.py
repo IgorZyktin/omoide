@@ -20,16 +20,22 @@ from omoide.workers.converter.interfaces import AbsDatabase
 LOG = custom_logging.get_logger(__name__)
 WORKING = True
 
-FILES_PROCESSED = Metric(
+M_FILES_PROCESSED = Metric(
     id=1,
     name='wc_files_processed',
     documentation='How many files we processed',
 )
 
-BYTES_PROCESSED = Metric(
+M_BYTES_PROCESSED = Metric(
     id=2,
     name='wc_bytes_processed',
     documentation='How many bytes we processed',
+)
+
+M_ERRORS = Metric(
+    id=3,
+    name='wc_errors',
+    documentation='How many errors we got',
 )
 
 
@@ -70,7 +76,7 @@ def main() -> None:
     )
 
     metrics = PrometheusMetricsCollector(
-        metrics=[],
+        metrics=[M_FILES_PROCESSED, M_BYTES_PROCESSED, M_ERRORS],
         address=config.metrics.address,
         port=config.metrics.port,
         labels={
@@ -128,12 +134,13 @@ def do_work(
                 target_id, error=traceback or '???'
             )
             LOG.exception('Failed to convert input media {}', target_id)
+            metrics.increment(M_ERRORS, 1)
             return False
         else:
             LOG.info('Converted input media {}', target_id)
             database.delete_media(target_id)
-            metrics.increment(FILES_PROCESSED, 1)
-            metrics.increment(BYTES_PROCESSED, len(model.content))
+            metrics.increment(M_FILES_PROCESSED, 1)
+            metrics.increment(M_BYTES_PROCESSED, len(model.content))
             del model
             return True
 
