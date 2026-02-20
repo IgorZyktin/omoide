@@ -14,7 +14,7 @@
 
 @media (min-width: 300px) {
     html, body {
-        font-size: 28pt;
+        font-size: 20pt;
     }
 
     .query-container {
@@ -30,7 +30,7 @@
     }
 
     .envelope img {
-        min-width: 800px;
+        min-width: 400px;
         min-height: auto;
     }
 }
