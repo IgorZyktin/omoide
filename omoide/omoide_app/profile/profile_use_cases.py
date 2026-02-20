@@ -36,7 +36,8 @@ class AppProfileTagsUseCase(BaseAPPUseCase):
         async with self.mediator.database.transaction() as conn:
             known_tags = await self.mediator.tags.get_known_tags_user(conn, user)
             clean_tags = {
-                tag: counter for tag, counter in known_tags.items()
+                tag: counter
+                for tag, counter in known_tags.items()
                 if not pu.is_valid_uuid(tag) and counter > 0
             }
         return clean_tags

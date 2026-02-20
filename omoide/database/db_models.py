@@ -821,6 +821,99 @@ class Problem(Base):
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
 
 
+class QueueInputMedia(Base):
+    """Data loaded by users."""
+
+    __tablename__ = 'queue_input_media'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
+    )
+
+    user_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+        index=True,
+        unique=False,
+    )
+
+    item_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+        unique=False,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), index=True, unique=False, nullable=False
+    )
+    lock: Mapped[str] = mapped_column(sa.String(SMALL), nullable=True)
+    ext: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
+    content_type: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+    error: Mapped[str] = mapped_column(sa.Text, nullable=True)
+    content: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
+
+
+class QueueOutputMedia(Base):
+    """Data after conversion."""
+
+    __tablename__ = 'queue_output_media'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
+    )
+
+    user_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+        index=True,
+        unique=False,
+    )
+
+    item_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+        unique=False,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), index=True, unique=False, nullable=False
+    )
+    lock: Mapped[str] = mapped_column(sa.String(SMALL), nullable=True)
+    ext: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
+    content_type: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
+    media_type: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=False)
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+    error: Mapped[str] = mapped_column(sa.Text, nullable=True)
+    content: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
+
+    # array fields ------------------------------------------------------------
+
+    processed_by: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
+
+
 if __name__ == '__main__':
     db_url = os.environ[const.ENV_DB_URL_ADMIN]
     engine = sa.create_engine(db_url, echo=True)
