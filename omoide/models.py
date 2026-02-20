@@ -539,7 +539,8 @@ class InputMedia:
     """What we received from user."""
 
     id: int
-    item_id: int
+    user_uuid: UUID
+    item_uuid: UUID
     created_at: datetime
     ext: str
     content_type: str

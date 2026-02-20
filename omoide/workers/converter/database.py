@@ -60,7 +60,10 @@ class PostgreSQLDatabase(AbsDatabase):
             .values(
                 lock=name,
             )
-            .where(db_models.QueueInputMedia.id == target_id)
+            .where(
+                db_models.QueueInputMedia.id == target_id,
+                db_models.QueueInputMedia.lock == sa.null(),
+            )
         )
 
         with self.engine.begin() as conn:
@@ -79,7 +82,8 @@ class PostgreSQLDatabase(AbsDatabase):
 
         return models.InputMedia(
             id=response.id,
-            item_id=response.item_id,
+            user_uuid=response.user_uuid,
+            item_uuid=response.item_uuid,
             created_at=response.created_at,
             ext=response.ext,
             content_type=response.content_type,
@@ -92,7 +96,8 @@ class PostgreSQLDatabase(AbsDatabase):
         """Save data to storage."""
         stmt = sa.insert(db_models.QueueOutputMedia).values(
             id=model.id,
-            item_id=model.item_id,
+            user_uuid=model.user_uuid,
+            item_uuid=model.item_uuid,
             created_at=model.created_at,
             ext=model.ext,
             content_type=model.content_type,
