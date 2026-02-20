@@ -8,13 +8,29 @@ from typing import Any
 import nano_settings as ns
 
 from omoide import custom_logging
+from omoide.infra.implementations.prometheus_metric_collector import (
+    PrometheusMetricsCollector,
+)
+from omoide.infra.interfaces.abs_metrics_collector import Metric
 from omoide.workers.converter import conversions
-from omoide.workers.converter import dependencies as dep
 from omoide.workers.converter.cfg import WorkerConverterConfig
+from omoide.workers.converter.database import PostgreSQLDatabase
 from omoide.workers.converter.interfaces import AbsDatabase
 
 LOG = custom_logging.get_logger(__name__)
 WORKING = True
+
+FILES_PROCESSED = Metric(
+    id=1,
+    name='wc_files_processed',
+    documentation='How many files we processed',
+)
+
+BYTES_PROCESSED = Metric(
+    id=2,
+    name='wc_bytes_processed',
+    documentation='How many bytes we processed',
+)
 
 
 def signal_handler(signum: int, frame: Any) -> None:
@@ -48,16 +64,26 @@ def main() -> None:
 
     signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 
-    database = dep.get_database(
+    database = PostgreSQLDatabase(
         url=config.db.url.get_secret_value(),
         echo=config.db.echo,
     )
 
+    metrics = PrometheusMetricsCollector(
+        metrics=[],
+        address=config.metrics.address,
+        port=config.metrics.port,
+        labels={
+            'name': config.name,
+        },
+    )
+
     database.connect()
+    metrics.start()
 
     while WORKING:
         try:
-            done_something = do_work(config, database)
+            done_something = do_work(config, database, metrics)
         except Exception:
             LOG.exception('Failed to perform work cycle')
             time.sleep(config.exc_delay)
@@ -68,11 +94,16 @@ def main() -> None:
                 time.sleep(config.long_delay)
 
     database.disconnect()
+    metrics.stop()
 
     LOG.info('Stopped converter worker: {}', config.name)
 
 
-def do_work(config: WorkerConverterConfig, database: AbsDatabase) -> bool:
+def do_work(
+    config: WorkerConverterConfig,
+    database: AbsDatabase,
+    metrics: PrometheusMetricsCollector,
+) -> bool:
     """Perform workload."""
     candidates = database.get_media_candidates(
         batch_size=config.input_batch,
@@ -85,10 +116,9 @@ def do_work(config: WorkerConverterConfig, database: AbsDatabase) -> bool:
         if not took_lock:
             continue
 
-        model = database.load_media(target_id)
-        converter = conversions.CONVERTERS[model.content_type.lower()]
-
         try:
+            model = database.load_media(target_id)
+            converter = conversions.CONVERTERS[model.content_type.lower()]
             converter(config, database, model)
         except Exception:
             traceback = custom_logging.capture_exception_output(
@@ -102,6 +132,8 @@ def do_work(config: WorkerConverterConfig, database: AbsDatabase) -> bool:
         else:
             LOG.info('Converted input media {}', target_id)
             database.delete_media(target_id)
+            metrics.increment(FILES_PROCESSED, 1)
+            metrics.increment(BYTES_PROCESSED, len(model.content))
             del model
             return True
 

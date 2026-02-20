@@ -22,3 +22,12 @@ class Db(ns.BaseConfig):
 
     url: ns.SecretStr
     echo: Annotated[bool, ns.Boolean()] = False
+
+
+@dataclass
+class Metrics(ns.BaseConfig):
+    """Metrics configuration."""
+
+    enabled: Annotated[bool, ns.Boolean()] = True
+    address: str = '0.0.0.0'
+    port: int = 9001

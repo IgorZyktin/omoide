@@ -13,6 +13,7 @@ class WorkerConverterConfig(ns.BaseConfig):
 
     db: cfg.Db
     log: cfg.Log
+    metrics: cfg.Metrics
 
     name: str = 'converter-dev'
     short_delay: float = 0.0
