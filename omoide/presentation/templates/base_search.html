@@ -173,7 +173,7 @@
 
 <div id="navbar" class="sidenav">
     <a href="javascript:void(0)"
-       title="Change view mode to see items ordered"
+       title="Close menu"
        onclick="closeNav()"
        class="button">
         <span title="Close">&times; {{ _('Close') }}</span>
@@ -334,6 +334,15 @@
     $(document).ready(function () {
         let input = document.getElementById('query_element');
         let currentFocus = -1;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].clientX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].clientX;
+            handleGesture();
+        });
 
         input.addEventListener('keyup', function (e) {
             if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {

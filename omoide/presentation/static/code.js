@@ -1,3 +1,7 @@
+let touchStartX = 0;
+let touchEndX = 0;
+const swipeThreshold = 50;
+
 const UUID_PREFIX_LENGTH = 2
 const UUID_REGEXP = /[0-9A-F]{8}-[0-9A-F]{4}-[04][0-9A-F]{3}-[089AB][0-9A-F]{3}-[0-9A-F]{12}/ig
 
@@ -464,4 +468,19 @@ function openNav() {
 
 function closeNav() {
   document.getElementById("navbar").style.width = "0";
+}
+
+function handleGesture() {
+    const swipeDistance = touchEndX - touchStartX;
+    let open = document.getElementById("navbar").style.width === "0"
+
+    // Check if the menu is closed and the swipe is from the left edge (e.g., within 20px)
+    if (!open && touchStartX < 20 && swipeDistance > swipeThreshold) {
+        openNav()
+    }
+
+    // Check if the menu is open and the swipe is a leftward motion
+    if (open && swipeDistance < -swipeThreshold) {
+        closeNav()
+    }
 }
