@@ -472,10 +472,10 @@ function closeNav() {
 
 function handleGesture() {
     const swipeDistance = touchEndX - touchStartX;
-    let open = document.getElementById("navbar").style.width === "0"
+    let open = document.getElementById("navbar").style.width === "250px"
 
     // Check if the menu is closed and the swipe is from the left edge (e.g., within 20px)
-    if (!open && touchStartX < 20 && swipeDistance > swipeThreshold) {
+    if (!open && touchStartX < 250 && swipeDistance > swipeThreshold) {
         openNav()
     }
 
