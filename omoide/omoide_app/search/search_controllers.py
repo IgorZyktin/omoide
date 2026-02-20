@@ -60,3 +60,27 @@ async def app_home(
         'endpoint': request.url_for('api_home'),
     }
     return templates.TemplateResponse('home.html', context)
+
+
+@app_search_router.get('/new')
+async def app_new(
+    request: Request,
+    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
+    config: Annotated[cfg.Config, Depends(dep.get_config)],
+    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
+):
+    """Show recent updates."""
+    context = {
+        'request': request,
+        'config': config,
+        'user': user,
+        'aim_wrapper': aim_wrapper,
+        'block_direct': True,
+        'block_ordered': True,
+        'block_collections': False,
+        'block_paginated': True,
+        'endpoint': request.url_for('api_get_recent_updates'),
+    }
+    return templates.TemplateResponse('new.html', context)

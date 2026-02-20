@@ -76,7 +76,7 @@ async def api_autocomplete(
     response_model=search_api_models.RecentUpdatesOutput,
 )
 async def api_get_recent_updates(
-    user: Annotated[models.User, Depends(dep.get_known_user)],
+    user: Annotated[models.User, Depends(dep.get_current_user)],
     database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
     users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
     browse_repo: Annotated[db_interfaces.AbsBrowseRepo, Depends(dep.get_browse_repo)],

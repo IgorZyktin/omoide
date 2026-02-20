@@ -176,6 +176,9 @@
         <span title="Close">{{ _('Close') }}</span>
     </a>
 
+    <a href="{{ request.url_for('app_new') }}"
+       class="button">{{ _('Whats new?') }}</a>
+
     {# Order button ------------------------------------------------ #}
     {% if block_ordered %}
         <a href="javascript:void(0)" class="button-disabled">
