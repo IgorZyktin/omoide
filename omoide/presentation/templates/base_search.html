@@ -189,11 +189,11 @@
         {% if aim_wrapper.order == 'random' %}
             <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
                  alt="Order is not supported in this section"/>
-            <span title="Change view mode to see items ordered">Random</span>
+            <span title="Change view mode to see items ordered">{{ _('Random') }}</span>
         {% else %}
             <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
                  alt="Order is not supported in this section"/>
-            <span title="Change view mode to see items in random order">Ordered</span>
+            <span title="Change view mode to see items in random order">{{ _('Ordered') }}</span>
         {% endif %}
     </a>
     {% else %}
