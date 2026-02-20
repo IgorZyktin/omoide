@@ -837,9 +837,16 @@ class QueueInputMedia(Base):
         unique=True,
     )
 
-    item_id: Mapped[int] = mapped_column(
-        sa.Integer,
-        sa.ForeignKey('items.id', ondelete='CASCADE'),
+    user_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+        index=True,
+        unique=False,
+    )
+
+    item_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
         nullable=False,
         index=True,
         unique=False,
@@ -874,9 +881,16 @@ class QueueOutputMedia(Base):
         unique=True,
     )
 
-    item_id: Mapped[int] = mapped_column(
-        sa.Integer,
-        sa.ForeignKey('items.id', ondelete='CASCADE'),
+    user_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+        index=True,
+        unique=False,
+    )
+
+    item_uuid: Mapped[UUID] = mapped_column(
+        pg.UUID(),
+        sa.ForeignKey('items.uuid', ondelete='CASCADE'),
         nullable=False,
         index=True,
         unique=False,
@@ -894,6 +908,10 @@ class QueueOutputMedia(Base):
     extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
     error: Mapped[str] = mapped_column(sa.Text, nullable=True)
     content: Mapped[bytes] = mapped_column(pg.BYTEA, nullable=False)
+
+    # array fields ------------------------------------------------------------
+
+    processed_by: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
 
 
 if __name__ == '__main__':
