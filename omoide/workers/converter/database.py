@@ -126,7 +126,9 @@ class PostgreSQLDatabase(AbsDatabase):
 
     def delete_media(self, target_id: int) -> None:
         """Delete specific object."""
-        stmt = sa.delete(db_models.QueueInputMedia).where(db_models.QueueInputMedia.id == target_id)
+        stmt = sa.delete(db_models.QueueInputMedia).where(
+            db_models.QueueInputMedia.id == target_id
+        )
 
         with self.engine.begin() as conn:
             conn.execute(stmt)

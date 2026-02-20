@@ -5,11 +5,12 @@ Revises: d4d6001bb918
 Create Date: 2026-02-20 22:06:19.606961+03:00
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = 'b0ba5b2255db'
 down_revision: str | None = 'd4d6001bb918'

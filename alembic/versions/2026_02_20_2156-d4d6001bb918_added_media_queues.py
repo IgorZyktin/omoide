@@ -5,10 +5,9 @@ Revises: 8870dd74f3df
 Create Date: 2026-02-20 21:56:35.308086+03:00
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from alembic import op
-
 
 revision: str = 'd4d6001bb918'
 down_revision: str | None = '8870dd74f3df'

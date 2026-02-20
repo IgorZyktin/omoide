@@ -3,11 +3,12 @@
 from collections.abc import Collection
 from typing import TYPE_CHECKING
 
-from prometheus_client import Counter, start_http_server
+from prometheus_client import Counter
+from prometheus_client import start_http_server
 
+from omoide import custom_logging
 from omoide.infra.interfaces.abs_metrics_collector import AbsMetricsCollector
 from omoide.infra.interfaces.abs_metrics_collector import Metric
-from omoide import custom_logging
 
 if TYPE_CHECKING:
     from threading import Thread  # pragma: no cover
@@ -86,7 +87,7 @@ class PrometheusMetricsCollector(AbsMetricsCollector):
         try:
             obj.labels(**self.labels).inc(value)
         except Exception as exc:
-            LOG.error(
+            LOG.exception(
                 'Failed to increment metric {metric} because of {error}',
                 metric=metric,
                 error=exc,
