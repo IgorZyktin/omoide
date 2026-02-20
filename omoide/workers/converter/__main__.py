@@ -91,8 +91,12 @@ def do_work(config: WorkerConverterConfig, database: AbsDatabase) -> bool:
         try:
             converter(config, database, model)
         except Exception:
-            traceback = custom_logging.capture_exception_output('Failed to perform conversion')
-            database.mark_failed_and_release_lock(target_id, error=traceback or '???')
+            traceback = custom_logging.capture_exception_output(
+                'Failed to perform conversion'
+            )
+            database.mark_failed_and_release_lock(
+                target_id, error=traceback or '???'
+            )
             LOG.exception('Failed to convert input media {}', target_id)
             return False
         else:
