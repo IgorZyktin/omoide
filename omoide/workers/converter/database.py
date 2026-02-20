@@ -95,7 +95,6 @@ class PostgreSQLDatabase(AbsDatabase):
     def save_media(self, model: models.InputMedia, media_type: str) -> None:
         """Save data to storage."""
         stmt = sa.insert(db_models.QueueOutputMedia).values(
-            id=model.id,
             user_uuid=model.user_uuid,
             item_uuid=model.item_uuid,
             created_at=model.created_at,
@@ -105,6 +104,7 @@ class PostgreSQLDatabase(AbsDatabase):
             extras=model.extras,
             error=model.error,
             content=model.content,
+            processed_by=[],
         )
 
         with self.engine.begin() as conn:
