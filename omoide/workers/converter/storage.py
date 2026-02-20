@@ -63,6 +63,23 @@ class PostgreSQLStorage(AbsStorage):
             content=response.content,
         )
 
+    def save_model(self, model: models.InputMedia, media_type: str) -> None:
+        """Save data to storage."""
+        stmt = sa.insert(db_models.QueueOutputMedia).values(
+            id=model.id,
+            item_id=model.item_id,
+            created_at=model.created_at,
+            filename=model.filename,
+            content_type=model.content_type,
+            media_type=media_type,
+            extras=model.extras,
+            error=model.error,
+            content=model.content,
+        )
+
+        with self.engine.begin() as conn:
+            conn.execute(stmt)
+
     def mark_failed_and_release_lock(self, target_id: int, error: str) -> None:
         """Mark object as unprocessable."""
         stmt = sa.update(db_models.QueueInputMedia).values(

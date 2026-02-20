@@ -17,6 +17,9 @@ class AbsStorage(ABC):
     def load_model(self, target_id: int) -> models.InputMedia:
         """Load data from storage."""
 
+    def save_model(self, model: models.InputMedia, media_type: str) -> None:
+        """Save data to storage."""
+
     def mark_failed_and_release_lock(self, target_id: int, error: str) -> None:
         """Mark object as unprocessable."""
 
