@@ -3,6 +3,12 @@
 from omoide import models
 
 VOCABULARY = {
+    'Menu': {
+        'ru': 'Меню',
+    },
+    'Close': {
+        'ru': 'Закрыть',
+    },
     'Home': {
         'ru': 'Домой',
     },

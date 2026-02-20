@@ -126,33 +126,6 @@ async def app_profile_tags(  # noqa: PLR0913
     return templates.TemplateResponse('profile_tags.html', context)
 
 
-@app_profile_router.get('/profile/new')
-async def app_profile_new(
-    request: Request,
-    templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    config: Annotated[cfg.Config, Depends(dep.get_config)],
-    aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
-    """Show recent updates."""
-    if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
-
-    context = {
-        'request': request,
-        'config': config,
-        'user': user,
-        'aim_wrapper': aim_wrapper,
-        'block_direct': True,
-        'block_ordered': True,
-        'block_collections': False,
-        'block_paginated': True,
-        'endpoint': request.url_for('api_get_recent_updates'),
-    }
-    return templates.TemplateResponse('profile_new.html', context)
-
-
 @app_profile_router.get('/profile/duplicates')
 async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in function definition
     request: Request,

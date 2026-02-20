@@ -13,11 +13,14 @@
 }
 
 @media (min-width: 300px) {
+    html, body {
+        font-size: 20pt;
+    }
+
     .query-container {
         margin: 0.1em;
         grid-column-gap: 0.1em;
-        grid-template: "order collections direct paged login"
-        "home input input input search";
+        grid-template: "nav home input input input search login";
     }
 
     .menu-container {
@@ -27,17 +30,21 @@
     }
 
     .envelope img {
-        min-width: 800px;
+        min-width: 400px;
         min-height: auto;
     }
 }
 
 @media (min-width: 1080px) {
+    html, body {
+        font-size: 16px;
+    }
+
     .query-container {
         margin: 0.5em;
         grid-column-gap: 0.5em;
         grid-row-gap: 0.5em;
-        grid-template: "home input input input search order collections direct paged login";
+        grid-template: "nav home input input input input input search login";
     }
 
     .menu-container {
@@ -60,6 +67,10 @@
     grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
+.qc-nav {
+    grid-area: nav;
+}
+
 .qc-home {
     grid-area: home;
 }
@@ -70,22 +81,6 @@
 
 .qc-search {
     grid-area: search;
-}
-
-.qc-order {
-    grid-area: order;
-}
-
-.qc-direct {
-    grid-area: direct;
-}
-
-.qc-collections {
-    grid-area: collections;
-}
-
-.qc-paged {
-    grid-area: paged;
 }
 
 .qc-login {
@@ -118,7 +113,7 @@ textarea:focus, input:focus {
 .header-static, .header-floating {
     background-color: var(--background-color) !important;
     padding: 0;
-    z-index: 13;
+    z-index: 2;
     width: 100%;
 }
 
@@ -258,7 +253,7 @@ a:active {
 
 h1, h2, h3, h4, h5 {
     text-align: center;
-    margin: .5rem!important;
+    margin: .5rem !important;
 }
 
 .envelope-container {
@@ -601,4 +596,27 @@ table td {
     background-color: #939393;
     border: 1px solid #808080;
     margin-top: 10px;
+}
+
+.sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    background-color: #434343;
+    overflow-x: hidden;
+    transition: 0.5s;
+}
+
+.sidenav a {
+    transition: 0.3s;
+    margin: 1em;
+}
+
+@media screen and (max-height: 450px) {
+    .sidenav {
+        padding-top: 0.1em;
+    }
 }

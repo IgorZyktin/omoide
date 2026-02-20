@@ -38,6 +38,17 @@
     <div id="sub_header" class="sub_header">
         <div class="query-container">
 
+            {# Menu button ------------------------------------------------- #}
+            <a title="Open menu"
+               class="button qc-nav"
+               onclick="openNav()">
+               <img src="{{ request.url_for('static', path='ic_menu_24px.svg') }}"
+                    class="invert"
+                    alt="Menu icon"/>
+               <span>{{ _('Menu') }}</span>
+            </a>
+            {# ------------------------------------------------------------- #}
+
             {# Home button ------------------------------------------------- #}
             <a href="{{ request.url_for('app_home')|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
                title="Go to starting page"
@@ -71,149 +82,6 @@
                      alt="Looking glass icon"/>
                 <span>{{ _('Search') }}</span>
             </a>
-            {# ------------------------------------------------------------- #}
-
-            {# Order button ------------------------------------------------ #}
-            {% if block_ordered %}
-                <span class="button-disabled qc-order">
-
-                {% if aim_wrapper.order == 'random' %}
-                    <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
-                         alt="Order is not supported in this section"/>
-                    <span title="Change view mode to see items ordered">Random</span>
-                {% else %}
-                    <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
-                         alt="Order is not supported in this section"/>
-                    <span title="Change view mode to see items in random order">Ordered</span>
-                {% endif %}
-            </span>
-            {% else %}
-                {% if aim_wrapper.order == 'random' %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items ordered"
-                       onclick="toggleOrder()"
-                       class="button qc-order">
-                        <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
-                             alt="Change view mode to see items ordered"/>
-                        <span title="Change view mode to see items ordered">{{ _('Random') }}</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items in random order"
-                       onclick="toggleOrder()"
-                       class="button qc-order">
-                        <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
-                             alt="Change view mode to see items ordered"/>
-                        <span>{{ _('Ordered') }}</span>
-                    </a>
-                {% endif %}
-            {% endif %}
-            {# ------------------------------------------------------------- #}
-
-            {# Collections button ------------------------------------------ #}
-            {% if block_collections %}
-                <span class="button-disabled qc-collections">
-                {% if aim_wrapper.collections %}
-                    <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
-                         alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see all items">{{ _('Collections') }}</span>
-                {% else %}
-                    <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
-                         alt="Collection filtering is not supported in this section"/>
-                    <span title="Change view mode to see only collections">{{ _('All items') }}</span>
-                {% endif %}
-            </span>
-            {% else %}
-                {% if aim_wrapper.collections %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see all items"
-                       onclick="toggleCollections()"
-                       class="button qc-collections">
-                        <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
-                             alt="Change view mode to see all items"/>
-                        <span title="Change view mode to see all items">{{ _('Collections') }}</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see only collections"
-                       onclick="toggleCollections()"
-                       class="button qc-collections">
-                        <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
-                             alt="Change view mode to see only collections"/>
-                        <span title="Change view mode to see only collections">{{ _('All items') }}</span>
-                    </a>
-                {% endif %}
-            {% endif %}
-            {# ------------------------------------------------------------- #}
-
-            {# Item connection button -------------------------------------- #}
-            {% if block_direct %}
-                <span class="button-disabled qc-direct">
-                {% if aim_wrapper.direct %}
-                    <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
-                         alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see all related items">{{ _('Direct') }}</span>
-                {% else %}
-                    <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
-                         alt="Nesting is not supported in this section"/>
-                    <span title="Change view mode to see only directly connected items">{{ _('Related') }}</span>
-                {% endif %}
-            </span>
-            {% else %}
-                {% if aim_wrapper.direct %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see all related items"
-                       onclick="toggleDirect()"
-                       class="button qc-toggleDirect">
-                        <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
-                             alt="Change view mode to see all related items"/>
-                        <span title="Change view mode to see all related items">{{ _('Direct') }}</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see only directly connected items"
-                       onclick="toggleDirect()"
-                       class="button qc-toggleDirect">
-                        <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
-                             alt="Change view mode to see only directly connected items"/>
-                        <span>{{ _('Related') }}</span>
-                    </a>
-                {% endif %}
-            {% endif %}
-            {# ------------------------------------------------------------- #}
-
-            {# Paged button ------------------------------------------------ #}
-            {% if block_paginated or False %}
-                <span class="button-disabled qc-paged">
-                <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
-                     alt="Pagination is not supported in this section"/>
-                    {% if aim_wrapper.paged %}
-                        <span title="Change view mode to see items with dynamic load">{{ _('Paged load') }}</span>
-                    {% else %}
-                        <span title="Change view mode to see items paged load">{{ _('Dynamic load') }}</span>
-                    {% endif %}
-            </span>
-            {% else %}
-                {% if aim_wrapper.paged %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items with dynamic load"
-                       onclick="togglePaged()"
-                       class="button qc-paged">
-                        <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
-                             alt="Change view mode to see items with dynamic load"/>
-                        <span>{{ _('Paged load') }}</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0)"
-                       title="Change view mode to see items with paged load"
-                       onclick="togglePaged()"
-                       class="button qc-paged">
-                        <img src="{{ request.url_for('static', path='ic_paginated_off.svg') }}"
-                             alt="Change view mode to see items with paged load"/>
-                        <span>{{ _('Dynamic load') }}</span>
-                    </a>
-                {% endif %}
-            {% endif %}
             {# ------------------------------------------------------------- #}
 
             {# Login button ------------------------------------------------ #}
@@ -301,6 +169,161 @@
 
     </div>
     {% block header_top %}{% endblock %}
+</div>
+
+<div id="navbar" class="sidenav">
+    <a href="javascript:void(0)"
+       title="Change view mode to see items ordered"
+       onclick="closeNav()"
+       class="button">
+        <span title="Close">&times; {{ _('Close') }}</span>
+    </a>
+
+    <a href="{{ request.url_for('app_new') }}"
+       class="button">{{ _('Whats new?') }}</a>
+
+    {# Order button ------------------------------------------------ #}
+    {% if block_ordered %}
+        <a href="javascript:void(0)" class="button-disabled">
+
+        {% if aim_wrapper.order == 'random' %}
+            <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
+                 alt="Order is not supported in this section"/>
+            <span title="Change view mode to see items ordered">{{ _('Random') }}</span>
+        {% else %}
+            <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
+                 alt="Order is not supported in this section"/>
+            <span title="Change view mode to see items in random order">{{ _('Ordered') }}</span>
+        {% endif %}
+    </a>
+    {% else %}
+        {% if aim_wrapper.order == 'random' %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see items ordered"
+               onclick="toggleOrder()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_sort_random.svg') }}"
+                     alt="Change view mode to see items ordered"/>
+                <span title="Change view mode to see items ordered">{{ _('Random') }}</span>
+            </a>
+        {% else %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see items in random order"
+               onclick="toggleOrder()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_sort_asc.svg') }}"
+                     alt="Change view mode to see items ordered"/>
+                <span>{{ _('Ordered') }}</span>
+            </a>
+        {% endif %}
+    {% endif %}
+    {# ------------------------------------------------------------- #}
+
+    {# Collections button ------------------------------------------ #}
+    {% if block_collections %}
+        <a href="javascript:void(0)" class="button-disabled">
+        {% if aim_wrapper.collections %}
+            <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
+                 alt="Collection filtering is not supported in this section"/>
+            <span title="Change view mode to see all items">{{ _('Collections') }}</span>
+        {% else %}
+            <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
+                 alt="Collection filtering is not supported in this section"/>
+            <span title="Change view mode to see only collections">{{ _('All items') }}</span>
+        {% endif %}
+        </a>
+    {% else %}
+        {% if aim_wrapper.collections %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see all items"
+               onclick="toggleCollections()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
+                     alt="Change view mode to see all items"/>
+                <span title="Change view mode to see all items">{{ _('Collections') }}</span>
+            </a>
+        {% else %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see only collections"
+               onclick="toggleCollections()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
+                     alt="Change view mode to see only collections"/>
+                <span title="Change view mode to see only collections">{{ _('All items') }}</span>
+            </a>
+        {% endif %}
+    {% endif %}
+    {# ------------------------------------------------------------- #}
+
+    {# Item connection button -------------------------------------- #}
+    {% if block_direct %}
+        <a href="javascript:void(0)" class="button-disabled">
+        {% if aim_wrapper.direct %}
+            <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
+                 alt="Nesting is not supported in this section"/>
+            <span title="Change view mode to see all related items">{{ _('Direct') }}</span>
+        {% else %}
+            <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
+                 alt="Nesting is not supported in this section"/>
+            <span title="Change view mode to see only directly connected items">{{ _('Related') }}</span>
+        {% endif %}
+    </a>
+    {% else %}
+        {% if aim_wrapper.direct %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see all related items"
+               onclick="toggleDirect()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_collections_on.svg') }}"
+                     alt="Change view mode to see all related items"/>
+                <span title="Change view mode to see all related items">{{ _('Direct') }}</span>
+            </a>
+        {% else %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see only directly connected items"
+               onclick="toggleDirect()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_collections_off.svg') }}"
+                     alt="Change view mode to see only directly connected items"/>
+                <span>{{ _('Related') }}</span>
+            </a>
+        {% endif %}
+    {% endif %}
+    {# ------------------------------------------------------------- #}
+
+    {# Paged button ------------------------------------------------ #}
+    {% if block_paginated or False %}
+        <a href="javascript:void(0)" class="button-disabled">
+        <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
+             alt="Pagination is not supported in this section"/>
+            {% if aim_wrapper.paged %}
+                <span title="Change view mode to see items with dynamic load">{{ _('Paged load') }}</span>
+            {% else %}
+                <span title="Change view mode to see items paged load">{{ _('Dynamic load') }}</span>
+            {% endif %}
+    </a>
+    {% else %}
+        {% if aim_wrapper.paged %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see items with dynamic load"
+               onclick="togglePaged()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
+                     alt="Change view mode to see items with dynamic load"/>
+                <span>{{ _('Paged load') }}</span>
+            </a>
+        {% else %}
+            <a href="javascript:void(0)"
+               title="Change view mode to see items with paged load"
+               onclick="togglePaged()"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_paginated_off.svg') }}"
+                     alt="Change view mode to see items with paged load"/>
+                <span>{{ _('Dynamic load') }}</span>
+            </a>
+        {% endif %}
+    {% endif %}
+    {# ------------------------------------------------------------- #}
 </div>
 
 <div id="content" class="content-static">
