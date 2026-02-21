@@ -37,7 +37,7 @@
 
 @media (min-width: 1080px) {
     html, body {
-        font-size: 16px;
+        font-size: 18px;
     }
 
     .query-container {
@@ -68,6 +68,7 @@
 }
 
 html, body {
+    font-family: "Roboto", sans-serif;
     color: var(--main-text-color);
     background-color: var(--background-color) !important;
     margin: 0;
@@ -398,6 +399,7 @@ h1, h2, h3, h4, h5 {
     height: 100%;
     width: 100%;
     border-radius: 3px;
+    font-size: 18px;
 }
 
 progress {

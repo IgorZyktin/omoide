@@ -12,17 +12,12 @@
     <link type="text/css"
           href="{{ request.url_for('static', path='navigation.css?' + version) }}"
           rel="stylesheet">
-    <link type="text/css"
-          href="{{ request.url_for('static', path='thirdparty/bootstrap/css/bootstrap.min.css') }}"
-          rel="stylesheet">
     <script type="text/javascript"
             src="{{ request.url_for('static', path='code.js?' + version) }}"></script>
     <script type="text/javascript"
             src="{{ request.url_for('static', path='navigation.js?' + version) }}"></script>
     <script type="text/javascript"
             src="{{ request.url_for('static', path='thirdparty/jquery-3.6.0.min.js') }}"></script>
-    <script type="text/javascript"
-            src="{{ request.url_for('static', path='thirdparty/bootstrap/js/bootstrap.min.js') }}"></script>
 
     {%- block head %}{% endblock -%}
 
