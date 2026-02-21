@@ -41,7 +41,7 @@
     }
 
     .query-container {
-        margin: 0.5em 2em 0.5em 0.5em;
+        margin: 0.5em;
         grid-column-gap: 0.5em;
         grid-row-gap: 0.5em;
         grid-template-columns: 0.25fr 1fr 4fr 1fr 1fr;
