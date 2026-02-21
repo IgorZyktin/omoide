@@ -1,8 +1,8 @@
 """Media conversion operations."""
 
+import math
 from collections.abc import Callable
 from io import BytesIO
-import math
 from typing import Final
 
 from PIL import Image
@@ -12,12 +12,12 @@ from PIL import ImageOps
 from omoide import const
 from omoide import models
 from omoide.workers.converter.cfg import WorkerConverterConfig
-from omoide.workers.converter.interfaces import AbsDatabase
+from omoide.workers.converter.database import ConverterPostgreSQLDatabase
 
 
 def convert_static_image(
     config: WorkerConverterConfig,
-    database: AbsDatabase,
+    database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
 ) -> None:
     """Convert image (without animation)."""
@@ -46,7 +46,7 @@ def get_new_image_dimensions(
 
 
 def _convert_and_save_static_image_content(
-    database: AbsDatabase,
+    database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
 ) -> None:
     """Save content."""
@@ -80,7 +80,7 @@ def _resize(model: models.InputMedia, size: int) -> bytes:
 
 
 def _convert_and_save_static_image_preview(
-    database: AbsDatabase,
+    database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
 ) -> None:
     """Save preview."""
@@ -90,7 +90,7 @@ def _convert_and_save_static_image_preview(
 
 
 def _convert_and_save_static_image_thumbnail(
-    database: AbsDatabase,
+    database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
 ) -> None:
     """Save thumbnail."""

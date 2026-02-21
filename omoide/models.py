@@ -547,3 +547,20 @@ class InputMedia:
     extras: dict
     error: str | None
     content: bytes
+
+
+@dataclass
+class OutputMedia:
+    """What we got after conversion."""
+
+    id: int
+    user_uuid: UUID
+    item_uuid: UUID
+    created_at: datetime
+    ext: str
+    content_type: str
+    media_type: str
+    extras: dict
+    error: str | None
+    content: bytes
+    processed_by: set[str]

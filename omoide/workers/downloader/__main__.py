@@ -1,4 +1,4 @@
-"""Worker that converts media files."""
+"""Worker that downloads media files."""
 
 import os
 import signal
@@ -13,27 +13,27 @@ from omoide.infra.implementations.prometheus_metric_collector import (
 )
 from omoide.infra.interfaces.abs_metrics_collector import Metric
 from omoide.workers.converter import conversions
-from omoide.workers.converter.cfg import WorkerConverterConfig
-from omoide.workers.converter.database import ConverterPostgreSQLDatabase
+from omoide.workers.downloader.cfg import WorkerDownloaderConfig
+from omoide.workers.downloader.database import DownloaderPostgreSQLDatabase
 
 LOG = custom_logging.get_logger(__name__)
 WORKING = True
 
 M_FILES_PROCESSED = Metric(
     id=1,
-    name='wc_files_processed',
+    name='wd_files_processed',
     documentation='How many files we processed',
 )
 
 M_BYTES_PROCESSED = Metric(
     id=2,
-    name='wc_bytes_processed',
+    name='wd_bytes_processed',
     documentation='How many bytes we processed',
 )
 
 M_ERRORS = Metric(
     id=3,
-    name='wc_errors',
+    name='wd_errors',
     documentation='How many errors we got',
 )
 
@@ -53,8 +53,8 @@ def signal_handler(signum: int, frame: Any) -> None:
 def main() -> None:
     """Entry point."""
     config = ns.from_env(
-        WorkerConverterConfig,
-        env_prefix='omoide_worker_converter',
+        WorkerDownloaderConfig,
+        env_prefix='omoide_worker_downloader',
     )
     os.environ.clear()
 
@@ -65,11 +65,11 @@ def main() -> None:
         rotation=config.log.rotation,
     )
 
-    LOG.info('Started converter worker: {}', config.name)
+    LOG.info('Started downloader worker: {}', config.name)
 
     signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 
-    database = ConverterPostgreSQLDatabase(
+    database = DownloaderPostgreSQLDatabase(
         url=config.db.url.get_secret_value(),
         echo=config.db.echo,
     )
@@ -101,12 +101,12 @@ def main() -> None:
     database.disconnect()
     metrics.stop()
 
-    LOG.info('Stopped converter worker: {}', config.name)
+    LOG.info('Stopped downloader worker: {}', config.name)
 
 
 def do_work(
-    config: WorkerConverterConfig,
-    database: ConverterPostgreSQLDatabase,
+    config: WorkerDownloaderConfig,
+    database: DownloaderPostgreSQLDatabase,
     metrics: PrometheusMetricsCollector,
 ) -> bool:
     """Perform workload."""
@@ -123,20 +123,19 @@ def do_work(
 
         try:
             model = database.load_media(target_id)
-            converter = conversions.CONVERTERS[model.content_type.lower()]
-            converter(config, database, model)
+            # TODO
         except Exception:
             traceback = custom_logging.capture_exception_output(
-                'Failed to perform conversion'
+                'Failed to perform download'
             )
             database.mark_failed_and_release_lock(
                 target_id, error=traceback or '???'
             )
-            LOG.exception('Failed to convert input media {}', target_id)
+            LOG.exception('Failed to download output media {}', target_id)
             metrics.increment(M_ERRORS, 1)
             return False
         else:
-            LOG.info('Converted input media {}', target_id)
+            LOG.info('Downloaded input media {}', target_id)
             database.delete_media(target_id)
             metrics.increment(M_FILES_PROCESSED, 1)
             metrics.increment(M_BYTES_PROCESSED, len(model.content))
