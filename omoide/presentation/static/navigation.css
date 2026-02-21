@@ -1,0 +1,27 @@
+.sidenav {
+    height: 100%;
+    width: 300px;
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    background-color: #434343;
+    overflow-x: hidden;
+    transition: 0.5s;
+    transform: translateX(-520px);
+}
+
+.sidenav-open {
+    transform: translateX(0);
+}
+
+.sidenav a {
+    transition: 0.3s;
+    margin: 1em;
+}
+
+@media only screen and (hover: none) and (pointer: coarse) {
+  .sidenav {
+      width: 500px;
+  }
+}
