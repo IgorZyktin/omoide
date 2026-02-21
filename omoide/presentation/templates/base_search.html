@@ -45,19 +45,19 @@
 
             {# Menu button ------------------------------------------------- #}
             <a title="Open menu"
-               class="button qc-nav"
+               class="button"
                onclick="openNav()">
                <img src="{{ request.url_for('static', path='ic_menu_24px.svg') }}"
                     class="invert"
+                    style="margin-right: 0"
                     alt="Menu icon"/>
-               <span>{{ _('Menu') }}</span>
             </a>
             {# ------------------------------------------------------------- #}
 
             {# Home button ------------------------------------------------- #}
             <a href="{{ request.url_for('app_home')|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-               title="Go to starting page"
-               class="button qc-home">
+               title="{{ _('Go to starting page') }}"
+               class="button">
                 <img src="{{ request.url_for('static', path='ic_home_24px.svg') }}"
                      class="invert"
                      alt="Home icon"/>
@@ -66,14 +66,14 @@
             {# ------------------------------------------------------------- #}
 
             {# Query field ------------------------------------------------- #}
-            <div id="guess" class="guess qc-input">
+            <div id="guess" class="guess">
                 <input id="query_element"
                        name="query"
                        type="search"
                        value="{{ request.query_params.get('q', '') }}"
                        class="query_input"
                        autocomplete="off"
-                       placeholder="Search (for example it + movie)"/>
+                       placeholder="Search (for example anime + artbook)"/>
             </div>
             {# ------------------------------------------------------------- #}
 
@@ -82,7 +82,7 @@
                href="javascript:void(0)"
                title="Press to perform search"
                onclick="goSearch()"
-               class="button qc-search">
+               class="button">
                 <img src="{{ request.url_for('static', path='ic_search.svg') }}"
                      alt="Looking glass icon"/>
                 <span>{{ _('Search') }}</span>
@@ -93,7 +93,7 @@
             {% if user.is_anon %}
                 <a href="{{ request.url_for('app_login') }}"
                    title="Enter credentials to log in"
-                   class="button qc-login">
+                   class="button">
                     <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
                          alt="Enter credentials to log in"/>
                     <span>{{ _('Login') }}</span>
@@ -101,7 +101,7 @@
             {% else %}
                 <a href="{{ request.url_for('app_profile') }}"
                    title="Currently logged in as"
-                   class="button qc-login">
+                   class="button">
                     <img src="{{ request.url_for('static', path='ic_perm_identity_24px.svg') }}"
                          alt="Currently logged in as"/>
                     <span>{{ user.name }}</span>
@@ -119,51 +119,51 @@
                 {% endif %}
 
                 <a href="{{ request.url_for('app_create_item', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   title="Create new item"
+                   title="{{ _('Create new item') }}"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
-                         alt="Create"/>
+                         alt="{{ _('Create new item') }}"/>
                     <span>{{ _('Create') }}</span>
                 </a>
 
                 <a href="{{ request.url_for('app_upload', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   title="Upload media"
+                   title="{{ _('Upload media') }}"
                    class="button">
                     <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"
-                         alt="Upload media"/>
+                         alt="{{ _('Upload media') }}"/>
                     <span>{{ _('Upload') }}</span>
                 </a>
 
                 {% if current_item and current_item.owner_uuid | string == user.uuid | string %}
                     <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="Edit current item"
+                       title="{{ _('Edit current item') }}"
                        class="button">
                         <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
-                             alt="Edit current item"/>
+                             alt="{{ _('Edit current item') }}"/>
                         <span>{{ _('Edit') }}</span>
                     </a>
 
                     <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="Delete current item"
+                       title="{{ _('Delete current item') }}"
                        class="button">
                         <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
-                             alt="Delete current item"/>
+                             alt="{{ _('Delete current item') }}"/>
                         <span>{{ _('Delete') }}</span>
                     </a>
                 {% else %}
                     <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="Edit current item"
+                       title="{{ _('Edit current item') }}"
                        class="button-disabled">
                         <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
-                             alt="Edit current item"/>
+                             alt="{{ _('Edit current item') }}"/>
                         <span>{{ _('Edit') }}</span>
                     </a>
 
                     <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="Delete current item"
+                       title="{{ _('Delete current item') }}"
                        class="button-disabled">
                         <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
-                             alt="Delete current item"/>
+                             alt="{{ _('Delete current item') }}"/>
                         <span>{{ _('Delete') }}</span>
                     </a>
                 {% endif %}
@@ -178,7 +178,7 @@
 
 <div id="navbar" class="sidenav">
     <a href="javascript:void(0)"
-       title="Close menu"
+       title="{{ _('Close menu') }}"
        onclick="closeNav()"
        class="button">
         <span title="Close">&times; {{ _('Close') }}</span>
