@@ -12,9 +12,17 @@
     --background-color: #939393;
 }
 
-@media (min-width: 300px) {
+@media only screen and (hover: none) and (pointer: coarse) {
     html, body {
         font-size: 28pt;
+    }
+
+    .icon-header {
+        width: 40px;
+    }
+
+    #query_element {
+        font-size: 28px;
     }
 
     .query-container {
@@ -35,8 +43,16 @@
     }
 }
 
-@media (min-width: 1080px) {
+@media (pointer: fine) and (hover: hover) {
     html, body {
+        font-size: 18px;
+    }
+
+    .icon-header {
+        width: 24px;
+    }
+
+    #query_element {
         font-size: 18px;
     }
 
@@ -399,7 +415,6 @@ h1, h2, h3, h4, h5 {
     height: 100%;
     width: 100%;
     border-radius: 3px;
-    font-size: 18px;
 }
 
 progress {
