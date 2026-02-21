@@ -218,7 +218,7 @@
         let newModel = {{ model | safe }};
         let initialPermissions = {{ initial_permissions | safe }};
 
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function () {
             tryLoadingThumbnail(
                 '{{ item.parent_uuid or '' }}',
                 $('#thumbnail_parent')

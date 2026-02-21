@@ -17,7 +17,7 @@
 
     {{ render_paginator_by_item(request, paginator, current_item.uuid, aim_wrapper) }}
     <script>
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function () {
             activateFloatingHeader()
             updateHeaderPadding()
         });

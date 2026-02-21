@@ -32,7 +32,7 @@
             deleteItem(this, '{{ item.uuid }}')
         });
 
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function () {
             tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
         });
     </script>

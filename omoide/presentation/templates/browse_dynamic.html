@@ -17,7 +17,7 @@
 {% block body %}
     <div class="envelope-container"></div>
     <script>
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function () {
             let container = document.querySelector('.envelope-container')
             let endpoint = '{{ endpoint }}'
             let scroller = new Scroller(container, endpoint)
