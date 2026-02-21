@@ -337,10 +337,12 @@
 
         document.addEventListener('touchstart', e => {
             touchStartX = e.changedTouches[0].clientX;
+            touchStartY = e.changedTouches[0].clientY;
         });
 
         document.addEventListener('touchend', e => {
             touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
             handleGesture();
         });
 

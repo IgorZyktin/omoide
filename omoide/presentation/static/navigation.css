@@ -7,7 +7,7 @@
     left: 0;
     background-color: #434343;
     overflow-x: hidden;
-    transition: 0.5s;
+    transition: 0.25s;
     transform: translateX(-520px);
 }
 
@@ -16,7 +16,7 @@
 }
 
 .sidenav a {
-    transition: 0.3s;
+    transition: 0.2s;
     margin: 1em;
 }
 

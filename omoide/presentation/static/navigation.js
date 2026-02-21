@@ -1,6 +1,9 @@
 let touchStartX = 0;
+let touchStartY = 0;
 let touchEndX = 0;
-const swipeThreshold = 50;
+let touchEndY = 0;
+const swipeThresholdX = 100;
+const swipeThresholdY = 200;
 
 function openNav() {
     // Open side menu
@@ -14,16 +17,17 @@ function closeNav() {
 
 function handleGesture() {
     // React on user gestures
-    const swipeDistance = touchEndX - touchStartX;
+    const swipeDistanceX = touchEndX - touchStartX;
+    const swipeDistanceY = Math.abs(touchEndY - touchStartY);
     let open = document.getElementById("navbar").classList.contains('sidenav-open')
 
     // Check if the menu is closed and the swipe is from the left edge
-    if (!open && swipeDistance > swipeThreshold) {
+    if (!open && swipeDistanceX > swipeThresholdX && swipeDistanceY < swipeThresholdY) {
         openNav()
     }
 
     // Check if the menu is open and the swipe is a leftward motion
-    if (open && swipeDistance < -swipeThreshold) {
+    if (open && swipeDistanceX < -swipeThresholdX && swipeDistanceY < swipeThresholdY) {
         closeNav()
     }
 }
