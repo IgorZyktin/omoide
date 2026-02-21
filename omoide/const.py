@@ -8,9 +8,9 @@ from typing import Literal
 from typing import TypeAlias
 from uuid import UUID
 
-VERSION = '0.3.12'
+VERSION = '0.3.13'
 
-FRONTEND_VERSION = 26
+FRONTEND_VERSION = 27
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
