@@ -314,7 +314,7 @@
     {# ------------------------------------------------------------- #}
 
     {# Paged button ------------------------------------------------ #}
-    {% if block_paginated or False %}
+    {% if block_paginated %}
         <a href="javascript:void(0)" class="button-disabled">
         <img src="{{ request.url_for('static', path='ic_paginated_on.svg') }}"
              class="invert icon-header"
