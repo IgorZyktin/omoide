@@ -60,7 +60,9 @@ def _resize(model: models.InputMedia, size: int) -> bytes:
     with Image.open(stream) as original_image:
         img = ImageOps.exif_transpose(original_image)
         old_width, old_height = img.size
-        new_width, new_height = get_new_image_dimensions(old_width, old_height, size)
+        new_width, new_height = get_new_image_dimensions(
+            old_width, old_height, size
+        )
         new_img = img.resize((new_width, new_height))
         new_img = new_img.convert('RGB')
         new_img = new_img.filter(ImageFilter.SHARPEN)

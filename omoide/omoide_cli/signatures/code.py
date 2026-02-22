@@ -1,218 +1,224 @@
-"""Implementation for signatures command."""
+"""Check signatures."""
 
-from collections.abc import Callable
 from collections.abc import Iterator
-from dataclasses import dataclass
 import hashlib
 from pathlib import Path
-from typing import Literal
+from typing import Any
+from uuid import UUID
 import zlib
 
 import sqlalchemy as sa
+from sqlalchemy import Connection
+from sqlalchemy import Engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.engine import Connection
 
-from omoide import const
-from omoide import custom_logging
+from omoide import models
+from omoide import utils
 from omoide.database import db_models
-from omoide.omoide_cli import common
-
-LOG = custom_logging.get_logger(__name__)
 
 
-def init(
-    what: Literal['MD5', 'CRC32'],
-    everything: bool,
-    folder: str | None,
-    db_url: str | None,
-) -> tuple[Path, str]:
-    """Prepare for running."""
-    if everything:
-        LOG.info('Recalculating {} hashes for all files', what)
-    else:
-        LOG.info('Adding {} hashes for files that miss them', what)
+def fix_missing_signatures(
+    engine: Engine,
+    data_folder: Path,
+    site_url: str,
+    fix_missing: bool,
+    marker: int,
+    limit: int,
+) -> None:
+    """Create signatures for items that miss them."""
+    with engine.begin() as conn:
+        for id_, user_uuid, item_uuid, ext in _get_items_without_signatures(conn, marker, limit):
+            string = f'Missing: item_id={id_}, {site_url}/preview/{item_uuid}'
+            if fix_missing:
+                _update_signature(conn, data_folder, id_, user_uuid, item_uuid, ext)
+                string += ' [Fixed]'
 
-    folder_path = common.extract_folder(folder)
-
-    db_url = common.extract_env(
-        what='Database URL',
-        variable=db_url,
-        env_variable=const.ENV_DB_URL_ADMIN,
-    )
-
-    return folder_path, db_url
+            print(string)  # noqa: T201
 
 
-@dataclass
-class Item:
-    """Simplified version of an item."""
-
-    id: int
-    uuid: str
-    owner_uuid: str
-    content_ext: str
-    prefix_size: int = const.STORAGE_PREFIX_SIZE
-
-    def get_path(self, root: Path) -> Path:
-        """Return path to the content file."""
-        return (
-            root
-            / 'content'
-            / self.owner_uuid
-            / self.uuid[: self.prefix_size]
-            / f'{self.uuid}.{self.content_ext}'
+def _get_items_without_signatures(conn: Connection, marker: int, limit: int) -> Iterator[tuple]:
+    """Get info from DB."""
+    query = (
+        sa.select(
+            db_models.Item.id,
+            db_models.User.uuid,
+            db_models.Item.uuid,
+            db_models.Item.content_ext,
         )
-
-
-def process_items(  # noqa: PLR0913
-    what: Literal['MD5', 'CRC32'],
-    db_url: str,
-    batch_size: int,
-    folder_path: Path,
-    limit: int | None,
-    everything: bool,
-    executable: Callable[[Connection, Path, Item], None],
-) -> int:
-    """Process items in batches."""
-    total = 0
-    batch_number = 1
-    engine = sa.create_engine(db_url, pool_pre_ping=True, future=True)
-
-    def condition(_total_in_batch: int, _batch_size: int) -> bool:
-        """Cycle stop condition."""
-        if limit is not None and total == limit:
-            return False
-
-        return not (_total_in_batch != 0 and _total_in_batch < _batch_size)
-
-    try:
-        with engine.connect() as conn:
-            total_in_batch = 0
-
-            while condition(total_in_batch, batch_size):
-                LOG.info('Batch {}', batch_number)
-                items = get_items(conn, what, everything, batch_size, limit)
-
-                total_in_batch = 0
-                for item in items:
-                    executable(conn, folder_path, item)
-                    total_in_batch += 1
-                    total += 1
-
-                batch_number += 1
-    finally:
-        engine.dispose()
-
-    return total
-
-
-def get_items(
-    conn: Connection,
-    what: Literal['MD5', 'CRC32'],
-    everything: bool,
-    batch_size: int,
-    limit: int | None,
-) -> Iterator[Item]:
-    """Extract items from the database."""
-    common_columns = [
-        db_models.Item.id,
-        db_models.Item.uuid,
-        db_models.Item.owner_uuid,
-        db_models.Item.content_ext,
-    ]
-
-    if everything:
-        query = sa.select(
-            *common_columns,
-            sa.literal(None),
+        .join(
+            db_models.User,
+            db_models.User.id == db_models.Item.owner_id,
+            isouter=True,
         )
-    elif what == 'MD5':
-        query = (
-            sa.select(
-                *common_columns,
-                db_models.SignatureMD5.signature,
-            )
-            .join(
-                db_models.SignatureMD5,
-                db_models.Item.id == db_models.SignatureMD5.item_id,
-                isouter=True,
-            )
-            .where(
+        .join(
+            db_models.SignatureMD5,
+            db_models.SignatureMD5.item_id == db_models.Item.id,
+            isouter=True,
+        )
+        .join(
+            db_models.SignatureCRC32,
+            db_models.SignatureCRC32.item_id == db_models.Item.id,
+            isouter=True,
+        )
+        .where(
+            db_models.Item.status == models.Status.AVAILABLE,
+            db_models.Item.content_ext != sa.null(),
+            sa.or_(
                 db_models.SignatureMD5.signature == sa.null(),
-            )
-        )
-    else:
-        query = (
-            sa.select(
-                *common_columns,
-                db_models.SignatureCRC32.signature,
-            )
-            .join(
-                db_models.SignatureCRC32,
-                db_models.Item.id == db_models.SignatureCRC32.item_id,
-                isouter=True,
-            )
-            .where(
                 db_models.SignatureCRC32.signature == sa.null(),
-            )
+            ),
+            db_models.Item.id > marker,
         )
-
-    # skip items without content
-    query = query.where(db_models.Item.content_ext != sa.null()).order_by(db_models.Item.id)
-
-    if limit is not None:
-        query = query.limit(min(batch_size, limit))
-    else:
-        query = query.limit(batch_size)
-
-    response = conn.execute(query).fetchall()
-
-    for raw_item in response:
-        yield Item(
-            id=raw_item.id,
-            uuid=raw_item.uuid,
-            owner_uuid=raw_item.owner_uuid,
-            content_ext=raw_item.content_ext,
-        )
-
-
-def update_md5_for_item(conn: Connection, root: Path, item: Item) -> None:
-    """Calculate MD5 hash."""
-    path = item.get_path(root)
-    signature = hashlib.md5(path.read_bytes()).hexdigest()
-
-    LOG.info('Updating {} -> {}', item.uuid, signature)
-
-    insert = pg_insert(db_models.SignatureMD5).values(
-        item_id=item.id,
-        signature=signature,
+        .order_by(db_models.Item.id)
+        .limit(limit)
     )
 
-    stmt = insert.on_conflict_do_update(
+    response = conn.execute(query).all()
+    yield from response
+
+
+def _update_signature(
+    conn: Connection,
+    data_folder: Path,
+    item_id: int,
+    user_uuid: UUID,
+    item_uuid: UUID,
+    ext: str,
+    md5: str | None = None,
+    crc32: str | None = None,
+) -> None:
+    """Update signature for a file."""
+    path = utils.get_content_path(data_folder, user_uuid, item_uuid, ext)
+
+    md5 = md5 or hashlib.md5(path.read_bytes()).hexdigest()
+    insert_md5 = pg_insert(db_models.SignatureMD5).values(
+        item_id=item_id,
+        signature=md5,
+    )
+    stmt_md5 = insert_md5.on_conflict_do_update(
         index_elements=[db_models.SignatureMD5.item_id],
-        set_={'signature': insert.excluded.signature},
+        set_={'signature': insert_md5.excluded.signature},
     )
 
-    conn.execute(stmt)
-    conn.commit()
-
-
-def update_crc32_for_item(conn: Connection, root: Path, item: Item) -> None:
-    """Calculate CRC32 hash."""
-    path = item.get_path(root)
-    signature = zlib.crc32(path.read_bytes())
-
-    LOG.info('Updating {} -> {}', item.uuid, signature)
-
-    insert = pg_insert(db_models.SignatureCRC32).values(
-        item_id=item.id,
-        signature=signature,
+    crc32 = crc32 or zlib.crc32(path.read_bytes())
+    insert_crc32 = pg_insert(db_models.SignatureCRC32).values(
+        item_id=item_id,
+        signature=crc32,
     )
-
-    stmt = insert.on_conflict_do_update(
+    stmt_crc32 = insert_crc32.on_conflict_do_update(
         index_elements=[db_models.SignatureCRC32.item_id],
-        set_={'signature': insert.excluded.signature},
+        set_={'signature': insert_crc32.excluded.signature},
     )
 
-    conn.execute(stmt)
-    conn.commit()
+    conn.execute(stmt_md5)
+    conn.execute(stmt_crc32)
+
+
+def fix_mismatching_signatures(
+    engine: Engine,
+    data_folder: Path,
+    site_url: str,
+    fix_mismatching: bool,
+    marker: int,
+    limit: int,
+) -> list[dict[str, Any]]:
+    """Create signatures for items that miss them."""
+    diff: list[dict[str, Any]] = []
+
+    id_ = None
+    with engine.begin() as conn:
+        for id_, user_uuid, item_uuid, ext, md5, crc32, dt, size in _get_all_signatures(conn,
+                                                                                        marker,
+                                                                                        limit):
+            path = utils.get_content_path(data_folder, user_uuid, item_uuid, ext)
+            real_md5 = hashlib.md5(path.read_bytes()).hexdigest()
+            real_crc32 = zlib.crc32(path.read_bytes())
+
+            print(f'\rProcessing: {id_}', end='')  # noqa: T201
+
+            if real_md5 != md5 or real_crc32 != crc32:
+                string = f'\rMismatching: item_id={id_}, {site_url}/preview/{item_uuid}'
+
+                diff.append(
+                    {
+                        'id': id_,
+                        'user_uuid': str(user_uuid),
+                        'item_uuid': str(item_uuid),
+                        'ext': ext,
+                        'database_md5': md5,
+                        'database_crc32': crc32,
+                        'real_md5': real_md5,
+                        'real_crc32': real_crc32,
+                        'timestamp': dt.isoformat(),
+                        'size': size,
+                        'url': f'{site_url}/preview/{item_uuid}',
+                    }
+                )
+
+                if fix_mismatching:
+                    _update_signature(
+                        conn,
+                        data_folder,
+                        id_,
+                        user_uuid,
+                        item_uuid,
+                        ext,
+                        md5=md5,
+                        crc32=crc32,
+                    )
+                    string += ' [Fixed]'
+
+                print(string)  # noqa: T201
+
+    if id_ is not None:
+        print(f'Last item id: {id_}')  # noqa: T201
+
+    return diff
+
+
+def _get_all_signatures(conn: Connection, marker: int, limit: int) -> Iterator[tuple]:
+    """Get info from DB."""
+    query = (
+        sa.select(
+            db_models.Item.id,
+            db_models.User.uuid,
+            db_models.Item.uuid,
+            db_models.Item.content_ext,
+            sa.label('md5', db_models.SignatureMD5.signature),
+            sa.label('crc32', db_models.SignatureCRC32.signature),
+            db_models.Metainfo.created_at,
+            db_models.Metainfo.content_size,
+        )
+        .join(
+            db_models.User,
+            db_models.User.id == db_models.Item.owner_id,
+            isouter=True,
+        )
+        .join(
+            db_models.SignatureMD5,
+            db_models.SignatureMD5.item_id == db_models.Item.id,
+            isouter=True,
+        )
+        .join(
+            db_models.SignatureCRC32,
+            db_models.SignatureCRC32.item_id == db_models.Item.id,
+            isouter=True,
+        )
+        .join(
+            db_models.Metainfo,
+            db_models.Metainfo.item_id == db_models.Item.id,
+            isouter=True,
+        )
+        .where(
+            db_models.Item.status == models.Status.AVAILABLE,
+            db_models.Item.content_ext != sa.null(),
+            db_models.SignatureMD5.signature != sa.null(),
+            db_models.SignatureCRC32.signature != sa.null(),
+            db_models.Item.id > marker,
+        )
+        .order_by(db_models.Item.id)
+        .limit(limit)
+    )
+
+    response = conn.execute(query).all()
+    yield from response
