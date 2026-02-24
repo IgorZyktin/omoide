@@ -11,6 +11,12 @@ class WebLocator:
         self.prefix_size = prefix_size
         self.root = root
 
+    def get_video_location(self, item: models.Item) -> str | None:
+        """Return location of the video."""
+        prefix = str(item.uuid)[: self.prefix_size]
+        ext = f'.{item.content_ext}' if item.content_ext else ''
+        return f'/{self.root}/video/{item.owner_uuid}/{prefix}/{item.uuid}{ext}'
+
     def get_content_location(self, item: models.Item) -> str | None:
         """Return location of the content."""
         prefix = str(item.uuid)[: self.prefix_size]

@@ -200,6 +200,7 @@ def get_templates(
 
     config = get_config()
     locator = WebLocator(root='content', prefix_size=config.prefix_size)
+    templates.env.globals['get_video_url'] = locator.get_video_location
     templates.env.globals['get_content_url'] = locator.get_content_location
     templates.env.globals['get_preview_url'] = locator.get_preview_location
     templates.env.globals['get_thumbnail_url'] = locator.get_thumbnail_location
