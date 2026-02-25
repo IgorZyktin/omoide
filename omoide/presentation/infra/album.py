@@ -73,6 +73,11 @@ class Album(Generic[T]):
         return self.total_items
 
     @property
+    def current_page_number(self) -> int:
+        """Return on which page we are."""
+        return self.sequence.index(self.position) + 1
+
+    @property
     def is_fitting(self) -> bool:
         """Return True if all pages can be displayed at once."""
         return self.total_items <= self.items_on_page

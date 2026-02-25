@@ -124,4 +124,22 @@
         </div>
 
     </div>
+
+    <script>
+        function goToPageItem(elementId){
+            // Switch to chosen page
+            let element = document.getElementById(elementId)
+
+            if (!element)
+                return
+
+            let pages = {
+                {% for item in album.sequence -%}
+                    "{{ loop.index }}": "{{ request.url_for('app_preview', item_uuid=item.uuid)}}?{{ aim_wrapper.to_url_no_q() }}",
+                {% endfor %}
+            }
+
+            window.location.href = pages[element.value]
+        }
+    </script>
 {% endblock %}

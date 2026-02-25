@@ -21,5 +21,18 @@
             activateFloatingHeader()
             updateHeaderPadding()
         });
+
+        function goToPageNumber(elementId){
+            // Switch to chosen page
+            let element = document.getElementById(elementId)
+
+            if (!element)
+                return
+
+            let searchParams = new URLSearchParams(window.location.search)
+            searchParams.set('page', element.value)
+
+            reloadSearchParams(searchParams)
+        }
     </script>
 {% endblock %}

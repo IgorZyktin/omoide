@@ -1,61 +1,3 @@
-{% macro render_paginator(request, paginator, query) %}
-    {% if paginator %}
-        <div class="pages">
-            {% if paginator.has_previous %}
-                <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search')|string + query.at_page(paginator.previous_page).as_str() }}">
-                    <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
-                         alt="Previous"/>
-                </a>
-            {% else %}
-                <a class="inactive-page page-separate">
-                    <img src="{{ request.url_for('static', path='ic_chevron_left_18px.svg') }}"
-                         alt="Previous"/>
-                </a>
-            {% endif %}
-            <span>&nbsp;</span>
-
-            {% for page in paginator %}
-
-                {% if paginator.total_pages == 1 %}
-                    {% set corner_style = 'page-separate' %}
-                {% elif page.number == 1 %}
-                    {% set corner_style = 'page-left' %}
-                {% elif page.number == paginator.total_pages %}
-                    {% set corner_style = 'page-right' %}
-                {% else %}
-                    {% set corner_style = '' %}
-                {% endif %}
-
-                {% if page.is_dummy %}
-                    <a class="inactive-page {{ corner_style }}">...</a>
-                {% elif page.is_current %}
-                    <a href="{{ request.url_for('app_search')|string + query.at_page(page.number).as_str() }}"
-                       class="active-page {{ corner_style }}">{{ page.number }}</a>
-                {% else %}
-                    <a href="{{ request.url_for('app_search')|string + query.at_page(page.number).as_str() }}"
-                       class="{{ corner_style }}">{{ page.number }}</a>
-                {% endif %}
-            {% endfor %}
-
-            <span>&nbsp;</span>
-            {% if paginator.has_next %}
-                <a class="active-page page-separate"
-                   href="{{ request.url_for('app_search')|string + query.at_page(paginator.next_page).as_str() }}">
-                    <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
-                         alt="Next"/>
-                </a>
-            {% else %}
-                <a class="inactive-page page-separate">
-                    <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
-                         alt="Next"/>
-                </a>
-            {% endif %}
-        </div>
-    {% endif %}
-{% endmacro %}
-
-
 {% macro render_paginator_by_item(request, paginator, uuid, aim_wrapper) %}
     {% if paginator %}
         <div class="pages">
@@ -108,6 +50,17 @@
                     <img src="{{ request.url_for('static', path='ic_chevron_right_18px.svg') }}"
                          alt="Next"/>
                 </a>
+            {% endif %}
+
+            {% if not paginator.is_fitting %}
+                &nbsp;
+                <input id="go_to_page"
+                       type="number"
+                       min="1"
+                       max="{{ paginator.total_pages }}"
+                       class="pages-selector"
+                       value="{{ paginator.page }}">
+                <a href="javascript:void(0)" class="active-page page-right" onclick="goToPageNumber('go_to_page')">Go</a>
             {% endif %}
         </div>
     {% endif %}
@@ -169,6 +122,16 @@
                 </a>
             {% endif %}
 
+            {% if not album.is_fitting %}
+                &nbsp;
+                <input id="go_to_page"
+                       type="number"
+                       min="1"
+                       max="{{ album.total_items }}"
+                       class="pages-selector"
+                       value="{{ album.current_page_number }}">
+                <a href="javascript:void(0)" class="active-page page-right" onclick="goToPageItem('go_to_page')">Go</a>
+            {% endif %}
         </div>
     {% endif %}
 {% endmacro %}

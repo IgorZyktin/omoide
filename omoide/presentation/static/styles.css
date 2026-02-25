@@ -191,6 +191,16 @@ a:active {
     color: #ffffff;
 }
 
+.pages-selector {
+    width: 3em !important;
+    display: inline-block;
+    margin-top: var(--gap-small);
+    margin-bottom: var(--gap-small);
+    border: 1px solid #707070;
+    border-radius: var(--radius) 0 0 var(--radius);
+    text-align: center;
+}
+
 .pages {
     width: 100%;
     display: flex;
