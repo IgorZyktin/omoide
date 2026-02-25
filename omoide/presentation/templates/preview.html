@@ -37,6 +37,11 @@
 
         {{ render_album(request, album, aim_wrapper) }}
 
+        {# FIXME - show it for all items, but make sure we're not using garbage names #}
+        {% if current_item.content_ext == 'mp4' %}
+            <h3>{{ current_item.name }}</h3>
+        {% endif %}
+
         <div class="preview-image">
 
             {% if album.has_previous %}
