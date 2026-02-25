@@ -181,12 +181,13 @@ class Album(Generic[T]):
         left = self.index - self.window // 2
         right = self.index + self.window // 2 + 1
 
-        for i in range(left, right + 1):
+        for i in range(left, right):
+            page_number = i + 1
             yield PageVal(
                 value=self.sequence[i],
-                number=i + self.window // 2,
+                number=page_number,
                 is_dummy=False,
-                is_current=i + 1 == self.number,
+                is_current=page_number == self.number,
             )
 
         yield PageVal(
