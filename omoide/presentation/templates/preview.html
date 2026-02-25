@@ -51,23 +51,21 @@
 
             {# FIXME - check content type, not extension #}
             {% if current_item.content_ext == 'mp4' %}
-                <div class="preview-video">
-                    <video
-                        class="video-js"
-                        controls
-                        preload="auto"
-                        poster="{{ get_preview_url(current_item) }}"
-                        data-setup='{}'>
-                      <source src="{{ get_video_url(current_item) }}" type="video/mp4">
-                      <p class="vjs-no-js">
-                        To view this video please enable JavaScript, and consider upgrading to a
-                        web browser that
-                        <a href="https://videojs.com/html5-video-support/" target="_blank">
-                          supports HTML5 video
-                        </a>
-                      </p>
-                    </video>
-                </div>
+                <video
+                    class="video-js"
+                    controls
+                    preload="auto"
+                    poster="{{ get_preview_url(current_item) }}"
+                    data-setup='{}'>
+                  <source src="{{ get_video_url(current_item) }}" type="video/mp4">
+                  <p class="vjs-no-js">
+                    To view this video please enable JavaScript, and consider upgrading to a
+                    web browser that
+                    <a href="https://videojs.com/html5-video-support/" target="_blank">
+                      supports HTML5 video
+                    </a>
+                  </p>
+                </video>
             {% elif current_item.is_collection %}
                 <div class="envelope env-collection">
                     {%- if current_item.is_collection and current_item.name -%}
