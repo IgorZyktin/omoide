@@ -139,7 +139,9 @@
                 {% endfor %}
             }
 
-            window.location.href = pages[element.value]
+            if (Object.hasOwn(pages, element.value)) {
+                window.location.href = pages[element.value]
+            }
         }
     </script>
 {% endblock %}

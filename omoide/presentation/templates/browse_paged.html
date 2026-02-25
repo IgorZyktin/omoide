@@ -29,10 +29,13 @@
             if (!element)
                 return
 
-            let searchParams = new URLSearchParams(window.location.search)
-            searchParams.set('page', element.value)
+            const value = parseFloat(element.value);
 
-            reloadSearchParams(searchParams)
+            if (!isNaN(value) && value >= 1 && value <= {{ paginator.total_pages }}) {
+                let searchParams = new URLSearchParams(window.location.search)
+                searchParams.set('page', element.value)
+                reloadSearchParams(searchParams)
+            }
         }
     </script>
 {% endblock %}
