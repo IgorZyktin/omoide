@@ -73,7 +73,9 @@ class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
             content=response.content,
         )
 
-    def save_output_media(self, model: models.InputMedia, media_type: str) -> None:
+    def save_output_media(
+        self, model: models.InputMedia, media_type: str
+    ) -> None:
         """Save data to storage."""
         stmt = sa.insert(db_models.QueueOutputMedia).values(
             user_uuid=model.user_uuid,

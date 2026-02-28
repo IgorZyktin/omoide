@@ -68,7 +68,7 @@ def _conver_and_save_video_content(
 def _convert_and_save_video_preview(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
-    img: Image,
+    img: Image.Image,
 ) -> None:
     """Save preview."""
     model.content = _resize(img, const.PREVIEW_SIZE)
@@ -80,7 +80,7 @@ def _convert_and_save_video_preview(
 def _convert_and_save_video_thumbnail(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
-    img: Image,
+    img: Image.Image,
 ) -> None:
     """Save thumbnail."""
     model.content = _resize(img, const.THUMBNAIL_SIZE)
@@ -115,7 +115,7 @@ def _convert_and_save_static_image_content(
     database.save_output_media(model, media_type='content')
 
 
-def _resize(img: Image, size: int) -> bytes:
+def _resize(img: Image.Image, size: int) -> bytes:
     """Resize to given dimensions."""
     img = ImageOps.exif_transpose(img)
     old_width, old_height = img.size
@@ -140,7 +140,7 @@ def _resize(img: Image, size: int) -> bytes:
 def _convert_and_save_static_image_preview(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
-    img: Image,
+    img: Image.Image,
 ) -> None:
     """Save preview."""
     model.ext = 'jpg'
@@ -151,7 +151,7 @@ def _convert_and_save_static_image_preview(
 def _convert_and_save_static_image_thumbnail(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
-    img: Image,
+    img: Image.Image,
 ) -> None:
     """Save thumbnail."""
     model.ext = 'jpg'
