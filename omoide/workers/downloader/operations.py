@@ -115,9 +115,14 @@ def download_content(
         database.update_metainfo(
             item_id=item_id,
             updated_at=pu.now(),
+            content_type=model.content_type,
             content_width=content_width,
             content_height=content_height,
             content_size=len(model.content),
+        )
+        database.update_item(
+            item_id=item_id,
+            content_ext=model.ext,
         )
 
 
@@ -145,6 +150,11 @@ def download_preview(
             preview_size=len(model.content),
         )
 
+        database.update_item(
+            item_id=item_id,
+            preview_ext=model.ext,
+        )
+
 
 def download_thumbnail(
     database: DownloaderPostgreSQLDatabase,
@@ -170,6 +180,11 @@ def download_thumbnail(
             thumbnail_size=len(model.content),
         )
 
+        database.update_item(
+            item_id=item_id,
+            thumbnail_ext=model.ext,
+        )
+
 
 def download_video(
     database: DownloaderPostgreSQLDatabase,
@@ -187,10 +202,16 @@ def download_video(
             database.update_metainfo(
                 item_id=item_id,
                 updated_at=pu.now(),
+                content_type=model.content_type,
                 content_width=clip.w,
                 content_height=clip.h,
                 content_size=len(model.content),
             )
+
+        database.update_item(
+            item_id=item_id,
+            content_ext=model.ext,
+        )
 
 
 def process_exif(model: models.OutputMedia) -> models.Exif:

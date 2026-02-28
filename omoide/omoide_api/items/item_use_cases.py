@@ -447,6 +447,13 @@ class UploadItemUseCase(BaseAPIUseCase):
                 ),
             )
 
+            await self.mediator.meta.add_item_note(
+                conn,
+                item=item,
+                key='original_filename',
+                value=str(file.filename),
+            )
+
             if item.parent_id is not None:
                 parent = await self.mediator.items.get_by_id(conn, item.parent_id)
                 parent.is_collection = True

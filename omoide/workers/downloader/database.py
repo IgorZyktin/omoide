@@ -118,6 +118,7 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
         self,
         item_id: int,
         updated_at: datetime | None = None,
+        content_type: str | None = None,
         content_width: int | None = None,
         content_height: int | None = None,
         content_size: int | None = None,
@@ -131,6 +132,7 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
         """Update item metainfo."""
         raw_values = {
             'updated_at': updated_at,
+            'content_type': content_type,
             'content_width': content_width,
             'content_height': content_height,
             'content_size': content_size,
@@ -151,6 +153,34 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
                 }
             )
             .where(db_models.Metainfo.item_id == item_id)
+        )
+
+        with self.engine.begin() as conn:
+            conn.execute(stmt)
+
+    def update_item(
+        self,
+        item_id: int,
+        content_ext: str | None = None,
+        preview_ext: str | None = None,
+        thumbnail_ext: str | None = None,
+    ) -> None:
+        """Update item."""
+        raw_values = {
+            'content_ext': content_ext,
+            'preview_ext': preview_ext,
+            'thumbnail_ext': thumbnail_ext,
+        }
+        stmt = (
+            sa.update(db_models.Item)
+            .values(
+                **{
+                    key: value
+                    for key, value in raw_values.items()
+                    if value is not None
+                }
+            )
+            .where(db_models.Item.id == item_id)
         )
 
         with self.engine.begin() as conn:
