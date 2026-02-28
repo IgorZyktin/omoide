@@ -461,7 +461,6 @@ class UploadItemUseCase(BaseAPIUseCase):
                 if parent.has_incomplete_media():
                     # NOTE - temporarily setting parent metainfo,
                     # so next upload will not copy again
-                    parent.content_ext = 'tmp'
                     parent.preview_ext = 'tmp'
                     parent.thumbnail_ext = 'tmp'
                     await self.mediator.misc.save_input_media(
@@ -469,7 +468,7 @@ class UploadItemUseCase(BaseAPIUseCase):
                         media=models.InputMedia(
                             id=-1,
                             user_uuid=user.uuid,
-                            item_uuid=item.uuid,
+                            item_uuid=parent.uuid,
                             created_at=now,
                             ext='jpg' if file.ext == 'jpeg' else file.ext,
                             content_type=file.content_type,
