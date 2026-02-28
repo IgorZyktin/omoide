@@ -20,3 +20,5 @@ class WorkerDownloaderConfig(ns.BaseConfig):
     long_delay: float = 1.0
     exc_delay: float = 10.0
     input_batch: int = 10
+    workers: int = 0
+    max_workers: int = 6

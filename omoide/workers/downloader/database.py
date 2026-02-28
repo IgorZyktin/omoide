@@ -1,7 +1,5 @@
 """Storage implementation."""
 
-from collections.abc import Sequence
-
 import sqlalchemy as sa
 
 from omoide import custom_logging
@@ -15,18 +13,13 @@ LOG = custom_logging.get_logger(__name__)
 class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
     """Storage in database."""
 
-    def get_media_candidates(
-        self,
-        batch_size: int,
-        content_types: Sequence[str],
-    ) -> list[int]:
+    def get_media_candidates(self, batch_size: int) -> list[int]:
         """Return candidates to operate on."""
         query = (
             sa.select(db_models.QueueOutputMedia.id)
             .where(
                 db_models.QueueOutputMedia.lock == sa.null(),
                 db_models.QueueOutputMedia.error == sa.null(),
-                db_models.QueueOutputMedia.content_type.in_(content_types),
             )
             .order_by(db_models.QueueOutputMedia.id)
             .limit(batch_size)
