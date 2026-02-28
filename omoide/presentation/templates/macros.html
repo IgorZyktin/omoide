@@ -226,6 +226,11 @@
             <p>{{ item.name }}</p>
         {%- endif -%}
 
+        {# FIXME - find another way to check for video #}
+        {% if not item.is_collection and item.name and item.content_ext == 'mp4' %}
+            <span class="envelope-video-title">{{ item.name }}</span>
+        {%- endif -%}
+
         {%- if item.thumbnail_ext is none or item.thumbnail_ext == 'tmp' -%}
             {%- if item.status == Status.CREATED or item.thumbnail_ext == 'tmp' -%}
                 <img src="{{ request.url_for('static', path='empty.png') }}"

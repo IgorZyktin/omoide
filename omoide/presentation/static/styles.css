@@ -310,6 +310,17 @@ h1, h2, h3, h4, h5 {
     height: 100%;
 }
 
+.envelope-video-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+}
+
 .narrow-block {
     max-width: 800px;
     display: flex;

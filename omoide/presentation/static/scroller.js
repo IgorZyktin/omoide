@@ -128,6 +128,14 @@ class Scroller {
                 link.appendChild(name)
             }
 
+            // FIXME - find another way to check for video
+            if (!item.is_collection && item.name && item.content_ext === 'mp4') {
+                let label = document.createElement('span')
+                label.classList.add('envelope-video-title')
+                label.innerText = item.name
+                link.appendChild(label)
+            }
+
             let img = document.createElement('img')
             if (item.thumbnail !== undefined) {
                 // FIXME - remove this check
