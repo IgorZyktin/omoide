@@ -1,6 +1,7 @@
 """Worker configuration."""
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import nano_settings as ns
 
@@ -22,3 +23,5 @@ class WorkerDownloaderConfig(ns.BaseConfig):
     input_batch: int = 10
     workers: int = 0
     max_workers: int = 6
+    data_folder: Path = Path('.')
+    prefix_size: int = 2
