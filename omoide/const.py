@@ -18,8 +18,9 @@ DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 CONTENT: Literal['content'] = 'content'
 PREVIEW: Literal['preview'] = 'preview'
 THUMBNAIL: Literal['thumbnail'] = 'thumbnail'
-MEDIA_TYPE: TypeAlias = Literal['content', 'preview', 'thumbnail']
-MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL]
+VIDEO: Literal['video'] = 'video'
+MEDIA_TYPE: TypeAlias = Literal['content', 'preview', 'thumbnail', 'video']
+MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL, VIDEO]
 
 AUTH_COMPLEXITY = 4  # minimal
 
@@ -59,3 +60,6 @@ IMAGE_QUALITY = 80
 CONTENT_TYPE_PNG: Final = 'image/png'
 CONTENT_TYPE_JPEG: Final = 'image/jpeg'
 CONTENT_TYPE_WEBP: Final = 'image/webp'
+CONTENT_TYPE_MP4: Final = 'video/mp4'
+
+CONTENT_TYPE_IMAGES: Final = {CONTENT_TYPE_PNG, CONTENT_TYPE_JPEG, CONTENT_TYPE_WEBP}

@@ -30,6 +30,7 @@ dependencies = [
     "nano-settings>=0.1.0",
     "starlette-exporter>=0.23.0",
     "python-multipart>=0.0.20",
+    "moviepy>=2.2.1",
 ]
 
 [project.optional-dependencies]

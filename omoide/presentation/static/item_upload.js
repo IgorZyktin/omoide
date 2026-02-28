@@ -384,10 +384,17 @@ class FileCardElement {
         this.left.classList.add("upload-lines")
         this.div.append(this.left)
 
-        this.img = document.createElement("img")
-        this.img.src = URL.createObjectURL(file)
-        this.img.addEventListener("click", () => this.togglePreview())
-        this.left.append(this.img)
+        if (isVideo(file)) {
+            this.img = document.createElement("video")
+            this.img.src = URL.createObjectURL(file)
+            this.img.addEventListener("click", () => this.togglePreview())
+            this.left.append(this.img)
+        } else {
+            this.img = document.createElement("img")
+            this.img.src = URL.createObjectURL(file)
+            this.img.addEventListener("click", () => this.togglePreview())
+            this.left.append(this.img)
+        }
 
         // right side
         this.right = document.createElement("div");
@@ -416,6 +423,13 @@ class FileCardElement {
         this.progress.value = 0
         this.progress.max = 100
         this.right.append(this.progress)
+
+        if (isVideo(file)) {
+            this.nameInput = document.createElement("input")
+            this.nameInput.type = "text"
+            this.nameInput.placeholder = "Specify name"
+            this.right.append(this.nameInput)
+        }
 
         this.tagsLabel = document.createElement("label")
         this.tagsLabel.innerHTML = "Additional tags for this item (one tag per line):"
@@ -501,13 +515,19 @@ async function createItems() {
     for (let card of CARDS) {
         let localPermissions = []
         for (const uuid of [...globalPermissions, ...card.localPermissions]) {
-            localPermissions.push({uuid: uuid, name: ''})
+            localPermissions.push({uuid: uuid, name: ""})
         }
+
+        let name = ""
+        if (card.element.nameInput !== undefined){
+            name = card.element.nameInput.value
+        }
+
         arrayForSending.push({
             uuid: null,
             owner_uuid: ownerUUID,
             parent_uuid: parentUUID,
-            name: '',
+            name: name,
             is_collection: false,
             tags: [...globalTags, ...card.localTags],
             permissions: localPermissions,
@@ -572,4 +592,9 @@ async function uploadAllFiles() {
     if (document.getElementById(AFTER_UPLOAD_ID).value === 'parent') {
         relocateWithAim(`/browse/${parentUUID}`)
     }
+}
+
+function isVideo(file){
+    // Return true if file has video content
+    return file.name.endsWith(".mp4")
 }

@@ -35,5 +35,6 @@ SUPPORTED_EXTENSION = frozenset(
         'jpeg',
         'png',
         'webp',
+        'mp4',
     )
 )

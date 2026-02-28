@@ -48,7 +48,7 @@ def fix_signatures(
         int,
         typer.Option(help='Maximum amount of rows to process'),
     ] = 100,
-):
+) -> None:
     """Check that signatures correspond to files, fix if need to."""
     db_url = utils.get_env('OMOIDE_CLI__DB__URL')
     data_folder = utils.get_path('OMOIDE_CLI__DATA_FOLDER')

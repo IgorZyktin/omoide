@@ -472,6 +472,10 @@ select {
     justify-content: center;
 }
 
+.upload-lines video {
+    width: 100%;
+}
+
 .float-button-container {
     position: absolute;
     right: -4.5em;

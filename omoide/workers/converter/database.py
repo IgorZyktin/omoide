@@ -1,37 +1,18 @@
-"""Storage implementations."""
+"""Storage implementation."""
 
 from collections.abc import Sequence
 
 import sqlalchemy as sa
 
-from omoide import custom_logging
 from omoide import models
 from omoide.database import db_models
-from omoide.workers.converter.interfaces import AbsDatabase
-
-LOG = custom_logging.get_logger(__name__)
+from omoide.workers.common.database import PostgreSQLDatabase
 
 
-class PostgreSQLDatabase(AbsDatabase):
+class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
     """Storage in database."""
 
-    def __init__(self, url: str, *, echo: bool) -> None:
-        """Initialize instance."""
-        self.url = url
-        self.echo = echo
-        self.engine = sa.create_engine(url, pool_pre_ping=True, future=True)
-
-    def connect(self) -> None:
-        """Connect to database."""
-
-    def disconnect(self) -> None:
-        """Disconnect from the database."""
-        try:
-            self.engine.dispose()
-        except Exception:
-            LOG.exception('Exception while disposing database engine')
-
-    def get_media_candidates(
+    def get_input_media_candidates(
         self,
         batch_size: int,
         content_types: Sequence[str],
@@ -92,7 +73,9 @@ class PostgreSQLDatabase(AbsDatabase):
             content=response.content,
         )
 
-    def save_media(self, model: models.InputMedia, media_type: str) -> None:
+    def save_output_media(
+        self, model: models.InputMedia, media_type: str
+    ) -> None:
         """Save data to storage."""
         stmt = sa.insert(db_models.QueueOutputMedia).values(
             user_uuid=model.user_uuid,

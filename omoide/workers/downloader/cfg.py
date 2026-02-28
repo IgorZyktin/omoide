@@ -9,17 +9,19 @@ from omoide.workers.common import cfg
 
 
 @dataclass
-class WorkerConverterConfig(ns.BaseConfig):
+class WorkerDownloaderConfig(ns.BaseConfig):
     """Worker configuration."""
 
     db: cfg.Db
     log: cfg.Log
     metrics: cfg.Metrics
 
-    temp_folder: Path
-
-    name: str = 'converter-dev'
+    name: str = 'downloader-dev'
     short_delay: float = 0.0
     long_delay: float = 1.0
     exc_delay: float = 10.0
     input_batch: int = 10
+    workers: int = 0
+    max_workers: int = 6
+    data_folder: Path = Path('.')
+    prefix_size: int = 2
