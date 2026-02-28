@@ -14,7 +14,7 @@ class PostgreSQLDatabase:
         """Initialize instance."""
         self.url = url
         self.echo = echo
-        self.engine = sa.create_engine(url, pool_pre_ping=True, future=True)
+        self.engine = sa.create_engine(url, pool_pre_ping=True, future=True, echo=echo)
 
     def connect(self) -> None:
         """Connect to database."""
