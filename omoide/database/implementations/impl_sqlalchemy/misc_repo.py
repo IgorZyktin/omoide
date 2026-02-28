@@ -6,6 +6,7 @@ import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from omoide import models
 from omoide import operations
 from omoide.database import db_models
 from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo
@@ -69,6 +70,31 @@ class MiscRepo(AbsMiscRepo[AsyncConnection]):
                 processed_by=[],
             )
             .returning(db_models.ParallelOperation.id)
+        )
+
+        operation_id = (await conn.execute(stmt)).scalar()
+        return operation_id if operation_id is not None else -1
+
+    async def save_input_media(
+        self,
+        conn: AsyncConnection,
+        media: models.InputMedia,
+    ) -> int:
+        """Save media from user."""
+        stmt = (
+            sa.insert(db_models.QueueInputMedia)
+            .values(
+                user_uuid=str(media.user_uuid),
+                item_uuid=str(media.item_uuid),
+                created_at=media.created_at,
+                lock=None,
+                ext=media.ext,
+                content_type=media.content_type,
+                extras=media.extras,
+                error=media.error,
+                content=media.content,
+            )
+            .returning(db_models.QueueInputMedia.id)
         )
 
         operation_id = (await conn.execute(stmt)).scalar()

@@ -4,6 +4,8 @@ from typing import Any
 from typing import Literal
 from uuid import UUID
 
+import python_utilz as pu
+
 from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
@@ -429,26 +431,20 @@ class UploadItemUseCase(BaseAPIUseCase):
         async with self.mediator.database.transaction() as conn:
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot upload media to someone else's item")
-
-            operation_id = await self.mediator.misc.create_serial_operation(
+            now = pu.now()
+            operation_id = await self.mediator.misc.save_input_media(
                 conn=conn,
-                name='upload',
-                extras={
-                    'requested_by': str(user.uuid),
-                    'item_uuid': str(item.uuid),
-                    'content_type': file.content_type,
-                    'filename': file.filename,
-                    'ext': 'jpg' if file.ext == 'jpeg' else file.ext,
-                    'features': {
-                        'extract_exif': file.features.extract_exif,
-                        'last_modified': (
-                            file.features.last_modified.isoformat()
-                            if file.features.last_modified
-                            else None
-                        ),
-                    },
-                },
-                payload=file.content,
+                media=models.InputMedia(
+                    id=-1,
+                    user_uuid=user.uuid,
+                    item_uuid=item.uuid,
+                    created_at=now,
+                    ext='jpg' if file.ext == 'jpeg' else file.ext,
+                    content_type=file.content_type,
+                    extras={'extract_exif': file.features.extract_exif},
+                    error=None,
+                    content=file.content,
+                ),
             )
 
             if item.parent_id is not None:
@@ -461,25 +457,22 @@ class UploadItemUseCase(BaseAPIUseCase):
                     parent.content_ext = 'tmp'
                     parent.preview_ext = 'tmp'
                     parent.thumbnail_ext = 'tmp'
-                    await self.mediator.misc.create_serial_operation(
+                    await self.mediator.misc.save_input_media(
                         conn=conn,
-                        name='upload',
-                        extras={
-                            'requested_by': str(user.uuid),
-                            'item_uuid': str(parent.uuid),
-                            'content_type': file.content_type,
-                            'filename': file.filename,
-                            'ext': 'jpg' if file.ext == 'jpeg' else file.ext,
-                            'features': {
+                        media=models.InputMedia(
+                            id=-1,
+                            user_uuid=user.uuid,
+                            item_uuid=item.uuid,
+                            created_at=now,
+                            ext='jpg' if file.ext == 'jpeg' else file.ext,
+                            content_type=file.content_type,
+                            extras={
                                 'extract_exif': file.features.extract_exif,
-                                'last_modified': (
-                                    file.features.last_modified.isoformat()
-                                    if file.features.last_modified
-                                    else None
-                                ),
+                                'skip_content': True,
                             },
-                        },
-                        payload=file.content,
+                            error=None,
+                            content=file.content,
+                        ),
                     )
 
                     await self.mediator.meta.add_item_note(
