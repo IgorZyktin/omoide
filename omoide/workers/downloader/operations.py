@@ -1,6 +1,7 @@
 """Download operations."""
 
 import hashlib
+import os
 import zlib
 from io import BytesIO
 from pathlib import Path
@@ -38,12 +39,12 @@ def download_media(
         / str(model.user_uuid)
         / str(model.item_uuid)[: config.prefix_size]
     )
-    folder.mkdir(exist_ok=True)
+    os.makedirs(folder, exist_ok=True)
     path = folder / filename
 
     if path.exists():
         moment = pu.now().isoformat().replace(':', '-').replace('T', '_')
-        new_name = f'{filename}___replaced___{moment}'
+        new_name = f'replaced___{moment}___{filename}'
         new_path = folder / new_name
         path.rename(new_path)
 
@@ -69,7 +70,9 @@ def download_media(
         msg = 'Unknown media type'
         raise NameError(msg)
 
-    if the_last_one and database.fully_downloaded(item_id):
+    if the_last_one and database.is_fully_downloaded(
+        item_id, skip_content=model.extras.get('skip_content')
+    ):
         database.mark_available(item_id)
 
 
@@ -98,7 +101,7 @@ def download_content(
         content_width, content_height = img.size
 
     if the_last_one:
-        if model.extras.get('process_exif'):
+        if model.extras.get('extract_exif'):
             exif = process_exif(model)
             if exif.exif:
                 database.save_exif(item_id, exif)
@@ -109,7 +112,6 @@ def download_content(
         signature_md5 = hashlib.md5(model.content).hexdigest()
         database.save_md5_signature(item_id, signature_md5)
 
-        item_id = database.get_item_id(model.item_uuid)
         database.update_metainfo(
             item_id=item_id,
             updated_at=pu.now(),
@@ -182,12 +184,11 @@ def download_video(
 
     if the_last_one:
         with VideoFileClip(path) as clip:
-            subclip = clip.subclip(0, 5)  # first 5 seconds
             database.update_metainfo(
                 item_id=item_id,
                 updated_at=pu.now(),
-                content_width=subclip.w,
-                content_height=subclip.h,
+                content_width=clip.w,
+                content_height=clip.h,
                 content_size=len(model.content),
             )
 

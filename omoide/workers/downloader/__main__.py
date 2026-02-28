@@ -8,37 +8,20 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import nano_settings as ns
+import python_utilz as pu
 
 from omoide import custom_logging
 from omoide.infra.implementations.prometheus_metric_collector import (
     PrometheusMetricsCollector,
 )
-from omoide.infra.interfaces.abs_metrics_collector import Metric
 from omoide.workers.downloader.cfg import WorkerDownloaderConfig
 from omoide.workers.downloader.database import DownloaderPostgreSQLDatabase
 from omoide.workers.downloader import operations
+from omoide.workers.common import metrics as common_metrics
 
 LOG = custom_logging.get_logger(__name__)
 WORKING = threading.Event()
 WORKING.set()
-
-M_FILES_PROCESSED = Metric(
-    id=1,
-    name='wd_files_processed',
-    documentation='How many files we processed',
-)
-
-M_BYTES_PROCESSED = Metric(
-    id=2,
-    name='wd_bytes_processed',
-    documentation='How many bytes we processed',
-)
-
-M_ERRORS = Metric(
-    id=3,
-    name='wd_errors',
-    documentation='How many errors we got',
-)
 
 
 def signal_handler(signum: int, frame: Any) -> None:
@@ -58,7 +41,6 @@ def main() -> None:
         WorkerDownloaderConfig,
         env_prefix='omoide_worker_downloader',
     )
-    os.environ.clear()
 
     custom_logging.init_logging(
         level=config.log.level,
@@ -76,17 +58,14 @@ def main() -> None:
         echo=config.db.echo,
     )
 
-    metrics = PrometheusMetricsCollector(
-        metrics=[M_FILES_PROCESSED, M_BYTES_PROCESSED, M_ERRORS],
+    database.connect()
+    metrics_collector = common_metrics.get_metric_collector(
         address=config.metrics.address,
         port=config.metrics.port,
-        labels={
-            'name': config.name,
-        },
+        name=config.name,
+        worker_type='downloader',
     )
-
-    database.connect()
-    metrics.start()
+    metrics_collector.start()
 
     cores = config.workers or os.cpu_count() or 1
     cores = min(cores, config.max_workers)
@@ -96,7 +75,7 @@ def main() -> None:
         while WORKING.is_set():
             submitted = 0
             try:
-                candidates = database.get_media_candidates(
+                candidates = database.get_output_media_candidates(
                     batch_size=config.input_batch
                 )
 
@@ -107,7 +86,11 @@ def main() -> None:
                         continue
 
                     executor.submit(
-                        do_download, config, database, metrics, target_id
+                        do_download,
+                        config,
+                        database,
+                        metrics_collector,
+                        target_id,
                     )
                     submitted += 1
             except Exception:
@@ -120,7 +103,7 @@ def main() -> None:
                 time.sleep(config.long_delay)
     finally:
         database.disconnect()
-        metrics.stop()
+        metrics_collector.stop()
         executor.shutdown()
 
     LOG.info('Stopped downloader worker: {}', config.name)
@@ -129,27 +112,39 @@ def main() -> None:
 def do_download(
     config: WorkerDownloaderConfig,
     database: DownloaderPostgreSQLDatabase,
-    metrics: PrometheusMetricsCollector,
-    target_id: int,
+    metrics_collector: PrometheusMetricsCollector,
+    item_id: int,
 ) -> None:
     """Actually download a media."""
+    model = database.get_output_media(item_id)
     try:
-        model = database.load_media(target_id)
         operations.download_media(config, database, model)
     except Exception:
         traceback = custom_logging.capture_exception_output(
             'Failed to perform download'
         )
         database.mark_failed_and_release_lock(
-            target_id, error=traceback or '???'
+            item_id, error=traceback or '???'
         )
-        LOG.exception('Failed to download output media {}', target_id)
-        metrics.increment(M_ERRORS, 1)
+        LOG.exception(
+            'Failed to download output {} for {}, {}',
+            model.content_type,
+            model.item_uuid,
+            pu.human_readable_size(len(model.content)),
+        )
+        metrics_collector.increment(common_metrics.ERRORS, 1)
     else:
-        LOG.info('Downloaded output media {}', target_id)
-        database.delete_media(target_id)
-        metrics.increment(M_FILES_PROCESSED, 1)
-        metrics.increment(M_BYTES_PROCESSED, len(model.content))
+        LOG.info(
+            'Downloaded output {} for {}, {}',
+            model.content_type,
+            model.item_uuid,
+            pu.human_readable_size(len(model.content)),
+        )
+        database.delete_output_media(item_id)
+        metrics_collector.increment(common_metrics.FILES_PROCESSED, 1)
+        metrics_collector.increment(
+            common_metrics.BYTES_PROCESSED, len(model.content)
+        )
         del model
 
 

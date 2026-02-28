@@ -18,7 +18,7 @@ LOG = custom_logging.get_logger(__name__)
 class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
     """Storage in database."""
 
-    def get_media_candidates(self, batch_size: int) -> list[int]:
+    def get_output_media_candidates(self, batch_size: int) -> list[int]:
         """Return candidates to operate on."""
         query = (
             sa.select(db_models.QueueOutputMedia.id)
@@ -53,7 +53,7 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
 
         return bool(response.rowcount)
 
-    def load_media(self, target_id: int) -> models.OutputMedia:
+    def get_output_media(self, target_id: int) -> models.OutputMedia:
         """Load data from storage."""
         query = sa.select(db_models.QueueOutputMedia).where(
             db_models.QueueOutputMedia.id == target_id
@@ -90,7 +90,7 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
         with self.engine.begin() as conn:
             conn.execute(stmt)
 
-    def delete_media(self, target_id: int) -> None:
+    def delete_output_media(self, target_id: int) -> None:
         """Delete specific object."""
         stmt = sa.delete(db_models.QueueOutputMedia).where(
             db_models.QueueOutputMedia.id == target_id
@@ -209,13 +209,20 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
         with self.engine.begin() as conn:
             conn.execute(stmt)
 
-    def fully_downloaded(self, item_id: int) -> bool:
+    def is_fully_downloaded(self, item_id: int, *, skip_content: bool) -> bool:
         """Return True if item is downloaded."""
         query = sa.select(db_models.Metainfo).where(
             db_models.Metainfo.item_id == item_id
         )
         with self.engine.begin() as conn:
             response = conn.execute(query).one()
+
+        if skip_content:
+            return (
+                response.preview_size is not None
+                and response.thumbnail_size is not None
+            )
+
         return (
             response.content_size is not None
             and response.preview_size is not None
