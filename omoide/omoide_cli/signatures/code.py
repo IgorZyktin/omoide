@@ -36,7 +36,7 @@ def fix_missing_signatures(
             print(string)  # noqa: T201
 
 
-def _get_items_without_signatures(conn: Connection, marker: int, limit: int) -> Iterator[tuple]:
+def _get_items_without_signatures(conn: Connection, marker: int, limit: int) -> Iterator[Any]:
     """Get info from DB."""
     query = (
         sa.select(
@@ -100,10 +100,9 @@ def _update_signature(
         set_={'signature': insert_md5.excluded.signature},
     )
 
-    crc32 = crc32 or zlib.crc32(path.read_bytes())
     insert_crc32 = pg_insert(db_models.SignatureCRC32).values(
         item_id=item_id,
-        signature=crc32,
+        signature=crc32 or zlib.crc32(path.read_bytes()),
     )
     stmt_crc32 = insert_crc32.on_conflict_do_update(
         index_elements=[db_models.SignatureCRC32.item_id],
@@ -127,9 +126,9 @@ def fix_mismatching_signatures(
 
     id_ = None
     with engine.begin() as conn:
-        for id_, user_uuid, item_uuid, ext, md5, crc32, dt, size in _get_all_signatures(conn,
-                                                                                        marker,
-                                                                                        limit):
+        for id_, user_uuid, item_uuid, ext, md5, crc32, dt, size in _get_all_signatures(
+            conn, marker, limit
+        ):
             path = utils.get_content_path(data_folder, user_uuid, item_uuid, ext)
             real_md5 = hashlib.md5(path.read_bytes()).hexdigest()
             real_crc32 = zlib.crc32(path.read_bytes())
@@ -176,7 +175,7 @@ def fix_mismatching_signatures(
     return diff
 
 
-def _get_all_signatures(conn: Connection, marker: int, limit: int) -> Iterator[tuple]:
+def _get_all_signatures(conn: Connection, marker: int, limit: int) -> Iterator[Any]:
     """Get info from DB."""
     query = (
         sa.select(
