@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from collections.abc import Iterator
 import datetime
 from itertools import zip_longest
+from pathlib import Path
 import re
 from typing import Any
 from typing import TypeVar
@@ -101,3 +102,14 @@ def parse_tags(query: str) -> tuple[set[str], set[str]]:
             tags_exclude.add(_tag)
 
     return tags_include, tags_exclude
+
+
+def get_content_path(
+    root: Path,
+    user_uuid: UUID | str,
+    item_uuid: UUID | str,
+    ext: str,
+    prefix_size: int = 2,
+) -> Path:
+    """Return path to the content file."""
+    return root / 'content' / str(user_uuid) / str(item_uuid)[:prefix_size] / f'{item_uuid}.{ext}'
