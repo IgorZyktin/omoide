@@ -229,6 +229,7 @@
         {# FIXME - find another way to check for video #}
         {% if not item.is_collection and item.name and item.content_ext == 'mp4' %}
             <span class="envelope-video-title">{{ item.name }}</span>
+            <div class="triangle-overlay"></div>
         {%- endif -%}
 
         {%- if item.thumbnail_ext is none or item.thumbnail_ext == 'tmp' -%}

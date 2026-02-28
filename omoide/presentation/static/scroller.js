@@ -134,6 +134,9 @@ class Scroller {
                 label.classList.add('envelope-video-title')
                 label.innerText = item.name
                 link.appendChild(label)
+                let sign = document.createElement('div')
+                sign.classList.add('triangle-overlay')
+                link.appendChild(sign)
             }
 
             let img = document.createElement('img')

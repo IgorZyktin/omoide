@@ -321,6 +321,18 @@ h1, h2, h3, h4, h5 {
     font-size: 18px;
 }
 
+.triangle-overlay {
+    position: absolute;
+    top: calc(50% - 80px);
+    right: calc(50% + 10px);
+    width: 0;
+    height: 0;
+    border-left: 60px solid transparent;
+    border-bottom: 60px solid rgba(243, 243, 243, 0.51); /* Red triangle */
+    border-top: 60px solid transparent;
+    transform: rotate(-45deg);
+}
+
 .narrow-block {
     max-width: 800px;
     display: flex;
