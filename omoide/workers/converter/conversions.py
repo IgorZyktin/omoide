@@ -51,8 +51,8 @@ def convert_video(
                 first_frame = clip.get_frame(0)
                 img = Image.fromarray(first_frame)
 
-                _convert_and_save_video_preview(database, model, img)
-                _convert_and_save_video_thumbnail(database, model, img)
+                _convert_and_save_static_image_preview(database, model, img)
+                _convert_and_save_static_image_thumbnail(database, model, img)
     finally:
         tmp_path.unlink(missing_ok=True)
 
@@ -63,30 +63,6 @@ def _conver_and_save_video_content(
 ) -> None:
     """Save content."""
     database.save_output_media(model, media_type='video')
-
-
-def _convert_and_save_video_preview(
-    database: ConverterPostgreSQLDatabase,
-    model: models.InputMedia,
-    img: Image.Image,
-) -> None:
-    """Save preview."""
-    model.content = _resize(img, const.PREVIEW_SIZE)
-    model.ext = 'jpg'
-    model.content_type = 'image/jpeg'
-    database.save_output_media(model, media_type='preview')
-
-
-def _convert_and_save_video_thumbnail(
-    database: ConverterPostgreSQLDatabase,
-    model: models.InputMedia,
-    img: Image.Image,
-) -> None:
-    """Save thumbnail."""
-    model.content = _resize(img, const.THUMBNAIL_SIZE)
-    model.ext = 'jpg'
-    model.content_type = 'image/jpeg'
-    database.save_output_media(model, media_type='thumbnail')
 
 
 def get_new_image_dimensions(
@@ -143,9 +119,18 @@ def _convert_and_save_static_image_preview(
     img: Image.Image,
 ) -> None:
     """Save preview."""
-    model.ext = 'jpg'
-    model.content = _resize(img, const.PREVIEW_SIZE)
-    database.save_output_media(model, media_type='preview')
+    new_model = models.InputMedia(
+        id=1,
+        user_uuid=model.user_uuid,
+        item_uuid=model.item_uuid,
+        created_at=model.created_at,
+        ext='jpg',
+        content_type='image/jpeg',
+        extras=model.extras,
+        error=model.error,
+        content=_resize(img, const.PREVIEW_SIZE),
+    )
+    database.save_output_media(new_model, media_type='preview')
 
 
 def _convert_and_save_static_image_thumbnail(
@@ -154,9 +139,18 @@ def _convert_and_save_static_image_thumbnail(
     img: Image.Image,
 ) -> None:
     """Save thumbnail."""
-    model.ext = 'jpg'
-    model.content = _resize(img, const.THUMBNAIL_SIZE)
-    database.save_output_media(model, media_type='thumbnail')
+    new_model = models.InputMedia(
+        id=1,
+        user_uuid=model.user_uuid,
+        item_uuid=model.item_uuid,
+        created_at=model.created_at,
+        ext='jpg',
+        content_type='image/jpeg',
+        extras=model.extras,
+        error=model.error,
+        content=_resize(img, const.THUMBNAIL_SIZE),
+    )
+    database.save_output_media(new_model, media_type='thumbnail')
 
 
 CONVERTERS: dict[str, Callable] = {
