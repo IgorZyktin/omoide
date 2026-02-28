@@ -1,7 +1,6 @@
 """Media conversion operations."""
 
 import math
-import tempfile
 from collections.abc import Callable
 from io import BytesIO
 from typing import Final
@@ -24,9 +23,14 @@ def convert_static_image(
 ) -> None:
     """Convert image (without animation)."""
     _ = config
-    _convert_and_save_static_image_content(database, model)
-    _convert_and_save_static_image_preview(database, model)
-    _convert_and_save_static_image_thumbnail(database, model)
+
+    if not model.extras.get('skip_content'):
+        _convert_and_save_static_image_content(database, model)
+
+    stream = BytesIO(model.content)
+    with Image.open(stream) as img:
+        _convert_and_save_static_image_preview(database, model, img)
+        _convert_and_save_static_image_thumbnail(database, model, img)
 
 
 def convert_video(
@@ -35,55 +39,54 @@ def convert_video(
     model: models.InputMedia,
 ) -> None:
     """Convert video."""
-    _ = config
-    database.save_media(model, media_type='video')
+    if not model.extras.get('skip_content'):
+        _conver_and_save_video_content(database, model)
 
-    with tempfile.NamedTemporaryFile(suffix='.mp4') as temp_file:
-        temp_file.write(model.content)
-        with VideoFileClip(temp_file.name) as clip:
-            first_frame = clip.get_frame(0)
-            img = Image.fromarray(first_frame)
+    tmp_path = config.temp_folder / f'{model.item_uuid}.{model.ext}'
 
-            old_width, old_height = img.size
-            new_width, new_height = get_new_image_dimensions(
-                old_width, old_height, const.PREVIEW_SIZE
-            )
-            preview = img.resize((new_width, new_height))
-            preview = preview.convert('RGB')
-            preview = preview.filter(ImageFilter.SHARPEN)
+    try:
+        with open(tmp_path, mode='wb') as file:
+            file.write(model.content)
+            with VideoFileClip(tmp_path) as clip:
+                first_frame = clip.get_frame(0)
+                img = Image.fromarray(first_frame)
 
-            buffer = BytesIO()
-            preview.save(
-                buffer,
-                'JPEG',
-                quality=const.IMAGE_QUALITY,
-                optimize=True,
-            )
-            preview_data = buffer.getvalue()
-            model.content = preview_data
-            model.ext = 'jpg'
-            model.content_type = 'image/jpeg'
-            database.save_media(model, media_type='preview')
+                _convert_and_save_video_preview(database, model, img)
+                _convert_and_save_video_thumbnail(database, model, img)
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
-            new_width, new_height = get_new_image_dimensions(
-                old_width, old_height, const.THUMBNAIL_SIZE
-            )
-            thumbnail = img.resize((new_width, new_height))
-            thumbnail = thumbnail.convert('RGB')
-            thumbnail = thumbnail.filter(ImageFilter.SHARPEN)
 
-            buffer = BytesIO()
-            thumbnail.save(
-                buffer,
-                'JPEG',
-                quality=const.IMAGE_QUALITY,
-                optimize=True,
-            )
-            thumbnail_data = buffer.getvalue()
-            model.content = thumbnail_data
-            model.ext = 'jpg'
-            model.content_type = 'image/jpeg'
-            database.save_media(model, media_type='thumbnail')
+def _conver_and_save_video_content(
+    database: ConverterPostgreSQLDatabase,
+    model: models.InputMedia,
+) -> None:
+    """Save content."""
+    database.save_output_media(model, media_type='video')
+
+
+def _convert_and_save_video_preview(
+    database: ConverterPostgreSQLDatabase,
+    model: models.InputMedia,
+    img: Image,
+) -> None:
+    """Save preview."""
+    model.content = _resize(img, const.PREVIEW_SIZE)
+    model.ext = 'jpg'
+    model.content_type = 'image/jpeg'
+    database.save_output_media(model, media_type='preview')
+
+
+def _convert_and_save_video_thumbnail(
+    database: ConverterPostgreSQLDatabase,
+    model: models.InputMedia,
+    img: Image,
+) -> None:
+    """Save thumbnail."""
+    model.content = _resize(img, const.THUMBNAIL_SIZE)
+    model.ext = 'jpg'
+    model.content_type = 'image/jpeg'
+    database.save_output_media(model, media_type='thumbnail')
 
 
 def get_new_image_dimensions(
@@ -109,53 +112,51 @@ def _convert_and_save_static_image_content(
     model: models.InputMedia,
 ) -> None:
     """Save content."""
-    database.save_media(model, media_type='content')
+    database.save_output_media(model, media_type='content')
 
 
-def _resize(content: bytes, size: int) -> bytes:
+def _resize(img: Image, size: int) -> bytes:
     """Resize to given dimensions."""
-    stream = BytesIO(content)
+    img = ImageOps.exif_transpose(img)
+    old_width, old_height = img.size
+    new_width, new_height = get_new_image_dimensions(
+        old_width, old_height, size
+    )
+    new_img = img.resize((new_width, new_height))
+    new_img = new_img.convert('RGB')
+    new_img = new_img.filter(ImageFilter.SHARPEN)
 
-    with Image.open(stream) as original_image:
-        img = ImageOps.exif_transpose(original_image)
-        old_width, old_height = img.size
-        new_width, new_height = get_new_image_dimensions(
-            old_width, old_height, size
-        )
-        new_img = img.resize((new_width, new_height))
-        new_img = new_img.convert('RGB')
-        new_img = new_img.filter(ImageFilter.SHARPEN)
-
-        buffer = BytesIO()
-        new_img.save(
-            buffer,
-            'JPEG',
-            quality=const.IMAGE_QUALITY,
-            optimize=True,
-        )
-        new_payload = buffer.getvalue()
-
+    buffer = BytesIO()
+    new_img.save(
+        buffer,
+        'JPEG',
+        quality=const.IMAGE_QUALITY,
+        optimize=True,
+    )
+    new_payload = buffer.getvalue()
     return new_payload
 
 
 def _convert_and_save_static_image_preview(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
+    img: Image,
 ) -> None:
     """Save preview."""
     model.ext = 'jpg'
-    model.content = _resize(model.content, const.PREVIEW_SIZE)
-    database.save_media(model, media_type='preview')
+    model.content = _resize(img, const.PREVIEW_SIZE)
+    database.save_output_media(model, media_type='preview')
 
 
 def _convert_and_save_static_image_thumbnail(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
+    img: Image,
 ) -> None:
     """Save thumbnail."""
     model.ext = 'jpg'
-    model.content = _resize(model.content, const.THUMBNAIL_SIZE)
-    database.save_media(model, media_type='thumbnail')
+    model.content = _resize(img, const.THUMBNAIL_SIZE)
+    database.save_output_media(model, media_type='thumbnail')
 
 
 CONVERTERS: dict[str, Callable] = {

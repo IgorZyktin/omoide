@@ -1,6 +1,7 @@
 """Worker configuration."""
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import nano_settings as ns
 
@@ -14,6 +15,8 @@ class WorkerConverterConfig(ns.BaseConfig):
     db: cfg.Db
     log: cfg.Log
     metrics: cfg.Metrics
+
+    temp_folder: Path
 
     name: str = 'converter-dev'
     short_delay: float = 0.0

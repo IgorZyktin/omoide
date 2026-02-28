@@ -4,18 +4,15 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 
-from omoide import custom_logging
 from omoide import models
 from omoide.database import db_models
 from omoide.workers.common.database import PostgreSQLDatabase
-
-LOG = custom_logging.get_logger(__name__)
 
 
 class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
     """Storage in database."""
 
-    def get_media_candidates(
+    def get_input_media_candidates(
         self,
         batch_size: int,
         content_types: Sequence[str],
@@ -76,7 +73,7 @@ class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
             content=response.content,
         )
 
-    def save_media(self, model: models.InputMedia, media_type: str) -> None:
+    def save_output_media(self, model: models.InputMedia, media_type: str) -> None:
         """Save data to storage."""
         stmt = sa.insert(db_models.QueueOutputMedia).values(
             user_uuid=model.user_uuid,
