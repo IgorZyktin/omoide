@@ -36,7 +36,7 @@ def download_media(
         config.data_folder
         / model.media_type
         / str(model.user_uuid)
-        / str(model.item_uuid)[:config.prefix_size]
+        / str(model.item_uuid)[: config.prefix_size]
     )
     folder.mkdir(exist_ok=True)
     path = folder / filename
@@ -50,13 +50,21 @@ def download_media(
     item_id = database.get_item_id(model.item_uuid)
 
     if model.media_type == const.CONTENT:
-        download_content(database, model, path, item_id, the_last_one=the_last_one)
+        download_content(
+            database, model, path, item_id, the_last_one=the_last_one
+        )
     elif model.media_type == const.PREVIEW:
-        download_preview(database, model, path, item_id, the_last_one=the_last_one)
+        download_preview(
+            database, model, path, item_id, the_last_one=the_last_one
+        )
     elif model.media_type == const.THUMBNAIL:
-        download_thumbnail(database, model, path, item_id, the_last_one=the_last_one)
+        download_thumbnail(
+            database, model, path, item_id, the_last_one=the_last_one
+        )
     elif model.media_type == const.VIDEO:
-        download_video(database, model, path, item_id, the_last_one=the_last_one)
+        download_video(
+            database, model, path, item_id, the_last_one=the_last_one
+        )
     else:
         msg = 'Unknown media type'
         raise NameError(msg)
@@ -211,7 +219,9 @@ def process_exif(model: models.OutputMedia) -> models.Exif:
                         or ExifTags.TAGS.get(nested_key, None)
                         or nested_key
                     )
-                    exif[ifd_tag_name][cast(nested_tag_name)] = cast(nested_value)
+                    exif[ifd_tag_name][cast(nested_tag_name)] = cast(
+                        nested_value
+                    )
 
             else:
                 exif[cast(ExifTags.TAGS.get(tag_code))] = cast(value)

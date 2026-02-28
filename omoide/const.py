@@ -60,3 +60,4 @@ IMAGE_QUALITY = 80
 CONTENT_TYPE_PNG: Final = 'image/png'
 CONTENT_TYPE_JPEG: Final = 'image/jpeg'
 CONTENT_TYPE_WEBP: Final = 'image/webp'
+CONTENT_TYPE_MP4: Final = 'video/mp4'

@@ -101,16 +101,18 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
 
     def get_item_id(self, item_uuid: UUID) -> int:
         """Return id."""
-        query = sa.select(db_models.Item.id).where(db_models.Item.uuid == item_uuid)
+        query = sa.select(db_models.Item.id).where(
+            db_models.Item.uuid == item_uuid
+        )
 
         with self.engine.begin() as conn:
-            item_id = conn.execute(query).one()
+            response = conn.execute(query).one()
 
-            if item_id is None:
+            if response is None:
                 msg = f'Item {item_uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg)
 
-        return item_id
+        return int(response.id)
 
     def update_metainfo(
         self,
@@ -139,10 +141,16 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
             'thumbnail_height': thumbnail_height,
             'thumbnail_size': thumbnail_size,
         }
-        stmt = sa.update(db_models.Metainfo).values(
-            **{key: value for key, value in raw_values.items() if value is not None}
-        ).where(
-            db_models.Metainfo.item_id == item_id
+        stmt = (
+            sa.update(db_models.Metainfo)
+            .values(
+                **{
+                    key: value
+                    for key, value in raw_values.items()
+                    if value is not None
+                }
+            )
+            .where(db_models.Metainfo.item_id == item_id)
         )
 
         with self.engine.begin() as conn:
@@ -203,7 +211,9 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
 
     def fully_downloaded(self, item_id: int) -> bool:
         """Return True if item is downloaded."""
-        query = sa.select(db_models.Metainfo).where(db_models.Metainfo.item_id==item_id)
+        query = sa.select(db_models.Metainfo).where(
+            db_models.Metainfo.item_id == item_id
+        )
         with self.engine.begin() as conn:
             response = conn.execute(query).one()
         return (
@@ -214,10 +224,12 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
 
     def mark_available(self, item_id: int) -> None:
         """Mark item as available."""
-        stmt = sa.update(db_models.Item).values(
-            status=models.Status.AVAILABLE,
-        ).where(
-            db_models.Item.id == item_id
+        stmt = (
+            sa.update(db_models.Item)
+            .values(
+                status=models.Status.AVAILABLE,
+            )
+            .where(db_models.Item.id == item_id)
         )
 
         with self.engine.begin() as conn:
