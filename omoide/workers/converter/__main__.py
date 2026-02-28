@@ -2,6 +2,7 @@
 
 import os
 import signal
+import threading
 import time
 from typing import Any
 
@@ -17,7 +18,8 @@ from omoide.workers.converter.cfg import WorkerConverterConfig
 from omoide.workers.converter.database import ConverterPostgreSQLDatabase
 
 LOG = custom_logging.get_logger(__name__)
-WORKING = True
+WORKING = threading.Event()
+WORKING.set()
 
 M_FILES_PROCESSED = Metric(
     id=1,
@@ -41,13 +43,12 @@ M_ERRORS = Metric(
 def signal_handler(signum: int, frame: Any) -> None:
     """Handle shutdown signals."""
     _ = frame
-    global WORKING  # noqa: PLW0603
     LOG.warning(
         'Received signal {signame} ({signum}). Shutting down gracefully...',
         signame=signal.strsignal(signum),
         signum=signum,
     )
-    WORKING = False
+    WORKING.clear()
 
 
 def main() -> None:
@@ -86,20 +87,21 @@ def main() -> None:
     database.connect()
     metrics.start()
 
-    while WORKING:
-        try:
-            done_something = do_work(config, database, metrics)
-        except Exception:
-            LOG.exception('Failed to perform work cycle')
-            time.sleep(config.exc_delay)
-        else:
-            if done_something:
-                time.sleep(config.short_delay)
+    try:
+        while WORKING.is_set():
+            try:
+                done_something = do_work(config, database, metrics)
+            except Exception:
+                LOG.exception('Failed to perform work cycle')
+                time.sleep(config.exc_delay)
             else:
-                time.sleep(config.long_delay)
-
-    database.disconnect()
-    metrics.stop()
+                if done_something:
+                    time.sleep(config.short_delay)
+                else:
+                    time.sleep(config.long_delay)
+    finally:
+        database.disconnect()
+        metrics.stop()
 
     LOG.info('Stopped converter worker: {}', config.name)
 
