@@ -229,7 +229,7 @@ class Item(OmoideModel):
     @property
     def is_video(self) -> bool:
         """Return True if item has video content."""
-        return self.content_ext == 'mp4' or self.content_ext == 'webm'
+        return self.content_ext in ('mp4', 'webm')
 
     def get_computed_tags(self, parent_name: str, parent_tags: set[str]) -> set[str]:
         """Return computed tags.

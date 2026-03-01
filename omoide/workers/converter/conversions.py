@@ -53,7 +53,9 @@ def convert_video(
                 img = Image.fromarray(first_frame)
 
                 if not model.extras.get('skip_preview'):
-                    _convert_and_save_static_image_preview(database, model, img)
+                    _convert_and_save_static_image_preview(
+                        database, model, img
+                    )
                 _convert_and_save_static_image_thumbnail(database, model, img)
     finally:
         tmp_path.unlink(missing_ok=True)

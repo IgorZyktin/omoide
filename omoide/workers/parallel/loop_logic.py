@@ -3,12 +3,10 @@
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-from uuid import UUID
 
 import python_utilz as pu
 
 from omoide import custom_logging
-from omoide import models
 from omoide import operations
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
 from omoide.workers.parallel.mediator import ParallelWorkerMediator

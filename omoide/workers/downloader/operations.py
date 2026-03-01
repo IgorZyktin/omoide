@@ -72,8 +72,8 @@ def download_media(
 
     if the_last_one and database.is_fully_downloaded(
         item_id,
-        skip_content=model.extras.get('skip_content'),
-        skip_preview=model.extras.get('skip_preview'),
+        skip_content=bool(model.extras.get('skip_content')),
+        skip_preview=bool(model.extras.get('skip_preview')),
     ):
         database.mark_item_available(item_id)
 
