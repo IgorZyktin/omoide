@@ -293,7 +293,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             )
             owner = await self.mediator.users.get_by_id(conn, item.owner_id)
 
-        if new_parent.has_incomplete_media():
+        if new_parent.thumbnail_ext is None:
             media_types = await self.mediator.object_storage.copy_all_objects(
                 requested_by=user,
                 owner=owner,
@@ -458,7 +458,7 @@ class UploadItemUseCase(BaseAPIUseCase):
                 parent = await self.mediator.items.get_by_id(conn, item.parent_id)
                 parent.is_collection = True
 
-                if parent.has_incomplete_media():
+                if parent.thumbnail_ext is None:
                     # NOTE - temporarily setting parent metainfo,
                     # so next upload will not copy again
                     parent.preview_ext = 'tmp'
@@ -475,6 +475,7 @@ class UploadItemUseCase(BaseAPIUseCase):
                             extras={
                                 'extract_exif': file.features.extract_exif,
                                 'skip_content': True,
+                                'skip_preview': True,
                             },
                             error=None,
                             content=file.content,

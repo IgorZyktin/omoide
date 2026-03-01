@@ -226,9 +226,10 @@ class Item(OmoideModel):
             return f'<Item id={self.id} {self.uuid} {self.name}>'
         return f'<Item id={self.id} {self.uuid}>'
 
-    def has_incomplete_media(self) -> bool:
-        """Return True if not media types are present for this item."""
-        return self.preview_ext is None or self.thumbnail_ext is None
+    @property
+    def is_video(self) -> bool:
+        """Return True if item has video content."""
+        return self.content_ext == 'mp4' or self.content_ext == 'webm'
 
     def get_computed_tags(self, parent_name: str, parent_tags: set[str]) -> set[str]:
         """Return computed tags.

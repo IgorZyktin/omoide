@@ -457,3 +457,9 @@ function getPreviewUrl(item) {
     }
     return `/preview/${item.uuid}` + '?' + searchParams.toString()
 }
+
+
+function itemIsVideo(item) {
+    // Return true if item has video content
+    return item.content_ext === 'mp4' || item.content_ext === 'webm'
+}

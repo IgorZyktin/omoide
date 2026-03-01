@@ -384,7 +384,7 @@ class FileCardElement {
         this.left.classList.add("upload-lines")
         this.div.append(this.left)
 
-        if (isVideo(file)) {
+        if (isVideoFile(file)) {
             this.img = document.createElement("video")
             this.img.src = URL.createObjectURL(file)
             this.img.addEventListener("click", () => this.togglePreview())
@@ -424,7 +424,7 @@ class FileCardElement {
         this.progress.max = 100
         this.right.append(this.progress)
 
-        if (isVideo(file)) {
+        if (isVideoFile(file)) {
             this.nameInput = document.createElement("input")
             this.nameInput.type = "text"
             this.nameInput.placeholder = "Specify name"
@@ -594,7 +594,7 @@ async function uploadAllFiles() {
     }
 }
 
-function isVideo(file){
+function isVideoFile(file){
     // Return true if file has video content
-    return file.name.endsWith(".mp4")
+    return file.name.endsWith('.mp4') || file.name.endsWith('.webm')
 }

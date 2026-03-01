@@ -37,8 +37,7 @@
 
         {{ render_album(request, album, aim_wrapper) }}
 
-        {# FIXME - show it for all items, but make sure we're not using garbage names #}
-        {% if current_item.content_ext == 'mp4' %}
+        {% if current_item.is_video %}
             <h3>{{ current_item.name }}</h3>
         {% endif %}
 
@@ -54,8 +53,7 @@
                 <a class="preview-swipe preview-swipe-inactive">&nbsp;</a>
             {% endif %}
 
-            {# FIXME - check content type, not extension #}
-            {% if current_item.content_ext == 'mp4' %}
+            {% if current_item.is_video %}
                 <div class="preview-video">
                     <video
                         class="video-js vjs-fill"
@@ -63,7 +61,7 @@
                         preload="auto"
                         poster="{{ get_preview_url(current_item) }}"
                         data-setup='{}'>
-                      <source src="{{ get_video_url(current_item) }}" type="video/mp4">
+                      <source src="{{ get_video_url(current_item) }}" type="{{ metainfo.content_type }}">
                       <p class="vjs-no-js">
                         To view this video please enable JavaScript, and consider upgrading to a
                         web browser that

@@ -29,7 +29,8 @@ def convert_static_image(
 
     stream = BytesIO(model.content)
     with Image.open(stream) as img:
-        _convert_and_save_static_image_preview(database, model, img)
+        if not model.extras.get('skip_preview'):
+            _convert_and_save_static_image_preview(database, model, img)
         _convert_and_save_static_image_thumbnail(database, model, img)
 
 
@@ -51,7 +52,8 @@ def convert_video(
                 first_frame = clip.get_frame(0)
                 img = Image.fromarray(first_frame)
 
-                _convert_and_save_static_image_preview(database, model, img)
+                if not model.extras.get('skip_preview'):
+                    _convert_and_save_static_image_preview(database, model, img)
                 _convert_and_save_static_image_thumbnail(database, model, img)
     finally:
         tmp_path.unlink(missing_ok=True)
@@ -158,6 +160,7 @@ CONVERTERS: dict[str, Callable] = {
     const.CONTENT_TYPE_JPEG: convert_static_image,
     const.CONTENT_TYPE_WEBP: convert_static_image,
     const.CONTENT_TYPE_MP4: convert_video,
+    const.CONTENT_TYPE_WEBM: convert_video,
 }
 
 SUPPORTED_CONTENT_TYPES: Final = tuple(frozenset(CONVERTERS.keys()))
