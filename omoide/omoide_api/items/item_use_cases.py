@@ -373,7 +373,9 @@ class DeleteItemUseCase(BaseItemUseCase):
 
             if desired_switch == 'sibling':
                 siblings = await self.mediator.items.get_siblings(conn, item, collections=False)
-                if len(siblings) > 1:
+                if item not in siblings:
+                    desired_switch = 'parent'
+                elif len(siblings) > 1:
                     index = siblings.index(item)
                     last = len(siblings) - 1
 
