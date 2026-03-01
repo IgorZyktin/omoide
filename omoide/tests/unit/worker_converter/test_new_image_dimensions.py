@@ -2,7 +2,7 @@
 
 import pytest
 
-from omoide.workers.serial.use_cases.upload_use_cases import get_new_image_dimensions
+from omoide.workers.converter.conversions import get_new_image_dimensions
 
 
 @pytest.mark.parametrize(
