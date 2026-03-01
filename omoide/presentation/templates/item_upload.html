@@ -67,7 +67,10 @@
                 {%- for user in users_with_permission -%}
                     {{ user.uuid | string + ' ' + user.name + '\n' }}{% endfor -%}</textarea>
         </label>
-
+        <div>
+            <input type="checkbox" id="feature-scan-name">
+            <label for="feature-scan-name">Try getting date from filename</label>
+        </div>
         <div>
             <input type="checkbox" id="feature-exif" onchange="toggleExif(this)">
             <label for="feature-exif">Extract EXIF info</label>

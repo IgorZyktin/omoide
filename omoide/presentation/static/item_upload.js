@@ -3,6 +3,7 @@ let ALL_TAGS = {
     foo: 0
 }
 
+const FEATURE_SCAN_NAME = "feature-scan-name"
 const FEATURE_EXIF_ID = "feature-exif"
 const ALL_FEATURES_EXIF_ID = "all-features-exif"
 const FEATURE_EXIF_TIME_BACKOFF_ID = "feature-exif-time-backoff"
@@ -97,6 +98,49 @@ function extractDatetime(rawString) {
     return rawString
 }
 
+function extractDateTimeFromFilename(filename) {
+    // Try to extract datetime from filename
+    if (!filename)
+        return null
+
+    let match
+    let year
+    let month
+    let day
+
+    // Regular expression to match the format PXL_YYYYMMDD_*
+    const pixelFormat = /^PXL_(\d{8})_.*/i;
+    // Regular expression to match the format VID_YYYYMMDD_*
+    const vidFormat = /^VID_(\d{8})_.*/i;
+    // Regular expression to match the format YYYY-MM-DD_*
+    const simpleFormat = /^(\d{4})-(\d{2})-(\d{2}).*/i;
+
+    match = filename.match(pixelFormat);
+    if (!match) {
+        match = filename.match(vidFormat);
+    }
+
+    if (match) {
+        year = match[1].slice(0, 4)
+        month = match[1].slice(4, 6)
+        day = match[1].slice(6, 9)
+        return `${year}-${month}-${day}`
+    }
+
+    if (!match) {
+        match = filename.match(simpleFormat);
+    }
+
+    if (match) {
+        year = match[1]
+        month = match[2]
+        day = match[3]
+        return `${year}-${month}-${day}`
+    }
+
+    return null
+}
+
 function extractYearNumberStr(string) {
     // get year from textual DateTime
     return string.slice(0, 4)
@@ -169,12 +213,16 @@ function splitLines(text) {
 
 function getFeatures() {
     // Read feature checkboxes and return their values
+    let features = {};
+    let scanName = document.getElementById(FEATURE_SCAN_NAME)
+    features["scan_name"] = scanName.checked
+
     let exif = document.getElementById(FEATURE_EXIF_ID)
 
     if (!exif.checked)
-        return {}
+        return features
 
-    let features = {extract_exif: true}
+    features["extract_exif"] = true
 
     let exifTimeBackoff = document.getElementById(FEATURE_EXIF_TIME_BACKOFF_ID)
     if (!exifTimeBackoff.disabled)
@@ -219,11 +267,23 @@ async function addNewFiles(source, parentUUid) {
     for (let file of Object.values(source.files)) {
         let tags = []
         let exif
+        let dt
+
+        if (features.scan_name) {
+            // FIXME - customize possible variants of extraction
+            dt = extractDateTimeFromFilename(file.name)
+
+            if (dt) {
+                tags.push(extractMonthRU(dt))
+                tags.push(extractYearNumberStr(dt))
+            }
+        }
+
         if (features.extract_exif) {
             await extractEXIFTags(file).then(function (result) {
                 exif = result
             })
-            let dt = extractDatetime(exif['DateTimeOriginal'])
+            dt = extractDatetime(exif['DateTimeOriginal'])
 
             if (!dt && features.exif_time_backoff) {
                 dt = new Date(file.lastModified).toISOString()
