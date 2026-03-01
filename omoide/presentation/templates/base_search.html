@@ -109,72 +109,6 @@
             {# ------------------------------------------------------------- #}
         </div>
 
-        {% if user.is_not_anon %}
-            <div class="menu-container">
-                {% if current_item %}
-                    {% set parent_hint = current_item.uuid | string %}
-                {% else %}
-                    {% set parent_hint = user.extras.root_item_uuid %}
-                {% endif %}
-
-                <a href="{{ request.url_for('app_create_item', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   title="{{ _('Create new item') }}"
-                   class="button">
-                    <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
-                         class="invert icon-header"
-                         alt="{{ _('Create new item') }}"/>
-                    <span>{{ _('Create') }}</span>
-                </a>
-
-                <a href="{{ request.url_for('app_upload', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                   title="{{ _('Upload media') }}"
-                   class="button">
-                    <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"
-                         class="invert icon-header"
-                         alt="{{ _('Upload media') }}"/>
-                    <span>{{ _('Upload') }}</span>
-                </a>
-
-                {% if current_item and current_item.owner_uuid | string == user.uuid | string %}
-                    <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="{{ _('Edit current item') }}"
-                       class="button">
-                        <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
-                             class="invert icon-header"
-                             alt="{{ _('Edit current item') }}"/>
-                        <span>{{ _('Edit') }}</span>
-                    </a>
-
-                    <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="{{ _('Delete current item') }}"
-                       class="button">
-                        <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
-                             class="invert icon-header"
-                             alt="{{ _('Delete current item') }}"/>
-                        <span>{{ _('Delete') }}</span>
-                    </a>
-                {% else %}
-                    <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="{{ _('Edit current item') }}"
-                       class="button-disabled">
-                        <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
-                             class="invert icon-header"
-                             alt="{{ _('Edit current item') }}"/>
-                        <span>{{ _('Edit') }}</span>
-                    </a>
-
-                    <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
-                       title="{{ _('Delete current item') }}"
-                       class="button-disabled">
-                        <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
-                             class="invert icon-header"
-                             alt="{{ _('Delete current item') }}"/>
-                        <span>{{ _('Delete') }}</span>
-                    </a>
-                {% endif %}
-            </div>
-        {% endif %}
-
         {% block upper_body %}{% endblock %}
 
     </div>
@@ -352,6 +286,71 @@
         {% endif %}
     {% endif %}
     {# ------------------------------------------------------------- #}
+    <hr>
+    {# ------------------------------------------------------------- #}
+    {% if user.is_not_anon %}
+        {% if current_item %}
+            {% set parent_hint = current_item.uuid | string %}
+        {% else %}
+            {% set parent_hint = user.extras.root_item_uuid %}
+        {% endif %}
+
+        <a href="{{ request.url_for('app_create_item', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+           title="{{ _('Create new item') }}"
+           class="button">
+            <img src="{{ request.url_for('static', path='ic_create_new_folder_24px.svg') }}"
+                 class="invert icon-header"
+                 alt="{{ _('Create new item') }}"/>
+            <span>{{ _('Create') }}</span>
+        </a>
+
+        <a href="{{ request.url_for('app_upload', parent_uuid=parent_hint) | string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+           title="{{ _('Upload media') }}"
+           class="button">
+            <img src="{{ request.url_for('static', path='ic_perm_media_24px.svg') }}"
+                 class="invert icon-header"
+                 alt="{{ _('Upload media') }}"/>
+            <span>{{ _('Upload') }}</span>
+        </a>
+
+        {% if current_item and current_item.owner_uuid | string == user.uuid | string %}
+            <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+               title="{{ _('Edit current item') }}"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
+                     class="invert icon-header"
+                     alt="{{ _('Edit current item') }}"/>
+                <span>{{ _('Edit') }}</span>
+            </a>
+
+            <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+               title="{{ _('Delete current item') }}"
+               class="button">
+                <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
+                     class="invert icon-header"
+                     alt="{{ _('Delete current item') }}"/>
+                <span>{{ _('Delete') }}</span>
+            </a>
+        {% else %}
+            <a href="{{ request.url_for('app_update_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+               title="{{ _('Edit current item') }}"
+               class="button-disabled">
+                <img src="{{ request.url_for('static', path='ic_format_list_bulleted_24px.svg') }}"
+                     class="invert icon-header"
+                     alt="{{ _('Edit current item') }}"/>
+                <span>{{ _('Edit') }}</span>
+            </a>
+
+            <a href="{{ request.url_for('app_delete_item', item_uuid=parent_hint)|string + '?' + aim_wrapper.to_url_no_q(page=1) }}"
+               title="{{ _('Delete current item') }}"
+               class="button-disabled">
+                <img src="{{ request.url_for('static', path='ic_delete_24px.svg') }}"
+                     class="invert icon-header"
+                     alt="{{ _('Delete current item') }}"/>
+                <span>{{ _('Delete') }}</span>
+            </a>
+        {% endif %}
+    {% endif %}
 </div>
 
 <div id="content" class="content-static">
