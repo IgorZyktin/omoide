@@ -125,13 +125,6 @@ class ParallelOperationsProcessor:
                         processed_by=self.config.name,
                     )
 
-                    # TODO - make it more dependant on operation, not just manual check
-                    if operation_after.name == 'download':
-                        item_uuid = UUID(operation_after.extras['item_uuid'])
-                        item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-                        item.status = models.Status.AVAILABLE
-                        await self.mediator.items.save(conn, item)
-
                 did_something = True
 
         return did_something
