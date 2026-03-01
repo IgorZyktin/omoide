@@ -71,9 +71,11 @@ def download_media(
         raise NameError(msg)
 
     if the_last_one and database.is_fully_downloaded(
-        item_id, skip_content=model.extras.get('skip_content')
+        item_id,
+        skip_content=model.extras.get('skip_content'),
+        skip_preview=model.extras.get('skip_preview'),
     ):
-        database.mark_available(item_id)
+        database.mark_item_available(item_id)
 
 
 def is_the_last_one(database: DownloaderPostgreSQLDatabase) -> bool:

@@ -98,12 +98,12 @@ def do_work(
     )
 
     for target_id in candidates:
-        took_lock = database.lock(target_id, config.name)
+        took_lock = database.lock_input_media(target_id, config.name)
 
         if not took_lock:
             continue
 
-        model = database.load_media(target_id)
+        model = database.get_input_media(target_id)
         try:
             converter = conversions.CONVERTERS[model.content_type.lower()]
             converter(config, database, model)

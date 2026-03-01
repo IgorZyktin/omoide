@@ -16,6 +16,8 @@ class WorkerDownloaderConfig(ns.BaseConfig):
     log: cfg.Log
     metrics: cfg.Metrics
 
+    data_folder: Path
+
     name: str = 'downloader-dev'
     short_delay: float = 0.0
     long_delay: float = 1.0
@@ -23,5 +25,4 @@ class WorkerDownloaderConfig(ns.BaseConfig):
     input_batch: int = 10
     workers: int = 0
     max_workers: int = 6
-    data_folder: Path = Path('.')
     prefix_size: int = 2

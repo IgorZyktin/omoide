@@ -34,7 +34,7 @@ class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
 
         return [x for (x,) in response]
 
-    def lock(self, target_id: int, name: str) -> bool:
+    def lock_input_media(self, target_id: int, name: str) -> bool:
         """Lock specific object."""
         stmt = (
             sa.update(db_models.QueueInputMedia)
@@ -52,7 +52,7 @@ class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
 
         return bool(response.rowcount)
 
-    def load_media(self, target_id: int) -> models.InputMedia:
+    def get_input_media(self, target_id: int) -> models.InputMedia:
         """Load data from storage."""
         query = sa.select(db_models.QueueInputMedia).where(
             db_models.QueueInputMedia.id == target_id

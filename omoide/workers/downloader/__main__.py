@@ -80,7 +80,7 @@ def main() -> None:
                 )
 
                 for target_id in candidates:
-                    took_lock = database.lock(target_id, config.name)
+                    took_lock = database.lock_output_media(target_id, config.name)
 
                     if not took_lock:
                         continue

@@ -35,7 +35,7 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
 
         return [x for (x,) in response]
 
-    def lock(self, target_id: int, name: str) -> bool:
+    def lock_output_media(self, target_id: int, name: str) -> bool:
         """Lock specific object."""
         stmt = (
             sa.update(db_models.QueueOutputMedia)
@@ -239,7 +239,13 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
         with self.engine.begin() as conn:
             conn.execute(stmt)
 
-    def is_fully_downloaded(self, item_id: int, *, skip_content: bool) -> bool:
+    def is_fully_downloaded(
+        self,
+        item_id: int,
+        *,
+        skip_content: bool,
+        skip_preview: bool,
+    ) -> bool:
         """Return True if item is downloaded."""
         query = sa.select(db_models.Metainfo).where(
             db_models.Metainfo.item_id == item_id
@@ -247,19 +253,17 @@ class DownloaderPostgreSQLDatabase(PostgreSQLDatabase):
         with self.engine.begin() as conn:
             response = conn.execute(query).one()
 
-        if skip_content:
-            return (
-                response.preview_size is not None
-                and response.thumbnail_size is not None
-            )
+        condition = [response.thumbnail_size is not None]
 
-        return (
-            response.content_size is not None
-            and response.preview_size is not None
-            and response.thumbnail_size is not None
-        )
+        if not skip_content:
+            condition.append(response.content_size is not None)
 
-    def mark_available(self, item_id: int) -> None:
+        if not skip_preview:
+            condition.append(response.preview_size is not None)
+
+        return all(condition)
+
+    def mark_item_available(self, item_id: int) -> None:
         """Mark item as available."""
         stmt = (
             sa.update(db_models.Item)
