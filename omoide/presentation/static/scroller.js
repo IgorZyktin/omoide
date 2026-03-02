@@ -126,13 +126,14 @@ class Scroller {
                 let name = document.createElement('p')
                 name.innerText = item.name
                 link.appendChild(name)
-            }
+            } else if (!item.is_collection && itemIsVideo(item)) {
+                if (item.name) {
+                    let label = document.createElement('span')
+                    label.classList.add('envelope-video-title')
+                    label.innerText = item.name
+                    link.appendChild(label)
+                }
 
-            if (!item.is_collection && item.name && itemIsVideo(item)) {
-                let label = document.createElement('span')
-                label.classList.add('envelope-video-title')
-                label.innerText = item.name
-                link.appendChild(label)
                 let sign = document.createElement('div')
                 sign.classList.add('triangle-overlay')
                 link.appendChild(sign)

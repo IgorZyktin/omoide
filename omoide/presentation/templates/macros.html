@@ -226,8 +226,10 @@
             <p>{{ item.name }}</p>
         {%- endif -%}
 
-        {% if not item.is_collection and item.name and item.is_video %}
-            <span class="envelope-video-title">{{ item.name }}</span>
+        {% if not item.is_collection and item.is_video %}
+            {% if item.name %}
+                <span class="envelope-video-title">{{ item.name }}</span>
+            {% endif %}
             <div class="triangle-overlay"></div>
         {%- endif -%}
 
