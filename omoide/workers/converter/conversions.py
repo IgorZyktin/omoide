@@ -48,7 +48,8 @@ def convert_video(
     try:
         with open(tmp_path, mode='wb') as file:
             file.write(model.content)
-            with VideoFileClip(tmp_path) as clip:
+            try:
+                clip = VideoFileClip(tmp_path)
                 first_frame = clip.get_frame(0)
                 img = Image.fromarray(first_frame)
 
@@ -57,6 +58,8 @@ def convert_video(
                         database, model, img
                     )
                 _convert_and_save_static_image_thumbnail(database, model, img)
+            finally:
+                clip.close()
     finally:
         tmp_path.unlink(missing_ok=True)
 
