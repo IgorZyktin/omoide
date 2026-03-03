@@ -434,6 +434,16 @@ class UploadItemUseCase(BaseAPIUseCase):
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot upload media to someone else's item")
             now = pu.now()
+
+            oid = None
+            content = file.content
+            if len(content) >= const.LARGE_OBJECT_SIZE:
+                save_content = b''
+                oid = await self.mediator.database.save_large_object(content)
+                LOG.info('Created large object {} for item {}', oid, item.uuid)
+            else:
+                save_content = file.content
+
             operation_id = await self.mediator.misc.save_input_media(
                 conn=conn,
                 media=models.InputMedia(
@@ -443,9 +453,9 @@ class UploadItemUseCase(BaseAPIUseCase):
                     created_at=now,
                     ext='jpg' if file.ext == 'jpeg' else file.ext,
                     content_type=file.content_type,
-                    extras={'extract_exif': file.features.extract_exif},
+                    extras={'extract_exif': file.features.extract_exif, 'oid': oid},
                     error=None,
-                    content=file.content,
+                    content=save_content,
                 ),
             )
 
@@ -462,9 +472,20 @@ class UploadItemUseCase(BaseAPIUseCase):
 
                 if parent.thumbnail_ext is None:
                     # NOTE - temporarily setting parent metainfo,
-                    # so next upload will not copy again
+                    # so next item in batch will not copy again
                     parent.preview_ext = 'tmp'
                     parent.thumbnail_ext = 'tmp'
+
+                    # TODO - do not save file twice!
+                    oid2 = None
+                    content = file.content
+                    if len(content) >= const.LARGE_OBJECT_SIZE:
+                        save_content = b''
+                        oid2 = await self.mediator.database.save_large_object(content)
+                        LOG.info('Created large object {} for item {}', oid2, parent.uuid)
+                    else:
+                        save_content = file.content
+
                     await self.mediator.misc.save_input_media(
                         conn=conn,
                         media=models.InputMedia(
@@ -478,9 +499,10 @@ class UploadItemUseCase(BaseAPIUseCase):
                                 'extract_exif': file.features.extract_exif,
                                 'skip_content': True,
                                 'skip_preview': True,
+                                'oid': oid2,
                             },
                             error=None,
-                            content=file.content,
+                            content=save_content,
                         ),
                     )
 

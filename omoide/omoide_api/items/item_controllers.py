@@ -355,6 +355,8 @@ async def api_upload_item(
 
     use_case = item_use_cases.UploadItemUseCase(mediator)
     features = item_api_models.extract_features(request)
+
+    # TODO - read in chunks, not whole file at once
     content = await file.read()
 
     try:

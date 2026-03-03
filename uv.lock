@@ -88,6 +88,19 @@ wheels = [
 ]
 
 [[package]]
+name = "asyncpg-lostream"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asyncpg" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/93/17/4dbab3eec41efde274b7903abad9bdea2db144fe77a2eeb370e805d62003/asyncpg-lostream-0.1.2.tar.gz", hash = "sha256:fd911c1bb4e843b048bfaf87890d41a58167eef69385b9719f478472052723ee", size = 10636 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fc/0e/252c207751dc1b4b78a51ec3da366c35ca6d17979da20049aa79f229d885/asyncpg_lostream-0.1.2-py3-none-any.whl", hash = "sha256:9db9e2d1652b5c63032634ae97c9cbc1574a606e09af7679d8d0a57e3b7218d8", size = 10933 },
+]
+
+[[package]]
 name = "bcrypt"
 version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -716,6 +729,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
+    { name = "asyncpg-lostream" },
     { name = "httptools" },
     { name = "loguru" },
     { name = "moviepy" },
@@ -768,6 +782,7 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13.3" },
     { name = "asyncpg", specifier = ">=0.30.0" },
+    { name = "asyncpg-lostream", specifier = ">=0.1.2" },
     { name = "bcrypt", marker = "extra == 'web'", specifier = ">=4.2.0" },
     { name = "colorama", marker = "extra == 'cli'", specifier = ">=0.4.6" },
     { name = "fastapi", marker = "extra == 'web'", specifier = ">=0.115.0" },

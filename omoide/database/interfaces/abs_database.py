@@ -24,3 +24,7 @@ class AbsDatabase(abc.ABC, Generic[ConnectionT]):
     @abc.abstractmethod
     def transaction(self) -> AsyncIterator[ConnectionT]:
         """Start transaction."""
+
+    @abc.abstractmethod
+    async def save_large_object(self, content: bytes) -> int:
+        """Save large object."""

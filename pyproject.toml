@@ -31,6 +31,7 @@ dependencies = [
     "starlette-exporter>=0.23.0",
     "python-multipart>=0.0.20",
     "moviepy>=2.2.1",
+    "asyncpg-lostream>=0.1.2",
 ]
 
 [project.optional-dependencies]
