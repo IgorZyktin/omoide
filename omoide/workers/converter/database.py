@@ -83,6 +83,8 @@ class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
             oid = self.save_large_object(model.content)
             model.extras['oid'] = oid
             content = b''
+        else:
+            model.extras['oid'] = None
 
         stmt = sa.insert(db_models.QueueOutputMedia).values(
             user_uuid=model.user_uuid,
