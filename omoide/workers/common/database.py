@@ -42,7 +42,7 @@ class PostgreSQLDatabase:
                 l_obj.close()
             conn.close()
 
-        return content
+        return bytes(content)
 
     def save_large_object(self, content: bytes) -> int:
         """Return large object."""
@@ -62,7 +62,7 @@ class PostgreSQLDatabase:
             conn.commit()
             conn.close()
 
-        return l_obj.oid
+        return int(l_obj.oid)
 
     def delete_large_object(self, oid: int) -> None:
         """Delete large object."""

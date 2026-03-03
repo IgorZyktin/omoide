@@ -53,4 +53,4 @@ class SqlalchemyDatabase(AbsDatabase[AsyncConnection]):
 
             await session.commit()
 
-        return lob_oid
+        return int(lob_oid)
