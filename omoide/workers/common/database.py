@@ -2,6 +2,7 @@
 
 import sqlalchemy as sa
 
+from omoide import const
 from omoide import custom_logging
 
 LOG = custom_logging.get_logger(__name__)
@@ -42,6 +43,26 @@ class PostgreSQLDatabase:
             conn.close()
 
         return content
+
+    def save_large_object(self, content: bytes) -> int:
+        """Return large object."""
+        conn = self.engine.raw_connection()
+        l_obj = None
+        try:
+            l_obj = conn.lobject(0, 'wb')
+            for i in range(0, len(content), const.MEGABYTE):
+                chunk = content[i : i + const.MEGABYTE]
+                l_obj.write(chunk)
+        except Exception:
+            LOG.exception('Error saving large object')
+            raise
+        finally:
+            if l_obj is not None:
+                l_obj.close()
+            conn.commit()
+            conn.close()
+
+        return l_obj.oid
 
     def delete_large_object(self, oid: int) -> None:
         """Delete large object."""
