@@ -25,3 +25,33 @@ class PostgreSQLDatabase:
             self.engine.dispose()
         except Exception:
             LOG.exception('Exception while disposing database engine')
+
+    def get_large_object(self, oid: int) -> bytes:
+        """Return large object."""
+        conn = self.engine.raw_connection()
+        l_obj = None
+        try:
+            l_obj = conn.lobject(oid, 'rb')
+            content = l_obj.read()
+        except Exception:
+            LOG.exception('Error loading large object')
+            raise
+        finally:
+            if l_obj is not None:
+                l_obj.close()
+            conn.close()
+
+        return content
+
+    def delete_large_object(self, oid: int) -> None:
+        """Delete large object."""
+        conn = self.engine.raw_connection()
+        try:
+            conn.lobject(oid).unlink()
+            conn.commit()
+        except Exception:
+            LOG.exception('Error deleting large object')
+            conn.rollback()
+            raise
+        finally:
+            conn.close()

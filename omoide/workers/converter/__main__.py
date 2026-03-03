@@ -104,6 +104,10 @@ def do_work(
             continue
 
         model = database.get_input_media(target_id)
+        oid = model.extras.pop('oid', None)
+        if oid:
+            model.content = database.get_large_object(oid)
+
         try:
             converter = conversions.CONVERTERS[model.content_type.lower()]
             converter(config, database, model)
@@ -127,11 +131,14 @@ def do_work(
                 model.item_uuid,
                 pu.human_readable_size(len(model.content)),
             )
-            database.delete_media(target_id)
             metrics_collector.increment(common_metrics.FILES_PROCESSED, 1)
             metrics_collector.increment(
                 common_metrics.BYTES_PROCESSED, len(model.content)
             )
+            if oid:
+                database.delete_large_object(oid)
+            database.delete_media(target_id)
+            model.content = b''
             del model
             return True
 

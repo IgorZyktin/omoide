@@ -119,6 +119,10 @@ def do_download(
 ) -> None:
     """Actually download a media."""
     model = database.get_output_media(item_id)
+    oid = model.extras.get('oid')
+    if oid:
+        model.content = database.get_large_object(oid)
+
     try:
         operations.download_media(config, database, model)
     except Exception:
@@ -142,11 +146,14 @@ def do_download(
             model.item_uuid,
             pu.human_readable_size(len(model.content)),
         )
-        database.delete_output_media(item_id)
         metrics_collector.increment(common_metrics.FILES_PROCESSED, 1)
         metrics_collector.increment(
             common_metrics.BYTES_PROCESSED, len(model.content)
         )
+        if oid:
+            database.delete_large_object(oid)
+        database.delete_output_media(item_id)
+        model.content = b''
         del model
 
 
