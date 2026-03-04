@@ -41,7 +41,7 @@ def convert_video(
 ) -> None:
     """Convert video."""
     if not model.extras.get('skip_content'):
-        _conver_and_save_video_content(database, model)
+        _convert_and_save_video_content(database, model)
 
     tmp_path = config.temp_folder / f'{model.item_uuid}.{model.ext}'
 
@@ -64,7 +64,7 @@ def convert_video(
         tmp_path.unlink(missing_ok=True)
 
 
-def _conver_and_save_video_content(
+def _convert_and_save_video_content(
     database: ConverterPostgreSQLDatabase,
     model: models.InputMedia,
 ) -> None:
