@@ -124,7 +124,9 @@ def do_download(
         model.content = database.get_large_object(oid)
 
     try:
+        start = time.perf_counter()
         operations.download_media(config, database, model)
+        time_spent = time.perf_counter() - start
     except Exception:
         traceback = custom_logging.capture_exception_output(
             'Failed to perform download'
@@ -149,6 +151,9 @@ def do_download(
         metrics_collector.increment(common_metrics.FILES_PROCESSED, 1)
         metrics_collector.increment(
             common_metrics.BYTES_PROCESSED, len(model.content)
+        )
+        metrics_collector.increment(
+            common_metrics.TIME_SPENT, int(time_spent * 1000)
         )
         if oid:
             database.delete_large_object(oid)

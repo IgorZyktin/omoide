@@ -18,6 +18,11 @@ ERRORS = Metric(
     name='ow_errors',
     documentation='How many errors we got',
 )
+TIME_SPENT = Metric(
+    id=4,
+    name='ow_time_spent',
+    documentation='How many seconds we spent processing data',
+)
 
 
 def get_metric_collector(
@@ -32,6 +37,7 @@ def get_metric_collector(
             FILES_PROCESSED,
             BYTES_PROCESSED,
             ERRORS,
+            TIME_SPENT,
         ],
         address=address,
         port=port,

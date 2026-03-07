@@ -110,7 +110,9 @@ def do_work(
 
         try:
             converter = conversions.CONVERTERS[model.content_type.lower()]
+            start = time.perf_counter()
             converter(config, database, model)
+            time_spent = time.perf_counter() - start
         except Exception:
             traceback = custom_logging.capture_exception_output(
                 'Failed to perform conversion'
@@ -134,6 +136,9 @@ def do_work(
             metrics_collector.increment(common_metrics.FILES_PROCESSED, 1)
             metrics_collector.increment(
                 common_metrics.BYTES_PROCESSED, len(model.content)
+            )
+            metrics_collector.increment(
+                common_metrics.TIME_SPENT, int(time_spent * 1000)
             )
             if oid:
                 database.delete_large_object(oid)
