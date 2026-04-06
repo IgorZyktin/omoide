@@ -26,3 +26,4 @@ class WorkerDownloaderConfig(ns.BaseConfig):
     workers: int = 0
     max_workers: int = 6
     prefix_size: int = 2
+    shutdown_deadline: float = 300.0

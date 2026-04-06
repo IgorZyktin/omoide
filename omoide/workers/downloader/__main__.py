@@ -5,8 +5,9 @@ import signal
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
 
+from omoide.workers import utils
+from functools import partial
 import nano_settings as ns
 import python_utilz as pu
 
@@ -22,17 +23,6 @@ from omoide.workers.common import metrics as common_metrics
 LOG = custom_logging.get_logger(__name__)
 WORKING = threading.Event()
 WORKING.set()
-
-
-def signal_handler(signum: int, frame: Any) -> None:
-    """Handle shutdown signals."""
-    _ = frame
-    LOG.warning(
-        'Received signal {signame} ({signum}). Shutting down gracefully...',
-        signame=signal.strsignal(signum),
-        signum=signum,
-    )
-    WORKING.clear()
 
 
 def main() -> None:
@@ -51,7 +41,10 @@ def main() -> None:
 
     LOG.info('Started downloader worker: {}', config.name)
 
-    signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+    signal_handler = partial(
+        utils.signal_handler, event=WORKING, deadline=config.shutdown_deadline
+    )
+    signal.signal(signal.SIGINT, signal_handler)
 
     database = DownloaderPostgreSQLDatabase(
         url=config.db.url.get_secret_value(),

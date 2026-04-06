@@ -23,3 +23,4 @@ class WorkerConverterConfig(ns.BaseConfig):
     long_delay: float = 1.0
     exc_delay: float = 10.0
     input_batch: int = 10
+    shutdown_deadline: float = 300.0
