@@ -5,9 +5,10 @@ Revises: b0ba5b2255db
 Create Date: 2026-03-04 22:52:39.921191+03:00
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = '8ca57ddc101c'
