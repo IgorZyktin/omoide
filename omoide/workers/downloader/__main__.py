@@ -51,20 +51,18 @@ def main() -> None:
         echo=config.db.echo,
     )
 
-    database.connect()
     metrics_collector = common_metrics.get_metric_collector(
         address=config.metrics.address,
         port=config.metrics.port,
         name=config.name,
         worker_type='downloader',
     )
-    metrics_collector.start()
 
     cores = config.workers or os.cpu_count() or 1
     cores = min(cores, config.max_workers)
     executor = ThreadPoolExecutor(max_workers=cores)
 
-    try:
+    with metrics_collector, database, executor:
         while WORKING.is_set():
             submitted = 0
             try:
@@ -92,10 +90,6 @@ def main() -> None:
                 time.sleep(config.short_delay)
             else:
                 time.sleep(config.long_delay)
-    finally:
-        database.disconnect()
-        metrics_collector.stop()
-        executor.shutdown()
 
     LOG.info('Stopped downloader worker: {}', config.name)
 

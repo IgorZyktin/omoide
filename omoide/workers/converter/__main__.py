@@ -48,7 +48,6 @@ def main() -> None:
         url=config.db.url.get_secret_value(),
         echo=config.db.echo,
     )
-    database.connect()
 
     metrics_collector = common_metrics.get_metric_collector(
         address=config.metrics.address,
@@ -56,10 +55,10 @@ def main() -> None:
         name=config.name,
         worker_type='converter',
     )
-    metrics_collector.start()
 
-    try:
-        os.makedirs(config.temp_folder, exist_ok=True)
+    os.makedirs(config.temp_folder, exist_ok=True)
+
+    with metrics_collector, database:
         while WORKING.is_set():
             try:
                 done_something = do_work(config, database, metrics_collector)
@@ -71,9 +70,6 @@ def main() -> None:
                     time.sleep(config.short_delay)
                 else:
                     time.sleep(config.long_delay)
-    finally:
-        database.disconnect()
-        metrics_collector.stop()
 
     LOG.info('Stopped converter worker: {}', config.name)
 

@@ -1,7 +1,10 @@
 """Sender that interacts with prometheus using pull model."""
 
 from collections.abc import Collection
+from types import TracebackType
 from typing import TYPE_CHECKING
+from typing import Literal
+from typing import Self
 
 from prometheus_client import Counter
 from prometheus_client import start_http_server
@@ -47,6 +50,21 @@ class PrometheusMetricsCollector(AbsMetricsCollector):
                     )
                 case _:
                     LOG.warning('Unknown metric type: {}', metric)
+
+    def __enter__(self) -> Self:
+        """Start HTTP server."""
+        self.start()
+        return self
+
+    def __exit__(
+        self,
+        type_: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Literal[False]:
+        """Stop HTTP server."""
+        self.stop()
+        return False
 
     def start(self) -> None:
         """Start HTTP server."""

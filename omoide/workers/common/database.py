@@ -1,5 +1,9 @@
 """Common database for workers."""
 
+from types import TracebackType
+from typing import Literal
+from typing import Self
+
 import sqlalchemy as sa
 
 from omoide import const
@@ -16,6 +20,21 @@ class PostgreSQLDatabase:
         self.url = url
         self.echo = echo
         self.engine = sa.create_engine(url, pool_pre_ping=True, future=True, echo=echo)
+
+    def __enter__(self) -> Self:
+        """Start HTTP server."""
+        self.connect()
+        return self
+
+    def __exit__(
+        self,
+        type_: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Literal[False]:
+        """Stop HTTP server."""
+        self.disconnect()
+        return False
 
     def connect(self) -> None:
         """Connect to database."""
