@@ -91,7 +91,17 @@ def main() -> None:
             else:
                 time.sleep(config.long_delay)
 
-    LOG.info('Stopped downloader worker: {}', config.name)
+    LOG.info(
+        'Worker {} stopped. Processed: {} files, {}, {} errors',
+        config.name,
+        pu.sep_digits(
+            metrics_collector.get_value(common_metrics.FILES_PROCESSED)
+        ),
+        pu.human_readable_size(
+            metrics_collector.get_value(common_metrics.BYTES_PROCESSED)
+        ),
+        pu.sep_digits(metrics_collector.get_value(common_metrics.ERRORS)),
+    )
 
 
 def do_download(

@@ -4,6 +4,7 @@ import signal
 import sys
 import threading
 from typing import Any
+from typing import NoReturn
 
 import python_utilz as pu
 
@@ -29,7 +30,7 @@ def signal_handler(
     )
     event.clear()
 
-    def timeout_handler():
+    def timeout_handler() -> NoReturn:
         LOG.error('Graceful shutdown timed out, forcing exit')
         sys.exit(1)
 

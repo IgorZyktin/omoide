@@ -110,3 +110,14 @@ class PrometheusMetricsCollector(AbsMetricsCollector):
                 metric=metric,
                 error=exc,
             )
+
+    def get_value(self, metric: Metric) -> float:
+        """Get value."""
+        obj = self._counter_metrics.get(metric.id)
+        if obj is None:
+            return -1.0
+
+        for sample in obj.collect():
+            for each in sample.samples:
+                return each.value
+        return -1.0
