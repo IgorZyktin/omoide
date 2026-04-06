@@ -90,9 +90,7 @@ def do_work(
     )
 
     for target_id in candidates:
-        took_lock = database.lock_input_media(target_id, config.name)
-
-        if not took_lock:
+        if not database.lock_input_media(target_id, config.name):
             continue
 
         model = database.get_input_media(target_id)

@@ -73,11 +73,7 @@ def main() -> None:
                 )
 
                 for target_id in candidates:
-                    took_lock = database.lock_output_media(
-                        target_id, config.name
-                    )
-
-                    if not took_lock:
+                    if not database.lock_output_media(target_id, config.name):
                         continue
 
                     executor.submit(
