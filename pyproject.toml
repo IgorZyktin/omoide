@@ -37,7 +37,7 @@ dependencies = [
 [project.optional-dependencies]
 web = [
     "bcrypt>=4.2.0",
-    "fastapi>=0.115.0",
+    "fastapi>=0.135.3",
     "gunicorn>=23.0.0",
     "jinja2>=3.1.4",
     "python-multipart>=0.0.12",
