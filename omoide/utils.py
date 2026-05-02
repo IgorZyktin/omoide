@@ -37,7 +37,7 @@ def group_to_size(iterable: Iterable, group_size: int = 2, default: Any = '?') -
 T = TypeVar('T')
 
 
-def get_delta(
+def get_delta(  # noqa: UP047
     before: Collection[T],
     after: Collection[T],
 ) -> tuple[set[T], set[T]]:

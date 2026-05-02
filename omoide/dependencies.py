@@ -22,8 +22,8 @@ from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
-from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra import mediators
+from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.web_locator import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
@@ -162,6 +162,19 @@ def get_mediator(
         tags=impl_sqlalchemy.TagsRepo(),
         users=impl_sqlalchemy.UsersRepo(),
         object_storage=object_storage,
+    )
+
+
+def get_exif_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.EXIFMediator:
+    """Get mediator instance."""
+    return mediators.EXIFMediator(
+        authenticator=authenticator,
+        database=database,
+        exif=impl_sqlalchemy.EXIFRepo(),
+        items=impl_sqlalchemy.ItemsRepo(),
     )
 
 
