@@ -14,7 +14,7 @@ from omoide import cfg
 from omoide import const
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_app.preview import preview_use_cases
 from omoide.presentation import infra
 from omoide.presentation import web
@@ -62,4 +62,4 @@ async def app_preview(  # noqa: PLR0913
         'block_paginated': True,
     }
 
-    return templates.TemplateResponse('preview.html', context)
+    return templates.TemplateResponse(request, 'preview.html', context)

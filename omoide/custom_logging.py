@@ -28,7 +28,7 @@ def get_logger(name: str) -> Logger:
 def capture_exception_output(title: str) -> str | None:
     """Capture traceback from Loguru."""
     storage = []
-    sink_id = loguru.logger.add(sink=lambda msg: storage.append(msg))
+    sink_id = loguru.logger.add(sink=lambda msg: storage.append(msg))  # noqa: PLW0108
     loguru.logger.exception(title)
     loguru.logger.remove(sink_id)
     return storage[0] if storage else None

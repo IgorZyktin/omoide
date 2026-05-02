@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 from omoide import cfg
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_app.upload import upload_use_cases
 from omoide.presentation import web
 
@@ -53,4 +53,4 @@ async def app_upload(  # noqa: PLR0913
         'users_with_permission': users_with_permission,
     }
 
-    return templates.TemplateResponse('item_upload.html', context)
+    return templates.TemplateResponse(request, 'item_upload.html', context)

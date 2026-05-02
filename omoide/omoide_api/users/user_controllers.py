@@ -12,7 +12,7 @@ from fastapi import status
 from omoide import dependencies as dep
 from omoide import models
 from omoide import utils
-from omoide.infra.mediator import Mediator
+from omoide.infra import mediators
 from omoide.omoide_api.users import user_api_models
 from omoide.omoide_api.users import user_use_cases
 from omoide.presentation import web
@@ -34,7 +34,7 @@ async def api_create_user(
     request: Request,
     response: Response,
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     user_in: user_api_models.UserInput,
 ):
     """Create new user.
@@ -71,7 +71,7 @@ async def api_create_user(
 )
 async def api_get_all_users(
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
 ):
     """Get list of users.
 
@@ -104,7 +104,7 @@ async def api_get_all_users(
 async def api_get_user_resource_usage(
     user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
 ):
     """Get resource usage info for specific user."""
     use_case = user_use_cases.GetUserResourceUsageUseCase(mediator)
@@ -136,7 +136,9 @@ async def api_get_user_resource_usage(
     },
     response_model=dict[str, int],
 )
-async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediator)]):
+async def api_get_anon_tags(
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
+):
     """Get all known tags for anon user."""
     use_case = user_use_cases.GetAnonUserTagsUseCase(mediator)
 
@@ -162,7 +164,7 @@ async def api_get_anon_tags(mediator: Annotated[Mediator, Depends(dep.get_mediat
 async def api_get_user_tags(
     user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
 ):
     """Get all known tags for specific user."""
     use_case = user_use_cases.GetKnownUserTagsUseCase(mediator)
@@ -189,7 +191,7 @@ async def api_get_user_tags(
 async def api_get_user_by_uuid(
     user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
 ):
     """Get user by UUID."""
     use_case = user_use_cases.GetUserByUUIDUseCase(mediator)
@@ -216,7 +218,7 @@ async def api_get_user_by_uuid(
 async def api_change_user_name(
     user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     payload: user_api_models.UserValueInput,
 ):
     """Update name of existing user."""
@@ -244,7 +246,7 @@ async def api_change_user_name(
 async def api_change_user_login(
     user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     payload: user_api_models.UserValueInput,
 ):
     """Update login of existing user."""
@@ -272,7 +274,7 @@ async def api_change_user_login(
 async def api_change_user_password(
     user_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     payload: user_api_models.UserValueInput,
 ):
     """Update password of existing user."""

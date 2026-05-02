@@ -17,7 +17,7 @@ from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_app.items import item_use_cases
 from omoide.presentation import web
 
@@ -63,7 +63,7 @@ async def app_create_item(  # noqa: PLR0913
         'users_with_permission': users_with_permission,
     }
 
-    return templates.TemplateResponse('create_item.html', context)
+    return templates.TemplateResponse(request, 'create_item.html', context)
 
 
 def serialize_item(
@@ -141,7 +141,7 @@ async def app_update_item(  # noqa: PLR0913
         ),
     }
 
-    return templates.TemplateResponse('item_update.html', context)
+    return templates.TemplateResponse(request, 'item_update.html', context)
 
 
 @app_items_router.get('/delete/{item_uuid}')
@@ -178,4 +178,4 @@ async def app_delete_item(  # noqa: PLR0913 Too many arguments in function defin
         'total': pu.sep_digits(total),
     }
 
-    return templates.TemplateResponse('item_delete.html', context)
+    return templates.TemplateResponse(request, 'item_delete.html', context)

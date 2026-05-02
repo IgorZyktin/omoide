@@ -36,4 +36,4 @@ async def app_home(
         'block_direct': False,
         'endpoint': request.url_for('api_home'),
     }
-    return templates.TemplateResponse('home.html', context)
+    return templates.TemplateResponse(request, 'home.html', context)

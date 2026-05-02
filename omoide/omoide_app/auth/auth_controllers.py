@@ -17,7 +17,7 @@ from fastapi.templating import Jinja2Templates
 from omoide import cfg
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra import mediators
 from omoide.omoide_app.auth import auth_use_cases
 from omoide.presentation import web
 
@@ -29,7 +29,7 @@ security = HTTPBasic(realm='omoide')
 async def app_login(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     response_class: type[Response] = RedirectResponse,  # noqa: ARG001
@@ -78,6 +78,7 @@ async def app_logout(
         'url': request.url_for('app_search'),
     }
     return templates.TemplateResponse(
+        request,
         name='logout.html',
         context=context,
         status_code=status.HTTP_401_UNAUTHORIZED,

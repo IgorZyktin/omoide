@@ -10,13 +10,21 @@ from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
 from omoide.domain import ensure
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
-from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
+from omoide.infra import mediators
+from omoide.omoide_api.items import item_use_cases
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class CreateUserUseCase(BaseItemUseCase):
+class BaseUserUseCase:
+    """Base use case for user-related operations."""
+
+    def __init__(self, mediator: mediators.UsersMediator) -> None:
+        """Initialize instance."""
+        self.mediator = mediator
+
+
+class CreateUserUseCase(BaseUserUseCase):
     """Use case for creating a new user."""
 
     async def execute(
@@ -57,26 +65,25 @@ class CreateUserUseCase(BaseItemUseCase):
                 auth_complexity=const.AUTH_COMPLEXITY,
             )
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.create_one_item(
-                conn=conn,
-                user=new_user,
-                uuid=None,
-                parent_uuid=None,
-                name=new_user.name,
-                is_collection=True,
-                number=None,
-                tags=[new_user.name],
-                permissions=[],
-                top_level=True,
-            )
+        sub_use_case = item_use_cases.CreateOneItemUseCase(self.mediator)
+        item = await sub_use_case.execute(
+            user=new_user,
+            uuid=None,
+            parent_uuid=None,
+            name=new_user.name,
+            is_collection=True,
+            number=None,
+            tags=[new_user.name],
+            permissions=[],
+            top_level=True,
+        )
 
-            new_user.extras['root_item_uuid'] = item.uuid
+        new_user.extras['root_item_uuid'] = item.uuid
 
         return new_user
 
 
-class ChangeUserNameUseCase(BaseAPIUseCase):
+class ChangeUserNameUseCase(BaseUserUseCase):
     """Use case for updating a user's name."""
 
     async def execute(
@@ -120,7 +127,7 @@ class ChangeUserNameUseCase(BaseAPIUseCase):
         return target_user
 
 
-class ChangeUserLoginUseCase(BaseAPIUseCase):
+class ChangeUserLoginUseCase(BaseUserUseCase):
     """Use case for updating a user's login."""
 
     async def execute(
@@ -152,7 +159,7 @@ class ChangeUserLoginUseCase(BaseAPIUseCase):
         return target_user
 
 
-class ChangeUserPasswordUseCase(BaseAPIUseCase):
+class ChangeUserPasswordUseCase(BaseUserUseCase):
     """Use case for updating a user's password."""
 
     async def execute(
@@ -191,7 +198,7 @@ class ChangeUserPasswordUseCase(BaseAPIUseCase):
         return target_user
 
 
-class GetAllUsersUseCase(BaseAPIUseCase):
+class GetAllUsersUseCase(BaseUserUseCase):
     """Use case for getting all users."""
 
     async def execute(
@@ -215,7 +222,7 @@ class GetAllUsersUseCase(BaseAPIUseCase):
         return users
 
 
-class GetUserByUUIDUseCase(BaseAPIUseCase):
+class GetUserByUUIDUseCase(BaseUserUseCase):
     """Use case for getting user by UUID."""
 
     async def execute(
@@ -235,7 +242,7 @@ class GetUserByUUIDUseCase(BaseAPIUseCase):
         return target_user
 
 
-class GetUserResourceUsageUseCase(BaseAPIUseCase):
+class GetUserResourceUsageUseCase(BaseUserUseCase):
     """Use case for getting current user stats."""
 
     async def execute(
@@ -268,7 +275,7 @@ class GetUserResourceUsageUseCase(BaseAPIUseCase):
         )
 
 
-class GetAnonUserTagsUseCase(BaseAPIUseCase):
+class GetAnonUserTagsUseCase(BaseUserUseCase):
     """Use case for getting tags available to anon."""
 
     async def execute(self) -> dict[str, int]:
@@ -278,7 +285,7 @@ class GetAnonUserTagsUseCase(BaseAPIUseCase):
         return tags
 
 
-class GetKnownUserTagsUseCase(BaseAPIUseCase):
+class GetKnownUserTagsUseCase(BaseUserUseCase):
     """Use case for getting tags available to specific user."""
 
     async def execute(self, user: models.User, user_uuid: UUID) -> dict[str, int]:

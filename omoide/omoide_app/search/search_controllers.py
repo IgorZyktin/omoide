@@ -37,7 +37,7 @@ async def app_search(
         'endpoint': request.url_for('api_search'),
         'total_endpoint': request.url_for('api_search_total'),
     }
-    return templates.TemplateResponse('search.html', context)
+    return templates.TemplateResponse(request, 'search.html', context)
 
 
 @app_search_router.get('/home')
@@ -59,7 +59,7 @@ async def app_home(
         'block_direct': True,
         'endpoint': request.url_for('api_home'),
     }
-    return templates.TemplateResponse('home.html', context)
+    return templates.TemplateResponse(request, 'home.html', context)
 
 
 @app_search_router.get('/new')
@@ -83,4 +83,4 @@ async def app_new(
         'block_paginated': True,
         'endpoint': request.url_for('api_get_recent_updates'),
     }
-    return templates.TemplateResponse('new.html', context)
+    return templates.TemplateResponse(request, 'new.html', context)

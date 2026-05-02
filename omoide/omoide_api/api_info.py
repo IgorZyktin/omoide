@@ -10,6 +10,10 @@ Backend of Omoide application.
 
 TAGS_METADATA = [
     {
+        'name': 'Download',
+        'description': 'Endpoint for media download.',
+    },
+    {
         'name': 'Info',
         'description': 'Technical information about the API.',
     },

@@ -1,8 +1,11 @@
 """Use cases for Item-related operations."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 from typing import Literal
 from uuid import UUID
+from uuid import uuid4
 
 import python_utilz as pu
 
@@ -12,10 +15,152 @@ from omoide import exceptions
 from omoide import models
 from omoide import utils
 from omoide.domain import ensure
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
-from omoide.omoide_api.common.common_use_cases import BaseItemUseCase
+from omoide.infra import mediators
 
 LOG = custom_logging.get_logger(__name__)
+
+
+class CreateOneItemUseCase:
+    """Use case for creating one item."""
+
+    def __init__(self, mediator: mediators.UsersMediator | mediators.ItemsMediator) -> None:
+        """Initialize instance."""
+        self.mediator = mediator
+
+    async def execute(  # noqa: PLR0913 Too many arguments in function definition
+        self,
+        user: models.User,
+        uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        number: int | None,
+        is_collection: bool,
+        tags: list[str],
+        permissions: list[dict[str, UUID | str]],
+        top_level: bool = False,
+        connection: Any = None,
+    ) -> models.Item:
+        """Create single item."""
+        if uuid is None:
+            valid_uuid = uuid4()
+        else:
+            valid_uuid = uuid
+
+        msg = 'You are not allowed to create items for other users'
+
+        transaction: Any
+        if connection is None:
+            transaction = self.mediator.database.transaction()
+        else:
+
+            @asynccontextmanager
+            async def transaction() -> AsyncIterator[Any]:
+                yield conn
+
+        async with transaction as conn:
+            if top_level:
+                parent = None
+            elif parent_uuid is None:
+                parent = await self.mediator.users.get_root_item(conn, user)
+            else:
+                parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
+                if parent.owner_uuid != user.uuid:
+                    raise exceptions.NotAllowedError(msg)
+
+            _permissions: set[int] = set()
+            for human_readable_user in permissions:
+                user_uuid = human_readable_user.get('uuid')
+                if not isinstance(user_uuid, UUID):
+                    continue
+                local_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+                _permissions.add(local_user.id)
+
+            item = models.Item(
+                id=-1,
+                uuid=valid_uuid,
+                parent_id=parent.id if parent is not None else None,
+                parent_uuid=parent.uuid if parent is not None else None,
+                owner_id=user.id,
+                owner_uuid=user.uuid,
+                name=name,
+                status=models.Status.AVAILABLE if is_collection else models.Status.CREATED,
+                number=number or -1,
+                is_collection=is_collection,
+                content_ext=None,
+                preview_ext=None,
+                thumbnail_ext=None,
+                tags=set(tags),
+                permissions=_permissions,
+                extras={},
+            )
+
+            item.id = await self.mediator.items.create(conn, item)
+
+            metainfo = models.Metainfo(
+                item_id=item.id,
+                created_at=pu.now(),
+                updated_at=pu.now(),
+                deleted_at=None,
+                user_time=None,
+                content_type=None,
+                content_size=None,
+                preview_size=None,
+                thumbnail_size=None,
+                content_width=None,
+                content_height=None,
+                preview_width=None,
+                preview_height=None,
+                thumbnail_width=None,
+                thumbnail_height=None,
+            )
+
+            await self.mediator.meta.create(conn, metainfo)
+
+        return item
+
+
+class BaseItemUseCase:
+    """Base use case for user-related operations."""
+
+    def __init__(self, mediator: mediators.ItemsMediator) -> None:
+        """Initialize instance."""
+        self.mediator = mediator
+        self._users_cache: dict[int, models.User] = {}
+        self._items_cache: dict[int, models.Item] = {}
+        self._computed_tags_cache: dict[int, set[str]] = {}
+
+    async def _get_cached_user(self, conn: Any, user_id: int) -> models.User:
+        """Perform cached request."""
+        user = self._users_cache.get(user_id)
+
+        if user is not None:
+            return user
+
+        user = await self.mediator.users.get_by_id(conn, user_id)
+        self._users_cache[user.id] = user
+        return user
+
+    async def _get_cached_item(self, conn: Any, item_id: int) -> models.Item:
+        """Perform cached request."""
+        item = self._items_cache.get(item_id)
+
+        if item is not None:
+            return item
+
+        item = await self.mediator.items.get_by_id(conn, item_id)
+        self._items_cache[item.id] = item
+        return item
+
+    async def _get_cached_computed_tags(self, conn: Any, item: models.Item) -> set[str]:
+        """Perform cached request."""
+        tags = self._computed_tags_cache.get(item.id)
+
+        if tags is not None:
+            return tags
+
+        tags = await self.mediator.tags.get_computed_tags(conn, item)
+        self._computed_tags_cache[item.id] = tags
+        return tags
 
 
 class CreateManyItemsUseCase(BaseItemUseCase):
@@ -32,9 +177,10 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         items: list[models.Item] = []
         users_map: dict[int, models.User | None] = {user.id: user}
 
+        sub_use_case = CreateOneItemUseCase(self.mediator)
         async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
-                item = await self.create_one_item(conn, user, **raw_item)
+                item = await sub_use_case.execute(user, **raw_item, connection=conn)
                 items.append(item)
 
                 if item.parent_id is None:
@@ -114,7 +260,7 @@ class GetItemUseCase(BaseItemUseCase):
         return item, users_map
 
 
-class GetManyItemsUseCase(BaseAPIUseCase):
+class GetManyItemsUseCase(BaseItemUseCase):
     """Use case for item getting."""
 
     async def execute(
@@ -418,7 +564,7 @@ class DeleteItemUseCase(BaseItemUseCase):
         return switch_to
 
 
-class UploadItemUseCase(BaseAPIUseCase):
+class UploadItemUseCase(BaseItemUseCase):
     """Use case for processing image binary content."""
 
     async def execute(
@@ -518,119 +664,7 @@ class UploadItemUseCase(BaseAPIUseCase):
         return operation_id
 
 
-class DownloadCollectionUseCase(BaseItemUseCase):
-    """Use case for downloading whole group of items as zip archive."""
-
-    async def execute(
-        self,
-        user: models.User,
-        item_uuid: UUID,
-    ) -> tuple[list[str], models.User, models.Item | None]:
-        """Execute."""
-        lines: list[str] = []
-
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
-            public_users = await self.mediator.users.get_public_user_ids(conn)
-
-            if all(
-                (
-                    owner.id not in public_users,
-                    user.id != owner.id,
-                    user.id not in item.permissions,
-                )
-            ):
-                # NOTE - hiding the fact
-                msg = 'Item {item_uuid} does not exist'
-                raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
-
-            children = await self.mediator.items.get_children(conn, item)
-
-        # TODO - remove transaction splitting
-        async with self.mediator.database.transaction() as conn:
-            signatures = await self.mediator.signatures.get_cr32_signatures_map(
-                conn=conn,
-                items=children,
-            )
-
-        async with self.mediator.database.transaction() as conn:
-            metainfos = await self.mediator.meta.get_metainfo_map(conn, children)
-            valid_children = [
-                child
-                for child in children
-                if child.content_ext is not None and not child.is_collection
-            ]
-
-            total = len(valid_children)
-            for i, child in enumerate(valid_children, start=1):
-                signature = signatures.get(child.id)
-                metainfo = metainfos.get(child.id)
-
-                if signature is None:
-                    LOG.warning(
-                        'User {} requested download for item {}, but is has no signature',
-                        user,
-                        item,
-                    )
-
-                lines.append(
-                    self.form_signature_line(
-                        item=child,
-                        metainfo=metainfo,
-                        signature=signature,
-                        current=i,
-                        total=total,
-                    )
-                )
-
-        return lines, owner, item
-
-    @staticmethod
-    def form_signature_line(
-        item: models.Item,
-        metainfo: models.Metainfo | None,
-        signature: int | None,
-        current: int,
-        total: int,
-    ) -> str:
-        """Generate signature line for NGINX.
-
-        Example:
-        (
-            '2caf75ed '
-            + '16948 '
-            + '/content/content/92b0f.../14/14e0bc....jpg '
-            + '7___14e0bc49-8561-4667-8210-202e1965b499.jpg'
-        )
-
-        """
-        digits = len(str(total))
-        template = f'{{:0{digits}d}}'
-        owner_uuid = str(item.owner_uuid)
-        item_uuid = str(item.uuid)
-        base = '/content/content'  # TODO - ensure it is correct path
-        prefix = item_uuid[: const.STORAGE_PREFIX_SIZE]
-        content_ext = str(item.content_ext)
-
-        fs_path = f'{base}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
-
-        user_visible_filename = f'{template.format(current)}___{item_uuid}.{content_ext}'
-
-        if signature is None:
-            checksum = '-'
-        else:
-            # hash must be converted 123 -> '0x7b' -> '7b
-            checksum = hex(signature)[2:]
-
-        size = 0
-        if metainfo and metainfo.content_size is not None:
-            size = metainfo.content_size
-
-        return f'{checksum} {size} {fs_path} {user_visible_filename}'
-
-
-class ChangePermissionsUseCase(BaseAPIUseCase):
+class ChangePermissionsUseCase(BaseItemUseCase):
     """Use case for item permissions change."""
 
     async def execute(

@@ -1,6 +1,6 @@
 """Common use case elements."""
 
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 
 
 class BaseAPPUseCase:

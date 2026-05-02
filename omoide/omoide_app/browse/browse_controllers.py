@@ -15,7 +15,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_app.browse import browse_use_cases
 from omoide.presentation import infra
 from omoide.presentation import web
@@ -59,7 +59,7 @@ async def app_browse(  # noqa: PLR0913
             'metainfo': metainfo,
         }
 
-        return templates.TemplateResponse('browse_dynamic.html', context)
+        return templates.TemplateResponse(request, 'browse_dynamic.html', context)
 
     use_case_paged = browse_use_cases.AppBrowsePagedUseCase(mediator)
 
@@ -94,4 +94,4 @@ async def app_browse(  # noqa: PLR0913
         'block_collections': True,
     }
 
-    return templates.TemplateResponse('browse_paged.html', context)
+    return templates.TemplateResponse(request, 'browse_paged.html', context)

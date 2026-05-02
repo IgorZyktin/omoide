@@ -3,20 +3,19 @@
 import time
 
 from omoide import models
-from omoide.database import interfaces as db_interfaces
+from omoide.infra import mediators
 
 
-class AutocompleteUseCase:
-    """Use case for suggesting tag autocomplete."""
+class BaseSearchUseCase:
+    """Use case for searching."""
 
-    def __init__(
-        self,
-        database: db_interfaces.AbsDatabase,
-        tags_repo: db_interfaces.AbsTagsRepo,
-    ) -> None:
+    def __init__(self, mediator: mediators.SearchMediator) -> None:
         """Initialize instance."""
-        self.database = database
-        self.tags_repo = tags_repo
+        self.mediator = mediator
+
+
+class AutocompleteUseCase(BaseSearchUseCase):
+    """Use case for suggesting tag autocomplete."""
 
     async def execute(
         self,
@@ -29,27 +28,16 @@ class AutocompleteUseCase:
         if len(tag) < minimal_length:
             return []
 
-        async with self.database.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             if user.is_anon:
-                variants = await self.tags_repo.autocomplete_tag_anon(conn, tag, limit)
+                variants = await self.mediator.tags.autocomplete_tag_anon(conn, tag, limit)
             else:
-                variants = await self.tags_repo.autocomplete_tag_user(conn, user, tag, limit)
+                variants = await self.mediator.tags.autocomplete_tag_user(conn, user, tag, limit)
         return variants
 
 
-class RecentUpdatesUseCase:
+class RecentUpdatesUseCase(BaseSearchUseCase):
     """Use case for getting recently updated items."""
-
-    def __init__(
-        self,
-        database: db_interfaces.AbsDatabase,
-        users_repo: db_interfaces.AbsUsersRepo,
-        browse_repo: db_interfaces.AbsBrowseRepo,
-    ) -> None:
-        """Initialize instance."""
-        self.database = database
-        self.users_repo = users_repo
-        self.browse_repo = browse_repo
 
     async def execute(
         self,
@@ -57,53 +45,34 @@ class RecentUpdatesUseCase:
         plan: models.Plan,
     ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
-        async with self.database.transaction() as conn:
+        async with self.mediator.database.transaction() as conn:
             if user.is_anon:
-                items = await self.browse_repo.get_recently_updated_items_anon(conn, plan)
+                items = await self.mediator.browse.get_recently_updated_items_anon(conn, plan)
             else:
-                items = await self.browse_repo.get_recently_updated_items_known(conn, user, plan)
-            users = await self.users_repo.get_map(conn, items)
-
+                items = await self.mediator.browse.get_recently_updated_items_known(
+                    conn, user, plan
+                )
+            users = await self.mediator.users.get_map(conn, items)
         return items, users
 
 
-class ApiSearchTotalUseCase:
+class ApiSearchTotalUseCase(BaseSearchUseCase):
     """Use case for calculating total results of search."""
-
-    def __init__(
-        self,
-        database: db_interfaces.AbsDatabase,
-        search_repo: db_interfaces.AbsSearchRepo,
-    ) -> None:
-        """Initialize instance."""
-        self.database = database
-        self.search_repo = search_repo
 
     async def execute(self, user: models.User, plan: models.Plan) -> tuple[int, float]:
         """Execute."""
         start = time.perf_counter()
 
-        async with self.database.transaction() as conn:
-            total = await self.search_repo.count(conn, user, plan)
+        async with self.mediator.database.transaction() as conn:
+            total = await self.mediator.search.count(conn, user, plan)
 
         duration = time.perf_counter() - start
 
         return total, duration
 
 
-class ApiSearchUseCase:
+class ApiSearchUseCase(BaseSearchUseCase):
     """Use case for search."""
-
-    def __init__(
-        self,
-        database: db_interfaces.AbsDatabase,
-        users_repo: db_interfaces.AbsUsersRepo,
-        search_repo: db_interfaces.AbsSearchRepo,
-    ) -> None:
-        """Initialize instance."""
-        self.database = database
-        self.users_repo = users_repo
-        self.search_repo = search_repo
 
     async def execute(
         self,
@@ -113,9 +82,9 @@ class ApiSearchUseCase:
         """Execute."""
         start = time.perf_counter()
 
-        async with self.database.transaction() as conn:
-            items = await self.search_repo.search(conn, user, plan)
-            users = await self.users_repo.get_map(conn, items)
+        async with self.mediator.database.transaction() as conn:
+            items = await self.mediator.search.search(conn, user, plan)
+            users = await self.mediator.users.get_map(conn, items)
 
         duration = time.perf_counter() - start
 

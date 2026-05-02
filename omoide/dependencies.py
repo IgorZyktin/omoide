@@ -22,8 +22,8 @@ from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.infra import mediators
 from omoide.infra.interfaces import AbsAuthenticator
-from omoide.infra.mediator import Mediator
 from omoide.infra.web_locator import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
@@ -147,9 +147,9 @@ def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
     object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
     database: Annotated[AbsDatabase, Depends(get_database)],
-) -> Mediator:
+) -> mediators.Mediator:
     """Get mediator instance."""
-    return Mediator(
+    return mediators.Mediator(
         authenticator=authenticator,
         database=database,
         browse=impl_sqlalchemy.BrowseRepo(),
@@ -165,9 +165,107 @@ def get_mediator(
     )
 
 
+def get_exif_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.EXIFMediator:
+    """Get mediator instance."""
+    return mediators.EXIFMediator(
+        authenticator=authenticator,
+        database=database,
+        exif=impl_sqlalchemy.EXIFRepo(),
+        items=impl_sqlalchemy.ItemsRepo(),
+    )
+
+
+def get_metainfo_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.EXIFMediator:
+    """Get mediator instance."""
+    return mediators.EXIFMediator(
+        authenticator=authenticator,
+        database=database,
+        exif=impl_sqlalchemy.EXIFRepo(),
+        items=impl_sqlalchemy.ItemsRepo(),
+    )
+
+
+def get_search_mediator(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.SearchMediator:
+    """Get mediator instance."""
+    return mediators.SearchMediator(
+        browse=impl_sqlalchemy.BrowseRepo(),
+        database=database,
+        search=impl_sqlalchemy.SearchRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
+def get_home_mediator(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.HomeMediator:
+    """Get mediator instance."""
+    return mediators.HomeMediator(
+        database=database,
+        search=impl_sqlalchemy.SearchRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
+def get_browse_mediator(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.BrowseMediator:
+    """Get mediator instance."""
+    return mediators.BrowseMediator(
+        browse=impl_sqlalchemy.BrowseRepo(),
+        database=database,
+        items=impl_sqlalchemy.ItemsRepo(),
+        search=impl_sqlalchemy.SearchRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
+def get_users_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.UsersMediator:
+    """Get mediator instance."""
+    return mediators.UsersMediator(
+        authenticator=authenticator,
+        database=database,
+        items=impl_sqlalchemy.ItemsRepo(),
+        meta=impl_sqlalchemy.MetaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
+def get_items_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+    object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
+) -> mediators.ItemsMediator:
+    """Get mediator instance."""
+    return mediators.ItemsMediator(
+        authenticator=authenticator,
+        database=database,
+        items=impl_sqlalchemy.ItemsRepo(),
+        meta=impl_sqlalchemy.MetaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
+        object_storage=object_storage,
+        signatures=impl_sqlalchemy.SignaturesRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(get_users_mediator)],
 ) -> models.User:
     """Return current user or create anon."""
     use_case = LoginUserUseCase(mediator)
