@@ -178,6 +178,19 @@ def get_exif_mediator(
     )
 
 
+def get_metainfo_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.EXIFMediator:
+    """Get mediator instance."""
+    return mediators.EXIFMediator(
+        authenticator=authenticator,
+        database=database,
+        exif=impl_sqlalchemy.EXIFRepo(),
+        items=impl_sqlalchemy.ItemsRepo(),
+    )
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
     mediator: Annotated[mediators.Mediator, Depends(get_mediator)],

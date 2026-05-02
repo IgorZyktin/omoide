@@ -27,7 +27,7 @@ class Mediator:
     object_storage: object_interfaces.AbsObjectStorage
 
 
-@dataclass
+@dataclass(frozen=True)
 class EXIFMediator:
     """Class that ties all components together."""
 
@@ -35,4 +35,15 @@ class EXIFMediator:
     database: database_interfaces.AbsDatabase
 
     exif: database_interfaces.AbsEXIFRepo
+    items: database_interfaces.AbsItemsRepo
+
+
+@dataclass(frozen=True)
+class MetainfoMediator:
+    """Class that ties all components together."""
+
+    authenticator: infra_interfaces.AbsAuthenticator
+    database: database_interfaces.AbsDatabase
+
+    meta: database_interfaces.AbsMetaRepo
     items: database_interfaces.AbsItemsRepo

@@ -10,7 +10,7 @@ import pytz
 
 from omoide import dependencies as dep
 from omoide import models
-from omoide.database import interfaces as db_interfaces
+from omoide.infra import mediators
 from omoide.omoide_api.metainfo import metainfo_api_models
 from omoide.omoide_api.metainfo import metainfo_use_cases
 from omoide.presentation import web
@@ -32,12 +32,10 @@ api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 async def api_read_metainfo(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
-    items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
-    meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
+    mediator: Annotated[mediators.MetainfoMediator, Depends(dep.get_metainfo_mediator)],
 ):
     """Get metainfo of existing item."""
-    use_case = metainfo_use_cases.ReadMetainfoUseCase(database, items_repo, meta_repo)
+    use_case = metainfo_use_cases.ReadMetainfoUseCase(mediator)
 
     try:
         metainfo = await use_case.execute(user, item_uuid)
@@ -82,12 +80,10 @@ async def api_update_metainfo(
     item_uuid: UUID,
     metainfo_input: metainfo_api_models.MetainfoInput,
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
-    items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
-    meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
+    mediator: Annotated[mediators.MetainfoMediator, Depends(dep.get_metainfo_mediator)],
 ):
     """Update metainfo entry for existing item."""
-    use_case = metainfo_use_cases.UpdateMetainfoUseCase(database, items_repo, meta_repo)
+    use_case = metainfo_use_cases.UpdateMetainfoUseCase(mediator)
 
     try:
         await use_case.execute(user, item_uuid, **metainfo_input.model_dump())

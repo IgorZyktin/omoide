@@ -77,7 +77,8 @@ async def app_logout(
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
     }
-    return templates.TemplateResponse(request, 
+    return templates.TemplateResponse(
+        request,
         name='logout.html',
         context=context,
         status_code=status.HTTP_401_UNAUTHORIZED,
