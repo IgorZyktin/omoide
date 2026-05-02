@@ -2,7 +2,6 @@
 
 from typing import Annotated
 from typing import Literal
-import urllib.parse
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -12,7 +11,6 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
-from fastapi.responses import PlainTextResponse
 
 from omoide import dependencies as dep
 from omoide import limits
@@ -375,43 +373,3 @@ async def api_upload_item(
         return web.response_from_exc(exc)
 
     return {'result': 'enqueued content adding', 'item_uuid': str(item_uuid)}
-
-
-@api_items_router.get(
-    '/download/{item_uuid}',
-    summary='Return all child items as a zip archive',
-)
-async def api_download_collection(
-    item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
-    response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
-):
-    """Return all child items as a zip archive.
-
-    WARNING - this endpoint works only behind NGINX with mod_zip installed.
-    """
-    use_case = item_use_cases.DownloadCollectionUseCase(mediator)
-
-    try:
-        lines, _, item = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
-
-    if item and item.name:
-        filename = urllib.parse.quote(item.name)
-    else:
-        filename = 'unnamed collection'
-
-    filename = f'Omoide - {filename}'
-
-    return PlainTextResponse(
-        content='\n'.join(lines),
-        headers={
-            'X-Archive-Files': 'zip',
-            'Content-Disposition': f'attachment; filename="{filename}.zip"',
-        },
-    )
