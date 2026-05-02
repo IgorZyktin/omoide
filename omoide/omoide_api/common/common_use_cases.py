@@ -1,13 +1,8 @@
 """Common use case elements."""
 
 from typing import Any
-from uuid import UUID
-from uuid import uuid4
-
-import python_utilz as pu
 
 from omoide import custom_logging
-from omoide import exceptions
 from omoide import models
 from omoide.infra.mediators import Mediator
 
@@ -64,84 +59,3 @@ class BaseItemUseCase(BaseAPIUseCase):
         tags = await self.mediator.tags.get_computed_tags(conn, item)
         self._computed_tags_cache[item.id] = tags
         return tags
-
-    async def create_one_item(  # noqa: PLR0913 Too many arguments in function definition
-        self,
-        conn: Any,  # TODO - find a way to skip this argument
-        user: models.User,
-        uuid: UUID | None,
-        parent_uuid: UUID | None,
-        name: str,
-        number: int | None,
-        is_collection: bool,
-        tags: list[str],
-        permissions: list[dict[str, UUID | str]],
-        top_level: bool = False,
-    ) -> models.Item:
-        """Create single item."""
-        if uuid is None:
-            valid_uuid = uuid4()
-        else:
-            valid_uuid = uuid
-
-        msg = 'You are not allowed to create items for other users'
-
-        if top_level:
-            parent = None
-        elif parent_uuid is None:
-            parent = await self.mediator.users.get_root_item(conn, user)
-        else:
-            parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
-            if parent.owner_uuid != user.uuid:
-                raise exceptions.NotAllowedError(msg)
-
-        _permissions: set[int] = set()
-        for human_readable_user in permissions:
-            user_uuid = human_readable_user.get('uuid')
-            if not isinstance(user_uuid, UUID):
-                continue
-            local_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-            _permissions.add(local_user.id)
-
-        item = models.Item(
-            id=-1,
-            uuid=valid_uuid,
-            parent_id=parent.id if parent is not None else None,
-            parent_uuid=parent.uuid if parent is not None else None,
-            owner_id=user.id,
-            owner_uuid=user.uuid,
-            name=name,
-            status=models.Status.AVAILABLE if is_collection else models.Status.CREATED,
-            number=number or -1,
-            is_collection=is_collection,
-            content_ext=None,
-            preview_ext=None,
-            thumbnail_ext=None,
-            tags=set(tags),
-            permissions=_permissions,
-            extras={},
-        )
-
-        item.id = await self.mediator.items.create(conn, item)
-
-        metainfo = models.Metainfo(
-            item_id=item.id,
-            created_at=pu.now(),
-            updated_at=pu.now(),
-            deleted_at=None,
-            user_time=None,
-            content_type=None,
-            content_size=None,
-            preview_size=None,
-            thumbnail_size=None,
-            content_width=None,
-            content_height=None,
-            preview_width=None,
-            preview_height=None,
-            thumbnail_width=None,
-            thumbnail_height=None,
-        )
-
-        await self.mediator.meta.create(conn, metainfo)
-
-        return item

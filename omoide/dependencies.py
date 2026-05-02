@@ -222,9 +222,25 @@ def get_browse_mediator(
     return mediators.BrowseMediator(
         browse=impl_sqlalchemy.BrowseRepo(),
         database=database,
+        items=impl_sqlalchemy.ItemsRepo(),
         search=impl_sqlalchemy.SearchRepo(),
         users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
+def get_users_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.UsersMediator:
+    """Get mediator instance."""
+    return mediators.UsersMediator(
+        authenticator=authenticator,
+        database=database,
         items=impl_sqlalchemy.ItemsRepo(),
+        meta=impl_sqlalchemy.MetaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
     )
 
 
