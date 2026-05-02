@@ -215,6 +215,19 @@ def get_home_mediator(
     )
 
 
+def get_browse_mediator(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.BrowseMediator:
+    """Get mediator instance."""
+    return mediators.BrowseMediator(
+        browse=impl_sqlalchemy.BrowseRepo(),
+        database=database,
+        search=impl_sqlalchemy.SearchRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+        items=impl_sqlalchemy.ItemsRepo(),
+    )
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
     mediator: Annotated[mediators.Mediator, Depends(get_mediator)],

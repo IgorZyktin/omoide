@@ -65,3 +65,14 @@ class HomeMediator:
     database: database_interfaces.AbsDatabase
     search: database_interfaces.AbsSearchRepo
     users: database_interfaces.AbsUsersRepo
+
+
+@dataclass(frozen=True)
+class BrowseMediator:
+    """Class that ties all components together."""
+
+    browse: database_interfaces.AbsBrowseRepo
+    database: database_interfaces.AbsDatabase
+    items: database_interfaces.AbsItemsRepo
+    search: database_interfaces.AbsSearchRepo
+    users: database_interfaces.AbsUsersRepo
