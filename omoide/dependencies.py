@@ -204,6 +204,17 @@ def get_search_mediator(
     )
 
 
+def get_home_mediator(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.HomeMediator:
+    """Get mediator instance."""
+    return mediators.HomeMediator(
+        database=database,
+        search=impl_sqlalchemy.SearchRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
     mediator: Annotated[mediators.Mediator, Depends(get_mediator)],
