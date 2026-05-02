@@ -17,7 +17,7 @@ from fastapi.responses import PlainTextResponse
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra.mediators import Mediator
+from omoide.infra import mediators
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
@@ -36,7 +36,7 @@ async def api_create_item(
     request: Request,
     response: Response,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
     item_in: common_api_models.ItemInput,
 ):
     """Create single item."""
@@ -60,7 +60,7 @@ async def api_create_item(
 )
 async def api_create_many_items(
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
     items_in: list[common_api_models.ItemInput],
 ):
     """Create many items in one request."""
@@ -88,7 +88,7 @@ async def api_create_many_items(
 async def api_get_item(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Get exising item."""
     use_case = item_use_cases.GetItemUseCase(mediator)
@@ -109,7 +109,7 @@ async def api_get_item(
 )
 async def api_get_many_items(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
     owner_uuid: Annotated[UUID | None, Query()] = None,
     parent_uuid: Annotated[UUID | None, Query()] = None,
     name: Annotated[str | None, Query(max_length=limits.MAX_QUERY)] = None,
@@ -144,7 +144,7 @@ async def api_update_item(
     item_uuid: UUID,
     item_update_in: item_api_models.ItemUpdateInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Update exising item."""
     use_case = item_use_cases.UpdateItemUseCase(mediator)
@@ -171,7 +171,7 @@ async def api_rename_item(
     item_uuid: UUID,
     item_rename_in: item_api_models.ItemRenameInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Rename exising item."""
     use_case = item_use_cases.RenameItemUseCase(mediator)
@@ -202,7 +202,7 @@ async def api_change_parent_item(
     item_uuid: UUID,
     new_parent_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Change parent of the item."""
     use_case = item_use_cases.ChangeParentItemUseCase(mediator)
@@ -234,7 +234,7 @@ async def api_update_item_tags(
     item_uuid: UUID,
     item_tags_in: item_api_models.ItemUpdateTagsInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Update item tags."""
     use_case = item_use_cases.UpdateItemTagsUseCase(mediator)
@@ -264,7 +264,7 @@ async def api_update_item_tags(
 async def api_delete_item(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
     desired_switch: Annotated[Literal['parent', 'sibling'], Query()] = 'sibling',
 ):
     """Delete exising item."""
@@ -301,7 +301,7 @@ async def api_item_update_permissions(
     item_uuid: UUID,
     permissions_in: item_api_models.PermissionsInput,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Change permissions for given item.
 
@@ -342,7 +342,7 @@ async def api_upload_item(
     item_uuid: UUID,
     file: UploadFile,
     user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
 ):
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
@@ -384,7 +384,7 @@ async def api_upload_item(
 async def api_download_collection(
     item_uuid: UUID,
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
+    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
     response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
 ):
     """Return all child items as a zip archive.

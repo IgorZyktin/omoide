@@ -244,9 +244,28 @@ def get_users_mediator(
     )
 
 
+def get_items_mediator(
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+    object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
+) -> mediators.ItemsMediator:
+    """Get mediator instance."""
+    return mediators.ItemsMediator(
+        authenticator=authenticator,
+        database=database,
+        items=impl_sqlalchemy.ItemsRepo(),
+        meta=impl_sqlalchemy.MetaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
+        object_storage=object_storage,
+        signatures=impl_sqlalchemy.SignaturesRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
-    mediator: Annotated[mediators.Mediator, Depends(get_mediator)],
+    mediator: Annotated[mediators.UsersMediator, Depends(get_users_mediator)],
 ) -> models.User:
     """Return current user or create anon."""
     use_case = LoginUserUseCase(mediator)

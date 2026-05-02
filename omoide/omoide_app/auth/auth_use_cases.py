@@ -3,11 +3,15 @@
 import python_utilz as pu
 
 from omoide import models
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
+from omoide.infra import mediators
 
 
-class LoginUserUseCase(BaseAPIUseCase):
+class LoginUserUseCase:
     """Login user on the site."""
+
+    def __init__(self, mediator: mediators.UsersMediator) -> None:
+        """Initialize instance."""
+        self.mediator = mediator
 
     async def execute(self, login: str, password: str) -> models.User:
         """Execute."""

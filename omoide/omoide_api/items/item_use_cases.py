@@ -1,5 +1,7 @@
 """Use cases for Item-related operations."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 from typing import Literal
 from uuid import UUID
@@ -14,21 +16,16 @@ from omoide import models
 from omoide import utils
 from omoide.domain import ensure
 from omoide.infra import mediators
-from omoide.omoide_api.common.common_use_cases import BaseAPIUseCase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseItemUseCase:
-    """Base use case for user-related operations."""
+class CreateOneItemUseCase:
+    """Use case for creating one item."""
 
-    def __init__(self, mediator: mediators.UsersMediator) -> None:
+    def __init__(self, mediator: mediators.UsersMediator | mediators.ItemsMediator) -> None:
         """Initialize instance."""
         self.mediator = mediator
-
-
-class CreateOneItemUseCase(BaseItemUseCase):
-    """Use case for creating one item."""
 
     async def execute(  # noqa: PLR0913 Too many arguments in function definition
         self,
@@ -41,6 +38,7 @@ class CreateOneItemUseCase(BaseItemUseCase):
         tags: list[str],
         permissions: list[dict[str, UUID | str]],
         top_level: bool = False,
+        connection: Any = None,
     ) -> models.Item:
         """Create single item."""
         if uuid is None:
@@ -50,7 +48,16 @@ class CreateOneItemUseCase(BaseItemUseCase):
 
         msg = 'You are not allowed to create items for other users'
 
-        async with self.mediator.database.transaction() as conn:
+        transaction: Any
+        if connection is None:
+            transaction = self.mediator.database.transaction()
+        else:
+
+            @asynccontextmanager
+            async def transaction() -> AsyncIterator[Any]:
+                yield conn
+
+        async with transaction as conn:
             if top_level:
                 parent = None
             elif parent_uuid is None:
@@ -112,6 +119,50 @@ class CreateOneItemUseCase(BaseItemUseCase):
         return item
 
 
+class BaseItemUseCase:
+    """Base use case for user-related operations."""
+
+    def __init__(self, mediator: mediators.ItemsMediator) -> None:
+        """Initialize instance."""
+        self.mediator = mediator
+        self._users_cache: dict[int, models.User] = {}
+        self._items_cache: dict[int, models.Item] = {}
+        self._computed_tags_cache: dict[int, set[str]] = {}
+
+    async def _get_cached_user(self, conn: Any, user_id: int) -> models.User:
+        """Perform cached request."""
+        user = self._users_cache.get(user_id)
+
+        if user is not None:
+            return user
+
+        user = await self.mediator.users.get_by_id(conn, user_id)
+        self._users_cache[user.id] = user
+        return user
+
+    async def _get_cached_item(self, conn: Any, item_id: int) -> models.Item:
+        """Perform cached request."""
+        item = self._items_cache.get(item_id)
+
+        if item is not None:
+            return item
+
+        item = await self.mediator.items.get_by_id(conn, item_id)
+        self._items_cache[item.id] = item
+        return item
+
+    async def _get_cached_computed_tags(self, conn: Any, item: models.Item) -> set[str]:
+        """Perform cached request."""
+        tags = self._computed_tags_cache.get(item.id)
+
+        if tags is not None:
+            return tags
+
+        tags = await self.mediator.tags.get_computed_tags(conn, item)
+        self._computed_tags_cache[item.id] = tags
+        return tags
+
+
 class CreateManyItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
 
@@ -126,9 +177,10 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         items: list[models.Item] = []
         users_map: dict[int, models.User | None] = {user.id: user}
 
+        sub_use_case = CreateOneItemUseCase(self.mediator)
         async with self.mediator.database.transaction() as conn:
             for raw_item in items_in:
-                item = await self.create_one_item(conn, user, **raw_item)
+                item = await sub_use_case.execute(user, **raw_item, connection=conn)
                 items.append(item)
 
                 if item.parent_id is None:
@@ -208,7 +260,7 @@ class GetItemUseCase(BaseItemUseCase):
         return item, users_map
 
 
-class GetManyItemsUseCase(BaseAPIUseCase):
+class GetManyItemsUseCase(BaseItemUseCase):
     """Use case for item getting."""
 
     async def execute(
@@ -512,7 +564,7 @@ class DeleteItemUseCase(BaseItemUseCase):
         return switch_to
 
 
-class UploadItemUseCase(BaseAPIUseCase):
+class UploadItemUseCase(BaseItemUseCase):
     """Use case for processing image binary content."""
 
     async def execute(
@@ -724,7 +776,7 @@ class DownloadCollectionUseCase(BaseItemUseCase):
         return f'{checksum} {size} {fs_path} {user_visible_filename}'
 
 
-class ChangePermissionsUseCase(BaseAPIUseCase):
+class ChangePermissionsUseCase(BaseItemUseCase):
     """Use case for item permissions change."""
 
     async def execute(

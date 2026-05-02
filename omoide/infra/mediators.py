@@ -89,3 +89,18 @@ class UsersMediator:
     misc: database_interfaces.AbsMiscRepo
     tags: database_interfaces.AbsTagsRepo
     users: database_interfaces.AbsUsersRepo
+
+
+@dataclass(frozen=True)
+class ItemsMediator:
+    """Class that ties all components together."""
+
+    authenticator: infra_interfaces.AbsAuthenticator
+    database: database_interfaces.AbsDatabase
+    items: database_interfaces.AbsItemsRepo
+    meta: database_interfaces.AbsMetaRepo
+    misc: database_interfaces.AbsMiscRepo
+    object_storage: object_interfaces.AbsObjectStorage
+    signatures: database_interfaces.AbsSignaturesRepo
+    tags: database_interfaces.AbsTagsRepo
+    users: database_interfaces.AbsUsersRepo
