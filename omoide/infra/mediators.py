@@ -33,7 +33,6 @@ class EXIFMediator:
 
     authenticator: infra_interfaces.AbsAuthenticator
     database: database_interfaces.AbsDatabase
-
     exif: database_interfaces.AbsEXIFRepo
     items: database_interfaces.AbsItemsRepo
 
@@ -44,6 +43,16 @@ class MetainfoMediator:
 
     authenticator: infra_interfaces.AbsAuthenticator
     database: database_interfaces.AbsDatabase
-
-    meta: database_interfaces.AbsMetaRepo
     items: database_interfaces.AbsItemsRepo
+    meta: database_interfaces.AbsMetaRepo
+
+
+@dataclass(frozen=True)
+class SearchMediator:
+    """Class that ties all components together."""
+
+    browse: database_interfaces.AbsBrowseRepo
+    database: database_interfaces.AbsDatabase
+    search: database_interfaces.AbsSearchRepo
+    tags: database_interfaces.AbsTagsRepo
+    users: database_interfaces.AbsUsersRepo

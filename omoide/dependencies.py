@@ -191,6 +191,19 @@ def get_metainfo_mediator(
     )
 
 
+def get_search_mediator(
+    database: Annotated[AbsDatabase, Depends(get_database)],
+) -> mediators.SearchMediator:
+    """Get mediator instance."""
+    return mediators.SearchMediator(
+        browse=impl_sqlalchemy.BrowseRepo(),
+        database=database,
+        search=impl_sqlalchemy.SearchRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
     mediator: Annotated[mediators.Mediator, Depends(get_mediator)],

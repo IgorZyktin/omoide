@@ -13,7 +13,7 @@ from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
 from omoide import utils
-from omoide.database import interfaces as db_interfaces
+from omoide.infra import mediators
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
 from omoide.omoide_api.search import search_use_cases
@@ -32,8 +32,7 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
 )
 async def api_autocomplete(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
-    tags_repo: Annotated[db_interfaces.AbsTagsRepo, Depends(dep.get_tags_repo)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
     tag: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     limit: Annotated[
         int,
@@ -48,7 +47,7 @@ async def api_autocomplete(
     This endpoint can be used by anybody, but each user will get tailored
     output. String must be an exact match, no guessing is used.
     """
-    use_case = search_use_cases.AutocompleteUseCase(database, tags_repo)
+    use_case = search_use_cases.AutocompleteUseCase(mediator)
 
     # noinspection PyBroadException
     try:
@@ -77,9 +76,7 @@ async def api_autocomplete(
 )
 async def api_get_recent_updates(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
-    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
-    browse_repo: Annotated[db_interfaces.AbsBrowseRepo, Depends(dep.get_browse_repo)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
@@ -89,7 +86,7 @@ async def api_get_recent_updates(
 
     This endpoint can be used by any user, but each will get tailored output.
     """
-    use_case = search_use_cases.RecentUpdatesUseCase(database, users_repo, browse_repo)
+    use_case = search_use_cases.RecentUpdatesUseCase(mediator)
 
     plan = models.Plan(
         query='',
@@ -119,8 +116,7 @@ async def api_get_recent_updates(
 )
 async def api_search_total(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
-    search_repo: Annotated[db_interfaces.AbsSearchRepo, Depends(dep.get_search_repo)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     collections: Annotated[bool, Query()] = False,
 ):
@@ -128,7 +124,7 @@ async def api_search_total(
     if len(q) < limits.MIN_QUERY:
         return search_api_models.SearchTotalOutput(total=0, duration=0.0)
 
-    use_case = search_use_cases.ApiSearchTotalUseCase(database, search_repo)
+    use_case = search_use_cases.ApiSearchTotalUseCase(mediator)
     tags_include, tags_exclude = utils.parse_tags(q)
 
     plan = models.Plan(
@@ -158,9 +154,7 @@ async def api_search_total(
 )
 async def api_search(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
-    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
-    search_repo: Annotated[db_interfaces.AbsSearchRepo, Depends(dep.get_search_repo)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
@@ -176,7 +170,7 @@ async def api_search(  # noqa: PLR0913
     if len(q) < limits.MIN_QUERY:
         return common_api_models.ManyItemsOutput(duration=0.0, items=[])
 
-    use_case = search_use_cases.ApiSearchUseCase(database, users_repo, search_repo)
+    use_case = search_use_cases.ApiSearchUseCase(mediator)
     tags_include, tags_exclude = utils.parse_tags(q)
 
     plan = models.Plan(
