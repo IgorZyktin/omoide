@@ -37,7 +37,7 @@ async def app_not_found(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return templates.TemplateResponse('special_not_found.html', context)
+    return templates.TemplateResponse(request, 'special_not_found.html', context)
 
 
 @app_special_router.get(
@@ -59,7 +59,7 @@ async def app_forbidden(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return templates.TemplateResponse('special_forbidden.html', context)
+    return templates.TemplateResponse(request, 'special_forbidden.html', context)
 
 
 @app_special_router.get(
@@ -81,4 +81,4 @@ async def app_bad_request(
         'user': user,
         'aim_wrapper': aim_wrapper,
     }
-    return templates.TemplateResponse('special_bad_request.html', context)
+    return templates.TemplateResponse(request, 'special_bad_request.html', context)

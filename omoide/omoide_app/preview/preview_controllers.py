@@ -62,4 +62,4 @@ async def app_preview(  # noqa: PLR0913
         'block_paginated': True,
     }
 
-    return templates.TemplateResponse('preview.html', context)
+    return templates.TemplateResponse(request, 'preview.html', context)

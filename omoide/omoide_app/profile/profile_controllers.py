@@ -49,7 +49,7 @@ async def app_profile(
         'block_paginated': True,
         'url': request.url_for('app_search'),
     }
-    return templates.TemplateResponse('profile.html', context)
+    return templates.TemplateResponse(request, 'profile.html', context)
 
 
 @app_profile_router.get('/profile/usage')
@@ -87,7 +87,7 @@ async def app_profile_usage(  # noqa: PLR0913
         'aim_wrapper': aim_wrapper,
     }
 
-    return templates.TemplateResponse('profile_usage.html', context)
+    return templates.TemplateResponse(request, 'profile_usage.html', context)
 
 
 @app_profile_router.get('/profile/tags')
@@ -123,7 +123,7 @@ async def app_profile_tags(  # noqa: PLR0913
         'block_paginated': True,
     }
 
-    return templates.TemplateResponse('profile_tags.html', context)
+    return templates.TemplateResponse(request, 'profile_tags.html', context)
 
 
 @app_profile_router.get('/profile/duplicates')
@@ -162,4 +162,4 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
         'block_paginated': True,
     }
 
-    return templates.TemplateResponse('profile_duplicates.html', context)
+    return templates.TemplateResponse(request, 'profile_duplicates.html', context)

@@ -53,4 +53,4 @@ async def app_upload(  # noqa: PLR0913
         'users_with_permission': users_with_permission,
     }
 
-    return templates.TemplateResponse('item_upload.html', context)
+    return templates.TemplateResponse(request, 'item_upload.html', context)

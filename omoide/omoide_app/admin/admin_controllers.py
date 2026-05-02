@@ -42,4 +42,4 @@ async def app_admin(
         'url': request.url_for('app_search'),
     }
 
-    return templates.TemplateResponse('admin.html', context)
+    return templates.TemplateResponse(request, 'admin.html', context)
