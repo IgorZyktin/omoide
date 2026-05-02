@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 from omoide import cfg
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_app.upload import upload_use_cases
 from omoide.presentation import web
 

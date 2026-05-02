@@ -23,7 +23,7 @@ from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
-from omoide.infra.mediator import Mediator
+from omoide.infra import mediators
 from omoide.infra.web_locator import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
@@ -147,9 +147,9 @@ def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
     object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
     database: Annotated[AbsDatabase, Depends(get_database)],
-) -> Mediator:
+) -> mediators.Mediator:
     """Get mediator instance."""
-    return Mediator(
+    return mediators.Mediator(
         authenticator=authenticator,
         database=database,
         browse=impl_sqlalchemy.BrowseRepo(),
@@ -167,7 +167,7 @@ def get_mediator(
 
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    mediator: Annotated[mediators.Mediator, Depends(get_mediator)],
 ) -> models.User:
     """Return current user or create anon."""
     use_case = LoginUserUseCase(mediator)

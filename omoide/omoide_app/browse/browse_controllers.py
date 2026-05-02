@@ -15,7 +15,7 @@ from omoide import const
 from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_app.browse import browse_use_cases
 from omoide.presentation import infra
 from omoide.presentation import web

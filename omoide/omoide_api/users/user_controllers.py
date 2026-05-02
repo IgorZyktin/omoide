@@ -12,7 +12,7 @@ from fastapi import status
 from omoide import dependencies as dep
 from omoide import models
 from omoide import utils
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_api.users import user_api_models
 from omoide.omoide_api.users import user_use_cases
 from omoide.presentation import web

@@ -9,7 +9,7 @@ import python_utilz as pu
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 
 LOG = custom_logging.get_logger(__name__)
 

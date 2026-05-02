@@ -17,7 +17,7 @@ from fastapi.responses import PlainTextResponse
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra.mediator import Mediator
+from omoide.infra.mediators import Mediator
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
