@@ -76,7 +76,7 @@ async def api_autocomplete(
 )
 async def api_get_recent_updates(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
@@ -116,7 +116,7 @@ async def api_get_recent_updates(
 )
 async def api_search_total(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     collections: Annotated[bool, Query()] = False,
 ):
@@ -154,7 +154,7 @@ async def api_search_total(
 )
 async def api_search(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
