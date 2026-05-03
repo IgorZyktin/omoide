@@ -10,6 +10,7 @@ from omoide import const
 from omoide.omoide_api import api_info
 from omoide.omoide_api.actions import actions_controllers
 from omoide.omoide_api.browse import browse_controllers
+from omoide.omoide_api.download import download_controllers
 from omoide.omoide_api.exif import exif_controllers
 from omoide.omoide_api.home import home_controllers
 from omoide.omoide_api.info import info_controllers
@@ -42,6 +43,7 @@ def apply_api_routes_v1(current_api: FastAPI) -> None:
 
     api_router_v1.include_router(actions_controllers.api_actions_router)
     api_router_v1.include_router(browse_controllers.api_browse_router)
+    api_router_v1.include_router(download_controllers.api_download_router)
     api_router_v1.include_router(exif_controllers.api_exif_router)
     api_router_v1.include_router(home_controllers.api_home_router)
     api_router_v1.include_router(info_controllers.api_info_router)
