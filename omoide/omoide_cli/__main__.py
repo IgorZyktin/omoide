@@ -12,6 +12,7 @@ from omoide.omoide_cli.db import main as db
 from omoide.omoide_cli.display import main as display
 from omoide.omoide_cli.fs import main as filesystem
 from omoide.omoide_cli.signatures import code as signatures
+from omoide.omoide_cli.thumbnails import code as thumbnails
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -67,6 +68,38 @@ def fix_signatures(
         if output and diff:
             with open(output, mode='w', encoding='utf-8') as file:
                 json.dump(diff, file, ensure_ascii=False, indent=4)
+
+
+@app.command()
+def fix_missing_thumbnails(
+    password: Annotated[
+        str,
+        typer.Option(help='User password'),
+    ],
+    user: Annotated[
+        str,
+        typer.Option(help='User to operate from'),
+    ] = 'admin',
+    create: Annotated[
+        bool,
+        typer.Option(help='Automatically create missing thumbnails'),
+    ] = False,
+    marker: Annotated[
+        int,
+        typer.Option(help='Id of last processed item'),
+    ] = -1,
+    limit: Annotated[
+        int,
+        typer.Option(help='Maximum amount of rows to process'),
+    ] = 100,
+) -> None:
+    """Check that all items has a thumbnail, fix if need to."""
+    db_url = utils.get_env('OMOIDE_CLI__DB__URL')
+    site_url = utils.get_env('OMOIDE_CLI__SITE_URL')
+
+    engine = sa.create_engine(db_url, pool_pre_ping=True, future=True)
+
+    thumbnails.fix_missing_thumbnails(engine, site_url, create, marker, limit, user, password)
 
 
 app.add_typer(db.app, name='db')

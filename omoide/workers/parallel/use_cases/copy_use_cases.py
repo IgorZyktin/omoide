@@ -50,12 +50,20 @@ class CopyUseCase(BaseParallelWorkerUseCase):
             )
             owner_uuid = operation.extras['owner_uuid']
 
-            if operation.extras['media_type'] == const.CONTENT:
-                source_ext = source_item.content_ext or ''
-            elif operation.extras['media_type'] == const.PREVIEW:
-                source_ext = source_item.preview_ext or ''
+            if operation.extras['media_type'] == const.CONTENT and bool(source_item.content_ext):
+                source_ext = source_item.content_ext
+                target_item.content_ext = source_ext
+            elif operation.extras['media_type'] == const.PREVIEW and bool(source_item.preview_ext):
+                source_ext = source_item.preview_ext
+                target_item.preview_ext = source_ext
+            elif operation.extras['media_type'] == const.THUMBNAIL and bool(
+                source_item.thumbnail_ext
+            ):
+                source_ext = source_item.thumbnail_ext
+                target_item.thumbnail_ext = source_ext
             else:
-                source_ext = source_item.thumbnail_ext or ''
+                msg = 'Target has no actual data to copy'
+                raise ValueError(msg)
 
             target_ext = source_ext
 
