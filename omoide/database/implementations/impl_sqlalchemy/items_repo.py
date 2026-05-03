@@ -185,7 +185,6 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             sa.select(db_models.Item)
             .where(
                 db_models.Item.parent_uuid == item.parent_uuid,
-                db_models.Item.status == models.Status.AVAILABLE,
             )
             .order_by(db_models.Item.number)
         )
