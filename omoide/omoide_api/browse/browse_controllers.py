@@ -28,7 +28,7 @@ api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 )
 async def api_browse(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.BrowseMediator, Depends(dep.get_database)],
+    mediator: Annotated[mediators.BrowseMediator, Depends(dep.get_browse_mediator)],
     item_uuid: UUID,
     direct: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
