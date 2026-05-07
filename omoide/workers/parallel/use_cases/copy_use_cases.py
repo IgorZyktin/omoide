@@ -74,7 +74,7 @@ class CopyUseCase(BaseParallelWorkerUseCase):
                 str(owner_uuid),
                 str(source_item.uuid),
                 str(target_item.uuid),
-                source_ext,
-                target_ext,
+                source_ext or '',
+                target_ext or '',
                 self.config.prefix_size,
             )
