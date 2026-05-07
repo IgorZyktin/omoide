@@ -32,7 +32,7 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
 )
 async def api_autocomplete(
     user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_database)],
+    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
     tag: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     limit: Annotated[
         int,
