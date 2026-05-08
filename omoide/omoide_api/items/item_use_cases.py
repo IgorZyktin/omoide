@@ -50,14 +50,14 @@ class CreateOneItemUseCase:
 
         transaction: Any
         if connection is None:
-            transaction = self.mediator.database.transaction()
+            transaction = self.mediator.database.transaction
         else:
 
             @asynccontextmanager
             async def transaction() -> AsyncIterator[Any]:
                 yield conn
 
-        async with transaction as conn:
+        async with transaction() as conn:
             if top_level:
                 parent = None
             elif parent_uuid is None:
