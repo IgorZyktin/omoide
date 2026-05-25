@@ -121,8 +121,17 @@ class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
         """Delete the given item."""
 
     @abc.abstractmethod
-    async def read_computed_tags(self, conn: ConnectionT, item: models.Item) -> list[str]:
+    async def get_computed_tags(self, conn: ConnectionT, item: models.Item) -> list[str]:
         """Return all computed tags for the item."""
+
+    @abc.abstractmethod
+    async def save_computed_tags(
+        self,
+        conn: ConnectionT,
+        item: models.Item,
+        tags: set[str],
+    ) -> None:
+        """Replace all computed tags with given set."""
 
     @abc.abstractmethod
     async def count_family(self, conn: ConnectionT, item: models.Item) -> int:
@@ -169,3 +178,11 @@ class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
         limit: int,
     ) -> list[models.Duplicate]:
         """Return groups of items with same hash."""
+
+    @abc.abstractmethod
+    async def select(
+        self,
+        conn: ConnectionT,
+        **kwargs,
+    ) -> list[models.Item]:
+        """Return filtered list of items."""

@@ -6,6 +6,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from omoide import exceptions
@@ -343,7 +344,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         response = await conn.execute(stmt)
         return bool(response.rowcount)
 
-    async def read_computed_tags(self, conn: AsyncConnection, item: models.Item) -> list[str]:
+    async def get_computed_tags(self, conn: AsyncConnection, item: models.Item) -> list[str]:
         """Return all computed tags for the item."""
         query = sa.select(db_models.ComputedTags.tags).where(
             db_models.ComputedTags.item_id == item.id,
@@ -353,6 +354,27 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         if not response:
             return []
         return list(response.tags)
+
+    async def save_computed_tags(
+        self,
+        conn: AsyncConnection,
+        item: models.Item,
+        tags: set[str],
+    ) -> None:
+        """Replace all computed tags with given set."""
+        _tags = tuple(sorted(tags))
+
+        insert = pg_insert(db_models.ComputedTags).values(
+            item_id=item.id,
+            tags=_tags,
+        )
+
+        stmt = insert.on_conflict_do_update(
+            index_elements=[db_models.ComputedTags.item_id],
+            set_={'tags': insert.excluded.tags},
+        )
+
+        await conn.execute(stmt)
 
     async def count_family(self, conn: AsyncConnection, item: models.Item) -> int:
         """Count all descendants for given item (including the item itself)."""
@@ -524,3 +546,21 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             result.append(duplication)
 
         return result
+
+    async def select(
+        self,
+        conn: AsyncConnection,
+        **kwargs,
+    ) -> list[models.Item]:
+        """Return filtered list of items."""
+        query = sa.select(db_models.Item)
+
+        if 'parent_id' in kwargs:
+            parent_id = kwargs['parent_id']
+            if parent_id is None:
+                query = query.where(db_models.Item.parent_id == sa.null())
+            else:
+                query = query.where(db_models.Item.parent_id == parent_id)
+
+        response = (await conn.execute(query)).fetchall()
+        return [models.Item.from_obj(row) for row in response]

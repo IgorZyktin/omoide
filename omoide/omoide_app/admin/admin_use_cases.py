@@ -54,7 +54,7 @@ class AppUpdateItemUseCase(BaseAPPUseCase):
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             total = await self.mediator.items.count_family(conn, item)
             can_see = await self.mediator.users.select(conn, ids=item.permissions)
-            computed_tags = await self.mediator.items.read_computed_tags(conn, item)
+            computed_tags = await self.mediator.items.get_computed_tags(conn, item)
             metainfo = await self.mediator.meta.get_by_item(conn, item)
             notes = await self.mediator.meta.get_item_notes(conn, item)
 
