@@ -248,7 +248,7 @@ class Item(OmoideModel):
         computed_tags.update(parent_tags)
 
         if self.parent_uuid is not None:
-            computed_tags.add(str(self.parent_uuid))
+            computed_tags.add(str(self.parent_uuid).casefold())
 
         computed_tags.add(str(self.uuid).casefold())
 

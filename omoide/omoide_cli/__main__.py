@@ -1,11 +1,14 @@
 """Manual CLI operations."""
 
+import asyncio
 import json
 from typing import Annotated
 
 import sqlalchemy as sa
 import typer
 
+from omoide.omoide_cli import rebuild_computed_tags as rebuild_computed_tags_module
+from omoide.omoide_cli import rebuild_known_tags as rebuild_known_tags_module
 from omoide.omoide_cli import utils
 from omoide.omoide_cli.audit import main as audit_module
 from omoide.omoide_cli.db import main as db
@@ -17,6 +20,18 @@ from omoide.omoide_cli.thumbnails import code as thumbnails
 app = typer.Typer(no_args_is_help=True)
 
 app.command()(audit_module.audit)
+
+
+@app.command()
+def rebuild_computed_tags() -> None:
+    """Perform full recalculation of computed tags."""
+    asyncio.run(rebuild_computed_tags_module.run())
+
+
+@app.command()
+def rebuild_known_tags() -> None:
+    """Perform full recalculation of known tags."""
+    asyncio.run(rebuild_known_tags_module.run())
 
 
 @app.command()
