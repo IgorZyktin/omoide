@@ -143,6 +143,19 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
 
+    async def count_all(self, conn: AsyncConnection) -> int:
+        """Return total amount of items."""
+        query = (
+            sa.select(sa.func.count().label('total_items'))
+            .select_from(db_models.Item)
+            .where(
+                db_models.Item.status != models.Status.DELETED,
+            )
+        )
+
+        response = (await conn.execute(query)).fetchone()
+        return int(response.total_items) if response else 0
+
     async def count_children(self, conn: AsyncConnection, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
         query = (

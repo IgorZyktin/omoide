@@ -56,6 +56,10 @@ class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
         """Return list of children for given item."""
 
     @abc.abstractmethod
+    async def count_all(self, conn: ConnectionT) -> int:
+        """Return total amount of items."""
+
+    @abc.abstractmethod
     async def count_children(self, conn: ConnectionT, item: models.Item) -> int:
         """Count all children of an item with given UUID."""
 

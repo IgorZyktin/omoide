@@ -29,11 +29,9 @@ async def run():
                     )
 
             existing_known_tags_anon = await tags_repo.get_known_tags_anon(conn)
-            actual_known_tags_anon = await tags_repo.calculate_known_tags_anon(
-                conn, only_tags=None
-            )
+            actual_known_tags_anon = await tags_repo.calculate_known_tags_anon(conn, only_tags=None)
             if existing_known_tags_anon != actual_known_tags_anon:
-                print(f'Saving anon')  # noqa: T201
+                print('Saving anon')  # noqa: T201
                 await tags_repo.insert_known_tags_anon(
                     conn, actual_known_tags_anon, batch_size=1000
                 )

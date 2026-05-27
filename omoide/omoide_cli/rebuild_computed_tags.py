@@ -5,6 +5,11 @@ from omoide import utils as global_utils
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.omoide_cli import utils
 
+ITEMS_REPO = impl_sqlalchemy.ItemsRepo()
+TAGS_REPO = impl_sqlalchemy.TagsRepo()
+TAGS_CACHE: dict[int, set[str]] = {}
+PROCESSED_ITEMS = 0
+
 
 async def run():
     """Entry point."""
@@ -13,52 +18,48 @@ async def run():
         db_url=db_url,
         echo=False,
     )
-    items_repo = impl_sqlalchemy.ItemsRepo()
-    tags_repo = impl_sqlalchemy.TagsRepo()
-    items_cache: dict[int, models.Item] = {}
-    tags_cache: dict[int, set[str]] = {}
 
     try:
         async with database.transaction() as conn:
-            root_items = await items_repo.select(conn, parent_id=None)
+            root_items = await ITEMS_REPO.select(conn, parent_id=None)
+            total_items = await ITEMS_REPO.count_all(conn)
 
         for root_item in root_items:
-            await rebuild_tags(database, items_repo, tags_repo, root_item, items_cache, tags_cache)
+            await rebuild_tags(database, root_item, total_items)
+
     finally:
         await database.disconnect()
 
 
 async def rebuild_tags(
     database: impl_sqlalchemy.SqlalchemyDatabase,
-    items_repo: impl_sqlalchemy.ItemsRepo,
-    tags_repo: impl_sqlalchemy.TagsRepo,
     item: models.Item,
-    items_cache: dict[int, models.Item],
-    tags_cache: dict[int, set[str]],
+    total_items: int,
 ) -> None:
     """Rebuild tags for specific item."""
-    parent = items_cache.get(item.parent_id)
-    parent_tags = tags_cache.get(item.parent_id, set())
+    global PROCESSED_ITEMS  # noqa: PLW0603
+    PROCESSED_ITEMS += 1
+    percent = (PROCESSED_ITEMS / (total_items or 1)) * 100
+    percent_str = f'{percent:.2f}'
 
-    if parent is None:
-        computed_tags = item.get_computed_tags(parent_tags=set())
-    else:
-        computed_tags = item.get_computed_tags(parent_tags=parent_tags)
-
-    items_cache[item.id] = item
-    tags_cache[item.id] = computed_tags
+    parent_tags = TAGS_CACHE.get(item.parent_id, set())
+    computed_tags = item.get_computed_tags(parent_tags=parent_tags)
+    TAGS_CACHE[item.id] = computed_tags
 
     async with database.transaction() as conn:
         label = item.name if item.name else item.uuid
-        existing_computed_tags = await tags_repo.get_computed_tags(conn, item)
-        if existing_computed_tags != computed_tags:
-            delta = global_utils.get_delta(existing_computed_tags, computed_tags)
-            print(f'Saving {label}, delta={sorted(delta)}')  # noqa: T201
-            await tags_repo.save_computed_tags(conn, item, computed_tags)
-        else:
-            print(f'\033[K\rSkipping {label}', end='')  # noqa: T201
+        existing_computed_tags = await TAGS_REPO.get_computed_tags(conn, item)
 
-        children = await items_repo.get_children(conn, item)
+        if existing_computed_tags != computed_tags:
+            added, deleted = global_utils.get_delta(existing_computed_tags, computed_tags)
+            print(  # noqa: T201
+                f'[{percent_str}%] Saving {label}, added={sorted(added)}, deleted={sorted(deleted)}'
+            )
+            await TAGS_REPO.save_computed_tags(conn, item, computed_tags)
+        else:
+            print(f'\033[K\r[{percent_str}%] Skipping {label}', end='')  # noqa: T201
+
+        children = await ITEMS_REPO.get_children(conn, item)
 
     for child in children:
-        await rebuild_tags(database, items_repo, tags_repo, child, items_cache, tags_cache)
+        await rebuild_tags(database, child, total_items)
