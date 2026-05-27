@@ -185,11 +185,9 @@ class CreateManyItemsUseCase(BaseItemUseCase):
 
                 if item.parent_id is None:
                     parent_tags = set()
-                    parent_name = ''
                 else:
                     parent = await self._get_cached_item(conn, item.parent_id)
                     parent_tags = await self._get_cached_computed_tags(conn, parent)
-                    parent_name = parent.name
 
                     if not parent.is_collection:
                         parent.is_collection = True

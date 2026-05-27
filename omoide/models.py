@@ -238,16 +238,11 @@ class Item(OmoideModel):
         technical information.
         """
         computed_tags: set[str] = {tag.casefold() for tag in self.tags}
-
-        if self.is_collection and (_name := self.name.strip()):
-            computed_tags.add(_name.casefold())
-
         computed_tags.update(parent_tags)
 
+        computed_tags.add(str(self.uuid).casefold())
         if self.parent_uuid is not None:
             computed_tags.add(str(self.parent_uuid).casefold())
-
-        computed_tags.add(str(self.uuid).casefold())
 
         return computed_tags
 
