@@ -113,3 +113,11 @@ def get_content_path(
 ) -> Path:
     """Return path to the content file."""
     return root / 'content' / str(user_uuid) / str(item_uuid)[:prefix_size] / f'{item_uuid}.{ext}'
+
+
+UUID_PATTERN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
+
+
+def looks_like_uuid(string: str) -> bool:
+    """Return True if string is a UUID."""
+    return UUID_PATTERN.match(string) is not None

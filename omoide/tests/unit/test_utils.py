@@ -17,3 +17,9 @@ from omoide import utils
 def test_get_bucket(uuid, length, result):
     """Must cut symbols from the start, but only if input is UUID."""
     assert utils.get_bucket(uuid, length) == result
+
+
+def test_looks_like_uuid():
+    """Must separate UUID from random strings."""
+    assert utils.looks_like_uuid('fb6a8840-d6a8-4ab4-9555-be67917c8717')
+    assert not utils.looks_like_uuid('hello world')

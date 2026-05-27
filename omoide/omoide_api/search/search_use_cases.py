@@ -3,6 +3,7 @@
 import time
 
 from omoide import models
+from omoide import utils
 from omoide.infra import mediators
 
 
@@ -33,7 +34,8 @@ class AutocompleteUseCase(BaseSearchUseCase):
                 variants = await self.mediator.tags.autocomplete_tag_anon(conn, tag, limit)
             else:
                 variants = await self.mediator.tags.autocomplete_tag_user(conn, user, tag, limit)
-        return variants
+
+        return [variant for variant in variants if not utils.looks_like_uuid(variant)]
 
 
 class RecentUpdatesUseCase(BaseSearchUseCase):
