@@ -175,13 +175,11 @@ class RebuildComputedTagsForItemUseCase(BaseSerialWorkerUseCase):
                 """Apply to at least one item and maybe its children."""
                 parent_tags: set[str] = set()
 
-                parent_name = ''
                 if current_item.parent_uuid is not None:
                     parent = await self._get_cached_item(conn, current_item.parent_uuid)
                     parent_tags = await self._get_cached_computed_tags(conn, parent)
-                    parent_name = parent.name
 
-                computed_tags = current_item.get_computed_tags(parent_name, parent_tags)
+                computed_tags = current_item.get_computed_tags(parent_tags)
                 affected_tags.update(computed_tags)
                 # NOTE: outputting private tags could be a security risk
                 LOG.debug('{} got computed tags {}', current_item, sorted(computed_tags))

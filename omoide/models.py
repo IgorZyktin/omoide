@@ -231,16 +231,13 @@ class Item(OmoideModel):
         """Return True if item has video content."""
         return self.content_ext in ('mp4', 'webm')
 
-    def get_computed_tags(self, parent_name: str, parent_tags: set[str]) -> set[str]:
+    def get_computed_tags(self, parent_tags: set[str]) -> set[str]:
         """Return computed tags.
 
         Resulting collection is not visible for users and includes
         technical information.
         """
         computed_tags: set[str] = {tag.casefold() for tag in self.tags}
-
-        if _parent_name := parent_name.strip():
-            computed_tags.add(_parent_name.casefold())
 
         if self.is_collection and (_name := self.name.strip()):
             computed_tags.add(_name.casefold())

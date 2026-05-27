@@ -195,7 +195,7 @@ class CreateManyItemsUseCase(BaseItemUseCase):
                         parent.is_collection = True
                         await self.mediator.items.save(conn, parent)
 
-                computed_tags = item.get_computed_tags(parent_name, parent_tags)
+                computed_tags = item.get_computed_tags(parent_tags)
 
                 # for the item itself
                 await self.mediator.tags.save_computed_tags(conn, item, computed_tags)

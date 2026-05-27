@@ -41,9 +41,9 @@ async def rebuild_tags(
     parent_tags = tags_cache.get(item.parent_id, set())
 
     if parent is None:
-        computed_tags = item.get_computed_tags(parent_name='', parent_tags=set())
+        computed_tags = item.get_computed_tags(parent_tags=set())
     else:
-        computed_tags = item.get_computed_tags(parent_name=parent.name, parent_tags=parent_tags)
+        computed_tags = item.get_computed_tags(parent_tags=parent_tags)
 
     items_cache[item.id] = item
     tags_cache[item.id] = computed_tags
