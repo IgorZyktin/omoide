@@ -251,18 +251,19 @@ function getNonEmptyValues(array) {
 
 function jumpToBottom() {
     // Scroll to the bottom of the page
-    const scrollingElement = (document.scrollingElement || document.body);
-    scrollingElement.scrollTop = scrollingElement.scrollHeight;
+    const maxScroll = document.body.scrollHeight - window.innerHeight;
+    window.scrollTo({
+        top: maxScroll,
+        behavior: 'smooth'
+    });
 }
 
-function jumpToTop(targetId) {
-    // Scroll to the top of the page or to given element
-    const scrollingElement = (document.scrollingElement || document.body);
-    if (!targetId) {
-        scrollingElement.scrollTop = 0;
-    } else {
-        document.getElementById(targetId).scrollIntoView()
-    }
+function jumpToTop() {
+    // Scroll to the top of the page
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
 }
 
 function clearAutocompletion(element) {

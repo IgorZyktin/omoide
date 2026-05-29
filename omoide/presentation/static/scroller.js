@@ -1,196 +1,237 @@
 // half of a second
-const SCROLLER_INTERVAL = 500
+const SCROLLER_INTERVAL = 500;
 
 // pixels
-const SCROLLER_HEIGHT = 1000
+const SCROLLER_HEIGHT = 1000;
 
 // items to be loaded in one request
-const DEFAULT_LOAD_AMOUNT = 10
+const DEFAULT_LOAD_AMOUNT = 10;
 
 // If we could not load anything in X attempts, do not continue
-const GIVE_UP_AFTER_N_EMPTY_REQUESTS = 10
+const GIVE_UP_AFTER_N_EMPTY_REQUESTS = 10;
 
 class Scroller {
-    // Helper object that controls scrolling
+    /**
+     * Creates a new Scroller instance
+     * @param {HTMLElement} container - The container to append items to
+     * @param {string} endpoint - The API endpoint to fetch data from
+     */
     constructor(container, endpoint) {
-        // Return new instance of a scroller object
-        this.container = container
-        this.endpoint = endpoint
-        this.isActive = true
-        this.nextUpload = new Date().getTime()
-        this.lastSeen = -1
-        this.alreadySeen = new Set()
-        this.totalEmptyRequests = 0
-        this.intervalId = null
-        this.tryNotOnlyCollections = false
+        this.container = container;
+        this.endpoint = endpoint;
+        this.isActive = true;
+        this.nextUpload = Date.now();
+        this.lastSeen = -1;
+        this.alreadySeen = new Set();
+        this.totalEmptyRequests = 0;
+        this.intervalId = null;
+        this.tryNotOnlyCollections = false;
+        this.isProcessing = false;
     }
 
+    /**
+     * Trigger scroll handling
+     */
     trigger() {
-        // Process uploading on every scroll
-        if (!this.isActive) {
-            return null
+        if (!this.isActive || this.isProcessing) {
+            return;
         }
 
-        if (new Date().getTime() < this.nextUpload) {
-            return null
+        if (Date.now() < this.nextUpload) {
+            return;
         }
 
-        let scrollY = window.scrollY
-        let innerHeight = window.innerHeight
-        let offsetHeight = document.body.offsetHeight
-        let atTheBottom = scrollY + innerHeight > offsetHeight - SCROLLER_HEIGHT
+        const scrollY = window.scrollY;
+        const innerHeight = window.innerHeight;
+        const offsetHeight = document.body.offsetHeight;
+        const atTheBottom = scrollY + innerHeight > offsetHeight - SCROLLER_HEIGHT;
 
         if (!atTheBottom) {
-            return null
+            return;
         }
 
-        this.nextUpload = new Date().getTime() + SCROLLER_INTERVAL
-        this.load()
+        this.nextUpload = Date.now() + SCROLLER_INTERVAL;
+        this.load();
     }
 
+    /**
+     * Stop the scroller and add jump-to-top link
+     */
     stop() {
-        // Turn dynamic load off
-        this.isActive = false
-        clearInterval(this.intervalId)
-        let jump = document.createElement('a')
-        jump.id = 'jump-to-top'
-        jump.classList.add('to-top-link')
-        jump.appendChild(document.createTextNode('Jump to top'));
+        this.isActive = false;
+        clearInterval(this.intervalId);
+
+        // Create jump-to-top link
+        const jump = document.createElement('a');
+        jump.id = 'jump-to-top';
+        jump.className = 'to-top-link';
+        jump.textContent = 'Jump to top';
         jump.title = 'Scroll back to top';
-        jump.href = '#'
-        jump.onclick = function () {
-            jumpToTop(jump.id)
-        }
+        jump.href = '#';
+        jump.onclick = (e) => {
+            e.preventDefault();
+            this.jumpToTop();
+        };
+
         document.body.appendChild(jump);
     }
 
+    /**
+     * Jump to top of page
+     */
+    jumpToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    /**
+     * Insert new items into page
+     * @param {Object} response - API response containing items
+     * @param {URLSearchParams} searchParams - Current search parameters
+     */
     inject(response, searchParams) {
-        // Insert new items into page
-        let items
+        const items = response.items || response;
 
-        if (response['items'] === undefined) {
-            items = response
-        } else {
-            items = response['items']
-        }
-
-        let switchedMode = false
+        // Handle collections toggle
+        let switchedMode = false;
         if (items.length === 0 && !this.tryNotOnlyCollections && searchParams.get('collections') === 'on') {
-            switchedMode = true
-            this.tryNotOnlyCollections = true
-            console.log('Seems that user got no results because "only collections" is active')
+            switchedMode = true;
+            this.tryNotOnlyCollections = true;
+            console.log('Seems that user got no results because "only collections" is active');
         }
 
-        console.log(`Loading ${items.length} items`)
+        console.log(`Loading ${items.length} items`);
 
-        let actuallyInjected = 0
-        let last_item
+        let actuallyInjected = 0;
+        let lastItem = null;
+
         for (const item of items) {
-            last_item = item
+            lastItem = item;
+            this.lastSeen = item.number;
 
-            this.lastSeen = item['number']
-
-            if (this.alreadySeen.has(item['uuid'])) {
-                continue
-            } else {
-                actuallyInjected += 1
+            if (this.alreadySeen.has(item.uuid)) {
+                continue;
             }
 
-            this.alreadySeen.add(item['uuid'])
+            actuallyInjected += 1;
+            this.alreadySeen.add(item.uuid);
 
-            let envelope = document.createElement('div')
-            envelope.classList.add('envelope')
-            if (item.is_collection) {
-                envelope.classList.add('env-collection')
-            }
-
-            let link = document.createElement('a')
-            searchParams.set('page', '1')
-
-            if (item['href'] !== undefined) {
-                // FIXME - remove this check
-                link.href = item['href'] + '?' + searchParams.toString()
-            } else {
-                link.href = getPreviewUrl(item)
-            }
-            let parent_name = ''
-
-            if (item['extras'] !== undefined) {
-                parent_name = item['extras'].parent_name
-                parent_name = parent_name ? parent_name : ''
-            }
-
-            link.title = parent_name
-
-            if (item.is_collection && item.name) {
-                let name = document.createElement('p')
-                name.innerText = item.name
-                link.appendChild(name)
-            } else if (!item.is_collection && itemIsVideo(item)) {
-                if (item.name) {
-                    let label = document.createElement('span')
-                    label.classList.add('envelope-video-title')
-                    label.innerText = item.name
-                    link.appendChild(label)
-                }
-
-                let sign = document.createElement('div')
-                sign.classList.add('triangle-overlay')
-                link.appendChild(sign)
-            }
-
-            let img = document.createElement('img')
-            if (item.thumbnail !== undefined) {
-                // FIXME - remove this check
-                img.src = item.thumbnail
-            } else {
-                img.src = getThumbnailContentUrl(item)
-            }
-            img.title = parent_name
-            link.appendChild(img)
-
-            envelope.appendChild(link)
+            const envelope = this.createEnvelope(item, searchParams);
             this.container.appendChild(envelope);
         }
 
+        // Update empty request counter
         if (actuallyInjected === 0) {
-            this.totalEmptyRequests += 1
+            this.totalEmptyRequests += 1;
         } else {
-            this.totalEmptyRequests = 0
+            this.totalEmptyRequests = 0;
         }
 
+        // Check if we should give up
         if (this.totalEmptyRequests > GIVE_UP_AFTER_N_EMPTY_REQUESTS) {
-            console.log(`Giving up on getting more items after ${this.totalEmptyRequests} attempts`)
-            this.stop()
+            console.log(`Giving up on getting more items after ${this.totalEmptyRequests} attempts`);
+            this.stop();
+            return;
         }
 
-        let expectedToLoad = Number.parseInt(searchParams.get('items_per_page'))
-        if (items.length < (expectedToLoad || DEFAULT_LOAD_AMOUNT) && !switchedMode) {
-            console.log('Loaded everything from server')
-            this.stop()
+        // Check if we've loaded everything
+        const expectedToLoad = Number.parseInt(searchParams.get('items_per_page')) || DEFAULT_LOAD_AMOUNT;
+        if (items.length < expectedToLoad && !switchedMode) {
+            console.log('Loaded everything from server');
+            this.stop();
         }
     }
 
-    load() {
-        // Actually load new media
-        let searchParams = new URLSearchParams(window.location.search)
-        let self = this
-        searchParams.set('items_per_page', searchParams.get('items_per_page') || DEFAULT_LOAD_AMOUNT)
-        searchParams.set('last_seen', this.lastSeen)
+    /**
+     * Create envelope element for an item
+     * @param {Object} item - The item data
+     * @param {URLSearchParams} searchParams - Search parameters
+     * @returns {HTMLElement} The created envelope element
+     */
+    createEnvelope(item, searchParams) {
+        const envelope = document.createElement('div');
+        envelope.className = 'envelope';
 
-        if (this.tryNotOnlyCollections) {
-            searchParams.set('collections', 'off')
+        if (item.is_collection) {
+            envelope.classList.add('env-collection');
         }
 
-        $.ajax({
-            url: this.endpoint + '?' + searchParams.toString(),
-            contentType: 'application/json',
-        }).done(function (response) {
-            self.inject(response, searchParams)
-        }).fail(function (response) {
-            let text = JSON.stringify(response)
-            console.log(`Request to ${this.endpoint} returned response: ${text}`)
-            self.stop()
-        });
+        const link = document.createElement('a');
+        searchParams.set('page', '1');
+        link.href = getPreviewUrl(item);
+
+        // Handle parent name
+        let parentName = '';
+        if (item.extras !== undefined && item.extras.parent_name) {
+            parentName = item.extras.parent_name;
+        }
+        link.title = parentName;
+
+        // Handle item display based on type
+        if (item.is_collection && item.name) {
+            const name = document.createElement('p');
+            name.textContent = item.name;
+            link.appendChild(name);
+        } else if (!item.is_collection && itemIsVideo(item)) {
+            if (item.name) {
+                const label = document.createElement('span');
+                label.className = 'envelope-video-title';
+                label.textContent = item.name;
+                link.appendChild(label);
+            }
+
+            const sign = document.createElement('div');
+            sign.className = 'triangle-overlay';
+            link.appendChild(sign);
+        }
+
+        // Create image element
+        const img = document.createElement('img');
+        img.src = getThumbnailContentUrl(item);
+        img.title = parentName;
+        link.appendChild(img);
+
+        envelope.appendChild(link);
+        return envelope;
+    }
+
+    /**
+     * Load new media items
+     */
+    async load() {
+        if (this.isProcessing) return;
+
+        this.isProcessing = true;
+
+        try {
+            const searchParams = new URLSearchParams(window.location.search);
+            searchParams.set('items_per_page', searchParams.get('items_per_page') || DEFAULT_LOAD_AMOUNT);
+            searchParams.set('last_seen', this.lastSeen);
+
+            if (this.tryNotOnlyCollections) {
+                searchParams.set('collections', 'off');
+            }
+
+            const response = await fetch(`${this.endpoint}?${searchParams.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            this.inject(data, searchParams);
+        } catch (error) {
+            console.error(`Request to ${this.endpoint} failed:`, error);
+            this.stop();
+        } finally {
+            this.isProcessing = false;
+        }
     }
 }
