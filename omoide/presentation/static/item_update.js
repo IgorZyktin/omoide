@@ -92,27 +92,51 @@ function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
     })
 }
 
-function saveName(alertsElementId) {
-    // save item name
-    $.ajax({
-        timeout: 5000, // 5 seconds
-        type: 'PUT',
-        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/name`,
-        contentType: 'application/json',
-        data: JSON.stringify(
-            {
-                'name': newModel['name'],
+async function saveName(alertsElementId) {
+    // Save item name
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
+        const response = await fetch(`${ITEMS_ENDPOINT}/${newModel['uuid']}/name`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
             },
-        ),
-        success: function (response) {
-            console.log('Saved item name', response)
-            oldModel['name'] = newModel['name']
-            makeAnnounce('New item name saved', alertsElementId)
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
-        },
-    })
+            body: JSON.stringify({
+                'name': newModel['name'],
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            // Try to parse error response for better error details
+            let errorData = {};
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                // If response is not JSON, use text or status
+                errorData = { message: response.statusText };
+            }
+            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('Saved item name', result);
+        oldModel['name'] = newModel['name'];
+        makeAnnounce('New item name saved', alertsElementId);
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Request timed out');
+        } else {
+            console.error('Failed to save item name:', error);
+            // Handle error appropriately - check if describeFail expects specific format
+            describeFail({ message: error.message }, alertsElementId);
+        }
+    }
 }
 
 function saveBasicStuff(alertsElementId) {
