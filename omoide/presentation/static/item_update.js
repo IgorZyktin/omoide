@@ -66,7 +66,7 @@ async function handleError(response) {
         errorData = await response.json();
     } catch (e) {
         // If response is not JSON, use status text or a default message
-        errorData = { message: response.statusText || 'Unknown error' };
+        errorData = {message: response.statusText || 'Unknown error'};
     }
     throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText || 'Unknown error'}`);
 }
@@ -194,32 +194,51 @@ async function saveBasicStuff(alertsElementId) {
             console.error('Request timed out');
         } else {
             console.error('Failed to save basic fields:', error);
-            describeFail({ message: error.message }, alertsElementId);
+            describeFail({message: error.message}, alertsElementId);
         }
     }
 }
 
-function saveParent(totalChildren, alertsElementId) {
-    // save changes
+async function saveParent(totalChildren, alertsElementId) {
+    // Save new parent
     if (totalChildren !== '0' && totalChildren !== '1') {
-        if (!confirm(`New parent will affect ${totalChildren} items, are you sure?`))
-            return
+        if (!confirm(`New parent will affect ${totalChildren} items, are you sure?`)) {
+            return;
+        }
     }
-    $.ajax({
-        timeout: 5000, // 5 seconds
-        type: 'PUT',
-        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/parent/${newModel['parent_uuid']}`,
-        contentType: 'application/json',
-        success: function (response) {
-            console.log('Saved parent', response)
-            oldModel['parent_uuid'] = newModel['parent_uuid']
-            tryLoadingThumbnail(oldModel['parent_uuid'], $('#thumbnail_parent'))
-            makeAnnounce('Parent changed', alertsElementId)
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
-        },
-    })
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
+        const response = await fetch(`${ITEMS_ENDPOINT}/${newModel['uuid']}/parent/${newModel['parent_uuid']}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            await handleError(response)
+        }
+
+        const result = await response.json();
+        console.log('Saved parent', result);
+        oldModel['parent_uuid'] = newModel['parent_uuid'];
+        tryLoadingThumbnail(oldModel['parent_uuid'], $('#thumbnail_parent'));
+        makeAnnounce('Parent changed', alertsElementId);
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Request timed out');
+        } else {
+            console.error('Failed to save parent:', error);
+            describeFail({message: error.message}, alertsElementId);
+        }
+    }
 }
 
 function saveTags(totalChildren, alertsElementId) {
