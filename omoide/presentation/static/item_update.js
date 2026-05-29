@@ -285,36 +285,54 @@ async function saveTags(totalChildren, alertsElementId) {
     }
 }
 
-function savePermissions(totalChildren, alertsElementId) {
-    // save changes
-    let applyToParents = $('#item_perm_apply_to_parents').is(':checked')
-    let applyToChildren = $('#item_perm_apply_to_children').is(':checked')
-    let applyToChildrenAs = $('#apply_to_children_as').val()
+async function savePermissions(totalChildren, alertsElementId) {
+    // Save new permissions
+    const applyToParents = document.getElementById('item_perm_apply_to_parents').checked;
+    const applyToChildren = document.getElementById('item_perm_apply_to_children').checked;
+    const applyToChildrenAs = document.getElementById('apply_to_children_as').value;
 
     if (applyToChildren && totalChildren !== '0' && totalChildren !== '1') {
-        if (!confirm(`New permissions will affect ${totalChildren} items, are you sure?`))
-            return
+        if (!confirm(`New permissions will affect ${totalChildren} items, are you sure?`)) {
+            return;
+        }
     }
 
-    $.ajax({
-        timeout: 5000, // 5 seconds
-        type: 'PUT',
-        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/permissions`,
-        contentType: 'application/json',
-        data: JSON.stringify({
-            'apply_to_parents': applyToParents,
-            'apply_to_children': applyToChildren,
-            'apply_to_children_as': applyToChildrenAs,
-            'permissions': newModel['permissions'],
-        }),
-        success: function (response) {
-            console.log('Saved permissions', response)
-            oldModel['permissions'] = newModel['permissions']
-            initialPermissions = newModel['permissions']
-            makeAnnounce('Permissions saved', alertsElementId)
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
-        },
-    })
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
+        const response = await fetch(`${ITEMS_ENDPOINT}/${newModel['uuid']}/permissions`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                'apply_to_parents': applyToParents,
+                'apply_to_children': applyToChildren,
+                'apply_to_children_as': applyToChildrenAs,
+                'permissions': newModel['permissions'],
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            await handleError(response)
+        }
+
+        const result = await response.json();
+        console.log('Saved permissions', result);
+        oldModel['permissions'] = newModel['permissions'];
+        initialPermissions = newModel['permissions'];
+        makeAnnounce('Permissions saved', alertsElementId);
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Request timed out');
+        } else {
+            console.error('Failed to save permissions:', error);
+            describeFail({message: error.message}, alertsElementId);
+        }
+    }
 }
