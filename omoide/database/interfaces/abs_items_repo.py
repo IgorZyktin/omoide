@@ -2,6 +2,7 @@
 
 import abc
 from collections.abc import Collection
+from typing import Any
 from typing import Generic
 from typing import TypeVar
 from uuid import UUID
@@ -187,6 +188,6 @@ class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
     async def select(
         self,
         conn: ConnectionT,
-        **kwargs,
+        **kwargs: Any,
     ) -> list[models.Item]:
         """Return filtered list of items."""

@@ -11,7 +11,7 @@ TAGS_CACHE: dict[int, set[str]] = {}
 PROCESSED_ITEMS = 0
 
 
-async def run():
+async def run() -> None:
     """Entry point."""
     db_url = utils.get_env('OMOIDE__DB_URL_ADMIN')
     database = impl_sqlalchemy.SqlalchemyDatabase(
@@ -42,7 +42,7 @@ async def rebuild_tags(
     percent = (PROCESSED_ITEMS / (total_items or 1)) * 100
     percent_str = f'{percent:.2f}'
 
-    parent_tags = TAGS_CACHE.get(item.parent_id, set())
+    parent_tags = TAGS_CACHE.get(item.parent_id or 0, set())
     computed_tags = item.get_computed_tags(parent_tags=parent_tags)
     TAGS_CACHE[item.id] = computed_tags
 

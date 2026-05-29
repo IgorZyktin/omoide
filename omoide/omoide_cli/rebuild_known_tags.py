@@ -4,7 +4,7 @@ from omoide.database.implementations import impl_sqlalchemy
 from omoide.omoide_cli import utils
 
 
-async def run():
+async def run() -> None:
     """Entry point."""
     db_url = utils.get_env('OMOIDE__DB_URL_ADMIN')
     database = impl_sqlalchemy.SqlalchemyDatabase(

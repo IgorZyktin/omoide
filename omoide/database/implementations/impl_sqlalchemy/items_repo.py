@@ -563,7 +563,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     async def select(
         self,
         conn: AsyncConnection,
-        **kwargs,
+        **kwargs: Any,
     ) -> list[models.Item]:
         """Return filtered list of items."""
         query = sa.select(db_models.Item)
