@@ -142,7 +142,6 @@ async function saveName(alertsElementId) {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            // Try to parse error response for better error details
             await handleError(response)
         }
 
@@ -156,34 +155,48 @@ async function saveName(alertsElementId) {
             console.error('Request timed out');
         } else {
             console.error('Failed to save item name:', error);
-            // Handle error appropriately - check if describeFail expects specific format
             describeFail({message: error.message}, alertsElementId);
         }
     }
 }
 
-function saveBasicStuff(alertsElementId) {
-    // save changes
-    $.ajax({
-        timeout: 5000, // 5 seconds
-        type: 'PATCH',
-        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}`,
-        contentType: 'application/json',
-        data: JSON.stringify(
-            {
-                'is_collection': newModel['is_collection'],
+async function saveBasicStuff(alertsElementId) {
+    // Save changes
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
+        const response = await fetch(`${ITEMS_ENDPOINT}/${newModel['uuid']}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
             },
-        ),
-        success: function (response) {
-            console.log('Saved basic fields', response)
-            oldModel['is_collection'] = newModel['is_collection']
-            tryLoadingThumbnail(oldModel['uuid'], $('#thumbnail'))
-            makeAnnounce('Basic fields saved', alertsElementId)
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
-        },
-    })
+            body: JSON.stringify({
+                'is_collection': newModel['is_collection'],
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            await handleError(response)
+        }
+
+        const result = await response.json();
+        console.log('Saved basic fields', result);
+        oldModel['is_collection'] = newModel['is_collection'];
+        tryLoadingThumbnail(oldModel['uuid'], $('#thumbnail'));
+        makeAnnounce('Basic fields saved', alertsElementId);
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Request timed out');
+        } else {
+            console.error('Failed to save basic fields:', error);
+            describeFail({ message: error.message }, alertsElementId);
+        }
+    }
 }
 
 function saveParent(totalChildren, alertsElementId) {
