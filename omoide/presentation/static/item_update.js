@@ -241,30 +241,48 @@ async function saveParent(totalChildren, alertsElementId) {
     }
 }
 
-function saveTags(totalChildren, alertsElementId) {
-    // save changes
+async function saveTags(totalChildren, alertsElementId) {
+    // Save tags
     if (totalChildren !== '0' && totalChildren !== '1') {
-        if (!confirm(`New tags will affect ${totalChildren} items, are you sure?`))
-            return
+        if (!confirm(`New tags will affect ${totalChildren} items, are you sure?`)) {
+            return;
+        }
     }
 
-    $.ajax({
-        timeout: 5000, // 5 seconds
-        type: 'PUT',
-        url: `${ITEMS_ENDPOINT}/${newModel['uuid']}/tags`,
-        contentType: 'application/json',
-        data: JSON.stringify({
-            'tags': newModel['tags'],
-        }),
-        success: function (response) {
-            console.log('Saved tags', response)
-            oldModel['tags'] = newModel['tags']
-            makeAnnounce('Tags saved', alertsElementId)
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
-        },
-    })
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
+        const response = await fetch(`${ITEMS_ENDPOINT}/${newModel['uuid']}/tags`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                'tags': newModel['tags'],
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            await handleError(response)
+        }
+
+        const result = await response.json();
+        console.log('Saved tags', result);
+        oldModel['tags'] = newModel['tags'];
+        makeAnnounce('Tags saved', alertsElementId);
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Request timed out');
+        } else {
+            console.error('Failed to save tags:', error);
+            describeFail({message: error.message}, alertsElementId);
+        }
+    }
 }
 
 function savePermissions(totalChildren, alertsElementId) {
