@@ -426,30 +426,6 @@ function getThumbnailContentUrl(item) {
     return `/content/thumbnail/${item.owner_uuid}/${prefix}/${item.uuid}.${item.thumbnail_ext}`
 }
 
-function getPreviewContentUrl(item) {
-    // generate preview content url for the item
-    if (!item.preview_ext) {
-        if (item.status === 'created')
-            return CREATED_FILE
-        return EMPTY_FILE
-    }
-
-    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
-    return `/content/preview/${item.owner_uuid}/${prefix}/${item.uuid}.${item.preview_ext}`
-}
-
-function getContentUrl(item) {
-    // generate preview content url for the item
-    if (!item.content_ext) {
-        if (item.status === 'created')
-            return CREATED_FILE
-        return EMPTY_FILE
-    }
-
-    let prefix = item.uuid.slice(0, UUID_PREFIX_LENGTH)
-    return `/content/content/${item.owner_uuid}/${prefix}/${item.uuid}.${item.content_ext}`
-}
-
 function getPreviewUrl(item) {
     // generate preview url for the item
     let searchParams = new URLSearchParams(window.location.search)
