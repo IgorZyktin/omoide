@@ -59,37 +59,67 @@ function fillTextarea(elementId, values) {
     $('#' + elementId).val(lines)
 }
 
-function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
-    // make parent use thumbnail from given item
+async function handleError(response) {
+    // Throw error with extended description
+    let errorData = {};
+    try {
+        errorData = await response.json();
+    } catch (e) {
+        // If response is not JSON, use status text or a default message
+        errorData = { message: response.statusText || 'Unknown error' };
+    }
+    throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText || 'Unknown error'}`);
+}
+
+async function copyImageFromGivenItem(parentUUID, childUUID, alertsElementId) {
+    // Make parent use thumbnail from given item
     if (!isUUID(childUUID)) {
-        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId)
+        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId);
         return;
     }
 
     if (!isUUID(parentUUID)) {
-        makeAlert(`Incorrect UUID: ${childUUID}`, alertsElementId)
+        makeAlert(`Incorrect UUID: ${parentUUID}`, alertsElementId);
         return;
     }
 
     if (parentUUID === childUUID) {
         console.log(`Skipping copy thumbnail for ${childUUID} ` +
-            `because it points on itself`)
-        return
+            `because it points on itself`);
+        return;
     }
 
-    $.ajax({
-        timeout: 5000, // 5 seconds
-        type: 'POST',
-        url: `${ACTIONS_ENDPOINT}/copy_image/${childUUID}/to/${parentUUID}`,
-        contentType: 'application/json',
-        success: function (response) {
-            console.log('Enqueued image copying', response)
-            makeAnnounce('Enqueued image copying', alertsElementId)
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON, alertsElementId)
-        },
-    })
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
+        const response = await fetch(`${ACTIONS_ENDPOINT}/copy_image/${childUUID}/to/${parentUUID}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            await handleError(response)
+        }
+
+        const result = await response.json();
+        console.log('Enqueued image copying', result);
+        makeAnnounce('Enqueued image copying', alertsElementId);
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Request timed out');
+        } else {
+            console.error('Failed to enqueue image copying:', error);
+            // Handle error appropriately
+            describeFail({message: error.message}, alertsElementId);
+        }
+    }
 }
 
 async function saveName(alertsElementId) {
@@ -113,14 +143,7 @@ async function saveName(alertsElementId) {
 
         if (!response.ok) {
             // Try to parse error response for better error details
-            let errorData = {};
-            try {
-                errorData = await response.json();
-            } catch (e) {
-                // If response is not JSON, use text or status
-                errorData = { message: response.statusText };
-            }
-            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+            await handleError(response)
         }
 
         const result = await response.json();
@@ -134,7 +157,7 @@ async function saveName(alertsElementId) {
         } else {
             console.error('Failed to save item name:', error);
             // Handle error appropriately - check if describeFail expects specific format
-            describeFail({ message: error.message }, alertsElementId);
+            describeFail({message: error.message}, alertsElementId);
         }
     }
 }
