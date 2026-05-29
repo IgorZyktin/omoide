@@ -228,9 +228,9 @@
 
             origin.on('input', function () {
                 alterModelTextField(this, 'copied_image_from')
-                tryLoadingThumbnail($(this).val(), $('#thumbnail'))
+                tryLoadingThumbnail($(this).val(), document.getElementById('thumbnail'))
             });
-            tryLoadingThumbnail('{{ item.uuid }}', $('#thumbnail'))
+            tryLoadingThumbnail('{{ item.uuid }}', document.getElementById('thumbnail'))
         });
     </script>
     <br>

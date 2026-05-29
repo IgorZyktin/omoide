@@ -139,12 +139,12 @@ function isUUID(uuid) {
 function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
     // try to load thumbnail for the item
     if (!isUUID(uuid)) {
-        thumbnailElement.empty()
+        thumbnailElement.innerHTML = ''
         renderThumbnailStatic(thumbnailElement, EMPTY_FILE)
         return
     }
 
-    thumbnailElement.empty()
+    thumbnailElement.innerHTML = ''
 
     $.ajax({
         type: 'GET',

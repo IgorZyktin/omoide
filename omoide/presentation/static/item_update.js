@@ -1,62 +1,62 @@
 function alterModelTextField(element, fieldName) {
     // change item model field
-    newModel[fieldName] = $(element).val().trim()
+    newModel[fieldName] = element.value.trim();
 }
-
 
 function alterModelBoolField(element, fieldName) {
     // change item model field
-    newModel[fieldName] = $(element).is(':checked')
+    newModel[fieldName] = element.checked;
 }
 
 function alterModelParentField(element) {
     // change item model field
-    let value = $(element).val().trim()
-    newModel['parent_uuid'] = value || null
-    tryLoadingThumbnail(newModel['parent_uuid'], $('#thumbnail_parent'))
+    const value = element.value.trim();
+    newModel['parent_uuid'] = value || null;
+    tryLoadingThumbnail(newModel['parent_uuid'], document.getElementById('thumbnail_parent'));
 }
 
 function alterModelTagsField(element) {
     // change item model field
-    newModel['tags'] = splitLines($(element).val())
+    newModel['tags'] = splitLines(element.value);
 }
 
 function alterModelPermissionsField(element) {
     // change item model field
-    newModel['permissions'] = extractUUIDs($(element).val())
+    newModel['permissions'] = extractUUIDs(element.value);
 }
 
 function resetBasic() {
     // restore parameters
-    newModel['is_collection'] = oldModel['is_collection']
-    $('#item_name').val(oldModel['name'] || '')
-    $('#thumbnail_origin').val(oldModel['copied_image_from'] || '').trigger('input')
-    $('#item_is_collection').prop('checked', oldModel['is_collection']);
+    newModel['is_collection'] = oldModel['is_collection'];
+    document.getElementById('item_name').value = oldModel['name'] || '';
+    const origin = document.getElementById('thumbnail_origin');
+    origin.value = oldModel['copied_image_from'] || '';
+    origin.dispatchEvent(new Event('input'));
+    document.getElementById('item_is_collection').checked = oldModel['is_collection'];
 }
 
 function resetTags() {
     // restore parameters
-    newModel['tags'] = oldModel['tags']
-    fillTextarea('item_tags', oldModel['tags'])
+    newModel['tags'] = oldModel['tags'];
+    fillTextarea('item_tags', oldModel['tags']);
 }
 
 function resetPermissions() {
     // restore parameters
-    newModel['permissions'] = oldModel['permissions']
-    fillTextarea('item_permissions', initialPermissions)
+    newModel['permissions'] = oldModel['permissions'];
+    fillTextarea('item_permissions', initialPermissions);
 }
 
 function resetParent() {
     // restore parameters
-    newModel['parent_uuid'] = oldModel['parent_uuid']
-    $('#item_parent').val(oldModel['parent_uuid'] || '')
-    tryLoadingThumbnail(oldModel['parent_uuid'], $('#thumbnail_parent'))
+    newModel['parent_uuid'] = oldModel['parent_uuid'];
+    document.getElementById('item_parent').value = oldModel['parent_uuid'] || '';
+    tryLoadingThumbnail(oldModel['parent_uuid'], document.getElementById('thumbnail_parent'));
 }
 
 function fillTextarea(elementId, values) {
     // fill textarea using array
-    let lines = values.join('\n').trim()
-    $('#' + elementId).val(lines)
+    document.getElementById(elementId).value = values.join('\n').trim();
 }
 
 async function handleError(response) {
@@ -186,7 +186,7 @@ async function saveBasicStuff(alertsElementId) {
         const result = await response.json();
         console.log('Saved basic fields', result);
         oldModel['is_collection'] = newModel['is_collection'];
-        tryLoadingThumbnail(oldModel['uuid'], $('#thumbnail'));
+        tryLoadingThumbnail(oldModel['uuid'], document.getElementById('thumbnail'));
         makeAnnounce('Basic fields saved', alertsElementId);
 
     } catch (error) {
@@ -228,7 +228,7 @@ async function saveParent(totalChildren, alertsElementId) {
         const result = await response.json();
         console.log('Saved parent', result);
         oldModel['parent_uuid'] = newModel['parent_uuid'];
-        tryLoadingThumbnail(oldModel['parent_uuid'], $('#thumbnail_parent'));
+        tryLoadingThumbnail(oldModel['parent_uuid'], document.getElementById('thumbnail_parent'));
         makeAnnounce('Parent changed', alertsElementId);
 
     } catch (error) {
