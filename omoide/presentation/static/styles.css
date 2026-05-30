@@ -324,13 +324,50 @@ h1, h2, h3, h4, h5 {
 .triangle-overlay {
     position: absolute;
     top: calc(50% - 80px);
-    right: calc(50% + 10px);
+    right: calc(50%);
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.triangle-overlay::before {
+    content: '';
+    position: absolute;
     width: 0;
     height: 0;
-    border-left: 60px solid transparent;
-    border-bottom: 60px solid rgba(243, 243, 243, 0.51); /* Red triangle */
-    border-top: 60px solid transparent;
-    transform: rotate(-45deg);
+    border-left: 40px solid transparent;
+    border-bottom: 40px solid rgba(255, 255, 255, 0.8);
+    border-top: 40px solid transparent;
+    top: 50%;
+    left: 80%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.triangle-overlay::after {
+    content: '';
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.5);
+    top: 10%;
+    left: 50%;
+}
+
+.triangle-overlay:hover::before {
+    border-bottom: 40px solid rgba(255, 255, 255, 1);
+}
+
+.triangle-overlay:hover::after {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.8);
 }
 
 .narrow-block {
