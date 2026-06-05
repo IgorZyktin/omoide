@@ -620,16 +620,9 @@ class UploadItemUseCase(BaseItemUseCase):
                     parent.preview_ext = 'tmp'
                     parent.thumbnail_ext = 'tmp'
 
-                    # TODO - do not save file twice!
-                    oid2 = None
-                    content = file.content
-                    if len(content) >= const.LARGE_OBJECT_SIZE:
-                        save_content = b''
-                        oid2 = await self.mediator.database.save_large_object(content)
-                        LOG.info('Created large object {} for item {}', oid2, parent.uuid)
-                    else:
-                        save_content = file.content
-
+                    # Reuse the payload saved for the child: same bytes / same large
+                    # object, so we don't persist them twice. The converter only deletes
+                    # the OID when no other queue entry still references it.
                     await self.mediator.misc.save_input_media(
                         conn=conn,
                         media=models.InputMedia(
@@ -643,7 +636,7 @@ class UploadItemUseCase(BaseItemUseCase):
                                 'extract_exif': file.features.extract_exif,
                                 'skip_content': True,
                                 'skip_preview': True,
-                                'oid': oid2,
+                                'oid': oid,
                             },
                             error=None,
                             content=save_content,

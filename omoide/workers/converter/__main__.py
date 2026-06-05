@@ -100,7 +100,7 @@ def do_work(
             continue
 
         model = database.get_input_media(target_id)
-        oid = model.extras.pop('oid', None)
+        oid: int | None = model.extras.pop('oid', None)
         if oid:
             model.content = database.get_large_object(oid)
 
@@ -137,7 +137,13 @@ def do_work(
                 common_metrics.TIME_SPENT, int(time_spent * 1000)
             )
             if oid:
-                database.delete_large_object(oid)
+                if database.is_oid_referenced_elsewhere(oid, exclude_id=target_id):
+                    LOG.info(
+                        'Keeping large object {} alive: still referenced by other queue entries',
+                        oid,
+                    )
+                else:
+                    database.delete_large_object(oid)
             database.delete_media(target_id)
             model.content = b''
             del model
