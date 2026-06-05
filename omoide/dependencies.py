@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
+import jinja2
 import nano_settings as ns
 import python_utilz as pu
 from starlette.requests import Request
@@ -288,9 +289,7 @@ async def get_known_user(
 
 
 @functools.cache
-def get_templates(
-    user: Annotated[models.User, Depends(get_current_user)],
-) -> Jinja2Templates:
+def get_templates() -> Jinja2Templates:
     """Get templates instance."""
     templates = Jinja2Templates(directory='omoide/presentation/templates')
     templates.env.globals['zip'] = zip
@@ -307,5 +306,12 @@ def get_templates(
     templates.env.globals['sep_digits'] = pu.sep_digits
     templates.env.globals['Status'] = models.Status
 
-    templates.env.globals['_'] = functools.partial(localization.gettext, user=user)
+    @jinja2.pass_context
+    def translate(context: jinja2.runtime.Context, text: str) -> str:
+        user = context.get('user')
+        if user is None:
+            return text
+        return localization.gettext(text, user=user)
+
+    templates.env.globals['_'] = translate
     return templates
