@@ -15,8 +15,9 @@ when those tests are written.
 """
 
 from collections.abc import Iterator
+import contextlib
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 import os
 from pathlib import Path
 from typing import Any
@@ -140,10 +141,8 @@ def _unlink_all_large_objects(engine: Engine) -> None:
     raw = engine.raw_connection()
     try:
         for oid in oids:
-            try:
+            with contextlib.suppress(Exception):
                 raw.lobject(oid).unlink()
-            except Exception:
-                pass
         raw.commit()
     finally:
         raw.close()
@@ -181,7 +180,7 @@ def make_user(engine: Engine):
             'name': overrides.pop('name', 'test-user'),
             'auth_complexity': 1,
             'is_public': False,
-            'registered_at': datetime.now(timezone.utc),
+            'registered_at': datetime.now(UTC),
             'last_login': None,
         }
         values.update(overrides)
@@ -261,7 +260,7 @@ def insert_input_media(engine: Engine):
                 .values(
                     user_uuid=user_uuid,
                     item_uuid=item_uuid,
-                    created_at=datetime.now(timezone.utc),
+                    created_at=datetime.now(UTC),
                     lock=lock,
                     ext=ext,
                     content_type=content_type,

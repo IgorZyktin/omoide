@@ -137,7 +137,9 @@ def do_work(
                 common_metrics.TIME_SPENT, int(time_spent * 1000)
             )
             if oid:
-                if database.is_oid_referenced_elsewhere(oid, exclude_id=target_id):
+                if database.is_oid_referenced_elsewhere(
+                    oid, exclude_id=target_id
+                ):
                     LOG.info(
                         'Keeping large object {} alive: still referenced by other queue entries',
                         oid,

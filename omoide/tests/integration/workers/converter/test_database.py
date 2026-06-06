@@ -6,13 +6,14 @@ OID refcount logic that the worker depends on for the shared-large-object
 deletion path.
 """
 
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 
 import pytest
 import sqlalchemy as sa
 
 from omoide import const
+from omoide import models
 from omoide.database import db_models
 from omoide.workers.converter.database import ConverterPostgreSQLDatabase
 
@@ -37,7 +38,10 @@ class TestIsOidReferencedElsewhere:
     """The OID refcount check that gates large-object deletion."""
 
     def test_true_when_another_row_references_same_oid(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         first = insert_input_media(user_uuid=user_uuid, item_uuid=item_uuid, oid=12345)
@@ -47,7 +51,10 @@ class TestIsOidReferencedElsewhere:
         assert db.is_oid_referenced_elsewhere(12345, exclude_id=second) is True
 
     def test_false_when_only_excluded_row_references_oid(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         only = insert_input_media(user_uuid=user_uuid, item_uuid=item_uuid, oid=12345)
@@ -55,7 +62,10 @@ class TestIsOidReferencedElsewhere:
         assert db.is_oid_referenced_elsewhere(12345, exclude_id=only) is False
 
     def test_false_when_oid_is_unknown(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         row = insert_input_media(user_uuid=user_uuid, item_uuid=item_uuid, oid=12345)
@@ -63,7 +73,10 @@ class TestIsOidReferencedElsewhere:
         assert db.is_oid_referenced_elsewhere(99999, exclude_id=row) is False
 
     def test_ignores_rows_with_null_oid(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         target = insert_input_media(user_uuid=user_uuid, item_uuid=item_uuid, oid=12345)
@@ -80,14 +93,21 @@ class TestGetInputMediaCandidates:
     """Polling query that drives the worker loop."""
 
     def test_returns_only_rows_with_matching_content_type(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         match = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, content_type='image/jpeg',
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            content_type='image/jpeg',
         )
         insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, content_type='application/pdf',
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            content_type='application/pdf',
         )
 
         candidates = db.get_input_media_candidates(batch_size=10, content_types=['image/jpeg'])
@@ -113,7 +133,10 @@ class TestGetInputMediaCandidates:
         assert candidates == [clean]
 
     def test_orders_by_id_and_respects_batch_size(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         first = insert_input_media(user_uuid=user_uuid, item_uuid=item_uuid)
@@ -146,11 +169,16 @@ class TestLockInputMedia:
         assert lock == 'worker-1'
 
     def test_does_not_lock_already_locked_row(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         row_id = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, lock='someone-else',
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            lock='someone-else',
         )
 
         assert db.lock_input_media(row_id, 'worker-1') is False
@@ -161,7 +189,10 @@ class TestLockInputMedia:
 
 class TestGetInputMedia:
     def test_returns_full_input_media_model(
-        self, db, insert_input_media, user_and_item,
+        self,
+        db,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         row_id = insert_input_media(
@@ -190,17 +221,18 @@ class TestGetInputMedia:
 
 class TestSaveOutputMedia:
     def test_small_content_stays_in_bytea_and_sets_oid_none(
-        self, db, engine, user_and_item,
+        self,
+        db,
+        engine,
+        user_and_item,
     ):
-        from omoide import models
-
         user_uuid, item_uuid = user_and_item
         payload = b'\x89PNG\r\n' + b'x' * 100
         model = models.InputMedia(
             id=-1,
             user_uuid=user_uuid,
             item_uuid=item_uuid,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             ext='jpg',
             content_type='image/jpeg',
             extras={'extract_exif': False, 'oid': 9999},
@@ -223,16 +255,18 @@ class TestSaveOutputMedia:
         assert model.extras['oid'] is None
 
     def test_large_content_creates_large_object_and_clears_bytea(
-        self, db, engine, large_payload, user_and_item,
+        self,
+        db,
+        engine,
+        large_payload,
+        user_and_item,
     ):
-        from omoide import models
-
         user_uuid, item_uuid = user_and_item
         model = models.InputMedia(
             id=-1,
             user_uuid=user_uuid,
             item_uuid=item_uuid,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             ext='jpg',
             content_type='image/jpeg',
             extras={'extract_exif': False, 'oid': None},
@@ -277,11 +311,17 @@ class TestDeleteMedia:
 
 class TestMarkFailedAndReleaseLock:
     def test_clears_lock_and_sets_error(
-        self, db, engine, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         row_id = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, lock='worker-1',
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            lock='worker-1',
         )
 
         db.mark_failed_and_release_lock(row_id, error='conversion failed')

@@ -16,6 +16,7 @@ import sqlalchemy as sa
 
 from omoide import const
 from omoide.database import db_models
+from omoide.workers.common import metrics as common_metrics
 from omoide.workers.converter import __main__ as converter_main
 from omoide.workers.converter.database import ConverterPostgreSQLDatabase
 
@@ -50,7 +51,10 @@ class _StubConfig:
 
 @pytest.fixture
 def db(test_db_url: str, engine):
-    """Connected converter DB; ``engine`` ordering ensures schema-clean first."""
+    """Connect converter DB.
+
+    ``engine`` ordering ensures schema-clean first.
+    """
     _ = engine
     instance = ConverterPostgreSQLDatabase(url=test_db_url, echo=False)
     yield instance
@@ -64,9 +68,7 @@ def config(converter_temp_folder: Path) -> _StubConfig:
 
 def _count(engine, table) -> int:
     with engine.connect() as conn:
-        return int(
-            conn.execute(sa.select(sa.func.count()).select_from(table)).scalar_one()
-        )
+        return int(conn.execute(sa.select(sa.func.count()).select_from(table)).scalar_one())
 
 
 def _large_object_exists(engine, oid: int) -> bool:
@@ -91,10 +93,16 @@ class TestEmptyQueue:
 
 class TestSmallImageNoOid:
     def test_processes_and_removes_input_row(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
-        row_id = insert_input_media(
+        insert_input_media(
             user_uuid=user_uuid,
             item_uuid=item_uuid,
             content=_make_jpeg(),
@@ -111,10 +119,13 @@ class TestSmallImageNoOid:
         assert _count(engine, db_models.QueueOutputMedia) == 3
 
     def test_increments_metrics(
-        self, db, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
-        from omoide.workers.common import metrics as common_metrics
-
         user_uuid, item_uuid = user_and_item
         insert_input_media(
             user_uuid=user_uuid,
@@ -134,7 +145,13 @@ class TestSmallImageNoOid:
 
 class TestSkipFlags:
     def test_skip_content_and_skip_preview_emits_only_thumbnail(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         """Mirrors what the upload use case emits for the parent item."""
         user_uuid, item_uuid = user_and_item
@@ -150,8 +167,7 @@ class TestSkipFlags:
 
         with engine.connect() as conn:
             media_types = [
-                row[0]
-                for row in conn.execute(sa.select(db_models.QueueOutputMedia.media_type))
+                row[0] for row in conn.execute(sa.select(db_models.QueueOutputMedia.media_type))
             ]
         assert media_types == ['thumbnail']
 
@@ -163,7 +179,13 @@ class TestLargeImageWithOid:
     """OID is alive at start of conversion, deleted afterwards when nobody else refs it."""
 
     def test_solo_oid_is_deleted_after_processing(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         # Real JPEG content goes into a large object; the BYTEA stays empty.
@@ -194,7 +216,13 @@ class TestSharedOidLifecycle:
     """
 
     def test_first_pass_keeps_oid_alive_when_other_row_still_references_it(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         payload = _make_jpeg(size=(300, 300))
@@ -222,9 +250,7 @@ class TestSharedOidLifecycle:
         assert converter_main.do_work(config, db, metrics_collector) is True
 
         with engine.connect() as conn:
-            remaining = [
-                row[0] for row in conn.execute(sa.select(db_models.QueueInputMedia.id))
-            ]
+            remaining = [row[0] for row in conn.execute(sa.select(db_models.QueueInputMedia.id))]
         assert remaining == [parent_id]
         # Child is done, parent still references the OID — OID MUST be alive.
         assert _large_object_exists(engine, oid) is True
@@ -232,7 +258,13 @@ class TestSharedOidLifecycle:
         assert child_id not in remaining
 
     def test_second_pass_deletes_oid_when_no_more_references(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         payload = _make_jpeg(size=(300, 300))
@@ -269,10 +301,14 @@ class TestSharedOidLifecycle:
 
 class TestConversionFailure:
     def test_corrupt_content_marks_row_failed_and_keeps_oid_alive(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
-        from omoide.workers.common import metrics as common_metrics
-
         user_uuid, item_uuid = user_and_item
         payload = b'not-a-real-image-just-some-bytes'
         oid = db.save_large_object(payload)
@@ -295,7 +331,8 @@ class TestConversionFailure:
                 ).where(db_models.QueueInputMedia.id == row_id)
             ).one()
         assert row.lock is None
-        assert row.error and row.error != ''
+        assert row.error
+        assert row.error != ''
         # OID must survive so a retry path can read the content again.
         assert _large_object_exists(engine, oid) is True
         assert metrics_collector.get_value(common_metrics.ERRORS) == 1.0
@@ -306,7 +343,13 @@ class TestConversionFailure:
 
 class TestUnsupportedContentType:
     def test_rows_with_unsupported_content_type_are_not_picked_up(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -325,7 +368,13 @@ class TestUnsupportedContentType:
 
 class TestPng:
     def test_png_is_processed(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -345,22 +394,30 @@ class TestPng:
 
 class TestProcessingOrder:
     def test_picks_lower_id_first(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         first = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, content=_make_jpeg(),
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            content=_make_jpeg(),
         )
         second = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, content=_make_jpeg(),
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            content=_make_jpeg(),
         )
 
         assert converter_main.do_work(config, db, metrics_collector) is True
 
         with engine.connect() as conn:
-            remaining = [
-                row[0] for row in conn.execute(sa.select(db_models.QueueInputMedia.id))
-            ]
+            remaining = [row[0] for row in conn.execute(sa.select(db_models.QueueInputMedia.id))]
         assert first not in remaining
         assert second in remaining
 
@@ -370,7 +427,13 @@ class TestProcessingOrder:
 
 class TestWebp:
     def test_webp_is_processed(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -397,7 +460,13 @@ def _outputs(engine) -> dict[str, db_models.QueueOutputMedia]:
 
 class TestOutputMediaTypes:
     def test_emits_content_preview_and_thumbnail(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -414,7 +483,13 @@ class TestOutputMediaTypes:
 
 class TestOutputFormats:
     def test_preview_and_thumbnail_are_jpeg_regardless_of_input(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -434,7 +509,13 @@ class TestOutputFormats:
         assert outputs['thumbnail'].content_type == 'image/jpeg'
 
     def test_content_keeps_original_format(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -454,7 +535,13 @@ class TestOutputFormats:
 
 class TestOutputDimensions:
     def test_thumbnail_and_preview_are_within_their_size_limits(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         # 2000 px on the long side — large enough to be downscaled for both
@@ -480,7 +567,13 @@ class TestOutputDimensions:
         assert thumb_size[0] // thumb_size[1] == 2
 
     def test_small_image_is_not_upscaled(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         # 100x100 is smaller than both thumbnail (384) and preview (1024).
@@ -505,7 +598,13 @@ class TestOutputDimensions:
 
 class TestSkipContentOnly:
     def test_skip_content_emits_preview_and_thumbnail(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -525,7 +624,12 @@ class TestSkipContentOnly:
 
 class TestFailedRowIsNotRetried:
     def test_second_do_work_finds_no_candidates_after_failure(
-        self, db, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(
@@ -546,7 +650,13 @@ class TestFailedRowIsNotRetried:
 
 class TestBatchSingleCandidatePerCall:
     def test_only_one_row_processed_per_do_work_invocation(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         for _ in range(3):
@@ -569,7 +679,14 @@ class TestBatchSingleCandidatePerCall:
 
 class TestLockStealing:
     def test_continues_to_next_candidate_when_first_lock_fails(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item, monkeypatch,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
+        monkeypatch,
     ):
         """The race covered by ``do_work``'s ``continue`` on failed lock.
 
@@ -580,10 +697,14 @@ class TestLockStealing:
         """
         user_uuid, item_uuid = user_and_item
         first = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, content=_make_jpeg(),
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            content=_make_jpeg(),
         )
         second = insert_input_media(
-            user_uuid=user_uuid, item_uuid=item_uuid, content=_make_jpeg(),
+            user_uuid=user_uuid,
+            item_uuid=item_uuid,
+            content=_make_jpeg(),
         )
 
         original_lock = db.lock_input_media
@@ -612,7 +733,13 @@ class TestLockStealing:
 
 class TestExtrasPropagation:
     def test_extract_exif_flag_survives_into_output_extras(
-        self, db, engine, config, metrics_collector, insert_input_media, user_and_item,
+        self,
+        db,
+        engine,
+        config,
+        metrics_collector,
+        insert_input_media,
+        user_and_item,
     ):
         user_uuid, item_uuid = user_and_item
         insert_input_media(

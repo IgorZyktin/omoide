@@ -146,6 +146,9 @@ lint.ignore = [
     "EM101", # Exception must not use a string literal
     "PLR2004", # Magic value used in comparison
     "PT001", # Use `@pytest.fixture` over `@pytest.fixture()`
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D107", # Missing docstring in `__init__`
 ]
 "alembic/*" = [
     "INP001", # File ... is part of an implicit namespace package
