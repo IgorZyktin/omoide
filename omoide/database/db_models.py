@@ -18,8 +18,6 @@ from sqlalchemy.orm import relationship
 from omoide import const
 from omoide import models
 
-metadata = sa.MetaData()
-
 HUGE = 1024
 MEDIUM = 256
 SMALL = 64
@@ -917,4 +915,4 @@ class QueueOutputMedia(Base):
 if __name__ == '__main__':
     db_url = os.environ[const.ENV_DB_URL_ADMIN]
     engine = sa.create_engine(db_url, echo=True)
-    metadata.create_all(engine, checkfirst=True)
+    Base.metadata.create_all(engine, checkfirst=True)
