@@ -52,5 +52,25 @@ jobs:
       - name: Test with mypy
         run: uv run mypy ./omoide
 
-      - name: Test with pytest
-        run: uv run pytest ./omoide/tests
+      - name: Run tests with coverage
+        run: uv run coverage run -m pytest ./omoide/tests
+
+      - name: Coverage report
+        run: |
+          uv run coverage report
+          uv run coverage xml -o coverage.xml
+          PCT=$(uv run coverage report --format=total)
+          echo "### Test coverage: ${PCT}%" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo ""
+            echo '```'
+            uv run coverage report
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage.xml
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml

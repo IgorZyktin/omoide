@@ -222,12 +222,17 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 branch = true
+source = ["omoide"]
 omit = [
     "./etc/*",
     "./venv/*",
+    "omoide/tests/*",
 ]
 
 [tool.coverage.report]
+precision = 1
+show_missing = true
+skip_empty = true
 exclude_also = [
     # Don't complain about missing debug-only code:
     "def __repr__",
