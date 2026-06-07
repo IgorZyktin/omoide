@@ -4,8 +4,29 @@ on: [ push, pull_request ]
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: omoide
+          POSTGRES_PASSWORD: omoide
+          POSTGRES_DB: omoide_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U omoide -d omoide_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # Sync URL — workers and integration fixtures connect via psycopg2.
+      OMOIDE_TEST_DB_URL: postgresql+psycopg2://omoide:omoide@localhost:5432/omoide_test
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -17,6 +38,14 @@ jobs:
           pip install uv
           uv sync --all-extras
 
+      - name: Enable required Postgres extensions
+        env:
+          PGPASSWORD: omoide
+        run: |
+          psql -h localhost -U omoide -d omoide_test \
+            -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" \
+            -c "CREATE EXTENSION IF NOT EXISTS btree_gin;"
+
       - name: Lint with Ruff
         run: uv run ruff check --output-format=github .
 
@@ -24,4 +53,4 @@ jobs:
         run: uv run mypy ./omoide
 
       - name: Test with pytest
-        run: uv run pytest ./omoide/tests/unit/
+        run: uv run pytest ./omoide/tests
