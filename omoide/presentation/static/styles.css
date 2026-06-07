@@ -319,17 +319,23 @@ progress {
     text-align: center;
     text-decoration: none;
     border: 1px solid var(--color-border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .page-left     { border-radius: var(--radius-md) 0 0 var(--radius-md); }
 .page-right    { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
 .page-separate { border-radius: var(--radius-md); }
 
-.active-page   { background-color: var(--color-accent-active); }
+.active-page   {
+    background-color: var(--color-accent-active) !important;
+    font-weight: bold;
+}
 .inactive-page { cursor: default; }
 
 .pages-selector {
-    width: 3em;
+    width: 4em;
     display: inline-block;
     margin: var(--space-2) 0;
     border: 1px solid var(--color-border);
