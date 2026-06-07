@@ -11,15 +11,14 @@
         <h1>Creating item</h1>
 
         <label for="parent_uuid">Parent item:</label>
-        <div style="display: flex; flex-direction: row; align-items: center">
+        <div class="field-row">
             <input id="parent_uuid"
                    type="text"
                    value="{{ parent_item.uuid }}"
                    disabled
                    class="height-auto"/>
             <a href="javascript:void(0)"
-               onclick="copyText('{{ parent_item.uuid }}', 'parent ID', 'copy-alerts-parent')"
-               style="height: 100%">
+               onclick="copyText('{{ parent_item.uuid }}', 'parent ID', 'copy-alerts-parent')">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
                      alt="{{ _('Copy ID') }}"
