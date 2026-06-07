@@ -15,15 +15,14 @@
         <h1>Uploading media</h1>
 
         <label for="owner-uuid">Owner of the item:</label>
-        <div style="display: flex; flex-direction: row; align-items: center">
+        <div class="field-row">
             <input id="owner-uuid"
                    type="text"
                    value="{{ current_item.owner_uuid }}"
                    disabled
                    class="height-auto"/>
             <a href="javascript:void(0)"
-               onclick="copyText('{{ current_item.owner_uuid }}', 'owner ID', 'copy-alerts-owner')"
-               style="height: 100%">
+               onclick="copyText('{{ current_item.owner_uuid }}', 'owner ID', 'copy-alerts-owner')">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
                      alt="{{ _('Copy ID') }}"
@@ -32,15 +31,14 @@
         <div id="copy-alerts-owner"></div>
 
         <label for="parent-uuid">Parent item:</label>
-        <div style="display: flex; flex-direction: row; align-items: center">
+        <div class="field-row">
             <input id="parent-uuid"
                    type="text"
                    value="{{ current_item.uuid }}"
                    disabled
                    class="height-auto"/>
             <a href="javascript:void(0)"
-               onclick="copyText('{{ current_item.uuid }}', 'parent ID', 'copy-alerts-parent')"
-               style="height: 100%">
+               onclick="copyText('{{ current_item.uuid }}', 'parent ID', 'copy-alerts-parent')">
                 <img class="icon-big"
                      src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
                      alt="{{ _('Copy ID') }}"

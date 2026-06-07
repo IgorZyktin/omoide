@@ -17,15 +17,14 @@
         <div>
             <h3>Parent</h3>
             <label for="item_parent">Parent UUID: </label>
-            <div style="display: flex; flex-direction: row; align-items: center">
+            <div class="field-row">
                 <input id="item_parent"
                        type="text"
                        value="{{ (item.parent_uuid or '')|string }}"
                        onchange="alterModelParentField(this)"
                        class="height-auto">
                 <a href="javascript:void(0)"
-                   onclick="copyText('{{ item.parent_uuid or '' }}', 'ID', 'copy-alerts-parent')"
-                   style="height: 100%">
+                   onclick="copyText('{{ item.parent_uuid or '' }}', 'ID', 'copy-alerts-parent')">
                     <img class="icon-big"
                          src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
                          alt="{{ _('Copy ID') }}"
@@ -54,15 +53,14 @@
         <div>
             <h3>Parameters</h3>
             <label for="item_uuid">Item UUID:</label>
-            <div style="display: flex; flex-direction: row; align-items: center">
+            <div class="field-row">
                 <input id="item_uuid"
                        type="text"
                        value="{{ item.uuid }}"
                        disabled
                        class="height-auto">
                 <a href="javascript:void(0)"
-                   onclick="copyText('{{ item.uuid }}', 'ID', 'copy-alerts-item')"
-                   style="height: 100%">
+                   onclick="copyText('{{ item.uuid }}', 'ID', 'copy-alerts-item')">
                     <img class="icon-big"
                          src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
                          alt="{{ _('Copy ID') }}"
@@ -85,14 +83,13 @@
 
             {% if notes and notes.get('copied_image_from') %}
                 <label for="thumbnail_origin">Copied image from:</label>
-                <div style="display: flex; flex-direction: row; align-items: center">
+                <div class="field-row">
                         <input id="thumbnail_origin"
                                type="text"
                                value="{{ notes.get('copied_image_from') }}"
                                class="height-auto" disabled>
                     <a href="javascript:void(0)"
-                       onclick="copyText('{{ notes.get('copied_image_from') }}', 'ID', 'copy-alerts-item')"
-                       style="height: 100%">
+                       onclick="copyText('{{ notes.get('copied_image_from') }}', 'ID', 'copy-alerts-item')">
                         <img class="icon-big"
                              src="{{ request.url_for('static', path='ic_copy_id.svg') }}"
                              alt="{{ _('Copy ID') }}"
