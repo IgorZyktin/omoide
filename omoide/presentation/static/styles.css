@@ -777,7 +777,7 @@ progress {
 }
 
 .autocomplete-active {
-    background-color: DodgerBlue;
+    background-color: DodgerBlue !important;
     color: var(--color-text-inverse);
 }
 
