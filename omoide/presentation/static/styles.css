@@ -83,8 +83,18 @@ html {
 
 @media (pointer: coarse) {
     html {
-        font-size: 22px;
+        font-size: var(--font-size-xl) !important;
     }
+
+    body {
+        font-size: var(--font-size-xl) !important;
+    }
+
+    h1 { font-size: var(--font-size-3xl) !important; }
+    h2 { font-size: var(--font-size-3xl) !important; }
+    h3 { font-size: var(--font-size-2xl) !important; }
+    h4 { font-size: var(--font-size-xl) !important; }
+    h5 { font-size: var(--font-size-lg) !important; }
 }
 
 html, body {
