@@ -335,7 +335,7 @@ progress {
 .inactive-page { cursor: default; }
 
 .pages-selector {
-    width: 4em;
+    width: 4.5em;
     display: inline-block;
     box-sizing: border-box;
     /* margin + padding mirror .pages a so the two land at the same height
