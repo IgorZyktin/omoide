@@ -9,11 +9,20 @@ The DB pointed to is treated as disposable: every test truncates all tables
 and unlinks every Postgres large object on teardown. Never point this at
 production data.
 
-The integration fixtures are SYNC because the workers (converter/downloader)
-use sync SQLAlchemy. Async fixtures for use-case tests will live alongside
-when those tests are written.
+Two parallel fixture stacks live here:
+
+* SYNC — engine/make_user/make_item/etc. Used by the worker tests
+  (converter, downloader) which run on sync SQLAlchemy.
+* ASYNC — async_database/items_mediator/make_user_model/make_item_model.
+  Used by use-case tests which exercise the production async stack.
+
+Both stacks point at the same physical database. The function-scoped
+``engine`` fixture truncates between tests, so the async stack sees a
+clean DB on every test as long as it depends on ``engine`` (directly or
+transitively through ``items_mediator``).
 """
 
+from collections.abc import AsyncIterator
 from collections.abc import Iterator
 import contextlib
 from datetime import UTC
@@ -28,8 +37,13 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from omoide import const
+from omoide import models
 from omoide.database import db_models
+from omoide.database.implementations import impl_sqlalchemy
+from omoide.infra import mediators
+from omoide.infra.interfaces.abs_authenticator import AbsAuthenticator
 from omoide.infra.interfaces.abs_metrics_collector import Metric
+from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 
 _TRUNCATE_TABLES = (
     'queue_input_media',
@@ -314,3 +328,254 @@ def converter_temp_folder(tmp_path: Path) -> Path:
     folder = tmp_path / 'converter'
     folder.mkdir()
     return folder
+
+
+# Async fixtures ---------------------------------------------------------
+#
+# Use-cases run on async SQLAlchemy in production. These fixtures wire up
+# a real ``SqlalchemyDatabase`` plus all repos against the same physical
+# test DB that the sync fixtures use. Isolation between tests still comes
+# from the function-scoped ``engine`` fixture's truncate cycle — depend
+# on it (directly or transitively) so the DB is clean.
+
+
+class _StubAuthenticator(AbsAuthenticator):
+    """Passthrough authenticator.
+
+    Use-case tests never go through the auth path; the real authenticator
+    drags in bcrypt setup we do not need. Stubbing keeps wiring trivial.
+    """
+
+    def encode_password(self, given_password: str, auth_complexity: int) -> str:
+        return given_password
+
+    def password_is_correct(
+        self, given_password: str, reference: str, auth_complexity: int
+    ) -> bool:
+        return given_password == reference
+
+
+def _to_async_url(url: str) -> str:
+    """Convert a sync-driver Postgres URL to the asyncpg driver.
+
+    The test env var historically points at psycopg2 for the sync workers.
+    Async fixtures need the same DB through asyncpg.
+    """
+    for prefix in ('postgresql+psycopg2://', 'postgresql+psycopg://', 'postgresql://'):
+        if url.startswith(prefix):
+            return 'postgresql+asyncpg://' + url[len(prefix) :]
+    return url
+
+
+@pytest.fixture(scope='session')
+def async_db_url(test_db_url: str) -> str:
+    """Return the async (asyncpg) variant of the test DB URL."""
+    return _to_async_url(test_db_url)
+
+
+@pytest.fixture
+async def async_database(
+    async_db_url: str, _schema_engine: Engine
+) -> AsyncIterator[impl_sqlalchemy.SqlalchemyDatabase]:
+    """Async database bound to the test DB.
+
+    Function-scoped so it shares the per-test event loop pytest-asyncio
+    provides (the default ``asyncio_default_fixture_loop_scope`` is
+    ``function``). Engine creation is cheap; the connection pool is lazy
+    so this only opens a real socket on first transaction.
+
+    Depending on ``_schema_engine`` guarantees the schema has been
+    bootstrapped before any async test reaches for it.
+    """
+    _ = _schema_engine  # ordering dependency only
+    database = impl_sqlalchemy.SqlalchemyDatabase(async_db_url)
+    await database.connect()
+    try:
+        yield database
+    finally:
+        await database.disconnect()
+
+
+@pytest.fixture
+def items_mediator(
+    engine: Engine, async_database: impl_sqlalchemy.SqlalchemyDatabase
+) -> mediators.ItemsMediator:
+    """Build an ``ItemsMediator`` wired with real repos.
+
+    Mirrors ``dependencies.get_items_mediator`` so use-case behavior
+    matches production. Depends on ``engine`` only to chain the per-test
+    truncate cycle — the truncate runs first, then this fixture returns.
+    """
+    _ = engine  # truncates between tests
+    return mediators.ItemsMediator(
+        authenticator=_StubAuthenticator(),
+        database=async_database,
+        items=impl_sqlalchemy.ItemsRepo(),
+        meta=impl_sqlalchemy.MetaRepo(),
+        misc=impl_sqlalchemy.MiscRepo(),
+        object_storage=FileObjectStorageServer(
+            database=async_database,
+            media=impl_sqlalchemy.MediaRepo(),
+            misc=impl_sqlalchemy.MiscRepo(),
+            prefix_size=2,
+        ),
+        signatures=impl_sqlalchemy.SignaturesRepo(),
+        tags=impl_sqlalchemy.TagsRepo(),
+        users=impl_sqlalchemy.UsersRepo(),
+    )
+
+
+@pytest.fixture
+def make_user_model(make_user, items_mediator: mediators.ItemsMediator):
+    """Create a user row and return the domain ``models.User``.
+
+    Accepts the same overrides as ``make_user`` plus reads the row back
+    through ``UsersRepo`` so tests get a model identical to one the
+    use-case would have produced.
+    """
+
+    async def _factory(**overrides: Any) -> models.User:
+        user_id, _user_uuid = make_user(**overrides)
+        async with items_mediator.database.transaction() as conn:
+            return await items_mediator.users.get_by_id(conn, user_id)
+
+    return _factory
+
+
+@pytest.fixture
+def make_item_model(make_item, items_mediator: mediators.ItemsMediator):
+    """Create an item row and return the domain ``models.Item``.
+
+    Accepts the same overrides as ``make_item``. Reads back via
+    ``ItemsRepo`` so tests work with the same shape the use-case sees.
+    """
+
+    async def _factory(**overrides: Any) -> models.Item:
+        item_id, _item_uuid, _owner_uuid = make_item(**overrides)
+        async with items_mediator.database.transaction() as conn:
+            return await items_mediator.items.get_by_id(conn, item_id)
+
+    return _factory
+
+
+@pytest.fixture
+def make_metainfo(engine: Engine):
+    """Insert a metainfo row for the given item id and return its model.
+
+    Most item flows expect a row in ``item_metainfo`` to exist; otherwise
+    ``meta.soft_delete`` no-ops and ``meta.get_by_item`` raises.
+    """
+
+    def _factory(item_id: int, **overrides: Any) -> models.Metainfo:
+        now = datetime.now(UTC)
+        values: dict[str, Any] = {
+            'item_id': item_id,
+            'created_at': now,
+            'updated_at': now,
+            'deleted_at': None,
+            'user_time': None,
+            'content_type': overrides.pop('content_type', 'image/jpeg'),
+            'content_size': None,
+            'preview_size': None,
+            'thumbnail_size': None,
+            'content_width': None,
+            'content_height': None,
+            'preview_width': None,
+            'preview_height': None,
+            'thumbnail_width': None,
+            'thumbnail_height': None,
+        }
+        values.update(overrides)
+        with engine.begin() as conn:
+            conn.execute(sa.insert(db_models.Metainfo).values(**values))
+        return models.Metainfo(
+            item_id=item_id,
+            created_at=values['created_at'],
+            updated_at=values['updated_at'],
+            deleted_at=values['deleted_at'],
+            user_time=values['user_time'],
+            content_type=values['content_type'],
+            content_size=values['content_size'],
+            preview_size=values['preview_size'],
+            thumbnail_size=values['thumbnail_size'],
+            content_width=values['content_width'],
+            content_height=values['content_height'],
+            preview_width=values['preview_width'],
+            preview_height=values['preview_height'],
+            thumbnail_width=values['thumbnail_width'],
+            thumbnail_height=values['thumbnail_height'],
+        )
+
+    return _factory
+
+
+@pytest.fixture
+def set_computed_tags(engine: Engine):
+    """Upsert ``computed_tags`` for an item.
+
+    The delete use-case reads computed_tags BEFORE clearing them and uses
+    the snapshot to decrement ``known_tags``. Tests that care about
+    that branch need pre-seeded data.
+    """
+
+    def _factory(item_id: int, tags: set[str]) -> None:
+        with engine.begin() as conn:
+            conn.execute(sa.delete(db_models.ComputedTags).where(
+                db_models.ComputedTags.item_id == item_id
+            ))
+            conn.execute(
+                sa.insert(db_models.ComputedTags).values(
+                    item_id=item_id, tags=tuple(sorted(tags))
+                )
+            )
+
+    return _factory
+
+
+@pytest.fixture
+def set_known_tags_user(engine: Engine):
+    """Upsert per-user ``known_tags`` counters."""
+
+    def _factory(user_id: int, tags: dict[str, int]) -> None:
+        if not tags:
+            return
+        with engine.begin() as conn:
+            conn.execute(
+                sa.delete(db_models.KnownTags).where(
+                    db_models.KnownTags.user_id == user_id,
+                    db_models.KnownTags.tag.in_(tags),
+                )
+            )
+            conn.execute(
+                sa.insert(db_models.KnownTags),
+                [
+                    {'user_id': user_id, 'tag': tag, 'counter': counter}
+                    for tag, counter in tags.items()
+                ],
+            )
+
+    return _factory
+
+
+@pytest.fixture
+def set_known_tags_anon(engine: Engine):
+    """Upsert anon ``known_tags`` counters."""
+
+    def _factory(tags: dict[str, int]) -> None:
+        if not tags:
+            return
+        with engine.begin() as conn:
+            conn.execute(
+                sa.delete(db_models.KnownTagsAnon).where(
+                    db_models.KnownTagsAnon.tag.in_(tags)
+                )
+            )
+            conn.execute(
+                sa.insert(db_models.KnownTagsAnon),
+                [
+                    {'tag': tag, 'counter': counter}
+                    for tag, counter in tags.items()
+                ],
+            )
+
+    return _factory
