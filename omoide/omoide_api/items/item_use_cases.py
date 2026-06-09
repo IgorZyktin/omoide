@@ -61,6 +61,7 @@ class CreateOneItemUseCase:
 
         async with transaction() as conn:
             if top_level:
+                ensure.admin(user, 'Only admin can create top-level items')
                 parent = None
             elif parent_uuid is None:
                 parent = await self.mediator.users.get_root_item(conn, user)
