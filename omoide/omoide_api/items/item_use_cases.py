@@ -529,6 +529,8 @@ class DeleteItemUseCase(BaseItemUseCase):
                         switch_to = siblings[index + 1]
                 elif len(siblings) == 1:
                     switch_to = siblings[0]
+                    if switch_to.id == item.id:
+                        desired_switch = 'parent'
                 else:
                     desired_switch = 'parent'
 
