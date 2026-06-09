@@ -66,8 +66,7 @@ class CreateOneItemUseCase:
                 parent = await self.mediator.users.get_root_item(conn, user)
             else:
                 parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
-                if parent.owner_uuid != user.uuid:
-                    raise exceptions.NotAllowedError(msg)
+                ensure.owner(user, parent, 'Only owner can create child items')
 
             _permissions: set[int] = set()
             for human_readable_user in permissions:
