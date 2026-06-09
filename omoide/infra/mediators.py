@@ -87,6 +87,7 @@ class UsersMediator:
     items: database_interfaces.AbsItemsRepo
     meta: database_interfaces.AbsMetaRepo
     misc: database_interfaces.AbsMiscRepo
+    object_storage: object_interfaces.AbsObjectStorage
     tags: database_interfaces.AbsTagsRepo
     users: database_interfaces.AbsUsersRepo
 

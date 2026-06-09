@@ -520,13 +520,11 @@ def set_computed_tags(engine: Engine):
 
     def _factory(item_id: int, tags: set[str]) -> None:
         with engine.begin() as conn:
-            conn.execute(sa.delete(db_models.ComputedTags).where(
-                db_models.ComputedTags.item_id == item_id
-            ))
             conn.execute(
-                sa.insert(db_models.ComputedTags).values(
-                    item_id=item_id, tags=tuple(sorted(tags))
-                )
+                sa.delete(db_models.ComputedTags).where(db_models.ComputedTags.item_id == item_id)
+            )
+            conn.execute(
+                sa.insert(db_models.ComputedTags).values(item_id=item_id, tags=tuple(sorted(tags)))
             )
 
     return _factory
@@ -566,16 +564,11 @@ def set_known_tags_anon(engine: Engine):
             return
         with engine.begin() as conn:
             conn.execute(
-                sa.delete(db_models.KnownTagsAnon).where(
-                    db_models.KnownTagsAnon.tag.in_(tags)
-                )
+                sa.delete(db_models.KnownTagsAnon).where(db_models.KnownTagsAnon.tag.in_(tags))
             )
             conn.execute(
                 sa.insert(db_models.KnownTagsAnon),
-                [
-                    {'tag': tag, 'counter': counter}
-                    for tag, counter in tags.items()
-                ],
+                [{'tag': tag, 'counter': counter} for tag, counter in tags.items()],
             )
 
     return _factory

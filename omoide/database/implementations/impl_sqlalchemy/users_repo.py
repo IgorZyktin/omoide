@@ -185,6 +185,7 @@ class UsersRepo(AbsUsersRepo[AsyncConnection]):
             sa.and_(
                 db_models.Item.owner_id == user.id,
                 db_models.Item.parent_id == sa.null(),
+                db_models.Item.status != models.Status.DELETED,
             )
         )
 

@@ -41,9 +41,7 @@ def _read_known_tags_user_counter(engine, user_id: int, tag: str) -> int | None:
 def _read_known_tags_anon_counter(engine, tag: str) -> int | None:
     with engine.connect() as conn:
         row = conn.execute(
-            sa.select(db_models.KnownTagsAnon.counter).where(
-                db_models.KnownTagsAnon.tag == tag
-            )
+            sa.select(db_models.KnownTagsAnon.counter).where(db_models.KnownTagsAnon.tag == tag)
         ).fetchone()
     return None if row is None else int(row.counter)
 
@@ -60,9 +58,7 @@ def _read_item_status(engine, item_id: int) -> int:
 def _read_metainfo_deleted_at(engine, item_id: int):
     with engine.connect() as conn:
         row = conn.execute(
-            sa.select(db_models.Metainfo.deleted_at).where(
-                db_models.Metainfo.item_id == item_id
-            )
+            sa.select(db_models.Metainfo.deleted_at).where(db_models.Metainfo.item_id == item_id)
         ).fetchone()
     assert row is not None
     return row.deleted_at
@@ -71,9 +67,7 @@ def _read_metainfo_deleted_at(engine, item_id: int):
 def _read_computed_tags(engine, item_id: int) -> list[str] | None:
     with engine.connect() as conn:
         row = conn.execute(
-            sa.select(db_models.ComputedTags.tags).where(
-                db_models.ComputedTags.item_id == item_id
-            )
+            sa.select(db_models.ComputedTags.tags).where(db_models.ComputedTags.item_id == item_id)
         ).fetchone()
     return None if row is None else list(row.tags)
 
@@ -538,9 +532,7 @@ class TestDeleteItemUseCaseSwitchTo:
         )
 
         assert switch_to is not None
-        assert switch_to.id != lonely.id, (
-            'switch_to must not be the item that was just deleted'
-        )
+        assert switch_to.id != lonely.id, 'switch_to must not be the item that was just deleted'
         assert switch_to.id == root.id
 
 
@@ -746,11 +738,9 @@ class TestDeleteItemUseCaseCascade:
         )
 
         # The viewer only saw the child, so only 'child_only' should drop.
-        assert (
-            _read_known_tags_user_counter(engine, descendant_viewer.id, 'child_only')
-            == 8
-        ), 'descendant-only permission holder must lose count for descendant tag'
-        assert (
-            _read_known_tags_user_counter(engine, descendant_viewer.id, 'parent_only')
-            == 9
-        ), 'permission holder unrelated to parent must not lose count for parent tag'
+        assert _read_known_tags_user_counter(engine, descendant_viewer.id, 'child_only') == 8, (
+            'descendant-only permission holder must lose count for descendant tag'
+        )
+        assert _read_known_tags_user_counter(engine, descendant_viewer.id, 'parent_only') == 9, (
+            'permission holder unrelated to parent must not lose count for parent tag'
+        )

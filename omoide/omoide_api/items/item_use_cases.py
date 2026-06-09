@@ -20,111 +20,10 @@ from omoide.infra import mediators
 LOG = custom_logging.get_logger(__name__)
 
 
-class CreateOneItemUseCase:
-    """Use case for creating one item."""
-
-    def __init__(self, mediator: mediators.UsersMediator | mediators.ItemsMediator) -> None:
-        """Initialize instance."""
-        self.mediator = mediator
-
-    async def execute(  # noqa: PLR0913 Too many arguments in function definition
-        self,
-        user: models.User,
-        uuid: UUID | None,
-        parent_uuid: UUID | None,
-        name: str,
-        number: int | None,
-        is_collection: bool,
-        tags: list[str],
-        permissions: list[dict[str, UUID | str]],
-        top_level: bool = False,
-        connection: Any = None,
-    ) -> models.Item:
-        """Create single item."""
-        ensure.registered(user, 'Anonymous users are not allowed to create items')
-
-        if uuid is None:
-            valid_uuid = uuid4()
-        else:
-            valid_uuid = uuid
-
-        msg = 'You are not allowed to create items for other users'
-
-        transaction: Any
-        if connection is None:
-            transaction = self.mediator.database.transaction
-        else:
-
-            @asynccontextmanager
-            async def transaction() -> AsyncIterator[Any]:
-                yield connection
-
-        async with transaction() as conn:
-            if top_level:
-                ensure.admin(user, 'Only admin can create top-level items')
-                parent = None
-            elif parent_uuid is None:
-                parent = await self.mediator.users.get_root_item(conn, user)
-            else:
-                parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
-                ensure.owner(user, parent, 'Only owner can create child items')
-
-            _permissions: set[int] = set()
-            for human_readable_user in permissions:
-                user_uuid = human_readable_user.get('uuid')
-                if not isinstance(user_uuid, UUID):
-                    continue
-                local_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
-                _permissions.add(local_user.id)
-
-            item = models.Item(
-                id=-1,
-                uuid=valid_uuid,
-                parent_id=parent.id if parent is not None else None,
-                parent_uuid=parent.uuid if parent is not None else None,
-                owner_id=user.id,
-                owner_uuid=user.uuid,
-                name=name,
-                status=models.Status.AVAILABLE if is_collection else models.Status.CREATED,
-                number=number or -1,
-                is_collection=is_collection,
-                content_ext=None,
-                preview_ext=None,
-                thumbnail_ext=None,
-                tags=set(tags),
-                permissions=_permissions,
-                extras={},
-            )
-
-            item.id = await self.mediator.items.create(conn, item)
-
-            metainfo = models.Metainfo(
-                item_id=item.id,
-                created_at=pu.now(),
-                updated_at=pu.now(),
-                deleted_at=None,
-                user_time=None,
-                content_type=None,
-                content_size=None,
-                preview_size=None,
-                thumbnail_size=None,
-                content_width=None,
-                content_height=None,
-                preview_width=None,
-                preview_height=None,
-                thumbnail_width=None,
-                thumbnail_height=None,
-            )
-
-            await self.mediator.meta.create(conn, metainfo)
-
-        return item
-
-
 class BaseItemUseCase:
     """Base use case for user-related operations."""
 
-    def __init__(self, mediator: mediators.ItemsMediator) -> None:
+    def __init__(self, mediator: mediators.UsersMediator | mediators.ItemsMediator) -> None:
         """Initialize instance."""
         self.mediator = mediator
         self._users_cache: dict[int, models.User] = {}
@@ -164,6 +63,141 @@ class BaseItemUseCase:
         self._computed_tags_cache[item.id] = tags
         return tags
 
+    async def update_tags(
+        self,
+        user: models.User,
+        item: models.Item,
+        conn: Any,
+    ) -> dict[int, models.User | None]:
+        """Increment all counters and calculate computed tags."""
+        users_map: dict[int, models.User | None] = {user.id: user}
+
+        if item.parent_id is None:
+            parent_tags = set()
+        else:
+            parent = await self._get_cached_item(conn, item.parent_id)
+            parent_tags = await self._get_cached_computed_tags(conn, parent)
+
+            if not parent.is_collection:
+                parent.is_collection = True
+                await self.mediator.items.save(conn, parent)
+
+        computed_tags = item.get_computed_tags(parent_tags)
+
+        # for the item itself
+        await self.mediator.tags.save_computed_tags(conn, item, computed_tags)
+
+        # for the owner
+        await self.mediator.tags.increment_known_tags_user(conn, user, computed_tags)
+
+        # for anons
+        if user.is_public:
+            await self.mediator.tags.increment_known_tags_anon(conn, computed_tags)
+
+        # for everyone, who can see this item
+        for user_id in item.permissions:
+            other_user = await self._get_cached_user(conn, user_id)
+            users_map[user_id] = other_user
+            await self.mediator.tags.increment_known_tags_user(conn, other_user, computed_tags)
+
+        return users_map
+
+
+class CreateOneItemUseCase(BaseItemUseCase):
+    """Use case for creating one item."""
+
+    async def execute(  # noqa: PLR0913 Too many arguments in function definition
+        self,
+        user: models.User,
+        item_uuid: UUID | None,
+        parent_uuid: UUID | None,
+        name: str,
+        number: int | None,
+        is_collection: bool,
+        tags: list[str],
+        permissions: list[dict[str, UUID | str]],
+        top_level: bool = False,
+        connection: Any = None,
+    ) -> models.Item:
+        """Create single item."""
+        ensure.registered(user, 'Anonymous users are not allowed to create items')
+
+        if item_uuid is None:
+            valid_uuid = uuid4()
+        else:
+            valid_uuid = item_uuid
+
+        transaction: Any
+        if connection is None:
+            transaction = self.mediator.database.transaction
+        else:
+
+            @asynccontextmanager
+            async def transaction() -> AsyncIterator[Any]:
+                yield connection
+
+        async with transaction() as conn:
+            if top_level:
+                ensure.admin(user, 'Only admin can create top-level items')
+                parent = None
+            elif parent_uuid is None:
+                parent = await self.mediator.users.get_root_item(conn, user)
+            else:
+                parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
+                ensure.owner(user, parent, 'Only owner can create child items')
+
+            _permissions: set[int] = set()
+            for human_readable_user in permissions:
+                user_uuid = human_readable_user.get('uuid')
+                if not isinstance(user_uuid, UUID):
+                    continue
+                local_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+                _permissions.add(local_user.id)
+
+            item = models.Item(
+                id=-1,
+                uuid=valid_uuid,
+                parent_id=parent.id if parent is not None else None,
+                parent_uuid=parent.uuid if parent is not None else None,
+                owner_id=user.id,
+                owner_uuid=user.uuid,
+                name=name,
+                status=models.Status.AVAILABLE if is_collection else models.Status.CREATED,
+                number=number if number is not None else -1,
+                is_collection=is_collection,
+                content_ext=None,
+                preview_ext=None,
+                thumbnail_ext=None,
+                tags=set(tags),
+                permissions=_permissions,
+                extras={},
+            )
+
+            item.id = await self.mediator.items.create(conn, item)
+
+            metainfo = models.Metainfo(
+                item_id=item.id,
+                created_at=pu.now(),
+                updated_at=pu.now(),
+                deleted_at=None,
+                user_time=None,
+                content_type=None,
+                content_size=None,
+                preview_size=None,
+                thumbnail_size=None,
+                content_width=None,
+                content_height=None,
+                preview_width=None,
+                preview_height=None,
+                thumbnail_width=None,
+                thumbnail_height=None,
+            )
+
+            await self.mediator.meta.create(conn, metainfo)
+
+        LOG.info('User {user} created item: {item}', user=user, item=item)
+        return item
+
 
 class CreateManyItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
@@ -184,46 +218,15 @@ class CreateManyItemsUseCase(BaseItemUseCase):
             for raw_item in items_in:
                 item = await sub_use_case.execute(user, **raw_item, connection=conn)
                 items.append(item)
+                new_users = await self.update_tags(user, item, conn)
+                users_map.update(new_users)
 
-                if item.parent_id is None:
-                    parent_tags = set()
-                else:
-                    parent = await self._get_cached_item(conn, item.parent_id)
-                    parent_tags = await self._get_cached_computed_tags(conn, parent)
-
-                    if not parent.is_collection:
-                        parent.is_collection = True
-                        await self.mediator.items.save(conn, parent)
-
-                computed_tags = item.get_computed_tags(parent_tags)
-
-                # for the item itself
-                await self.mediator.tags.save_computed_tags(conn, item, computed_tags)
-
-                # for the owner
-                await self.mediator.tags.increment_known_tags_user(conn, user, computed_tags)
-
-                # for anons
-                if user.is_public:
-                    await self.mediator.tags.increment_known_tags_anon(conn, computed_tags)
-
-                # for everyone, who can see this item
-                for user_id in item.permissions:
-                    other_user = await self._get_cached_user(conn, user_id)
-                    users_map[user_id] = other_user
-                    await self.mediator.tags.increment_known_tags_user(
-                        conn, other_user, computed_tags
-                    )
-
-        if len(items) == 1:
-            LOG.info('User {user} created item: {item}', user=user, item=items[0])
-        else:
-            LOG.info(
-                'User {user} created {total} items: {items}',
-                user=user,
-                total=len(items),
-                items=items,
-            )
+        LOG.info(
+            'User {user} created {total} items: {items}',
+            user=user,
+            total=len(items),
+            items=items,
+        )
 
         return items, users_map
 

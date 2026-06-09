@@ -65,18 +65,19 @@ class CreateUserUseCase(BaseUserUseCase):
                 auth_complexity=const.AUTH_COMPLEXITY,
             )
 
-        sub_use_case = item_use_cases.CreateOneItemUseCase(self.mediator)
-        item = await sub_use_case.execute(
-            user=new_user,
-            uuid=None,
-            parent_uuid=None,
-            name=new_user.name,
-            is_collection=True,
-            number=None,
-            tags=[new_user.name],
-            permissions=[],
-            top_level=True,
-        )
+            sub_use_case = item_use_cases.CreateOneItemUseCase(self.mediator)
+            item = await sub_use_case.execute(
+                user=new_user,
+                item_uuid=None,
+                parent_uuid=None,
+                name=new_user.name,
+                is_collection=True,
+                number=None,
+                tags=[new_user.name],
+                permissions=[],
+                top_level=True,
+            )
+            await sub_use_case.update_tags(user, item, conn)
 
         new_user.extras['root_item_uuid'] = item.uuid
 
