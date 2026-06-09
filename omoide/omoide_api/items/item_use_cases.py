@@ -552,7 +552,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 if owner.is_public:
                     await self.mediator.tags.decrement_known_tags_anon(conn, computed_tags)
 
-                for user_id in item.permissions:
+                for user_id in member.permissions:
                     other_user = await self._get_cached_user(conn, user_id)
                     await self.mediator.tags.decrement_known_tags_user(
                         conn, other_user, computed_tags
