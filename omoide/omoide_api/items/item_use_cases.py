@@ -41,6 +41,8 @@ class CreateOneItemUseCase:
         connection: Any = None,
     ) -> models.Item:
         """Create single item."""
+        ensure.registered(user, 'Anonymous users are not allowed to create items')
+
         if uuid is None:
             valid_uuid = uuid4()
         else:
