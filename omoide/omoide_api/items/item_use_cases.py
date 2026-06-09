@@ -510,7 +510,7 @@ class DeleteItemUseCase(BaseItemUseCase):
             item = await self.mediator.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot delete someone else's item")
 
-            if item.parent_uuid is None:
+            if item.parent_id is None:
                 LOG.warning('{} tried to delete root {}', user, item)
                 msg = 'Root items cannot be deleted'
                 raise exceptions.NotAllowedError(msg)
@@ -523,7 +523,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                     index = siblings.index(item)
                     last = len(siblings) - 1
 
-                    if index == len(siblings) - 1:
+                    if index == last:
                         switch_to = siblings[last - 1]
                     else:
                         switch_to = siblings[index + 1]
@@ -534,7 +534,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 else:
                     desired_switch = 'parent'
 
-            if (desired_switch == 'parent' or switch_to is None) and item.parent_id is not None:
+            if desired_switch == 'parent' or switch_to is None:
                 switch_to = await self.mediator.items.get_by_id(conn, item.parent_id)
 
             members = await self.mediator.items.get_family(conn, item)
