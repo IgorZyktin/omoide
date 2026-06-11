@@ -38,17 +38,6 @@ class MetainfoMediator:
 
 
 @dataclass(frozen=True)
-class SearchMediator:
-    """Class that ties all components together."""
-
-    browse: database_interfaces.AbsBrowseRepo
-    database: database_interfaces.AbsDatabase
-    search: database_interfaces.AbsSearchRepo
-    tags: database_interfaces.AbsTagsRepo
-    users: database_interfaces.AbsUsersRepo
-
-
-@dataclass(frozen=True)
 class HomeMediator:
     """Class that ties all components together."""
 

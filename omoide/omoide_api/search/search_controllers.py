@@ -13,7 +13,8 @@ from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
 from omoide import utils
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
 from omoide.omoide_api.search import search_use_cases
@@ -31,8 +32,9 @@ api_search_router = APIRouter(prefix='/search', tags=['Search'])
     response_model=search_api_models.AutocompleteOutput,
 )
 async def api_autocomplete(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
     tag: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     limit: Annotated[
         int,
@@ -47,7 +49,7 @@ async def api_autocomplete(
     This endpoint can be used by anybody, but each user will get tailored
     output. String must be an exact match, no guessing is used.
     """
-    use_case = search_use_cases.AutocompleteUseCase(mediator)
+    use_case = search_use_cases.AutocompleteUseCase(database, tags_repo)
 
     # noinspection PyBroadException
     try:
@@ -74,9 +76,11 @@ async def api_autocomplete(
     status_code=status.HTTP_200_OK,
     response_model=search_api_models.RecentUpdatesOutput,
 )
-async def api_get_recent_updates(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
+async def api_get_recent_updates(  # noqa: PLR0913
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    browse_repo: db_interfaces.AbsBrowseRepo = Depends(dep.get_browse_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
@@ -86,7 +90,7 @@ async def api_get_recent_updates(
 
     This endpoint can be used by any user, but each will get tailored output.
     """
-    use_case = search_use_cases.RecentUpdatesUseCase(mediator)
+    use_case = search_use_cases.RecentUpdatesUseCase(database, browse_repo, users_repo)
 
     plan = models.Plan(
         query='',
@@ -115,8 +119,9 @@ async def api_get_recent_updates(
     response_model=search_api_models.SearchTotalOutput,
 )
 async def api_search_total(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    search_repo: db_interfaces.AbsSearchRepo = Depends(dep.get_search_repo),
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     collections: Annotated[bool, Query()] = False,
 ):
@@ -124,7 +129,7 @@ async def api_search_total(
     if len(q) < limits.MIN_QUERY:
         return search_api_models.SearchTotalOutput(total=0, duration=0.0)
 
-    use_case = search_use_cases.ApiSearchTotalUseCase(mediator)
+    use_case = search_use_cases.ApiSearchTotalUseCase(database, search_repo)
     tags_include, tags_exclude = utils.parse_tags(q)
 
     plan = models.Plan(
@@ -153,8 +158,10 @@ async def api_search_total(
     response_model=common_api_models.ManyItemsOutput,
 )
 async def api_search(  # noqa: PLR0913
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.SearchMediator, Depends(dep.get_search_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    search_repo: db_interfaces.AbsSearchRepo = Depends(dep.get_search_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
@@ -170,7 +177,7 @@ async def api_search(  # noqa: PLR0913
     if len(q) < limits.MIN_QUERY:
         return common_api_models.ManyItemsOutput(duration=0.0, items=[])
 
-    use_case = search_use_cases.ApiSearchUseCase(mediator)
+    use_case = search_use_cases.ApiSearchUseCase(database, search_repo, users_repo)
     tags_include, tags_exclude = utils.parse_tags(q)
 
     plan = models.Plan(
