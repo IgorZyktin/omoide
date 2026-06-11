@@ -17,7 +17,9 @@ from fastapi.templating import Jinja2Templates
 from omoide import cfg
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.infra import interfaces as infra_interfaces
 from omoide.omoide_app.auth import auth_use_cases
 from omoide.presentation import web
 
@@ -26,12 +28,14 @@ security = HTTPBasic(realm='omoide')
 
 
 @app_auth_router.get('/login')
-async def app_login(
+async def app_login(  # noqa: PLR0913
     request: Request,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-    config: Annotated[cfg.Config, Depends(dep.get_config)],
+    user: models.User = Depends(dep.get_current_user),
+    authenticator: infra_interfaces.AbsAuthenticator = Depends(dep.get_authenticator),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    config: cfg.Config = Depends(dep.get_config),
     response_class: type[Response] = RedirectResponse,  # noqa: ARG001
 ):
     """Ask user for login and password."""
@@ -40,7 +44,7 @@ async def app_login(
     if user.is_not_anon:
         return RedirectResponse(url)
 
-    use_case = auth_use_cases.LoginUserUseCase(mediator)
+    use_case = auth_use_cases.LoginUserUseCase(authenticator, database, users_repo)
 
     try:
         new_user = await use_case.execute(

@@ -195,32 +195,16 @@ def get_browse_mediator(
     )
 
 
-def get_users_mediator(
-    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
-    database: Annotated[AbsDatabase, Depends(get_database)],
-    object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
-) -> mediators.UsersMediator:
-    """Get mediator instance."""
-    return mediators.UsersMediator(
-        authenticator=authenticator,
-        database=database,
-        items=impl_sqlalchemy.ItemsRepo(),
-        meta=impl_sqlalchemy.MetaRepo(),
-        object_storage=object_storage,
-        misc=impl_sqlalchemy.MiscRepo(),
-        tags=impl_sqlalchemy.TagsRepo(),
-        users=impl_sqlalchemy.UsersRepo(),
-    )
-
-
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
-    mediator: Annotated[mediators.UsersMediator, Depends(get_users_mediator)],
+    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
+    database: Annotated[AbsDatabase, Depends(get_database)],
+    users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(get_users_repo)],
 ) -> models.User:
     """Return current user or create anon."""
-    use_case = LoginUserUseCase(mediator)
     if not credentials.username or not credentials.password:
         return models.User.new_anon()
+    use_case = LoginUserUseCase(authenticator, database, users_repo)
     return await use_case.execute(credentials.username, credentials.password)
 
 

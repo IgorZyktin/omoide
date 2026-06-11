@@ -1,6 +1,5 @@
 """User related API operations."""
 
-from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -12,7 +11,9 @@ from fastapi import status
 from omoide import dependencies as dep
 from omoide import models
 from omoide import utils
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.infra import interfaces as infra_interfaces
 from omoide.omoide_api.users import user_api_models
 from omoide.omoide_api.users import user_use_cases
 from omoide.presentation import web
@@ -30,18 +31,25 @@ api_users_router = APIRouter(prefix='/users', tags=['Users'])
     },
     response_model=user_api_models.UserOutput,
 )
-async def api_create_user(
+async def api_create_user(  # noqa: PLR0913
     request: Request,
     response: Response,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     user_in: user_api_models.UserInput,
+    user: models.User = Depends(dep.get_current_user),
+    authenticator: infra_interfaces.AbsAuthenticator = Depends(dep.get_authenticator),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
 ):
     """Create new user.
 
     Only admins can do this.
     """
-    use_case = user_use_cases.CreateUserUseCase(mediator)
+    use_case = user_use_cases.CreateUserUseCase(
+        authenticator, database, users_repo, items_repo, meta_repo, tags_repo
+    )
 
     try:
         user_out = await use_case.execute(
@@ -70,14 +78,15 @@ async def api_create_user(
     response_model=user_api_models.UserCollectionOutput,
 )
 async def api_get_all_users(
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
 ):
     """Get list of users.
 
     Admins can get all users, registered users will get only themselves.
     """
-    use_case = user_use_cases.GetAllUsersUseCase(mediator)
+    use_case = user_use_cases.GetAllUsersUseCase(database, users_repo)
 
     try:
         users = await use_case.execute(user)
@@ -103,11 +112,13 @@ async def api_get_all_users(
 )
 async def api_get_user_resource_usage(
     user_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
 ):
     """Get resource usage info for specific user."""
-    use_case = user_use_cases.GetUserResourceUsageUseCase(mediator)
+    use_case = user_use_cases.GetUserResourceUsageUseCase(database, users_repo, meta_repo)
 
     try:
         output = await use_case.execute(user, user_uuid)
@@ -137,10 +148,11 @@ async def api_get_user_resource_usage(
     response_model=dict[str, int],
 )
 async def api_get_anon_tags(
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
+    database: AbsDatabase = Depends(dep.get_database),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
 ):
     """Get all known tags for anon user."""
-    use_case = user_use_cases.GetAnonUserTagsUseCase(mediator)
+    use_case = user_use_cases.GetAnonUserTagsUseCase(database, tags_repo)
 
     try:
         tags = await use_case.execute()
@@ -163,11 +175,13 @@ async def api_get_anon_tags(
 )
 async def api_get_user_tags(
     user_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
 ):
     """Get all known tags for specific user."""
-    use_case = user_use_cases.GetKnownUserTagsUseCase(mediator)
+    use_case = user_use_cases.GetKnownUserTagsUseCase(database, users_repo, tags_repo)
 
     try:
         tags = await use_case.execute(user, user_uuid)
@@ -190,11 +204,12 @@ async def api_get_user_tags(
 )
 async def api_get_user_by_uuid(
     user_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
 ):
     """Get user by UUID."""
-    use_case = user_use_cases.GetUserByUUIDUseCase(mediator)
+    use_case = user_use_cases.GetUserByUUIDUseCase(database, users_repo)
 
     try:
         user = await use_case.execute(user, user_uuid)
@@ -215,14 +230,16 @@ async def api_get_user_by_uuid(
     },
     response_model=user_api_models.UserOutput,
 )
-async def api_change_user_name(
+async def api_change_user_name(  # noqa: PLR0913
     user_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     payload: user_api_models.UserValueInput,
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
 ):
     """Update name of existing user."""
-    use_case = user_use_cases.ChangeUserNameUseCase(mediator)
+    use_case = user_use_cases.ChangeUserNameUseCase(database, users_repo, misc_repo)
 
     try:
         user = await use_case.execute(user, user_uuid, payload.value)
@@ -245,12 +262,13 @@ async def api_change_user_name(
 )
 async def api_change_user_login(
     user_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     payload: user_api_models.UserValueInput,
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
 ):
     """Update login of existing user."""
-    use_case = user_use_cases.ChangeUserLoginUseCase(mediator)
+    use_case = user_use_cases.ChangeUserLoginUseCase(database, users_repo)
 
     try:
         user = await use_case.execute(user, user_uuid, payload.value)
@@ -271,14 +289,16 @@ async def api_change_user_login(
     },
     response_model=user_api_models.UserOutput,
 )
-async def api_change_user_password(
+async def api_change_user_password(  # noqa: PLR0913
     user_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.UsersMediator, Depends(dep.get_users_mediator)],
     payload: user_api_models.UserValueInput,
+    user: models.User = Depends(dep.get_known_user),
+    authenticator: infra_interfaces.AbsAuthenticator = Depends(dep.get_authenticator),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
 ):
     """Update password of existing user."""
-    use_case = user_use_cases.ChangeUserPasswordUseCase(mediator)
+    use_case = user_use_cases.ChangeUserPasswordUseCase(authenticator, database, users_repo)
 
     try:
         user = await use_case.execute(user, user_uuid, payload.value)

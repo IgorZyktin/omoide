@@ -45,17 +45,3 @@ class BrowseMediator:
     items: database_interfaces.AbsItemsRepo
     search: database_interfaces.AbsSearchRepo
     users: database_interfaces.AbsUsersRepo
-
-
-@dataclass(frozen=True)
-class UsersMediator:
-    """Class that ties all components together."""
-
-    authenticator: infra_interfaces.AbsAuthenticator
-    database: database_interfaces.AbsDatabase
-    items: database_interfaces.AbsItemsRepo
-    meta: database_interfaces.AbsMetaRepo
-    misc: database_interfaces.AbsMiscRepo
-    object_storage: object_interfaces.AbsObjectStorage
-    tags: database_interfaces.AbsTagsRepo
-    users: database_interfaces.AbsUsersRepo

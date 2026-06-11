@@ -9,23 +9,34 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.domain import ensure
-from omoide.infra import mediators
+from omoide.infra import interfaces as infra_interfaces
 from omoide.omoide_api.items import item_use_cases
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseUserUseCase:
-    """Base use case for user-related operations."""
-
-    def __init__(self, mediator: mediators.UsersMediator) -> None:
-        """Initialize instance."""
-        self.mediator = mediator
-
-
-class CreateUserUseCase(BaseUserUseCase):
+class CreateUserUseCase:
     """Use case for creating a new user."""
+
+    def __init__(  # noqa: PLR0913
+        self,
+        authenticator: infra_interfaces.AbsAuthenticator,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+        items: db_interfaces.AbsItemsRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        tags: db_interfaces.AbsTagsRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.authenticator = authenticator
+        self.database = database
+        self.users = users
+        self.items = items
+        self.meta = meta
+        self.tags = tags
 
     async def execute(
         self,
@@ -52,13 +63,13 @@ class CreateUserUseCase(BaseUserUseCase):
             extras={},
         )
 
-        encoded_password = self.mediator.authenticator.encode_password(
+        encoded_password = self.authenticator.encode_password(
             given_password=password,
             auth_complexity=const.AUTH_COMPLEXITY,
         )
 
-        async with self.mediator.database.transaction() as conn:
-            await self.mediator.users.create(
+        async with self.database.transaction() as conn:
+            await self.users.create(
                 conn=conn,
                 user=new_user,
                 encoded_password=encoded_password,
@@ -66,11 +77,11 @@ class CreateUserUseCase(BaseUserUseCase):
             )
 
             sub_use_case = item_use_cases.CreateOneItemUseCase(
-                database=self.mediator.database,
-                items=self.mediator.items,
-                users=self.mediator.users,
-                meta=self.mediator.meta,
-                tags=self.mediator.tags,
+                database=self.database,
+                items=self.items,
+                users=self.users,
+                meta=self.meta,
+                tags=self.tags,
             )
             item = await sub_use_case.execute(
                 user=new_user,
@@ -90,8 +101,19 @@ class CreateUserUseCase(BaseUserUseCase):
         return new_user
 
 
-class ChangeUserNameUseCase(BaseUserUseCase):
+class ChangeUserNameUseCase:
     """Use case for updating a user's name."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+        misc: db_interfaces.AbsMiscRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users = users
+        self.misc = misc
 
     async def execute(
         self,
@@ -102,8 +124,8 @@ class ChangeUserNameUseCase(BaseUserUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to change user name')
 
-        async with self.mediator.database.transaction() as conn:
-            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+        async with self.database.transaction() as conn:
+            target_user = await self.users.get_by_uuid(conn, user_uuid)
             ensure.represents(
                 user,
                 target_user,
@@ -118,11 +140,11 @@ class ChangeUserNameUseCase(BaseUserUseCase):
             )
 
             target_user.name = new_name
-            await self.mediator.users.save(conn, target_user)
+            await self.users.save(conn, target_user)
 
-            root = await self.mediator.users.get_root_item(conn, target_user)
+            root = await self.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
-            await self.mediator.misc.create_serial_operation(
+            await self.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
                 extras={
@@ -134,8 +156,17 @@ class ChangeUserNameUseCase(BaseUserUseCase):
         return target_user
 
 
-class ChangeUserLoginUseCase(BaseUserUseCase):
+class ChangeUserLoginUseCase:
     """Use case for updating a user's login."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users = users
 
     async def execute(
         self,
@@ -146,8 +177,8 @@ class ChangeUserLoginUseCase(BaseUserUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to change user login')
 
-        async with self.mediator.database.transaction() as conn:
-            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+        async with self.database.transaction() as conn:
+            target_user = await self.users.get_by_uuid(conn, user_uuid)
             ensure.represents(user, target_user, "You cannot change someone else's login")
 
             LOG.info(
@@ -158,16 +189,27 @@ class ChangeUserLoginUseCase(BaseUserUseCase):
             )
 
             target_user.login = new_login
-            await self.mediator.users.save(conn, target_user)
+            await self.users.save(conn, target_user)
 
-            root = await self.mediator.users.get_root_item(conn, target_user)
+            root = await self.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
 
         return target_user
 
 
-class ChangeUserPasswordUseCase(BaseUserUseCase):
+class ChangeUserPasswordUseCase:
     """Use case for updating a user's password."""
+
+    def __init__(
+        self,
+        authenticator: infra_interfaces.AbsAuthenticator,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.authenticator = authenticator
+        self.database = database
+        self.users = users
 
     async def execute(
         self,
@@ -178,13 +220,13 @@ class ChangeUserPasswordUseCase(BaseUserUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to change user password')
 
-        async with self.mediator.database.transaction() as conn:
-            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+        async with self.database.transaction() as conn:
+            target_user = await self.users.get_by_uuid(conn, user_uuid)
             ensure.represents(user, target_user, "You cannot change someone else's password")
 
             LOG.info('User {} is updating user {} password', user, target_user)
 
-            pack = await self.mediator.users.get_by_login(conn, target_user.login)
+            pack = await self.users.get_by_login(conn, target_user.login)
 
             if not pack:
                 msg = 'User with UUID {user_uuid} does not exist'
@@ -192,21 +234,30 @@ class ChangeUserPasswordUseCase(BaseUserUseCase):
 
             _, password, auth_complexity = pack
 
-            encoded_password = self.mediator.authenticator.encode_password(
+            encoded_password = self.authenticator.encode_password(
                 given_password=new_password, auth_complexity=auth_complexity
             )
 
             if encoded_password != password:
-                await self.mediator.users.update_user_password(conn, target_user, encoded_password)
+                await self.users.update_user_password(conn, target_user, encoded_password)
 
-            root = await self.mediator.users.get_root_item(conn, target_user)
+            root = await self.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
 
         return target_user
 
 
-class GetAllUsersUseCase(BaseUserUseCase):
+class GetAllUsersUseCase:
     """Use case for getting all users."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users = users
 
     async def execute(
         self,
@@ -215,22 +266,31 @@ class GetAllUsersUseCase(BaseUserUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to get list of users')
 
-        async with self.mediator.database.transaction() as conn:
+        async with self.database.transaction() as conn:
             if user.is_admin:
-                users = await self.mediator.users.select(conn)
-                roots = await self.mediator.users.get_root_items_map(conn, *users)
+                users = await self.users.select(conn)
+                roots = await self.users.get_root_items_map(conn, *users)
                 for each_user in users:
                     each_user.extras['root_item_uuid'] = roots.get(each_user.id, const.DUMMY_UUID)
             else:
-                root = await self.mediator.users.get_root_item(conn, user)
+                root = await self.users.get_root_item(conn, user)
                 user.extras['root_item_uuid'] = root.uuid or const.DUMMY_UUID
                 users = [user]
 
         return users
 
 
-class GetUserByUUIDUseCase(BaseUserUseCase):
+class GetUserByUUIDUseCase:
     """Use case for getting user by UUID."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users = users
 
     async def execute(
         self,
@@ -240,17 +300,28 @@ class GetUserByUUIDUseCase(BaseUserUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to get registered users')
 
-        async with self.mediator.database.transaction() as conn:
-            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+        async with self.database.transaction() as conn:
+            target_user = await self.users.get_by_uuid(conn, user_uuid)
             ensure.represents(user, target_user, "You cannot get someone else's info")
-            root = await self.mediator.users.get_root_item(conn, target_user)
+            root = await self.users.get_root_item(conn, target_user)
             target_user.extras['root_item_uuid'] = root.uuid
 
         return target_user
 
 
-class GetUserResourceUsageUseCase(BaseUserUseCase):
+class GetUserResourceUsageUseCase:
     """Use case for getting current user stats."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users = users
+        self.meta = meta
 
     async def execute(
         self,
@@ -260,15 +331,15 @@ class GetUserResourceUsageUseCase(BaseUserUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to get user stats')
 
-        async with self.mediator.database.transaction() as conn:
-            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+        async with self.database.transaction() as conn:
+            target_user = await self.users.get_by_uuid(conn, user_uuid)
             ensure.represents(user, target_user, "You cannot change someone else's resource usage")
 
-            disk_usage = await self.mediator.meta.get_total_disk_usage(conn, target_user)
+            disk_usage = await self.meta.get_total_disk_usage(conn, target_user)
 
-            total_items = await self.mediator.users.count_items_by_owner(conn, target_user)
+            total_items = await self.users.count_items_by_owner(conn, target_user)
 
-            total_collections = await self.mediator.users.count_items_by_owner(
+            total_collections = await self.users.count_items_by_owner(
                 conn,
                 target_user,
                 collections=True,
@@ -282,25 +353,45 @@ class GetUserResourceUsageUseCase(BaseUserUseCase):
         )
 
 
-class GetAnonUserTagsUseCase(BaseUserUseCase):
+class GetAnonUserTagsUseCase:
     """Use case for getting tags available to anon."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        tags: db_interfaces.AbsTagsRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.tags = tags
 
     async def execute(self) -> dict[str, int]:
         """Execute."""
-        async with self.mediator.database.transaction() as conn:
-            tags = await self.mediator.tags.get_known_tags_anon(conn)
+        async with self.database.transaction() as conn:
+            tags = await self.tags.get_known_tags_anon(conn)
         return tags
 
 
-class GetKnownUserTagsUseCase(BaseUserUseCase):
+class GetKnownUserTagsUseCase:
     """Use case for getting tags available to specific user."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users: db_interfaces.AbsUsersRepo,
+        tags: db_interfaces.AbsTagsRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users = users
+        self.tags = tags
 
     async def execute(self, user: models.User, user_uuid: UUID) -> dict[str, int]:
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to get known tags for user')
 
-        async with self.mediator.database.transaction() as conn:
-            target_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+        async with self.database.transaction() as conn:
+            target_user = await self.users.get_by_uuid(conn, user_uuid)
             ensure.represents(user, target_user, "You cannot change someone else's known tags")
-            tags = await self.mediator.tags.get_known_tags_user(conn, user=target_user)
+            tags = await self.tags.get_known_tags_user(conn, user=target_user)
         return tags
