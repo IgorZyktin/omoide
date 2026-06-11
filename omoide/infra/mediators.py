@@ -28,15 +28,6 @@ class Mediator:
 
 
 @dataclass(frozen=True)
-class HomeMediator:
-    """Class that ties all components together."""
-
-    database: database_interfaces.AbsDatabase
-    search: database_interfaces.AbsSearchRepo
-    users: database_interfaces.AbsUsersRepo
-
-
-@dataclass(frozen=True)
 class BrowseMediator:
     """Class that ties all components together."""
 

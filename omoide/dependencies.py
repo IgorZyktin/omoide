@@ -171,17 +171,6 @@ def get_mediator(
     )
 
 
-def get_home_mediator(
-    database: Annotated[AbsDatabase, Depends(get_database)],
-) -> mediators.HomeMediator:
-    """Get mediator instance."""
-    return mediators.HomeMediator(
-        database=database,
-        search=impl_sqlalchemy.SearchRepo(),
-        users=impl_sqlalchemy.UsersRepo(),
-    )
-
-
 def get_browse_mediator(
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> mediators.BrowseMediator:

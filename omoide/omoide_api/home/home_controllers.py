@@ -10,7 +10,8 @@ from omoide import const
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.home import home_use_cases
 from omoide.presentation import web
@@ -24,8 +25,10 @@ api_home_router = APIRouter(prefix='/home', tags=['Home'])
     response_model=common_api_models.ManyItemsOutput,
 )
 async def api_home(  # noqa: PLR0913
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.HomeMediator, Depends(dep.get_home_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    search_repo: db_interfaces.AbsSearchRepo = Depends(dep.get_search_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     direct: Annotated[bool, Query()] = const.DEF_DIRECT,
@@ -36,7 +39,7 @@ async def api_home(  # noqa: PLR0913
 
     Combined collections of all available users.
     """
-    use_case = home_use_cases.ApiHomeUseCase(mediator)
+    use_case = home_use_cases.ApiHomeUseCase(database, search_repo, users_repo)
 
     plan = models.Plan(
         query='',
