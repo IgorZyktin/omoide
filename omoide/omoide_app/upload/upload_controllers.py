@@ -31,7 +31,7 @@ async def app_upload(  # noqa: PLR0913
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Upload media page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))

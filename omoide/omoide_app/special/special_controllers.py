@@ -29,7 +29,7 @@ async def app_not_found(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Show <not found> page."""
     context = {
         'request': request,
@@ -51,7 +51,7 @@ async def app_forbidden(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Show <forbidden> page."""
     context = {
         'request': request,
@@ -73,7 +73,7 @@ async def app_bad_request(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Show <bad request> page."""
     context = {
         'request': request,

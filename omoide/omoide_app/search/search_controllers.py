@@ -25,7 +25,7 @@ async def app_search(
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Show the main page of the application."""
     context = {
         'request': request,
@@ -48,7 +48,7 @@ async def app_home(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Home endpoint for user."""
     context = {
         'request': request,
@@ -70,7 +70,7 @@ async def app_new(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Show recent updates."""
     context = {
         'request': request,

@@ -212,11 +212,6 @@ module = [
     "omoide.omoide_app.browse.browse_controllers",
     "omoide.omoide_app.home.home_controllers",
     "omoide.omoide_app.items.item_controllers",
-    "omoide.omoide_app.preview.preview_controllers",
-    "omoide.omoide_app.profile.profile_controllers",
-    "omoide.omoide_app.search.search_controllers",
-    "omoide.omoide_app.special.special_controllers",
-    "omoide.omoide_app.upload.upload_controllers",
 ]
 disallow_untyped_defs = false
 

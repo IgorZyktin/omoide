@@ -33,7 +33,7 @@ async def app_profile(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Show user profile page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
@@ -61,7 +61,7 @@ async def app_profile_usage(  # noqa: PLR0913
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Show space usage stats."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
@@ -99,7 +99,7 @@ async def app_profile_tags(  # noqa: PLR0913
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Show know tags."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
@@ -137,7 +137,7 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
     item_uuid: Annotated[str | None, Query()] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Show duplicated items."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))

@@ -345,9 +345,7 @@ async def api_item_update_permissions(  # noqa: PLR0913
 
     Can affect parents and children.
     """
-    use_case = item_use_cases.ChangePermissionsUseCase(
-        database, items_repo, users_repo, misc_repo
-    )
+    use_case = item_use_cases.ChangePermissionsUseCase(database, items_repo, users_repo, misc_repo)
 
     try:
         operation_id = await use_case.execute(
@@ -396,9 +394,7 @@ async def api_upload_item(  # noqa: PLR0913
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    use_case = item_use_cases.UploadItemUseCase(
-        database, items_repo, meta_repo, misc_repo
-    )
+    use_case = item_use_cases.UploadItemUseCase(database, items_repo, meta_repo, misc_repo)
     features = item_api_models.extract_features(request)
 
     # TODO - read in chunks, not whole file at once

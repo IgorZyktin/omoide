@@ -347,9 +347,7 @@ class GetManyItemsUseCase(BaseItemUseCase):
         """Execute."""
         async with self.database.transaction() as conn:
             if user.is_anon:
-                items = await self.items.get_items_anon(
-                    conn, owner_uuid, parent_uuid, name, limit
-                )
+                items = await self.items.get_items_anon(conn, owner_uuid, parent_uuid, name, limit)
             else:
                 items = await self.items.get_items_known(
                     conn, user, owner_uuid, parent_uuid, name, limit
@@ -699,9 +697,7 @@ class DeleteItemUseCase(BaseItemUseCase):
 
                 for user_id in member.permissions:
                     other_user = await self._get_cached_user(conn, user_id)
-                    await self.tags.decrement_known_tags_user(
-                        conn, other_user, computed_tags
-                    )
+                    await self.tags.decrement_known_tags_user(conn, other_user, computed_tags)
 
                 member_metainfo = await self.meta.get_by_item(conn, member)
                 await self.object_storage.soft_delete(user, owner, member)
