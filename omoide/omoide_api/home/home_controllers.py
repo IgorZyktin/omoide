@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
+from fastapi.responses import JSONResponse
 
 from omoide import const
 from omoide import dependencies as dep
@@ -34,7 +35,7 @@ async def api_home(  # noqa: PLR0913
     direct: Annotated[bool, Query()] = const.DEF_DIRECT,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-):
+) -> JSONResponse | common_api_models.ManyItemsOutput:
     """Return items for user home page.
 
     Combined collections of all available users.

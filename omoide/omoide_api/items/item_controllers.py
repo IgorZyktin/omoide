@@ -1,6 +1,7 @@
 """Item related API operations."""
 
 from typing import Annotated
+from typing import Any
 from typing import Literal
 from uuid import UUID
 
@@ -11,6 +12,7 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
+from fastapi.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import limits
@@ -42,7 +44,7 @@ async def api_create_item(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-):
+) -> JSONResponse | common_api_models.OneItemOutput:
     """Create single item."""
     use_case = item_use_cases.CreateManyItemsUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo
@@ -72,7 +74,7 @@ async def api_create_many_items(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-):
+) -> JSONResponse | common_api_models.ManyItemsOutput:
     """Create many items in one request."""
     use_case = item_use_cases.CreateManyItemsUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo
@@ -103,7 +105,7 @@ async def api_get_item(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-):
+) -> JSONResponse | common_api_models.OneItemOutput:
     """Get exising item."""
     use_case = item_use_cases.GetItemUseCase(database, items_repo, users_repo)
 
@@ -130,7 +132,7 @@ async def api_get_many_items(  # noqa: PLR0913
     parent_uuid: Annotated[UUID | None, Query()] = None,
     name: Annotated[str | None, Query(max_length=limits.MAX_QUERY)] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-):
+) -> JSONResponse | common_api_models.ManyItemsOutput:
     """Get list of exising items."""
     use_case = item_use_cases.GetManyItemsUseCase(database, items_repo, users_repo)
 
@@ -162,7 +164,7 @@ async def api_update_item(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
-):
+) -> JSONResponse | dict[str, str]:
     """Update exising item."""
     use_case = item_use_cases.UpdateItemUseCase(database, items_repo)
 
@@ -191,7 +193,7 @@ async def api_rename_item(  # noqa: PLR0913
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Rename exising item."""
     use_case = item_use_cases.RenameItemUseCase(database, items_repo, misc_repo)
 
@@ -227,7 +229,7 @@ async def api_change_parent_item(  # noqa: PLR0913
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
     object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
-):
+) -> JSONResponse | dict[str, Any]:
     """Change parent of the item."""
     use_case = item_use_cases.ChangeParentItemUseCase(
         database, items_repo, users_repo, meta_repo, misc_repo, object_storage
@@ -263,7 +265,7 @@ async def api_update_item_tags(  # noqa: PLR0913
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Update item tags."""
     use_case = item_use_cases.UpdateItemTagsUseCase(database, items_repo, misc_repo)
 
@@ -299,7 +301,7 @@ async def api_delete_item(  # noqa: PLR0913
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
     object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
     desired_switch: Annotated[Literal['parent', 'sibling'], Query()] = 'sibling',
-):
+) -> JSONResponse | common_api_models.ItemDeleteOutput:
     """Delete exising item."""
     use_case = item_use_cases.DeleteItemUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo, object_storage
@@ -340,7 +342,7 @@ async def api_item_update_permissions(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Change permissions for given item.
 
     Can affect parents and children.
@@ -384,12 +386,12 @@ async def api_upload_item(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
     if ext not in limits.SUPPORTED_EXTENSION:
         extensions = ', '.join(sorted(limits.SUPPORTED_EXTENSION))
-        return Response(
+        return JSONResponse(
             content=f'Only support extensions {extensions}, got {ext!r}',
             status_code=status.HTTP_400_BAD_REQUEST,
         )

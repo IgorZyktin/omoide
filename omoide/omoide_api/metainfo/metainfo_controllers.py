@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
+from fastapi.responses import JSONResponse
 import pytz
 
 from omoide import dependencies as dep
@@ -35,7 +36,7 @@ async def api_read_metainfo(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
-):
+) -> JSONResponse | metainfo_api_models.MetainfoOutput:
     """Get metainfo of existing item."""
     use_case = metainfo_use_cases.ReadMetainfoUseCase(database, items_repo, meta_repo)
 
@@ -85,7 +86,7 @@ async def api_update_metainfo(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
-):
+) -> JSONResponse | dict[str, str]:
     """Update metainfo entry for existing item."""
     use_case = metainfo_use_cases.UpdateMetainfoUseCase(database, items_repo, meta_repo)
 

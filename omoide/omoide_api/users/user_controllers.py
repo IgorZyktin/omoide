@@ -1,5 +1,6 @@
 """User related API operations."""
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -7,6 +8,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from starlette.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import models
@@ -42,7 +44,7 @@ async def api_create_user(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-):
+) -> JSONResponse | user_api_models.UserOutput:
     """Create new user.
 
     Only admins can do this.
@@ -81,7 +83,7 @@ async def api_get_all_users(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Get list of users.
 
     Admins can get all users, registered users will get only themselves.
@@ -116,7 +118,7 @@ async def api_get_user_resource_usage(
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
-):
+) -> JSONResponse | user_api_models.UserResourceUsageOutput:
     """Get resource usage info for specific user."""
     use_case = user_use_cases.GetUserResourceUsageUseCase(database, users_repo, meta_repo)
 
@@ -150,7 +152,7 @@ async def api_get_user_resource_usage(
 async def api_get_anon_tags(
     database: AbsDatabase = Depends(dep.get_database),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-):
+) -> JSONResponse | dict[str, int]:
     """Get all known tags for anon user."""
     use_case = user_use_cases.GetAnonUserTagsUseCase(database, tags_repo)
 
@@ -179,7 +181,7 @@ async def api_get_user_tags(
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-):
+) -> JSONResponse | dict[str, int]:
     """Get all known tags for specific user."""
     use_case = user_use_cases.GetKnownUserTagsUseCase(database, users_repo, tags_repo)
 
@@ -207,7 +209,7 @@ async def api_get_user_by_uuid(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-):
+) -> JSONResponse | user_api_models.UserOutput:
     """Get user by UUID."""
     use_case = user_use_cases.GetUserByUUIDUseCase(database, users_repo)
 
@@ -237,7 +239,7 @@ async def api_change_user_name(  # noqa: PLR0913
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-):
+) -> JSONResponse | user_api_models.UserOutput:
     """Update name of existing user."""
     use_case = user_use_cases.ChangeUserNameUseCase(database, users_repo, misc_repo)
 
@@ -266,7 +268,7 @@ async def api_change_user_login(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-):
+) -> JSONResponse | user_api_models.UserOutput:
     """Update login of existing user."""
     use_case = user_use_cases.ChangeUserLoginUseCase(database, users_repo)
 
@@ -296,7 +298,7 @@ async def api_change_user_password(  # noqa: PLR0913
     authenticator: infra_interfaces.AbsAuthenticator = Depends(dep.get_authenticator),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-):
+) -> JSONResponse | user_api_models.UserOutput:
     """Update password of existing user."""
     use_case = user_use_cases.ChangeUserPasswordUseCase(authenticator, database, users_repo)
 

@@ -1,5 +1,6 @@
 """EXIF related API operations."""
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -7,6 +8,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from fastapi.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import models
@@ -40,7 +42,7 @@ async def api_create_exif(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     exif_repo: db_interfaces.AbsEXIFRepo = Depends(dep.get_exif_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Add EXIF data to existing item."""
     use_case = exif_use_cases.CreateEXIFUseCase(database, items_repo, exif_repo)
 
@@ -73,7 +75,7 @@ async def api_read_exif(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     exif_repo: db_interfaces.AbsEXIFRepo = Depends(dep.get_exif_repo),
-):
+) -> JSONResponse | exif_api_models.EXIFIn:
     """Read EXIF data of existing item."""
     use_case = exif_use_cases.ReadEXIFUseCase(database, items_repo, exif_repo)
 
@@ -104,7 +106,7 @@ async def api_update_exif(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     exif_repo: db_interfaces.AbsEXIFRepo = Depends(dep.get_exif_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Update EXIF data of existing item.
 
     If item has no EXIF data at the moment, it will be created.
@@ -138,7 +140,7 @@ async def api_delete_exif(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     exif_repo: db_interfaces.AbsEXIFRepo = Depends(dep.get_exif_repo),
-):
+) -> JSONResponse | dict[str, Any]:
     """Delete EXIF data of exising item."""
     use_case = exif_use_cases.DeleteEXIFUseCase(database, items_repo, exif_repo)
 

@@ -1,11 +1,13 @@
 """Computationally heavy operations."""
 
 from typing import Annotated
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
+from fastapi.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import models
@@ -27,7 +29,7 @@ async def api_action_rebuild_known_tags_for_anon(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
     misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
-):
+) -> JSONResponse | dict[str, Any]:
     """Recalculate all known tags for anon user."""
     use_case = actions_use_cases.RebuildKnownTagsForAnonUseCase(database, misc_repo)
 
@@ -54,7 +56,7 @@ async def api_action_rebuild_known_tags_for_user(
     misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
     users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
     user_uuid: UUID,
-):
+) -> JSONResponse | dict[str, Any]:
     """Recalculate all known tags for registered user."""
     use_case = actions_use_cases.RebuildKnownTagsForUserUseCase(database, misc_repo, users_repo)
 
@@ -80,7 +82,7 @@ async def api_action_rebuild_known_tags_for_all(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
     misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
-):
+) -> JSONResponse | dict[str, Any]:
     """Recalculate all known tags for all users."""
     use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(database, misc_repo)
 
@@ -108,7 +110,7 @@ async def api_action_rebuild_computed_tags(
     users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     item_uuid: UUID,
-):
+) -> JSONResponse | dict[str, Any]:
     """Recalculate all computed tags for specific user.
 
     If `including_children` is set to True, this will also affect all
@@ -141,7 +143,7 @@ async def api_action_rebuild_computed_tags_for_all(
     user: Annotated[models.User, Depends(dep.get_current_user)],
     database: Annotated[db_interfaces.AbsDatabase, Depends(dep.get_database)],
     misc_repo: Annotated[db_interfaces.AbsMiscRepo, Depends(dep.get_misc_repo)],
-):
+) -> JSONResponse | dict[str, Any]:
     """Recalculate all computed tags for all users."""
     use_case = actions_use_cases.RebuildKnownTagsForAllUseCase(database, misc_repo)
 
@@ -172,7 +174,7 @@ async def api_action_copy_image(
     object_storage: Annotated[os_interfaces.AbsObjectStorage, Depends(dep.get_object_storage)],
     source_item_uuid: UUID,
     target_item_uuid: UUID,
-):
+) -> JSONResponse | dict[str, Any]:
     """Copy image from one item to another.
 
     This will invoke copying of content, preview and a thumbnail.

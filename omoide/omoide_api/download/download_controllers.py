@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi.responses import PlainTextResponse
+from starlette.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import models
@@ -31,7 +32,7 @@ async def api_download_collection(  # noqa: PLR0913
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     signatures_repo: db_interfaces.AbsSignaturesRepo = Depends(dep.get_signatures_repo),
     response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
-):
+) -> JSONResponse | PlainTextResponse:
     """Return all child items as a zip archive.
 
     WARNING - this endpoint works only behind NGINX with mod_zip installed.

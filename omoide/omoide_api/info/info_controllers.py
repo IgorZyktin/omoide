@@ -1,6 +1,6 @@
 """Technical information about the API."""
 
-from typing import Annotated
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -20,7 +20,7 @@ api_info_router = APIRouter(prefix='/info', tags=['Info'])
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.VersionOutput,
 )
-async def api_get_version():
+async def api_get_version() -> dict[str, str]:
     """Get current version of the API."""
     return {'version': const.VERSION}
 
@@ -31,7 +31,9 @@ async def api_get_version():
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.WhoAmIOutput,
 )
-async def api_get_myself(user: Annotated[models.User, Depends(dep.get_current_user)]):
+async def api_get_myself(
+    user: models.User = Depends(dep.get_current_user),
+) -> dict[str, Any]:
     """Return current user as API sees it."""
     if user.is_anon:
         return {'uuid': None, 'name': 'anon'}

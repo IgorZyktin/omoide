@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 from fastapi import status
+from starlette.responses import JSONResponse
 
 from omoide import const
 from omoide import dependencies as dep
@@ -39,7 +40,7 @@ async def api_browse(  # noqa: PLR0913
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_BROWSE, lt=limits.MAX_BROWSE)] = limits.DEF_BROWSE,
-):
+) -> JSONResponse | common_api_models.ManyItemsOutput:
     """Perform browse request.
 
     Returns all descendants of a specified item.

@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 from fastapi import status
+from fastapi.responses import JSONResponse
 
 from omoide import const
 from omoide import custom_logging
@@ -40,7 +41,7 @@ async def api_autocomplete(
         int,
         Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT),
     ] = limits.AUTOCOMPLETE_LIMIT,
-):
+) -> search_api_models.AutocompleteOutput:
     """Return tags that match supplied string.
 
     You will get list of strings, ordered by their frequency.
@@ -85,7 +86,7 @@ async def api_get_recent_updates(  # noqa: PLR0913
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-):
+) -> JSONResponse | search_api_models.RecentUpdatesOutput:
     """Return recently updated items.
 
     This endpoint can be used by any user, but each will get tailored output.
@@ -124,7 +125,7 @@ async def api_search_total(
     search_repo: db_interfaces.AbsSearchRepo = Depends(dep.get_search_repo),
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     collections: Annotated[bool, Query()] = False,
-):
+) -> JSONResponse | search_api_models.SearchTotalOutput:
     """Return total amount of items that correspond to search query."""
     if len(q) < limits.MIN_QUERY:
         return search_api_models.SearchTotalOutput(total=0, duration=0.0)
@@ -167,7 +168,7 @@ async def api_search(  # noqa: PLR0913
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-):
+) -> JSONResponse | common_api_models.ManyItemsOutput:
     """Perform search request.
 
     Given input will be split into tags.
