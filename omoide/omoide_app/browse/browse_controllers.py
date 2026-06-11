@@ -7,6 +7,7 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
@@ -35,7 +36,7 @@ async def app_browse(  # noqa: PLR0913
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Browse contents of a single item."""
     if not aim_wrapper.aim.paged:
         use_case_dynamic = browse_use_cases.AppBrowseDynamicUseCase(mediator)

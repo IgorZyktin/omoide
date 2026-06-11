@@ -36,7 +36,7 @@ async def app_create_item(  # noqa: PLR0913
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Create item page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
@@ -93,7 +93,7 @@ async def app_update_item(  # noqa: PLR0913
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Edit item page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
@@ -154,7 +154,7 @@ async def app_delete_item(  # noqa: PLR0913 Too many arguments in function defin
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Delete item page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))

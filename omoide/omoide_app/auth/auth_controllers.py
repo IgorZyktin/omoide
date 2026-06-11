@@ -37,7 +37,7 @@ async def app_login(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     config: cfg.Config = Depends(dep.get_config),
     response_class: type[Response] = RedirectResponse,  # noqa: ARG001
-):
+) -> HTMLResponse | RedirectResponse:
     """Ask user for login and password."""
     url = request.url_for('app_home')
 
@@ -72,7 +72,7 @@ async def app_logout(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-):
+) -> HTMLResponse:
     """Clear authorization."""
     context = {
         'request': request,
