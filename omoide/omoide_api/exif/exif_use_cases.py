@@ -4,8 +4,9 @@ from uuid import UUID
 
 from omoide import custom_logging
 from omoide import models
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.domain import ensure
-from omoide.infra import mediators
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -13,9 +14,16 @@ LOG = custom_logging.get_logger(__name__)
 class BaseEXIFUseCase:
     """Base use case class."""
 
-    def __init__(self, mediator: mediators.EXIFMediator) -> None:
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        exif: db_interfaces.AbsEXIFRepo,
+    ) -> None:
         """Initialize instance."""
-        self.mediator = mediator
+        self.database = database
+        self.items = items
+        self.exif = exif
 
 
 class CreateEXIFUseCase(BaseEXIFUseCase):
@@ -25,12 +33,12 @@ class CreateEXIFUseCase(BaseEXIFUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to create EXIF data')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, f'You must own item {item_uuid} to create EXIF data for it')
 
             LOG.info('{} is creating EXIF for {}', user, item)
-            await self.mediator.exif.create(conn, item, exif)
+            await self.exif.create(conn, item, exif)
 
 
 class ReadEXIFUseCase(BaseEXIFUseCase):
@@ -38,15 +46,15 @@ class ReadEXIFUseCase(BaseEXIFUseCase):
 
     async def execute(self, user: models.User, item_uuid: UUID) -> models.Exif:
         """Execute."""
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.can_see(
                 user,
                 item,
                 f'You are not allowed to see item {item_uuid} and its EXIF data',
             )
 
-            exif = await self.mediator.exif.get_by_item(conn, item)
+            exif = await self.exif.get_by_item(conn, item)
 
         return exif
 
@@ -61,8 +69,8 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to update EXIF data')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(
                 user,
                 item,
@@ -70,7 +78,7 @@ class UpdateEXIFUseCase(BaseEXIFUseCase):
             )
 
             LOG.info('{} is updating EXIF for {}', user, item)
-            await self.mediator.exif.save(conn, item, exif)
+            await self.exif.save(conn, item, exif)
 
 
 class DeleteEXIFUseCase(BaseEXIFUseCase):
@@ -80,8 +88,8 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to delete EXIF data')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(
                 user,
                 item,
@@ -89,4 +97,4 @@ class DeleteEXIFUseCase(BaseEXIFUseCase):
             )
 
             LOG.info('{} is deleting EXIF for {}', user, item)
-            await self.mediator.exif.delete(conn, item)
+            await self.exif.delete(conn, item)

@@ -176,6 +176,10 @@ docstring-quotes = "double"
 [tool.ruff.lint.pylint]
 max-args = 9
 
+[tool.ruff.lint.flake8-bugbear]
+# Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
+extend-immutable-calls = ["Depends", "fastapi.Depends", "Query", "fastapi.Query"]
+
 [tool.mypy]
 disallow_untyped_defs = true
 ignore_missing_imports = true
