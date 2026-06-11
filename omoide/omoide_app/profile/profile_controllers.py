@@ -71,7 +71,7 @@ async def app_profile_usage(  # noqa: PLR0913
     use_case = profile_use_cases.AppProfileUsageUseCase(database, users_repo)
 
     try:
-        size, total_items, total_collections = await use_case.execute(user)
+        result = await use_case.execute(user)
     except Exception as exc:
         return web.redirect_from_exc(request, exc)
 
@@ -79,9 +79,9 @@ async def app_profile_usage(  # noqa: PLR0913
         'request': request,
         'config': config,
         'user': user,
-        'size': size,
-        'total_items': total_items,
-        'total_collections': total_collections,
+        'size': result.size,
+        'total_items': result.total_items,
+        'total_collections': result.total_collections,
         'block_direct': True,
         'block_ordered': True,
         'block_collections': True,

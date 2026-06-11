@@ -1,11 +1,34 @@
 """Use cases that process search requests from users."""
 
 import time
+from typing import NamedTuple
 
 from omoide import models
 from omoide import utils
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+
+
+class ItemsResult(NamedTuple):
+    """Multi-item lookup result with users referenced by their permissions."""
+
+    items: list[models.Item]
+    users_map: dict[int, models.User | None]
+
+
+class SearchTotalResult(NamedTuple):
+    """Total matches for a search query plus how long the count took."""
+
+    total: int
+    duration: float
+
+
+class SearchResult(NamedTuple):
+    """Search hit list with users referenced and how long it took to run."""
+
+    duration: float
+    items: list[models.Item]
+    users_map: dict[int, models.User | None]
 
 
 class AutocompleteUseCase:
@@ -58,15 +81,15 @@ class RecentUpdatesUseCase:
         self,
         user: models.User,
         plan: models.Plan,
-    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
+    ) -> ItemsResult:
         """Execute."""
         async with self.database.transaction() as conn:
             if user.is_anon:
                 items = await self.browse.get_recently_updated_items_anon(conn, plan)
             else:
                 items = await self.browse.get_recently_updated_items_known(conn, user, plan)
-            users = await self.users.get_map(conn, items)
-        return items, users
+            users_map = await self.users.get_map(conn, items)
+        return ItemsResult(items=items, users_map=users_map)
 
 
 class ApiSearchTotalUseCase:
@@ -81,7 +104,7 @@ class ApiSearchTotalUseCase:
         self.database = database
         self.search = search
 
-    async def execute(self, user: models.User, plan: models.Plan) -> tuple[int, float]:
+    async def execute(self, user: models.User, plan: models.Plan) -> SearchTotalResult:
         """Execute."""
         start = time.perf_counter()
 
@@ -90,7 +113,7 @@ class ApiSearchTotalUseCase:
 
         duration = time.perf_counter() - start
 
-        return total, duration
+        return SearchTotalResult(total=total, duration=duration)
 
 
 class ApiSearchUseCase:
@@ -111,14 +134,14 @@ class ApiSearchUseCase:
         self,
         user: models.User,
         plan: models.Plan,
-    ) -> tuple[float, list[models.Item], dict[int, models.User | None]]:
+    ) -> SearchResult:
         """Execute."""
         start = time.perf_counter()
 
         async with self.database.transaction() as conn:
             items = await self.search.search(conn, user, plan)
-            users = await self.users.get_map(conn, items)
+            users_map = await self.users.get_map(conn, items)
 
         duration = time.perf_counter() - start
 
-        return duration, items, users
+        return SearchResult(duration=duration, items=items, users_map=users_map)

@@ -1,8 +1,17 @@
 """Use cases that process requests for home pages."""
 
+from typing import NamedTuple
+
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+
+
+class ItemsResult(NamedTuple):
+    """Items shown on the home page plus users referenced by permissions."""
+
+    items: list[models.Item]
+    users_map: dict[int, models.User | None]
 
 
 class ApiHomeUseCase:
@@ -23,7 +32,7 @@ class ApiHomeUseCase:
         self,
         user: models.User,
         plan: models.Plan,
-    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
+    ) -> ItemsResult:
         """Perform search request."""
         async with self.database.transaction() as conn:
             if user.is_anon:
@@ -31,6 +40,6 @@ class ApiHomeUseCase:
             else:
                 items = await self.search.get_home_items_for_known(conn, user, plan)
 
-            users = await self.users.get_map(conn, items)
+            users_map = await self.users.get_map(conn, items)
 
-        return items, users
+        return ItemsResult(items=items, users_map=users_map)

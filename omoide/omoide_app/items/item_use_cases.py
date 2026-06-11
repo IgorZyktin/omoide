@@ -1,5 +1,6 @@
 """Use case for item operations."""
 
+from typing import NamedTuple
 from uuid import UUID
 
 from omoide import const
@@ -7,6 +8,31 @@ from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+
+
+class CreateItemPage(NamedTuple):
+    """Pre-filled parent context for the create-item page."""
+
+    parent: models.Item
+    users_with_permission: list[models.User]
+
+
+class UpdateItemPage(NamedTuple):
+    """Pre-filled context for the edit-item page."""
+
+    item: models.Item
+    total: int
+    can_see: list[models.User]
+    computed_tags: list[str]
+    metainfo: models.Metainfo | None
+    notes: dict[str, str]
+
+
+class DeleteItemPage(NamedTuple):
+    """Pre-filled context for the delete-item confirmation page."""
+
+    item: models.Item
+    total: int
 
 
 class AppCreateItemUseCase:
@@ -27,7 +53,7 @@ class AppCreateItemUseCase:
         self,
         user: models.User,
         parent_uuid: UUID,
-    ) -> tuple[models.Item, list[models.User]]:
+    ) -> CreateItemPage:
         """Execute."""
         async with self.database.transaction() as conn:
             if parent_uuid == const.DUMMY_UUID:
@@ -44,7 +70,7 @@ class AppCreateItemUseCase:
                 ids=parent.permissions,
             )
 
-        return parent, users_with_permission
+        return CreateItemPage(parent=parent, users_with_permission=users_with_permission)
 
 
 class AppUpdateItemUseCase:
@@ -67,9 +93,7 @@ class AppUpdateItemUseCase:
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[
-        models.Item, int, list[models.User], list[str], models.Metainfo | None, dict[str, str]
-    ]:
+    ) -> UpdateItemPage:
         """Execute."""
         if user.is_anon:
             msg = 'You are not allowed to update items'
@@ -83,7 +107,14 @@ class AppUpdateItemUseCase:
             metainfo = await self.meta.get_by_item(conn, item)
             notes = await self.meta.get_item_notes(conn, item)
 
-        return item, total, can_see, computed_tags, metainfo, notes
+        return UpdateItemPage(
+            item=item,
+            total=total,
+            can_see=can_see,
+            computed_tags=computed_tags,
+            metainfo=metainfo,
+            notes=notes,
+        )
 
 
 class AppDeleteItemUseCase:
@@ -102,7 +133,7 @@ class AppDeleteItemUseCase:
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[models.Item, int]:
+    ) -> DeleteItemPage:
         """Execute."""
         if user.is_anon:
             msg = 'You are not allowed to delete items'
@@ -117,4 +148,4 @@ class AppDeleteItemUseCase:
 
             total = await self.items.count_family(conn, item)
 
-        return item, total
+        return DeleteItemPage(item=item, total=total)

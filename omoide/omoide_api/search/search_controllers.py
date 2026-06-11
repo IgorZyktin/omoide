@@ -193,11 +193,11 @@ async def api_search(  # noqa: PLR0913
     )
 
     try:
-        duration, items, users = await use_case.execute(user, plan)
+        result = await use_case.execute(user, plan)
     except Exception as exc:
         return web.response_from_exc(exc)
 
     return common_api_models.ManyItemsOutput(
-        duration=duration,
-        items=common_api_models.convert_items(items, users),
+        duration=result.duration,
+        items=common_api_models.convert_items(result.items, result.users_map),
     )

@@ -1,11 +1,20 @@
 """Use cases that process browse requests from users."""
 
 import time
+from typing import NamedTuple
 from uuid import UUID
 
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+
+
+class BrowseResult(NamedTuple):
+    """Descendants of a browsed item with users referenced and elapsed time."""
+
+    duration: float
+    items: list[models.Item]
+    users_map: dict[int, models.User | None]
 
 
 class ApiBrowseUseCase:
@@ -29,7 +38,7 @@ class ApiBrowseUseCase:
         user: models.User,
         item_uuid: UUID,
         plan: models.Plan,
-    ) -> tuple[float, list[models.Item], dict[int, models.User | None]]:
+    ) -> BrowseResult:
         """Perform search request."""
         start = time.perf_counter()
 
@@ -45,8 +54,8 @@ class ApiBrowseUseCase:
             else:
                 items = await self.browse.browse_related_known(conn, user, item, plan)
 
-            users = await self.users.get_map(conn, items)
+            users_map = await self.users.get_map(conn, items)
 
         duration = time.perf_counter() - start
 
-        return duration, items, users
+        return BrowseResult(duration=duration, items=items, users_map=users_map)

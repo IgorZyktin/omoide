@@ -1,11 +1,19 @@
 """Use cases for uploading."""
 
+from typing import NamedTuple
 from uuid import UUID
 
 from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+
+
+class UploadPage(NamedTuple):
+    """Pre-filled context for the upload page."""
+
+    item: models.Item
+    users_with_permission: list[models.User]
 
 
 class AppUploadUseCase:
@@ -26,7 +34,7 @@ class AppUploadUseCase:
         self,
         user: models.User,
         parent_uuid: UUID,
-    ) -> tuple[models.Item, list[models.User]]:
+    ) -> UploadPage:
         """Execute."""
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, parent_uuid)
@@ -37,4 +45,4 @@ class AppUploadUseCase:
 
             users_with_permission = await self.users.select(conn, ids=item.permissions)
 
-        return item, users_with_permission
+        return UploadPage(item=item, users_with_permission=users_with_permission)

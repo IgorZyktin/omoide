@@ -121,15 +121,15 @@ async def api_action_rebuild_computed_tags(
     )
 
     try:
-        owner, item, job_id = await use_case.execute(user, item_uuid)
+        result = await use_case.execute(user, item_uuid)
     except Exception as exc:
         return web.response_from_exc(exc)
 
     return {
         'result': 'Rebuilding computed tags',
-        'target_user': owner.name or str(owner.uuid),
-        'target_item': item.name or str(item.uuid),
-        'job_id': job_id,
+        'target_user': result.owner.name or str(result.owner.uuid),
+        'target_item': result.item.name or str(result.item.uuid),
+        'job_id': result.operation_id,
     }
 
 

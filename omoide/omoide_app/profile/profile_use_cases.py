@@ -1,5 +1,6 @@
 """Use case for user profile."""
 
+from typing import NamedTuple
 from uuid import UUID
 
 import python_utilz as pu
@@ -7,6 +8,21 @@ import python_utilz as pu
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+
+
+class ProfileUsage(NamedTuple):
+    """Disk usage stats shown on the profile usage page."""
+
+    size: models.SpaceUsage
+    total_items: int
+    total_collections: int
+
+
+class ProfileDuplicates(NamedTuple):
+    """Duplicate listing shown on the profile duplicates page."""
+
+    item: models.Item | None
+    duplicates: list[models.Duplicate]
 
 
 class AppProfileUsageUseCase:
@@ -24,7 +40,7 @@ class AppProfileUsageUseCase:
     async def execute(
         self,
         user: models.User,
-    ) -> tuple[models.SpaceUsage, int, int]:
+    ) -> ProfileUsage:
         """Execute."""
         async with self.database.transaction() as conn:
             size = await self.users.calc_total_space_used_by(conn, user)
@@ -35,7 +51,11 @@ class AppProfileUsageUseCase:
                 collections=True,
             )
 
-        return size, total_items, total_collections
+        return ProfileUsage(
+            size=size,
+            total_items=total_items,
+            total_collections=total_collections,
+        )
 
 
 class AppProfileTagsUseCase:
@@ -79,7 +99,7 @@ class AppProfileDuplicatesUseCase:
         user: models.User,
         item_uuid: str | None,
         limit: int,
-    ) -> tuple[models.Item | None, list[models.Duplicate]]:
+    ) -> ProfileDuplicates:
         """Execute."""
         async with self.database.transaction() as conn:
             if item_uuid is not None and pu.is_valid_uuid(item_uuid):
@@ -89,4 +109,4 @@ class AppProfileDuplicatesUseCase:
 
             duplicates = await self.items.get_duplicates(conn, user, item, limit)
 
-        return item, duplicates
+        return ProfileDuplicates(item=item, duplicates=duplicates)

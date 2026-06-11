@@ -48,7 +48,7 @@ async def app_browse(  # noqa: PLR0913
         )
 
         try:
-            parents, item, metainfo = await use_case_dynamic.execute(
+            result = await use_case_dynamic.execute(
                 user=user,
                 item_uuid=item_uuid,
             )
@@ -61,9 +61,9 @@ async def app_browse(  # noqa: PLR0913
             'user': user,
             'aim_wrapper': aim_wrapper,
             'endpoint': request.url_for('api_browse', item_uuid=item_uuid),
-            'parents': parents,
-            'current_item': item,
-            'metainfo': metainfo,
+            'parents': result.parents,
+            'current_item': result.item,
+            'metainfo': result.metainfo,
         }
 
         return templates.TemplateResponse(request, 'browse_dynamic.html', context)

@@ -1,5 +1,6 @@
 """Use cases for download-related operations."""
 
+from typing import NamedTuple
 from uuid import UUID
 
 from omoide import const
@@ -10,6 +11,14 @@ from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
 
 LOG = custom_logging.get_logger(__name__)
+
+
+class DownloadResult(NamedTuple):
+    """NGINX zip manifest lines plus the item being downloaded and its owner."""
+
+    lines: list[str]
+    owner: models.User
+    item: models.Item | None
 
 
 class DownloadCollectionUseCase:
@@ -34,7 +43,7 @@ class DownloadCollectionUseCase:
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[list[str], models.User, models.Item | None]:
+    ) -> DownloadResult:
         """Execute."""
         lines: list[str] = []
 
@@ -93,7 +102,7 @@ class DownloadCollectionUseCase:
                     )
                 )
 
-        return lines, owner, item
+        return DownloadResult(lines=lines, owner=owner, item=item)
 
     @staticmethod
     def form_signature_line(

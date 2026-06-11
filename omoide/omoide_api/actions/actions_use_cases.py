@@ -1,5 +1,6 @@
 """Use cases for heavy operations."""
 
+from typing import NamedTuple
 from uuid import UUID
 
 from omoide import const
@@ -10,6 +11,14 @@ from omoide.domain import ensure
 from omoide.object_storage import interfaces as os_interfaces
 
 LOG = custom_logging.get_logger(__name__)
+
+
+class RebuildComputedTagsResult(NamedTuple):
+    """Enqueued rebuild operation context for an item."""
+
+    owner: models.User
+    item: models.Item
+    operation_id: int
 
 
 class BaseActionsUseCase:
@@ -118,7 +127,7 @@ class RebuildComputedTagsForItemUseCase:
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[models.User, models.Item, int]:
+    ) -> RebuildComputedTagsResult:
         """Prepare for execution."""
         ensure.admin(user, 'Only admins can rebuild computed tags for items')
 
@@ -142,7 +151,7 @@ class RebuildComputedTagsForItemUseCase:
                 },
             )
 
-        return owner, item, operation_id
+        return RebuildComputedTagsResult(owner=owner, item=item, operation_id=operation_id)
 
 
 class RebuildComputedTagsForAllUseCase(BaseActionsUseCase):

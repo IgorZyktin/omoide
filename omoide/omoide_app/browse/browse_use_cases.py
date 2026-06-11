@@ -33,6 +33,14 @@ async def _ensure_allowed_to(
         raise exceptions.NotAllowedError(msg)
 
 
+class BrowseDynamicResult(NamedTuple):
+    """Pre-filled context for the dynamic (infinite-scroll) browse page."""
+
+    parents: list[models.Item]
+    item: models.Item
+    metainfo: models.Metainfo
+
+
 class AppBrowseDynamicUseCase:
     """Use case for browse (application)."""
 
@@ -53,7 +61,7 @@ class AppBrowseDynamicUseCase:
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[list[models.Item], models.Item, models.Metainfo]:
+    ) -> BrowseDynamicResult:
         """Return browse model suitable for rendering."""
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
@@ -64,7 +72,7 @@ class AppBrowseDynamicUseCase:
             parents = await self.items.get_parents(conn, item)
             metainfo = await self.meta.get_by_item(conn, item)
 
-        return parents, item, metainfo
+        return BrowseDynamicResult(parents=parents, item=item, metainfo=metainfo)
 
 
 class BrowseResult(NamedTuple):

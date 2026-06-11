@@ -43,22 +43,22 @@ async def api_download_collection(  # noqa: PLR0913
     )
 
     try:
-        lines, _, item = await use_case.execute(
+        result = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
         )
     except Exception as exc:
         return web.response_from_exc(exc)
 
-    if item and item.name:
-        filename = urllib.parse.quote(item.name)
+    if result.item and result.item.name:
+        filename = urllib.parse.quote(result.item.name)
     else:
         filename = 'unnamed collection'
 
     filename = f'Omoide - {filename}'
 
     return PlainTextResponse(
-        content='\n'.join(lines),
+        content='\n'.join(result.lines),
         headers={
             'X-Archive-Files': 'zip',
             'Content-Disposition': f'attachment; filename="{filename}.zip"',

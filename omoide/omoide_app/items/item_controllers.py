@@ -109,43 +109,38 @@ async def app_update_item(  # noqa: PLR0913
     )
 
     try:
-        (
-            item,
-            total,
-            permissions,
-            computed_tags,
-            metainfo,
-            notes,
-        ) = await use_case.execute(
+        result = await use_case.execute(
             user=user,
             item_uuid=item_uuid,
         )
     except Exception as exc:
         return web.redirect_from_exc(request, exc)
 
-    lower_tags = [tag.lower() for tag in item.tags]
+    lower_tags = [tag.lower() for tag in result.item.tags]
     external_tags = [
-        tag for tag in computed_tags if tag not in lower_tags and not pu.is_valid_uuid(tag)
+        tag
+        for tag in result.computed_tags
+        if tag not in lower_tags and not pu.is_valid_uuid(tag)
     ]
 
-    model = serialize_item(item)
+    model = serialize_item(result.item)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'current_item': item,
-        'item': item,
-        'metainfo': metainfo,
-        'notes': notes,
-        'total': pu.sep_digits(total),
-        'permissions': permissions,
+        'current_item': result.item,
+        'item': result.item,
+        'metainfo': result.metainfo,
+        'notes': result.notes,
+        'total': pu.sep_digits(result.total),
+        'permissions': result.can_see,
         'external_tags': external_tags,
         'url': request.url_for('app_search'),
         'model': ujson.dumps(model, ensure_ascii=False),
         'initial_permissions': ujson.dumps(
-            [f'{x.uuid} {x.name}' for x in permissions], ensure_ascii=False
+            [f'{x.uuid} {x.name}' for x in result.can_see], ensure_ascii=False
         ),
     }
 

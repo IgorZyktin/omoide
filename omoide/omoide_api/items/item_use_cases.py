@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 from typing import Literal
+from typing import NamedTuple
 from uuid import UUID
 from uuid import uuid4
 
@@ -20,6 +21,20 @@ from omoide.domain import ensure
 from omoide.object_storage import interfaces as object_interfaces
 
 LOG = custom_logging.get_logger(__name__)
+
+
+class ItemResult(NamedTuple):
+    """Single-item lookup result with users referenced by its permissions."""
+
+    item: models.Item
+    users_map: dict[int, models.User | None]
+
+
+class ItemsResult(NamedTuple):
+    """Multi-item lookup result with users referenced by their permissions."""
+
+    items: list[models.Item]
+    users_map: dict[int, models.User | None]
 
 
 class BaseItemUseCase:
@@ -250,7 +265,7 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         self,
         user: models.User,
         *items_in: dict[str, Any],
-    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
+    ) -> ItemsResult:
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to create items')
 
@@ -274,7 +289,7 @@ class CreateManyItemsUseCase(BaseItemUseCase):
             items=items,
         )
 
-        return items, users_map
+        return ItemsResult(items=items, users_map=users_map)
 
 
 class GetItemUseCase(BaseItemUseCase):
@@ -296,7 +311,7 @@ class GetItemUseCase(BaseItemUseCase):
         self,
         user: models.User,
         item_uuid: UUID,
-    ) -> tuple[models.Item, dict[int, models.User | None]]:
+    ) -> ItemResult:
         """Execute."""
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
@@ -318,7 +333,7 @@ class GetItemUseCase(BaseItemUseCase):
                 other_user = await self.users.get_by_id(conn, user_id)
                 users_map[user_id] = other_user
 
-        return item, users_map
+        return ItemResult(item=item, users_map=users_map)
 
 
 class GetManyItemsUseCase(BaseItemUseCase):
@@ -343,7 +358,7 @@ class GetManyItemsUseCase(BaseItemUseCase):
         parent_uuid: UUID | None,
         name: str | None,
         limit: int,
-    ) -> tuple[list[models.Item], dict[int, models.User | None]]:
+    ) -> ItemsResult:
         """Execute."""
         async with self.database.transaction() as conn:
             if user.is_anon:
@@ -361,7 +376,7 @@ class GetManyItemsUseCase(BaseItemUseCase):
                     other_user = await self.users.get_by_id(conn, user_id)
                     users_map[user_id] = other_user
 
-        return items, users_map
+        return ItemsResult(items=items, users_map=users_map)
 
 
 class UpdateItemUseCase(BaseItemUseCase):
