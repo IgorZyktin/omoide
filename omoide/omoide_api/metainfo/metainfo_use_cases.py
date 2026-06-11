@@ -8,8 +8,9 @@ import python_utilz as pu
 
 from omoide import custom_logging
 from omoide import models
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.domain import ensure
-from omoide.infra import mediators
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -17,9 +18,16 @@ LOG = custom_logging.get_logger(__name__)
 class BaseMetainfoUseCase:
     """Base use case class."""
 
-    def __init__(self, mediator: mediators.MetainfoMediator) -> None:
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        meta: db_interfaces.AbsMetaRepo,
+    ) -> None:
         """Initialize instance."""
-        self.mediator = mediator
+        self.database = database
+        self.items = items
+        self.meta = meta
 
 
 class ReadMetainfoUseCase(BaseMetainfoUseCase):
@@ -27,15 +35,15 @@ class ReadMetainfoUseCase(BaseMetainfoUseCase):
 
     async def execute(self, user: models.User, item_uuid: UUID) -> models.Metainfo:
         """Execute."""
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.can_see(
                 user,
                 item,
                 f'You are not allowed to see item {item_uuid} and its metadata',
             )
 
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            metainfo = await self.meta.get_by_item(conn, item)
 
         return metainfo
 
@@ -54,8 +62,8 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to update item metadata')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(
                 user,
                 item,
@@ -63,12 +71,12 @@ class UpdateMetainfoUseCase(BaseMetainfoUseCase):
             )
 
             LOG.info('{} is updating metainfo for {}', user, item)
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            metainfo = await self.meta.get_by_item(conn, item)
 
             metainfo.updated_at = pu.now()
             metainfo.user_time = user_time
             metainfo.content_type = content_type
-            await self.mediator.meta.save(conn, metainfo)
+            await self.meta.save(conn, metainfo)
 
             for key, value in extras.items():
-                await self.mediator.meta.add_item_note(conn, item, key, value)
+                await self.meta.add_item_note(conn, item, key, value)

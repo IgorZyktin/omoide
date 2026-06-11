@@ -166,19 +166,6 @@ def get_mediator(
     )
 
 
-def get_metainfo_mediator(
-    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
-    database: Annotated[AbsDatabase, Depends(get_database)],
-) -> mediators.MetainfoMediator:
-    """Get mediator instance."""
-    return mediators.MetainfoMediator(
-        authenticator=authenticator,
-        database=database,
-        items=impl_sqlalchemy.ItemsRepo(),
-        meta=impl_sqlalchemy.MetaRepo(),
-    )
-
-
 def get_home_mediator(
     database: Annotated[AbsDatabase, Depends(get_database)],
 ) -> mediators.HomeMediator:

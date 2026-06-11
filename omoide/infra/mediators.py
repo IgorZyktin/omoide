@@ -28,16 +28,6 @@ class Mediator:
 
 
 @dataclass(frozen=True)
-class MetainfoMediator:
-    """Class that ties all components together."""
-
-    authenticator: infra_interfaces.AbsAuthenticator
-    database: database_interfaces.AbsDatabase
-    items: database_interfaces.AbsItemsRepo
-    meta: database_interfaces.AbsMetaRepo
-
-
-@dataclass(frozen=True)
 class HomeMediator:
     """Class that ties all components together."""
 

@@ -1,6 +1,5 @@
 """API operations that process item metainfo."""
 
-from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -10,7 +9,8 @@ import pytz
 
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.metainfo import metainfo_api_models
 from omoide.omoide_api.metainfo import metainfo_use_cases
 from omoide.presentation import web
@@ -31,11 +31,13 @@ api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 )
 async def api_read_metainfo(
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.MetainfoMediator, Depends(dep.get_metainfo_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
 ):
     """Get metainfo of existing item."""
-    use_case = metainfo_use_cases.ReadMetainfoUseCase(mediator)
+    use_case = metainfo_use_cases.ReadMetainfoUseCase(database, items_repo, meta_repo)
 
     try:
         metainfo = await use_case.execute(user, item_uuid)
@@ -79,11 +81,13 @@ async def api_read_metainfo(
 async def api_update_metainfo(
     item_uuid: UUID,
     metainfo_input: metainfo_api_models.MetainfoInput,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.MetainfoMediator, Depends(dep.get_metainfo_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
 ):
     """Update metainfo entry for existing item."""
-    use_case = metainfo_use_cases.UpdateMetainfoUseCase(mediator)
+    use_case = metainfo_use_cases.UpdateMetainfoUseCase(database, items_repo, meta_repo)
 
     try:
         await use_case.execute(user, item_uuid, **metainfo_input.model_dump())
