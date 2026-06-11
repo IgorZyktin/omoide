@@ -27,7 +27,7 @@ app_auth_router = fastapi.APIRouter()
 security = HTTPBasic(realm='omoide')
 
 
-@app_auth_router.get('/login')
+@app_auth_router.get('/login', response_model=None)
 async def app_login(  # noqa: PLR0913
     request: Request,
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],

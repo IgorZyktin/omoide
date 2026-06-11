@@ -6,38 +6,48 @@ from uuid import UUID
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.presentation import web
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class BaseBrowseUseCase(BaseAPPUseCase):
-    """Base class."""
-
-    @staticmethod
-    async def _ensure_allowed_to(
-        user: models.User,
-        item: models.Item,
-        public_users: set[int],
-    ) -> None:
-        """Raise if user has no access to this item."""
-        allowed_to = any(
-            (
-                user.is_admin,
-                item.owner_id in public_users,
-                item.owner_id == user.id,
-                user.id in item.permissions,
-            )
+async def _ensure_allowed_to(
+    user: models.User,
+    item: models.Item,
+    public_users: set[int],
+) -> None:
+    """Raise if user has no access to this item."""
+    allowed_to = any(
+        (
+            user.is_admin,
+            item.owner_id in public_users,
+            item.owner_id == user.id,
+            user.id in item.permissions,
         )
+    )
 
-        if not allowed_to:
-            msg = 'You are not allowed to browse this'
-            raise exceptions.NotAllowedError(msg)
+    if not allowed_to:
+        msg = 'You are not allowed to browse this'
+        raise exceptions.NotAllowedError(msg)
 
 
-class AppBrowseDynamicUseCase(BaseBrowseUseCase):
+class AppBrowseDynamicUseCase:
     """Use case for browse (application)."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
 
     async def execute(
         self,
@@ -45,14 +55,14 @@ class AppBrowseDynamicUseCase(BaseBrowseUseCase):
         item_uuid: UUID,
     ) -> tuple[list[models.Item], models.Item, models.Metainfo]:
         """Return browse model suitable for rendering."""
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
 
-            public_users = await self.mediator.users.get_public_user_ids(conn)
-            await self._ensure_allowed_to(user, item, public_users)
+            public_users = await self.users.get_public_user_ids(conn)
+            await _ensure_allowed_to(user, item, public_users)
 
-            parents = await self.mediator.items.get_parents(conn, item)
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            parents = await self.items.get_parents(conn, item)
+            metainfo = await self.meta.get_by_item(conn, item)
 
         return parents, item, metainfo
 
@@ -70,8 +80,21 @@ class BrowseResult(NamedTuple):
     aim: web.Aim
 
 
-class AppBrowsePagedUseCase(BaseBrowseUseCase):
+class AppBrowsePagedUseCase:
     """Use case for browse (application)."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
 
     async def execute(
         self,
@@ -80,23 +103,23 @@ class AppBrowsePagedUseCase(BaseBrowseUseCase):
         aim: web.Aim,
     ) -> BrowseResult:
         """Return browse model suitable for rendering."""
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
 
-            public_users = await self.mediator.users.get_public_user_ids(conn)
-            await self._ensure_allowed_to(user, item, public_users)
+            public_users = await self.users.get_public_user_ids(conn)
+            await _ensure_allowed_to(user, item, public_users)
 
-            parents = await self.mediator.items.get_parents(conn, item)
-            children = await self.mediator.items.get_children(
+            parents = await self.items.get_parents(conn, item)
+            children = await self.items.get_children(
                 conn=conn,
                 item=item,
                 offset=aim.offset,
                 limit=aim.items_per_page,
             )
 
-            names = await self.mediator.items.get_parent_names(conn, children)
-            total_items = await self.mediator.items.count_children(conn, item)
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
+            names = await self.items.get_parent_names(conn, children)
+            total_items = await self.items.count_children(conn, item)
+            metainfo = await self.meta.get_by_item(conn, item)
 
         return BrowseResult(
             item=item,

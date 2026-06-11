@@ -21,7 +21,7 @@ LOG = custom_logging.get_logger(__name__)
 app_admin_router = fastapi.APIRouter()
 
 
-@app_admin_router.get('/admin')
+@app_admin_router.get('/admin', response_model=None)
 async def app_admin(
     request: Request,
     admin: Annotated[models.User, Depends(dep.get_current_user)],

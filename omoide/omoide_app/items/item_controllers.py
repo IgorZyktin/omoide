@@ -17,7 +17,8 @@ from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediators import Mediator
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_app.items import item_use_cases
 from omoide.presentation import web
 
@@ -26,22 +27,24 @@ LOG = custom_logging.get_logger(__name__)
 app_items_router = fastapi.APIRouter()
 
 
-@app_items_router.get('/create/{parent_uuid}')
+@app_items_router.get('/create/{parent_uuid}', response_model=None)
 async def app_create_item(  # noqa: PLR0913
     request: Request,
     parent_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse | RedirectResponse:
     """Create item page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    use_case = item_use_cases.AppCreateItemUseCase(mediator)
+    use_case = item_use_cases.AppCreateItemUseCase(database, items_repo, users_repo)
 
     try:
         parent, users_with_permission = await use_case.execute(
@@ -83,22 +86,27 @@ def serialize_item(
     }
 
 
-@app_items_router.get('/update/{item_uuid}')
+@app_items_router.get('/update/{item_uuid}', response_model=None)
 async def app_update_item(  # noqa: PLR0913
     request: Request,
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse | RedirectResponse:
     """Edit item page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    use_case = item_use_cases.AppUpdateItemUseCase(mediator)
+    use_case = item_use_cases.AppUpdateItemUseCase(
+        database, items_repo, users_repo, meta_repo
+    )
 
     try:
         (
@@ -144,22 +152,23 @@ async def app_update_item(  # noqa: PLR0913
     return templates.TemplateResponse(request, 'item_update.html', context)
 
 
-@app_items_router.get('/delete/{item_uuid}')
-async def app_delete_item(  # noqa: PLR0913 Too many arguments in function definition
+@app_items_router.get('/delete/{item_uuid}', response_model=None)
+async def app_delete_item(  # noqa: PLR0913
     request: Request,
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse | RedirectResponse:
     """Delete item page."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    use_case = item_use_cases.AppDeleteItemUseCase(mediator)
+    use_case = item_use_cases.AppDeleteItemUseCase(database, items_repo)
 
     try:
         item, total = await use_case.execute(user, item_uuid)

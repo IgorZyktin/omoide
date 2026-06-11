@@ -7,7 +7,8 @@ import python_utilz as pu
 
 from omoide import exceptions
 from omoide import models
-from omoide.omoide_app.common.common_use_cases import BaseAPPUseCase
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 
 
 class PreviewResult(NamedTuple):
@@ -20,8 +21,23 @@ class PreviewResult(NamedTuple):
     all_tags: list[str]
 
 
-class AppPreviewUseCase(BaseAPPUseCase):
+class AppPreviewUseCase:
     """Use case for item preview."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        tags: db_interfaces.AbsTagsRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
+        self.tags = tags
 
     async def execute(
         self,
@@ -29,9 +45,9 @@ class AppPreviewUseCase(BaseAPPUseCase):
         item_uuid: UUID,
     ) -> PreviewResult:
         """Execute."""
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            public_users = await self.mediator.users.get_public_user_ids(conn)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
+            public_users = await self.users.get_public_user_ids(conn)
 
             allowed_to = any(
                 (
@@ -46,10 +62,10 @@ class AppPreviewUseCase(BaseAPPUseCase):
                 msg = 'You are not allowed to preview this'
                 raise exceptions.AccessDeniedError(msg)
 
-            metainfo = await self.mediator.meta.get_by_item(conn, item)
-            parents = await self.mediator.items.get_parents(conn, item)
-            siblings = await self.mediator.items.get_siblings(conn, item, collections=False)
-            computed_tags = await self.mediator.tags.get_computed_tags(conn, item)
+            metainfo = await self.meta.get_by_item(conn, item)
+            parents = await self.items.get_parents(conn, item)
+            siblings = await self.items.get_siblings(conn, item, collections=False)
+            computed_tags = await self.tags.get_computed_tags(conn, item)
 
         result = PreviewResult(
             item=item,

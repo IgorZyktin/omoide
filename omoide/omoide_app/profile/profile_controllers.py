@@ -16,7 +16,8 @@ from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra.mediators import Mediator
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_app.profile import profile_use_cases
 from omoide.presentation import web
 
@@ -25,7 +26,7 @@ LOG = custom_logging.get_logger(__name__)
 app_profile_router = fastapi.APIRouter()
 
 
-@app_profile_router.get('/profile')
+@app_profile_router.get('/profile', response_model=None)
 async def app_profile(
     request: Request,
     user: Annotated[models.User, Depends(dep.get_current_user)],
@@ -52,21 +53,22 @@ async def app_profile(
     return templates.TemplateResponse(request, 'profile.html', context)
 
 
-@app_profile_router.get('/profile/usage')
+@app_profile_router.get('/profile/usage', response_model=None)
 async def app_profile_usage(  # noqa: PLR0913
     request: Request,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse | RedirectResponse:
     """Show space usage stats."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    use_case = profile_use_cases.AppProfileUsageUseCase(mediator)
+    use_case = profile_use_cases.AppProfileUsageUseCase(database, users_repo)
 
     try:
         size, total_items, total_collections = await use_case.execute(user)
@@ -90,21 +92,22 @@ async def app_profile_usage(  # noqa: PLR0913
     return templates.TemplateResponse(request, 'profile_usage.html', context)
 
 
-@app_profile_router.get('/profile/tags')
+@app_profile_router.get('/profile/tags', response_model=None)
 async def app_profile_tags(  # noqa: PLR0913
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse | RedirectResponse:
     """Show know tags."""
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    use_case = profile_use_cases.AppProfileTagsUseCase(mediator)
+    use_case = profile_use_cases.AppProfileTagsUseCase(database, tags_repo)
 
     try:
         known_tags = await use_case.execute(user)
@@ -126,14 +129,15 @@ async def app_profile_tags(  # noqa: PLR0913
     return templates.TemplateResponse(request, 'profile_tags.html', context)
 
 
-@app_profile_router.get('/profile/duplicates')
-async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in function definition
+@app_profile_router.get('/profile/duplicates', response_model=None)
+async def app_profile_duplicates(  # noqa: PLR0913
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     item_uuid: Annotated[str | None, Query()] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
@@ -142,7 +146,7 @@ async def app_profile_duplicates(  # noqa: PLR0913 Too many arguments in functio
     if user.is_anon:
         return RedirectResponse(request.url_for('app_forbidden'))
 
-    use_case = profile_use_cases.AppProfileDuplicatesUseCase(mediator)
+    use_case = profile_use_cases.AppProfileDuplicatesUseCase(database, items_repo)
 
     try:
         item, duplicates = await use_case.execute(user, item_uuid, limit)

@@ -22,6 +22,7 @@ api_download_router = APIRouter(tags=['Download'])
 @api_download_router.get(
     '/download/{item_uuid}',
     summary='Return all child items as a zip archive',
+    response_model=None,
 )
 async def api_download_collection(  # noqa: PLR0913
     item_uuid: UUID,

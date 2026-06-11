@@ -16,7 +16,8 @@ from omoide import const
 from omoide import custom_logging
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra.mediators import Mediator
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_app.browse import browse_use_cases
 from omoide.presentation import infra
 from omoide.presentation import web
@@ -26,20 +27,25 @@ LOG = custom_logging.get_logger(__name__)
 app_browse_router = fastapi.APIRouter(prefix='/browse')
 
 
-@app_browse_router.get('/{item_uuid}')
+@app_browse_router.get('/{item_uuid}', response_model=None)
 async def app_browse(  # noqa: PLR0913
     request: Request,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[Mediator, Depends(dep.get_mediator)],
     item_uuid: UUID,
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse | RedirectResponse:
     """Browse contents of a single item."""
     if not aim_wrapper.aim.paged:
-        use_case_dynamic = browse_use_cases.AppBrowseDynamicUseCase(mediator)
+        use_case_dynamic = browse_use_cases.AppBrowseDynamicUseCase(
+            database, items_repo, users_repo, meta_repo
+        )
 
         try:
             parents, item, metainfo = await use_case_dynamic.execute(
@@ -62,7 +68,9 @@ async def app_browse(  # noqa: PLR0913
 
         return templates.TemplateResponse(request, 'browse_dynamic.html', context)
 
-    use_case_paged = browse_use_cases.AppBrowsePagedUseCase(mediator)
+    use_case_paged = browse_use_cases.AppBrowsePagedUseCase(
+        database, items_repo, users_repo, meta_repo
+    )
 
     try:
         result = await use_case_paged.execute(

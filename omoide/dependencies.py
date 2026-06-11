@@ -23,7 +23,6 @@ from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.database.interfaces.abs_database import AbsDatabase
-from omoide.infra import mediators
 from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.web_locator import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
@@ -146,29 +145,6 @@ def get_tags_repo() -> db_interfaces.AbsTagsRepo:
 def get_signatures_repo() -> db_interfaces.AbsSignaturesRepo:
     """Get repo instance."""
     return impl_sqlalchemy.SignaturesRepo()
-
-
-@functools.cache
-def get_mediator(
-    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
-    object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
-    database: Annotated[AbsDatabase, Depends(get_database)],
-) -> mediators.Mediator:
-    """Get mediator instance."""
-    return mediators.Mediator(
-        authenticator=authenticator,
-        database=database,
-        browse=impl_sqlalchemy.BrowseRepo(),
-        exif=impl_sqlalchemy.EXIFRepo(),
-        items=impl_sqlalchemy.ItemsRepo(),
-        meta=impl_sqlalchemy.MetaRepo(),
-        misc=impl_sqlalchemy.MiscRepo(),
-        search=impl_sqlalchemy.SearchRepo(),
-        signatures=impl_sqlalchemy.SignaturesRepo(),
-        tags=impl_sqlalchemy.TagsRepo(),
-        users=impl_sqlalchemy.UsersRepo(),
-        object_storage=object_storage,
-    )
 
 
 async def get_current_user(
