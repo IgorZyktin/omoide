@@ -25,14 +25,3 @@ class Mediator:
     users: database_interfaces.AbsUsersRepo
 
     object_storage: object_interfaces.AbsObjectStorage
-
-
-@dataclass(frozen=True)
-class BrowseMediator:
-    """Class that ties all components together."""
-
-    browse: database_interfaces.AbsBrowseRepo
-    database: database_interfaces.AbsDatabase
-    items: database_interfaces.AbsItemsRepo
-    search: database_interfaces.AbsSearchRepo
-    users: database_interfaces.AbsUsersRepo

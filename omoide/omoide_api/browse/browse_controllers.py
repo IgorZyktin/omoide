@@ -12,7 +12,8 @@ from omoide import const
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
 from omoide.presentation import web
@@ -27,9 +28,12 @@ api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
     response_model=common_api_models.ManyItemsOutput,
 )
 async def api_browse(  # noqa: PLR0913
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.BrowseMediator, Depends(dep.get_browse_mediator)],
     item_uuid: UUID,
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    browse_repo: db_interfaces.AbsBrowseRepo = Depends(dep.get_browse_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     direct: Annotated[bool, Query()] = False,
     order: Annotated[const.ORDER_TYPE, Query()] = const.DEF_ORDER,
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
@@ -40,7 +44,7 @@ async def api_browse(  # noqa: PLR0913
 
     Returns all descendants of a specified item.
     """
-    use_case = browse_use_cases.ApiBrowseUseCase(mediator)
+    use_case = browse_use_cases.ApiBrowseUseCase(database, items_repo, browse_repo, users_repo)
 
     plan = models.Plan(
         query='',
