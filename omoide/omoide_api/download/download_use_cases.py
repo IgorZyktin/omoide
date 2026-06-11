@@ -6,7 +6,8 @@ from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -14,9 +15,20 @@ LOG = custom_logging.get_logger(__name__)
 class DownloadCollectionUseCase:
     """Use case for downloading whole group of items as zip archive."""
 
-    def __init__(self, mediator: mediators.ItemsMediator) -> None:
+    def __init__(  # noqa: PLR0913
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        signatures: db_interfaces.AbsSignaturesRepo,
+    ) -> None:
         """Initialize instance."""
-        self.mediator = mediator
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
+        self.signatures = signatures
 
     async def execute(
         self,
@@ -26,10 +38,10 @@ class DownloadCollectionUseCase:
         """Execute."""
         lines: list[str] = []
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
-            public_users = await self.mediator.users.get_public_user_ids(conn)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
+            owner = await self.users.get_by_id(conn, item.owner_id)
+            public_users = await self.users.get_public_user_ids(conn)
 
             if all(
                 (
@@ -42,17 +54,17 @@ class DownloadCollectionUseCase:
                 msg = 'Item {item_uuid} does not exist'
                 raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
-            children = await self.mediator.items.get_children(conn, item)
+            children = await self.items.get_children(conn, item)
 
         # TODO - remove transaction splitting
-        async with self.mediator.database.transaction() as conn:
-            signatures = await self.mediator.signatures.get_cr32_signatures_map(
+        async with self.database.transaction() as conn:
+            signatures = await self.signatures.get_cr32_signatures_map(
                 conn=conn,
                 items=children,
             )
 
-        async with self.mediator.database.transaction() as conn:
-            metainfos = await self.mediator.meta.get_metainfo_map(conn, children)
+        async with self.database.transaction() as conn:
+            metainfos = await self.meta.get_metainfo_map(conn, children)
             valid_children = [
                 child
                 for child in children

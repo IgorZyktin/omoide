@@ -65,7 +65,13 @@ class CreateUserUseCase(BaseUserUseCase):
                 auth_complexity=const.AUTH_COMPLEXITY,
             )
 
-            sub_use_case = item_use_cases.CreateOneItemUseCase(self.mediator)
+            sub_use_case = item_use_cases.CreateOneItemUseCase(
+                database=self.mediator.database,
+                items=self.mediator.items,
+                users=self.mediator.users,
+                meta=self.mediator.meta,
+                tags=self.mediator.tags,
+            )
             item = await sub_use_case.execute(
                 user=new_user,
                 item_uuid=None,

@@ -15,7 +15,9 @@ from fastapi import status
 from omoide import dependencies as dep
 from omoide import limits
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.object_storage import interfaces as object_interfaces
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
@@ -30,15 +32,21 @@ api_items_router = APIRouter(prefix='/items', tags=['Items'])
     status_code=status.HTTP_201_CREATED,
     response_model=common_api_models.OneItemOutput,
 )
-async def api_create_item(
+async def api_create_item(  # noqa: PLR0913
     request: Request,
     response: Response,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
     item_in: common_api_models.ItemInput,
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
 ):
     """Create single item."""
-    use_case = item_use_cases.CreateManyItemsUseCase(mediator)
+    use_case = item_use_cases.CreateManyItemsUseCase(
+        database, items_repo, users_repo, meta_repo, tags_repo
+    )
 
     try:
         items, users_map = await use_case.execute(user, item_in.model_dump())
@@ -56,13 +64,19 @@ async def api_create_item(
     status_code=status.HTTP_201_CREATED,
     response_model=common_api_models.ManyItemsOutput,
 )
-async def api_create_many_items(
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+async def api_create_many_items(  # noqa: PLR0913
     items_in: list[common_api_models.ItemInput],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
 ):
     """Create many items in one request."""
-    use_case = item_use_cases.CreateManyItemsUseCase(mediator)
+    use_case = item_use_cases.CreateManyItemsUseCase(
+        database, items_repo, users_repo, meta_repo, tags_repo
+    )
 
     try:
         items, users_map = await use_case.execute(
@@ -85,11 +99,13 @@ async def api_create_many_items(
 )
 async def api_get_item(
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
 ):
     """Get exising item."""
-    use_case = item_use_cases.GetItemUseCase(mediator)
+    use_case = item_use_cases.GetItemUseCase(database, items_repo, users_repo)
 
     try:
         item, users_map = await use_case.execute(user, item_uuid)
@@ -105,16 +121,18 @@ async def api_get_item(
     status_code=status.HTTP_200_OK,
     response_model=common_api_models.ManyItemsOutput,
 )
-async def api_get_many_items(
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+async def api_get_many_items(  # noqa: PLR0913
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     owner_uuid: Annotated[UUID | None, Query()] = None,
     parent_uuid: Annotated[UUID | None, Query()] = None,
     name: Annotated[str | None, Query(max_length=limits.MAX_QUERY)] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
 ):
     """Get list of exising items."""
-    use_case = item_use_cases.GetManyItemsUseCase(mediator)
+    use_case = item_use_cases.GetManyItemsUseCase(database, items_repo, users_repo)
 
     try:
         items, users_map = await use_case.execute(
@@ -141,11 +159,12 @@ async def api_get_many_items(
 async def api_update_item(
     item_uuid: UUID,
     item_update_in: item_api_models.ItemUpdateInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
 ):
     """Update exising item."""
-    use_case = item_use_cases.UpdateItemUseCase(mediator)
+    use_case = item_use_cases.UpdateItemUseCase(database, items_repo)
 
     try:
         await use_case.execute(
@@ -165,14 +184,16 @@ async def api_update_item(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
-async def api_rename_item(
+async def api_rename_item(  # noqa: PLR0913
     item_uuid: UUID,
     item_rename_in: item_api_models.ItemRenameInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
 ):
     """Rename exising item."""
-    use_case = item_use_cases.RenameItemUseCase(mediator)
+    use_case = item_use_cases.RenameItemUseCase(database, items_repo, misc_repo)
 
     try:
         operation_id = await use_case.execute(
@@ -196,14 +217,21 @@ async def api_rename_item(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | list[int]],
 )
-async def api_change_parent_item(
+async def api_change_parent_item(  # noqa: PLR0913
     item_uuid: UUID,
     new_parent_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
+    object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
 ):
     """Change parent of the item."""
-    use_case = item_use_cases.ChangeParentItemUseCase(mediator)
+    use_case = item_use_cases.ChangeParentItemUseCase(
+        database, items_repo, users_repo, meta_repo, misc_repo, object_storage
+    )
 
     try:
         operations = await use_case.execute(
@@ -228,14 +256,16 @@ async def api_change_parent_item(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
-async def api_update_item_tags(
+async def api_update_item_tags(  # noqa: PLR0913
     item_uuid: UUID,
     item_tags_in: item_api_models.ItemUpdateTagsInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
 ):
     """Update item tags."""
-    use_case = item_use_cases.UpdateItemTagsUseCase(mediator)
+    use_case = item_use_cases.UpdateItemTagsUseCase(database, items_repo, misc_repo)
 
     try:
         operation_id = await use_case.execute(
@@ -259,14 +289,21 @@ async def api_update_item_tags(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=common_api_models.ItemDeleteOutput,
 )
-async def api_delete_item(
+async def api_delete_item(  # noqa: PLR0913
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
+    object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
     desired_switch: Annotated[Literal['parent', 'sibling'], Query()] = 'sibling',
 ):
     """Delete exising item."""
-    use_case = item_use_cases.DeleteItemUseCase(mediator)
+    use_case = item_use_cases.DeleteItemUseCase(
+        database, items_repo, users_repo, meta_repo, tags_repo, object_storage
+    )
 
     try:
         item = await use_case.execute(
@@ -295,17 +332,22 @@ async def api_delete_item(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, bool | str | int | None],
 )
-async def api_item_update_permissions(
+async def api_item_update_permissions(  # noqa: PLR0913
     item_uuid: UUID,
     permissions_in: item_api_models.PermissionsInput,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
 ):
     """Change permissions for given item.
 
     Can affect parents and children.
     """
-    use_case = item_use_cases.ChangePermissionsUseCase(mediator)
+    use_case = item_use_cases.ChangePermissionsUseCase(
+        database, items_repo, users_repo, misc_repo
+    )
 
     try:
         operation_id = await use_case.execute(
@@ -335,12 +377,15 @@ async def api_item_update_permissions(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str],
 )
-async def api_upload_item(
+async def api_upload_item(  # noqa: PLR0913
     request: Request,
     item_uuid: UUID,
     file: UploadFile,
-    user: Annotated[models.User, Depends(dep.get_known_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_known_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
 ):
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
@@ -351,7 +396,9 @@ async def api_upload_item(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    use_case = item_use_cases.UploadItemUseCase(mediator)
+    use_case = item_use_cases.UploadItemUseCase(
+        database, items_repo, meta_repo, misc_repo
+    )
     features = item_api_models.extract_features(request)
 
     # TODO - read in chunks, not whole file at once

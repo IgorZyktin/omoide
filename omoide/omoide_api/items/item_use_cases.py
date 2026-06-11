@@ -14,18 +14,30 @@ from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
 from omoide import utils
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.domain import ensure
-from omoide.infra import mediators
+from omoide.object_storage import interfaces as object_interfaces
 
 LOG = custom_logging.get_logger(__name__)
 
 
 class BaseItemUseCase:
-    """Base use case for user-related operations."""
+    """Cache helpers and tag-propagation logic shared between item use cases.
 
-    def __init__(self, mediator: mediators.UsersMediator | mediators.ItemsMediator) -> None:
-        """Initialize instance."""
-        self.mediator = mediator
+    Subclasses MUST set the repo attributes they invoke through these
+    helpers: ``self.users`` for ``_get_cached_user``, ``self.items`` for
+    ``_get_cached_item`` and ``update_tags``, ``self.tags`` for
+    ``_get_cached_computed_tags`` and ``update_tags``.
+    """
+
+    database: AbsDatabase
+    items: db_interfaces.AbsItemsRepo
+    users: db_interfaces.AbsUsersRepo
+    tags: db_interfaces.AbsTagsRepo
+
+    def __init__(self) -> None:
+        """Initialize per-instance request caches."""
         self._users_cache: dict[int, models.User] = {}
         self._items_cache: dict[int, models.Item] = {}
         self._computed_tags_cache: dict[int, set[str]] = {}
@@ -37,7 +49,7 @@ class BaseItemUseCase:
         if user is not None:
             return user
 
-        user = await self.mediator.users.get_by_id(conn, user_id)
+        user = await self.users.get_by_id(conn, user_id)
         self._users_cache[user.id] = user
         return user
 
@@ -48,7 +60,7 @@ class BaseItemUseCase:
         if item is not None:
             return item
 
-        item = await self.mediator.items.get_by_id(conn, item_id)
+        item = await self.items.get_by_id(conn, item_id)
         self._items_cache[item.id] = item
         return item
 
@@ -59,7 +71,7 @@ class BaseItemUseCase:
         if tags is not None:
             return tags
 
-        tags = await self.mediator.tags.get_computed_tags(conn, item)
+        tags = await self.tags.get_computed_tags(conn, item)
         self._computed_tags_cache[item.id] = tags
         return tags
 
@@ -80,31 +92,47 @@ class BaseItemUseCase:
 
             if not parent.is_collection:
                 parent.is_collection = True
-                await self.mediator.items.save(conn, parent)
+                await self.items.save(conn, parent)
 
         computed_tags = item.get_computed_tags(parent_tags)
 
         # for the item itself
-        await self.mediator.tags.save_computed_tags(conn, item, computed_tags)
+        await self.tags.save_computed_tags(conn, item, computed_tags)
 
         # for the owner
-        await self.mediator.tags.increment_known_tags_user(conn, user, computed_tags)
+        await self.tags.increment_known_tags_user(conn, user, computed_tags)
 
         # for anons
         if user.is_public:
-            await self.mediator.tags.increment_known_tags_anon(conn, computed_tags)
+            await self.tags.increment_known_tags_anon(conn, computed_tags)
 
         # for everyone, who can see this item
         for user_id in item.permissions:
             other_user = await self._get_cached_user(conn, user_id)
             users_map[user_id] = other_user
-            await self.mediator.tags.increment_known_tags_user(conn, other_user, computed_tags)
+            await self.tags.increment_known_tags_user(conn, other_user, computed_tags)
 
         return users_map
 
 
 class CreateOneItemUseCase(BaseItemUseCase):
     """Use case for creating one item."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        tags: db_interfaces.AbsTagsRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
+        self.tags = tags
 
     async def execute(  # noqa: PLR0913 Too many arguments in function definition
         self,
@@ -129,7 +157,7 @@ class CreateOneItemUseCase(BaseItemUseCase):
 
         transaction: Any
         if connection is None:
-            transaction = self.mediator.database.transaction
+            transaction = self.database.transaction
         else:
 
             @asynccontextmanager
@@ -141,9 +169,9 @@ class CreateOneItemUseCase(BaseItemUseCase):
                 ensure.admin(user, 'Only admin can create top-level items')
                 parent = None
             elif parent_uuid is None:
-                parent = await self.mediator.users.get_root_item(conn, user)
+                parent = await self.users.get_root_item(conn, user)
             else:
-                parent = await self.mediator.items.get_by_uuid(conn, parent_uuid)
+                parent = await self.items.get_by_uuid(conn, parent_uuid)
                 ensure.owner(user, parent, 'Only owner can create child items')
 
             _permissions: set[int] = set()
@@ -151,7 +179,7 @@ class CreateOneItemUseCase(BaseItemUseCase):
                 user_uuid = human_readable_user.get('uuid')
                 if not isinstance(user_uuid, UUID):
                     continue
-                local_user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+                local_user = await self.users.get_by_uuid(conn, user_uuid)
                 _permissions.add(local_user.id)
 
             item = models.Item(
@@ -173,7 +201,7 @@ class CreateOneItemUseCase(BaseItemUseCase):
                 extras={},
             )
 
-            item.id = await self.mediator.items.create(conn, item)
+            item.id = await self.items.create(conn, item)
 
             metainfo = models.Metainfo(
                 item_id=item.id,
@@ -193,7 +221,7 @@ class CreateOneItemUseCase(BaseItemUseCase):
                 thumbnail_height=None,
             )
 
-            await self.mediator.meta.create(conn, metainfo)
+            await self.meta.create(conn, metainfo)
 
         LOG.info('User {user} created item: {item}', user=user, item=item)
         return item
@@ -201,6 +229,22 @@ class CreateOneItemUseCase(BaseItemUseCase):
 
 class CreateManyItemsUseCase(BaseItemUseCase):
     """Use case for item creation."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        tags: db_interfaces.AbsTagsRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
+        self.tags = tags
 
     async def execute(
         self,
@@ -213,8 +257,10 @@ class CreateManyItemsUseCase(BaseItemUseCase):
         items: list[models.Item] = []
         users_map: dict[int, models.User | None] = {user.id: user}
 
-        sub_use_case = CreateOneItemUseCase(self.mediator)
-        async with self.mediator.database.transaction() as conn:
+        sub_use_case = CreateOneItemUseCase(
+            self.database, self.items, self.users, self.meta, self.tags
+        )
+        async with self.database.transaction() as conn:
             for raw_item in items_in:
                 item = await sub_use_case.execute(user, **raw_item, connection=conn)
                 items.append(item)
@@ -234,15 +280,27 @@ class CreateManyItemsUseCase(BaseItemUseCase):
 class GetItemUseCase(BaseItemUseCase):
     """Use case for item getting."""
 
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
+
     async def execute(
         self,
         user: models.User,
         item_uuid: UUID,
     ) -> tuple[models.Item, dict[int, models.User | None]]:
         """Execute."""
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
-            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
+            owner = await self.users.get_by_id(conn, item.owner_id)
             users_map: dict[int, models.User | None] = {user.id: user}
 
             if not any(
@@ -257,7 +315,7 @@ class GetItemUseCase(BaseItemUseCase):
                 raise exceptions.DoesNotExistError(msg, item_uuid=item_uuid)
 
             for user_id in item.permissions:
-                other_user = await self.mediator.users.get_by_id(conn, user_id)
+                other_user = await self.users.get_by_id(conn, user_id)
                 users_map[user_id] = other_user
 
         return item, users_map
@@ -265,6 +323,18 @@ class GetItemUseCase(BaseItemUseCase):
 
 class GetManyItemsUseCase(BaseItemUseCase):
     """Use case for item getting."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
 
     async def execute(
         self,
@@ -275,13 +345,13 @@ class GetManyItemsUseCase(BaseItemUseCase):
         limit: int,
     ) -> tuple[list[models.Item], dict[int, models.User | None]]:
         """Execute."""
-        async with self.mediator.database.transaction() as conn:
+        async with self.database.transaction() as conn:
             if user.is_anon:
-                items = await self.mediator.items.get_items_anon(
+                items = await self.items.get_items_anon(
                     conn, owner_uuid, parent_uuid, name, limit
                 )
             else:
-                items = await self.mediator.items.get_items_known(
+                items = await self.items.get_items_known(
                     conn, user, owner_uuid, parent_uuid, name, limit
                 )
 
@@ -290,7 +360,7 @@ class GetManyItemsUseCase(BaseItemUseCase):
                 for user_id in item.permissions:
                     if user_id in users_map:
                         continue
-                    other_user = await self.mediator.users.get_by_id(conn, user_id)
+                    other_user = await self.users.get_by_id(conn, user_id)
                     users_map[user_id] = other_user
 
         return items, users_map
@@ -298,6 +368,16 @@ class GetManyItemsUseCase(BaseItemUseCase):
 
 class UpdateItemUseCase(BaseItemUseCase):
     """Use case for item update."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
 
     async def execute(
         self,
@@ -308,8 +388,8 @@ class UpdateItemUseCase(BaseItemUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to update items')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot update someone else's item")
 
             if item.is_collection == is_collection:
@@ -318,11 +398,23 @@ class UpdateItemUseCase(BaseItemUseCase):
             LOG.info('{} is updating {}', user, item)
 
             item.is_collection = is_collection
-            await self.mediator.items.save(conn, item)
+            await self.items.save(conn, item)
 
 
 class RenameItemUseCase(BaseItemUseCase):
     """Use case for item rename."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        misc: db_interfaces.AbsMiscRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.misc = misc
 
     async def execute(
         self,
@@ -333,8 +425,8 @@ class RenameItemUseCase(BaseItemUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to rename items')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot rename someone else's item")
 
             if item.name == name:
@@ -343,9 +435,9 @@ class RenameItemUseCase(BaseItemUseCase):
             LOG.info('{} is renaming {}', user, item)
 
             item.name = name
-            await self.mediator.items.save(conn, item)
+            await self.items.save(conn, item)
 
-            operation_id = await self.mediator.misc.create_serial_operation(
+            operation_id = await self.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
                 extras={
@@ -360,6 +452,24 @@ class RenameItemUseCase(BaseItemUseCase):
 class ChangeParentItemUseCase(BaseItemUseCase):
     """Use case for setting new parent item."""
 
+    def __init__(  # noqa: PLR0913
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        misc: db_interfaces.AbsMiscRepo,
+        object_storage: object_interfaces.AbsObjectStorage,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
+        self.misc = misc
+        self.object_storage = object_storage
+
     async def execute(
         self,
         user: models.User,
@@ -369,8 +479,8 @@ class ChangeParentItemUseCase(BaseItemUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to change item parents')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot change someone else's item parents")
 
             if item.parent_uuid == new_parent_uuid:
@@ -380,9 +490,9 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                 msg = 'You cannot change parent for the root item'
                 raise exceptions.InvalidInputError(msg)
 
-            old_parent = await self.mediator.items.get_by_uuid(conn, item.parent_uuid)
-            new_parent = await self.mediator.items.get_by_uuid(conn, new_parent_uuid)
-            is_child = await self.mediator.items.is_child(conn, item, new_parent)
+            old_parent = await self.items.get_by_uuid(conn, item.parent_uuid)
+            new_parent = await self.items.get_by_uuid(conn, new_parent_uuid)
+            is_child = await self.items.is_child(conn, item, new_parent)
 
             if is_child:
                 msg = (
@@ -408,13 +518,13 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 
             item.parent_id = new_parent.id
             item.parent_uuid = new_parent.uuid
-            await self.mediator.items.save(conn, item)
+            await self.items.save(conn, item)
 
             if not new_parent.is_collection:
                 new_parent.is_collection = True
-                await self.mediator.items.save(conn, new_parent)
+                await self.items.save(conn, new_parent)
 
-            operation_id_tags = await self.mediator.misc.create_serial_operation(
+            operation_id_tags = await self.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
                 extras={
@@ -423,7 +533,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                 },
             )
 
-            operation_id_old_parent = await self.mediator.misc.create_serial_operation(
+            operation_id_old_parent = await self.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
                 extras={
@@ -432,7 +542,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                 },
             )
 
-            operation_id_new_parent = await self.mediator.misc.create_serial_operation(
+            operation_id_new_parent = await self.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
                 extras={
@@ -440,10 +550,10 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                     'item_uuid': str(new_parent.uuid),
                 },
             )
-            owner = await self.mediator.users.get_by_id(conn, item.owner_id)
+            owner = await self.users.get_by_id(conn, item.owner_id)
 
         if new_parent.thumbnail_ext is None:
-            media_types = await self.mediator.object_storage.copy_all_objects(
+            media_types = await self.object_storage.copy_all_objects(
                 requested_by=user,
                 owner=owner,
                 source_item=item,
@@ -451,8 +561,8 @@ class ChangeParentItemUseCase(BaseItemUseCase):
             )
 
             if media_types:
-                async with self.mediator.database.transaction() as conn:
-                    await self.mediator.meta.add_item_note(
+                async with self.database.transaction() as conn:
+                    await self.meta.add_item_note(
                         conn=conn,
                         item=new_parent,
                         key='copied_image_from',
@@ -465,6 +575,18 @@ class ChangeParentItemUseCase(BaseItemUseCase):
 class UpdateItemTagsUseCase(BaseItemUseCase):
     """Use case for item tags update."""
 
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        misc: db_interfaces.AbsMiscRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.misc = misc
+
     async def execute(
         self,
         user: models.User,
@@ -474,8 +596,8 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to change item tags')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot update someone else's item's tags")
 
             if item.tags == tags:
@@ -484,9 +606,9 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
             LOG.info('{} is updating tags of {}', user, item)
 
             item.tags = tags
-            await self.mediator.items.save(conn, item)
+            await self.items.save(conn, item)
 
-            operation_id = await self.mediator.misc.create_serial_operation(
+            operation_id = await self.misc.create_serial_operation(
                 conn=conn,
                 name='rebuild_computed_tags',
                 extras={
@@ -501,6 +623,24 @@ class UpdateItemTagsUseCase(BaseItemUseCase):
 class DeleteItemUseCase(BaseItemUseCase):
     """Use case for item deletion."""
 
+    def __init__(  # noqa: PLR0913
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        tags: db_interfaces.AbsTagsRepo,
+        object_storage: object_interfaces.AbsObjectStorage,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
+        self.meta = meta
+        self.tags = tags
+        self.object_storage = object_storage
+
     async def execute(  # noqa: C901,PLR0912
         self,
         user: models.User,
@@ -511,8 +651,8 @@ class DeleteItemUseCase(BaseItemUseCase):
         ensure.registered(user, 'Anonymous users are not allowed to delete items')
         switch_to = None
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot delete someone else's item")
 
             if item.parent_id is None:
@@ -521,7 +661,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                 raise exceptions.NotAllowedError(msg)
 
             if desired_switch == 'sibling':
-                siblings = await self.mediator.items.get_siblings(conn, item, collections=False)
+                siblings = await self.items.get_siblings(conn, item, collections=False)
                 if item not in siblings:
                     desired_switch = 'parent'
                 elif len(siblings) > 1:
@@ -540,9 +680,9 @@ class DeleteItemUseCase(BaseItemUseCase):
                     desired_switch = 'parent'
 
             if desired_switch == 'parent' or switch_to is None:
-                switch_to = await self.mediator.items.get_by_id(conn, item.parent_id)
+                switch_to = await self.items.get_by_id(conn, item.parent_id)
 
-            members = await self.mediator.items.get_family(conn, item)
+            members = await self.items.get_family(conn, item)
             for member in members:
                 if member.id == item.id:
                     LOG.info('{} is soft deleting {}', user, item)
@@ -551,28 +691,42 @@ class DeleteItemUseCase(BaseItemUseCase):
 
                 owner = await self._get_cached_user(conn, member.owner_id)
                 computed_tags = await self._get_cached_computed_tags(conn, member)
-                await self.mediator.tags.save_computed_tags(conn, member, set())
-                await self.mediator.tags.decrement_known_tags_user(conn, owner, computed_tags)
+                await self.tags.save_computed_tags(conn, member, set())
+                await self.tags.decrement_known_tags_user(conn, owner, computed_tags)
 
                 if owner.is_public:
-                    await self.mediator.tags.decrement_known_tags_anon(conn, computed_tags)
+                    await self.tags.decrement_known_tags_anon(conn, computed_tags)
 
                 for user_id in member.permissions:
                     other_user = await self._get_cached_user(conn, user_id)
-                    await self.mediator.tags.decrement_known_tags_user(
+                    await self.tags.decrement_known_tags_user(
                         conn, other_user, computed_tags
                     )
 
-                member_metainfo = await self.mediator.meta.get_by_item(conn, member)
-                await self.mediator.object_storage.soft_delete(user, owner, member)
-                await self.mediator.meta.soft_delete(conn, member_metainfo)
-                await self.mediator.items.soft_delete(conn, member)
+                member_metainfo = await self.meta.get_by_item(conn, member)
+                await self.object_storage.soft_delete(user, owner, member)
+                await self.meta.soft_delete(conn, member_metainfo)
+                await self.items.soft_delete(conn, member)
 
         return switch_to
 
 
 class UploadItemUseCase(BaseItemUseCase):
     """Use case for processing image binary content."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        meta: db_interfaces.AbsMetaRepo,
+        misc: db_interfaces.AbsMiscRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.meta = meta
+        self.misc = misc
 
     async def execute(
         self,
@@ -583,8 +737,8 @@ class UploadItemUseCase(BaseItemUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to upload items')
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot upload media to someone else's item")
             now = pu.now()
 
@@ -592,12 +746,12 @@ class UploadItemUseCase(BaseItemUseCase):
             content = file.content
             if len(content) >= const.LARGE_OBJECT_SIZE:
                 save_content = b''
-                oid = await self.mediator.database.save_large_object(content)
+                oid = await self.database.save_large_object(content)
                 LOG.info('Created large object {} for item {}', oid, item.uuid)
             else:
                 save_content = file.content
 
-            operation_id = await self.mediator.misc.save_input_media(
+            operation_id = await self.misc.save_input_media(
                 conn=conn,
                 media=models.InputMedia(
                     id=-1,
@@ -612,7 +766,7 @@ class UploadItemUseCase(BaseItemUseCase):
                 ),
             )
 
-            await self.mediator.meta.add_item_note(
+            await self.meta.add_item_note(
                 conn,
                 item=item,
                 key='original_filename',
@@ -620,7 +774,7 @@ class UploadItemUseCase(BaseItemUseCase):
             )
 
             if item.parent_id is not None:
-                parent = await self.mediator.items.get_by_id(conn, item.parent_id)
+                parent = await self.items.get_by_id(conn, item.parent_id)
                 parent.is_collection = True
 
                 if parent.thumbnail_ext is None:
@@ -632,7 +786,7 @@ class UploadItemUseCase(BaseItemUseCase):
                     # Reuse the payload saved for the child: same bytes / same large
                     # object, so we don't persist them twice. The converter only deletes
                     # the OID when no other queue entry still references it.
-                    await self.mediator.misc.save_input_media(
+                    await self.misc.save_input_media(
                         conn=conn,
                         media=models.InputMedia(
                             id=-1,
@@ -652,20 +806,34 @@ class UploadItemUseCase(BaseItemUseCase):
                         ),
                     )
 
-                    await self.mediator.meta.add_item_note(
+                    await self.meta.add_item_note(
                         conn=conn,
                         item=parent,
                         key='copied_image_from',
                         value=str(item.uuid),
                     )
 
-                await self.mediator.items.save(conn, parent)
+                await self.items.save(conn, parent)
 
         return operation_id
 
 
 class ChangePermissionsUseCase(BaseItemUseCase):
     """Use case for item permissions change."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        items: db_interfaces.AbsItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        misc: db_interfaces.AbsMiscRepo,
+    ) -> None:
+        """Initialize instance."""
+        super().__init__()
+        self.database = database
+        self.items = items
+        self.users = users
+        self.misc = misc
 
     async def execute(
         self,
@@ -681,15 +849,15 @@ class ChangePermissionsUseCase(BaseItemUseCase):
 
         operation_id = None
 
-        async with self.mediator.database.transaction() as conn:
-            item = await self.mediator.items.get_by_uuid(conn, item_uuid)
+        async with self.database.transaction() as conn:
+            item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot change someone else's item's permissions")
 
             LOG.info('{} is updating permissions of {}', user, item)
 
             user_ids: set[int] = set()
             for user_uuid in permissions:
-                user = await self.mediator.users.get_by_uuid(conn, user_uuid)
+                user = await self.users.get_by_uuid(conn, user_uuid)
                 user_ids.add(user.id)
 
             if item.permissions == permissions:
@@ -698,7 +866,7 @@ class ChangePermissionsUseCase(BaseItemUseCase):
             if apply_to_parents or apply_to_children:
                 added, deleted = utils.get_delta(item.permissions, user_ids)
 
-                operation_id = await self.mediator.misc.create_serial_operation(
+                operation_id = await self.misc.create_serial_operation(
                     conn=conn,
                     name='rebuild_permissions',
                     extras={
@@ -714,6 +882,6 @@ class ChangePermissionsUseCase(BaseItemUseCase):
                 )
 
             item.permissions = user_ids
-            await self.mediator.items.save(conn, item)
+            await self.items.save(conn, item)
 
         return operation_id

@@ -27,6 +27,26 @@ from omoide.database import db_models
 from omoide.omoide_api.items.item_use_cases import DeleteItemUseCase
 
 
+@pytest.fixture
+def delete_item_use_case(
+    async_database,
+    items_repo,
+    users_repo,
+    meta_repo,
+    tags_repo,
+    object_storage,
+):
+    """Build ``DeleteItemUseCase`` wired with real repos.
+
+    Collapses the six constructor arguments into a single fixture so the
+    tests below stay within the project's PLR0913 limit and remain easy
+    to read.
+    """
+    return DeleteItemUseCase(
+        async_database, items_repo, users_repo, meta_repo, tags_repo, object_storage
+    )
+
+
 def _read_known_tags_user_counter(engine, user_id: int, tag: str) -> int | None:
     with engine.connect() as conn:
         row = conn.execute(
@@ -85,8 +105,8 @@ def _read_parallel_ops(engine, name: str) -> list[dict]:
 class TestDeleteItemUseCaseGuards:
     """Pre-condition / permission checks fire before any side effect."""
 
-    async def test_anonymous_user_is_rejected(self, items_mediator):
-        use_case = DeleteItemUseCase(items_mediator)
+    async def test_anonymous_user_is_rejected(self, delete_item_use_case):
+        use_case = delete_item_use_case
         with pytest.raises(exceptions.AccessDeniedError):
             await use_case.execute(
                 user=models.User.new_anon(),
@@ -94,9 +114,9 @@ class TestDeleteItemUseCaseGuards:
                 desired_switch='parent',
             )
 
-    async def test_unknown_item_uuid_raises(self, items_mediator, make_user_model):
+    async def test_unknown_item_uuid_raises(self, delete_item_use_case, make_user_model):
         actor = await make_user_model()
-        use_case = DeleteItemUseCase(items_mediator)
+        use_case = delete_item_use_case
         with pytest.raises(exceptions.DoesNotExistError):
             await use_case.execute(
                 user=actor,
@@ -106,7 +126,7 @@ class TestDeleteItemUseCaseGuards:
 
     async def test_non_owner_is_rejected(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -123,7 +143,7 @@ class TestDeleteItemUseCaseGuards:
         )
         make_metainfo(child.id)
 
-        use_case = DeleteItemUseCase(items_mediator)
+        use_case = delete_item_use_case
         with pytest.raises(exceptions.AccessDeniedError):
             await use_case.execute(
                 user=attacker,
@@ -136,7 +156,7 @@ class TestDeleteItemUseCaseGuards:
 
     async def test_root_item_cannot_be_deleted(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -146,7 +166,7 @@ class TestDeleteItemUseCaseGuards:
         root = await make_item_model(owner_id=owner.id, owner_uuid=owner.uuid)
         make_metainfo(root.id)
 
-        use_case = DeleteItemUseCase(items_mediator)
+        use_case = delete_item_use_case
         with pytest.raises(exceptions.NotAllowedError):
             await use_case.execute(
                 user=owner,
@@ -162,7 +182,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_marks_item_as_deleted(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -178,7 +198,7 @@ class TestDeleteItemUseCaseHappyPath:
         )
         make_metainfo(child.id)
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -188,7 +208,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_marks_metainfo_as_deleted(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -204,7 +224,7 @@ class TestDeleteItemUseCaseHappyPath:
         )
         make_metainfo(child.id)
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -214,7 +234,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_clears_computed_tags(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -232,7 +252,7 @@ class TestDeleteItemUseCaseHappyPath:
         make_metainfo(child.id)
         set_computed_tags(child.id, {'red', 'blue'})
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -242,7 +262,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_decrements_owner_known_tags(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -262,7 +282,7 @@ class TestDeleteItemUseCaseHappyPath:
         set_computed_tags(child.id, {'red'})
         set_known_tags_user(owner.id, {'red': 5})
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -272,7 +292,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_decrements_anon_known_tags_when_owner_is_public(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -292,7 +312,7 @@ class TestDeleteItemUseCaseHappyPath:
         set_computed_tags(child.id, {'red'})
         set_known_tags_anon({'red': 7})
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -302,7 +322,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_does_not_touch_anon_tags_when_owner_is_private(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -322,7 +342,7 @@ class TestDeleteItemUseCaseHappyPath:
         set_computed_tags(child.id, {'red'})
         set_known_tags_anon({'red': 7})
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -332,7 +352,7 @@ class TestDeleteItemUseCaseHappyPath:
 
     async def test_decrements_known_tags_for_permission_user(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -354,7 +374,7 @@ class TestDeleteItemUseCaseHappyPath:
         set_computed_tags(child.id, {'red'})
         set_known_tags_user(permitted.id, {'red': 3})
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -368,7 +388,7 @@ class TestDeleteItemUseCaseSwitchTo:
 
     async def test_parent_mode_returns_parent(
         self,
-        items_mediator,
+        delete_item_use_case,
         make_user_model,
         make_item_model,
         make_metainfo,
@@ -383,7 +403,7 @@ class TestDeleteItemUseCaseSwitchTo:
         )
         make_metainfo(child.id)
 
-        switch_to = await DeleteItemUseCase(items_mediator).execute(
+        switch_to = await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -394,7 +414,7 @@ class TestDeleteItemUseCaseSwitchTo:
 
     async def test_sibling_mode_returns_next_sibling(
         self,
-        items_mediator,
+        delete_item_use_case,
         make_user_model,
         make_item_model,
         make_metainfo,
@@ -425,7 +445,7 @@ class TestDeleteItemUseCaseSwitchTo:
         make_metainfo(sibling_b.id)
         _ = sibling_a, sibling_c
 
-        switch_to = await DeleteItemUseCase(items_mediator).execute(
+        switch_to = await delete_item_use_case.execute(
             user=owner,
             item_uuid=sibling_b.uuid,
             desired_switch='sibling',
@@ -436,7 +456,7 @@ class TestDeleteItemUseCaseSwitchTo:
 
     async def test_sibling_mode_returns_previous_when_at_end(
         self,
-        items_mediator,
+        delete_item_use_case,
         make_user_model,
         make_item_model,
         make_metainfo,
@@ -459,7 +479,7 @@ class TestDeleteItemUseCaseSwitchTo:
         )
         make_metainfo(sibling_b.id)
 
-        switch_to = await DeleteItemUseCase(items_mediator).execute(
+        switch_to = await delete_item_use_case.execute(
             user=owner,
             item_uuid=sibling_b.uuid,
             desired_switch='sibling',
@@ -470,7 +490,7 @@ class TestDeleteItemUseCaseSwitchTo:
 
     async def test_sibling_mode_falls_back_to_parent_for_collection_item(
         self,
-        items_mediator,
+        delete_item_use_case,
         make_user_model,
         make_item_model,
         make_metainfo,
@@ -491,7 +511,7 @@ class TestDeleteItemUseCaseSwitchTo:
         )
         make_metainfo(collection.id)
 
-        switch_to = await DeleteItemUseCase(items_mediator).execute(
+        switch_to = await delete_item_use_case.execute(
             user=owner,
             item_uuid=collection.uuid,
             desired_switch='sibling',
@@ -502,7 +522,7 @@ class TestDeleteItemUseCaseSwitchTo:
 
     async def test_sibling_mode_falls_back_to_parent_when_item_is_only_non_collection_sibling(
         self,
-        items_mediator,
+        delete_item_use_case,
         make_user_model,
         make_item_model,
         make_metainfo,
@@ -525,7 +545,7 @@ class TestDeleteItemUseCaseSwitchTo:
         )
         make_metainfo(lonely.id)
 
-        switch_to = await DeleteItemUseCase(items_mediator).execute(
+        switch_to = await delete_item_use_case.execute(
             user=owner,
             item_uuid=lonely.uuid,
             desired_switch='sibling',
@@ -541,7 +561,7 @@ class TestDeleteItemUseCaseObjectStorage:
 
     async def test_emits_parallel_operation_per_media_type(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -560,7 +580,7 @@ class TestDeleteItemUseCaseObjectStorage:
         )
         make_metainfo(child.id)
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -572,7 +592,7 @@ class TestDeleteItemUseCaseObjectStorage:
 
     async def test_no_parallel_operation_when_no_media(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -588,7 +608,7 @@ class TestDeleteItemUseCaseObjectStorage:
         )
         make_metainfo(child.id)
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -598,7 +618,7 @@ class TestDeleteItemUseCaseObjectStorage:
 
     async def test_records_actor_as_requested_by(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -627,7 +647,7 @@ class TestDeleteItemUseCaseObjectStorage:
         )
         make_metainfo(child.id)
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=child.uuid,
             desired_switch='parent',
@@ -645,7 +665,7 @@ class TestDeleteItemUseCaseCascade:
 
     async def test_soft_deletes_all_descendants(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -675,7 +695,7 @@ class TestDeleteItemUseCaseCascade:
         for item_id in (parent.id, grand_child_a.id, grand_child_b.id):
             make_metainfo(item_id)
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=parent.uuid,
             desired_switch='parent',
@@ -687,7 +707,7 @@ class TestDeleteItemUseCaseCascade:
 
     async def test_decrements_known_tags_for_descendants_own_permission_users(
         self,
-        items_mediator,
+        delete_item_use_case,
         engine,
         make_user_model,
         make_item_model,
@@ -731,7 +751,7 @@ class TestDeleteItemUseCaseCascade:
             {'parent_only': 9, 'child_only': 9},
         )
 
-        await DeleteItemUseCase(items_mediator).execute(
+        await delete_item_use_case.execute(
             user=owner,
             item_uuid=parent.uuid,
             desired_switch='parent',

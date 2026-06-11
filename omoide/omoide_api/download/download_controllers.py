@@ -1,6 +1,5 @@
 """Downloading related API operations."""
 
-from typing import Annotated
 import urllib.parse
 from uuid import UUID
 
@@ -11,7 +10,8 @@ from fastapi.responses import PlainTextResponse
 
 from omoide import dependencies as dep
 from omoide import models
-from omoide.infra import mediators
+from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.download import download_use_cases
 from omoide.presentation import web
 
@@ -22,17 +22,23 @@ api_download_router = APIRouter(tags=['Download'])
     '/download/{item_uuid}',
     summary='Return all child items as a zip archive',
 )
-async def api_download_collection(
+async def api_download_collection(  # noqa: PLR0913
     item_uuid: UUID,
-    user: Annotated[models.User, Depends(dep.get_current_user)],
-    mediator: Annotated[mediators.ItemsMediator, Depends(dep.get_items_mediator)],
+    user: models.User = Depends(dep.get_current_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    signatures_repo: db_interfaces.AbsSignaturesRepo = Depends(dep.get_signatures_repo),
     response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
 ):
     """Return all child items as a zip archive.
 
     WARNING - this endpoint works only behind NGINX with mod_zip installed.
     """
-    use_case = download_use_cases.DownloadCollectionUseCase(mediator)
+    use_case = download_use_cases.DownloadCollectionUseCase(
+        database, items_repo, users_repo, meta_repo, signatures_repo
+    )
 
     try:
         lines, _, item = await use_case.execute(

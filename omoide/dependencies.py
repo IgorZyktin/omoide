@@ -143,6 +143,11 @@ def get_tags_repo() -> db_interfaces.AbsTagsRepo:
     return impl_sqlalchemy.TagsRepo()
 
 
+def get_signatures_repo() -> db_interfaces.AbsSignaturesRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.SignaturesRepo()
+
+
 @functools.cache
 def get_mediator(
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
@@ -203,25 +208,6 @@ def get_users_mediator(
         meta=impl_sqlalchemy.MetaRepo(),
         object_storage=object_storage,
         misc=impl_sqlalchemy.MiscRepo(),
-        tags=impl_sqlalchemy.TagsRepo(),
-        users=impl_sqlalchemy.UsersRepo(),
-    )
-
-
-def get_items_mediator(
-    authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
-    database: Annotated[AbsDatabase, Depends(get_database)],
-    object_storage: Annotated[object_interfaces.AbsObjectStorage, Depends(get_object_storage)],
-) -> mediators.ItemsMediator:
-    """Get mediator instance."""
-    return mediators.ItemsMediator(
-        authenticator=authenticator,
-        database=database,
-        items=impl_sqlalchemy.ItemsRepo(),
-        meta=impl_sqlalchemy.MetaRepo(),
-        misc=impl_sqlalchemy.MiscRepo(),
-        object_storage=object_storage,
-        signatures=impl_sqlalchemy.SignaturesRepo(),
         tags=impl_sqlalchemy.TagsRepo(),
         users=impl_sqlalchemy.UsersRepo(),
     )

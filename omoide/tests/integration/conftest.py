@@ -13,13 +13,14 @@ Two parallel fixture stacks live here:
 
 * SYNC — engine/make_user/make_item/etc. Used by the worker tests
   (converter, downloader) which run on sync SQLAlchemy.
-* ASYNC — async_database/items_mediator/make_user_model/make_item_model.
-  Used by use-case tests which exercise the production async stack.
+* ASYNC — async_database + individual repo fixtures (users_repo,
+  items_repo, ...)/make_user_model/make_item_model. Used by use-case
+  tests which exercise the production async stack.
 
 Both stacks point at the same physical database. The function-scoped
 ``engine`` fixture truncates between tests, so the async stack sees a
 clean DB on every test as long as it depends on ``engine`` (directly or
-transitively through ``items_mediator``).
+transitively through ``async_database``).
 """
 
 from collections.abc import AsyncIterator
@@ -40,8 +41,6 @@ from omoide import const
 from omoide import models
 from omoide.database import db_models
 from omoide.database.implementations import impl_sqlalchemy
-from omoide.infra import mediators
-from omoide.infra.interfaces.abs_authenticator import AbsAuthenticator
 from omoide.infra.interfaces.abs_metrics_collector import Metric
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 
@@ -339,22 +338,6 @@ def converter_temp_folder(tmp_path: Path) -> Path:
 # on it (directly or transitively) so the DB is clean.
 
 
-class _StubAuthenticator(AbsAuthenticator):
-    """Passthrough authenticator.
-
-    Use-case tests never go through the auth path; the real authenticator
-    drags in bcrypt setup we do not need. Stubbing keeps wiring trivial.
-    """
-
-    def encode_password(self, given_password: str, auth_complexity: int) -> str:
-        return given_password
-
-    def password_is_correct(
-        self, given_password: str, reference: str, auth_complexity: int
-    ) -> bool:
-        return given_password == reference
-
-
 def _to_async_url(url: str) -> str:
     """Convert a sync-driver Postgres URL to the asyncpg driver.
 
@@ -375,7 +358,7 @@ def async_db_url(test_db_url: str) -> str:
 
 @pytest.fixture
 async def async_database(
-    async_db_url: str, _schema_engine: Engine
+    async_db_url: str, _schema_engine: Engine, engine: Engine
 ) -> AsyncIterator[impl_sqlalchemy.SqlalchemyDatabase]:
     """Async database bound to the test DB.
 
@@ -385,9 +368,13 @@ async def async_database(
     so this only opens a real socket on first transaction.
 
     Depending on ``_schema_engine`` guarantees the schema has been
-    bootstrapped before any async test reaches for it.
+    bootstrapped before any async test reaches for it. Depending on
+    ``engine`` makes the per-test truncate cycle apply to any async test
+    that uses ``async_database`` (directly or transitively through one of
+    the repo fixtures below).
     """
     _ = _schema_engine  # ordering dependency only
+    _ = engine  # truncates between tests
     database = impl_sqlalchemy.SqlalchemyDatabase(async_db_url)
     await database.connect()
     try:
@@ -397,36 +384,60 @@ async def async_database(
 
 
 @pytest.fixture
-def items_mediator(
-    engine: Engine, async_database: impl_sqlalchemy.SqlalchemyDatabase
-) -> mediators.ItemsMediator:
-    """Build an ``ItemsMediator`` wired with real repos.
+def users_repo() -> impl_sqlalchemy.UsersRepo:
+    """Provide a ``UsersRepo`` for use-case tests."""
+    return impl_sqlalchemy.UsersRepo()
 
-    Mirrors ``dependencies.get_items_mediator`` so use-case behavior
-    matches production. Depends on ``engine`` only to chain the per-test
-    truncate cycle — the truncate runs first, then this fixture returns.
-    """
-    _ = engine  # truncates between tests
-    return mediators.ItemsMediator(
-        authenticator=_StubAuthenticator(),
+
+@pytest.fixture
+def items_repo() -> impl_sqlalchemy.ItemsRepo:
+    """Provide an ``ItemsRepo`` for use-case tests."""
+    return impl_sqlalchemy.ItemsRepo()
+
+
+@pytest.fixture
+def meta_repo() -> impl_sqlalchemy.MetaRepo:
+    """Provide a ``MetaRepo`` for use-case tests."""
+    return impl_sqlalchemy.MetaRepo()
+
+
+@pytest.fixture
+def misc_repo() -> impl_sqlalchemy.MiscRepo:
+    """Provide a ``MiscRepo`` for use-case tests."""
+    return impl_sqlalchemy.MiscRepo()
+
+
+@pytest.fixture
+def tags_repo() -> impl_sqlalchemy.TagsRepo:
+    """Provide a ``TagsRepo`` for use-case tests."""
+    return impl_sqlalchemy.TagsRepo()
+
+
+@pytest.fixture
+def signatures_repo() -> impl_sqlalchemy.SignaturesRepo:
+    """Provide a ``SignaturesRepo`` for use-case tests."""
+    return impl_sqlalchemy.SignaturesRepo()
+
+
+@pytest.fixture
+def object_storage(
+    async_database: impl_sqlalchemy.SqlalchemyDatabase,
+) -> FileObjectStorageServer:
+    """Provide a ``FileObjectStorageServer`` wired to the test DB."""
+    return FileObjectStorageServer(
         database=async_database,
-        items=impl_sqlalchemy.ItemsRepo(),
-        meta=impl_sqlalchemy.MetaRepo(),
+        media=impl_sqlalchemy.MediaRepo(),
         misc=impl_sqlalchemy.MiscRepo(),
-        object_storage=FileObjectStorageServer(
-            database=async_database,
-            media=impl_sqlalchemy.MediaRepo(),
-            misc=impl_sqlalchemy.MiscRepo(),
-            prefix_size=2,
-        ),
-        signatures=impl_sqlalchemy.SignaturesRepo(),
-        tags=impl_sqlalchemy.TagsRepo(),
-        users=impl_sqlalchemy.UsersRepo(),
+        prefix_size=2,
     )
 
 
 @pytest.fixture
-def make_user_model(make_user, items_mediator: mediators.ItemsMediator):
+def make_user_model(
+    make_user,
+    async_database: impl_sqlalchemy.SqlalchemyDatabase,
+    users_repo: impl_sqlalchemy.UsersRepo,
+):
     """Create a user row and return the domain ``models.User``.
 
     Accepts the same overrides as ``make_user`` plus reads the row back
@@ -436,14 +447,18 @@ def make_user_model(make_user, items_mediator: mediators.ItemsMediator):
 
     async def _factory(**overrides: Any) -> models.User:
         user_id, _user_uuid = make_user(**overrides)
-        async with items_mediator.database.transaction() as conn:
-            return await items_mediator.users.get_by_id(conn, user_id)
+        async with async_database.transaction() as conn:
+            return await users_repo.get_by_id(conn, user_id)
 
     return _factory
 
 
 @pytest.fixture
-def make_item_model(make_item, items_mediator: mediators.ItemsMediator):
+def make_item_model(
+    make_item,
+    async_database: impl_sqlalchemy.SqlalchemyDatabase,
+    items_repo: impl_sqlalchemy.ItemsRepo,
+):
     """Create an item row and return the domain ``models.Item``.
 
     Accepts the same overrides as ``make_item``. Reads back via
@@ -452,8 +467,8 @@ def make_item_model(make_item, items_mediator: mediators.ItemsMediator):
 
     async def _factory(**overrides: Any) -> models.Item:
         item_id, _item_uuid, _owner_uuid = make_item(**overrides)
-        async with items_mediator.database.transaction() as conn:
-            return await items_mediator.items.get_by_id(conn, item_id)
+        async with async_database.transaction() as conn:
+            return await items_repo.get_by_id(conn, item_id)
 
     return _factory
 
