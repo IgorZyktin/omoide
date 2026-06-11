@@ -3,17 +3,6 @@
 Per CLAUDE.md §1 these MUST run against a real PostgreSQL instance and MUST
 NOT mock the database, repos, or object storage. The fixtures wire up the
 same async stack the API uses in production.
-
-Three tests in this module document bugs identified during code review of
-``DeleteItemUseCase.execute`` and will FAIL until those bugs are fixed:
-
-* ``test_records_actor_as_requested_by`` — ``user`` is shadowed inside the
-  permissions loop and the wrong UUID lands in the parallel operation.
-* ``test_sibling_mode_falls_back_to_parent_when_item_is_only_non_collection_sibling``
-  — ``switch_to`` is set to the item being deleted.
-* ``test_decrements_known_tags_for_descendants_own_permission_users`` —
-  the code reads ``item.permissions`` instead of ``member.permissions``,
-  missing decrements for users that only see a descendant.
 """
 
 import uuid
@@ -530,9 +519,8 @@ class TestDeleteItemUseCaseSwitchTo:
         """Regression: ``siblings[0]`` is the item being deleted.
 
         When the only non-collection sibling is the item itself, the
-        current implementation returns that (now soft-deleted) item. The
-        correct behavior is to fall back to the parent. This test fails
-        against the current code.
+        correct behavior is to fall back to the parent rather than
+        returning the (about-to-be-soft-deleted) item.
         """
         owner = await make_user_model()
         root = await make_item_model(owner_id=owner.id, owner_uuid=owner.uuid)
@@ -627,11 +615,9 @@ class TestDeleteItemUseCaseObjectStorage:
         """Regression: actor is shadowed inside the permissions loop.
 
         ``extras['requested_by']`` is the audit trail for who initiated
-        the deletion. The current implementation overwrites the local
-        ``user`` variable while decrementing known_tags for permission
-        holders, then passes that (wrong) value to
-        ``object_storage.soft_delete``. This test fails against the
-        current code; the recorded UUID is the last permission holder
+        the deletion. Reassigning the local ``user`` variable while
+        decrementing known_tags for permission holders would leak the
+        last permission holder's UUID into ``object_storage.soft_delete``
         instead of the owner who actually performed the delete.
         """
         owner = await make_user_model()
@@ -717,11 +703,10 @@ class TestDeleteItemUseCaseCascade:
     ):
         """Regression: ``item.permissions`` is used instead of ``member.permissions``.
 
-        A descendant with its own permission user should have that user's
-        ``known_tags`` counter decremented by the descendant's tags. The
-        current implementation iterates the *root* item's permissions for
-        every member, so a descendant-only permission holder is missed.
-        This test fails against the current code.
+        A descendant with its own permission user must have that user's
+        ``known_tags`` counter decremented by the descendant's tags.
+        Iterating the *root* item's permissions for every member would
+        miss a descendant-only permission holder.
         """
         owner = await make_user_model()
         descendant_viewer = await make_user_model()
