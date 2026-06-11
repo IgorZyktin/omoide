@@ -8,7 +8,6 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
-from starlette.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import models
@@ -18,7 +17,6 @@ from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra import interfaces as infra_interfaces
 from omoide.omoide_api.users import user_api_models
 from omoide.omoide_api.users import user_use_cases
-from omoide.presentation import web
 
 api_users_router = APIRouter(prefix='/users', tags=['Users'])
 
@@ -44,7 +42,7 @@ async def api_create_user(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-) -> JSONResponse | user_api_models.UserOutput:
+) -> user_api_models.UserOutput:
     """Create new user.
 
     Only admins can do this.
@@ -53,15 +51,12 @@ async def api_create_user(  # noqa: PLR0913
         authenticator, database, users_repo, items_repo, meta_repo, tags_repo
     )
 
-    try:
-        user_out = await use_case.execute(
-            user=user,
-            name=user_in.name,
-            login=user_in.login,
-            password=user_in.password,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    user_out = await use_case.execute(
+        user=user,
+        name=user_in.name,
+        login=user_in.login,
+        password=user_in.password,
+    )
 
     response.headers['Location'] = str(
         request.url_for('api_get_user_by_uuid', user_uuid=user_out.uuid)
@@ -83,17 +78,14 @@ async def api_get_all_users(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-) -> JSONResponse | dict[str, Any]:
+) -> dict[str, Any]:
     """Get list of users.
 
     Admins can get all users, registered users will get only themselves.
     """
     use_case = user_use_cases.GetAllUsersUseCase(database, users_repo)
 
-    try:
-        users = await use_case.execute(user)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    users = await use_case.execute(user)
 
     return {
         'users': [
@@ -118,14 +110,11 @@ async def api_get_user_resource_usage(
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
-) -> JSONResponse | user_api_models.UserResourceUsageOutput:
+) -> user_api_models.UserResourceUsageOutput:
     """Get resource usage info for specific user."""
     use_case = user_use_cases.GetUserResourceUsageUseCase(database, users_repo, meta_repo)
 
-    try:
-        output = await use_case.execute(user, user_uuid)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    output = await use_case.execute(user, user_uuid)
 
     return user_api_models.UserResourceUsageOutput(
         user_uuid=str(output.user_uuid),
@@ -152,16 +141,11 @@ async def api_get_user_resource_usage(
 async def api_get_anon_tags(
     database: AbsDatabase = Depends(dep.get_database),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-) -> JSONResponse | dict[str, int]:
+) -> dict[str, int]:
     """Get all known tags for anon user."""
     use_case = user_use_cases.GetAnonUserTagsUseCase(database, tags_repo)
 
-    try:
-        tags = await use_case.execute()
-    except Exception as exc:
-        return web.response_from_exc(exc)
-
-    return tags
+    return await use_case.execute()
 
 
 @api_users_router.get(
@@ -181,16 +165,11 @@ async def api_get_user_tags(
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-) -> JSONResponse | dict[str, int]:
+) -> dict[str, int]:
     """Get all known tags for specific user."""
     use_case = user_use_cases.GetKnownUserTagsUseCase(database, users_repo, tags_repo)
 
-    try:
-        tags = await use_case.execute(user, user_uuid)
-    except Exception as exc:
-        return web.response_from_exc(exc)
-
-    return tags
+    return await use_case.execute(user, user_uuid)
 
 
 @api_users_router.get(
@@ -209,14 +188,11 @@ async def api_get_user_by_uuid(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-) -> JSONResponse | user_api_models.UserOutput:
+) -> user_api_models.UserOutput:
     """Get user by UUID."""
     use_case = user_use_cases.GetUserByUUIDUseCase(database, users_repo)
 
-    try:
-        user = await use_case.execute(user, user_uuid)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    user = await use_case.execute(user, user_uuid)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
@@ -232,21 +208,18 @@ async def api_get_user_by_uuid(
     },
     response_model=user_api_models.UserOutput,
 )
-async def api_change_user_name(  # noqa: PLR0913
+async def api_change_user_name(
     user_uuid: UUID,
     payload: user_api_models.UserValueInput,
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-) -> JSONResponse | user_api_models.UserOutput:
+) -> user_api_models.UserOutput:
     """Update name of existing user."""
     use_case = user_use_cases.ChangeUserNameUseCase(database, users_repo, misc_repo)
 
-    try:
-        user = await use_case.execute(user, user_uuid, payload.value)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    user = await use_case.execute(user, user_uuid, payload.value)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
@@ -268,14 +241,11 @@ async def api_change_user_login(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-) -> JSONResponse | user_api_models.UserOutput:
+) -> user_api_models.UserOutput:
     """Update login of existing user."""
     use_case = user_use_cases.ChangeUserLoginUseCase(database, users_repo)
 
-    try:
-        user = await use_case.execute(user, user_uuid, payload.value)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    user = await use_case.execute(user, user_uuid, payload.value)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))
 
@@ -291,20 +261,17 @@ async def api_change_user_login(
     },
     response_model=user_api_models.UserOutput,
 )
-async def api_change_user_password(  # noqa: PLR0913
+async def api_change_user_password(
     user_uuid: UUID,
     payload: user_api_models.UserValueInput,
     user: models.User = Depends(dep.get_known_user),
     authenticator: infra_interfaces.AbsAuthenticator = Depends(dep.get_authenticator),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-) -> JSONResponse | user_api_models.UserOutput:
+) -> user_api_models.UserOutput:
     """Update password of existing user."""
     use_case = user_use_cases.ChangeUserPasswordUseCase(authenticator, database, users_repo)
 
-    try:
-        user = await use_case.execute(user, user_uuid, payload.value)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    user = await use_case.execute(user, user_uuid, payload.value)
 
     return user_api_models.UserOutput(**utils.serialize(user.model_dump()))

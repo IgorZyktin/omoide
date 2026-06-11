@@ -7,7 +7,6 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 import python_utilz as pu
@@ -16,6 +15,7 @@ import ujson
 from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
+from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
@@ -39,20 +39,18 @@ async def app_create_item(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Create item page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users are not allowed to create items'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = item_use_cases.AppCreateItemUseCase(database, items_repo, users_repo)
 
-    try:
-        parent, users_with_permission = await use_case.execute(
-            user=user,
-            parent_uuid=parent_uuid,
-        )
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(
+        user=user,
+        parent_uuid=parent_uuid,
+    )
 
     context = {
         'request': request,
@@ -61,9 +59,9 @@ async def app_create_item(  # noqa: PLR0913
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
         'endpoint': request.url_for('api_create_item'),
-        'current_item': parent,
-        'parent_item': parent,
-        'users_with_permission': users_with_permission,
+        'current_item': result.parent,
+        'parent_item': result.parent,
+        'users_with_permission': result.users_with_permission,
     }
 
     return templates.TemplateResponse(request, 'create_item.html', context)
@@ -99,22 +97,20 @@ async def app_update_item(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Edit item page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users are not allowed to update items'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = item_use_cases.AppUpdateItemUseCase(
         database, items_repo, users_repo, meta_repo
     )
 
-    try:
-        result = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-        )
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+    )
 
     lower_tags = [tag.lower() for tag in result.item.tags]
     external_tags = [
@@ -158,28 +154,26 @@ async def app_delete_item(  # noqa: PLR0913
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Delete item page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users are not allowed to delete items'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = item_use_cases.AppDeleteItemUseCase(database, items_repo)
 
-    try:
-        item, total = await use_case.execute(user, item_uuid)
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(user, item_uuid)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
         'aim_wrapper': aim_wrapper,
-        'current_item': item,
-        'item': item,
+        'current_item': result.item,
+        'item': result.item,
         'url': request.url_for('app_search'),
         'uuid': item_uuid,
-        'total': pu.sep_digits(total),
+        'total': pu.sep_digits(result.total),
     }
 
     return templates.TemplateResponse(request, 'item_delete.html', context)

@@ -7,12 +7,12 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
 from omoide import cfg
 from omoide import dependencies as dep
+from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
@@ -34,17 +34,15 @@ async def app_upload(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Upload media page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users are not allowed to upload'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = upload_use_cases.AppUploadUseCase(database, items_repo, users_repo)
 
-    try:
-        item, users_with_permission = await use_case.execute(user, parent_uuid)
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(user, parent_uuid)
 
     context = {
         'request': request,
@@ -52,8 +50,8 @@ async def app_upload(  # noqa: PLR0913
         'user': user,
         'aim_wrapper': aim_wrapper,
         'url': request.url_for('app_search'),
-        'current_item': item,
-        'users_with_permission': users_with_permission,
+        'current_item': result.item,
+        'users_with_permission': result.users_with_permission,
     }
 
     return templates.TemplateResponse(request, 'item_upload.html', context)

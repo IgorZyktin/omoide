@@ -12,9 +12,9 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
-from fastapi.responses import JSONResponse
 
 from omoide import dependencies as dep
+from omoide import exceptions
 from omoide import limits
 from omoide import models
 from omoide.database import interfaces as db_interfaces
@@ -23,7 +23,6 @@ from omoide.object_storage import interfaces as object_interfaces
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.items import item_api_models
 from omoide.omoide_api.items import item_use_cases
-from omoide.presentation import web
 
 api_items_router = APIRouter(prefix='/items', tags=['Items'])
 
@@ -44,20 +43,19 @@ async def api_create_item(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-) -> JSONResponse | common_api_models.OneItemOutput:
+) -> common_api_models.OneItemOutput:
     """Create single item."""
     use_case = item_use_cases.CreateManyItemsUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo
     )
 
-    try:
-        items, users_map = await use_case.execute(user, item_in.model_dump())
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(user, item_in.model_dump())
 
-    item = items[0]
+    item = result.items[0]
     response.headers['Location'] = str(request.url_for('api_get_item', item_uuid=item.uuid))
-    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, users_map))
+    return common_api_models.OneItemOutput(
+        item=common_api_models.convert_item(item, result.users_map)
+    )
 
 
 @api_items_router.post(
@@ -74,22 +72,19 @@ async def api_create_many_items(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-) -> JSONResponse | common_api_models.ManyItemsOutput:
+) -> common_api_models.ManyItemsOutput:
     """Create many items in one request."""
     use_case = item_use_cases.CreateManyItemsUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo
     )
 
-    try:
-        items, users_map = await use_case.execute(
-            user,
-            *(item_in.model_dump() for item_in in items_in),
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(
+        user,
+        *(item_in.model_dump() for item_in in items_in),
+    )
 
     return common_api_models.ManyItemsOutput(
-        items=common_api_models.convert_items(items, users_map),
+        items=common_api_models.convert_items(result.items, result.users_map),
     )
 
 
@@ -105,16 +100,15 @@ async def api_get_item(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
-) -> JSONResponse | common_api_models.OneItemOutput:
+) -> common_api_models.OneItemOutput:
     """Get exising item."""
     use_case = item_use_cases.GetItemUseCase(database, items_repo, users_repo)
 
-    try:
-        item, users_map = await use_case.execute(user, item_uuid)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(user, item_uuid)
 
-    return common_api_models.OneItemOutput(item=common_api_models.convert_item(item, users_map))
+    return common_api_models.OneItemOutput(
+        item=common_api_models.convert_item(result.item, result.users_map)
+    )
 
 
 @api_items_router.get(
@@ -132,23 +126,20 @@ async def api_get_many_items(  # noqa: PLR0913
     parent_uuid: Annotated[UUID | None, Query()] = None,
     name: Annotated[str | None, Query(max_length=limits.MAX_QUERY)] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-) -> JSONResponse | common_api_models.ManyItemsOutput:
+) -> common_api_models.ManyItemsOutput:
     """Get list of exising items."""
     use_case = item_use_cases.GetManyItemsUseCase(database, items_repo, users_repo)
 
-    try:
-        items, users_map = await use_case.execute(
-            user=user,
-            owner_uuid=owner_uuid,
-            parent_uuid=parent_uuid,
-            name=name,
-            limit=limit,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(
+        user=user,
+        owner_uuid=owner_uuid,
+        parent_uuid=parent_uuid,
+        name=name,
+        limit=limit,
+    )
 
     return common_api_models.ManyItemsOutput(
-        items=common_api_models.convert_items(items, users_map),
+        items=common_api_models.convert_items(result.items, result.users_map),
     )
 
 
@@ -164,18 +155,15 @@ async def api_update_item(
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
-) -> JSONResponse | dict[str, str]:
+) -> dict[str, str]:
     """Update exising item."""
     use_case = item_use_cases.UpdateItemUseCase(database, items_repo)
 
-    try:
-        await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            is_collection=item_update_in.is_collection,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        is_collection=item_update_in.is_collection,
+    )
 
     return {'result': 'updated item', 'item_uuid': str(item_uuid)}
 
@@ -186,25 +174,22 @@ async def api_update_item(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
-async def api_rename_item(  # noqa: PLR0913
+async def api_rename_item(
     item_uuid: UUID,
     item_rename_in: item_api_models.ItemRenameInput,
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-) -> JSONResponse | dict[str, Any]:
+) -> dict[str, Any]:
     """Rename exising item."""
     use_case = item_use_cases.RenameItemUseCase(database, items_repo, misc_repo)
 
-    try:
-        operation_id = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            name=item_rename_in.name,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    operation_id = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        name=item_rename_in.name,
+    )
 
     return {
         'result': 'enqueued name change',
@@ -229,20 +214,17 @@ async def api_change_parent_item(  # noqa: PLR0913
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
     object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
-) -> JSONResponse | dict[str, Any]:
+) -> dict[str, Any]:
     """Change parent of the item."""
     use_case = item_use_cases.ChangeParentItemUseCase(
         database, items_repo, users_repo, meta_repo, misc_repo, object_storage
     )
 
-    try:
-        operations = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            new_parent_uuid=new_parent_uuid,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    operations = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        new_parent_uuid=new_parent_uuid,
+    )
 
     return {
         'result': 'changed parent',
@@ -258,25 +240,22 @@ async def api_change_parent_item(  # noqa: PLR0913
     status_code=status.HTTP_202_ACCEPTED,
     response_model=dict[str, str | int | None],
 )
-async def api_update_item_tags(  # noqa: PLR0913
+async def api_update_item_tags(
     item_uuid: UUID,
     item_tags_in: item_api_models.ItemUpdateTagsInput,
     user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-) -> JSONResponse | dict[str, Any]:
+) -> dict[str, Any]:
     """Update item tags."""
     use_case = item_use_cases.UpdateItemTagsUseCase(database, items_repo, misc_repo)
 
-    try:
-        operation_id = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            tags=item_tags_in.tags,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    operation_id = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        tags=item_tags_in.tags,
+    )
 
     return {
         'result': 'enqueued tags update',
@@ -301,20 +280,17 @@ async def api_delete_item(  # noqa: PLR0913
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
     object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
     desired_switch: Annotated[Literal['parent', 'sibling'], Query()] = 'sibling',
-) -> JSONResponse | common_api_models.ItemDeleteOutput:
+) -> common_api_models.ItemDeleteOutput:
     """Delete exising item."""
     use_case = item_use_cases.DeleteItemUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo, object_storage
     )
 
-    try:
-        item = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            desired_switch=desired_switch,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    item = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        desired_switch=desired_switch,
+    )
 
     if item is None:
         switch_to = None
@@ -342,24 +318,21 @@ async def api_item_update_permissions(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-) -> JSONResponse | dict[str, Any]:
+) -> dict[str, Any]:
     """Change permissions for given item.
 
     Can affect parents and children.
     """
     use_case = item_use_cases.ChangePermissionsUseCase(database, items_repo, users_repo, misc_repo)
 
-    try:
-        operation_id = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            permissions=permissions_in.permissions,
-            apply_to_parents=permissions_in.apply_to_parents,
-            apply_to_children=permissions_in.apply_to_children,
-            apply_to_children_as=permissions_in.apply_to_children_as,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    operation_id = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        permissions=permissions_in.permissions,
+        apply_to_parents=permissions_in.apply_to_parents,
+        apply_to_children=permissions_in.apply_to_children,
+        apply_to_children_as=permissions_in.apply_to_children_as,
+    )
 
     return {
         'result': 'enqueued permissions change',
@@ -386,15 +359,13 @@ async def api_upload_item(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-) -> JSONResponse | dict[str, Any]:
+) -> dict[str, Any]:
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
     if ext not in limits.SUPPORTED_EXTENSION:
         extensions = ', '.join(sorted(limits.SUPPORTED_EXTENSION))
-        return JSONResponse(
-            content=f'Only support extensions {extensions}, got {ext!r}',
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        msg = f'Only support extensions {extensions}, got {ext!r}'
+        raise exceptions.InvalidInputError(msg)
 
     use_case = item_use_cases.UploadItemUseCase(database, items_repo, meta_repo, misc_repo)
     features = item_api_models.extract_features(request)
@@ -402,19 +373,16 @@ async def api_upload_item(  # noqa: PLR0913
     # TODO - read in chunks, not whole file at once
     content = await file.read()
 
-    try:
-        await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            file=models.NewFile(
-                content=content,
-                content_type=str(file.content_type),
-                filename=str(file.filename),
-                ext=ext,
-                features=features,
-            ),
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        file=models.NewFile(
+            content=content,
+            content_type=str(file.content_type),
+            filename=str(file.filename),
+            ext=ext,
+            features=features,
+        ),
+    )
 
     return {'result': 'enqueued content adding', 'item_uuid': str(item_uuid)}

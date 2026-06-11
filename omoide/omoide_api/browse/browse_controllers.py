@@ -7,7 +7,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 from fastapi import status
-from starlette.responses import JSONResponse
 
 from omoide import const
 from omoide import dependencies as dep
@@ -17,7 +16,6 @@ from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.browse import browse_use_cases
 from omoide.omoide_api.common import common_api_models
-from omoide.presentation import web
 
 api_browse_router = APIRouter(prefix='/browse', tags=['Browse'])
 
@@ -40,7 +38,7 @@ async def api_browse(  # noqa: PLR0913
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_BROWSE, lt=limits.MAX_BROWSE)] = limits.DEF_BROWSE,
-) -> JSONResponse | common_api_models.ManyItemsOutput:
+) -> common_api_models.ManyItemsOutput:
     """Perform browse request.
 
     Returns all descendants of a specified item.
@@ -58,10 +56,7 @@ async def api_browse(  # noqa: PLR0913
         limit=limit,
     )
 
-    try:
-        result = await use_case.execute(user, item_uuid, plan)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(user, item_uuid, plan)
 
     return common_api_models.ManyItemsOutput(
         duration=result.duration,

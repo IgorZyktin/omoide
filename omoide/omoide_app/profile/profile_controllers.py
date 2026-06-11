@@ -7,13 +7,13 @@ from fastapi import Depends
 from fastapi import Query
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
 from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
+from omoide import exceptions
 from omoide import limits
 from omoide import models
 from omoide.database import interfaces as db_interfaces
@@ -34,10 +34,11 @@ async def app_profile(
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Show user profile page."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users have no profile'
+        raise exceptions.AccessDeniedError(msg)
 
     context = {
         'request': request,
@@ -63,17 +64,15 @@ async def app_profile_usage(  # noqa: PLR0913
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Show space usage stats."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users have no profile'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = profile_use_cases.AppProfileUsageUseCase(database, users_repo)
 
-    try:
-        result = await use_case.execute(user)
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(user)
 
     context = {
         'request': request,
@@ -102,17 +101,15 @@ async def app_profile_tags(  # noqa: PLR0913
     database: AbsDatabase = Depends(dep.get_database),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Show know tags."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users have no profile'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = profile_use_cases.AppProfileTagsUseCase(database, tags_repo)
 
-    try:
-        known_tags = await use_case.execute(user)
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    known_tags = await use_case.execute(user)
 
     context = {
         'request': request,
@@ -141,25 +138,23 @@ async def app_profile_duplicates(  # noqa: PLR0913
     item_uuid: Annotated[str | None, Query()] = None,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Show duplicated items."""
     if user.is_anon:
-        return RedirectResponse(request.url_for('app_forbidden'))
+        msg = 'Anonymous users have no profile'
+        raise exceptions.AccessDeniedError(msg)
 
     use_case = profile_use_cases.AppProfileDuplicatesUseCase(database, items_repo)
 
-    try:
-        item, duplicates = await use_case.execute(user, item_uuid, limit)
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(user, item_uuid, limit)
 
     context = {
         'request': request,
         'config': config,
         'user': user,
-        'duplicates': duplicates,
+        'duplicates': result.duplicates,
         'aim_wrapper': aim_wrapper,
-        'item': item,
+        'item': result.item,
         'block_direct': True,
         'block_ordered': True,
         'block_collections': True,

@@ -7,7 +7,6 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
@@ -40,20 +39,17 @@ async def app_browse(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Browse contents of a single item."""
     if not aim_wrapper.aim.paged:
         use_case_dynamic = browse_use_cases.AppBrowseDynamicUseCase(
             database, items_repo, users_repo, meta_repo
         )
 
-        try:
-            result = await use_case_dynamic.execute(
-                user=user,
-                item_uuid=item_uuid,
-            )
-        except Exception as exc:
-            return web.redirect_from_exc(request, exc)
+        result_dynamic = await use_case_dynamic.execute(
+            user=user,
+            item_uuid=item_uuid,
+        )
 
         context = {
             'request': request,
@@ -61,9 +57,9 @@ async def app_browse(  # noqa: PLR0913
             'user': user,
             'aim_wrapper': aim_wrapper,
             'endpoint': request.url_for('api_browse', item_uuid=item_uuid),
-            'parents': result.parents,
-            'current_item': result.item,
-            'metainfo': result.metainfo,
+            'parents': result_dynamic.parents,
+            'current_item': result_dynamic.item,
+            'metainfo': result_dynamic.metainfo,
         }
 
         return templates.TemplateResponse(request, 'browse_dynamic.html', context)
@@ -72,14 +68,11 @@ async def app_browse(  # noqa: PLR0913
         database, items_repo, users_repo, meta_repo
     )
 
-    try:
-        result = await use_case_paged.execute(
-            user=user,
-            item_uuid=item_uuid,
-            aim=aim_wrapper.aim,
-        )
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case_paged.execute(
+        user=user,
+        item_uuid=item_uuid,
+        aim=aim_wrapper.aim,
+    )
 
     paginator = infra.Paginator(
         page=aim_wrapper.aim.page,

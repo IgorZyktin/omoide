@@ -13,9 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from omoide import dependencies as dep
+from omoide.exceptions import BaseOmoideError
 from omoide.omoide_app.admin import admin_controllers
 from omoide.omoide_app.auth import auth_controllers
 from omoide.omoide_app.browse import browse_controllers
+from omoide.omoide_app.exception_handlers import handle_omoide_error
 from omoide.omoide_app.home import home_controllers
 from omoide.omoide_app.items import item_controllers
 from omoide.omoide_app.preview import preview_controllers
@@ -42,6 +44,7 @@ def get_app() -> FastAPI:
         docs_url=None,
         redoc_url=None,
     )
+    new_app.add_exception_handler(BaseOmoideError, handle_omoide_error)
 
     config = dep.get_config()
 

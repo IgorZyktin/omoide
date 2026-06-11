@@ -37,7 +37,7 @@ async def app_login(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     config: cfg.Config = Depends(dep.get_config),
     response_class: type[Response] = RedirectResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> RedirectResponse:
     """Ask user for login and password."""
     url = request.url_for('app_home')
 
@@ -46,13 +46,10 @@ async def app_login(  # noqa: PLR0913
 
     use_case = auth_use_cases.LoginUserUseCase(authenticator, database, users_repo)
 
-    try:
-        new_user = await use_case.execute(
-            login=credentials.username,
-            password=credentials.password,
-        )
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    new_user = await use_case.execute(
+        login=credentials.username,
+        password=credentials.password,
+    )
 
     if new_user.is_anon:
         await asyncio.sleep(config.penalty_wrong_password)

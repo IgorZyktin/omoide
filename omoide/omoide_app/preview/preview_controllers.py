@@ -7,7 +7,6 @@ import fastapi
 from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
@@ -38,16 +37,13 @@ async def app_preview(  # noqa: PLR0913
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
-) -> HTMLResponse | RedirectResponse:
+) -> HTMLResponse:
     """Browse contents of a single item as one object."""
     use_case = preview_use_cases.AppPreviewUseCase(
         database, items_repo, users_repo, meta_repo, tags_repo
     )
 
-    try:
-        result = await use_case.execute(user, item_uuid)
-    except Exception as exc:
-        return web.redirect_from_exc(request, exc)
+    result = await use_case.execute(user, item_uuid)
 
     context = {
         'request': request,

@@ -7,14 +7,12 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi.responses import PlainTextResponse
-from starlette.responses import JSONResponse
 
 from omoide import dependencies as dep
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.download import download_use_cases
-from omoide.presentation import web
 
 api_download_router = APIRouter(tags=['Download'])
 
@@ -33,7 +31,7 @@ async def api_download_collection(  # noqa: PLR0913
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     signatures_repo: db_interfaces.AbsSignaturesRepo = Depends(dep.get_signatures_repo),
     response_class: type[Response] = PlainTextResponse,  # noqa: ARG001
-) -> JSONResponse | PlainTextResponse:
+) -> PlainTextResponse:
     """Return all child items as a zip archive.
 
     WARNING - this endpoint works only behind NGINX with mod_zip installed.
@@ -42,13 +40,10 @@ async def api_download_collection(  # noqa: PLR0913
         database, items_repo, users_repo, meta_repo, signatures_repo
     )
 
-    try:
-        result = await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-        )
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+    )
 
     if result.item and result.item.name:
         filename = urllib.parse.quote(result.item.name)

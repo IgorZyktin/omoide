@@ -5,7 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
-from fastapi.responses import JSONResponse
 import pytz
 
 from omoide import dependencies as dep
@@ -14,7 +13,6 @@ from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.metainfo import metainfo_api_models
 from omoide.omoide_api.metainfo import metainfo_use_cases
-from omoide.presentation import web
 
 api_metainfo_router = APIRouter(prefix='/metainfo', tags=['Metainfo'])
 
@@ -36,14 +34,11 @@ async def api_read_metainfo(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
-) -> JSONResponse | metainfo_api_models.MetainfoOutput:
+) -> metainfo_api_models.MetainfoOutput:
     """Get metainfo of existing item."""
     use_case = metainfo_use_cases.ReadMetainfoUseCase(database, items_repo, meta_repo)
 
-    try:
-        metainfo = await use_case.execute(user, item_uuid)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    metainfo = await use_case.execute(user, item_uuid)
 
     if user.timezone is None:
         created_at = metainfo.created_at.isoformat()
@@ -86,13 +81,10 @@ async def api_update_metainfo(
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
-) -> JSONResponse | dict[str, str]:
+) -> dict[str, str]:
     """Update metainfo entry for existing item."""
     use_case = metainfo_use_cases.UpdateMetainfoUseCase(database, items_repo, meta_repo)
 
-    try:
-        await use_case.execute(user, item_uuid, **metainfo_input.model_dump())
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    await use_case.execute(user, item_uuid, **metainfo_input.model_dump())
 
     return {'result': 'updated metainfo', 'item_uuid': str(item_uuid)}

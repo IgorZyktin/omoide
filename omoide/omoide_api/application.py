@@ -7,10 +7,12 @@ from fastapi import APIRouter
 from fastapi import FastAPI
 
 from omoide import const
+from omoide.exceptions import BaseOmoideError
 from omoide.omoide_api import api_info
 from omoide.omoide_api.actions import actions_controllers
 from omoide.omoide_api.browse import browse_controllers
 from omoide.omoide_api.download import download_controllers
+from omoide.omoide_api.exception_handlers import handle_omoide_error
 from omoide.omoide_api.exif import exif_controllers
 from omoide.omoide_api.home import home_controllers
 from omoide.omoide_api.info import info_controllers
@@ -22,7 +24,7 @@ from omoide.omoide_api.users import user_controllers
 
 def get_api() -> FastAPI:
     """Create API instance."""
-    return FastAPI(
+    api = FastAPI(
         redoc_url=None,
         title='OmoideAPI',
         version=const.VERSION,
@@ -35,6 +37,8 @@ def get_api() -> FastAPI:
         # Removing models from docs because the look too verbose
         swagger_ui_parameters={'defaultModelsExpandDepth': -1},
     )
+    api.add_exception_handler(BaseOmoideError, handle_omoide_error)
+    return api
 
 
 def apply_api_routes_v1(current_api: FastAPI) -> None:

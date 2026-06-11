@@ -6,7 +6,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 from fastapi import status
-from fastapi.responses import JSONResponse
 
 from omoide import const
 from omoide import custom_logging
@@ -19,7 +18,6 @@ from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.omoide_api.common import common_api_models
 from omoide.omoide_api.search import search_api_models
 from omoide.omoide_api.search import search_use_cases
-from omoide.presentation import web
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -54,6 +52,9 @@ async def api_autocomplete(
 
     # noinspection PyBroadException
     try:
+        # Autocomplete swallows errors on purpose: the dropdown should
+        # quietly degrade to "no suggestions" rather than show a stack
+        # trace, so this endpoint stays out of the global error handler.
         variants = await use_case.execute(
             user=user,
             tag=tag,
@@ -86,7 +87,7 @@ async def api_get_recent_updates(  # noqa: PLR0913
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-) -> JSONResponse | search_api_models.RecentUpdatesOutput:
+) -> search_api_models.RecentUpdatesOutput:
     """Return recently updated items.
 
     This endpoint can be used by any user, but each will get tailored output.
@@ -104,13 +105,10 @@ async def api_get_recent_updates(  # noqa: PLR0913
         limit=limit,
     )
 
-    try:
-        items, users = await use_case.execute(user, plan)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(user, plan)
 
     return search_api_models.RecentUpdatesOutput(
-        items=common_api_models.convert_items(items, users)
+        items=common_api_models.convert_items(result.items, result.users_map)
     )
 
 
@@ -125,7 +123,7 @@ async def api_search_total(
     search_repo: db_interfaces.AbsSearchRepo = Depends(dep.get_search_repo),
     q: Annotated[str, Query(max_length=limits.MAX_QUERY)] = limits.DEF_QUERY,
     collections: Annotated[bool, Query()] = False,
-) -> JSONResponse | search_api_models.SearchTotalOutput:
+) -> search_api_models.SearchTotalOutput:
     """Return total amount of items that correspond to search query."""
     if len(q) < limits.MIN_QUERY:
         return search_api_models.SearchTotalOutput(total=0, duration=0.0)
@@ -144,12 +142,9 @@ async def api_search_total(
         limit=-1,
     )
 
-    try:
-        total, duration = await use_case.execute(user, plan)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(user, plan)
 
-    return search_api_models.SearchTotalOutput(total=total, duration=duration)
+    return search_api_models.SearchTotalOutput(total=result.total, duration=result.duration)
 
 
 @api_search_router.get(
@@ -168,7 +163,7 @@ async def api_search(  # noqa: PLR0913
     collections: Annotated[bool, Query()] = const.DEF_COLLECTIONS,
     last_seen: Annotated[int | None, Query()] = limits.DEF_LAST_SEEN,
     limit: Annotated[int, Query(ge=limits.MIN_LIMIT, lt=limits.MAX_LIMIT)] = limits.DEF_LIMIT,
-) -> JSONResponse | common_api_models.ManyItemsOutput:
+) -> common_api_models.ManyItemsOutput:
     """Perform search request.
 
     Given input will be split into tags.
@@ -192,10 +187,7 @@ async def api_search(  # noqa: PLR0913
         limit=limit,
     )
 
-    try:
-        result = await use_case.execute(user, plan)
-    except Exception as exc:
-        return web.response_from_exc(exc)
+    result = await use_case.execute(user, plan)
 
     return common_api_models.ManyItemsOutput(
         duration=result.duration,
