@@ -23,7 +23,7 @@ class Permission(BaseModel):
 class ItemInput(BaseModel):
     """Input info for item creation."""
 
-    uuid: UUID | None = None
+    uuid: UUID | None = Field(serialization_alias='item_uuid', default=None)
     parent_uuid: UUID | None = None
     name: str = Field('', max_length=limits.MAX_ITEM_FIELD_LENGTH)
     number: int | None = None

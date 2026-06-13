@@ -51,7 +51,7 @@ async def api_create_item(  # noqa: PLR0913
         database, items_repo, users_repo, meta_repo, tags_repo
     )
 
-    result = await use_case.execute(user, item_in.model_dump())
+    result = await use_case.execute(user, item_in.model_dump(by_alias=True))
 
     item = result.items[0]
     response.headers['Location'] = str(request.url_for('api_get_item', item_uuid=item.uuid))
@@ -82,7 +82,7 @@ async def api_create_many_items(  # noqa: PLR0913
 
     result = await use_case.execute(
         user,
-        *(item_in.model_dump() for item_in in items_in),
+        *(item_in.model_dump(by_alias=True) for item_in in items_in),
     )
 
     return common_api_models.ManyItemsOutput(
