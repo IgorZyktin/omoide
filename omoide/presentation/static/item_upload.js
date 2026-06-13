@@ -1,7 +1,5 @@
 const CARDS = []
-let ALL_TAGS = {
-    foo: 0
-}
+let ALL_TAGS = {}
 
 const FEATURE_SCAN_NAME = "feature-scan-name"
 const FEATURE_EXIF_ID = "feature-exif"
@@ -14,6 +12,7 @@ const FEATURE_EXIF_MONTH_RU_ID = "feature-exif-month-ru"
 const SCROLL_TOP_ID = "scroll-top"
 const SCROLL_BOTTOM_ID = "scroll-bottom"
 const MEDIA_ID = "media"
+const UPLOAD_INPUT_ID = "upload-input"
 
 const OWNER_UUID_ID = "owner-uuid"
 const PARENT_UUID_ID = "parent-uuid"
@@ -24,233 +23,179 @@ const AFTER_UPLOAD_ID = "after-upload"
 
 const SEND_TIMEOUT = 20000 // 20 seconds
 
+const MONTHS_EN = {
+    '01': 'january',
+    '02': 'february',
+    '03': 'march',
+    '04': 'april',
+    '05': 'may',
+    '06': 'june',
+    '07': 'july',
+    '08': 'august',
+    '09': 'september',
+    '10': 'october',
+    '11': 'november',
+    '12': 'december',
+}
+
+const MONTHS_RU = {
+    '01': 'января',
+    '02': 'февраля',
+    '03': 'марта',
+    '04': 'апреля',
+    '05': 'мая',
+    '06': 'июня',
+    '07': 'июля',
+    '08': 'августа',
+    '09': 'сентября',
+    '10': 'октября',
+    '11': 'ноября',
+    '12': 'декабря',
+}
+
+const FILENAME_DATE_FORMATS = [
+    {regex: /^PXL_(\d{8})_.*/i, parts: m => [m[1].slice(0, 4), m[1].slice(4, 6), m[1].slice(6, 8)]},
+    {regex: /^VID_(\d{8})_.*/i, parts: m => [m[1].slice(0, 4), m[1].slice(4, 6), m[1].slice(6, 8)]},
+    {regex: /^(\d{4})-(\d{2})-(\d{2}).*/i, parts: m => [m[1], m[2], m[3]]},
+]
+
 function toggleExif(checkbox) {
-    // Make exif switches enabled/disabled
-    if (checkbox.checked) {
-        document.getElementById(ALL_FEATURES_EXIF_ID).style.display = "block";
-        document.getElementById(FEATURE_EXIF_TIME_BACKOFF_ID).disabled = false
-        document.getElementById(FEATURE_EXIF_YEAR_ID).disabled = false
-        document.getElementById(FEATURE_EXIF_MONTH_EN_ID).disabled = false
-        document.getElementById(FEATURE_EXIF_MONTH_RU_ID).disabled = false
-    } else {
-        document.getElementById(ALL_FEATURES_EXIF_ID).style.display = "none";
-        document.getElementById(FEATURE_EXIF_TIME_BACKOFF_ID).disabled = true
-        document.getElementById(FEATURE_EXIF_YEAR_ID).disabled = true
-        document.getElementById(FEATURE_EXIF_MONTH_EN_ID).disabled = true
-        document.getElementById(FEATURE_EXIF_MONTH_RU_ID).disabled = true
+    // Enable/disable nested EXIF sub-features
+    const visible = checkbox.checked
+    document.getElementById(ALL_FEATURES_EXIF_ID).style.display = visible ? "block" : "none"
+    for (const id of [
+        FEATURE_EXIF_TIME_BACKOFF_ID,
+        FEATURE_EXIF_YEAR_ID,
+        FEATURE_EXIF_MONTH_EN_ID,
+        FEATURE_EXIF_MONTH_RU_ID,
+    ]) {
+        document.getElementById(id).disabled = !visible
     }
 }
 
 function getAllTags() {
-    // Return keys of ALL_TAGS sorted by their values
+    // Return keys of ALL_TAGS sorted by their occurrence counts (desc)
     return Object.keys(ALL_TAGS).sort((a, b) => ALL_TAGS[b] - ALL_TAGS[a])
 }
 
 function refreshAllTags() {
-    // Clear and rebuild variable with all known tags
+    // Clear and rebuild dictionary of known tags
     ALL_TAGS = {}
-    let globalTags = splitLines(document.getElementById(GLOBAL_TAGS_ID).value)
-    for (let tag of globalTags) {
-        if (ALL_TAGS[tag]) {
-            ALL_TAGS[tag] ++
-        } else {
-            ALL_TAGS[tag] = 1
-        }
+    const globalTags = splitLines(document.getElementById(GLOBAL_TAGS_ID).value)
+    for (const tag of globalTags) {
+        ALL_TAGS[tag] = (ALL_TAGS[tag] || 0) + 1
     }
 
-    for (let card of CARDS) {
-        for (let tag of card.localTags) {
-            if (ALL_TAGS[tag]) {
-                ALL_TAGS[tag] ++
-            } else {
-                ALL_TAGS[tag] = 1
-            }
+    for (const card of CARDS) {
+        for (const tag of card.localTags) {
+            ALL_TAGS[tag] = (ALL_TAGS[tag] || 0) + 1
         }
     }
 }
 
-async function extractEXIFTags(file) {
-    // Extract tags from file
-    return new Promise(function (resolve, _) {
+function extractEXIFTags(file) {
+    // Extract EXIF tags from file. Resolves with {} if no EXIF data.
+    return new Promise(resolve => {
+        // Cannot use arrow function: EXIF.getAllTags relies on `this`.
         EXIF.getData(file, function () {
-            resolve(EXIF.getAllTags(this))
+            resolve(EXIF.getAllTags(this) || {})
         })
     })
 }
 
 function extractDatetime(rawString) {
-    // try to extract datetime from string
+    // Normalize EXIF datetime ("YYYY:MM:DD HH:MM:SS") into "YYYY-MM-DD HH:MM:SS"
     if (!rawString)
         return null
 
-    let parsed = Date.parse(rawString)
+    // Replace only the date-part colons, leaving the time-part colons intact.
+    const normalized = rawString.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
 
-    if (isNaN(parsed)) {
-        // datetime could be in format "2022:10:29 20:39:00"
-        rawString = rawString.replace(':', '-')
-        rawString = rawString.replace(':', '-')
-    }
-
-    let parsed2 = Date.parse(rawString)
-    if (isNaN(parsed2))
+    if (isNaN(Date.parse(normalized)))
         return null
 
-    return rawString
+    return normalized
 }
 
 function extractDateTimeFromFilename(filename) {
-    // Try to extract datetime from filename
+    // Try to extract a YYYY-MM-DD date from the filename
     if (!filename)
         return null
 
-    let match
-    let year
-    let month
-    let day
-
-    // Regular expression to match the format PXL_YYYYMMDD_*
-    const pixelFormat = /^PXL_(\d{8})_.*/i;
-    // Regular expression to match the format VID_YYYYMMDD_*
-    const vidFormat = /^VID_(\d{8})_.*/i;
-    // Regular expression to match the format YYYY-MM-DD_*
-    const simpleFormat = /^(\d{4})-(\d{2})-(\d{2}).*/i;
-
-    match = filename.match(pixelFormat);
-    if (!match) {
-        match = filename.match(vidFormat);
-    }
-
-    if (match) {
-        year = match[1].slice(0, 4)
-        month = match[1].slice(4, 6)
-        day = match[1].slice(6, 9)
-        return `${year}-${month}-${day}`
-    }
-
-    if (!match) {
-        match = filename.match(simpleFormat);
-    }
-
-    if (match) {
-        year = match[1]
-        month = match[2]
-        day = match[3]
-        return `${year}-${month}-${day}`
+    for (const {regex, parts} of FILENAME_DATE_FORMATS) {
+        const match = filename.match(regex)
+        if (match) {
+            const [year, month, day] = parts(match)
+            return `${year}-${month}-${day}`
+        }
     }
 
     return null
 }
 
 function extractYearNumberStr(string) {
-    // get year from textual DateTime
+    // get year from textual DateTime (YYYY-MM-DD ...)
     return string.slice(0, 4)
 }
 
 function extractMonthNumberStr(string) {
-    // get month from textual DateTime
+    // get month from textual DateTime (YYYY-MM-DD ...)
     return string.slice(5, 7)
 }
 
 function extractDayNumberStr(string) {
-    // get day from textual DateTime
+    // get day from textual DateTime (YYYY-MM-DD ...)
     return string.slice(8, 10)
 }
 
-function getMonthNameByNumberEN(number) {
-    // Return month name by its number in english
-    return {
-        '01': 'january',
-        '02': 'february',
-        '03': 'march',
-        '04': 'april',
-        '05': 'may',
-        '06': 'june',
-        '07': 'july',
-        '08': 'august',
-        '09': 'september',
-        '10': 'october',
-        '11': 'november',
-        '12': 'december',
-    }[number] || '???'
-}
-
 function extractMonthEN(dt) {
-    // Extract month from EXIF tags as a string (english)
-    let monthName = getMonthNameByNumberEN(extractMonthNumberStr(dt))
-    let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
+    // Format month as english, e.g. "october 5"
+    const monthName = MONTHS_EN[extractMonthNumberStr(dt)] || '???'
+    const dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
     return `${monthName} ${dayNumber}`
 }
 
-function getMonthNameByNumberRU(number) {
-    // Return month name by its number in russian
-    return {
-        '01': 'января',
-        '02': 'февраля',
-        '03': 'марта',
-        '04': 'апреля',
-        '05': 'мая',
-        '06': 'июня',
-        '07': 'июля',
-        '08': 'августа',
-        '09': 'сентября',
-        '10': 'октября',
-        '11': 'ноября',
-        '12': 'декабря',
-    }[number] || '???'
-}
-
 function extractMonthRU(dt) {
-    // Extract month from EXIF tags as a string (russian)
-    let monthName = getMonthNameByNumberRU(extractMonthNumberStr(dt))
-    let dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
+    // Format month as russian, e.g. "5 октября"
+    const monthName = MONTHS_RU[extractMonthNumberStr(dt)] || '???'
+    const dayNumber = extractDayNumberStr(dt).replace(/^0+/, '')
     return `${dayNumber} ${monthName}`
-}
-
-function splitLines(text) {
-    // split string by line separators and return only non-empty
-    return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
 }
 
 function getFeatures() {
     // Read feature checkboxes and return their values
-    let features = {};
-    let scanName = document.getElementById(FEATURE_SCAN_NAME)
-    features["scan_name"] = scanName.checked
+    const features = {
+        scan_name: document.getElementById(FEATURE_SCAN_NAME).checked,
+    }
 
-    let exif = document.getElementById(FEATURE_EXIF_ID)
-
+    const exif = document.getElementById(FEATURE_EXIF_ID)
     if (!exif.checked)
         return features
 
-    features["extract_exif"] = true
+    features.extract_exif = true
 
-    let exifTimeBackoff = document.getElementById(FEATURE_EXIF_TIME_BACKOFF_ID)
-    if (!exifTimeBackoff.disabled)
-        features["exif_time_backoff"] = exifTimeBackoff.checked
-
-    let exifYear = document.getElementById(FEATURE_EXIF_YEAR_ID)
-    if (!exifYear.disabled)
-        features["exif_year"] = exifYear.checked
-
-    let exifMonthEn = document.getElementById(FEATURE_EXIF_MONTH_EN_ID)
-    if (!exifMonthEn.disabled)
-        features["exif_month_en"] = exifMonthEn.checked
-
-    let exifMonthRu = document.getElementById(FEATURE_EXIF_MONTH_RU_ID)
-    if (!exifMonthRu.disabled)
-        features["exif_month_ru"] = exifMonthRu.checked
+    const subFeatures = [
+        ['exif_time_backoff', FEATURE_EXIF_TIME_BACKOFF_ID],
+        ['exif_year', FEATURE_EXIF_YEAR_ID],
+        ['exif_month_en', FEATURE_EXIF_MONTH_EN_ID],
+        ['exif_month_ru', FEATURE_EXIF_MONTH_RU_ID],
+    ]
+    for (const [name, id] of subFeatures) {
+        const element = document.getElementById(id)
+        if (!element.disabled) {
+            features[name] = element.checked
+        }
+    }
 
     return features
 }
 
 function showNavButtons() {
-    // Make scrolling buttons visible
     document.getElementById(SCROLL_TOP_ID).style.display = "block"
     document.getElementById(SCROLL_BOTTOM_ID).style.display = "block"
 }
 
 function hideNavButtons() {
-    // Make scrolling buttons invisible
     document.getElementById(SCROLL_TOP_ID).style.display = "none"
     document.getElementById(SCROLL_BOTTOM_ID).style.display = "none"
 }
@@ -259,18 +204,16 @@ async function addNewFiles(source, parentUUid) {
     // Create placeholders for added files
     showNavButtons()
     refreshAllTags()
-    let media = document.getElementById(MEDIA_ID)
-    let features = getFeatures()
+    const media = document.getElementById(MEDIA_ID)
+    const features = getFeatures()
     CARDS.length = 0
     media.replaceChildren()
     let number = 1
-    for (let file of Object.values(source.files)) {
-        let tags = []
-        let exif
-        let dt
+    for (const file of source.files) {
+        const tags = []
+        let dt = null
 
         if (features.scan_name) {
-            // FIXME - customize possible variants of extraction
             dt = extractDateTimeFromFilename(file.name)
 
             if (dt) {
@@ -280,9 +223,7 @@ async function addNewFiles(source, parentUUid) {
         }
 
         if (features.extract_exif) {
-            await extractEXIFTags(file).then(function (result) {
-                exif = result
-            })
+            const exif = await extractEXIFTags(file)
             dt = extractDatetime(exif['DateTimeOriginal'])
 
             if (!dt && features.exif_time_backoff) {
@@ -301,7 +242,7 @@ async function addNewFiles(source, parentUUid) {
                 tags.push(extractMonthEN(dt))
             }
         }
-        let card = createFileCard(file, parentUUid, number, tags)
+        const card = createFileCard(file, parentUUid, number, tags)
         number += 1
         CARDS.push(card)
         console.log(`Added file ${file.name}`)
@@ -311,7 +252,7 @@ async function addNewFiles(source, parentUUid) {
 
 function createFileCard(file, parentUUID, number, tags) {
     // Create new card that stores file upload progress
-    let card = {
+    const card = {
         uuid: null,
         parentUuid: parentUUID,
         file: file,
@@ -322,64 +263,93 @@ function createFileCard(file, parentUUID, number, tags) {
         localPermissions: [],
         isFolded: false,
 
-        send: async function (thisCard) {
-            let promise = new Promise(resolve => {
+        send() {
+            return new Promise(resolve => {
                 const xhr = new XMLHttpRequest()
                 xhr.timeout = SEND_TIMEOUT
 
-                xhr.upload.addEventListener("loadstart", (event) => {
+                xhr.upload.addEventListener("loadstart", () => {
                     this.element.progress.value = 0
                     this.element.progress.max = 100
-                });
+                })
 
-                xhr.upload.addEventListener("progress", (event) => {
-                    let loaded = (event.loaded / event.total) * 100
-                    this.element.progress.value = loaded;
-                    this.element.progress.textContent = `Uploading (${loaded.toFixed(2)}%)…`;
-                });
+                xhr.upload.addEventListener("progress", event => {
+                    if (!event.lengthComputable)
+                        return
+                    const loaded = (event.loaded / event.total) * 100
+                    this.element.progress.value = loaded
+                    this.element.progress.textContent =
+                        `Uploading (${loaded.toFixed(2)}%)…`
+                })
 
-                xhr.upload.addEventListener("loaded", (event) => {
+                xhr.upload.addEventListener("load", () => {
                     this.element.progress.value = 100
                     this.element.progress.max = 100
-                });
+                })
 
-                xhr.onload = function (e) {
-                    resolve(xhr.response);
-                };
-                xhr.onerror = function () {
-                    resolve(undefined);
-                    thisCard.element.log.textContent = "Upload failed"
-                    console.error(`An error occurred during the XMLHttpRequest for ${thisCard.uuid}`)
-                };
+                xhr.addEventListener("load", () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(xhr.response)
+                    } else {
+                        this.element.log.textContent =
+                            `Upload failed (HTTP ${xhr.status})`
+                        console.error(
+                            `Upload of ${this.uuid} failed: HTTP ${xhr.status} ${xhr.statusText}`
+                        )
+                        resolve(undefined)
+                    }
+                })
 
-                const fileData = new FormData();
-                fileData.append("file", file);
+                xhr.addEventListener("error", () => {
+                    this.element.log.textContent = "Upload failed"
+                    console.error(
+                        `An error occurred during the XMLHttpRequest for ${this.uuid}`
+                    )
+                    resolve(undefined)
+                })
 
-                xhr.open("PUT", `${ITEMS_ENDPOINT}/${this.uuid}/upload`, true)
+                xhr.addEventListener("timeout", () => {
+                    this.element.log.textContent = "Upload timed out"
+                    console.error(`Upload of ${this.uuid} timed out`)
+                    resolve(undefined)
+                })
 
-                let features = getFeatures()
+                xhr.addEventListener("abort", () => {
+                    this.element.log.textContent = "Upload aborted"
+                    resolve(undefined)
+                })
+
+                const fileData = new FormData()
+                fileData.append("file", this.file)
+
+                xhr.open("PUT", `${ITEMS_ENDPOINT}/${this.uuid}/upload`)
+
+                const features = getFeatures()
                 for (const [key, value] of Object.entries(features)) {
-                    xhr.setRequestHeader(`X-Feature-${key.replaceAll('_', '-')}`, value)
+                    xhr.setRequestHeader(
+                        `X-Feature-${key.replaceAll('_', '-')}`, String(value)
+                    )
                 }
-                xhr.setRequestHeader('X-Feature-Last-Modified', this.file.lastModifiedDate.toISOString())
-                xhr.send(fileData);
-                return xhr
+                xhr.setRequestHeader(
+                    'X-Feature-Last-Modified',
+                    new Date(this.file.lastModified).toISOString(),
+                )
+                xhr.send(fileData)
             })
-            return await promise
         },
     }
 
-    card.element.tagsArea.addEventListener("change", function () {
+    card.element.tagsArea.addEventListener("change", () => {
         card.localTags = splitLines(card.element.tagsArea.value)
     })
 
-    card.element.permissionsArea.addEventListener("change", function () {
+    card.element.permissionsArea.addEventListener("change", () => {
         card.localPermissions = extractAllUUIDs(splitLines(
             card.element.permissionsArea.value
         ))
     })
 
-    card.element.fold.addEventListener("click", function () {
+    card.element.fold.addEventListener("click", () => {
         if (card.isFolded) {
             card.element.foldImg.src = "/static/ic_unfold_more_24px.svg"
             card.element.left.style.display = "flex"
@@ -394,30 +364,32 @@ function createFileCard(file, parentUUID, number, tags) {
         card.isFolded = !card.isFolded
     })
 
-    card.element.tagsInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            let textValue = card.element.tagsInput.value.trim()
-            card.localTags.push(textValue)
-            card.element.tagsArea.value += `${textValue}\n`
-            card.element.tagsInput.value = ""
-            refreshAllTags()
-        }
-        card.element.tagsInputDatalist.innerHTML = ""
-        for (let tag of getAllTags()) {
-            let newVariant = document.createElement('option')
+    const rebuildTagsDatalist = () => {
+        card.element.tagsInputDatalist.replaceChildren()
+        for (const tag of getAllTags()) {
+            const newVariant = document.createElement('option')
             newVariant.value = tag
             card.element.tagsInputDatalist.append(newVariant)
         }
+    }
+
+    card.element.tagsInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault()
+            const textValue = card.element.tagsInput.value.trim()
+            if (textValue) {
+                card.localTags.push(textValue)
+                card.element.tagsArea.value += `${textValue}\n`
+                card.element.tagsInput.value = ""
+                refreshAllTags()
+            }
+        }
+        rebuildTagsDatalist()
     })
 
-    card.element.tagsInput.addEventListener("click", function (e) {
-        if (card.element.tagsInputDatalist.innerHTML === "") {
-            for (let tag of getAllTags()) {
-                let newVariant = document.createElement('option')
-                newVariant.value = tag
-                card.element.tagsInputDatalist.append(newVariant)
-            }
+    card.element.tagsInput.addEventListener("click", () => {
+        if (card.element.tagsInputDatalist.childElementCount === 0) {
+            rebuildTagsDatalist()
         }
     })
 
@@ -435,29 +407,26 @@ class FileCardElement {
         this.div.classList.add("upload-element")
 
         this.foldLabel = document.createElement("h4")
-        this.foldLabel.innerHTML = file.name
+        this.foldLabel.textContent = file.name
         this.foldLabel.style.display = "none"
         this.div.append(this.foldLabel)
 
         // left side
-        this.left = document.createElement("div");
+        this.left = document.createElement("div")
         this.left.classList.add("upload-lines")
         this.div.append(this.left)
 
         if (isVideoFile(file)) {
             this.img = document.createElement("video")
-            this.img.src = URL.createObjectURL(file)
-            this.img.addEventListener("click", () => this.togglePreview())
-            this.left.append(this.img)
         } else {
             this.img = document.createElement("img")
-            this.img.src = URL.createObjectURL(file)
-            this.img.addEventListener("click", () => this.togglePreview())
-            this.left.append(this.img)
         }
+        this.img.src = URL.createObjectURL(file)
+        this.img.addEventListener("click", () => this.togglePreview())
+        this.left.append(this.img)
 
         // right side
-        this.right = document.createElement("div");
+        this.right = document.createElement("div")
         this.right.classList.add("upload-lines")
         this.div.append(this.right)
 
@@ -476,7 +445,7 @@ class FileCardElement {
         this.fold.append(this.foldImg)
 
         this.label = document.createElement("h4")
-        this.label.innerHTML = file.name
+        this.label.textContent = file.name
         this.right.append(this.label)
 
         this.progress = document.createElement("progress")
@@ -492,49 +461,51 @@ class FileCardElement {
         }
 
         this.tagsLabel = document.createElement("label")
-        this.tagsLabel.innerHTML = "Additional tags for this item (one tag per line):"
+        this.tagsLabel.append(
+            document.createTextNode(
+                "Additional tags for this item (one tag per line):"
+            )
+        )
         this.tagsInput = document.createElement("input")
         this.tagsInput.type = "text"
         this.tagsInput.placeholder = "Add tag here"
         this.tagsInput.autocomplete = "on"
         this.tagsInputDatalist = document.createElement("datalist")
         this.tagsInputDatalist.id = `upload-element-${number}-tags-list`
-        this.tagsInputDatalist.innerHTML = ""
-        this.tagsInput.setAttribute('list',`upload-element-${number}-tags-list`)
+        this.tagsInput.setAttribute('list', `upload-element-${number}-tags-list`)
         this.tagsInput.append(this.tagsInputDatalist)
         this.tagsArea = document.createElement("textarea")
         this.tagsArea.rows = 5
-        if (tags.length) {
-            this.tagsArea.innerHTML = tags.join("\n") + "\n"
-        } else {
-            this.tagsArea.innerHTML = ""
-        }
+        this.tagsArea.value = tags.length ? `${tags.join("\n")}\n` : ""
         this.tagsLabel.append(this.tagsArea)
         this.right.append(this.tagsLabel)
         this.right.append(this.tagsInput)
 
         this.permissionsLabel = document.createElement("label")
-        this.permissionsLabel.innerHTML = "Additional permissions for this item (one user per line):"
+        this.permissionsLabel.append(
+            document.createTextNode(
+                "Additional permissions for this item (one user per line):"
+            )
+        )
         this.permissionsArea = document.createElement("textarea")
         this.permissionsArea.rows = 5
+        this.permissionsArea.value = ""
         this.permissionsLabel.append(this.permissionsArea)
         this.right.append(this.permissionsLabel)
 
-        this.log = document.createElement("div");
+        this.log = document.createElement("div")
         this.div.append(this.log)
 
         this.delete = document.createElement("a")
-        this.delete.innerHTML = "Delete"
+        this.delete.textContent = "Delete"
         this.delete.classList.add("button")
-        this.delete.addEventListener("click", function () {
+        this.delete.addEventListener("click", () => {
             if (confirm(`Are you sure you want to remove ${file.name} from set?`)) {
-                for (let i = CARDS.length - 1; i >= 0; i--) {
-                    if (CARDS[i].number === number) {
-                        CARDS.splice(i, 1);
-                        break
-                    }
+                const index = CARDS.findIndex(c => c.number === number)
+                if (index !== -1) {
+                    CARDS.splice(index, 1)
                 }
-                document.getElementById(`upload-element-${number}`).remove();
+                this.div.remove()
             }
         })
         this.left.append(this.delete)
@@ -562,24 +533,24 @@ class FileCardElement {
     }
 }
 
-async function createItems() {
+function createItems() {
     // Bulk item creation
-    let ownerUUID = document.getElementById(OWNER_UUID_ID).value
-    let parentUUID = document.getElementById(PARENT_UUID_ID).value
-    let globalTags = splitLines(document.getElementById(GLOBAL_TAGS_ID).value)
-    let globalPermissions = extractAllUUIDs(
+    const ownerUUID = document.getElementById(OWNER_UUID_ID).value
+    const parentUUID = document.getElementById(PARENT_UUID_ID).value
+    const globalTags = splitLines(document.getElementById(GLOBAL_TAGS_ID).value)
+    const globalPermissions = extractAllUUIDs(
         splitLines(document.getElementById(GLOBAL_PERMISSIONS_ID).value)
     )
 
-    let arrayForSending = []
-    for (let card of CARDS) {
-        let localPermissions = []
+    const arrayForSending = []
+    for (const card of CARDS) {
+        const localPermissions = []
         for (const uuid of [...globalPermissions, ...card.localPermissions]) {
             localPermissions.push({uuid: uuid, name: ""})
         }
 
         let name = ""
-        if (card.element.nameInput !== undefined){
+        if (card.element.nameInput !== undefined) {
             name = card.element.nameInput.value
         }
 
@@ -594,47 +565,56 @@ async function createItems() {
         })
     }
 
-    let promise = new Promise(resolve => {
+    return new Promise(resolve => {
         const xhr = new XMLHttpRequest()
         xhr.timeout = SEND_TIMEOUT
-        xhr.responseType = "json";
+        xhr.responseType = "json"
 
-        xhr.onload = function (e) {
-            resolve(xhr.response);
-            for (let i = 0; i < xhr.response["items"].length; i++) {
-                CARDS[i].uuid = xhr.response["items"][i]["uuid"]
+        xhr.addEventListener("load", () => {
+            if (xhr.status < 200 || xhr.status >= 300) {
+                console.error(
+                    `Failed to create items: HTTP ${xhr.status} ${xhr.statusText}`,
+                    xhr.response,
+                )
+                resolve(undefined)
+                return
             }
-        };
+            const items = xhr.response?.items ?? []
+            for (let i = 0; i < items.length && i < CARDS.length; i++) {
+                CARDS[i].uuid = items[i].uuid
+            }
+            resolve(xhr.response)
+        })
 
-        xhr.onerror = function () {
-            resolve(undefined);
-            console.error("Failed to create items")
-        };
+        xhr.addEventListener("error", () => {
+            console.error("Failed to create items: network error")
+            resolve(undefined)
+        })
 
-        xhr.open("POST", `${ITEMS_ENDPOINT}/bulk`, true)
-        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.addEventListener("timeout", () => {
+            console.error("Failed to create items: timeout")
+            resolve(undefined)
+        })
+
+        xhr.open("POST", `${ITEMS_ENDPOINT}/bulk`)
+        xhr.setRequestHeader("Content-Type", "application/json")
         xhr.send(JSON.stringify(arrayForSending))
-        return xhr
     })
-    return await promise
 }
 
 async function uploadAllFiles() {
     // Perform uploading
-    let globalProgress = document.getElementById(GLOBAL_PROGRESS_ID)
-    let parentUUID = document.getElementById(PARENT_UUID_ID).value
+    const globalProgress = document.getElementById(GLOBAL_PROGRESS_ID)
+    const parentUUID = document.getElementById(PARENT_UUID_ID).value
 
-    let step = 0
+    const step = CARDS.length ? 100 / CARDS.length : 0
     let progress = 0
-    if (CARDS.length) {
-        step = 100 / CARDS.length
-    }
 
     await createItems()
 
-    for (let card of CARDS) {
+    for (const card of CARDS) {
         if (card.uuid) {
-            await card.send(card)
+            await card.send()
             progress += step
             globalProgress.value = progress
         } else {
@@ -644,17 +624,17 @@ async function uploadAllFiles() {
 
     globalProgress.value = 100
 
-    for (let card of CARDS) {
+    for (const card of CARDS) {
         card.element.disable()
     }
     CARDS.length = 0
-    document.getElementById("upload-input").value = null
+    document.getElementById(UPLOAD_INPUT_ID).value = null
     if (document.getElementById(AFTER_UPLOAD_ID).value === 'parent') {
         relocateWithAim(`/browse/${parentUUID}`)
     }
 }
 
-function isVideoFile(file){
+function isVideoFile(file) {
     // Return true if file has video content
     return file.name.endsWith('.mp4') || file.name.endsWith('.webm')
 }

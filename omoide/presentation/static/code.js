@@ -216,7 +216,7 @@ function convertDatetimeToIsoString(datetime) {
 
 function splitLines(text) {
     // split string by line separators and return only non-empty
-    return text.replace(/\r\n/, '\n').split('\n').filter(n => n)
+    return text.replace(/\r\n/g, '\n').split('\n').filter(n => n)
 }
 
 function arraysAreIdentical(arr1, arr2) {
