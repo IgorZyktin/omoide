@@ -1,25 +1,20 @@
 function gatherItemParameters(owner_uuid) {
     // gather information for item creation
-    let raw_uuid = $('#parent_uuid').val()
-    let parent_uuid
+    const rawUUID = document.getElementById('parent_uuid').value
+    const parentUUID = isUUID(rawUUID) ? rawUUID : null
 
-    if (isUUID(raw_uuid)) {
-        parent_uuid = raw_uuid
-    } else {
-        parent_uuid = null
-    }
-
-    let permissions = []
-    for (const each of $('#item_permissions').val().matchAll(UUID_REGEXP)){
-        permissions.push({uuid: each[0], name: ''})
+    const permissionsText = document.getElementById('item_permissions').value
+    const permissions = []
+    for (const match of permissionsText.matchAll(UUID_REGEXP)) {
+        permissions.push({uuid: match[0], name: ''})
     }
 
     return {
         owner_uuid: owner_uuid,
-        parent_uuid: parent_uuid,
-        is_collection: $('#item_is_collection').is(':checked'),
-        name: $('#item_name').val().trim(),
-        tags: splitLines($('#item_tags').val()),
+        parent_uuid: parentUUID,
+        is_collection: document.getElementById('item_is_collection').checked,
+        name: document.getElementById('item_name').value.trim(),
+        tags: splitLines(document.getElementById('item_tags').value),
         permissions: permissions,
     }
 }
@@ -43,120 +38,131 @@ function describeFail(response, alertsElementId) {
 
 async function createItem(button, endpoint, parameters) {
     // send command for item creation
-    $.ajax({
-        type: 'POST',
-        url: endpoint,
-        contentType: 'application/json',
-        data: JSON.stringify(parameters),
-        beforeSend: function () {
-            $(button).addClass('button-disabled')
-        },
-        success: function (response) {
-            let action = $('#action_after_creation').val()
-            let uuid = response['item']['uuid']
-            if (action === 'upload') {
-                relocateWithAim(`/upload/${uuid}`)
-            } else if (action === 'nothing') {
-                makeAnnounce(`Created ${uuid}`)
-            } else if (parameters['is_collection']) {
-                relocateWithAim(`/browse/${uuid}`)
-            } else {
-                relocateWithAim(`/preview/${uuid}`)
-            }
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
-        },
-        complete: function () {
-            $(button).removeClass('button-disabled')
-        }
-    })
-}
-
-
-async function deleteItem(button, uuid, relocate=true) {
-    // send command for item deletion
-    let searchParams = new URLSearchParams(window.location.search)
-
-    $.ajax({
-        type: 'DELETE',
-        url: `${ITEMS_ENDPOINT}/${uuid}`,
-        contentType: 'application/json',
-        beforeSend: function () {
-            $(button).addClass('button-disabled')
-        },
-        success: function (response) {
-            if (relocate){
-                let switch_to = response['switch_to']
-                if (switch_to.is_collection){
-                    relocateWithAim(`/browse/${switch_to.uuid}` + '?' + searchParams.toString())
-                } else {
-                    relocateWithAim(`/preview/${switch_to.uuid}` + '?' + searchParams.toString())
-                }
-            }
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            describeFail(XMLHttpRequest.responseJSON)
-        },
-        complete: function () {
-            $(button).removeClass('button-disabled')
-        }
-    })
-}
-
-async function request(endpoint, payload, callback) {
-    // made HTTP POST request
+    button.classList.add('button-disabled')
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(parameters),
+        })
 
-        const result = await response.json()
-        if (response.status === 200 || response.status === 201) {
-            callback(response.headers, result)
+        const data = await response.json().catch(() => undefined)
+
+        if (!response.ok) {
+            describeFail(data)
+            return
+        }
+
+        const action = document.getElementById('action_after_creation').value
+        const uuid = data['item']['uuid']
+        if (action === 'upload') {
+            relocateWithAim(`/upload/${uuid}`)
+        } else if (action === 'nothing') {
+            makeAnnounce(`Created ${uuid}`)
+        } else if (parameters['is_collection']) {
+            relocateWithAim(`/browse/${uuid}`)
         } else {
-            for (const problem of result['detail']) {
-                console.log(`Problem: ${problem}`)
-                makeAlert(problem.msg)
+            relocateWithAim(`/preview/${uuid}`)
+        }
+    } catch (err) {
+        console.error('Failed to create item:', err)
+        describeFail(undefined)
+    } finally {
+        button.classList.remove('button-disabled')
+    }
+}
+
+
+async function deleteItem(button, uuid, relocate = true) {
+    // send command for item deletion
+    const searchParams = new URLSearchParams(window.location.search)
+
+    button.classList.add('button-disabled')
+    try {
+        const response = await fetch(`${ITEMS_ENDPOINT}/${uuid}`, {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+        })
+
+        const data = await response.json().catch(() => undefined)
+
+        if (!response.ok) {
+            describeFail(data)
+            return
+        }
+
+        if (relocate) {
+            const switchTo = data['switch_to']
+            if (switchTo.is_collection) {
+                relocateWithAim(`/browse/${switchTo.uuid}` + '?' + searchParams.toString())
+            } else {
+                relocateWithAim(`/preview/${switchTo.uuid}` + '?' + searchParams.toString())
             }
         }
     } catch (err) {
-        throw err
+        console.error('Failed to delete item:', err)
+        describeFail(undefined)
+    } finally {
+        button.classList.remove('button-disabled')
+    }
+}
+
+async function request(endpoint, payload, callback) {
+    // make HTTP POST request
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+
+    const result = await response.json()
+    if (response.status === 200 || response.status === 201) {
+        callback(response.headers, result)
+    } else {
+        for (const problem of result['detail']) {
+            console.log(`Problem: ${problem}`)
+            makeAlert(problem.msg)
+        }
     }
 }
 
 function isUUID(uuid) {
-    let s = "" + uuid;
-    s = s.match(UUID_REGEXP);
-    return s !== null;
+    const text = '' + uuid
+    return text.match(UUID_REGEXP) !== null
 }
 
-function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
+async function tryLoadingThumbnail(uuid, thumbnailElement, callback) {
     // try to load thumbnail for the item
     if (!isUUID(uuid)) {
-        thumbnailElement.innerHTML = ''
+        thumbnailElement.replaceChildren()
         renderThumbnailStatic(thumbnailElement, EMPTY_FILE)
         return
     }
 
-    thumbnailElement.innerHTML = ''
+    thumbnailElement.replaceChildren()
 
-    $.ajax({
-        type: 'GET',
-        url: `${ITEMS_ENDPOINT}/${uuid}`,
-        contentType: 'application/json',
-        success: function (response) {
-            if (response['item'] !== undefined) {
-                renderThumbnailDynamic(thumbnailElement, response['item'])
-            }
+    try {
+        const response = await fetch(`${ITEMS_ENDPOINT}/${uuid}`, {
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+        })
 
-            if (callback !== undefined)
-                callback(response)
-        },
-    })
+        if (!response.ok) {
+            return
+        }
+
+        const data = await response.json()
+        if (data['item'] !== undefined) {
+            renderThumbnailDynamic(thumbnailElement, data['item'])
+        }
+
+        if (callback !== undefined) {
+            callback(data)
+        }
+    } catch (err) {
+        console.error(`Failed to load thumbnail for ${uuid}:`, err)
+    }
 }

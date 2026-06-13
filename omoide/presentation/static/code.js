@@ -51,13 +51,11 @@ function makeSmallNotification(text, element, css_class) {
     alert.innerHTML = `
         <div class="small-notification ${css_class}">
             <span class="closebtn"
-                  onclick="$(this.parentElement).remove()">&times;</span>
+                  onclick="this.parentElement.remove()">&times;</span>
             ${text}
         </div>`
 
-    setInterval(() => {
-        $(alert).remove()
-    }, 4000)
+    setTimeout(() => alert.remove(), 4000)
 
     element.appendChild(alert)
 }
@@ -167,34 +165,40 @@ function relocateWithAim(url, parameters) {
 
 function renderThumbnailDynamic(container, item) {
     // render single thumbnail during page edit (collection or singular)
-    let envelope = $('<div>', {class: 'envelope'})
+    const envelope = document.createElement('div')
+    envelope.classList.add('envelope')
     if (item.is_collection) {
-        envelope.addClass('env-collection')
+        envelope.classList.add('env-collection')
     }
-    envelope.appendTo(container)
+    container.append(envelope)
 
-    let link = $('<a>', {href: getPreviewUrl(item)})
-    link.appendTo(envelope)
+    const link = document.createElement('a')
+    link.href = getPreviewUrl(item)
+    envelope.append(link)
 
     if (item.is_collection && item.name) {
-        $('<p>', {text: item.name}).appendTo(link)
+        const caption = document.createElement('p')
+        caption.textContent = item.name
+        link.append(caption)
     }
 
-    $('<img>', {
-        src: getThumbnailContentUrl(item),
-        alt: 'Thumbnail for ' + (item.name ? item.name : item.uuid)
-    }).appendTo(link)
+    const img = document.createElement('img')
+    img.src = getThumbnailContentUrl(item)
+    img.alt = 'Thumbnail for ' + (item.name ? item.name : item.uuid)
+    link.append(img)
 }
 
 function renderThumbnailStatic(container, path) {
     // render single thumbnail during page edit (collection or singular)
-    let envelope = $('<div>', {class: 'envelope'})
-    envelope.appendTo(container)
+    const envelope = document.createElement('div')
+    envelope.classList.add('envelope')
+    container.append(envelope)
 
-    $('<img>', {
-        src: path,
-        alt: 'Thumbnail'
-    }).css('maxWidth', '384px').appendTo(envelope)
+    const img = document.createElement('img')
+    img.src = path
+    img.alt = 'Thumbnail'
+    img.style.maxWidth = '384px'
+    envelope.append(img)
 }
 
 function convertDatetimeToIsoString(datetime) {
@@ -300,19 +304,21 @@ function removeActive(element) {
 
 async function getAutocompletionVariants(tag, endpoint) {
     // Load possible autocompletion variants
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: `${endpoint}?tag=${tag.trim()}`,
-            type: 'GET',
-            timeout: 10000,
-            success: (response) => {
-                resolve(response['variants']);
-            },
-            error: (response) => {
-                reject(response);
-            }
-        })
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+    try {
+        const response = await fetch(
+            `${endpoint}?tag=${encodeURIComponent(tag.trim())}`,
+            {method: 'GET', signal: controller.signal},
+        )
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`)
+        }
+        const data = await response.json()
+        return data['variants']
+    } finally {
+        clearTimeout(timeoutId)
+    }
 }
 
 function strongByTemplate(text, template) {
@@ -400,7 +406,8 @@ function activateFloatingHeader() {
     let header = document.getElementById('header')
 
     if (header) {
-        $(header).addClass('header-floating').removeClass('header-static');
+        header.classList.add('header-floating')
+        header.classList.remove('header-static')
     }
 }
 
