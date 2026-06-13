@@ -1,5 +1,6 @@
 """Sqlalchemy database."""
 
+from collections.abc import AsyncIterable
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -40,16 +41,16 @@ class SqlalchemyDatabase(AbsDatabase[AsyncConnection]):
         async with self._engine.begin() as connection:
             yield connection
 
-    async def save_large_object(self, content: bytes) -> int:
-        """Save large object."""
+    async def save_large_object(self, chunks: AsyncIterable[bytes]) -> int:
+        """Stream ``chunks`` into a large object and return its OID."""
         async with self._session_maker() as session:
             lob_oid = await PGLargeObject.create_large_object(session)
             pgl = PGLargeObject(session, lob_oid, mode='w')
             pgl.writes = 0
 
-            for i in range(0, len(content), pgl.chunk_size):
-                chunk = content[i : i + pgl.chunk_size]
-                await pgl.write(chunk)
+            async for chunk in chunks:
+                if chunk:
+                    await pgl.write(chunk)
 
             await session.commit()
 

@@ -1,6 +1,7 @@
 """Abstract database."""
 
 import abc
+from collections.abc import AsyncIterable
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Generic
@@ -26,5 +27,5 @@ class AbsDatabase(abc.ABC, Generic[ConnectionT]):
         """Start transaction."""
 
     @abc.abstractmethod
-    async def save_large_object(self, content: bytes) -> int:
-        """Save large object."""
+    async def save_large_object(self, chunks: AsyncIterable[bytes]) -> int:
+        """Stream ``chunks`` into a large object and return its OID."""

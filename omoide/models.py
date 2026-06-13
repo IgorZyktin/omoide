@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 import enum
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 from typing import NamedTuple
@@ -16,6 +17,9 @@ from uuid import UUID
 import python_utilz as pu
 
 from omoide import const
+
+if TYPE_CHECKING:
+    from omoide.object_storage.interfaces.abs_upload_staging import AbsStagedFile
 
 
 class OmoideModel(abc.ABC):
@@ -511,9 +515,14 @@ class Features:
 
 @dataclass
 class NewFile:
-    """Raw file uploaded by user."""
+    """Raw file uploaded by user.
 
-    content: bytes = b''
+    ``content`` is a handle into a staging area (see
+    ``omoide.object_storage.interfaces.AbsStagedFile``). The handle is
+    valid only inside the staging context manager that produced it.
+    """
+
+    content: 'AbsStagedFile'
     content_type: str = ''
     filename: str = ''
     ext: str = ''

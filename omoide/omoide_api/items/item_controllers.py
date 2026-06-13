@@ -1,5 +1,6 @@
 """Item related API operations."""
 
+from collections.abc import AsyncIterator
 from typing import Annotated
 from typing import Any
 from typing import Literal
@@ -13,6 +14,7 @@ from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
 
+from omoide import const
 from omoide import dependencies as dep
 from omoide import exceptions
 from omoide import limits
@@ -359,6 +361,7 @@ async def api_upload_item(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
+    upload_staging: object_interfaces.AbsUploadStaging = Depends(dep.get_upload_staging),
 ) -> dict[str, Any]:
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
@@ -370,19 +373,24 @@ async def api_upload_item(  # noqa: PLR0913
     use_case = item_use_cases.UploadItemUseCase(database, items_repo, meta_repo, misc_repo)
     features = item_api_models.extract_features(request)
 
-    # TODO - read in chunks, not whole file at once
-    content = await file.read()
+    async def _chunks() -> AsyncIterator[bytes]:
+        while True:
+            chunk = await file.read(const.UPLOAD_CHUNK_SIZE)
+            if not chunk:
+                break
+            yield chunk
 
-    await use_case.execute(
-        user=user,
-        item_uuid=item_uuid,
-        file=models.NewFile(
-            content=content,
-            content_type=str(file.content_type),
-            filename=str(file.filename),
-            ext=ext,
-            features=features,
-        ),
-    )
+    async with upload_staging.stage(_chunks()) as staged:
+        await use_case.execute(
+            user=user,
+            item_uuid=item_uuid,
+            file=models.NewFile(
+                content=staged,
+                content_type=str(file.content_type),
+                filename=str(file.filename),
+                ext=ext,
+                features=features,
+            ),
+        )
 
     return {'result': 'enqueued content adding', 'item_uuid': str(item_uuid)}

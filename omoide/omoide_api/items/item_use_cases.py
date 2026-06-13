@@ -753,14 +753,15 @@ class UploadItemUseCase(BaseItemUseCase):
             ensure.owner(user, item, "You cannot upload media to someone else's item")
             now = pu.now()
 
-            oid = None
-            content = file.content
-            if len(content) >= const.LARGE_OBJECT_SIZE:
+            oid: int | None = None
+            if file.content.size >= const.LARGE_OBJECT_SIZE:
                 save_content = b''
-                oid = await self.database.save_large_object(content)
+                oid = await self.database.save_large_object(
+                    file.content.iter_chunks(const.UPLOAD_CHUNK_SIZE)
+                )
                 LOG.info('Created large object {} for item {}', oid, item.uuid)
             else:
-                save_content = file.content
+                save_content = await file.content.read_all()
 
             operation_id = await self.misc.save_input_media(
                 conn=conn,
