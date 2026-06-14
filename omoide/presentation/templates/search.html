@@ -13,27 +13,32 @@
     <div class="envelope-container"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let container = document.querySelector('.envelope-container')
-            let endpoint = '{{ endpoint }}'
-            let total_endpoint = '{{ total_endpoint }}'
-            let scroller = new Scroller(container, endpoint)
-            let callback = function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+            const container = document.querySelector('.envelope-container')
+            const endpoint = '{{ endpoint }}'
+            const totalEndpoint = '{{ total_endpoint }}'
+            const scroller = new Scroller(container, endpoint)
+            const callback = function () {
                 scroller.trigger()
             }
 
-            let searchParams = new URLSearchParams(window.location.search)
-            $.ajax({
-                url: total_endpoint + '?' + searchParams.toString(),
-                contentType: 'application/json',
-            }).done(function (response) {
-                let total = Number(response['total']).toLocaleString('RU-ru')
-                let duration = response['duration'].toFixed(3)
-                $('#search_total').text(`Got ${total} results in ${duration} sec.`)
-            }).fail(function (response) {
-                let text = JSON.stringify(response)
-                console.log(`Request to ${this.endpoint} returned response: ${text}`)
-            });
+            const searchParams = new URLSearchParams(window.location.search)
+            const totalUrl = totalEndpoint + '?' + searchParams.toString()
+            try {
+                const response = await fetch(totalUrl, {
+                    headers: {'Accept': 'application/json'},
+                })
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`)
+                }
+                const data = await response.json()
+                const total = Number(data['total']).toLocaleString('RU-ru')
+                const duration = data['duration'].toFixed(3)
+                document.getElementById('search_total').textContent =
+                    `Got ${total} results in ${duration} sec.`
+            } catch (err) {
+                console.log(`Request to ${totalUrl} failed: ${err}`)
+            }
 
             window.addEventListener('scroll', callback)
             scroller.intervalId = setInterval(callback, SCROLLER_INTERVAL)

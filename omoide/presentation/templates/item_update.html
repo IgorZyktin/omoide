@@ -218,14 +218,14 @@
         document.addEventListener('DOMContentLoaded', function () {
             tryLoadingThumbnail(
                 '{{ item.parent_uuid or '' }}',
-                $('#thumbnail_parent')
+                document.getElementById('thumbnail_parent')
             )
 
-            let origin = $('#thumbnail_origin')
+            const origin = document.getElementById('thumbnail_origin')
 
-            origin.on('input', function () {
+            origin.addEventListener('input', function () {
                 alterModelTextField(this, 'copied_image_from')
-                tryLoadingThumbnail($(this).val(), document.getElementById('thumbnail'))
+                tryLoadingThumbnail(this.value, document.getElementById('thumbnail'))
             });
             tryLoadingThumbnail('{{ item.uuid }}', document.getElementById('thumbnail'))
         });

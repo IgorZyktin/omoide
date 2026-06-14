@@ -28,11 +28,11 @@
     </div>
 
     <script>
-        $('#delete_item_button').click(function () {
-            deleteItem(this, '{{ item.uuid }}')
-        });
-
         document.addEventListener('DOMContentLoaded', function () {
+            const button = document.getElementById('delete_item_button')
+            button.addEventListener('click', function () {
+                deleteItem(button, '{{ item.uuid }}')
+            })
             tryLoadingThumbnail('{{ item.uuid }}', document.getElementById('thumbnail'))
         });
     </script>
