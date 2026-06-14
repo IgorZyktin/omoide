@@ -294,7 +294,7 @@ def insert_input_media(engine: Engine):
 @pytest.fixture
 def large_payload() -> bytes:
     """Return a payload that exceeds ``LARGE_OBJECT_SIZE``."""
-    return b'A' * (const.LARGE_OBJECT_SIZE + 1)
+    return b'A' * (const.MEGABYTE + 1)
 
 
 class FakeMetricsCollector:

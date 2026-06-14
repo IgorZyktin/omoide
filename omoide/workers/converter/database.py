@@ -4,7 +4,6 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 
-from omoide import const
 from omoide import models
 from omoide.database import db_models
 from omoide.workers.common.database import PostgreSQLDatabase
@@ -78,13 +77,9 @@ class ConverterPostgreSQLDatabase(PostgreSQLDatabase):
         self, model: models.InputMedia, media_type: str
     ) -> None:
         """Save data to storage."""
-        content = model.content
-        if len(content) >= const.LARGE_OBJECT_SIZE:
-            oid = self.save_large_object(model.content)
-            model.extras['oid'] = oid
-            content = b''
-        else:
-            model.extras['oid'] = None
+        oid = self.save_large_object(model.content)
+        model.extras['oid'] = oid
+        content = b''
 
         stmt = sa.insert(db_models.QueueOutputMedia).values(
             user_uuid=model.user_uuid,
