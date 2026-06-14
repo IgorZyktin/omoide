@@ -361,7 +361,7 @@ async def api_upload_item(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-    upload_staging: object_interfaces.AbsUploadStaging = Depends(dep.get_upload_staging),
+    content_storage: object_interfaces.AbsContentStorage = Depends(dep.get_content_storage),
 ) -> dict[str, Any]:
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
@@ -370,7 +370,9 @@ async def api_upload_item(  # noqa: PLR0913
         msg = f'Only support extensions {extensions}, got {ext!r}'
         raise exceptions.InvalidInputError(msg)
 
-    use_case = item_use_cases.UploadItemUseCase(database, items_repo, meta_repo, misc_repo)
+    use_case = item_use_cases.UploadItemUseCase(
+        database, items_repo, meta_repo, misc_repo, content_storage
+    )
     features = item_api_models.extract_features(request)
 
     async def _chunks() -> AsyncIterator[bytes]:
@@ -380,17 +382,16 @@ async def api_upload_item(  # noqa: PLR0913
                 break
             yield chunk
 
-    async with upload_staging.stage(_chunks()) as staged:
-        await use_case.execute(
-            user=user,
-            item_uuid=item_uuid,
-            file=models.NewFile(
-                content=staged,
-                content_type=str(file.content_type),
-                filename=str(file.filename),
-                ext=ext,
-                features=features,
-            ),
-        )
+    await use_case.execute(
+        user=user,
+        item_uuid=item_uuid,
+        file=models.NewFile(
+            content_type=str(file.content_type),
+            filename=str(file.filename),
+            ext=ext,
+            features=features,
+        ),
+        chunks=_chunks(),
+    )
 
     return {'result': 'enqueued content adding', 'item_uuid': str(item_uuid)}

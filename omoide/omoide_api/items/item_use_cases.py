@@ -1,5 +1,6 @@
 """Use cases for Item-related operations."""
 
+from collections.abc import AsyncIterable
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -731,6 +732,7 @@ class UploadItemUseCase(BaseItemUseCase):
         items: db_interfaces.AbsItemsRepo,
         meta: db_interfaces.AbsMetaRepo,
         misc: db_interfaces.AbsMiscRepo,
+        storage: object_interfaces.AbsContentStorage,
     ) -> None:
         """Initialize instance."""
         super().__init__()
@@ -738,30 +740,32 @@ class UploadItemUseCase(BaseItemUseCase):
         self.items = items
         self.meta = meta
         self.misc = misc
+        self.storage = storage
 
     async def execute(
         self,
         user: models.User,
         item_uuid: UUID,
         file: models.NewFile,
+        chunks: AsyncIterable[bytes],
     ) -> int | None:
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to upload items')
 
+        # Pre-flight ownership check before the HTTP body is consumed.
+        # Failing here avoids streaming the payload only to reject it.
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot upload media to someone else's item")
-            now = pu.now()
 
-            oid: int | None = None
-            if file.content.size >= const.LARGE_OBJECT_SIZE:
-                save_content = b''
-                oid = await self.database.save_large_object(
-                    file.content.iter_chunks(const.UPLOAD_CHUNK_SIZE)
-                )
-                LOG.info('Created large object {} for item {}', oid, item.uuid)
-            else:
-                save_content = await file.content.read_all()
+        # Stream the upload into long-term storage with no DB transaction
+        # held; the storage commits on its own session.
+        reference = await self.storage.save(chunks)
+        LOG.info('Saved upload for item {} as {}', item.uuid, reference)
+
+        # Write all queue/metadata side effects in one short transaction.
+        async with self.database.transaction() as conn:
+            now = pu.now()
 
             operation_id = await self.misc.save_input_media(
                 conn=conn,
@@ -772,9 +776,9 @@ class UploadItemUseCase(BaseItemUseCase):
                     created_at=now,
                     ext='jpg' if file.ext == 'jpeg' else file.ext,
                     content_type=file.content_type,
-                    extras={'extract_exif': file.features.extract_exif, 'oid': oid},
+                    extras={'extract_exif': file.features.extract_exif, **reference},
                     error=None,
-                    content=save_content,
+                    content=b'',
                 ),
             )
 
@@ -795,9 +799,9 @@ class UploadItemUseCase(BaseItemUseCase):
                     parent.preview_ext = 'tmp'
                     parent.thumbnail_ext = 'tmp'
 
-                    # Reuse the payload saved for the child: same bytes / same large
-                    # object, so we don't persist them twice. The converter only deletes
-                    # the OID when no other queue entry still references it.
+                    # Reuse the same long-term reference for the parent thumbnail.
+                    # The converter only deletes the OID when no other queue
+                    # entry still references it.
                     await self.misc.save_input_media(
                         conn=conn,
                         media=models.InputMedia(
@@ -811,10 +815,10 @@ class UploadItemUseCase(BaseItemUseCase):
                                 'extract_exif': file.features.extract_exif,
                                 'skip_content': True,
                                 'skip_preview': True,
-                                'oid': oid,
+                                **reference,
                             },
                             error=None,
-                            content=save_content,
+                            content=b'',
                         ),
                     )
 

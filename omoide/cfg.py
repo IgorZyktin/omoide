@@ -2,13 +2,10 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-import tempfile
 from typing import Annotated
 
 import nano_settings as ns
 import ujson
-
-_DEFAULT_UPLOAD_STAGING_FOLDER = Path(tempfile.gettempdir()) / 'omoide_uploads'
 
 
 @dataclass
@@ -28,7 +25,6 @@ class Config(ns.BaseConfig):
     data_folder: Path
     static_folder: Path = Path('omoide/presentation/static')
     templates_folder: Path = Path('omoide/presentation/templates')
-    upload_staging_folder: Path = _DEFAULT_UPLOAD_STAGING_FOLDER
     env: str = 'dev'
     host: str = '0.0.0.0'
     port: int = 8080

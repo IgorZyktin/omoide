@@ -27,7 +27,9 @@ from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.web_locator import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.file_server import FileObjectStorageServer
-from omoide.object_storage.implementations.local_disk_upload_staging import LocalDiskUploadStaging
+from omoide.object_storage.implementations.pg_large_object_content_storage import (
+    PgLargeObjectContentStorage,
+)
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import web
 
@@ -104,15 +106,16 @@ def get_object_storage(
 
 
 @functools.cache
-def get_upload_staging() -> object_interfaces.AbsUploadStaging:
-    """Get upload-staging instance.
+def get_content_storage(
+    database: Annotated[impl_sqlalchemy.SqlalchemyDatabase, Depends(get_database)],
+) -> object_interfaces.AbsContentStorage:
+    """Get long-term content storage.
 
     Swap this factory's return value to switch the backend (e.g. an S3
     implementation) — the controller / use case only depend on the
-    ``AbsUploadStaging`` interface.
+    ``AbsContentStorage`` interface.
     """
-    config = get_config()
-    return LocalDiskUploadStaging(folder=config.upload_staging_folder)
+    return PgLargeObjectContentStorage(database=database)
 
 
 def get_users_repo() -> db_interfaces.AbsUsersRepo:
