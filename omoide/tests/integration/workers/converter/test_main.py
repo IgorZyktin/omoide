@@ -546,19 +546,23 @@ class TestOutputDimensions:
         user_uuid, item_uuid = user_and_item
         # 2000 px on the long side — large enough to be downscaled for both
         # preview (1024) and thumbnail (384).
+        payload = _make_jpeg(size=(2000, 1000))
+        oid = db.save_large_object(payload)
         insert_input_media(
             user_uuid=user_uuid,
             item_uuid=item_uuid,
-            content=_make_jpeg(size=(2000, 1000)),
             content_type='image/jpeg',
+            oid=oid,
         )
 
         converter_main.do_work(config, db, metrics_collector)
 
         outputs = _outputs(engine)
-        with Image.open(BytesIO(outputs['preview'].content)) as img:
+        preview_content = db.get_large_object(outputs['preview'].extras['oid'])
+        with Image.open(BytesIO(preview_content)) as img:
             preview_size = img.size
-        with Image.open(BytesIO(outputs['thumbnail'].content)) as img:
+        thumbnail_content = db.get_large_object(outputs['thumbnail'].extras['oid'])
+        with Image.open(BytesIO(thumbnail_content)) as img:
             thumb_size = img.size
         assert max(preview_size) <= const.PREVIEW_SIZE
         assert max(thumb_size) <= const.THUMBNAIL_SIZE
@@ -587,9 +591,11 @@ class TestOutputDimensions:
         converter_main.do_work(config, db, metrics_collector)
 
         outputs = _outputs(engine)
-        with Image.open(BytesIO(outputs['preview'].content)) as img:
+        preview_content = db.get_large_object(outputs['preview'].extras['oid'])
+        with Image.open(BytesIO(preview_content)) as img:
             assert img.size == (100, 100)
-        with Image.open(BytesIO(outputs['thumbnail'].content)) as img:
+        thumbnail_content = db.get_large_object(outputs['thumbnail'].extras['oid'])
+        with Image.open(BytesIO(thumbnail_content)) as img:
             assert img.size == (100, 100)
 
 

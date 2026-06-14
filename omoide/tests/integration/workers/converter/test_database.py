@@ -220,40 +220,6 @@ class TestGetInputMedia:
 
 
 class TestSaveOutputMedia:
-    def test_small_content_stays_in_bytea_and_sets_oid_none(
-        self,
-        db,
-        engine,
-        user_and_item,
-    ):
-        user_uuid, item_uuid = user_and_item
-        payload = b'\x89PNG\r\n' + b'x' * 100
-        model = models.InputMedia(
-            id=-1,
-            user_uuid=user_uuid,
-            item_uuid=item_uuid,
-            created_at=datetime.now(UTC),
-            ext='jpg',
-            content_type='image/jpeg',
-            extras={'extract_exif': False, 'oid': 9999},
-            error=None,
-            content=payload,
-        )
-
-        db.save_output_media(model, media_type='thumbnail')
-
-        with engine.connect() as conn:
-            row = conn.execute(
-                sa.select(db_models.QueueOutputMedia).where(
-                    db_models.QueueOutputMedia.item_uuid == item_uuid
-                )
-            ).one()
-        assert row.media_type == 'thumbnail'
-        assert row.content == payload
-        # save_output_media REPLACES the input oid with the output oid (None for small content).
-        assert row.extras['oid'] is None
-        assert model.extras['oid'] is None
-
     def test_large_content_creates_large_object_and_clears_bytea(
         self,
         db,
