@@ -670,15 +670,15 @@ progress {
 
 .float-button-container {
     position: absolute;
-    right: -4.5em;
+    right: -4em;
 }
 
 .float-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 4em;
-    height: 4em;
+    width: 2em;
+    height: 2em;
 }
 
 #global-status {
