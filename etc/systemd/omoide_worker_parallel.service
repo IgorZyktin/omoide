@@ -2,14 +2,29 @@
 Description=Omoide parallel worker daemon
 After=network.target postgresql.service
 Requires=postgresql.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
+Type=exec
 User=omoide_user
 WorkingDirectory=/home/omoide_user/omoide
-ExecStart=/home/omoide_user/omoide/.venv/bin/python -m omoide.workers.serial
+ExecStart=/home/omoide_user/omoide/.venv/bin/python -m omoide.workers.parallel
 EnvironmentFile=/etc/omoide/env
+Restart=on-failure
+RestartSec=10s
 CPUAccounting=true
 MemoryAccounting=true
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
 
 [Install]
 WantedBy=multi-user.target
