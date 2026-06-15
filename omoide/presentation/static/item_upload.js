@@ -292,31 +292,30 @@ function createFileCard(file, parentUUID, number, tags) {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         resolve(xhr.response)
                     } else {
-                        this.element.log.textContent =
-                            `Upload failed (HTTP ${xhr.status})`
                         console.error(
                             `Upload of ${this.uuid} failed: HTTP ${xhr.status} ${xhr.statusText}`
                         )
+                        this.element.setError(`Upload failed (HTTP ${xhr.status})`)
                         resolve(undefined)
                     }
                 })
 
                 xhr.addEventListener('error', () => {
-                    this.element.log.textContent = 'Upload failed'
                     console.error(
                         `An error occurred during the XMLHttpRequest for ${this.uuid}`
                     )
+                    this.element.setError('Upload failed')
                     resolve(undefined)
                 })
 
                 xhr.addEventListener('timeout', () => {
-                    this.element.log.textContent = 'Upload timed out'
                     console.error(`Upload of ${this.uuid} timed out`)
+                    this.element.setError('Upload timed out')
                     resolve(undefined)
                 })
 
                 xhr.addEventListener('abort', () => {
-                    this.element.log.textContent = 'Upload aborted'
+                    this.element.setError('Upload aborted')
                     resolve(undefined)
                 })
 
@@ -401,6 +400,7 @@ class FileCardElement {
     // Helper object that displays file card
     constructor(file, number, tags) {
         this.previewIsVisible = false
+        this.error = null
 
         // div itself
         this.div = document.createElement('div')
@@ -494,7 +494,8 @@ class FileCardElement {
         this.permissionsLabel.append(this.permissionsArea)
         this.right.append(this.permissionsLabel)
 
-        this.log = document.createElement('div')
+        this.log = document.createElement('p')
+        this.log.classList.add('error-message')
         this.div.append(this.log)
 
         this.delete = document.createElement('a')
@@ -531,6 +532,13 @@ class FileCardElement {
         this.tagsArea.disabled = true
         this.permissionsArea.disabled = true
         this.delete.style.display = 'none'
+    }
+
+    setError(text) {
+        // Mark card as failed
+        this.error = true
+        this.div.classList.add('error-upload')
+        this.log.textContent = text
     }
 }
 
@@ -625,9 +633,16 @@ async function uploadAllFiles() {
 
     globalProgress.value = 100
 
+    let hasErrors = false
     for (const card of CARDS) {
         card.element.disable()
+        hasErrors = hasErrors || card.element.error
     }
+
+    if (hasErrors){
+        return
+    }
+
     CARDS.length = 0
     document.getElementById(UPLOAD_INPUT_ID).value = null
     if (document.getElementById(AFTER_UPLOAD_ID).value === 'parent') {

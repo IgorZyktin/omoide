@@ -55,6 +55,7 @@
     /* Colors — semantic */
     --color-danger:  #f44336;
     --color-success: #77ec88;
+    --color-problem: #965d5a;
 
     /* Radii */
     --radius-sm: 3px;
@@ -683,6 +684,16 @@ progress {
 
 #global-status {
     margin-top: var(--space-4);
+}
+
+.error-message {
+    text-align: center;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xl);
+}
+
+.error-upload {
+    background-color: var(--color-problem);
 }
 
 /* ============================================================
