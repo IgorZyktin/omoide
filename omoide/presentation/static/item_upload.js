@@ -1,27 +1,28 @@
 const CARDS = []
 let ALL_TAGS = {}
 
-const FEATURE_SCAN_NAME = "feature-scan-name"
-const FEATURE_EXIF_ID = "feature-exif"
-const ALL_FEATURES_EXIF_ID = "all-features-exif"
-const FEATURE_EXIF_TIME_BACKOFF_ID = "feature-exif-time-backoff"
-const FEATURE_EXIF_YEAR_ID = "feature-exif-year"
-const FEATURE_EXIF_MONTH_EN_ID = "feature-exif-month-en"
-const FEATURE_EXIF_MONTH_RU_ID = "feature-exif-month-ru"
+const FEATURE_SCAN_NAME = 'feature-scan-name'
+const FEATURE_EXIF_ID = 'feature-exif'
+const ALL_FEATURES_EXIF_ID = 'all-features-exif'
+const FEATURE_EXIF_TIME_BACKOFF_ID = 'feature-exif-time-backoff'
+const FEATURE_EXIF_YEAR_ID = 'feature-exif-year'
+const FEATURE_EXIF_MONTH_EN_ID = 'feature-exif-month-en'
+const FEATURE_EXIF_MONTH_RU_ID = 'feature-exif-month-ru'
 
-const SCROLL_TOP_ID = "scroll-top"
-const SCROLL_BOTTOM_ID = "scroll-bottom"
-const MEDIA_ID = "media"
-const UPLOAD_INPUT_ID = "upload-input"
+const SCROLL_TOP_ID = 'scroll-top'
+const SCROLL_BOTTOM_ID = 'scroll-bottom'
+const MEDIA_ID = 'media'
+const UPLOAD_INPUT_ID = 'upload-input'
 
-const OWNER_UUID_ID = "owner-uuid"
-const PARENT_UUID_ID = "parent-uuid"
-const GLOBAL_TAGS_ID = "item-tags"
-const GLOBAL_PERMISSIONS_ID = "item-permissions"
-const GLOBAL_PROGRESS_ID = "global-progress"
-const AFTER_UPLOAD_ID = "after-upload"
+const OWNER_UUID_ID = 'owner-uuid'
+const PARENT_UUID_ID = 'parent-uuid'
+const GLOBAL_TAGS_ID = 'item-tags'
+const GLOBAL_PERMISSIONS_ID = 'item-permissions'
+const GLOBAL_PROGRESS_ID = 'global-progress'
+const AFTER_UPLOAD_ID = 'after-upload'
 
-const SEND_TIMEOUT = 20000 // 20 seconds
+const ITEM_CREATION_TIMEOUT = 20000 // 20 seconds
+const ITEM_UPLOAD_TIMEOUT = 600000 // 600 seconds
 
 const MONTHS_EN = {
     '01': 'january',
@@ -62,7 +63,7 @@ const FILENAME_DATE_FORMATS = [
 function toggleExif(checkbox) {
     // Enable/disable nested EXIF sub-features
     const visible = checkbox.checked
-    document.getElementById(ALL_FEATURES_EXIF_ID).style.display = visible ? "block" : "none"
+    document.getElementById(ALL_FEATURES_EXIF_ID).style.display = visible ? 'block' : 'none'
     for (const id of [
         FEATURE_EXIF_TIME_BACKOFF_ID,
         FEATURE_EXIF_YEAR_ID,
@@ -191,13 +192,13 @@ function getFeatures() {
 }
 
 function showNavButtons() {
-    document.getElementById(SCROLL_TOP_ID).style.display = "block"
-    document.getElementById(SCROLL_BOTTOM_ID).style.display = "block"
+    document.getElementById(SCROLL_TOP_ID).style.display = 'block'
+    document.getElementById(SCROLL_BOTTOM_ID).style.display = 'block'
 }
 
 function hideNavButtons() {
-    document.getElementById(SCROLL_TOP_ID).style.display = "none"
-    document.getElementById(SCROLL_BOTTOM_ID).style.display = "none"
+    document.getElementById(SCROLL_TOP_ID).style.display = 'none'
+    document.getElementById(SCROLL_BOTTOM_ID).style.display = 'none'
 }
 
 async function addNewFiles(source, parentUUid) {
@@ -266,14 +267,14 @@ function createFileCard(file, parentUUID, number, tags) {
         send() {
             return new Promise(resolve => {
                 const xhr = new XMLHttpRequest()
-                xhr.timeout = SEND_TIMEOUT
+                xhr.timeout = ITEM_UPLOAD_TIMEOUT
 
-                xhr.upload.addEventListener("loadstart", () => {
+                xhr.upload.addEventListener('loadstart', () => {
                     this.element.progress.value = 0
                     this.element.progress.max = 100
                 })
 
-                xhr.upload.addEventListener("progress", event => {
+                xhr.upload.addEventListener('progress', event => {
                     if (!event.lengthComputable)
                         return
                     const loaded = (event.loaded / event.total) * 100
@@ -282,12 +283,12 @@ function createFileCard(file, parentUUID, number, tags) {
                         `Uploading (${loaded.toFixed(2)}%)…`
                 })
 
-                xhr.upload.addEventListener("load", () => {
+                xhr.upload.addEventListener('load', () => {
                     this.element.progress.value = 100
                     this.element.progress.max = 100
                 })
 
-                xhr.addEventListener("load", () => {
+                xhr.addEventListener('load', () => {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         resolve(xhr.response)
                     } else {
@@ -300,29 +301,29 @@ function createFileCard(file, parentUUID, number, tags) {
                     }
                 })
 
-                xhr.addEventListener("error", () => {
-                    this.element.log.textContent = "Upload failed"
+                xhr.addEventListener('error', () => {
+                    this.element.log.textContent = 'Upload failed'
                     console.error(
                         `An error occurred during the XMLHttpRequest for ${this.uuid}`
                     )
                     resolve(undefined)
                 })
 
-                xhr.addEventListener("timeout", () => {
-                    this.element.log.textContent = "Upload timed out"
+                xhr.addEventListener('timeout', () => {
+                    this.element.log.textContent = 'Upload timed out'
                     console.error(`Upload of ${this.uuid} timed out`)
                     resolve(undefined)
                 })
 
-                xhr.addEventListener("abort", () => {
-                    this.element.log.textContent = "Upload aborted"
+                xhr.addEventListener('abort', () => {
+                    this.element.log.textContent = 'Upload aborted'
                     resolve(undefined)
                 })
 
                 const fileData = new FormData()
-                fileData.append("file", this.file)
+                fileData.append('file', this.file)
 
-                xhr.open("PUT", `${ITEMS_ENDPOINT}/${this.uuid}/upload`)
+                xhr.open('PUT', `${ITEMS_ENDPOINT}/${this.uuid}/upload`)
 
                 const features = getFeatures()
                 for (const [key, value] of Object.entries(features)) {
@@ -339,27 +340,27 @@ function createFileCard(file, parentUUID, number, tags) {
         },
     }
 
-    card.element.tagsArea.addEventListener("change", () => {
+    card.element.tagsArea.addEventListener('change', () => {
         card.localTags = splitLines(card.element.tagsArea.value)
     })
 
-    card.element.permissionsArea.addEventListener("change", () => {
+    card.element.permissionsArea.addEventListener('change', () => {
         card.localPermissions = extractAllUUIDs(splitLines(
             card.element.permissionsArea.value
         ))
     })
 
-    card.element.fold.addEventListener("click", () => {
+    card.element.fold.addEventListener('click', () => {
         if (card.isFolded) {
-            card.element.foldImg.src = "/static/ic_unfold_more_24px.svg"
-            card.element.left.style.display = "flex"
-            card.element.right.style.display = "flex"
-            card.element.foldLabel.style.display = "none"
+            card.element.foldImg.src = '/static/ic_unfold_more_24px.svg'
+            card.element.left.style.display = 'flex'
+            card.element.right.style.display = 'flex'
+            card.element.foldLabel.style.display = 'none'
         } else {
-            card.element.foldImg.src = "/static/ic_unfold_less_24px.svg"
-            card.element.left.style.display = "none"
-            card.element.right.style.display = "none"
-            card.element.foldLabel.style.display = "flex"
+            card.element.foldImg.src = '/static/ic_unfold_less_24px.svg'
+            card.element.left.style.display = 'none'
+            card.element.right.style.display = 'none'
+            card.element.foldLabel.style.display = 'flex'
         }
         card.isFolded = !card.isFolded
     })
@@ -373,21 +374,21 @@ function createFileCard(file, parentUUID, number, tags) {
         }
     }
 
-    card.element.tagsInput.addEventListener("keydown", e => {
-        if (e.key === "Enter") {
+    card.element.tagsInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
             e.preventDefault()
             const textValue = card.element.tagsInput.value.trim()
             if (textValue) {
                 card.localTags.push(textValue)
                 card.element.tagsArea.value += `${textValue}\n`
-                card.element.tagsInput.value = ""
+                card.element.tagsInput.value = ''
                 refreshAllTags()
             }
         }
         rebuildTagsDatalist()
     })
 
-    card.element.tagsInput.addEventListener("click", () => {
+    card.element.tagsInput.addEventListener('click', () => {
         if (card.element.tagsInputDatalist.childElementCount === 0) {
             rebuildTagsDatalist()
         }
@@ -402,104 +403,104 @@ class FileCardElement {
         this.previewIsVisible = false
 
         // div itself
-        this.div = document.createElement("div")
+        this.div = document.createElement('div')
         this.div.id = `upload-element-${number}`
-        this.div.classList.add("upload-element")
+        this.div.classList.add('upload-element')
 
-        this.foldLabel = document.createElement("h4")
+        this.foldLabel = document.createElement('h4')
         this.foldLabel.textContent = file.name
-        this.foldLabel.style.display = "none"
+        this.foldLabel.style.display = 'none'
         this.div.append(this.foldLabel)
 
         // left side
-        this.left = document.createElement("div")
-        this.left.classList.add("upload-lines")
+        this.left = document.createElement('div')
+        this.left.classList.add('upload-lines')
         this.div.append(this.left)
 
         if (isVideoFile(file)) {
-            this.img = document.createElement("video")
+            this.img = document.createElement('video')
         } else {
-            this.img = document.createElement("img")
+            this.img = document.createElement('img')
         }
         this.img.src = URL.createObjectURL(file)
-        this.img.addEventListener("click", () => this.togglePreview())
+        this.img.addEventListener('click', () => this.togglePreview())
         this.left.append(this.img)
 
         // right side
-        this.right = document.createElement("div")
-        this.right.classList.add("upload-lines")
+        this.right = document.createElement('div')
+        this.right.classList.add('upload-lines')
         this.div.append(this.right)
 
-        this.foldArea = document.createElement("div")
-        this.foldArea.classList.add("float-button-container")
+        this.foldArea = document.createElement('div')
+        this.foldArea.classList.add('float-button-container')
         this.div.append(this.foldArea)
 
-        this.fold = document.createElement("a")
-        this.fold.classList.add("float-button")
-        this.fold.classList.add("button")
+        this.fold = document.createElement('a')
+        this.fold.classList.add('float-button')
+        this.fold.classList.add('button')
         this.foldArea.append(this.fold)
 
-        this.foldImg = document.createElement("img")
-        this.foldImg.src = "/static/ic_unfold_less_24px.svg"
+        this.foldImg = document.createElement('img')
+        this.foldImg.src = '/static/ic_unfold_less_24px.svg'
         this.foldImg.style.margin = '0'
         this.fold.append(this.foldImg)
 
-        this.label = document.createElement("h4")
+        this.label = document.createElement('h4')
         this.label.textContent = file.name
         this.right.append(this.label)
 
-        this.progress = document.createElement("progress")
+        this.progress = document.createElement('progress')
         this.progress.value = 0
         this.progress.max = 100
         this.right.append(this.progress)
 
         if (isVideoFile(file)) {
-            this.nameInput = document.createElement("input")
-            this.nameInput.type = "text"
-            this.nameInput.placeholder = "Specify name"
+            this.nameInput = document.createElement('input')
+            this.nameInput.type = 'text'
+            this.nameInput.placeholder = 'Specify name'
             this.right.append(this.nameInput)
         }
 
-        this.tagsLabel = document.createElement("label")
+        this.tagsLabel = document.createElement('label')
         this.tagsLabel.append(
             document.createTextNode(
-                "Additional tags for this item (one tag per line):"
+                'Additional tags for this item (one tag per line):'
             )
         )
-        this.tagsInput = document.createElement("input")
-        this.tagsInput.type = "text"
-        this.tagsInput.placeholder = "Add tag here"
-        this.tagsInput.autocomplete = "on"
-        this.tagsInputDatalist = document.createElement("datalist")
+        this.tagsInput = document.createElement('input')
+        this.tagsInput.type = 'text'
+        this.tagsInput.placeholder = 'Add tag here'
+        this.tagsInput.autocomplete = 'on'
+        this.tagsInputDatalist = document.createElement('datalist')
         this.tagsInputDatalist.id = `upload-element-${number}-tags-list`
         this.tagsInput.setAttribute('list', `upload-element-${number}-tags-list`)
         this.tagsInput.append(this.tagsInputDatalist)
-        this.tagsArea = document.createElement("textarea")
+        this.tagsArea = document.createElement('textarea')
         this.tagsArea.rows = 5
-        this.tagsArea.value = tags.length ? `${tags.join("\n")}\n` : ""
+        this.tagsArea.value = tags.length ? `${tags.join('\n')}\n` : ''
         this.tagsLabel.append(this.tagsArea)
         this.right.append(this.tagsLabel)
         this.right.append(this.tagsInput)
 
-        this.permissionsLabel = document.createElement("label")
+        this.permissionsLabel = document.createElement('label')
         this.permissionsLabel.append(
             document.createTextNode(
-                "Additional permissions for this item (one user per line):"
+                'Additional permissions for this item (one user per line):'
             )
         )
-        this.permissionsArea = document.createElement("textarea")
+        this.permissionsArea = document.createElement('textarea')
         this.permissionsArea.rows = 5
-        this.permissionsArea.value = ""
+        this.permissionsArea.value = ''
         this.permissionsLabel.append(this.permissionsArea)
         this.right.append(this.permissionsLabel)
 
-        this.log = document.createElement("div")
+        this.log = document.createElement('div')
         this.div.append(this.log)
 
-        this.delete = document.createElement("a")
-        this.delete.textContent = "Delete"
-        this.delete.classList.add("button")
-        this.delete.addEventListener("click", () => {
+        this.delete = document.createElement('a')
+        this.delete.textContent = 'Delete'
+        this.delete.classList.add('button')
+        this.delete.addEventListener('click', () => {
             if (confirm(`Are you sure you want to remove ${file.name} from set?`)) {
                 const index = CARDS.findIndex(c => c.number === number)
                 if (index !== -1) {
@@ -514,13 +515,13 @@ class FileCardElement {
     togglePreview() {
         // Make image bigger or smaller
         if (this.previewIsVisible) {
-            this.div.style.display = "grid"
-            this.div.style.flexDirection = "unset"
-            this.div.style.gridTemplateColumns = "1fr 3fr"
+            this.div.style.display = 'grid'
+            this.div.style.flexDirection = 'unset'
+            this.div.style.gridTemplateColumns = '1fr 3fr'
         } else {
-            this.div.style.display = "flex"
-            this.div.style.flexDirection = "column"
-            this.div.style.gridTemplateColumns = "unset"
+            this.div.style.display = 'flex'
+            this.div.style.flexDirection = 'column'
+            this.div.style.gridTemplateColumns = 'unset'
         }
         this.previewIsVisible = !this.previewIsVisible
     }
@@ -529,7 +530,7 @@ class FileCardElement {
         // Make nested elements disabled
         this.tagsArea.disabled = true
         this.permissionsArea.disabled = true
-        this.delete.style.display = "none"
+        this.delete.style.display = 'none'
     }
 }
 
@@ -546,10 +547,10 @@ function createItems() {
     for (const card of CARDS) {
         const localPermissions = []
         for (const uuid of [...globalPermissions, ...card.localPermissions]) {
-            localPermissions.push({uuid: uuid, name: ""})
+            localPermissions.push({uuid: uuid, name: ''})
         }
 
-        let name = ""
+        let name = ''
         if (card.element.nameInput !== undefined) {
             name = card.element.nameInput.value
         }
@@ -567,10 +568,10 @@ function createItems() {
 
     return new Promise(resolve => {
         const xhr = new XMLHttpRequest()
-        xhr.timeout = SEND_TIMEOUT
-        xhr.responseType = "json"
+        xhr.timeout = ITEM_CREATION_TIMEOUT
+        xhr.responseType = 'json'
 
-        xhr.addEventListener("load", () => {
+        xhr.addEventListener('load', () => {
             if (xhr.status < 200 || xhr.status >= 300) {
                 console.error(
                     `Failed to create items: HTTP ${xhr.status} ${xhr.statusText}`,
@@ -586,18 +587,18 @@ function createItems() {
             resolve(xhr.response)
         })
 
-        xhr.addEventListener("error", () => {
-            console.error("Failed to create items: network error")
+        xhr.addEventListener('error', () => {
+            console.error('Failed to create items: network error')
             resolve(undefined)
         })
 
-        xhr.addEventListener("timeout", () => {
-            console.error("Failed to create items: timeout")
+        xhr.addEventListener('timeout', () => {
+            console.error('Failed to create items: timeout')
             resolve(undefined)
         })
 
-        xhr.open("POST", `${ITEMS_ENDPOINT}/bulk`)
-        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.open('POST', `${ITEMS_ENDPOINT}/bulk`)
+        xhr.setRequestHeader('Content-Type', 'application/json')
         xhr.send(JSON.stringify(arrayForSending))
     })
 }
