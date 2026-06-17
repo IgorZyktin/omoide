@@ -48,8 +48,6 @@
                    value="Reset changes">
         </div>
 
-        <hr>
-
         <div>
             <h3>Parameters</h3>
             <label for="item_uuid">Item UUID:</label>
@@ -127,8 +125,6 @@
                    onclick="resetBasic()"
                    value="Reset changes">
         </div>
-
-        <hr>
 
         <div>
             <h3>Tags for the item and dependant items</h3>
@@ -221,7 +217,7 @@
                 document.getElementById('thumbnail_parent')
             )
 
-            const origin = document.getElementById('thumbnail_origin')
+            const origin = document.getElementById('thumbnail')
 
             origin.addEventListener('input', function () {
                 alterModelTextField(this, 'copied_image_from')
