@@ -8,6 +8,7 @@ import sqlalchemy as sa
 
 from omoide import const
 from omoide import custom_logging
+from omoide.database import db_models
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -95,3 +96,15 @@ class PostgreSQLDatabase:
             raise
         finally:
             conn.close()
+
+    def is_oid_referenced_elsewhere(self, oid: int, exclude_id: int) -> bool:
+        """Return True if any other queue_input_media row still references this OID."""
+        query = sa.select(
+            sa.exists().where(
+                db_models.QueueInputMedia.id != exclude_id,
+                db_models.QueueInputMedia.extras['oid'].astext == str(oid),
+            )
+        )
+
+        with self.engine.begin() as conn:
+            return bool(conn.execute(query).scalar())

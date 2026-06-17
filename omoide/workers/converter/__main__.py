@@ -141,7 +141,8 @@ def do_work(
                     oid, exclude_id=target_id
                 ):
                     LOG.info(
-                        'Keeping large object {} alive: still referenced by other queue entries',
+                        'Keeping large object {} alive: '
+                        'still referenced by other queue entries',
                         oid,
                     )
                 else:

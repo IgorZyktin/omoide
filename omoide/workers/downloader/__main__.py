@@ -149,7 +149,14 @@ def do_download(
             common_metrics.TIME_SPENT, int(time_spent * 1000)
         )
         if oid:
-            database.delete_large_object(oid)
+            if database.is_oid_referenced_elsewhere(oid, exclude_id=item_id):
+                LOG.info(
+                    'Keeping large object {} alive: '
+                    'still referenced by other queue entries',
+                    oid,
+                )
+            else:
+                database.delete_large_object(oid)
         database.delete_output_media(item_id)
         model.content = b''
         del model
