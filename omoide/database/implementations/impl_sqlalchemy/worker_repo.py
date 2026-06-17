@@ -32,10 +32,19 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             raise exceptions.UnknownWorkerError(worker_name=worker_name)
 
     async def take_serial_lock(self, conn: AsyncConnection, worker_name: str) -> bool:
-        """Try acquiring the lock, return True on success."""
-        stmt = sa.update(db_models.SerialLock).values(
-            worker_name=worker_name,
-            last_update=pu.now(),
+        """Try acquiring the lock, return True on success.
+
+        Only an empty slot can be claimed; a different worker's name in
+        ``worker_name`` blocks the update. Without this guard a starting
+        worker would silently overwrite an active owner.
+        """
+        stmt = (
+            sa.update(db_models.SerialLock)
+            .where(db_models.SerialLock.worker_name.is_(None))
+            .values(
+                worker_name=worker_name,
+                last_update=pu.now(),
+            )
         )
         response = await conn.execute(stmt)
         return bool(response.rowcount)
@@ -67,7 +76,7 @@ class WorkersRepo(AbsWorkersRepo[AsyncConnection]):
             .where(
                 db_models.SerialOperation.status == operations.OperationStatus.CREATED,
                 db_models.SerialOperation.name.in_(tuple(names)),
-                sa.not_(db_models.SerialOperation.name.in_(tuple(skip))),
+                sa.not_(db_models.SerialOperation.id.in_(tuple(skip))),
             )
             .order_by(db_models.SerialOperation.id)
             .limit(1)
