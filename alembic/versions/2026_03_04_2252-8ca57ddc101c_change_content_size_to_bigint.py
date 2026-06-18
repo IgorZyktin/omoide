@@ -23,8 +23,8 @@ def upgrade() -> None:
     op.alter_column(
         'item_metainfo',
         'content_size',
-        existing_type=sa.BIGINT(),
-        type_=sa.Integer(),
+        existing_type=sa.Integer(),
+        type_=sa.BIGINT(),
         existing_nullable=True,
     )
     # ### end Alembic commands ###
@@ -36,8 +36,8 @@ def downgrade() -> None:
     op.alter_column(
         'item_metainfo',
         'content_size',
-        existing_type=sa.Integer(),
-        type_=sa.BIGINT(),
+        existing_type=sa.BIGINT(),
+        type_=sa.Integer(),
         existing_nullable=True,
     )
     # ### end Alembic commands ###
