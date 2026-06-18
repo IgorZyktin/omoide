@@ -103,9 +103,7 @@ async def app_update_item(  # noqa: PLR0913
         msg = 'Anonymous users are not allowed to update items'
         raise exceptions.AccessDeniedError(msg)
 
-    use_case = item_use_cases.AppUpdateItemUseCase(
-        database, items_repo, users_repo, meta_repo
-    )
+    use_case = item_use_cases.AppUpdateItemUseCase(database, items_repo, users_repo, meta_repo)
 
     result = await use_case.execute(
         user=user,
@@ -114,9 +112,7 @@ async def app_update_item(  # noqa: PLR0913
 
     lower_tags = [tag.lower() for tag in result.item.tags]
     external_tags = [
-        tag
-        for tag in result.computed_tags
-        if tag not in lower_tags and not pu.is_valid_uuid(tag)
+        tag for tag in result.computed_tags if tag not in lower_tags and not pu.is_valid_uuid(tag)
     ]
 
     model = serialize_item(result.item)
