@@ -58,6 +58,13 @@ async def main() -> None:
 
     lock = PGAdvisoryLock(db_url=config.db.url.get_secret_value())
 
+    users_repo = impl_sqlalchemy.UsersRepo()
+    items_repo = impl_sqlalchemy.ItemsRepo()
+    fs_locator = FilesystemLocator(
+        root=config.data_folder,
+        prefix_size=config.prefix_size,
+    )
+
     with executor, metrics_collector:
         async with db, lock:
             while WORKING.is_set():
@@ -67,6 +74,9 @@ async def main() -> None:
                     lock=lock,
                     database=db,
                     metrics_collector=metrics_collector,
+                    users_repo=users_repo,
+                    items_repo=items_repo,
+                    fs_locator=fs_locator,
                 )
 
                 if not did_something:
@@ -93,6 +103,9 @@ async def do_work(
     lock: PGAdvisoryLock,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
+    users_repo: impl_sqlalchemy.UsersRepo,
+    items_repo: impl_sqlalchemy.ItemsRepo,
+    fs_locator: FilesystemLocator,
 ) -> bool:
     """Perform workload."""
     candidates = await database.get_parallel_commands(
@@ -107,12 +120,15 @@ async def do_work(
         for candidate in candidates:
             tg.create_task(
                 process_one(
-                    candidate,
-                    config,
-                    executor,
-                    lock,
-                    database,
-                    metrics_collector,
+                    command=candidate,
+                    config=config,
+                    executor=executor,
+                    lock=lock,
+                    database=database,
+                    metrics_collector=metrics_collector,
+                    users_repo=users_repo,
+                    items_repo=items_repo,
+                    fs_locator=fs_locator,
                 )
             )
 
@@ -120,20 +136,31 @@ async def do_work(
 
 
 async def process_one(
-    task: models.ParallelCommand,
+    command: models.ParallelCommand,
     config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     lock: PGAdvisoryLock,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
+    users_repo: impl_sqlalchemy.UsersRepo,
+    items_repo: impl_sqlalchemy.ItemsRepo,
+    fs_locator: FilesystemLocator,
 ) -> None:
     """Process one command."""
     try:
         await _process_one(
-            task, config, executor, lock, database, metrics_collector
+            command=command,
+            config=config,
+            executor=executor,
+            lock=lock,
+            database=database,
+            metrics_collector=metrics_collector,
+            users_repo=users_repo,
+            items_repo=items_repo,
+            fs_locator=fs_locator,
         )
     except Exception:
-        LOG.exception('Process_one for task {} crashed', task.id)
+        LOG.exception('Process_one for task {} crashed', command.id)
 
 
 async def _process_one(
@@ -143,22 +170,12 @@ async def _process_one(
     lock: PGAdvisoryLock,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
+    users_repo: impl_sqlalchemy.UsersRepo,
+    items_repo: impl_sqlalchemy.ItemsRepo,
+    fs_locator: FilesystemLocator,
 ) -> None:
     """Process one command."""
-    item_id = command.extras.get('item_id')
-    if item_id is None:
-        LOG.error('Command {} has no item_id in extras', command.id)
-        await database.mark_failed(command, 'Missing item_id')
-        return
-
-    try:
-        item_id_int = int(item_id)
-    except (TypeError, ValueError):
-        LOG.error('Command {} has invalid item_id: {!r}', command.id, item_id)
-        await database.mark_failed(command, f'Invalid item_id: {item_id!r}')
-        return
-
-    resources = [LockableResource(NAMESPACE_ITEMS, item_id_int)]
+    resources = [LockableResource(NAMESPACE_ITEMS, command.item_id)]
 
     oid = command.extras.get('oid')
     if oid is not None:
@@ -186,6 +203,9 @@ async def _process_one(
                 config=config,
                 executor=executor,
                 database=database,
+                users_repo=users_repo,
+                items_repo=items_repo,
+                fs_locator=fs_locator,
             )
             time_spent = time.perf_counter() - start
             await database.mark_done(command)
@@ -246,6 +266,9 @@ async def dispatch_and_execute(
     config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     database: ParallelPostgreSQLDatabase,
+    users_repo: impl_sqlalchemy.UsersRepo,
+    items_repo: impl_sqlalchemy.ItemsRepo,
+    fs_locator: FilesystemLocator,
 ) -> tuple[list[str], int]:
     """Choose implementation and execute."""
     command_implementation: Command
@@ -257,12 +280,9 @@ async def dispatch_and_execute(
             command_implementation = commands.HardDeleteCommand(
                 dto=command,
                 database=database,
-                users=impl_sqlalchemy.UsersRepo(),
-                items=impl_sqlalchemy.ItemsRepo(),
-                locator=FilesystemLocator(
-                    root=config.data_folder,
-                    prefix_size=config.prefix_size,
-                ),
+                users=users_repo,
+                items=items_repo,
+                locator=fs_locator,
             )
 
         case _:

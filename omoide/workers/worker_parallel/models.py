@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from functools import cached_property
 from typing import Any
 
 
@@ -29,3 +30,14 @@ class ParallelCommand:
     updated_at: datetime
     started_at: datetime
     ended_at: datetime
+
+    @cached_property
+    def item_id(self) -> int:
+        """Extract from extras."""
+        item_id = self.extras.get('item_id')
+
+        if item_id is None:
+            msg = 'Missing item_id'
+            raise KeyError(msg)
+
+        return int(item_id)

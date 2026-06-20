@@ -33,37 +33,35 @@ class HardDeleteCommand(Command):
     async def execute(self) -> tuple[list[str], int]:
         """Start execution of the command."""
         warnings: list[str] = []
-        item_id = self.dto.extras['item_id']
+        item_id = self.dto.item_id
 
         async with self.database.transaction() as conn:
             item = await self.items.get_by_id(conn, item_id)
             owner = await self.users.get_by_id(conn, item.owner_id)
 
-        if video_path := self.locator.get_video_location(owner, item):
-            try:
-                await os.unlink(video_path)
-            except FileNotFoundError:
-                warnings.append(f'File does not exist: {video_path}')
-
-        if content_path := self.locator.get_content_location(owner, item):
-            try:
-                await os.unlink(content_path)
-            except FileNotFoundError:
-                warnings.append(f'File does not exist: {content_path}')
-
-        if preview_path := self.locator.get_preview_location(owner, item):
-            try:
-                await os.unlink(preview_path)
-            except FileNotFoundError:
-                warnings.append(f'File does not exist: {preview_path}')
-
-        if thumbnail_path := self.locator.get_thumbnail_location(owner, item):
-            try:
-                await os.unlink(thumbnail_path)
-            except FileNotFoundError:
-                warnings.append(f'File does not exist: {thumbnail_path}')
+        paths = [
+            path
+            for path in (
+                self.locator.get_video_location(owner, item),
+                self.locator.get_content_location(owner, item),
+                self.locator.get_preview_location(owner, item),
+                self.locator.get_thumbnail_location(owner, item),
+            )
+            if path is not None
+        ]
 
         async with self.database.transaction() as conn:
             await self.items.hard_delete(conn, item)
+
+        if not paths:
+            return [], 0
+
+        # NOTE: Any general OSError shows critical misconfiguration
+        # of the host, so it is not added into exception clause
+        for path in paths:
+            try:
+                await os.unlink(path)
+            except FileNotFoundError:
+                warnings.append(f'File did not exist: {path}')
 
         return warnings, 0
