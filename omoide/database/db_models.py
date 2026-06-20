@@ -912,6 +912,50 @@ class QueueOutputMedia(Base):
     processed_by: Mapped[set[str]] = mapped_column(pg.ARRAY(sa.Text), nullable=False)
 
 
+class ParallelCommand(Base):
+    """Parallel task queue."""
+
+    __tablename__ = 'command_queue_parallel'
+
+    # primary and foreign keys ------------------------------------------------
+
+    id: Mapped[int] = mapped_column(
+        sa.Integer,
+        autoincrement=True,
+        nullable=False,
+        index=True,
+        primary_key=True,
+        unique=True,
+    )
+
+    requested_by: Mapped[int] = mapped_column(
+        sa.Integer(),
+        sa.ForeignKey('users.id', ondelete='RESTRICT'),
+        index=True,
+        unique=False,
+    )
+
+    # fields ------------------------------------------------------------------
+
+    name: Mapped[str] = mapped_column(sa.String(MEDIUM), nullable=False)
+    status: Mapped[str] = mapped_column(sa.String(SMALL), nullable=False)
+    extras: Mapped[dict[str, Any]] = mapped_column(pg.JSONB, nullable=False)
+    log: Mapped[str] = mapped_column(sa.Text, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), unique=False, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), unique=False, nullable=False
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), unique=False, nullable=True
+    )
+    ended_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), unique=False, nullable=True
+    )
+
+
 if __name__ == '__main__':
     db_url = os.environ[const.ENV_DB_URL_ADMIN]
     engine = sa.create_engine(db_url, echo=True)
