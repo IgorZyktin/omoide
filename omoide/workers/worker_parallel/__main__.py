@@ -12,9 +12,10 @@ from omoide import custom_logging
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.infra.interfaces.abs_lock import LockableResource
 from omoide.workers import utils
-from omoide.workers.worker_parallel import metrics
+from omoide.workers.worker_parallel import metrics, commands
 from omoide.workers.worker_parallel import models
 from omoide.workers.worker_parallel.cfg import ParallelWorkerConfig
+from omoide.workers.worker_parallel.commands.base_command import Command
 from omoide.workers.worker_parallel.database import ParallelPostgreSQLDatabase
 
 LOG = custom_logging.get_logger(__name__)
@@ -179,6 +180,7 @@ async def _process_one(
         try:
             start = time.perf_counter()
             warnings, bytes_processed = await dispatch_and_execute(
+                command=command,
                 config=config,
                 executor=executor,
                 database=database,
@@ -239,15 +241,22 @@ async def _cleanup_oid(
 
 
 async def dispatch_and_execute(
+    command: models.ParallelCommand,
     config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
 ) -> tuple[list[str], int]:
     """Choose implementation and execute."""
-    # TODO: Here we will put actual execution
-    await asyncio.sleep(10)
-    return [], 0
+    command_implementation: Command
+    match command.name:
+        case 'dummy':
+            command_implementation = commands.DummyCommand()
+        case _:
+            msg = f'Unknown command: {command.name!r}'
+            raise RuntimeError(msg)
+
+    return await command_implementation.execute()
 
 
 if __name__ == '__main__':
