@@ -1,6 +1,9 @@
 """PostgreSQL advisory lock implementation."""
 
 from collections.abc import Sequence
+from types import TracebackType
+from typing import Literal
+from typing import Self
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -33,6 +36,21 @@ class PGAdvisoryLock(AbsLockingProvider):
         """Initialize instance."""
         self._engine = create_async_engine(db_url, poolclass=NullPool)
         self._conn: AsyncConnection | None = None
+
+    async def __aenter__(self) -> Self:
+        """Start connect to DB."""
+        await self.connect()
+        return self
+
+    async def __aexit__(
+        self,
+        type_: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Literal[False]:
+        """Disconnect form DB."""
+        await self.disconnect()
+        return False
 
     @property
     def _connection(self) -> AsyncConnection:
@@ -78,7 +96,7 @@ class PGAdvisoryLock(AbsLockingProvider):
                 _TRY_LOCK,
                 {'ns': resource.namespace, 'id': resource.affected_id},
             )
-            (ok,) = result.fetchone()
+            (ok,) = result.fetchone() or (False,)
             if not ok:
                 await self.release_held(taken)
                 return None
@@ -102,7 +120,7 @@ class PGAdvisoryLock(AbsLockingProvider):
                     _UNLOCK,
                     {'ns': resource.namespace, 'id': resource.affected_id},
                 )
-                (released,) = result.fetchone()
+                (released,) = result.fetchone() or (False,)
                 if not released:
                     LOG.warning(
                         'pg_advisory_unlock({}, {}) returned false — '
