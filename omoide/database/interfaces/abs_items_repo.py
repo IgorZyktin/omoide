@@ -122,7 +122,7 @@ class AbsItemsRepo(abc.ABC, Generic[ConnectionT]):
         """Mark tem as deleted."""
 
     @abc.abstractmethod
-    async def delete(self, conn: ConnectionT, item: models.Item) -> bool:
+    async def hard_delete(self, conn: ConnectionT, item: models.Item) -> bool:
         """Delete the given item."""
 
     @abc.abstractmethod

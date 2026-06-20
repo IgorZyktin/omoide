@@ -9,8 +9,10 @@ import nano_settings as ns
 import python_utilz as pu
 
 from omoide import custom_logging
+from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.infra.interfaces.abs_lock import LockableResource
+from omoide.infra.locators import FilesystemLocator
 from omoide.workers import utils
 from omoide.workers.worker_parallel import metrics, commands
 from omoide.workers.worker_parallel import models
@@ -184,7 +186,6 @@ async def _process_one(
                 config=config,
                 executor=executor,
                 database=database,
-                metrics_collector=metrics_collector,
             )
             time_spent = time.perf_counter() - start
             await database.mark_done(command)
@@ -245,13 +246,25 @@ async def dispatch_and_execute(
     config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     database: ParallelPostgreSQLDatabase,
-    metrics_collector: metrics.PrometheusMetricsCollector,
 ) -> tuple[list[str], int]:
     """Choose implementation and execute."""
     command_implementation: Command
     match command.name:
         case 'dummy':
-            command_implementation = commands.DummyCommand()
+            command_implementation = commands.DummyCommand(command)
+
+        case 'hard_delete':
+            command_implementation = commands.HardDeleteCommand(
+                dto=command,
+                database=database,
+                users=impl_sqlalchemy.UsersRepo(),
+                items=impl_sqlalchemy.ItemsRepo(),
+                locator=FilesystemLocator(
+                    root=config.data_folder,
+                    prefix_size=config.prefix_size,
+                ),
+            )
+
         case _:
             msg = f'Unknown command: {command.name!r}'
             raise RuntimeError(msg)

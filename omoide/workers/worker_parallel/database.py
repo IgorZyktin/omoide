@@ -1,13 +1,14 @@
 """Storage implementation."""
 
 from collections.abc import Collection
+from contextlib import asynccontextmanager
 from types import TracebackType
-from typing import Literal
+from typing import Literal, AsyncIterator
 from typing import Self
 
 import python_utilz as pu
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncConnection
 
 from omoide import custom_logging
 from omoide.database import db_models
@@ -41,6 +42,12 @@ class ParallelPostgreSQLDatabase:
         """Disconnect form DB."""
         await self.disconnect()
         return False
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncIterator[AsyncConnection]:
+        """Start transaction."""
+        async with self._engine.begin() as connection:
+            yield connection
 
     async def connect(self) -> None:
         """Connect to database."""

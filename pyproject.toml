@@ -32,6 +32,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "moviepy>=2.2.1",
     "asyncpg-lostream>=0.1.2",
+    "aiofiles>=25.1.0",
 ]
 
 [project.optional-dependencies]
