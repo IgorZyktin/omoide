@@ -2,15 +2,14 @@
 
 from pathlib import Path
 
+from omoide import const
 from omoide import models
 
 
-class BaseLocator:
-    """Base pathfinder."""
+class LocatorMixin:
+    """Generic pathfinder operations."""
 
-    def __init__(self, prefix_size: int) -> None:
-        """Initialize instance."""
-        self.prefix_size = prefix_size
+    prefix_size: int
 
     def _get_prefix(self, item: models.Item) -> str:
         """Return prefix of the item."""
@@ -22,58 +21,74 @@ class BaseLocator:
         return f'{item.uuid}.{ext}' if ext else ''
 
 
-class WebLocator(BaseLocator):
+class WebLocator(LocatorMixin):
     """Web locator."""
 
     def __init__(self, root: str, prefix_size: int) -> None:
         """Initialize instance."""
-        super().__init__(prefix_size)
         self.root = root
+        self.prefix_size = prefix_size
 
     def get_video_location(self, item: models.Item) -> str | None:
         """Return location of the video."""
         if item.content_ext is None:
             return None
 
-        prefix = str(item.uuid)[: self.prefix_size]
-        ext = f'.{item.content_ext}' if item.content_ext else ''
-        return f'/{self.root}/video/{item.owner_uuid}/{prefix}/{item.uuid}{ext}'
+        return (
+            f'/{self.root}'
+            f'/{const.MediaType.VIDEO}'
+            f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
+            f'/{self._get_prefix(item)}'
+            f'/{self._get_filename(item, item.content_ext)}'
+        )
 
     def get_content_location(self, item: models.Item) -> str | None:
         """Return location of the content."""
         if item.content_ext is None:
             return None
 
-        prefix = str(item.uuid)[: self.prefix_size]
-        ext = f'.{item.content_ext}' if item.content_ext else ''
-        return f'/{self.root}/content/{item.owner_uuid}/{prefix}/{item.uuid}{ext}'
+        return (
+            f'/{self.root}'
+            f'/{const.MediaType.CONTENT}'
+            f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
+            f'/{self._get_prefix(item)}'
+            f'/{self._get_filename(item, item.content_ext)}'
+        )
 
     def get_preview_location(self, item: models.Item) -> str | None:
         """Return location of the preview."""
         if item.preview_ext is None:
             return None
 
-        prefix = str(item.uuid)[: self.prefix_size]
-        ext = f'.{item.preview_ext}' if item.preview_ext else ''
-        return f'/{self.root}/preview/{item.owner_uuid}/{prefix}/{item.uuid}{ext}'
+        return (
+            f'/{self.root}'
+            f'/{const.MediaType.PREVIEW}'
+            f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
+            f'/{self._get_prefix(item)}'
+            f'/{self._get_filename(item, item.preview_ext)}'
+        )
 
     def get_thumbnail_location(self, item: models.Item) -> str | None:
         """Return location of the thumbnail."""
         if item.thumbnail_ext is None:
             return None
 
-        prefix = str(item.uuid)[: self.prefix_size]
-        ext = f'.{item.thumbnail_ext}' if item.thumbnail_ext else ''
-        return f'/{self.root}/thumbnail/{item.owner_uuid}/{prefix}/{item.uuid}{ext}'
+        return (
+            f'/{self.root}'
+            f'/{const.MediaType.THUMBNAIL}'
+            f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
+            f'/{self._get_prefix(item)}'
+            f'/{self._get_filename(item, item.thumbnail_ext)}'
+        )
 
 
-class FilesystemLocator(BaseLocator):
+class FilesystemLocator(LocatorMixin):
     """Filesystem locator."""
 
     def __init__(self, root: Path, prefix_size: int) -> None:
         """Initialize instance."""
-        super().__init__(prefix_size)
         self.root = root
+        self.prefix_size = prefix_size
 
     def get_video_location(
         self,
@@ -86,7 +101,7 @@ class FilesystemLocator(BaseLocator):
 
         return (
             self.root
-            / 'video'
+            / const.MediaType.VIDEO
             / str(owner.uuid)
             / self._get_prefix(item)
             / self._get_filename(item, item.content_ext)
@@ -103,7 +118,7 @@ class FilesystemLocator(BaseLocator):
 
         return (
             self.root
-            / 'content'
+            / const.MediaType.CONTENT
             / str(owner.uuid)
             / self._get_prefix(item)
             / self._get_filename(item, item.content_ext)
@@ -120,7 +135,7 @@ class FilesystemLocator(BaseLocator):
 
         return (
             self.root
-            / 'preview'
+            / const.MediaType.PREVIEW
             / str(owner.uuid)
             / self._get_prefix(item)
             / self._get_filename(item, item.preview_ext)
@@ -137,7 +152,7 @@ class FilesystemLocator(BaseLocator):
 
         return (
             self.root
-            / 'thumbnail'
+            / const.MediaType.THUMBNAIL
             / str(owner.uuid)
             / self._get_prefix(item)
             / self._get_filename(item, item.thumbnail_ext)

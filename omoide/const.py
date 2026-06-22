@@ -15,6 +15,16 @@ FRONTEND_VERSION = 40
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
 DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 
+
+class MediaType(enum.StrEnum):
+    """Possible media types."""
+
+    VIDEO = 'video'
+    CONTENT = 'content'
+    PREVIEW = 'preview'
+    THUMBNAIL = 'thumbnail'
+
+
 CONTENT: Literal['content'] = 'content'
 PREVIEW: Literal['preview'] = 'preview'
 THUMBNAIL: Literal['thumbnail'] = 'thumbnail'
