@@ -824,6 +824,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "ruff" },
+    { name = "types-aiofiles" },
     { name = "types-pytz" },
     { name = "types-ujson" },
     { name = "vulture" },
@@ -873,6 +874,7 @@ dev = [
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
     { name = "ruff", specifier = ">=0.6.9" },
+    { name = "types-aiofiles", specifier = ">=25.1.0.20260518" },
     { name = "types-pytz", specifier = ">=2024.2.0.20241003" },
     { name = "types-ujson", specifier = ">=5.10.0.20240515" },
     { name = "vulture", specifier = ">=2.13" },
@@ -1403,6 +1405,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e4/51/9aed62104cea109b820bbd6c14245af756112017d309da813ef107d42e7e/typer-0.25.1.tar.gz", hash = "sha256:9616eb8853a09ffeabab1698952f33c6f29ffdbceb4eaeecf571880e8d7664cc", size = 122276 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/f9/2b3ff4e56e5fa7debfaf9eb135d0da96f3e9a1d5b27222223c7296336e5f/typer-0.25.1-py3-none-any.whl", hash = "sha256:75caa44ed46a03fb2dab8808753ffacdbfea88495e74c85a28c5eefcf5f39c89", size = 58409 },
+]
+
+[[package]]
+name = "types-aiofiles"
+version = "25.1.0.20260518"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/42/f5b9b90162d2196f016b87228d6bf43f2c2c0c6501bfd5415001b3eb68bb/types_aiofiles-25.1.0.20260518.tar.gz", hash = "sha256:c0c95eb78755d4fa7b397d4f0332c632714dd7cd0d17f49b96e31d4d7a8d8c76", size = 14891 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ca/3d/7a9ed9faafeae3aa3b5bc22fa5b979ff9cf3c83ecbe919b58eae07795b8c/types_aiofiles-25.1.0.20260518-py3-none-any.whl", hash = "sha256:f776bdfb4bec17f743d9ef042e61edf03bdcc7821fc08556fba9b63d873fdea9", size = 14377 },
 ]
 
 [[package]]
