@@ -80,6 +80,7 @@ class CommandsRepo(AbsCommandsRepo[AsyncConnection]):
                 name=models.Command.COPY_IMAGE,
                 status=models.CommandStatus.CREATED,
                 extras={
+                    'item_id': source_item.id,
                     'source_item_id': source_item.id,
                     'target_item_id': target_item.id,
                 },
