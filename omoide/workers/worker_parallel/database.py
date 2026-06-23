@@ -1,63 +1,20 @@
 """Storage implementation."""
 
 from collections.abc import Collection
-from contextlib import asynccontextmanager
-from types import TracebackType
-from typing import Literal, AsyncIterator
-from typing import Self
 
 import python_utilz as pu
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncConnection
 
 from omoide import custom_logging
+from omoide import models
 from omoide.database import db_models
-from omoide.workers.worker_parallel import models
+from omoide.database.implementations.impl_sqlalchemy import SqlalchemyDatabase
 
 LOG = custom_logging.get_logger(__name__)
 
 
-class ParallelPostgreSQLDatabase:
+class ParallelPostgreSQLDatabase(SqlalchemyDatabase):
     """Storage in database."""
-
-    def __init__(self, db_url: str, *, echo: bool) -> None:
-        """Initialize instance."""
-        self._engine = create_async_engine(
-            db_url,
-            echo=echo,
-            pool_pre_ping=True,
-        )
-
-    async def __aenter__(self) -> Self:
-        """Start connect to DB."""
-        await self.connect()
-        return self
-
-    async def __aexit__(
-        self,
-        type_: type[BaseException] | None,
-        value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> Literal[False]:
-        """Disconnect form DB."""
-        await self.disconnect()
-        return False
-
-    @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[AsyncConnection]:
-        """Start transaction."""
-        async with self._engine.begin() as connection:
-            yield connection
-
-    async def connect(self) -> None:
-        """Connect to database."""
-
-    async def disconnect(self) -> None:
-        """Disconnect from the database."""
-        try:
-            await self._engine.dispose()
-        except Exception:
-            LOG.exception('Exception while disposing database engine')
 
     async def get_parallel_commands(
         self,

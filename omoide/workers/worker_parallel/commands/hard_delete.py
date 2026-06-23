@@ -10,7 +10,7 @@ from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.locators import FilesystemLocator
 from omoide.workers.worker_parallel.commands.base_command import Command
 from omoide.workers.worker_parallel.database import ParallelPostgreSQLDatabase
-from omoide.workers.worker_parallel.models import ParallelCommand
+from omoide.models import ParallelCommand
 
 LOG = custom_logging.get_logger(__name__)
 

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 import enum
+from enum import StrEnum
+from functools import cached_property
 from typing import Any
 from typing import Literal
 from typing import NamedTuple
@@ -560,3 +562,47 @@ class OutputMedia:
     error: str | None
     content: bytes
     processed_by: set[str]
+
+
+class Command(StrEnum):
+    """All known commands."""
+
+    DUMMY = 'dummy'
+    SOFT_DELETE = 'soft_delete'
+    HARD_DELETE = 'hard_delete'
+
+
+class CommandStatus(StrEnum):
+    """Task status."""
+
+    CREATED = 'created'
+    ACTIVE = 'active'
+    DONE = 'done'
+    FAILED = 'failed'
+
+
+@dataclass(frozen=True)
+class ParallelCommand:
+    """ParallelCommand."""
+
+    id: int
+    requested_by: int
+    name: str
+    status: CommandStatus
+    extras: dict[str, Any]
+    log: str
+    created_at: datetime
+    updated_at: datetime
+    started_at: datetime
+    ended_at: datetime
+
+    @cached_property
+    def item_id(self) -> int:
+        """Extract from extras."""
+        item_id = self.extras.get('item_id')
+
+        if item_id is None:
+            msg = 'Missing item_id'
+            raise KeyError(msg)
+
+        return int(item_id)

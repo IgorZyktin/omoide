@@ -2,7 +2,7 @@
 
 import abc
 
-from omoide.workers.worker_parallel.models import ParallelCommand
+from omoide.models import ParallelCommand
 
 
 class Command(abc.ABC):

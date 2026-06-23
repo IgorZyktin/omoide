@@ -4,6 +4,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import threading
 import time
+from typing import assert_never
 
 import nano_settings as ns
 import python_utilz as pu
@@ -14,8 +15,9 @@ from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.infra.interfaces.abs_lock import LockableResource
 from omoide.infra.locators import FilesystemLocator
 from omoide.workers import utils
-from omoide.workers.worker_parallel import metrics, commands
-from omoide.workers.worker_parallel import models
+from omoide.workers.worker_parallel import metrics
+from omoide.workers.worker_parallel import commands
+from omoide import models
 from omoide.workers.worker_parallel.cfg import ParallelWorkerConfig
 from omoide.workers.worker_parallel.commands.base_command import Command
 from omoide.workers.worker_parallel.database import ParallelPostgreSQLDatabase
@@ -273,10 +275,10 @@ async def dispatch_and_execute(
     """Choose implementation and execute."""
     command_implementation: Command
     match command.name:
-        case 'dummy':
+        case models.Command.DUMMY:
             command_implementation = commands.DummyCommand(command)
 
-        case 'hard_delete':
+        case models.Command.HARD_DELETE:
             command_implementation = commands.HardDeleteCommand(
                 dto=command,
                 database=database,
@@ -285,7 +287,7 @@ async def dispatch_and_execute(
                 locator=fs_locator,
             )
 
-        case 'soft_delete':
+        case models.Command.SOFT_DELETE:
             command_implementation = commands.SoftDeleteCommand(
                 dto=command,
                 database=database,
@@ -295,8 +297,7 @@ async def dispatch_and_execute(
             )
 
         case _:
-            msg = f'Unknown command: {command.name!r}'
-            raise RuntimeError(msg)
+            assert_never(command.name)
 
     return await command_implementation.execute()
 
