@@ -46,12 +46,20 @@ def upgrade() -> None:
     op.execute('GRANT ALL ON command_queue_parallel TO omoide_worker;')
     op.execute('GRANT SELECT ON command_queue_parallel TO omoide_monitoring;')
 
+    op.execute('GRANT ALL ON command_queue_parallel_id_seq TO omoide_app;')
+    op.execute('GRANT ALL ON command_queue_parallel_id_seq TO omoide_worker;')
+    op.execute('GRANT SELECT ON command_queue_parallel_id_seq TO omoide_monitoring;')
+
 
 def downgrade() -> None:
     """Removing stuff."""
     op.execute('REVOKE ALL PRIVILEGES ON command_queue_parallel FROM omoide_app;')
     op.execute('REVOKE ALL PRIVILEGES ON command_queue_parallel FROM omoide_worker;')
     op.execute('REVOKE ALL PRIVILEGES ON command_queue_parallel FROM omoide_monitoring;')
+
+    op.execute('REVOKE ALL PRIVILEGES ON command_queue_parallel_id_seq FROM omoide_app;')
+    op.execute('REVOKE ALL PRIVILEGES ON command_queue_parallel_id_seq FROM omoide_worker;')
+    op.execute('REVOKE ALL PRIVILEGES ON command_queue_parallel_id_seq FROM omoide_monitoring;')
 
     op.drop_index(op.f('ix_command_queue_parallel_id'), table_name='command_queue_parallel')
     op.drop_index(op.f('ix_command_queue_parallel_name'), table_name='command_queue_parallel')
