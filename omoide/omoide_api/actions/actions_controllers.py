@@ -11,7 +11,6 @@ from fastapi import status
 from omoide import dependencies as dep
 from omoide import models
 from omoide.database import interfaces as db_interfaces
-from omoide.object_storage import interfaces as os_interfaces
 from omoide.omoide_api.actions import actions_use_cases
 
 api_actions_router = APIRouter(prefix='/actions', tags=['Actions'])
@@ -145,7 +144,7 @@ async def api_action_rebuild_computed_tags_for_all(
     '/copy_image/{source_item_uuid}/to/{target_item_uuid}',
     summary='Copy image from one item to another',
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=dict[str, str | list[str]],
+    response_model=dict[str, str],
 )
 async def api_action_copy_image(  # noqa: PLR0913
     user: Annotated[models.User, Depends(dep.get_current_user)],
@@ -154,22 +153,22 @@ async def api_action_copy_image(  # noqa: PLR0913
     users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(dep.get_users_repo)],
     items_repo: Annotated[db_interfaces.AbsItemsRepo, Depends(dep.get_items_repo)],
     meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
-    object_storage: Annotated[os_interfaces.AbsObjectStorage, Depends(dep.get_object_storage)],
+    commands_repo: Annotated[db_interfaces.AbsCommandsRepo, Depends(dep.get_commands_repo)],
     source_item_uuid: UUID,
     target_item_uuid: UUID,
-) -> dict[str, Any]:
+) -> dict[str, str]:
     """Copy image from one item to another.
 
     This will invoke copying of content, preview and a thumbnail.
     """
     use_case = actions_use_cases.CopyImageUseCase(
-        database, misc_repo, users_repo, items_repo, meta_repo, object_storage
+        database, misc_repo, users_repo, items_repo, meta_repo, commands_repo
     )
 
-    media_types = await use_case.execute(
+    await use_case.execute(
         user=user,
         source_uuid=source_item_uuid,
         target_uuid=target_item_uuid,
     )
 
-    return {'result': 'Copying image', 'will_copy': media_types}
+    return {'result': 'Copying image'}

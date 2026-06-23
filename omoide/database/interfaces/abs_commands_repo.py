@@ -29,3 +29,13 @@ class AbsCommandsRepo(abc.ABC, Generic[ConnectionT]):
         item: models.Item,
     ) -> int:
         """Hard delete an item."""
+
+    @abc.abstractmethod
+    async def copy_image(
+        self,
+        conn: ConnectionT,
+        requested_by: models.User,
+        source_item: models.Item,
+        target_item: models.Item,
+    ) -> int:
+        """Copy images between items."""

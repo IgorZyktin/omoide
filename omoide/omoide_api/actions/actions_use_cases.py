@@ -3,12 +3,11 @@
 from typing import NamedTuple
 from uuid import UUID
 
-from omoide import const
 from omoide import custom_logging
+from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.domain import ensure
-from omoide.object_storage import interfaces as os_interfaces
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -183,7 +182,7 @@ class CopyImageUseCase:
         users_repo: db_interfaces.AbsUsersRepo,
         items_repo: db_interfaces.AbsItemsRepo,
         meta_repo: db_interfaces.AbsMetaRepo,
-        object_storage: os_interfaces.AbsObjectStorage,
+        commands_repo: db_interfaces.AbsCommandsRepo,
     ) -> None:
         """Initialize instance."""
         self.database = database
@@ -191,43 +190,48 @@ class CopyImageUseCase:
         self.users_repo = users_repo
         self.items_repo = items_repo
         self.meta_repo = meta_repo
-        self.object_storage = object_storage
+        self.commands_repo = commands_repo
 
     async def execute(
         self,
         user: models.User,
         source_uuid: UUID,
         target_uuid: UUID,
-    ) -> list[const.MEDIA_TYPE]:
+    ) -> None:
         """Execute."""
         ensure.registered(user, 'Only registered users can copy images')
 
         if source_uuid == target_uuid:
-            return []
+            return
 
         async with self.database.transaction() as conn:
             source_item = await self.items_repo.get_by_uuid(conn, source_uuid)
+            if source_item.status == models.Status.DELETED:
+                msg = 'You cannot copy from deleted item'
+                raise exceptions.NotAllowedError(msg)
+
             target_item = await self.items_repo.get_by_uuid(conn, target_uuid)
+            if target_item.status == models.Status.DELETED:
+                msg = 'You cannot copy to deleted item'
+                raise exceptions.NotAllowedError(msg)
 
-            ensure.owner(user, source_item, 'Only owner can to copy images')
-            ensure.owner(user, target_item, 'Only owner can to copy images')
+            ensure.owner(user, source_item, 'You must own item to copy from')
+            ensure.owner(user, target_item, 'You must own item to copy to')
 
-            owner = await self.users_repo.get_by_id(conn, source_item.owner_id)
+            if source_item.thumbnail_ext is None or source_item.preview_ext is None:
+                msg = 'Item must have an image to copy'
+                raise exceptions.NotAllowedError(msg)
 
-        media_types = await self.object_storage.copy_all_objects(
-            requested_by=user,
-            owner=owner,
-            source_item=source_item,
-            target_item=target_item,
-        )
+            await self.commands_repo.copy_image(
+                conn=conn,
+                requested_by=user,
+                source_item=source_item,
+                target_item=target_item,
+            )
 
-        async with self.database.transaction() as conn:
-            if media_types:
-                await self.meta_repo.add_item_note(
-                    conn=conn,
-                    item=target_item,
-                    key='copied_image_from',
-                    value=str(source_uuid),
-                )
-
-        return media_types
+            await self.meta_repo.add_item_note(
+                conn=conn,
+                item=target_item,
+                key='copied_image_from',
+                value=str(source_uuid),
+            )

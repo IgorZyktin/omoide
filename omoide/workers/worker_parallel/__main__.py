@@ -297,6 +297,15 @@ async def dispatch_and_execute(
                 locator=fs_locator,
             )
 
+        case models.Command.COPY_IMAGE:
+            command_implementation = commands.CopyImageCommand(
+                dto=command,
+                database=database,
+                users=users_repo,
+                items=items_repo,
+                locator=fs_locator,
+            )
+
         case _:
             assert_never(command_type)
 

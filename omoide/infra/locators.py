@@ -12,12 +12,12 @@ class LocatorMixin:
 
     prefix_size: int
 
-    def _get_prefix(self, item: models.Item) -> str:
+    def get_prefix(self, item: models.Item) -> str:
         """Return prefix of the item."""
         return str(item.uuid)[: self.prefix_size]
 
     @staticmethod
-    def _get_filename(
+    def get_filename(
         item: models.Item,
         ext: str | None,
         *,
@@ -52,8 +52,8 @@ class WebLocator(LocatorMixin):
             f'/{self.root}'
             f'/{const.MediaType.VIDEO}'
             f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
-            f'/{self._get_prefix(item)}'
-            f'/{self._get_filename(item, item.content_ext)}'
+            f'/{self.get_prefix(item)}'
+            f'/{self.get_filename(item, item.content_ext)}'
         )
 
     def get_content_location(self, item: models.Item) -> str | None:
@@ -65,8 +65,8 @@ class WebLocator(LocatorMixin):
             f'/{self.root}'
             f'/{const.MediaType.CONTENT}'
             f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
-            f'/{self._get_prefix(item)}'
-            f'/{self._get_filename(item, item.content_ext)}'
+            f'/{self.get_prefix(item)}'
+            f'/{self.get_filename(item, item.content_ext)}'
         )
 
     def get_preview_location(self, item: models.Item) -> str | None:
@@ -78,8 +78,8 @@ class WebLocator(LocatorMixin):
             f'/{self.root}'
             f'/{const.MediaType.PREVIEW}'
             f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
-            f'/{self._get_prefix(item)}'
-            f'/{self._get_filename(item, item.preview_ext)}'
+            f'/{self.get_prefix(item)}'
+            f'/{self.get_filename(item, item.preview_ext)}'
         )
 
     def get_thumbnail_location(self, item: models.Item) -> str | None:
@@ -91,8 +91,8 @@ class WebLocator(LocatorMixin):
             f'/{self.root}'
             f'/{const.MediaType.THUMBNAIL}'
             f'/{item.owner_uuid}'  # FIXME - do not use `owner_uuid` attribute
-            f'/{self._get_prefix(item)}'
-            f'/{self._get_filename(item, item.thumbnail_ext)}'
+            f'/{self.get_prefix(item)}'
+            f'/{self.get_filename(item, item.thumbnail_ext)}'
         )
 
 
@@ -132,8 +132,8 @@ class FilesystemLocator(LocatorMixin):
             self.root,
             media_type,
             str(owner.uuid),
-            self._get_prefix(item),
-            self._get_filename(item, ext, deleted=deleted),
+            self.get_prefix(item),
+            self.get_filename(item, ext, deleted=deleted),
         )
 
     def get_path(

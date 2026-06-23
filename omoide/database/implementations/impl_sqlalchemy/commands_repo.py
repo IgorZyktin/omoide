@@ -63,3 +63,33 @@ class CommandsRepo(AbsCommandsRepo[AsyncConnection]):
         )
         command_id = (await conn.execute(stmt)).scalar()
         return command_id if command_id is not None else -1
+
+    async def copy_image(
+        self,
+        conn: AsyncConnection,
+        requested_by: models.User,
+        source_item: models.Item,
+        target_item: models.Item,
+    ) -> int:
+        """Copy images between items."""
+        now = pu.now()
+        stmt = (
+            sa.insert(db_models.ParallelCommand)
+            .values(
+                requested_by=requested_by.id,
+                name=models.Command.COPY_IMAGE,
+                status=models.CommandStatus.CREATED,
+                extras={
+                    'source_item_id': source_item.id,
+                    'target_item_id': target_item.id,
+                },
+                log='',
+                created_at=now,
+                updated_at=now,
+                started_at=None,
+                ended_at=None,
+            )
+            .returning(db_models.ParallelCommand.id)
+        )
+        command_id = (await conn.execute(stmt)).scalar()
+        return command_id if command_id is not None else -1
