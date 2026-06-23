@@ -159,7 +159,7 @@ async def api_action_copy_image(  # noqa: PLR0913
 ) -> dict[str, str]:
     """Copy image from one item to another.
 
-    This will invoke copying of content, preview and a thumbnail.
+    This will invoke copying of preview and a thumbnail.
     """
     use_case = actions_use_cases.CopyImageUseCase(
         database, misc_repo, users_repo, items_repo, meta_repo, commands_repo

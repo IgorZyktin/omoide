@@ -42,7 +42,6 @@ from omoide import models
 from omoide.database import db_models
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.interfaces.abs_metrics_collector import Metric
-from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 
 _TRUNCATE_TABLES = (
     'queue_input_media',
@@ -420,16 +419,9 @@ def signatures_repo() -> impl_sqlalchemy.SignaturesRepo:
 
 
 @pytest.fixture
-def object_storage(
-    async_database: impl_sqlalchemy.SqlalchemyDatabase,
-) -> FileObjectStorageServer:
-    """Provide a ``FileObjectStorageServer`` wired to the test DB."""
-    return FileObjectStorageServer(
-        database=async_database,
-        media=impl_sqlalchemy.MediaRepo(),
-        misc=impl_sqlalchemy.MiscRepo(),
-        prefix_size=2,
-    )
+def commands_repo() -> impl_sqlalchemy.CommandsRepo:
+    """Provide a ``CommandsRepo`` for use-case tests."""
+    return impl_sqlalchemy.CommandsRepo()
 
 
 @pytest.fixture

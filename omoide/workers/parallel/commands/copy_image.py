@@ -1,14 +1,14 @@
 """Copy image between items."""
 
 import shutil
-
+import python_utilz as pu
 from omoide import const
 from omoide import custom_logging
 from aiofiles.os import wrap
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.locators import FilesystemLocator
-from omoide.workers.worker_parallel.commands.base_command import Command
-from omoide.workers.worker_parallel.database import ParallelPostgreSQLDatabase
+from omoide.workers.parallel.commands.base_command import Command
+from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
 from omoide.models import ParallelCommand
 
 LOG = custom_logging.get_logger(__name__)
@@ -23,6 +23,7 @@ class CopyImageCommand(Command):
         database: ParallelPostgreSQLDatabase,
         users: impl_sqlalchemy.UsersRepo,
         items: impl_sqlalchemy.ItemsRepo,
+        meta: impl_sqlalchemy.MetaRepo,
         locator: FilesystemLocator,
     ) -> None:
         """Initialize instance."""
@@ -30,6 +31,7 @@ class CopyImageCommand(Command):
         self.database = database
         self.users = users
         self.items = items
+        self.meta = meta
         self.locator = locator
 
     async def execute(self) -> tuple[list[str], int]:
@@ -93,5 +95,28 @@ class CopyImageCommand(Command):
                 dst=target_path,
             )
             LOG.debug('Copied file: {} to {}', source_path, target_path)
+
+        async with self.database.transaction() as conn:
+            target_item.preview_ext = source_item.preview_ext
+            target_item.thumbnail_ext = source_item.thumbnail_ext
+            await self.items.save(conn, target_item)
+
+            source_metainfo = await self.meta.get_by_item(conn, source_item)
+            target_metainfo = await self.meta.get_by_item(conn, target_item)
+            target_metainfo.content_type = source_metainfo.content_type
+            target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
+            target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
+            target_metainfo.preview_height = source_metainfo.preview_height
+            target_metainfo.preview_width = source_metainfo.preview_width
+            target_metainfo.preview_size = source_metainfo.preview_size
+            target_metainfo.thumbnail_size = source_metainfo.thumbnail_size
+            target_metainfo.updated_at = pu.now()
+            await self.meta.save(conn, target_metainfo)
+            await self.meta.add_item_note(
+                conn=conn,
+                item=target_item,
+                key='copied_image_from',
+                value=str(source_item.uuid),
+            )
 
         return [], 0

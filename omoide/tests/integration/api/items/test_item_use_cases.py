@@ -23,7 +23,7 @@ def delete_item_use_case(
     users_repo,
     meta_repo,
     tags_repo,
-    object_storage,
+    commands_repo,
 ):
     """Build ``DeleteItemUseCase`` wired with real repos.
 
@@ -32,7 +32,7 @@ def delete_item_use_case(
     to read.
     """
     return DeleteItemUseCase(
-        async_database, items_repo, users_repo, meta_repo, tags_repo, object_storage
+        async_database, items_repo, users_repo, meta_repo, tags_repo, commands_repo
     )
 
 

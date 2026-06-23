@@ -228,10 +228,3 @@ class CopyImageUseCase:
                 source_item=source_item,
                 target_item=target_item,
             )
-
-            await self.meta_repo.add_item_note(
-                conn=conn,
-                item=target_item,
-                key='copied_image_from',
-                value=str(source_uuid),
-            )

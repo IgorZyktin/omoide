@@ -473,7 +473,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
         users: db_interfaces.AbsUsersRepo,
         meta: db_interfaces.AbsMetaRepo,
         misc: db_interfaces.AbsMiscRepo,
-        object_storage: object_interfaces.AbsObjectStorage,
+        commands_repo: db_interfaces.AbsCommandsRepo,
     ) -> None:
         """Initialize instance."""
         super().__init__()
@@ -482,7 +482,7 @@ class ChangeParentItemUseCase(BaseItemUseCase):
         self.users = users
         self.meta = meta
         self.misc = misc
-        self.object_storage = object_storage
+        self.commands_repo = commands_repo
 
     async def execute(
         self,
@@ -564,24 +564,14 @@ class ChangeParentItemUseCase(BaseItemUseCase):
                     'item_uuid': str(new_parent.uuid),
                 },
             )
-            owner = await self.users.get_by_id(conn, item.owner_id)
 
-        if new_parent.thumbnail_ext is None:
-            media_types = await self.object_storage.copy_all_objects(
-                requested_by=user,
-                owner=owner,
-                source_item=item,
-                target_item=new_parent,
-            )
-
-            if media_types:
-                async with self.database.transaction() as conn:
-                    await self.meta.add_item_note(
-                        conn=conn,
-                        item=new_parent,
-                        key='copied_image_from',
-                        value=str(item.uuid),
-                    )
+            if new_parent.thumbnail_ext is None:
+                await self.commands_repo.copy_image(
+                    conn=conn,
+                    requested_by=user,
+                    source_item=item,
+                    target_item=new_parent,
+                )
 
         return [operation_id_tags, operation_id_old_parent, operation_id_new_parent]
 

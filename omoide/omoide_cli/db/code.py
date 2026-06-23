@@ -6,14 +6,11 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from omoide import const
 from omoide import custom_logging
 from omoide import exceptions
 from omoide import models
 from omoide.database import db_models
-from omoide.database.implementations.impl_sqlalchemy import MediaRepo
-from omoide.database.implementations.impl_sqlalchemy import MiscRepo
-from omoide.object_storage.implementations.file_server import FileObjectStorageServer
+from omoide.database.implementations.impl_sqlalchemy import CommandsRepo
 from omoide.omoide_cli import common
 
 LOG = custom_logging.get_logger(__name__)
@@ -31,18 +28,12 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
         database,
         users,
         items,
-        meta,
+        _,
         _,
         _,
     ) = await common.init_variables(db_url, only_users, only_items)
 
-    object_storage = FileObjectStorageServer(
-        database=database,
-        media=MediaRepo(),
-        misc=MiscRepo(),
-        prefix_size=const.STORAGE_PREFIX_SIZE,
-    )
-
+    repo = CommandsRepo()
     total = 0
 
     async with database.transaction() as conn:
@@ -56,7 +47,6 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
         for item_uuid, copied_image_from_uuid in rows:
             changed = False
             target_item = await items.get_by_uuid(conn, item_uuid)
-            owner = await users.get_by_id(conn, target_item.owner_id)
 
             if copied_image_from_uuid is not None:
                 try:
@@ -71,9 +61,9 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
                             source_item=source_item,
                         )
 
-                    await object_storage.copy_all_objects(
+                    await repo.copy_image(
+                        conn=conn,
                         requested_by=admin,
-                        owner=owner,
                         source_item=source_item,
                         target_item=target_item,
                     )
@@ -100,17 +90,11 @@ async def copy_images_from_children(  # noqa: C901 `copy_images_from_children` i
                         target_item=target_item,
                         source_item=child,
                     )
-                await object_storage.copy_all_objects(
+                await repo.copy_image(
+                    conn=conn,
                     requested_by=admin,
-                    owner=owner,
                     source_item=child,
                     target_item=target_item,
-                )
-                await meta.add_item_note(
-                    conn=conn,
-                    item=target_item,
-                    key='copied_image_from',
-                    value=str(child.uuid),
                 )
                 changed = True
                 total += 1

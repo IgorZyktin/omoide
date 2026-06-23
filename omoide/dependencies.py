@@ -26,7 +26,6 @@ from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.locators import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
-from omoide.object_storage.implementations.file_server import FileObjectStorageServer
 from omoide.object_storage.implementations.pg_large_object_content_storage import (
     PgLargeObjectContentStorage,
 )
@@ -89,20 +88,6 @@ def get_credentials(request: Request) -> HTTPBasicCredentials:
 def get_authenticator() -> AbsAuthenticator:
     """Get authenticator instance."""
     return infra.BcryptAuthenticator()
-
-
-@functools.cache
-def get_object_storage(
-    database: Annotated[AbsDatabase, Depends(get_database)],
-) -> object_interfaces.AbsObjectStorage:
-    """Get policy instance."""
-    config = get_config()
-    return FileObjectStorageServer(
-        database=database,
-        media=impl_sqlalchemy.MediaRepo(),
-        misc=impl_sqlalchemy.MiscRepo(),
-        prefix_size=config.prefix_size,
-    )
 
 
 @functools.cache

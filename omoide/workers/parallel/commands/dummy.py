@@ -2,7 +2,7 @@
 
 import asyncio
 
-from omoide.workers.worker_parallel.commands.base_command import Command
+from omoide.workers.parallel.commands.base_command import Command
 
 
 class DummyCommand(Command):
