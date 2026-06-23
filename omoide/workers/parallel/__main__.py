@@ -72,20 +72,24 @@ async def main() -> None:
     with executor, metrics_collector:
         async with db, lock:
             while WORKING.is_set():
-                did_something = await do_work(
-                    config=config,
-                    executor=executor,
-                    lock=lock,
-                    database=db,
-                    metrics_collector=metrics_collector,
-                    users_repo=users_repo,
-                    items_repo=items_repo,
-                    meta_repo=meta_repo,
-                    fs_locator=fs_locator,
-                )
+                try:
+                    did_something = await do_work(
+                        config=config,
+                        executor=executor,
+                        lock=lock,
+                        database=db,
+                        metrics_collector=metrics_collector,
+                        users_repo=users_repo,
+                        items_repo=items_repo,
+                        meta_repo=meta_repo,
+                        fs_locator=fs_locator,
+                    )
 
-                if not did_something:
-                    await asyncio.sleep(config.delay)
+                    if not did_something:
+                        await asyncio.sleep(config.delay)
+                except (KeyboardInterrupt, asyncio.CancelledError):
+                    LOG.warning('Stopping manually')
+                    break
 
     LOG.info(
         'Worker {} stopped. Processed: {} tasks, {}, got {} errors.',
@@ -169,7 +173,12 @@ async def process_one(
             fs_locator=fs_locator,
         )
     except Exception:
-        LOG.exception('Process_one for task {} crashed', command.id)
+        LOG.exception('Command {} failed', command.id)
+        traceback = custom_logging.capture_exception_output(
+            f'Command {command.id} failed'
+        )
+        await database.mark_failed(command, traceback or '???')
+        metrics_collector.increment(metrics.ERRORS, 1)
 
 
 async def _process_one(
