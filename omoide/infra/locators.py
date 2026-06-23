@@ -1,6 +1,7 @@
 """Pathfinders."""
 
 from pathlib import Path
+from typing import assert_never
 
 from omoide import const
 from omoide import models
@@ -16,9 +17,22 @@ class LocatorMixin:
         return str(item.uuid)[: self.prefix_size]
 
     @staticmethod
-    def _get_filename(item: models.Item, ext: str | None) -> str:
+    def _get_filename(
+        item: models.Item,
+        ext: str | None,
+        *,
+        deleted: bool = False,
+    ) -> str:
         """Return filename of the item."""
-        return f'{item.uuid}.{ext}' if ext else ''
+        filename = str(item.uuid)
+
+        if ext is not None:
+            filename = f'{filename}.{ext}'
+
+        if deleted:
+            return f'deleted___{filename}'
+
+        return filename
 
 
 class WebLocator(LocatorMixin):
@@ -90,70 +104,51 @@ class FilesystemLocator(LocatorMixin):
         self.root = root
         self.prefix_size = prefix_size
 
-    def get_video_location(
+    def get_path_segments(
         self,
         owner: models.User,
         item: models.Item,
-    ) -> Path | None:
-        """Return location of the video."""
-        if item.content_ext is None:
+        media_type: const.MediaType,
+        *,
+        deleted: bool = False,
+    ) -> tuple[Path, str, str, str, str] | None:
+        """Return all path components separately."""
+        match media_type:
+            case media_type.VIDEO:
+                ext = item.content_ext
+            case media_type.CONTENT:
+                ext = item.content_ext
+            case media_type.PREVIEW:
+                ext = item.preview_ext
+            case media_type.THUMBNAIL:
+                ext = item.thumbnail_ext
+            case _:
+                assert_never(media_type)
+
+        if ext is None:
             return None
 
         return (
-            self.root
-            / const.MediaType.VIDEO
-            / str(owner.uuid)
-            / self._get_prefix(item)
-            / self._get_filename(item, item.content_ext)
+            self.root,
+            media_type,
+            str(owner.uuid),
+            self._get_prefix(item),
+            self._get_filename(item, ext, deleted=deleted),
         )
 
-    def get_content_location(
+    def get_path(
         self,
         owner: models.User,
         item: models.Item,
+        media_type: const.MediaType,
+        *,
+        deleted: bool = False,
     ) -> Path | None:
-        """Return location of the content."""
-        if item.content_ext is None:
+        """Get path to the file."""
+        segments = self.get_path_segments(owner, item, media_type, deleted=deleted)
+
+        if segments is None:
             return None
 
-        return (
-            self.root
-            / const.MediaType.CONTENT
-            / str(owner.uuid)
-            / self._get_prefix(item)
-            / self._get_filename(item, item.content_ext)
-        )
-
-    def get_preview_location(
-        self,
-        owner: models.User,
-        item: models.Item,
-    ) -> Path | None:
-        """Return location of the preview."""
-        if item.preview_ext is None:
-            return None
-
-        return (
-            self.root
-            / const.MediaType.PREVIEW
-            / str(owner.uuid)
-            / self._get_prefix(item)
-            / self._get_filename(item, item.preview_ext)
-        )
-
-    def get_thumbnail_location(
-        self,
-        owner: models.User,
-        item: models.Item,
-    ) -> Path | None:
-        """Return location of the thumbnail."""
-        if item.thumbnail_ext is None:
-            return None
-
-        return (
-            self.root
-            / const.MediaType.THUMBNAIL
-            / str(owner.uuid)
-            / self._get_prefix(item)
-            / self._get_filename(item, item.thumbnail_ext)
-        )
+        _root, _media, _uuid, _prefix, _filename = segments
+        return _root / _media / _uuid / _prefix / _filename
