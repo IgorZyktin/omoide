@@ -42,6 +42,10 @@ def add_signal_handling(
     deadline: float,
 ) -> None:
     """Handle shutdown signals."""
+    if os.name == 'nt':
+        LOG.warning('Running on Windows, can stop only using Ctr+C')
+        return
+
     handler = partial(signal_handler, event=event, deadline=deadline)
     loop = asyncio.get_running_loop()
     loop.add_signal_handler(signal.SIGINT, handler)
