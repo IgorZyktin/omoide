@@ -111,7 +111,7 @@ class FilesystemLocator(LocatorMixin):
         media_type: const.MediaType,
         *,
         deleted: bool = False,
-    ) -> tuple[Path, str, str, str, str] | None:
+    ) -> tuple[Path, const.MediaType, str, str, str] | None:
         """Return all path components separately."""
         match media_type:
             case media_type.VIDEO:

@@ -1,4 +1,4 @@
-"""Actually delete all files and the item itself."""
+"""Only mark files as deleted."""
 
 from aiofiles import os
 
@@ -15,8 +15,8 @@ from omoide.workers.worker_parallel.models import ParallelCommand
 LOG = custom_logging.get_logger(__name__)
 
 
-class HardDeleteCommand(Command):
-    """Actually delete all files and the item itself."""
+class SoftDeleteCommand(Command):
+    """Only mark files as deleted."""
 
     def __init__(
         self,
@@ -43,41 +43,64 @@ class HardDeleteCommand(Command):
 
         deleted = item.status == models.Status.DELETED
 
-        async with self.database.transaction() as conn:
-            await self.items.hard_delete(conn, item)
+        if deleted:
+            return [], 0
 
-        paths = [
-            path
-            for path in (
-                self.locator.get_path(
-                    owner, item, const.MediaType.VIDEO, deleted=deleted
+        all_segments = [
+            segments
+            for segments in (
+                self.locator.get_path_segments(
+                    owner,
+                    item,
+                    const.MediaType.VIDEO,
                 ),
-                self.locator.get_path(
-                    owner, item, const.MediaType.CONTENT, deleted=deleted
+                self.locator.get_path_segments(
+                    owner,
+                    item,
+                    const.MediaType.CONTENT,
                 ),
-                self.locator.get_path(
-                    owner, item, const.MediaType.PREVIEW, deleted=deleted
+                self.locator.get_path_segments(
+                    owner,
+                    item,
+                    const.MediaType.PREVIEW,
                 ),
-                self.locator.get_path(
-                    owner, item, const.MediaType.THUMBNAIL, deleted=deleted
+                self.locator.get_path_segments(
+                    owner,
+                    item,
+                    const.MediaType.THUMBNAIL,
                 ),
             )
-            if path is not None
+            if segments is not None
         ]
 
-        if not paths:
+        if not all_segments:
             return [], 0
 
         # NOTE: Any general OSError shows critical misconfiguration
         # of the host, so it is not added into exception clause
-        for path in paths:
+        for segments in all_segments:
+            _root, _media, _uuid, _prefix, _filename = segments
+            old_path = _root / _media / _uuid / _prefix / _filename
+            new_path = self.locator.get_path(owner, item, _media, deleted=True)
+
+            if new_path is None:
+                LOG.warning(
+                    'Item has no {}, skipping soft-delete: {}',
+                    _media,
+                    old_path,
+                )
+                continue
+
             try:
-                await os.unlink(path)
+                await os.rename(
+                    src=old_path,
+                    dst=new_path,
+                )
             except FileNotFoundError:
                 LOG.warning(
-                    'File did not exist, skipping hard-delete: {}', path
+                    'File did not exist, skipping soft-delete: {}', old_path
                 )
             else:
-                LOG.debug('Deleted file: {}', path)
+                LOG.debug('Renamed file to deleted: {}', old_path)
 
         return [], 0

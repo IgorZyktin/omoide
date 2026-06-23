@@ -285,6 +285,15 @@ async def dispatch_and_execute(
                 locator=fs_locator,
             )
 
+        case 'soft_delete':
+            command_implementation = commands.SoftDeleteCommand(
+                dto=command,
+                database=database,
+                users=users_repo,
+                items=items_repo,
+                locator=fs_locator,
+            )
+
         case _:
             msg = f'Unknown command: {command.name!r}'
             raise RuntimeError(msg)
