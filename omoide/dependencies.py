@@ -163,6 +163,11 @@ def get_signatures_repo() -> db_interfaces.AbsSignaturesRepo:
     return impl_sqlalchemy.SignaturesRepo()
 
 
+def get_commands_repo() -> db_interfaces.AbsCommandsRepo:
+    """Get repo instance."""
+    return impl_sqlalchemy.CommandsRepo()
+
+
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],

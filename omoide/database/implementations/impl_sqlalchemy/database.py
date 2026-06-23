@@ -2,6 +2,9 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from types import TracebackType
+from typing import Literal
+from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +28,21 @@ class SqlalchemyDatabase(AbsDatabase[AsyncConnection]):
         self.session_maker = async_sessionmaker(
             bind=self._engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
         )
+
+    async def __aenter__(self) -> Self:
+        """Start connect to DB."""
+        await self.connect()
+        return self
+
+    async def __aexit__(
+        self,
+        type_: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Literal[False]:
+        """Disconnect form DB."""
+        await self.disconnect()
+        return False
 
     async def connect(self) -> None:
         """Connect to the database."""

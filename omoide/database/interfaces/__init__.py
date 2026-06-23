@@ -1,4 +1,5 @@
 from omoide.database.interfaces.abs_browse_repo import AbsBrowseRepo  # noqa: F401
+from omoide.database.interfaces.abs_commands_repo import AbsCommandsRepo  # noqa: F401
 from omoide.database.interfaces.abs_database import AbsDatabase  # noqa: F401
 from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo  # noqa: F401
 from omoide.database.interfaces.abs_items_repo import AbsItemsRepo  # noqa: F401

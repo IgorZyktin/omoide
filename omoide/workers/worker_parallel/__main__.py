@@ -274,7 +274,8 @@ async def dispatch_and_execute(
 ) -> tuple[list[str], int]:
     """Choose implementation and execute."""
     command_implementation: Command
-    match command.name:
+    command_type = models.Command(command.name)
+    match command_type:
         case models.Command.DUMMY:
             command_implementation = commands.DummyCommand(command)
 
@@ -297,7 +298,7 @@ async def dispatch_and_execute(
             )
 
         case _:
-            assert_never(command.name)
+            assert_never(command_type)
 
     return await command_implementation.execute()
 

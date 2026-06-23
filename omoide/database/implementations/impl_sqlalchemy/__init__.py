@@ -1,4 +1,5 @@
 from omoide.database.implementations.impl_sqlalchemy.browse_repo import BrowseRepo  # noqa: F401
+from omoide.database.implementations.impl_sqlalchemy.commands_repo import CommandsRepo  # noqa: F401
 from omoide.database.implementations.impl_sqlalchemy.database import (
     SqlalchemyDatabase,  # noqa: F401
 )

@@ -280,12 +280,12 @@ async def api_delete_item(  # noqa: PLR0913
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
-    object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
+    commands_repo: db_interfaces.AbsCommandsRepo = Depends(dep.get_commands_repo),
     desired_switch: Annotated[Literal['parent', 'sibling'], Query()] = 'sibling',
 ) -> common_api_models.ItemDeleteOutput:
     """Delete exising item."""
     use_case = item_use_cases.DeleteItemUseCase(
-        database, items_repo, users_repo, meta_repo, tags_repo, object_storage
+        database, items_repo, users_repo, meta_repo, tags_repo, commands_repo
     )
 
     item = await use_case.execute(

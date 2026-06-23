@@ -644,7 +644,7 @@ class DeleteItemUseCase(BaseItemUseCase):
         users: db_interfaces.AbsUsersRepo,
         meta: db_interfaces.AbsMetaRepo,
         tags: db_interfaces.AbsTagsRepo,
-        object_storage: object_interfaces.AbsObjectStorage,
+        commands_repo: db_interfaces.AbsCommandsRepo,
     ) -> None:
         """Initialize instance."""
         super().__init__()
@@ -653,7 +653,7 @@ class DeleteItemUseCase(BaseItemUseCase):
         self.users = users
         self.meta = meta
         self.tags = tags
-        self.object_storage = object_storage
+        self.commands_repo = commands_repo
 
     async def execute(  # noqa: C901,PLR0912
         self,
@@ -716,7 +716,7 @@ class DeleteItemUseCase(BaseItemUseCase):
                     await self.tags.decrement_known_tags_user(conn, other_user, computed_tags)
 
                 member_metainfo = await self.meta.get_by_item(conn, member)
-                await self.object_storage.soft_delete(user, owner, member)
+                await self.commands_repo.soft_delete(conn, user, member)
                 await self.meta.soft_delete(conn, member_metainfo)
                 await self.items.soft_delete(conn, member)
 
