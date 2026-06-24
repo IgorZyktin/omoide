@@ -361,7 +361,7 @@ async def api_upload_item(  # noqa: PLR0913
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
     misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
-    content_storage: object_interfaces.AbsContentStorage = Depends(dep.get_content_storage),
+    object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
 ) -> dict[str, Any]:
     """Store content data for given item."""
     ext = str(file.filename).lower().split('.')[-1]
@@ -371,7 +371,7 @@ async def api_upload_item(  # noqa: PLR0913
         raise exceptions.InvalidInputError(msg)
 
     use_case = item_use_cases.UploadItemUseCase(
-        database, items_repo, meta_repo, misc_repo, content_storage
+        database, items_repo, meta_repo, misc_repo, object_storage
     )
     features = item_api_models.extract_features(request)
 

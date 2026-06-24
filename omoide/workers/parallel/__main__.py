@@ -14,6 +14,10 @@ from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.const import LockableResource
 from omoide.infra.locators import FilesystemLocator
+from omoide.object_storage.implementations.pg_large_object_content_storage import (
+    PgLargeObjectStorage,
+)
+from omoide.object_storage.interfaces import AbsObjectStorage
 from omoide.workers import utils
 from omoide.workers.parallel import metrics
 from omoide.workers.parallel import commands
@@ -69,6 +73,8 @@ async def main() -> None:
         prefix_size=config.prefix_size,
     )
 
+    object_storage = PgLargeObjectStorage(db)
+
     with executor, metrics_collector:
         async with db, lock:
             while WORKING.is_set():
@@ -83,6 +89,7 @@ async def main() -> None:
                         items_repo=items_repo,
                         meta_repo=meta_repo,
                         fs_locator=fs_locator,
+                        object_storage=object_storage,
                     )
 
                     if not did_something:
@@ -116,6 +123,7 @@ async def do_work(
     items_repo: impl_sqlalchemy.ItemsRepo,
     meta_repo: impl_sqlalchemy.MetaRepo,
     fs_locator: FilesystemLocator,
+    object_storage: AbsObjectStorage,
 ) -> bool:
     """Perform workload."""
     candidates = await database.get_parallel_commands(
@@ -140,6 +148,7 @@ async def do_work(
                     items_repo=items_repo,
                     meta_repo=meta_repo,
                     fs_locator=fs_locator,
+                    object_storage=object_storage,
                 )
             )
 
@@ -157,6 +166,7 @@ async def process_one(
     items_repo: impl_sqlalchemy.ItemsRepo,
     meta_repo: impl_sqlalchemy.MetaRepo,
     fs_locator: FilesystemLocator,
+    object_storage: AbsObjectStorage,
 ) -> None:
     """Process one command."""
     try:
@@ -171,6 +181,7 @@ async def process_one(
             items_repo=items_repo,
             meta_repo=meta_repo,
             fs_locator=fs_locator,
+            object_storage=object_storage,
         )
     except Exception:
         LOG.exception('Command {} failed', command.id)
@@ -192,6 +203,7 @@ async def _process_one(
     items_repo: impl_sqlalchemy.ItemsRepo,
     meta_repo: impl_sqlalchemy.MetaRepo,
     fs_locator: FilesystemLocator,
+    object_storage: AbsObjectStorage,
 ) -> None:
     """Process one command."""
     resources = [LockableResource(const.LockNamespace.ITEMS, command.item_id)]
@@ -226,6 +238,7 @@ async def _process_one(
                 items_repo=items_repo,
                 meta_repo=meta_repo,
                 fs_locator=fs_locator,
+                object_storage=object_storage,
             )
             time_spent = time.perf_counter() - start
             await database.mark_done(command)
@@ -259,7 +272,9 @@ async def _process_one(
                 )
 
         if oid and succeeded:
-            await _cleanup_oid(database, oid, exclude_id=command.id)
+            await _cleanup_oid(
+                database, object_storage, oid, exclude_id=command.id
+            )
 
     finally:
         await lock.release_held(locks)
@@ -267,6 +282,7 @@ async def _process_one(
 
 async def _cleanup_oid(
     database: ParallelPostgreSQLDatabase,
+    object_storage: AbsObjectStorage,
     oid: int,
     exclude_id: int,
 ) -> None:
@@ -278,7 +294,7 @@ async def _cleanup_oid(
             oid,
         )
     else:
-        await database.delete_large_object(oid)
+        await object_storage.delete(oid)
 
 
 async def dispatch_and_execute(
@@ -290,6 +306,7 @@ async def dispatch_and_execute(
     items_repo: impl_sqlalchemy.ItemsRepo,
     meta_repo: impl_sqlalchemy.MetaRepo,
     fs_locator: FilesystemLocator,
+    object_storage: AbsObjectStorage,
 ) -> tuple[list[str], int]:
     """Choose implementation and execute."""
     command_implementation: Command

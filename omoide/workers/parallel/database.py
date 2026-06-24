@@ -130,14 +130,3 @@ class ParallelPostgreSQLDatabase(SqlalchemyDatabase):
         async with self._engine.begin() as conn:
             result = await conn.execute(query)
         return bool(result.scalar())
-
-    async def delete_large_object(self, oid: int) -> None:
-        """Delete large object."""
-        try:
-            async with self._engine.begin() as conn:
-                await conn.execute(
-                    sa.text('SELECT lo_unlink(:oid)'), {'oid': oid}
-                )
-        except Exception:
-            LOG.exception('Error deleting large object {}', oid)
-            raise

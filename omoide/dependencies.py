@@ -27,7 +27,7 @@ from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.locators import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
 from omoide.object_storage.implementations.pg_large_object_content_storage import (
-    PgLargeObjectContentStorage,
+    PgLargeObjectStorage,
 )
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import web
@@ -91,16 +91,16 @@ def get_authenticator() -> AbsAuthenticator:
 
 
 @functools.cache
-def get_content_storage(
+def get_object_storage(
     database: Annotated[impl_sqlalchemy.SqlalchemyDatabase, Depends(get_database)],
-) -> object_interfaces.AbsContentStorage:
-    """Get long-term content storage.
+) -> object_interfaces.AbsObjectStorage:
+    """Get long-term object storage.
 
     Swap this factory's return value to switch the backend (e.g. an S3
     implementation) — the controller / use case only depend on the
-    ``AbsContentStorage`` interface.
+    ``AbsObjectStorage`` interface.
     """
-    return PgLargeObjectContentStorage(database=database)
+    return PgLargeObjectStorage(database=database)
 
 
 def get_users_repo() -> db_interfaces.AbsUsersRepo:

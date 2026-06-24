@@ -722,7 +722,7 @@ class UploadItemUseCase(BaseItemUseCase):
         items: db_interfaces.AbsItemsRepo,
         meta: db_interfaces.AbsMetaRepo,
         misc: db_interfaces.AbsMiscRepo,
-        storage: object_interfaces.AbsContentStorage,
+        object_storage: object_interfaces.AbsObjectStorage,
     ) -> None:
         """Initialize instance."""
         super().__init__()
@@ -730,7 +730,7 @@ class UploadItemUseCase(BaseItemUseCase):
         self.items = items
         self.meta = meta
         self.misc = misc
-        self.storage = storage
+        self.object_storage = object_storage
 
     async def execute(
         self,
@@ -750,8 +750,9 @@ class UploadItemUseCase(BaseItemUseCase):
 
         # Stream the upload into long-term storage with no DB transaction
         # held; the storage commits on its own session.
-        reference = await self.storage.save(chunks)
-        LOG.info('Saved upload for item {} as {}', item.uuid, reference)
+        reference = await self.object_storage.write(chunks)
+        oid = reference['oid']
+        LOG.info('Saved upload for item {} as {}', item.uuid, oid)
 
         # Write all queue/metadata side effects in one short transaction.
         async with self.database.transaction() as conn:
@@ -766,7 +767,7 @@ class UploadItemUseCase(BaseItemUseCase):
                     created_at=now,
                     ext='jpg' if file.ext == 'jpeg' else file.ext,
                     content_type=file.content_type,
-                    extras={'extract_exif': file.features.extract_exif, **reference},
+                    extras={'extract_exif': file.features.extract_exif, 'oid': oid},
                     error=None,
                     content=b'',
                 ),

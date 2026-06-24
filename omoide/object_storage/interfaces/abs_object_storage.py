@@ -5,7 +5,7 @@ from collections.abc import AsyncIterable
 from typing import Any
 
 
-class AbsContentStorage(abc.ABC):
+class AbsObjectStorage(abc.ABC):
     """Long-term storage for content uploaded by users.
 
     The concrete implementation decides where the bytes live (PostgreSQL
@@ -16,10 +16,14 @@ class AbsContentStorage(abc.ABC):
     """
 
     @abc.abstractmethod
-    async def save(self, chunks: AsyncIterable[bytes]) -> dict[str, Any]:
+    async def write(self, chunks: AsyncIterable[bytes]) -> dict[str, Any]:
         """Stream ``chunks`` into storage and return the reference.
 
         The returned dict is merged into ``InputMedia.extras`` verbatim,
         so implementations choose their own keys (``{'oid': N}`` for PG,
         ``{'s3_key': '...'}`` for S3, etc.).
         """
+
+    @abc.abstractmethod
+    async def delete(self, oid: int) -> None:
+        """Delete given object."""
