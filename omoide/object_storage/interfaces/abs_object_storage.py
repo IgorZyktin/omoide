@@ -2,6 +2,7 @@
 
 import abc
 from collections.abc import AsyncIterable
+from collections.abc import AsyncIterator
 from typing import Any
 
 
@@ -14,6 +15,10 @@ class AbsObjectStorage(abc.ABC):
     merges into ``queue_input_media.extras``; the worker reads the same
     extras to retrieve the payload.
     """
+
+    @abc.abstractmethod
+    def read(self, oid: int) -> AsyncIterator[bytes]:
+        """Load large object from the database."""
 
     @abc.abstractmethod
     async def write(self, chunks: AsyncIterable[bytes]) -> dict[str, Any]:

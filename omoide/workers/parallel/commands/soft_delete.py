@@ -32,7 +32,7 @@ class SoftDeleteCommand(Command):
         self.items = items
         self.locator = locator
 
-    async def execute(self) -> tuple[list[str], int]:
+    async def execute(self) -> int:
         """Start execution of the command."""
         item_id = self.dto.item_id
 
@@ -68,7 +68,7 @@ class SoftDeleteCommand(Command):
         ]
 
         if not all_segments:
-            return [], 0
+            return 0
 
         # NOTE: Any general OSError shows critical misconfiguration
         # of the host, so it is not added into exception clause
@@ -97,4 +97,4 @@ class SoftDeleteCommand(Command):
             else:
                 LOG.debug('Renamed file to deleted: {}', old_path)
 
-        return [], 0
+        return 0

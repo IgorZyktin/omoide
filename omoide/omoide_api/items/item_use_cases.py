@@ -722,6 +722,7 @@ class UploadItemUseCase(BaseItemUseCase):
         items: db_interfaces.AbsItemsRepo,
         meta: db_interfaces.AbsMetaRepo,
         misc: db_interfaces.AbsMiscRepo,
+        commands_repo: db_interfaces.AbsCommandsRepo,
         object_storage: object_interfaces.AbsObjectStorage,
     ) -> None:
         """Initialize instance."""
@@ -730,6 +731,7 @@ class UploadItemUseCase(BaseItemUseCase):
         self.items = items
         self.meta = meta
         self.misc = misc
+        self.commands = commands_repo
         self.object_storage = object_storage
 
     async def execute(
@@ -756,21 +758,14 @@ class UploadItemUseCase(BaseItemUseCase):
 
         # Write all queue/metadata side effects in one short transaction.
         async with self.database.transaction() as conn:
-            now = pu.now()
-
-            operation_id = await self.misc.save_input_media(
+            operation_id = await self.commands.upload(
                 conn=conn,
-                media=models.InputMedia(
-                    id=-1,
-                    user_uuid=user.uuid,
-                    item_uuid=item.uuid,
-                    created_at=now,
-                    ext='jpg' if file.ext == 'jpeg' else file.ext,
-                    content_type=file.content_type,
-                    extras={'extract_exif': file.features.extract_exif, 'oid': oid},
-                    error=None,
-                    content=b'',
-                ),
+                requested_by=user,
+                item=item,
+                content_type=file.content_type,
+                ext='jpg' if file.ext == 'jpeg' else file.ext,
+                oid=oid,
+                extras={'extract_exif': file.features.extract_exif},
             )
 
             await self.meta.add_item_note(
@@ -793,24 +788,17 @@ class UploadItemUseCase(BaseItemUseCase):
                     # Reuse the same long-term reference for the parent thumbnail.
                     # The converter only deletes the OID when no other queue
                     # entry still references it.
-                    await self.misc.save_input_media(
+                    await self.commands.upload(
                         conn=conn,
-                        media=models.InputMedia(
-                            id=-1,
-                            user_uuid=user.uuid,
-                            item_uuid=parent.uuid,
-                            created_at=now,
-                            ext='jpg' if file.ext == 'jpeg' else file.ext,
-                            content_type=file.content_type,
-                            extras={
-                                'extract_exif': file.features.extract_exif,
-                                'skip_content': True,
-                                'skip_preview': True,
-                                **reference,
-                            },
-                            error=None,
-                            content=b'',
-                        ),
+                        requested_by=user,
+                        item=item,
+                        content_type=file.content_type,
+                        ext='jpg' if file.ext == 'jpeg' else file.ext,
+                        oid=oid,
+                        extras={
+                            'extract_exif': False,
+                            'skip_content': True,
+                        },
                     )
 
                     await self.meta.add_item_note(

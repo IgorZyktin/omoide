@@ -111,20 +111,26 @@ class FilesystemLocator(LocatorMixin):
         media_type: const.MediaType,
         *,
         deleted: bool = False,
+        force_ext: str | None = None,
     ) -> tuple[Path, const.MediaType, str, str, str] | None:
         """Return all path components separately."""
-        match media_type:
-            case media_type.VIDEO:
-                ext = item.content_ext
-            case media_type.CONTENT:
-                ext = item.content_ext
-            case media_type.PREVIEW:
-                ext = item.preview_ext
-            case media_type.THUMBNAIL:
-                ext = item.thumbnail_ext
-            case _:
-                assert_never(media_type)
-                raise  # noqa: PLE0704
+        ext: str | None
+
+        if force_ext is not None:
+            ext = force_ext
+        else:
+            match media_type:
+                case media_type.VIDEO:
+                    ext = item.content_ext
+                case media_type.CONTENT:
+                    ext = item.content_ext
+                case media_type.PREVIEW:
+                    ext = item.preview_ext
+                case media_type.THUMBNAIL:
+                    ext = item.thumbnail_ext
+                case _:
+                    assert_never(media_type)
+                    raise  # noqa: PLE0704
 
         if ext is None:
             return None
@@ -144,9 +150,16 @@ class FilesystemLocator(LocatorMixin):
         media_type: const.MediaType,
         *,
         deleted: bool = False,
+        force_ext: str | None = None,
     ) -> Path | None:
         """Get path to the file."""
-        segments = self.get_path_segments(owner, item, media_type, deleted=deleted)
+        segments = self.get_path_segments(
+            owner,
+            item,
+            media_type,
+            deleted=deleted,
+            force_ext=force_ext,
+        )
 
         if segments is None:
             return None

@@ -590,6 +590,7 @@ class Command(StrEnum):
     SOFT_DELETE = 'soft_delete'
     HARD_DELETE = 'hard_delete'
     COPY_IMAGE = 'copy_image'
+    UPLOAD = 'upload'
 
 
 class CommandStatus(StrEnum):

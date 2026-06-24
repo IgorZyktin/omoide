@@ -10,3 +10,6 @@ from omoide.workers.parallel.commands.soft_delete import (
 from omoide.workers.parallel.commands.copy_image import (
     CopyImageCommand,  # noqa: F401
 )
+from omoide.workers.parallel.commands.upload import (
+    UploadCommand,  # noqa: F401
+)

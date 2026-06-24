@@ -13,5 +13,5 @@ class Command(abc.ABC):
         self.dto = dto
 
     @abc.abstractmethod
-    async def execute(self) -> tuple[list[str], int]:
+    async def execute(self) -> int:
         """Start execution of the command."""
