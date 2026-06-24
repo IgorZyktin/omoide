@@ -26,7 +26,7 @@ class MediaType(enum.StrEnum):
     THUMBNAIL = 'thumbnail'
 
 
-class LockNamespace(enum.Enum):
+class LockNamespace(enum.IntEnum):
     """Namespaces for locks."""
 
     ITEMS = 1
