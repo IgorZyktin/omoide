@@ -17,6 +17,7 @@ from moviepy import VideoFileClip
 
 from omoide import const
 from omoide import custom_logging
+from omoide import models
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.locators import FilesystemLocator
 from omoide.models import ParallelCommand
@@ -204,7 +205,7 @@ class UploadCommand(Command):
             self.executor,
             save_image,
             content_path,
-            preview_path,
+            thumbnail_path,
             is_video,
             const.THUMBNAIL_SIZE,
         )
@@ -243,6 +244,7 @@ class UploadCommand(Command):
             metainfo.updated_at = pu.now()
             await self.meta.save(conn, metainfo)
 
+            item.status = models.Status.AVAILABLE
             item.content_ext = ext
             item.preview_ext = 'jpg'
             item.thumbnail_ext = 'jpg'

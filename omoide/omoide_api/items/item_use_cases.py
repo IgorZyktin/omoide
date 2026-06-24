@@ -768,6 +768,8 @@ class UploadItemUseCase(BaseItemUseCase):
                 extras={'extract_exif': file.features.extract_exif},
             )
 
+            item.status = models.Status.PROCESSING
+            await self.items.save(conn, item)
             await self.meta.add_item_note(
                 conn,
                 item=item,
