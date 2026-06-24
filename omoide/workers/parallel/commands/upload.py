@@ -4,6 +4,7 @@ import asyncio
 import math
 import os
 from concurrent.futures import ProcessPoolExecutor
+from contextlib import suppress
 from pathlib import Path
 
 import aiofiles
@@ -131,11 +132,22 @@ class UploadCommand(Command):
             msg = f'Failed to create content path for item {item.id}'
             raise ValueError(msg)
 
-        _root, _media, _uuid, _prefix, _filename = segments
-        folder = _root / _media / _uuid / _prefix
-        content_path = folder / _filename
+        skip_content = self.dto.extras.get('skip_content')
+        extract_exif = self.dto.extras.get('extract_exif')
+        _ = extract_exif
+        # TODO - add exif processing
+        # TODO - add signatures processing
 
-        await aiofiles.os.makedirs(folder, exist_ok=True)
+        _root, _media, _uuid, _prefix, _filename = segments
+        content_folder = _root / _media / _uuid / _prefix
+        preview_folder = _root / const.MediaType.PREVIEW / _uuid / _prefix
+        thumbnail_folder = _root / const.MediaType.THUMBNAIL / _uuid / _prefix
+        content_path = content_folder / _filename
+
+        if not skip_content:
+            await aiofiles.os.makedirs(content_folder, exist_ok=True)
+        await aiofiles.os.makedirs(preview_folder, exist_ok=True)
+        await aiofiles.os.makedirs(thumbnail_folder, exist_ok=True)
         content_existed = await aiofiles.os.path.exists(content_path)
 
         chunks = self.object_storage.read(oid)
@@ -196,6 +208,10 @@ class UploadCommand(Command):
             is_video,
             const.THUMBNAIL_SIZE,
         )
+
+        if skip_content:
+            with suppress(FileNotFoundError):
+                await aiofiles.os.unlink(content_path)
 
         for label, existed in [
             ('content', content_existed),

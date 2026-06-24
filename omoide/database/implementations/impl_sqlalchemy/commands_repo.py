@@ -1,5 +1,7 @@
 """Repository that performs operations on commands."""
 
+from typing import Any
+
 import python_utilz as pu
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -83,6 +85,42 @@ class CommandsRepo(AbsCommandsRepo[AsyncConnection]):
                     'item_id': source_item.id,
                     'source_item_id': source_item.id,
                     'target_item_id': target_item.id,
+                },
+                log='',
+                created_at=now,
+                updated_at=now,
+                started_at=None,
+                ended_at=None,
+            )
+            .returning(db_models.ParallelCommand.id)
+        )
+        command_id = (await conn.execute(stmt)).scalar()
+        return command_id if command_id is not None else -1
+
+    async def upload(
+        self,
+        conn: AsyncConnection,
+        requested_by: models.User,
+        item: models.Item,
+        content_type: str,
+        ext: str,
+        oid: int,
+        extras: dict[str, Any],
+    ) -> int:
+        """Upload an item."""
+        now = pu.now()
+        stmt = (
+            sa.insert(db_models.ParallelCommand)
+            .values(
+                requested_by=requested_by.id,
+                name=models.Command.UPLOAD,
+                status=models.CommandStatus.CREATED,
+                extras={
+                    'item_id': item.id,
+                    'content_type': content_type,
+                    'ext': ext,
+                    'oid': oid,
+                    **extras,
                 },
                 log='',
                 created_at=now,
