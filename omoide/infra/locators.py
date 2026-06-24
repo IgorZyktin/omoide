@@ -124,6 +124,7 @@ class FilesystemLocator(LocatorMixin):
                 ext = item.thumbnail_ext
             case _:
                 assert_never(media_type)
+                raise  # noqa: PLE0704
 
         if ext is None:
             return None

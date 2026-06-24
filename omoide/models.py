@@ -309,6 +309,25 @@ class Metainfo(OmoideModel):
 
     _ignore_changes: frozenset[str] = frozenset(('item_id',))
 
+    def copy_from(self, obj: 'Metainfo', *, including_content: bool = False) -> None:
+        """Copy parameters from given object."""
+        self.content_type = obj.content_type
+
+        if including_content:
+            self.content_width = obj.content_width
+            self.content_height = obj.content_height
+            self.content_size = obj.content_size
+
+        self.preview_width = obj.preview_width
+        self.preview_height = obj.preview_height
+        self.preview_size = obj.preview_size
+
+        self.thumbnail_width = obj.thumbnail_width
+        self.thumbnail_height = obj.thumbnail_height
+        self.thumbnail_size = obj.thumbnail_size
+
+        self.updated_at = pu.now()
+
     @classmethod
     def from_obj(
         cls,
@@ -607,3 +626,25 @@ class ParallelCommand:
             raise KeyError(msg)
 
         return int(item_id)
+
+    @cached_property
+    def source_item_id(self) -> int:
+        """Extract from extras."""
+        source_item_id = self.extras.get('source_item_id')
+
+        if source_item_id is None:
+            msg = 'Missing source_item_id'
+            raise KeyError(msg)
+
+        return int(source_item_id)
+
+    @cached_property
+    def target_item_id(self) -> int:
+        """Extract from extras."""
+        target_item_id = self.extras.get('target_item_id')
+
+        if target_item_id is None:
+            msg = 'Missing target_item_id'
+            raise KeyError(msg)
+
+        return int(target_item_id)

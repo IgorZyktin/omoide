@@ -1,7 +1,8 @@
 """Copy image between items."""
 
 import shutil
-import python_utilz as pu
+from typing import assert_never
+
 from omoide import const
 from omoide import custom_logging
 from aiofiles.os import wrap
@@ -36,17 +37,10 @@ class CopyImageCommand(Command):
 
     async def execute(self) -> tuple[list[str], int]:
         """Start execution of the command."""
-        source_item_id = self.dto.extras.get('source_item_id')
-        if source_item_id is None:
-            msg = 'Missing source item id'
-            raise KeyError(msg)
-        source_item_id = int(source_item_id)
-
-        target_item_id = self.dto.extras.get('target_item_id')
-        if target_item_id is None:
-            msg = 'Missing target item id'
-            raise KeyError(msg)
-        target_item_id = int(target_item_id)
+        source_item_id = self.dto.source_item_id
+        target_item_id = self.dto.target_item_id
+        including_content = self.dto.extras.get('including_content')
+        including_video = self.dto.extras.get('including_video')
 
         async with self.database.transaction() as conn:
             source_item = await self.items.get_by_id(conn, source_item_id)
@@ -60,8 +54,14 @@ class CopyImageCommand(Command):
             )
 
         async_copyfile = wrap(shutil.copyfile)
+        media_types = [const.MediaType.PREVIEW, const.MediaType.THUMBNAIL]
 
-        for media in [const.MediaType.PREVIEW, const.MediaType.THUMBNAIL]:
+        if including_content:
+            media_types.append(const.MediaType.CONTENT)
+        if including_video:
+            media_types.append(const.MediaType.VIDEO)
+
+        for media in media_types:
             source_segments = self.locator.get_path_segments(
                 owner=source_owner,
                 item=source_item,
@@ -75,10 +75,18 @@ class CopyImageCommand(Command):
             _root, _media, _uuid, _prefix, _filename = source_segments
             source_path = _root / _media / _uuid / _prefix / _filename
 
-            if media is const.MediaType.PREVIEW:
-                ext = source_item.preview_ext
-            else:
-                ext = source_item.thumbnail_ext
+            match media:
+                case const.MediaType.VIDEO:
+                    ext = source_item.content_ext
+                case const.MediaType.CONTENT:
+                    ext = source_item.content_ext
+                case const.MediaType.PREVIEW:
+                    ext = source_item.preview_ext
+                case const.MediaType.THUMBNAIL:
+                    ext = source_item.thumbnail_ext
+                case _:
+                    assert_never(media)
+                    raise  # noqa: PLE0704
 
             new_prefix = self.locator.get_prefix(target_item)
             new_filename = self.locator.get_filename(target_item, ext)
@@ -97,20 +105,18 @@ class CopyImageCommand(Command):
             LOG.debug('Copied file: {} to {}', source_path, target_path)
 
         async with self.database.transaction() as conn:
+            if including_content:
+                target_item.content_ext = source_item.content_ext
             target_item.preview_ext = source_item.preview_ext
             target_item.thumbnail_ext = source_item.thumbnail_ext
             await self.items.save(conn, target_item)
 
             source_metainfo = await self.meta.get_by_item(conn, source_item)
             target_metainfo = await self.meta.get_by_item(conn, target_item)
-            target_metainfo.content_type = source_metainfo.content_type
-            target_metainfo.thumbnail_height = source_metainfo.thumbnail_height
-            target_metainfo.thumbnail_width = source_metainfo.thumbnail_width
-            target_metainfo.preview_height = source_metainfo.preview_height
-            target_metainfo.preview_width = source_metainfo.preview_width
-            target_metainfo.preview_size = source_metainfo.preview_size
-            target_metainfo.thumbnail_size = source_metainfo.thumbnail_size
-            target_metainfo.updated_at = pu.now()
+            target_metainfo.copy_from(
+                source_metainfo, including_content=including_content
+            )
+
             await self.meta.save(conn, target_metainfo)
             await self.meta.add_item_note(
                 conn=conn,
