@@ -4,7 +4,6 @@ from aiofiles import os
 
 from omoide import const
 from omoide import custom_logging
-from omoide import models
 
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.locators import FilesystemLocator
@@ -40,11 +39,6 @@ class SoftDeleteCommand(Command):
         async with self.database.transaction() as conn:
             item = await self.items.get_by_id(conn, item_id, read_deleted=True)
             owner = await self.users.get_by_id(conn, item.owner_id)
-
-        deleted = item.status == models.Status.DELETED
-
-        if deleted:
-            return [], 0
 
         all_segments = [
             segments
