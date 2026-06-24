@@ -3,6 +3,8 @@
 import shutil
 from typing import assert_never
 
+import aiofiles
+
 from omoide import const
 from omoide import custom_logging
 from aiofiles.os import wrap
@@ -35,7 +37,7 @@ class CopyImageCommand(Command):
         self.meta = meta
         self.locator = locator
 
-    async def execute(self) -> tuple[list[str], int]:
+    async def execute(self) -> int:
         """Start execution of the command."""
         source_item_id = self.dto.source_item_id
         target_item_id = self.dto.target_item_id
@@ -61,6 +63,7 @@ class CopyImageCommand(Command):
         if including_video:
             media_types.append(const.MediaType.VIDEO)
 
+        total_size = 0
         for media in media_types:
             source_segments = self.locator.get_path_segments(
                 owner=source_owner,
@@ -104,6 +107,8 @@ class CopyImageCommand(Command):
             )
             LOG.debug('Copied file: {} to {}', source_path, target_path)
 
+            total_size += await aiofiles.os.path.getsize(source_path)
+
         async with self.database.transaction() as conn:
             if including_content:
                 target_item.content_ext = source_item.content_ext
@@ -125,4 +130,4 @@ class CopyImageCommand(Command):
                 value=str(source_item.uuid),
             )
 
-        return [], 0
+        return total_size

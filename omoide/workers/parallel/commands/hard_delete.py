@@ -33,7 +33,7 @@ class HardDeleteCommand(Command):
         self.items = items
         self.locator = locator
 
-    async def execute(self) -> tuple[list[str], int]:
+    async def execute(self) -> int:
         """Start execution of the command."""
         item_id = self.dto.item_id
 
@@ -66,7 +66,7 @@ class HardDeleteCommand(Command):
         ]
 
         if not paths:
-            return [], 0
+            return 0
 
         # NOTE: Any general OSError shows critical misconfiguration
         # of the host, so it is not added into exception clause
@@ -80,4 +80,4 @@ class HardDeleteCommand(Command):
             else:
                 LOG.debug('Deleted file: {}', path)
 
-        return [], 0
+        return 0

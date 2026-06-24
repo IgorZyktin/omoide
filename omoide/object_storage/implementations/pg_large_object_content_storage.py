@@ -1,6 +1,7 @@
 """Content storage backed by a PostgreSQL large object."""
 
 from collections.abc import AsyncIterable
+from collections.abc import AsyncIterator
 from typing import Any
 
 from asyncpg_lostream.lostream import PGLargeObject
@@ -26,6 +27,14 @@ class PgLargeObjectStorage(AbsObjectStorage):
     def __init__(self, database: SqlalchemyDatabase) -> None:
         """Initialize instance."""
         self.database = database
+
+    async def read(self, oid: int) -> AsyncIterator[bytes]:
+        """Load large object from the database."""
+        async with self.database.session_maker() as session:
+            async with PGLargeObject(session, oid, 'r') as pgl:
+                async for buff in pgl:
+                    yield buff
+            await session.commit()
 
     async def write(self, chunks: AsyncIterable[bytes]) -> dict[str, Any]:
         """Stream ``chunks`` into a new large object and return its OID."""

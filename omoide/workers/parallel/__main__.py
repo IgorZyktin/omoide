@@ -139,7 +139,6 @@ async def do_work(
             tg.create_task(
                 process_one(
                     command=candidate,
-                    config=config,
                     executor=executor,
                     lock=lock,
                     database=database,
@@ -157,7 +156,6 @@ async def do_work(
 
 async def process_one(
     command: models.ParallelCommand,
-    config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     lock: PGAdvisoryLock,
     database: ParallelPostgreSQLDatabase,
@@ -172,7 +170,6 @@ async def process_one(
     try:
         await _process_one(
             command=command,
-            config=config,
             executor=executor,
             lock=lock,
             database=database,
@@ -194,7 +191,6 @@ async def process_one(
 
 async def _process_one(
     command: models.ParallelCommand,
-    config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     lock: PGAdvisoryLock,
     database: ParallelPostgreSQLDatabase,
@@ -229,9 +225,8 @@ async def _process_one(
 
         try:
             start = time.perf_counter()
-            warnings, bytes_processed = await dispatch_and_execute(
+            bytes_processed = await dispatch_and_execute(
                 command=command,
-                config=config,
                 executor=executor,
                 database=database,
                 users_repo=users_repo,
@@ -263,14 +258,6 @@ async def _process_one(
                     metrics.BYTES_PROCESSED, bytes_processed
                 )
 
-            for warning in warnings:
-                LOG.warning(
-                    'Warning in task {} ({}): {}',
-                    command.id,
-                    command.name,
-                    warning,
-                )
-
         if oid and succeeded:
             await _cleanup_oid(
                 database, object_storage, oid, exclude_id=command.id
@@ -299,7 +286,6 @@ async def _cleanup_oid(
 
 async def dispatch_and_execute(
     command: models.ParallelCommand,
-    config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
     database: ParallelPostgreSQLDatabase,
     users_repo: impl_sqlalchemy.UsersRepo,
@@ -307,7 +293,7 @@ async def dispatch_and_execute(
     meta_repo: impl_sqlalchemy.MetaRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
-) -> tuple[list[str], int]:
+) -> int:
     """Choose implementation and execute."""
     command_implementation: Command
     command_type = models.Command(command.name)
@@ -341,6 +327,18 @@ async def dispatch_and_execute(
                 items=items_repo,
                 meta=meta_repo,
                 locator=fs_locator,
+            )
+
+        case models.Command.UPLOAD:
+            command_implementation = commands.UploadCommand(
+                dto=command,
+                database=database,
+                users=users_repo,
+                items=items_repo,
+                meta=meta_repo,
+                locator=fs_locator,
+                executor=executor,
+                object_storage=object_storage,
             )
 
         case _:
