@@ -39,8 +39,8 @@ class CopyImageCommand(Command):
         """Start execution of the command."""
         source_item_id = self.dto.source_item_id
         target_item_id = self.dto.target_item_id
-        including_content = self.dto.extras.get('including_content')
-        including_video = self.dto.extras.get('including_video')
+        including_content = bool(self.dto.extras.get('including_content'))
+        including_video = bool(self.dto.extras.get('including_video'))
 
         async with self.database.transaction() as conn:
             source_item = await self.items.get_by_id(conn, source_item_id)

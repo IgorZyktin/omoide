@@ -12,12 +12,13 @@ import python_utilz as pu
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
-from omoide.infra.interfaces.abs_lock import LockableResource
+from omoide.const import LockableResource
 from omoide.infra.locators import FilesystemLocator
 from omoide.workers import utils
 from omoide.workers.parallel import metrics
 from omoide.workers.parallel import commands
 from omoide import models
+from omoide import const
 from omoide.workers.parallel.cfg import ParallelWorkerConfig
 from omoide.workers.parallel.commands.base_command import Command
 from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
@@ -26,13 +27,12 @@ LOG = custom_logging.get_logger(__name__)
 WORKING = threading.Event()
 WORKING.set()
 
-NAMESPACE_ITEMS = 1
-NAMESPACE_LARGE_OBJECTS = 2
-
 
 async def main() -> None:
     """Async entry point."""
-    config = ns.from_env(ParallelWorkerConfig, env_prefix='omoide_worker_parallel')
+    config = ns.from_env(
+        ParallelWorkerConfig, env_prefix='omoide_worker_parallel'
+    )
 
     custom_logging.init_logging(
         level=config.log.level,
@@ -194,13 +194,13 @@ async def _process_one(
     fs_locator: FilesystemLocator,
 ) -> None:
     """Process one command."""
-    resources = [LockableResource(NAMESPACE_ITEMS, command.item_id)]
+    resources = [LockableResource(const.LockNamespace.ITEMS, command.item_id)]
 
     oid = command.extras.get('oid')
     if oid is not None:
         try:
             resources.append(
-                LockableResource(NAMESPACE_LARGE_OBJECTS, int(oid))
+                LockableResource(const.LockNamespace.LARGE_OBJECTS, int(oid))
             )
         except (TypeError, ValueError):
             LOG.error('Command {} has invalid oid: {!r}', command.id, oid)

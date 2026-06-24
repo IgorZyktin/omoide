@@ -5,6 +5,7 @@ from datetime import datetime
 import enum
 from typing import Final
 from typing import Literal
+from typing import NamedTuple
 from typing import TypeAlias
 from uuid import UUID
 
@@ -23,6 +24,20 @@ class MediaType(enum.StrEnum):
     CONTENT = 'content'
     PREVIEW = 'preview'
     THUMBNAIL = 'thumbnail'
+
+
+class LockNamespace(enum.Enum):
+    """Namespaces for locks."""
+
+    ITEMS = 1
+    LARGE_OBJECTS = 2
+
+
+class LockableResource(NamedTuple):
+    """Something that can be locked."""
+
+    namespace: LockNamespace
+    affected_id: int
 
 
 CONTENT: Literal['content'] = 'content'

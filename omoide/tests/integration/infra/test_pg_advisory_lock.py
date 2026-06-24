@@ -9,8 +9,8 @@ ownership — which is exactly what cannot be verified with mocks.
 import pytest
 import sqlalchemy as sa
 
+from omoide.const import LockableResource
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
-from omoide.infra.interfaces.abs_lock import LockableResource
 
 _NS_USER = 1
 _NS_ITEM = 2

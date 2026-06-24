@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
 from omoide import custom_logging
+from omoide.const import LockableResource
 from omoide.infra.interfaces.abs_lock import AbsLockingProvider
-from omoide.infra.interfaces.abs_lock import LockableResource
 
 LOG = custom_logging.get_logger(__name__)
 
