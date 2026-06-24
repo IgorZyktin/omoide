@@ -32,7 +32,7 @@ NAMESPACE_LARGE_OBJECTS = 2
 
 async def main() -> None:
     """Async entry point."""
-    config = ns.from_env(ParallelWorkerConfig, env_prefix='owp')
+    config = ns.from_env(ParallelWorkerConfig, env_prefix='omoide_worker_parallel')
 
     custom_logging.init_logging(
         level=config.log.level,
