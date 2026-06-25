@@ -213,15 +213,15 @@ class UploadCommand(Command):
             with suppress(FileNotFoundError):
                 await aiofiles.os.unlink(content_path)
 
-        for label, existed in [
-            ('content', content_existed),
-            ('preview', preview_existed),
-            ('thumbnail', thumbnail_existed),
+        for label, existed, path in [
+            ('content', content_existed, content_path),
+            ('preview', preview_existed, preview_path),
+            ('thumbnail', thumbnail_existed, thumbnail_path),
         ]:
             if existed:
-                LOG.warning('Overwrote {} file: {}', label, content_path)
+                LOG.warning('Overwrote {} file: {}', label, path)
             else:
-                LOG.debug('Saved {} file: {}', label, content_path)
+                LOG.debug('Saved {} file: {}', label, path)
 
         total_size = content_size + preview_size + thumbnail_size
 
