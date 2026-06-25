@@ -2,6 +2,7 @@
 
 import abc
 
+from omoide import const
 from omoide.models import ParallelCommand
 
 
@@ -15,3 +16,7 @@ class Command(abc.ABC):
     @abc.abstractmethod
     async def execute(self) -> int:
         """Start execution of the command."""
+
+    @abc.abstractmethod
+    def get_required_resources(self) -> list[const.LockableResource]:
+        """Return resources to lock before execution."""

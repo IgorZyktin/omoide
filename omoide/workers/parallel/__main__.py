@@ -202,99 +202,6 @@ async def _process_one(
     object_storage: AbsObjectStorage,
 ) -> None:
     """Process one command."""
-    resources = [LockableResource(const.LockNamespace.ITEMS, command.item_id)]
-
-    oid = command.extras.get('oid')
-    if oid is not None:
-        try:
-            resources.append(
-                LockableResource(const.LockNamespace.LARGE_OBJECTS, int(oid))
-            )
-        except (TypeError, ValueError):
-            LOG.error('Command {} has invalid oid: {!r}', command.id, oid)
-            await database.mark_failed(command, f'Invalid oid: {oid!r}')
-            return
-
-    locks = await lock.acquire(resources)
-    if locks is None:
-        return
-
-    try:
-        if not await database.start_task(command):
-            return
-
-        try:
-            start = time.perf_counter()
-            bytes_processed = await dispatch_and_execute(
-                command=command,
-                executor=executor,
-                database=database,
-                users_repo=users_repo,
-                items_repo=items_repo,
-                meta_repo=meta_repo,
-                fs_locator=fs_locator,
-                object_storage=object_storage,
-            )
-            time_spent = time.perf_counter() - start
-            await database.mark_done(command)
-            succeeded = True
-        except Exception:
-            traceback = custom_logging.capture_exception_output(
-                f'Command {command.id} failed'
-            )
-            LOG.exception('Command {} failed', command.id)
-            await database.mark_failed(command, traceback or '???')
-            metrics_collector.increment(metrics.ERRORS, 1)
-            succeeded = False
-        else:
-            LOG.info('Finished command {} ({})', command.id, command.name)
-            metrics_collector.increment(metrics.COMMANDS_PROCESSED, 1)
-            metrics_collector.increment(
-                metrics.TIME_SPENT, int(time_spent * 1000)
-            )
-
-            if bytes_processed:
-                metrics_collector.increment(
-                    metrics.BYTES_PROCESSED, bytes_processed
-                )
-
-        if oid and succeeded:
-            await _cleanup_oid(
-                database, object_storage, oid, exclude_id=command.id
-            )
-
-    finally:
-        await lock.release_held(locks)
-
-
-async def _cleanup_oid(
-    database: ParallelPostgreSQLDatabase,
-    object_storage: AbsObjectStorage,
-    oid: int,
-    exclude_id: int,
-) -> None:
-    """Delete oid from database."""
-    if await database.is_oid_referenced_elsewhere(oid, exclude_id=exclude_id):
-        LOG.info(
-            'Keeping large object {} alive: '
-            'still referenced by other queue entries',
-            oid,
-        )
-    else:
-        await object_storage.delete(oid)
-
-
-async def dispatch_and_execute(
-    command: models.ParallelCommand,
-    executor: ProcessPoolExecutor,
-    database: ParallelPostgreSQLDatabase,
-    users_repo: impl_sqlalchemy.UsersRepo,
-    items_repo: impl_sqlalchemy.ItemsRepo,
-    meta_repo: impl_sqlalchemy.MetaRepo,
-    fs_locator: FilesystemLocator,
-    object_storage: AbsObjectStorage,
-) -> int:
-    """Choose implementation and execute."""
     command_implementation: Command
     command_type = models.Command(command.name)
     match command_type:
@@ -344,7 +251,77 @@ async def dispatch_and_execute(
         case _:
             assert_never(command_type)
 
-    return await command_implementation.execute()
+    resources = command_implementation.get_required_resources()
+
+    oid = command.extras.get('oid')
+    if oid is not None:
+        try:
+            resources.append(
+                LockableResource(const.LockNamespace.LARGE_OBJECTS, int(oid))
+            )
+        except (TypeError, ValueError):
+            LOG.error('Command {} has invalid oid: {!r}', command.id, oid)
+            await database.mark_failed(command, f'Invalid oid: {oid!r}')
+            return
+
+    locks = await lock.acquire(resources)
+    if locks is None:
+        return
+
+    try:
+        if not await database.start_task(command):
+            return
+
+        try:
+            start = time.perf_counter()
+            bytes_processed = await command_implementation.execute()
+            time_spent = time.perf_counter() - start
+            await database.mark_done(command)
+            succeeded = True
+        except Exception:
+            traceback = custom_logging.capture_exception_output(
+                f'Command {command.id} failed'
+            )
+            LOG.exception('Command {} failed', command.id)
+            await database.mark_failed(command, traceback or '???')
+            metrics_collector.increment(metrics.ERRORS, 1)
+            succeeded = False
+        else:
+            LOG.info('Finished command {} ({})', command.id, command.name)
+            metrics_collector.increment(metrics.COMMANDS_PROCESSED, 1)
+            metrics_collector.increment(
+                metrics.TIME_SPENT, int(time_spent * 1000)
+            )
+
+            if bytes_processed:
+                metrics_collector.increment(
+                    metrics.BYTES_PROCESSED, bytes_processed
+                )
+
+        if oid and succeeded:
+            await _cleanup_oid(
+                database, object_storage, oid, exclude_id=command.id
+            )
+
+    finally:
+        await lock.release_held(locks)
+
+
+async def _cleanup_oid(
+    database: ParallelPostgreSQLDatabase,
+    object_storage: AbsObjectStorage,
+    oid: int,
+    exclude_id: int,
+) -> None:
+    """Delete oid from database."""
+    if await database.is_oid_referenced_elsewhere(oid, exclude_id=exclude_id):
+        LOG.info(
+            'Keeping large object {} alive: '
+            'still referenced by other queue entries',
+            oid,
+        )
+    else:
+        await object_storage.delete(oid)
 
 
 if __name__ == '__main__':

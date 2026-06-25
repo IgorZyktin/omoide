@@ -37,6 +37,17 @@ class CopyImageCommand(Command):
         self.meta = meta
         self.locator = locator
 
+    def get_required_resources(self) -> list[const.LockableResource]:
+        """Return resources to lock before execution."""
+        return [
+            const.LockableResource(
+                const.LockNamespace.ITEMS, self.dto.source_item_id
+            ),
+            const.LockableResource(
+                const.LockNamespace.ITEMS, self.dto.target_item_id
+            ),
+        ]
+
     async def execute(self) -> int:
         """Start execution of the command."""
         source_item_id = self.dto.source_item_id

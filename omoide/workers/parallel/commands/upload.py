@@ -90,6 +90,12 @@ class UploadCommand(Command):
         self.executor = executor
         self.object_storage = object_storage
 
+    def get_required_resources(self) -> list[const.LockableResource]:
+        """Return resources to lock before execution."""
+        return [
+            const.LockableResource(const.LockNamespace.ITEMS, self.dto.item_id)
+        ]
+
     async def execute(self) -> int:
         """Start execution of the command."""
         oid = self.dto.extras.get('oid')
