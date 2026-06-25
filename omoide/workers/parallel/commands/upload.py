@@ -255,13 +255,15 @@ class UploadCommand(Command):
 def get_dimensions(src_path: Path, is_video: bool) -> tuple[int, int]:
     """Get image dimensions."""
     if is_video:
+        clip = None
         try:
             clip = VideoFileClip(src_path)
             first_frame = clip.get_frame(0)
             img = Image.fromarray(first_frame)
             width, height = img.size
         finally:
-            clip.close()
+            if clip is not None:
+                clip.close()
     else:
         with Image.open(src_path) as img:
             width, height = img.size
@@ -277,13 +279,15 @@ def save_image(
 ) -> tuple[int, int, int]:
     """Create preview file."""
     if is_video:
+        clip = None
         try:
             clip = VideoFileClip(src_path)
             first_frame = clip.get_frame(0)
             img = Image.fromarray(first_frame)
             width, height = resize(img, size, dst_path)
         finally:
-            clip.close()
+            if clip is not None:
+                clip.close()
     else:
         with Image.open(src_path) as img:
             width, height = resize(img, size, dst_path)
