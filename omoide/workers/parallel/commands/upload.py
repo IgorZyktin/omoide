@@ -209,10 +209,6 @@ class UploadCommand(Command):
             const.THUMBNAIL_SIZE,
         )
 
-        if skip_content:
-            with suppress(FileNotFoundError):
-                await aiofiles.os.unlink(content_path)
-
         for label, existed, path in [
             ('content', content_existed, content_path),
             ('preview', preview_existed, preview_path),
@@ -228,9 +224,21 @@ class UploadCommand(Command):
         async with self.database.transaction() as conn:
             metainfo = await self.meta.get_by_item(conn, item)
 
-            metainfo.content_width = content_width
-            metainfo.content_height = content_height
-            metainfo.content_size = content_size
+            if skip_content:
+                with suppress(FileNotFoundError):
+                    await aiofiles.os.unlink(content_path)
+                metainfo.content_width = None
+                metainfo.content_height = None
+                metainfo.content_size = None
+                item.content_ext = None
+            else:
+                item.content_ext = ext
+
+            item.preview_ext = 'jpg'
+            item.thumbnail_ext = 'jpg'
+
+            item.status = models.Status.AVAILABLE
+            await self.items.save(conn, item)
 
             metainfo.preview_width = preview_width
             metainfo.preview_height = preview_height
@@ -242,12 +250,6 @@ class UploadCommand(Command):
 
             metainfo.updated_at = pu.now()
             await self.meta.save(conn, metainfo)
-
-            item.status = models.Status.AVAILABLE
-            item.content_ext = ext
-            item.preview_ext = 'jpg'
-            item.thumbnail_ext = 'jpg'
-            await self.items.save(conn, item)
 
         return total_size
 
