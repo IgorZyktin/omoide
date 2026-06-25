@@ -181,19 +181,10 @@ class UploadCommand(Command):
         thumbnail_existed = await aiofiles.os.path.exists(thumbnail_path)
 
         loop = asyncio.get_running_loop()
-
-        content_width, content_height = await loop.run_in_executor(
-            self.executor,
-            get_dimensions,
-            content_path,
-            is_video,
+        content_fut = loop.run_in_executor(
+            self.executor, get_dimensions, content_path, is_video
         )
-
-        (
-            preview_width,
-            preview_height,
-            preview_size,
-        ) = await loop.run_in_executor(
+        preview_fut = loop.run_in_executor(
             self.executor,
             save_image,
             content_path,
@@ -201,12 +192,7 @@ class UploadCommand(Command):
             is_video,
             const.PREVIEW_SIZE,
         )
-
-        (
-            thumbnail_width,
-            thumbnail_height,
-            thumbnail_size,
-        ) = await loop.run_in_executor(
+        thumbnail_fut = loop.run_in_executor(
             self.executor,
             save_image,
             content_path,
@@ -214,6 +200,12 @@ class UploadCommand(Command):
             is_video,
             const.THUMBNAIL_SIZE,
         )
+
+        (
+            (content_width, content_height),
+            (preview_width, preview_height, preview_size),
+            (thumbnail_width, thumbnail_height, thumbnail_size),
+        ) = await asyncio.gather(content_fut, preview_fut, thumbnail_fut)
 
         for label, existed, path in [
             ('content', content_existed, content_path),
@@ -225,8 +217,6 @@ class UploadCommand(Command):
             else:
                 LOG.debug('Saved {} file: {}', label, path)
 
-        total_size = content_size + preview_size + thumbnail_size
-
         async with self.database.transaction() as conn:
             metainfo = await self.meta.get_by_item(conn, item)
 
@@ -237,8 +227,13 @@ class UploadCommand(Command):
                 metainfo.content_height = None
                 metainfo.content_size = None
                 item.content_ext = None
+                total_size = preview_size + thumbnail_size
             else:
+                metainfo.content_width = content_width
+                metainfo.content_height = content_height
+                metainfo.content_size = content_size
                 item.content_ext = ext
+                total_size = content_size + preview_size + thumbnail_size
 
             item.preview_ext = 'jpg'
             item.thumbnail_ext = 'jpg'
