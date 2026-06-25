@@ -65,14 +65,12 @@ class DownloadCollectionUseCase:
 
             children = await self.items.get_children(conn, item)
 
-        # TODO - remove transaction splitting
         async with self.database.transaction() as conn:
             signatures = await self.signatures.get_cr32_signatures_map(
                 conn=conn,
                 items=children,
             )
 
-        async with self.database.transaction() as conn:
             metainfos = await self.meta.get_metainfo_map(conn, children)
             valid_children = [
                 child
