@@ -12,7 +12,6 @@ happy path, failure, batching, lock-stealing) but rewritten for the
 new advisory-lock / TaskGroup architecture.
 """
 
-import pytest
 
 from omoide import const
 from omoide.const import LockableResource
@@ -96,7 +95,7 @@ class TestEmptyQueue:
 
 
 class TestHappyPathDummy:
-    async def test_command_transitions_to_done(
+    async def test_command_transitions_to_done(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -129,7 +128,7 @@ class TestHappyPathDummy:
         assert result is True
         assert _read_status(engine, command.id) == 'done'
 
-    async def test_metrics_incremented_on_success(
+    async def test_metrics_incremented_on_success(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -166,7 +165,7 @@ class TestHappyPathDummy:
 
 
 class TestExecutionFailure:
-    async def test_failure_marks_command_failed_with_traceback(
+    async def test_failure_marks_command_failed_with_traceback(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -206,7 +205,7 @@ class TestExecutionFailure:
         assert _read_status(engine, command.id) == 'failed'
         assert 'forced failure' in _read_log(engine, command.id)
 
-    async def test_failure_increments_error_metric(
+    async def test_failure_increments_error_metric(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -256,7 +255,7 @@ class TestOidCleanup:
     real LOB the cleanest harness for this contract.
     """
 
-    async def test_solo_oid_is_deleted_after_processing(
+    async def test_solo_oid_is_deleted_after_processing(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -292,7 +291,7 @@ class TestOidCleanup:
         assert _read_status(engine, command.id) == 'done'
         assert _large_object_exists(engine, oid) is False
 
-    async def test_oid_kept_when_other_row_references_it(
+    async def test_oid_kept_when_other_row_references_it(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -349,7 +348,7 @@ class TestAdvisoryLockGate:
     ``acquire()`` returning ``None``.
     """
 
-    async def test_command_stays_created_while_oid_lock_is_held(
+    async def test_command_stays_created_while_oid_lock_is_held(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -392,9 +391,7 @@ class TestAdvisoryLockGate:
             )
 
             assert _read_status(engine, command.id) == 'created'
-            assert (
-                metrics_collector.get_value(metrics.COMMANDS_PROCESSED) == 0.0
-            )
+            assert metrics_collector.get_value(metrics.COMMANDS_PROCESSED) == 0.0
             assert metrics_collector.get_value(metrics.ERRORS) == 0.0
         finally:
             await squatter.disconnect()
@@ -428,7 +425,7 @@ class TestStartTaskRace:
     yielded a row that another worker has since claimed and started.
     """
 
-    async def test_execute_is_not_called_when_start_task_loses(
+    async def test_execute_is_not_called_when_start_task_loses(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -483,7 +480,7 @@ class TestStartTaskRace:
 
 
 class TestTaskGroupConcurrency:
-    async def test_multiple_dummy_commands_all_done_in_one_pass(
+    async def test_multiple_dummy_commands_all_done_in_one_pass(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -518,7 +515,7 @@ class TestTaskGroupConcurrency:
             assert _read_status(engine, cmd_id) == 'done'
         assert metrics_collector.get_value(metrics.COMMANDS_PROCESSED) == 5.0
 
-    async def test_one_failure_does_not_kill_sibling_tasks(
+    async def test_one_failure_does_not_kill_sibling_tasks(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -533,9 +530,12 @@ class TestTaskGroupConcurrency:
         engine,
         monkeypatch,
     ):
-        """``process_one`` swallows command-level exceptions so a single
+        """Test that siblings can continue.
+
+        ``process_one`` swallows command-level exceptions so a single
         failing task can never propagate up and cancel its TaskGroup
-        siblings."""
+        siblings.
+        """
         first = make_parallel_command()
         target = make_parallel_command()
         third = make_parallel_command()
@@ -544,7 +544,8 @@ class TestTaskGroupConcurrency:
 
         async def _selective_execute(self):
             if self.dto.id == target.id:
-                raise RuntimeError('only this one')
+                msg = 'only this one'
+                raise RuntimeError(msg)
             return await original_execute(self)
 
         monkeypatch.setattr(commands.DummyCommand, 'execute', _selective_execute)
@@ -574,7 +575,7 @@ class TestTaskGroupConcurrency:
 
 
 class TestSupportedOperationsFilter:
-    async def test_unsupported_command_is_ignored(
+    async def test_unsupported_command_is_ignored(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -618,7 +619,7 @@ class TestSupportedOperationsFilter:
 
 
 class TestInvalidOid:
-    async def test_invalid_oid_marks_command_failed(
+    async def test_invalid_oid_marks_command_failed(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,
@@ -632,8 +633,11 @@ class TestInvalidOid:
         make_parallel_command,
         engine,
     ):
-        """``int(oid)`` raises on non-numeric strings; the worker must
-        mark the command failed instead of looping forever on it."""
+        """Test raises.
+
+        ``int(oid)`` raises on non-numeric strings; the worker must
+        mark the command failed instead of looping forever on it.
+        """
         command = make_parallel_command(extras={'oid': 'not-a-number'})
 
         await parallel_main.do_work(

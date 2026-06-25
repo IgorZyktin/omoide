@@ -7,14 +7,12 @@ the worker depends on for the shared-large-object deletion path.
 Adapted from the converter ``test_database.py`` patterns.
 """
 
-import pytest
 
 from omoide import models
 from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
 
 from .conftest import _read_log
 from .conftest import _read_status
-
 
 # --- get_parallel_commands ---------------------------------------------
 
@@ -114,9 +112,7 @@ class TestGetParallelCommands:
         parallel_db: ParallelPostgreSQLDatabase,
         make_parallel_command,
     ):
-        command = make_parallel_command(
-            extras={'item_id': 42, 'oid': 1234}
-        )
+        command = make_parallel_command(extras={'item_id': 42, 'oid': 1234})
 
         (loaded,) = await parallel_db.get_parallel_commands(
             batch_size=1, supported_operations=frozenset(['dummy'])
@@ -271,18 +267,8 @@ class TestIsOidReferencedElsewhere:
         first = make_parallel_command(extras={'oid': 12345})
         second = make_parallel_command(extras={'oid': 12345})
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                12345, exclude_id=first.id
-            )
-            is True
-        )
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                12345, exclude_id=second.id
-            )
-            is True
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(12345, exclude_id=first.id) is True
+        assert await parallel_db.is_oid_referenced_elsewhere(12345, exclude_id=second.id) is True
 
     async def test_false_when_only_excluded_row_references_oid(
         self,
@@ -291,12 +277,7 @@ class TestIsOidReferencedElsewhere:
     ):
         only = make_parallel_command(extras={'oid': 12345})
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                12345, exclude_id=only.id
-            )
-            is False
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(12345, exclude_id=only.id) is False
 
     async def test_false_when_oid_is_unknown(
         self,
@@ -305,12 +286,7 @@ class TestIsOidReferencedElsewhere:
     ):
         row = make_parallel_command(extras={'oid': 12345})
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                99999, exclude_id=row.id
-            )
-            is False
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(99999, exclude_id=row.id) is False
 
     async def test_ignores_rows_without_oid(
         self,
@@ -321,33 +297,21 @@ class TestIsOidReferencedElsewhere:
         make_parallel_command(extras={'item_id': 7})
         make_parallel_command(extras={})
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                12345, exclude_id=target.id
-            )
-            is False
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(12345, exclude_id=target.id) is False
 
     async def test_finds_oid_regardless_of_status(
         self,
         parallel_db: ParallelPostgreSQLDatabase,
         make_parallel_command,
     ):
-        """A reference is a reference whether the other row is created /
-        active / done / failed — the LOB must outlive any of them."""
+        """Test that we can see same oid usage.
+
+        A reference is a reference whether the other row is created /
+        active / done / failed — the LOB must outlive any of them.
+        """
         owner = make_parallel_command(extras={'oid': 99})
         active = make_parallel_command(extras={'oid': 99}, status='active')
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                99, exclude_id=owner.id
-            )
-            is True
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(99, exclude_id=owner.id) is True
         # And of course the symmetric case.
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                99, exclude_id=active.id
-            )
-            is True
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(99, exclude_id=active.id) is True

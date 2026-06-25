@@ -48,9 +48,7 @@ class StubConfig:
     """Minimal config exposing fields the worker loop reads."""
 
     input_batch: int = 10
-    supported_operations: frozenset[str] = field(
-        default_factory=lambda: frozenset(['dummy'])
-    )
+    supported_operations: frozenset[str] = field(default_factory=lambda: frozenset(['dummy']))
     data_folder: Path = field(default_factory=Path)
     prefix_size: int = 2
     name: str = 'parallel-test'
@@ -147,7 +145,7 @@ async def lock_provider(
     _schema_engine: Engine,
     engine: Engine,
 ) -> AsyncIterator[PGAdvisoryLock]:
-    """Connected ``PGAdvisoryLock`` against the test DB."""
+    """Return connected ``PGAdvisoryLock`` against the test DB."""
     _ = _schema_engine
     _ = engine
     provider = PGAdvisoryLock(async_db_url)
@@ -205,9 +203,7 @@ def _large_object_exists(engine: Engine, oid: int) -> bool:
     return row is not None
 
 
-async def _save_small_large_object(
-    storage: PgLargeObjectStorage, payload: bytes = b'x'
-) -> int:
+async def _save_small_large_object(storage: PgLargeObjectStorage, payload: bytes = b'x') -> int:
     """Stream a payload into a new LOB; return its OID."""
 
     async def _chunks():
