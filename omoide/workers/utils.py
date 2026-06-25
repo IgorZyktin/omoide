@@ -23,7 +23,7 @@ def signal_handler(
 ) -> None:
     """Handle shutdown signals."""
     LOG.warning(
-        'Received signal. Shutting down gracefully in {deadline} sec.',
+        'Received signal. Shutting down gracefully in {deadline}',
         deadline=pu.human_readable_time(deadline),
     )
     event.clear()
