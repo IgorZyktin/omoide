@@ -272,33 +272,21 @@ async def _process_one(
         if not await database.start_task(command):
             return
 
-        try:
-            start = time.perf_counter()
-            bytes_processed = await command_implementation.execute()
-            time_spent = time.perf_counter() - start
-            await database.mark_done(command)
-            succeeded = True
-        except Exception:
-            traceback = custom_logging.capture_exception_output(
-                f'Command {command.id} failed'
-            )
-            LOG.exception('Command {} failed', command.id)
-            await database.mark_failed(command, traceback or '???')
-            metrics_collector.increment(metrics.ERRORS, 1)
-            succeeded = False
-        else:
-            LOG.info('Finished command {} ({})', command.id, command.name)
-            metrics_collector.increment(metrics.COMMANDS_PROCESSED, 1)
+        start = time.perf_counter()
+        bytes_processed = await command_implementation.execute()
+        time_spent = time.perf_counter() - start
+
+        await database.mark_done(command)
+        LOG.info('Finished command {} ({})', command.id, command.name)
+
+        metrics_collector.increment(metrics.COMMANDS_PROCESSED, 1)
+        metrics_collector.increment(metrics.TIME_SPENT, int(time_spent * 1000))
+        if bytes_processed:
             metrics_collector.increment(
-                metrics.TIME_SPENT, int(time_spent * 1000)
+                metrics.BYTES_PROCESSED, bytes_processed
             )
 
-            if bytes_processed:
-                metrics_collector.increment(
-                    metrics.BYTES_PROCESSED, bytes_processed
-                )
-
-        if oid and succeeded:
+        if oid:
             await _cleanup_oid(
                 database, object_storage, oid, exclude_id=command.id
             )
