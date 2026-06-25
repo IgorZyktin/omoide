@@ -98,20 +98,12 @@ class UploadCommand(Command):
 
     async def execute(self) -> int:
         """Start execution of the command."""
-        oid = self.dto.extras.get('oid')
-
-        if oid is None:
+        if self.dto.oid is None:
             msg = 'oid is missing'
             raise KeyError(msg)
 
-        if not isinstance(oid, int):
-            msg = 'oid is invalid'
-            raise TypeError(msg)
-
-        item_id = self.dto.item_id
-
         async with self.database.transaction() as conn:
-            item = await self.items.get_by_id(conn, item_id)
+            item = await self.items.get_by_id(conn, self.dto.item_id)
             owner = await self.users.get_by_id(conn, item.owner_id)
 
         content_type = self.dto.extras.get('content_type')
@@ -156,7 +148,7 @@ class UploadCommand(Command):
         await aiofiles.os.makedirs(thumbnail_folder, exist_ok=True)
         content_existed = await aiofiles.os.path.exists(content_path)
 
-        chunks = self.object_storage.read(oid)
+        chunks = self.object_storage.read(self.dto.oid)
         content_size = 0
 
         async with aiofiles.open(content_path, mode='wb') as f:

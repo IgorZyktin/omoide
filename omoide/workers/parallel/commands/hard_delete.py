@@ -41,10 +41,8 @@ class HardDeleteCommand(Command):
 
     async def execute(self) -> int:
         """Start execution of the command."""
-        item_id = self.dto.item_id
-
         async with self.database.transaction() as conn:
-            item = await self.items.get_by_id(conn, item_id, read_deleted=True)
+            item = await self.items.get_by_id(conn, self.dto.item_id, read_deleted=True)
             owner = await self.users.get_by_id(conn, item.owner_id)
 
         deleted = item.status == models.Status.DELETED

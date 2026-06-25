@@ -253,16 +253,10 @@ async def _process_one(
 
     resources = command_implementation.get_required_resources()
 
-    oid = command.extras.get('oid')
-    if oid is not None:
-        try:
-            resources.append(
-                LockableResource(const.LockNamespace.LARGE_OBJECTS, int(oid))
-            )
-        except (TypeError, ValueError):
-            LOG.error('Command {} has invalid oid: {!r}', command.id, oid)
-            await database.mark_failed(command, f'Invalid oid: {oid!r}')
-            return
+    if command.oid is not None:
+        resources.append(
+            LockableResource(const.LockNamespace.LARGE_OBJECTS, command.oid)
+        )
 
     locks = await lock.acquire(resources)
     if locks is None:
@@ -286,9 +280,9 @@ async def _process_one(
                 metrics.BYTES_PROCESSED, bytes_processed
             )
 
-        if oid:
+        if command.oid is not None:
             await _cleanup_oid(
-                database, object_storage, oid, exclude_id=command.id
+                database, object_storage, command.oid, exclude_id=command.id
             )
 
     finally:

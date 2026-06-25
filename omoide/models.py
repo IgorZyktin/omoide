@@ -1,12 +1,12 @@
 """Domain-level models."""
 
 import abc
+import enum
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
-import enum
 from enum import StrEnum
 from functools import cached_property
 from typing import Any
@@ -584,7 +584,7 @@ class OutputMedia:
 
 
 class Command(StrEnum):
-    """All known commands."""
+    """All known parallel commands."""
 
     DUMMY = 'dummy'
     SOFT_DELETE = 'soft_delete'
@@ -617,35 +617,47 @@ class ParallelCommand:
     started_at: datetime
     ended_at: datetime
 
+    def _extract_int_value(self, name: str) -> int:
+        """Safely extract value from extras."""
+        value = self.extras.get(name)
+
+        if value is None:
+            msg = f'Missing {name}'
+            raise KeyError(msg)
+
+        try:
+            int_value = int(value)
+        except (TypeError, ValueError) as exc:
+            msg = f'Invalid {name}'
+            raise TypeError(msg) from exc
+
+        return int_value
+
     @cached_property
     def item_id(self) -> int:
         """Extract from extras."""
-        item_id = self.extras.get('item_id')
-
-        if item_id is None:
-            msg = 'Missing item_id'
-            raise KeyError(msg)
-
-        return int(item_id)
+        return self._extract_int_value('item_id')
 
     @cached_property
     def source_item_id(self) -> int:
         """Extract from extras."""
-        source_item_id = self.extras.get('source_item_id')
-
-        if source_item_id is None:
-            msg = 'Missing source_item_id'
-            raise KeyError(msg)
-
-        return int(source_item_id)
+        return self._extract_int_value('source_item_id')
 
     @cached_property
     def target_item_id(self) -> int:
         """Extract from extras."""
-        target_item_id = self.extras.get('target_item_id')
+        return self._extract_int_value('target_item_id')
 
-        if target_item_id is None:
-            msg = 'Missing target_item_id'
-            raise KeyError(msg)
+    @cached_property
+    def oid(self) -> int | None:
+        """Extract from extras."""
+        oid = self.extras.get('oid')
 
-        return int(target_item_id)
+        if oid is None:
+            return None
+
+        try:
+            return int(oid)
+        except (TypeError, ValueError) as exc:
+            msg = f'Invalid oid: {oid!r}'
+            raise TypeError(msg) from exc
