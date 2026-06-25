@@ -7,7 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
-
+from typing import Any
+from PIL import ExifTags
 import aiofiles
 import aiofiles.os
 import python_utilz as pu
@@ -56,6 +57,7 @@ class ConversionOutput:
     thumbnail_width: int
     thumbnail_height: int
     thumbnail_size: int
+    exif: dict[str, Any] | None
 
 
 class UploadCommand(Command):
@@ -68,6 +70,7 @@ class UploadCommand(Command):
         users: db_interfaces.AbsUsersRepo,
         items: db_interfaces.AbsItemsRepo,
         meta: db_interfaces.AbsMetaRepo,
+        exif: db_interfaces.AbsEXIFRepo,
         locator: FilesystemLocator,
         executor: ProcessPoolExecutor,
         object_storage: AbsObjectStorage,
@@ -78,6 +81,7 @@ class UploadCommand(Command):
         self.users = users
         self.items = items
         self.meta = meta
+        self.exif = exif
         self.locator = locator
         self.executor = executor
         self.object_storage = object_storage
@@ -179,6 +183,10 @@ class UploadCommand(Command):
             metainfo.updated_at = pu.now()
             await self.meta.save(conn, metainfo)
 
+            if conversion_output.exif is not None:
+                exif_model = models.Exif(exif=conversion_output.exif)
+                await self.exif.save(conn, item, exif_model)
+
         return (
             conversion_output.content_size
             + conversion_output.preview_size
@@ -247,6 +255,8 @@ def perform_all_conversions(
     conversion_input: ConversionInput,
 ) -> ConversionOutput:
     """Create all sub-images, calculate signatures."""
+    exif = None
+
     if conversion_input.is_video:
         clip = None
         img = None
@@ -261,6 +271,8 @@ def perform_all_conversions(
                 thumbnail_height,
             ) = do_resizes(img, conversion_input)
             content_width, content_height = img.size
+            if conversion_input.extract_exif:
+                exif = extract_exif_from_image(img)
         finally:
             if clip is not None:
                 clip.close()
@@ -275,6 +287,8 @@ def perform_all_conversions(
                 thumbnail_width,
                 thumbnail_height,
             ) = do_resizes(img, conversion_input)
+            if conversion_input.extract_exif:
+                exif = extract_exif_from_image(img)
 
     return ConversionOutput(
         content_width=content_width,
@@ -286,6 +300,7 @@ def perform_all_conversions(
         thumbnail_width=thumbnail_width,
         thumbnail_height=thumbnail_height,
         thumbnail_size=os.path.getsize(conversion_input.thumbnail_path),
+        exif=exif,
     )
 
 
@@ -332,7 +347,9 @@ def get_new_image_dimensions(
     return math.ceil(new_width), math.ceil(new_height)
 
 
-def resize(img: Image.Image, size: int, dst_path: Path, quality: int) -> tuple[int, int]:
+def resize(
+    img: Image.Image, size: int, dst_path: Path, quality: int
+) -> tuple[int, int]:
     """Resize to given dimensions."""
     img = ImageOps.exif_transpose(img)
     old_width, old_height = img.size
@@ -350,3 +367,39 @@ def resize(img: Image.Image, size: int, dst_path: Path, quality: int) -> tuple[i
         optimize=True,
     )
     return new_width, new_height
+
+
+IFD_CODE_LOOKUP = {i.value: i.name for i in ExifTags.IFD}
+
+
+def extract_exif_from_image(img: Image.Image) -> dict[str, Any]:
+    """Extract exif data from content."""
+    exif: dict[str, Any] = {}
+
+    def cast(maybe_string: Any) -> str:
+        """Convert to string. Also strip unicode \u0000."""
+        return str(maybe_string).replace('\u0000', '')
+
+    img_exif = img.getexif()
+
+    for tag_code, value in img_exif.items():
+        if tag_code in IFD_CODE_LOOKUP:
+            ifd_tag_name = cast(IFD_CODE_LOOKUP[tag_code])
+
+            if ifd_tag_name not in exif:
+                exif[ifd_tag_name] = {}
+
+            ifd_data = img_exif.get_ifd(tag_code).items()
+
+            for nested_key, nested_value in ifd_data:
+                nested_tag_name = (
+                    ExifTags.GPSTAGS.get(nested_key, None)
+                    or ExifTags.TAGS.get(nested_key, None)
+                    or nested_key
+                )
+                exif[ifd_tag_name][cast(nested_tag_name)] = cast(nested_value)
+
+        else:
+            exif[cast(ExifTags.TAGS.get(tag_code))] = cast(value)
+
+    return exif

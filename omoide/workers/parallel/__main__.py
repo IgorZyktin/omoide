@@ -68,6 +68,7 @@ async def main() -> None:
     users_repo = impl_sqlalchemy.UsersRepo()
     items_repo = impl_sqlalchemy.ItemsRepo()
     meta_repo = impl_sqlalchemy.MetaRepo()
+    exif_repo = impl_sqlalchemy.EXIFRepo()
 
     fs_locator = FilesystemLocator(
         root=config.data_folder,
@@ -89,6 +90,7 @@ async def main() -> None:
                         users_repo=users_repo,
                         items_repo=items_repo,
                         meta_repo=meta_repo,
+                        exif_repo=exif_repo,
                         fs_locator=fs_locator,
                         object_storage=object_storage,
                     )
@@ -123,6 +125,7 @@ async def do_work(
     users_repo: db_interfaces.AbsUsersRepo,
     items_repo: db_interfaces.AbsItemsRepo,
     meta_repo: db_interfaces.AbsMetaRepo,
+    exif_repo: db_interfaces.AbsEXIFRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> bool:
@@ -147,6 +150,7 @@ async def do_work(
                     users_repo=users_repo,
                     items_repo=items_repo,
                     meta_repo=meta_repo,
+                    exif_repo=exif_repo,
                     fs_locator=fs_locator,
                     object_storage=object_storage,
                 )
@@ -164,6 +168,7 @@ async def process_one(
     users_repo: db_interfaces.AbsUsersRepo,
     items_repo: db_interfaces.AbsItemsRepo,
     meta_repo: db_interfaces.AbsMetaRepo,
+    exif_repo: db_interfaces.AbsEXIFRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> None:
@@ -178,6 +183,7 @@ async def process_one(
             users_repo=users_repo,
             items_repo=items_repo,
             meta_repo=meta_repo,
+            exif_repo=exif_repo,
             fs_locator=fs_locator,
             object_storage=object_storage,
         )
@@ -199,6 +205,7 @@ async def _process_one(
     users_repo: db_interfaces.AbsUsersRepo,
     items_repo: db_interfaces.AbsItemsRepo,
     meta_repo: db_interfaces.AbsMetaRepo,
+    exif_repo: db_interfaces.AbsEXIFRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> None:
@@ -244,6 +251,7 @@ async def _process_one(
                 users=users_repo,
                 items=items_repo,
                 meta=meta_repo,
+                exif=exif_repo,
                 locator=fs_locator,
                 executor=executor,
                 object_storage=object_storage,
