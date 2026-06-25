@@ -145,8 +145,7 @@ class UploadCommand(Command):
         thumbnail_folder = _root / const.MediaType.THUMBNAIL / _uuid / _prefix
         content_path = content_folder / _filename
 
-        if not skip_content:
-            await aiofiles.os.makedirs(content_folder, exist_ok=True)
+        await aiofiles.os.makedirs(content_folder, exist_ok=True)
         await aiofiles.os.makedirs(preview_folder, exist_ok=True)
         await aiofiles.os.makedirs(thumbnail_folder, exist_ok=True)
         content_existed = await aiofiles.os.path.exists(content_path)
