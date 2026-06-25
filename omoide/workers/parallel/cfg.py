@@ -24,7 +24,6 @@ class ParallelWorkerConfig(ns.BaseConfig):
         frozenset[str], frozenset, ns.Separated()
     ] = frozenset()
     data_folder: Path = Path('.')
-    temp_folder: Path = Path('.')
     # zero means select automatically, but not more than `max_workers`
     workers: int = 0
     max_workers: int = 5
