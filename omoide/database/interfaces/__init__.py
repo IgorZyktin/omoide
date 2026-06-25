@@ -3,7 +3,6 @@ from omoide.database.interfaces.abs_commands_repo import AbsCommandsRepo  # noqa
 from omoide.database.interfaces.abs_database import AbsDatabase  # noqa: F401
 from omoide.database.interfaces.abs_exif_repo import AbsEXIFRepo  # noqa: F401
 from omoide.database.interfaces.abs_items_repo import AbsItemsRepo  # noqa: F401
-from omoide.database.interfaces.abs_media_repo import AbsMediaRepo  # noqa: F401
 from omoide.database.interfaces.abs_meta_repo import AbsMetaRepo  # noqa: F401
 from omoide.database.interfaces.abs_misc_repo import AbsMiscRepo  # noqa: F401
 from omoide.database.interfaces.abs_search_repo import AbsSearchRepo  # noqa: F401

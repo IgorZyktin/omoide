@@ -14,7 +14,6 @@ VERSION = '0.3.13'
 FRONTEND_VERSION = 40
 
 DUMMY_UUID = UUID('00000000-0000-0000-0000-000000000000')
-DUMMY_TIME = datetime(2000, 1, 1, 0, 0, 0, 0, tzinfo=UTC)
 
 
 class MediaType(enum.StrEnum):
@@ -45,7 +44,6 @@ PREVIEW: Literal['preview'] = 'preview'
 THUMBNAIL: Literal['thumbnail'] = 'thumbnail'
 VIDEO: Literal['video'] = 'video'
 MEDIA_TYPE: TypeAlias = Literal['content', 'preview', 'thumbnail', 'video']
-MEDIA_TYPES: list[MEDIA_TYPE] = [CONTENT, PREVIEW, THUMBNAIL, VIDEO]
 
 AUTH_COMPLEXITY = 4  # minimal
 
