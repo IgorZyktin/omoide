@@ -110,7 +110,7 @@ class CopyImageCommand(Command):
             total_size += await aiofiles.os.path.getsize(source_path)
 
         async with self.database.transaction() as conn:
-            if including_content:
+            if including_content or including_video:
                 target_item.content_ext = source_item.content_ext
             target_item.preview_ext = source_item.preview_ext
             target_item.thumbnail_ext = source_item.thumbnail_ext
