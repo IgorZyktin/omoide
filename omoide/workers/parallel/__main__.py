@@ -343,7 +343,6 @@ async def dispatch_and_execute(
 
         case _:
             assert_never(command_type)
-            raise  # noqa: PLE0704
 
     return await command_implementation.execute()
 

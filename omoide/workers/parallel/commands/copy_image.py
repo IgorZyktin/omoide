@@ -89,7 +89,6 @@ class CopyImageCommand(Command):
                     ext = source_item.thumbnail_ext
                 case _:
                     assert_never(media)
-                    raise  # noqa: PLE0704
 
             new_prefix = self.locator.get_prefix(target_item)
             new_filename = self.locator.get_filename(target_item, ext)
