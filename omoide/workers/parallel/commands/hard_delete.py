@@ -80,10 +80,8 @@ class HardDeleteCommand(Command):
             try:
                 await os.unlink(path)
             except FileNotFoundError:
-                LOG.warning(
-                    'File did not exist, skipping hard-delete: {}', path
-                )
+                pass
             else:
-                LOG.debug('Deleted file: {}', path)
+                LOG.debug('[{}] Deleted file: {}', self.dto.id, path)
 
         return 0

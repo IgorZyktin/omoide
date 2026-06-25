@@ -793,7 +793,7 @@ class UploadItemUseCase(BaseItemUseCase):
                     await self.commands.upload(
                         conn=conn,
                         requested_by=user,
-                        item=item,
+                        item=parent,
                         content_type=file.content_type,
                         ext='jpg' if file.ext == 'jpeg' else file.ext,
                         oid=oid,

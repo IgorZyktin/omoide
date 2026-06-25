@@ -123,6 +123,7 @@ class ParallelPostgreSQLDatabase(SqlalchemyDatabase):
         query = sa.select(
             sa.exists().where(
                 db_models.ParallelCommand.id != exclude_id,
+                db_models.ParallelCommand.status != models.CommandStatus.DONE,
                 db_models.ParallelCommand.extras['oid'].astext == str(oid),
             )
         )
