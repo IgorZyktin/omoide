@@ -99,9 +99,7 @@ class SoftDeleteCommand(Command):
                     dst=new_path,
                 )
             except FileNotFoundError:
-                LOG.warning(
-                    'File did not exist, skipping soft-delete: {}', old_path
-                )
+                pass
             else:
                 LOG.debug('Renamed file to deleted: {}', old_path)
 
