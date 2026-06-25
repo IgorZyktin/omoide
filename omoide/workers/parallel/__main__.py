@@ -14,7 +14,7 @@ from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.const import LockableResource
 from omoide.infra.locators import FilesystemLocator
-from omoide.object_storage.implementations.pg_large_object_content_storage import (
+from omoide.object_storage.implementations.pgl_object_storage import (
     PgLargeObjectStorage,
 )
 from omoide.object_storage.interfaces import AbsObjectStorage
