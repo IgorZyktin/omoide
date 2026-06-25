@@ -1,8 +1,10 @@
 """Add new image/video to the storage."""
 
 import asyncio
+import hashlib
 import math
 import os
+import zlib
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import suppress
 from dataclasses import dataclass
@@ -58,6 +60,8 @@ class ConversionOutput:
     thumbnail_height: int
     thumbnail_size: int
     exif: dict[str, Any] | None
+    signature_crc32: int
+    signature_md5: str
 
 
 class UploadCommand(Command):
@@ -67,10 +71,11 @@ class UploadCommand(Command):
         self,
         dto: ParallelCommand,
         database: ParallelPostgreSQLDatabase,
-        users: db_interfaces.AbsUsersRepo,
-        items: db_interfaces.AbsItemsRepo,
-        meta: db_interfaces.AbsMetaRepo,
-        exif: db_interfaces.AbsEXIFRepo,
+        users_repo: db_interfaces.AbsUsersRepo,
+        items_repo: db_interfaces.AbsItemsRepo,
+        meta_repo: db_interfaces.AbsMetaRepo,
+        exif_repo: db_interfaces.AbsEXIFRepo,
+        signatures_repo: db_interfaces.AbsSignaturesRepo,
         locator: FilesystemLocator,
         executor: ProcessPoolExecutor,
         object_storage: AbsObjectStorage,
@@ -78,10 +83,11 @@ class UploadCommand(Command):
         """Initialize instance."""
         super().__init__(dto)
         self.database = database
-        self.users = users
-        self.items = items
-        self.meta = meta
-        self.exif = exif
+        self.users_repo = users_repo
+        self.items_repo = items_repo
+        self.meta_repo = meta_repo
+        self.exif_repo = exif_repo
+        self.signatures_repo = signatures_repo
         self.locator = locator
         self.executor = executor
         self.object_storage = object_storage
@@ -99,8 +105,8 @@ class UploadCommand(Command):
             raise KeyError(msg)
 
         async with self.database.transaction() as conn:
-            item = await self.items.get_by_id(conn, self.dto.item_id)
-            owner = await self.users.get_by_id(conn, item.owner_id)
+            item = await self.items_repo.get_by_id(conn, self.dto.item_id)
+            owner = await self.users_repo.get_by_id(conn, item.owner_id)
 
         (
             content_path,
@@ -153,7 +159,7 @@ class UploadCommand(Command):
                 await aiofiles.os.unlink(content_path)
 
         async with self.database.transaction() as conn:
-            metainfo = await self.meta.get_by_item(conn, item)
+            metainfo = await self.meta_repo.get_by_item(conn, item)
 
             if skip_content:
                 metainfo.content_width = None
@@ -170,7 +176,7 @@ class UploadCommand(Command):
             item.thumbnail_ext = 'jpg'
 
             item.status = models.Status.AVAILABLE
-            await self.items.save(conn, item)
+            await self.items_repo.save(conn, item)
 
             metainfo.preview_width = conversion_output.preview_width
             metainfo.preview_height = conversion_output.preview_height
@@ -181,11 +187,18 @@ class UploadCommand(Command):
             metainfo.thumbnail_size = conversion_output.thumbnail_size
 
             metainfo.updated_at = pu.now()
-            await self.meta.save(conn, metainfo)
+            await self.meta_repo.save(conn, metainfo)
 
             if conversion_output.exif is not None:
                 exif_model = models.Exif(exif=conversion_output.exif)
-                await self.exif.save(conn, item, exif_model)
+                await self.exif_repo.save(conn, item, exif_model)
+
+            await self.signatures_repo.save_md5_signature(
+                conn, item, conversion_output.signature_md5
+            )
+            await self.signatures_repo.save_cr32_signature(
+                conn, item, conversion_output.signature_crc32
+            )
 
         return (
             conversion_output.content_size
@@ -290,6 +303,14 @@ def perform_all_conversions(
             if conversion_input.extract_exif:
                 exif = extract_exif_from_image(img)
 
+    chunk_size = 8192
+    with open(conversion_input.content_path, 'rb') as fd:
+        signature_crc32 = 0
+        signature_md5 = hashlib.md5()
+        while chunk := fd.read(chunk_size):
+            signature_md5.update(chunk)
+            signature_crc32 = zlib.crc32(chunk, signature_crc32)
+
     return ConversionOutput(
         content_width=content_width,
         content_height=content_height,
@@ -301,6 +322,8 @@ def perform_all_conversions(
         thumbnail_height=thumbnail_height,
         thumbnail_size=os.path.getsize(conversion_input.thumbnail_path),
         exif=exif,
+        signature_crc32=signature_crc32,
+        signature_md5=signature_md5.hexdigest(),
     )
 
 

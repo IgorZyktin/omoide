@@ -69,6 +69,7 @@ async def main() -> None:
     items_repo = impl_sqlalchemy.ItemsRepo()
     meta_repo = impl_sqlalchemy.MetaRepo()
     exif_repo = impl_sqlalchemy.EXIFRepo()
+    signatures_repo = impl_sqlalchemy.SignaturesRepo()
 
     fs_locator = FilesystemLocator(
         root=config.data_folder,
@@ -91,6 +92,7 @@ async def main() -> None:
                         items_repo=items_repo,
                         meta_repo=meta_repo,
                         exif_repo=exif_repo,
+                        signatures_repo=signatures_repo,
                         fs_locator=fs_locator,
                         object_storage=object_storage,
                     )
@@ -126,6 +128,7 @@ async def do_work(
     items_repo: db_interfaces.AbsItemsRepo,
     meta_repo: db_interfaces.AbsMetaRepo,
     exif_repo: db_interfaces.AbsEXIFRepo,
+    signatures_repo: db_interfaces.AbsSignaturesRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> bool:
@@ -151,6 +154,7 @@ async def do_work(
                     items_repo=items_repo,
                     meta_repo=meta_repo,
                     exif_repo=exif_repo,
+                    signatures_repo=signatures_repo,
                     fs_locator=fs_locator,
                     object_storage=object_storage,
                 )
@@ -169,6 +173,7 @@ async def process_one(
     items_repo: db_interfaces.AbsItemsRepo,
     meta_repo: db_interfaces.AbsMetaRepo,
     exif_repo: db_interfaces.AbsEXIFRepo,
+    signatures_repo: db_interfaces.AbsSignaturesRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> None:
@@ -184,6 +189,7 @@ async def process_one(
             items_repo=items_repo,
             meta_repo=meta_repo,
             exif_repo=exif_repo,
+            signatures_repo=signatures_repo,
             fs_locator=fs_locator,
             object_storage=object_storage,
         )
@@ -206,6 +212,7 @@ async def _process_one(
     items_repo: db_interfaces.AbsItemsRepo,
     meta_repo: db_interfaces.AbsMetaRepo,
     exif_repo: db_interfaces.AbsEXIFRepo,
+    signatures_repo: db_interfaces.AbsSignaturesRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> None:
@@ -248,10 +255,11 @@ async def _process_one(
             command_implementation = commands.UploadCommand(
                 dto=command,
                 database=database,
-                users=users_repo,
-                items=items_repo,
-                meta=meta_repo,
-                exif=exif_repo,
+                users_repo=users_repo,
+                items_repo=items_repo,
+                meta_repo=meta_repo,
+                exif_repo=exif_repo,
+                signatures_repo=signatures_repo,
                 locator=fs_locator,
                 executor=executor,
                 object_storage=object_storage,
