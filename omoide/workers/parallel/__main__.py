@@ -8,7 +8,8 @@ from typing import assert_never
 
 import nano_settings as ns
 import python_utilz as pu
-
+from omoide.database import interfaces as db_interfaces
+from omoide.infra import interfaces as infra_interfaces
 from omoide import custom_logging
 from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
@@ -116,12 +117,12 @@ async def main() -> None:
 async def do_work(
     config: ParallelWorkerConfig,
     executor: ProcessPoolExecutor,
-    lock: PGAdvisoryLock,
+    lock: infra_interfaces.AbsLockingProvider,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
-    users_repo: impl_sqlalchemy.UsersRepo,
-    items_repo: impl_sqlalchemy.ItemsRepo,
-    meta_repo: impl_sqlalchemy.MetaRepo,
+    users_repo: db_interfaces.AbsUsersRepo,
+    items_repo: db_interfaces.AbsItemsRepo,
+    meta_repo: db_interfaces.AbsMetaRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> bool:
@@ -157,12 +158,12 @@ async def do_work(
 async def process_one(
     command: models.ParallelCommand,
     executor: ProcessPoolExecutor,
-    lock: PGAdvisoryLock,
+    lock: infra_interfaces.AbsLockingProvider,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
-    users_repo: impl_sqlalchemy.UsersRepo,
-    items_repo: impl_sqlalchemy.ItemsRepo,
-    meta_repo: impl_sqlalchemy.MetaRepo,
+    users_repo: db_interfaces.AbsUsersRepo,
+    items_repo: db_interfaces.AbsItemsRepo,
+    meta_repo: db_interfaces.AbsMetaRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> None:
@@ -192,12 +193,12 @@ async def process_one(
 async def _process_one(
     command: models.ParallelCommand,
     executor: ProcessPoolExecutor,
-    lock: PGAdvisoryLock,
+    lock: infra_interfaces.AbsLockingProvider,
     database: ParallelPostgreSQLDatabase,
     metrics_collector: metrics.PrometheusMetricsCollector,
-    users_repo: impl_sqlalchemy.UsersRepo,
-    items_repo: impl_sqlalchemy.ItemsRepo,
-    meta_repo: impl_sqlalchemy.MetaRepo,
+    users_repo: db_interfaces.AbsUsersRepo,
+    items_repo: db_interfaces.AbsItemsRepo,
+    meta_repo: db_interfaces.AbsMetaRepo,
     fs_locator: FilesystemLocator,
     object_storage: AbsObjectStorage,
 ) -> None:

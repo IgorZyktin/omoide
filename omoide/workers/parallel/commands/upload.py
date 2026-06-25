@@ -18,7 +18,7 @@ from moviepy import VideoFileClip
 from omoide import const
 from omoide import custom_logging
 from omoide import models
-from omoide.database.implementations import impl_sqlalchemy
+from omoide.database import interfaces as db_interfaces
 from omoide.infra.locators import FilesystemLocator
 from omoide.models import ParallelCommand
 from omoide.object_storage.interfaces import AbsObjectStorage
@@ -73,9 +73,9 @@ class UploadCommand(Command):
         self,
         dto: ParallelCommand,
         database: ParallelPostgreSQLDatabase,
-        users: impl_sqlalchemy.UsersRepo,
-        items: impl_sqlalchemy.ItemsRepo,
-        meta: impl_sqlalchemy.MetaRepo,
+        users: db_interfaces.AbsUsersRepo,
+        items: db_interfaces.AbsItemsRepo,
+        meta: db_interfaces.AbsMetaRepo,
         locator: FilesystemLocator,
         executor: ProcessPoolExecutor,
         object_storage: AbsObjectStorage,

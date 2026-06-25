@@ -8,7 +8,7 @@ import aiofiles
 from omoide import const
 from omoide import custom_logging
 from aiofiles.os import wrap
-from omoide.database.implementations import impl_sqlalchemy
+from omoide.database import interfaces as db_interfaces
 from omoide.infra.locators import FilesystemLocator
 from omoide.workers.parallel.commands.base_command import Command
 from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
@@ -24,9 +24,9 @@ class CopyImageCommand(Command):
         self,
         dto: ParallelCommand,
         database: ParallelPostgreSQLDatabase,
-        users: impl_sqlalchemy.UsersRepo,
-        items: impl_sqlalchemy.ItemsRepo,
-        meta: impl_sqlalchemy.MetaRepo,
+        users: db_interfaces.AbsUsersRepo,
+        items: db_interfaces.AbsItemsRepo,
+        meta: db_interfaces.AbsMetaRepo,
         locator: FilesystemLocator,
     ) -> None:
         """Initialize instance."""

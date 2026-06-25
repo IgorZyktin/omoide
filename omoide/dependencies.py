@@ -26,9 +26,7 @@ from omoide.database.interfaces.abs_database import AbsDatabase
 from omoide.infra.interfaces import AbsAuthenticator
 from omoide.infra.locators import WebLocator
 from omoide.object_storage import interfaces as object_interfaces
-from omoide.object_storage.implementations.pgl_object_storage import (
-    PgLargeObjectStorage,
-)
+from omoide.object_storage.implementations.pgl_object_storage import PgLargeObjectStorage
 from omoide.omoide_app.auth.auth_use_cases import LoginUserUseCase
 from omoide.presentation import web
 

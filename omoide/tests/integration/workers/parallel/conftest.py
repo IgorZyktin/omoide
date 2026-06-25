@@ -37,9 +37,7 @@ from omoide import models
 from omoide.database import db_models
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.infra.locators import FilesystemLocator
-from omoide.object_storage.implementations.pgl_object_storage import (
-    PgLargeObjectStorage,
-)
+from omoide.object_storage.implementations.pgl_object_storage import PgLargeObjectStorage
 from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
 
 

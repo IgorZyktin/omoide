@@ -12,7 +12,6 @@ happy path, failure, batching, lock-stealing) but rewritten for the
 new advisory-lock / TaskGroup architecture.
 """
 
-
 from omoide import const
 from omoide.const import LockableResource
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock

@@ -6,11 +6,11 @@ from omoide import const
 from omoide import custom_logging
 from omoide import models
 
-from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.locators import FilesystemLocator
 from omoide.workers.parallel.commands.base_command import Command
 from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
 from omoide.models import ParallelCommand
+from omoide.database import interfaces as db_interfaces
 
 LOG = custom_logging.get_logger(__name__)
 
@@ -22,8 +22,8 @@ class HardDeleteCommand(Command):
         self,
         dto: ParallelCommand,
         database: ParallelPostgreSQLDatabase,
-        users: impl_sqlalchemy.UsersRepo,
-        items: impl_sqlalchemy.ItemsRepo,
+        users: db_interfaces.AbsUsersRepo,
+        items: db_interfaces.AbsItemsRepo,
         locator: FilesystemLocator,
     ) -> None:
         """Initialize instance."""
@@ -42,7 +42,9 @@ class HardDeleteCommand(Command):
     async def execute(self) -> int:
         """Start execution of the command."""
         async with self.database.transaction() as conn:
-            item = await self.items.get_by_id(conn, self.dto.item_id, read_deleted=True)
+            item = await self.items.get_by_id(
+                conn, self.dto.item_id, read_deleted=True
+            )
             owner = await self.users.get_by_id(conn, item.owner_id)
 
         deleted = item.status == models.Status.DELETED

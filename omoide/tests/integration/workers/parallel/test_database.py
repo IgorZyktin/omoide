@@ -7,7 +7,6 @@ the worker depends on for the shared-large-object deletion path.
 Adapted from the converter ``test_database.py`` patterns.
 """
 
-
 from omoide import models
 from omoide.workers.parallel.database import ParallelPostgreSQLDatabase
 
