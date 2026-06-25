@@ -59,6 +59,7 @@ _TRUNCATE_TABLES = (
     'serial_operations',
     'serial_lock',
     'parallel_operations',
+    'command_queue_parallel',
     'problems',
     'items',
     'users',

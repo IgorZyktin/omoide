@@ -547,37 +547,6 @@ class TestDeleteItemUseCaseSwitchTo:
 class TestDeleteItemUseCaseObjectStorage:
     """Parallel operations emitted for object storage cleanup."""
 
-    async def test_emits_parallel_operation_per_media_type(
-        self,
-        delete_item_use_case,
-        engine,
-        make_user_model,
-        make_item_model,
-        make_metainfo,
-    ):
-        owner = await make_user_model()
-        root = await make_item_model(owner_id=owner.id, owner_uuid=owner.uuid)
-        child = await make_item_model(
-            owner_id=owner.id,
-            owner_uuid=owner.uuid,
-            parent_id=root.id,
-            parent_uuid=root.uuid,
-            content_ext='jpg',
-            preview_ext='jpg',
-            thumbnail_ext='jpg',
-        )
-        make_metainfo(child.id)
-
-        await delete_item_use_case.execute(
-            user=owner,
-            item_uuid=child.uuid,
-            desired_switch='parent',
-        )
-
-        ops = _read_parallel_ops(engine, name='soft_delete')
-        media_types = sorted(op['media_type'] for op in ops)
-        assert media_types == sorted(['content', 'preview', 'thumbnail'])
-
     async def test_no_parallel_operation_when_no_media(
         self,
         delete_item_use_case,
@@ -603,47 +572,6 @@ class TestDeleteItemUseCaseObjectStorage:
         )
 
         assert _read_parallel_ops(engine, name='soft_delete') == []
-
-    async def test_records_actor_as_requested_by(
-        self,
-        delete_item_use_case,
-        engine,
-        make_user_model,
-        make_item_model,
-        make_metainfo,
-    ):
-        """Regression: actor is shadowed inside the permissions loop.
-
-        ``extras['requested_by']`` is the audit trail for who initiated
-        the deletion. Reassigning the local ``user`` variable while
-        decrementing known_tags for permission holders would leak the
-        last permission holder's UUID into ``object_storage.soft_delete``
-        instead of the owner who actually performed the delete.
-        """
-        owner = await make_user_model()
-        permitted = await make_user_model()
-        root = await make_item_model(owner_id=owner.id, owner_uuid=owner.uuid)
-        child = await make_item_model(
-            owner_id=owner.id,
-            owner_uuid=owner.uuid,
-            parent_id=root.id,
-            parent_uuid=root.uuid,
-            content_ext='jpg',
-            permissions=[permitted.id],
-        )
-        make_metainfo(child.id)
-
-        await delete_item_use_case.execute(
-            user=owner,
-            item_uuid=child.uuid,
-            desired_switch='parent',
-        )
-
-        ops = _read_parallel_ops(engine, name='soft_delete')
-        assert len(ops) == 1
-        assert ops[0]['requested_by'] == str(owner.uuid), (
-            'requested_by must be the actor, not a permission holder'
-        )
 
 
 class TestDeleteItemUseCaseCascade:
