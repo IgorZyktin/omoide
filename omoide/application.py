@@ -1,6 +1,6 @@
 """Application server.
 
-Here we're only gluing two components together.
+Here we're only gluing all components together.
 """
 
 import os
@@ -14,15 +14,19 @@ from starlette_exporter import handle_metrics
 from omoide import dependencies
 from omoide.omoide_api import application as api_application
 from omoide.omoide_app import application as app_application
+from omoide.omoide_nginx import application as nginx_application
 
 app = app_application.get_app()
 api = api_application.get_api()
+nginx = nginx_application.get_nginx()
 
 app.mount('/api', api)
+app.mount('/nginx', nginx)
 
 api_application.apply_api_routes_v1(api)
 app_application.apply_app_routes(app)
 app_application.apply_middlewares(app)
+nginx_application.apply_nginx_routes_v1(nginx)
 
 config = dependencies.get_config()
 

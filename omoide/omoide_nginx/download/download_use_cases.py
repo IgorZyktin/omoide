@@ -14,7 +14,7 @@ LOG = custom_logging.get_logger(__name__)
 
 
 class DownloadResult(NamedTuple):
-    """NGINX zip manifest lines plus the item being downloaded and its owner."""
+    """DTO for NGINX file format."""
 
     lines: list[str]
     owner: models.User
@@ -85,7 +85,8 @@ class DownloadCollectionUseCase:
 
                 if signature is None:
                     LOG.warning(
-                        'User {} requested download for item {}, but is has no signature',
+                        'User {} requested download for '
+                        'item {}, but is has no signature',
                         user,
                         item,
                     )
@@ -131,7 +132,9 @@ class DownloadCollectionUseCase:
 
         fs_path = f'{base}/{owner_uuid}/{prefix}/{item_uuid}.{content_ext}'
 
-        user_visible_filename = f'{template.format(current)}___{item_uuid}.{content_ext}'
+        user_visible_filename = (
+            f'{template.format(current)}___{item_uuid}.{content_ext}'
+        )
 
         if signature is None:
             checksum = '-'
