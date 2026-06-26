@@ -35,23 +35,31 @@
 
     {% if duplicates %}
         {% for duplication in duplicates %}
-
-            <div class="medium-block light-header">
-                <h2>MD5 - {{ duplication.signature }}</h2>
-            </div>
-
-            <div class="narrow-block">
-                {% for example in duplication.examples %}
-                    <div id="item_{{ example.item.uuid }}" class="light-under">
-                        {{ render_lineage(request, example.parents, example.item, aim_wrapper) }}
-                        <h3>Item {{ example.item.uuid }}</h3>
-                        {{ render_thumbnail_for_item(request, example.item, '???', aim_wrapper) }}
-                        <a href="javascript:void(0)"
-                           onclick="deleteThis('{{ example.item.uuid }}')"
-                           class="button">Delete this item</a>
-                    </div>
-                {% endfor %}
-            </div>
+            <section class="duplicates-group">
+                <header class="duplicates-group-header">
+                    <span class="duplicates-md5-label">MD5</span>
+                    <code class="duplicates-md5-value">{{ duplication.signature }}</code>
+                    <span class="duplicates-count">
+                        {{ duplication.examples|length }}
+                        {{ 'item' if duplication.examples|length == 1 else 'items' }}
+                    </span>
+                </header>
+                <div class="duplicates-examples">
+                    {% for example in duplication.examples %}
+                        <article id="item_{{ example.item.uuid }}" class="duplicates-example">
+                            {{ render_lineage(request, example.parents, example.item, aim_wrapper) }}
+                            <div class="envelope-container">
+                                {{ render_thumbnail_for_item(request, example.item, '???', aim_wrapper) }}
+                            </div>
+                            <a href="javascript:void(0)"
+                               onclick="deleteThis(this, '{{ example.item.uuid }}')"
+                               class="button button-danger duplicates-delete">
+                                Delete this item
+                            </a>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% endfor %}
     {% else %}
         <div class="medium-block light-header">
@@ -74,15 +82,17 @@
             window.location.href = baseUrl + '?' + searchParams.toString();
         }
 
-        function deleteThis(uuid) {
-            deleteItem(this, uuid, false)
-            let inp = document.getElementById('item_' + uuid)
-
-            if (inp !== undefined) {
-                inp.remove()
+        async function deleteThis(button, uuid) {
+            // Delete the duplicate item; remove its card only if the DELETE succeeded.
+            const ok = await deleteItem(button, uuid, false)
+            if (!ok) {
+                return
+            }
+            const card = document.getElementById('item_' + uuid)
+            if (card) {
+                card.remove()
             }
         }
-
     </script>
 
 {% endblock %}

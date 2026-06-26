@@ -305,6 +305,17 @@ progress {
     text-decoration: none;
 }
 
+.button-danger {
+    background-color: var(--color-problem);
+    color: var(--color-text-inverse);
+}
+
+.button-danger:hover {
+    background-color: var(--color-danger);
+    color: var(--color-text-inverse);
+    text-decoration: none;
+}
+
 /* gap rule above handles spacing between an icon and a label,
    so no extra image margins needed here. */
 
@@ -813,4 +824,76 @@ progress {
 
 .light-under {
     background-color: var(--color-surface);
+}
+
+/* ============================================================
+   Duplicates view (profile_duplicates.html)
+   One card per MD5 group, examples flow side-by-side and wrap.
+   ============================================================ */
+.duplicates-group {
+    max-width: var(--content-medium);
+    margin: var(--space-5) auto 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    overflow: hidden;
+}
+
+.duplicates-group-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-surface-raised);
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.duplicates-md5-label {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+}
+
+.duplicates-md5-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--font-size-sm);
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text-inverse);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    word-break: break-all;
+}
+
+.duplicates-count {
+    margin-left: auto;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.duplicates-examples {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+.duplicates-example {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+}
+
+.duplicates-example .envelope-container {
+    flex: 0 0 auto;
+    justify-content: center;
+}
+
+.duplicates-delete {
+    align-self: stretch;
 }

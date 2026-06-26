@@ -88,7 +88,7 @@ async function deleteItem(button, uuid, relocate = true) {
 
         if (!response.ok) {
             describeFail(data)
-            return
+            return false
         }
 
         if (relocate) {
@@ -99,9 +99,11 @@ async function deleteItem(button, uuid, relocate = true) {
                 relocateWithAim(`/preview/${switchTo.uuid}` + '?' + searchParams.toString())
             }
         }
+        return true
     } catch (err) {
         console.error('Failed to delete item:', err)
         describeFail(undefined)
+        return false
     } finally {
         button.classList.remove('button-disabled')
     }
