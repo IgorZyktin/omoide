@@ -35,6 +35,7 @@ from sqlalchemy.engine import Engine
 
 from omoide import models
 from omoide.database import db_models
+from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.implementations.pg_advisory_lock import PGAdvisoryLock
 from omoide.infra.locators import FilesystemLocator
 from omoide.object_storage.implementations.pgl_object_storage import PgLargeObjectStorage
@@ -166,6 +167,12 @@ def object_storage(
 def fs_locator(tmp_path: Path) -> FilesystemLocator:
     """File locator rooted at the per-test tmp directory."""
     return FilesystemLocator(root=tmp_path, prefix_size=2)
+
+
+@pytest.fixture
+def exif_repo() -> impl_sqlalchemy.EXIFRepo:
+    """Provide an ``EXIFRepo`` for worker-loop tests."""
+    return impl_sqlalchemy.EXIFRepo()
 
 
 def _read_status(engine: Engine, command_id: int) -> str:

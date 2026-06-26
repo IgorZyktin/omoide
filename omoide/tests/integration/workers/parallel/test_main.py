@@ -33,6 +33,8 @@ def _kwargs(
     users_repo,
     items_repo,
     meta_repo,
+    exif_repo,
+    signatures_repo,
     fs_locator,
     object_storage,
 ):
@@ -53,6 +55,8 @@ def _kwargs(
         'users_repo': users_repo,
         'items_repo': items_repo,
         'meta_repo': meta_repo,
+        'exif_repo': exif_repo,
+        'signatures_repo': signatures_repo,
         'fs_locator': fs_locator,
         'object_storage': object_storage,
     }
@@ -71,6 +75,8 @@ class TestEmptyQueue:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
     ):
@@ -83,6 +89,8 @@ class TestEmptyQueue:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -103,6 +111,8 @@ class TestHappyPathDummy:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -119,6 +129,8 @@ class TestHappyPathDummy:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -136,6 +148,8 @@ class TestHappyPathDummy:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -151,6 +165,8 @@ class TestHappyPathDummy:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -173,6 +189,8 @@ class TestExecutionFailure:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -196,6 +214,8 @@ class TestExecutionFailure:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -213,6 +233,8 @@ class TestExecutionFailure:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -234,6 +256,8 @@ class TestExecutionFailure:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -263,6 +287,8 @@ class TestOidCleanup:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -282,6 +308,8 @@ class TestOidCleanup:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -299,21 +327,24 @@ class TestOidCleanup:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
         engine,
     ):
-        """An older DONE row in the table still counts as a reference.
+        """An ACTIVE row referencing the same OID keeps it alive.
 
-        ``is_oid_referenced_elsewhere`` does not filter by status — any
-        row with ``extras['oid'] = X`` keeps the LOB alive. The worker
-        must respect that and leave the OID intact.
+        ``is_oid_referenced_elsewhere`` excludes DONE rows (those are
+        considered consumed). Any non-DONE reference — CREATED, ACTIVE,
+        FAILED — pins the LOB. Here we simulate a sibling command that
+        another worker is mid-processing.
         """
         oid = await _save_small_large_object(object_storage, b'shared')
 
-        # Pretend a prior pass left a done row referencing this OID.
-        make_parallel_command(extras={'oid': oid}, status='done')
+        # Sibling command another worker is mid-processing.
+        make_parallel_command(extras={'oid': oid}, status='active')
 
         fresh = make_parallel_command(extras={'oid': oid})
 
@@ -326,6 +357,8 @@ class TestOidCleanup:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -356,6 +389,8 @@ class TestAdvisoryLockGate:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -384,6 +419,8 @@ class TestAdvisoryLockGate:
                     users_repo,
                     items_repo,
                     meta_repo,
+                    exif_repo,
+                    signatures_repo,
                     fs_locator,
                     object_storage,
                 )
@@ -405,6 +442,8 @@ class TestAdvisoryLockGate:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -433,6 +472,8 @@ class TestStartTaskRace:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -464,6 +505,8 @@ class TestStartTaskRace:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -488,6 +531,8 @@ class TestTaskGroupConcurrency:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -504,6 +549,8 @@ class TestTaskGroupConcurrency:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -523,6 +570,8 @@ class TestTaskGroupConcurrency:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -558,6 +607,8 @@ class TestTaskGroupConcurrency:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -583,6 +634,8 @@ class TestSupportedOperationsFilter:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -605,6 +658,8 @@ class TestSupportedOperationsFilter:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )
@@ -627,6 +682,8 @@ class TestInvalidOid:
         users_repo,
         items_repo,
         meta_repo,
+        exif_repo,
+        signatures_repo,
         fs_locator,
         object_storage,
         make_parallel_command,
@@ -648,6 +705,8 @@ class TestInvalidOid:
                 users_repo,
                 items_repo,
                 meta_repo,
+                exif_repo,
+                signatures_repo,
                 fs_locator,
                 object_storage,
             )

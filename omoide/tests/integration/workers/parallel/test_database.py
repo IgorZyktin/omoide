@@ -303,10 +303,10 @@ class TestIsOidReferencedElsewhere:
         parallel_db: ParallelPostgreSQLDatabase,
         make_parallel_command,
     ):
-        """Test that we can see same oid usage.
+        """A non-DONE reference is a reference.
 
-        A reference is a reference whether the other row is created /
-        active / done / failed — the LOB must outlive any of them.
+        CREATED, ACTIVE, FAILED rows all keep the LOB alive — only DONE
+        rows are excluded (see ``test_ignores_done_rows`` below).
         """
         owner = make_parallel_command(extras={'oid': 99})
         active = make_parallel_command(extras={'oid': 99}, status='active')
@@ -314,3 +314,46 @@ class TestIsOidReferencedElsewhere:
         assert await parallel_db.is_oid_referenced_elsewhere(99, exclude_id=owner.id) is True
         # And of course the symmetric case.
         assert await parallel_db.is_oid_referenced_elsewhere(99, exclude_id=active.id) is True
+
+    async def test_ignores_done_rows(
+        self,
+        parallel_db: ParallelPostgreSQLDatabase,
+        make_parallel_command,
+    ):
+        """DONE rows MUST NOT pin the LOB.
+
+        Once a command finishes, its claim on the LOB is released — any
+        future reference check should see "no live references" if only
+        DONE rows are left. Otherwise an OID would survive forever as
+        the table accumulates completed history.
+        """
+        owner = make_parallel_command(extras={'oid': 42})
+        make_parallel_command(extras={'oid': 42}, status='done')
+        make_parallel_command(extras={'oid': 42}, status='done')
+
+        assert (
+            await parallel_db.is_oid_referenced_elsewhere(
+                42, exclude_id=owner.id
+            )
+            is False
+        )
+
+    async def test_failed_row_still_pins_oid(
+        self,
+        parallel_db: ParallelPostgreSQLDatabase,
+        make_parallel_command,
+    ):
+        """A FAILED row is a retry candidate — its LOB must stay alive.
+
+        Excluding FAILED would let cleanup delete a LOB an operator
+        intends to retry by flipping the row back to CREATED.
+        """
+        owner = make_parallel_command(extras={'oid': 7})
+        make_parallel_command(extras={'oid': 7}, status='failed')
+
+        assert (
+            await parallel_db.is_oid_referenced_elsewhere(
+                7, exclude_id=owner.id
+            )
+            is True
+        )

@@ -1,7 +1,5 @@
 """Global constants."""
 
-from datetime import UTC
-from datetime import datetime
 import enum
 from typing import Final
 from typing import Literal
