@@ -370,7 +370,7 @@ class Metainfo(Base):
 
     content_type: Mapped[str] = mapped_column(sa.String(length=SMALL), nullable=True)
 
-    content_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    content_size: Mapped[int | None] = mapped_column(sa.BigInteger, nullable=True)
     preview_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     thumbnail_size: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
