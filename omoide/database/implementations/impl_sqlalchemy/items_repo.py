@@ -228,7 +228,6 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                    preview_ext,
                    thumbnail_ext,
                    tags,
-                   content_ext,
                    permissions
             FROM items
             WHERE id = :id
@@ -247,7 +246,6 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
                    i.preview_ext,
                    i.thumbnail_ext,
                    i.tags,
-                   i.content_ext,
                    i.permissions
             FROM items i
                      INNER JOIN nested_items it2 ON i.parent_id = it2.id
