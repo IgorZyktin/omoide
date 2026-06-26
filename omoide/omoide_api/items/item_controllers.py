@@ -365,6 +365,10 @@ async def api_upload_item(  # noqa: PLR0913
     object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
 ) -> dict[str, Any]:
     """Store content data for given item."""
+    if request.headers['content-length'] > limits.MAX_MEDIA_SIZE:
+        msg = f'Maximum upload size is {limits.MAX_MEDIA_SIZE_HR}'
+        raise exceptions.NotAllowedError(msg)
+
     ext = str(file.filename).lower().split('.')[-1]
     if ext not in limits.SUPPORTED_EXTENSION:
         extensions = ', '.join(sorted(limits.SUPPORTED_EXTENSION))
