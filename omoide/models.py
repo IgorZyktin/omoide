@@ -1,6 +1,7 @@
 """Domain-level models."""
 
 import abc
+import functools
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
@@ -446,7 +447,7 @@ class SpaceUsage:
         return pu.human_readable_size(self.thumbnail_size)
 
 
-@dataclass
+@dataclass(frozen=True)
 class DiskUsage:
     """Total disk usage of a specific user."""
 
@@ -454,27 +455,32 @@ class DiskUsage:
     preview_bytes: int
     thumbnail_bytes: int
 
-    @property
+    @functools.cached_property
     def content_hr(self) -> str:
         """Return human-readable value."""
         return pu.human_readable_size(self.content_bytes)
 
-    @property
+    @functools.cached_property
     def preview_hr(self) -> str:
         """Return human-readable value."""
         return pu.human_readable_size(self.preview_bytes)
 
-    @property
+    @functools.cached_property
     def thumbnail_hr(self) -> str:
         """Return human-readable value."""
         return pu.human_readable_size(self.thumbnail_bytes)
+
+    @functools.cached_property
+    def total_size(self) -> int:
+        """Return total amount of bytes stored."""
+        return self.content_bytes + self.preview_bytes + self.thumbnail_bytes
 
 
 @dataclass
 class ResourceUsage:
     """Total resource usage for specific user."""
 
-    user_uuid: UUID
+    user: User
     total_items: int
     total_collections: int
     disk_usage: DiskUsage
@@ -656,3 +662,36 @@ class ParallelCommand:
         except (TypeError, ValueError) as exc:
             msg = f'Invalid oid: {oid!r}'
             raise TypeError(msg) from exc
+
+
+@dataclass(frozen=True)
+class ResourceUsageStats:
+    """Helper class that stores stats for all users."""
+
+    users: list[ResourceUsage]
+
+    @functools.cached_property
+    def total_items(self) -> int:
+        """Return total items on server."""
+        return sum(x.total_items for x in self.users)
+
+    @functools.cached_property
+    def total_size(self) -> int:
+        """Return total amount of bytes stored."""
+        return sum(user.disk_usage.total_size for user in self.users)
+
+    def percent_of_items(self, user: ResourceUsage) -> str:
+        """Return percent of total items."""
+        if user.total_items == 0 or self.total_items == 0:
+            return '0.00'
+
+        percent = (user.total_items / self.total_items) * 100.0
+        return f'{percent:.2f}'
+
+    def percent_of_size(self, user: ResourceUsage) -> str:
+        """Return percent of total size."""
+        if user.disk_usage.total_size == 0 or self.total_size == 0:
+            return '0.00'
+
+        percent = (user.disk_usage.total_size / self.total_size) * 100.0
+        return f'{percent:.2f}'

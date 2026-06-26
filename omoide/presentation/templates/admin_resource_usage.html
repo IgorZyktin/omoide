@@ -1,0 +1,31 @@
+{% extends "base_search.html" %}
+
+{% block body %}
+    <h1>Resource usage</h1>
+    <hr>
+    <table>
+    <tr>
+       <th>UUID</th>
+       <th>Name</th>
+       <th>Total items</th>
+       <th>Content size</th>
+       <th>Preview size</th>
+       <th>Thumbnail size</th>
+       <th>Percent of items</th>
+       <th>Percent of size</th>
+    </tr>
+    {% for usage in resource_usage.users %}
+        <tr>
+            <td>{{ usage.user.uuid }}</td>
+            <td>{{ usage.user.name }}</td>
+            <td>{{ sep_digits(usage.total_items) }}</td>
+            <td>{{ human_readable_size(usage.disk_usage.content_bytes) }}</td>
+            <td>{{ human_readable_size(usage.disk_usage.preview_bytes) }}</td>
+            <td>{{ human_readable_size(usage.disk_usage.thumbnail_bytes) }}</td>
+            <td>{{ resource_usage.percent_of_items(usage) }} %</td>
+            <td>{{ resource_usage.percent_of_size(usage) }} %</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <br>
+{% endblock %}

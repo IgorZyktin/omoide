@@ -346,7 +346,7 @@ class GetUserResourceUsageUseCase:
             )
 
         return models.ResourceUsage(
-            user_uuid=user_uuid,
+            user=target_user,
             total_items=total_items,
             total_collections=total_collections,
             disk_usage=disk_usage,
