@@ -1,10 +1,17 @@
 {% extends "base_search.html" %}
 
+{%  block head %}
+<style>
+tr:hover {background-color: #D6EEEE;}
+</style>
+{% endblock %}
+
 {% block body %}
     <h1>Resource usage</h1>
-    <hr>
+
     <table>
     <tr>
+       <th>N</th>
        <th>UUID</th>
        <th>Name</th>
        <th>Total items</th>
@@ -16,6 +23,7 @@
     </tr>
     {% for usage in resource_usage.users %}
         <tr>
+            <td>{{ loop.index }}</td>
             <td>{{ usage.user.uuid }}</td>
             <td>{{ usage.user.name }}</td>
             <td>{{ sep_digits(usage.total_items) }}</td>
