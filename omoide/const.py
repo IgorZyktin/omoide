@@ -7,7 +7,7 @@ from typing import NamedTuple
 from typing import TypeAlias
 from uuid import UUID
 
-VERSION = '0.3.13'
+VERSION = '0.3.14'
 
 FRONTEND_VERSION = 40
 
