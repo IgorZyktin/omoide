@@ -1,13 +1,12 @@
 """Dependencies."""
 
-from base64 import b64decode
-import binascii
 import functools
 from typing import Annotated
 
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.security import HTTPBasic
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 import jinja2
@@ -59,28 +58,24 @@ def get_aim(request: Request) -> web.AimWrapper:
     )
 
 
-def get_credentials(request: Request) -> HTTPBasicCredentials:
-    """Extract credentials from user request, but do not trigger login."""
-    authorization: str | None = request.headers.get('Authorization')
-    anon = HTTPBasicCredentials(username='', password='')
+_optional_basic = HTTPBasic(auto_error=False)
 
-    if authorization:
-        scheme, _, param = authorization.partition(' ')
 
-        if scheme.lower() == 'basic':
-            try:
-                data = b64decode(param).decode('ascii')
-            except (ValueError, UnicodeDecodeError, binascii.Error):
-                return anon
+async def get_credentials(request: Request) -> HTTPBasicCredentials | None:
+    """Extract Basic-Auth credentials without triggering a login dialog.
 
-            username, separator, password = data.partition(':')
-
-            if not separator:
-                return anon
-
-            return HTTPBasicCredentials(username=username, password=password)
-
-    return anon
+    The login challenge (401 + ``WWW-Authenticate``) lives only on
+    ``/login``, where ``auth_controllers.security`` uses ``HTTPBasic``
+    with ``auto_error=True``. Everywhere else we silently fall back to
+    anon — any failure mode (no header, wrong scheme, bad base64,
+    missing colon) maps to ``None``. ``HTTPBasic(auto_error=False)``
+    handles "no header" itself; the inner ``try`` covers the malformed
+    cases, which the base class still raises on.
+    """
+    try:
+        return await _optional_basic(request)
+    except HTTPException:
+        return None
 
 
 def get_authenticator() -> AbsAuthenticator:
@@ -152,13 +147,13 @@ def get_commands_repo() -> db_interfaces.AbsCommandsRepo:
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPBasicCredentials, Depends(get_credentials)],
+    credentials: Annotated[HTTPBasicCredentials | None, Depends(get_credentials)],
     authenticator: Annotated[AbsAuthenticator, Depends(get_authenticator)],
     database: Annotated[AbsDatabase, Depends(get_database)],
     users_repo: Annotated[db_interfaces.AbsUsersRepo, Depends(get_users_repo)],
 ) -> models.User:
     """Return current user or create anon."""
-    if not credentials.username or not credentials.password:
+    if credentials is None:
         return models.User.new_anon()
     use_case = LoginUserUseCase(authenticator, database, users_repo)
     return await use_case.execute(credentials.username, credentials.password)
