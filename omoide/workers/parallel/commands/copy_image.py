@@ -115,7 +115,12 @@ class CopyImageCommand(Command):
                 src=source_path,
                 dst=target_path,
             )
-            LOG.debug('[{}] Copied file: {} to {}', self.dto.id, source_path, target_path)
+            LOG.debug(
+                '[{}] Copied file: {} to {}',
+                self.dto.id,
+                source_path,
+                target_path,
+            )
 
             total_size += await aiofiles.os.path.getsize(source_path)
 

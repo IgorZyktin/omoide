@@ -150,7 +150,9 @@ class UploadCommand(Command):
             (const.MediaType.THUMBNAIL, thumbnail_existed, thumbnail_path),
         ]:
             if existed:
-                LOG.warning('[{}] Overwrote {} file: {}', self.dto.id, label, path)
+                LOG.warning(
+                    '[{}] Overwrote {} file: {}', self.dto.id, label, path
+                )
             else:
                 LOG.debug('[{}] Saved {} file: {}', self.dto.id, label, path)
 

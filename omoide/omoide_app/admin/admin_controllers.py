@@ -7,11 +7,13 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from omoide.database import interfaces as db_interfaces
-from omoide import cfg, exceptions
+
+from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
+from omoide import exceptions
 from omoide import models
+from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces import AbsDatabase
 from omoide.omoide_app.admin import admin_use_cases
 from omoide.presentation import web
@@ -61,9 +63,7 @@ async def app_admin_resource_usage(
         msg = 'Only admins can access this page'
         raise exceptions.AccessDeniedError(msg)
 
-    use_case = admin_use_cases.ShowResourceUsageUseCase(
-        database, users_repo, meta_repo
-    )
+    use_case = admin_use_cases.ShowResourceUsageUseCase(database, users_repo, meta_repo)
     resource_usage = await use_case.execute(admin)
 
     context = {
@@ -75,6 +75,4 @@ async def app_admin_resource_usage(
         'resource_usage': resource_usage,
     }
 
-    return templates.TemplateResponse(
-        request, 'admin_resource_usage.html', context
-    )
+    return templates.TemplateResponse(request, 'admin_resource_usage.html', context)

@@ -1,7 +1,6 @@
 """Domain-level models."""
 
 import abc
-import functools
 from collections.abc import Collection
 from dataclasses import asdict
 from dataclasses import dataclass
@@ -9,6 +8,7 @@ from dataclasses import field
 from datetime import datetime
 import enum
 from enum import StrEnum
+import functools
 from functools import cached_property
 from typing import Any
 from typing import Literal

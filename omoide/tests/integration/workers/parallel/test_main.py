@@ -25,7 +25,7 @@ from .conftest import _read_status
 from .conftest import _save_small_large_object
 
 
-def _kwargs(
+def _kwargs(  # noqa: PLR0913
     stub_config,
     parallel_db,
     lock_provider,
@@ -66,7 +66,7 @@ def _kwargs(
 
 
 class TestEmptyQueue:
-    async def test_returns_false_when_no_candidates(
+    async def test_returns_false_when_no_candidates(  # noqa: PLR0913
         self,
         stub_config,
         parallel_db,

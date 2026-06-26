@@ -1,9 +1,8 @@
 """Use cases for admins."""
 
 from omoide import models
-from omoide.database.interfaces import AbsDatabase
-
 from omoide.database import interfaces as db_interfaces
+from omoide.database.interfaces import AbsDatabase
 from omoide.domain import ensure
 
 
@@ -28,18 +27,18 @@ class ShowResourceUsageUseCase:
 
         async with self.database.transaction() as conn:
             users = await self.users.select(conn)
-            for user in users:
-                items = await self.users.count_items_by_owner(conn, user)
+            for each_user in users:
+                items = await self.users.count_items_by_owner(conn, each_user)
 
                 if items <= 1:
                     continue
 
-                disk = await self.meta.get_total_disk_usage(conn, user)
+                disk = await self.meta.get_total_disk_usage(conn, each_user)
                 collections = await self.users.count_items_by_owner(
-                    conn, user, collections=True
+                    conn, each_user, collections=True
                 )
                 usage = models.ResourceUsage(
-                    user=user,
+                    user=each_user,
                     total_items=items,
                     total_collections=collections,
                     disk_usage=disk,

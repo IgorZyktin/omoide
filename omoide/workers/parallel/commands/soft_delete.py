@@ -102,6 +102,8 @@ class SoftDeleteCommand(Command):
             except FileNotFoundError:
                 pass
             else:
-                LOG.debug('[{}] Renamed file to deleted: {}', self.dto.id, old_path)
+                LOG.debug(
+                    '[{}] Renamed file to deleted: {}', self.dto.id, old_path
+                )
 
         return 0

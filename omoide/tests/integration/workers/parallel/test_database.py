@@ -331,12 +331,7 @@ class TestIsOidReferencedElsewhere:
         make_parallel_command(extras={'oid': 42}, status='done')
         make_parallel_command(extras={'oid': 42}, status='done')
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                42, exclude_id=owner.id
-            )
-            is False
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(42, exclude_id=owner.id) is False
 
     async def test_failed_row_still_pins_oid(
         self,
@@ -351,9 +346,4 @@ class TestIsOidReferencedElsewhere:
         owner = make_parallel_command(extras={'oid': 7})
         make_parallel_command(extras={'oid': 7}, status='failed')
 
-        assert (
-            await parallel_db.is_oid_referenced_elsewhere(
-                7, exclude_id=owner.id
-            )
-            is True
-        )
+        assert await parallel_db.is_oid_referenced_elsewhere(7, exclude_id=owner.id) is True
