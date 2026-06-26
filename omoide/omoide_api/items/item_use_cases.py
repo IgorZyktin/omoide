@@ -854,10 +854,10 @@ class ChangePermissionsUseCase(BaseItemUseCase):
 
             user_ids: set[int] = set()
             for user_uuid in permissions:
-                user = await self.users.get_by_uuid(conn, user_uuid)
-                user_ids.add(user.id)
+                each_user = await self.users.get_by_uuid(conn, user_uuid)
+                user_ids.add(each_user.id)
 
-            if item.permissions == permissions:
+            if item.permissions == user_ids:
                 return None
 
             if apply_to_parents or apply_to_children:
