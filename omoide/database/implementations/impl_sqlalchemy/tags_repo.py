@@ -71,24 +71,36 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
         user: models.User,
         tags: set[str],
     ) -> None:
-        """Increase counter for given tags."""
-        for tag in tags:
-            stmt = (
-                sa.update(db_models.KnownTags)
-                .where(db_models.KnownTags.user_id == user.id, db_models.KnownTags.tag == tag)
-                .values(counter=sa.func.greatest(0, db_models.KnownTags.counter) + 1)
-            )
-            await conn.execute(stmt)
+        """Increase counter for given tags.
+
+        Single round-trip via ``INSERT ... ON CONFLICT``: missing rows
+        are created with counter ``1``, existing rows are incremented
+        (floored at ``0`` first so a desynced negative counter does not
+        keep climbing from -3). Without the INSERT branch a brand-new
+        tag would silently no-op and never appear in autocomplete until
+        the next ``rebuild_known_tags`` pass.
+        """
+        if not tags:
+            return
+        rows = [{'user_id': user.id, 'tag': tag, 'counter': 1} for tag in tags]
+        insert = pg_insert(db_models.KnownTags).values(rows)
+        stmt = insert.on_conflict_do_update(
+            index_elements=[db_models.KnownTags.user_id, db_models.KnownTags.tag],
+            set_={'counter': sa.func.greatest(0, db_models.KnownTags.counter) + 1},
+        )
+        await conn.execute(stmt)
 
     async def increment_known_tags_anon(self, conn: AsyncConnection, tags: set[str]) -> None:
-        """Increase counter for given tags."""
-        for tag in tags:
-            stmt = (
-                sa.update(db_models.KnownTagsAnon)
-                .where(db_models.KnownTagsAnon.tag == tag)
-                .values(counter=sa.func.greatest(0, db_models.KnownTagsAnon.counter) + 1)
-            )
-            await conn.execute(stmt)
+        """Increase anon counter for given tags; see ``increment_known_tags_user``."""
+        if not tags:
+            return
+        rows = [{'tag': tag, 'counter': 1} for tag in tags]
+        insert = pg_insert(db_models.KnownTagsAnon).values(rows)
+        stmt = insert.on_conflict_do_update(
+            index_elements=[db_models.KnownTagsAnon.tag],
+            set_={'counter': sa.func.greatest(0, db_models.KnownTagsAnon.counter) + 1},
+        )
+        await conn.execute(stmt)
 
     async def decrement_known_tags_user(
         self,
@@ -96,24 +108,35 @@ class TagsRepo(AbsTagsRepo[AsyncConnection]):
         user: models.User,
         tags: set[str],
     ) -> None:
-        """Decrease counter for given tags."""
-        for tag in tags:
-            stmt = (
-                sa.update(db_models.KnownTags)
-                .where(db_models.KnownTags.user_id == user.id, db_models.KnownTags.tag == tag)
-                .values(counter=sa.func.greatest(0, db_models.KnownTags.counter - 1))
+        """Decrease counter for given tags; floor at zero.
+
+        Single bulk UPDATE — tags that have no row are simply not
+        matched. We deliberately do NOT insert here: decrementing a
+        non-existent counter would create a zero row that ``autocomplete``
+        already filters out anyway.
+        """
+        if not tags:
+            return
+        stmt = (
+            sa.update(db_models.KnownTags)
+            .where(
+                db_models.KnownTags.user_id == user.id,
+                db_models.KnownTags.tag.in_(tuple(tags)),
             )
-            await conn.execute(stmt)
+            .values(counter=sa.func.greatest(0, db_models.KnownTags.counter - 1))
+        )
+        await conn.execute(stmt)
 
     async def decrement_known_tags_anon(self, conn: AsyncConnection, tags: set[str]) -> None:
-        """Decrease counter for given tags."""
-        for tag in tags:
-            stmt = (
-                sa.update(db_models.KnownTagsAnon)
-                .where(db_models.KnownTagsAnon.tag == tag)
-                .values(counter=sa.func.greatest(0, db_models.KnownTagsAnon.counter - 1))
-            )
-            await conn.execute(stmt)
+        """Decrease anon counter for given tags; see ``decrement_known_tags_user``."""
+        if not tags:
+            return
+        stmt = (
+            sa.update(db_models.KnownTagsAnon)
+            .where(db_models.KnownTagsAnon.tag.in_(tuple(tags)))
+            .values(counter=sa.func.greatest(0, db_models.KnownTagsAnon.counter - 1))
+        )
+        await conn.execute(stmt)
 
     async def calculate_known_tags_user(
         self,
