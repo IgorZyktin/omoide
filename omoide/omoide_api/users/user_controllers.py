@@ -117,7 +117,7 @@ async def api_get_user_resource_usage(
     output = await use_case.execute(user, user_uuid)
 
     return user_api_models.UserResourceUsageOutput(
-        user_uuid=str(output.user_uuid),
+        user_uuid=str(output.user.uuid),
         total_items=output.total_items,
         total_collections=output.total_collections,
         content_bytes=output.disk_usage.content_bytes,
