@@ -15,7 +15,6 @@ import ujson
 from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
-from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
@@ -34,17 +33,13 @@ async def app_create_item(  # noqa: PLR0913
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    user: models.User = Depends(dep.get_current_user),
+    user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Create item page."""
-    if user.is_anon:
-        msg = 'Anonymous users are not allowed to create items'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = item_use_cases.AppCreateItemUseCase(database, items_repo, users_repo)
 
     result = await use_case.execute(
@@ -91,7 +86,7 @@ async def app_update_item(  # noqa: PLR0913
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    user: models.User = Depends(dep.get_current_user),
+    user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
@@ -99,10 +94,6 @@ async def app_update_item(  # noqa: PLR0913
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Edit item page."""
-    if user.is_anon:
-        msg = 'Anonymous users are not allowed to update items'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = item_use_cases.AppUpdateItemUseCase(database, items_repo, users_repo, meta_repo)
 
     result = await use_case.execute(
@@ -146,16 +137,12 @@ async def app_delete_item(  # noqa: PLR0913
     templates: Annotated[Jinja2Templates, Depends(dep.get_templates)],
     config: Annotated[cfg.Config, Depends(dep.get_config)],
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
-    user: models.User = Depends(dep.get_current_user),
+    user: models.User = Depends(dep.get_known_user),
     database: AbsDatabase = Depends(dep.get_database),
     items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Delete item page."""
-    if user.is_anon:
-        msg = 'Anonymous users are not allowed to delete items'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = item_use_cases.AppDeleteItemUseCase(database, items_repo)
 
     result = await use_case.execute(user, item_uuid)
