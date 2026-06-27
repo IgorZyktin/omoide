@@ -86,5 +86,13 @@ CONTENT_TYPE_WEBM: Final = 'video/webm'
 
 CONTENT_TYPE_IMAGES: Final = {CONTENT_TYPE_PNG, CONTENT_TYPE_JPEG, CONTENT_TYPE_WEBP}
 
+VIDEO_EXTENSION = frozenset(
+    (
+        'webm',
+        'mp4',
+    )
+)
+
+
 MEGABYTE: Final = 1024 * 1024
 UPLOAD_CHUNK_SIZE: Final = MEGABYTE
