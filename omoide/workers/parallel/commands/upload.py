@@ -114,6 +114,7 @@ class UploadCommand(Command):
             thumbnail_path,
             is_video,
             ext,
+            content_type,
         ) = await self._get_paths_and_create_folders(owner, item)
 
         content_existed = await aiofiles.os.path.exists(content_path)
@@ -188,6 +189,7 @@ class UploadCommand(Command):
             metainfo.thumbnail_height = conversion_output.thumbnail_height
             metainfo.thumbnail_size = conversion_output.thumbnail_size
 
+            metainfo.content_type = content_type
             metainfo.updated_at = pu.now()
             await self.meta_repo.save(conn, metainfo)
 
@@ -212,7 +214,7 @@ class UploadCommand(Command):
         self,
         owner: models.User,
         item: models.Item,
-    ) -> tuple[Path, Path, Path, bool, str]:
+    ) -> tuple[Path, Path, Path, bool, str, str]:
         """Create data folders and return resulting paths."""
         content_type = self.dto.extras.get('content_type')
         if content_type is None:
@@ -263,7 +265,7 @@ class UploadCommand(Command):
             msg = f'Failed to create thumbnail path for item {item.id}'
             raise ValueError(msg)
 
-        return content_path, preview_path, thumbnail_path, is_video, ext
+        return content_path, preview_path, thumbnail_path, is_video, ext, content_type
 
 
 def perform_all_conversions(
