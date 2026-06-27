@@ -175,7 +175,7 @@ progress {
 .header-floating {
     background-color: var(--color-surface);
     padding: 0;
-    z-index: 2;
+    z-index: 90;
     width: 100%;
 }
 
