@@ -17,7 +17,13 @@ class RebuildPermissionsForItemUseCase(BaseSerialWorkerUseCase):
 
     async def execute(self, operation: operations.Operation) -> None:
         """Perform workload."""
-        affected_users: set[int] = set()
+        # Every added/deleted user needs a ``rebuild_known_tags_for_user``
+        # regardless of whether the change propagated to parents or
+        # children — otherwise their autocomplete drifts. Seed the set
+        # here so the single-item case (both flags False) still emits.
+        added = set(operation.extras['added'])
+        deleted = set(operation.extras['deleted'])
+        affected_users: set[int] = added | deleted
 
         if operation.extras['apply_to_parents']:
             await self.do_apply_to_parents(operation, affected_users)

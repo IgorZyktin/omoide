@@ -844,8 +844,6 @@ class ChangePermissionsUseCase(BaseItemUseCase):
         """Execute."""
         ensure.registered(user, 'Anonymous users are not allowed to change item permissions')
 
-        operation_id = None
-
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
             ensure.owner(user, item, "You cannot change someone else's item's permissions")
@@ -860,23 +858,27 @@ class ChangePermissionsUseCase(BaseItemUseCase):
             if item.permissions == user_ids:
                 return None
 
-            if apply_to_parents or apply_to_children:
-                added, deleted = utils.get_delta(item.permissions, user_ids)
+            added, deleted = utils.get_delta(item.permissions, user_ids)
 
-                operation_id = await self.misc.create_serial_operation(
-                    conn=conn,
-                    name='rebuild_permissions',
-                    extras={
-                        'requested_by': str(user.uuid),
-                        'item_uuid': str(item.uuid),
-                        'added': list(added),
-                        'deleted': list(deleted),
-                        'original': list(item.permissions),
-                        'apply_to_parents': apply_to_parents,
-                        'apply_to_children': apply_to_children,
-                        'apply_to_children_as': apply_to_children_as.value,
-                    },
-                )
+            # ``rebuild_permissions`` is emitted unconditionally: even
+            # for a single-item change the worker still needs to enqueue
+            # ``rebuild_known_tags_for_user`` for every added/deleted
+            # user, otherwise their autocomplete drifts. The parent/
+            # child propagation flags only control the tree traversal.
+            operation_id = await self.misc.create_serial_operation(
+                conn=conn,
+                name='rebuild_permissions',
+                extras={
+                    'requested_by': str(user.uuid),
+                    'item_uuid': str(item.uuid),
+                    'added': list(added),
+                    'deleted': list(deleted),
+                    'original': list(item.permissions),
+                    'apply_to_parents': apply_to_parents,
+                    'apply_to_children': apply_to_children,
+                    'apply_to_children_as': apply_to_children_as.value,
+                },
+            )
 
             item.permissions = user_ids
             await self.items.save(conn, item)
