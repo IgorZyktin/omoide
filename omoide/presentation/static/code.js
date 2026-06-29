@@ -21,17 +21,29 @@ function makeAnnounce(text, alertsElementId) {
 
 function makeNotification(text, alertsElementId, css_class) {
     // create user defined notification
-    let target = document.getElementById(alertsElementId || 'alerts')
-    let alert = document.createElement('div')
+    const target = document.getElementById(alertsElementId || 'alerts')
+    if (!target) {
+        return
+    }
 
-    alert.innerHTML = `
-        <div class="notification ${css_class}">
-            <span class="closebtn"
-                  onclick="this.parentElement.style.display='none';">&times;</span>
-            ${text}
-        </div>`
+    const wrapper = document.createElement('div')
+    const notification = document.createElement('div')
+    notification.className = 'notification ' + css_class
 
-    target.appendChild(alert)
+    const close = document.createElement('span')
+    close.className = 'closebtn'
+    close.textContent = '×'  // &times;
+    close.addEventListener('click', () => {
+        notification.style.display = 'none'
+    })
+    notification.appendChild(close)
+
+    // `text` is user-controlled (API messages, filenames, tag strings).
+    // Append as a text node so any HTML in it is rendered literally.
+    notification.appendChild(document.createTextNode(text))
+
+    wrapper.appendChild(notification)
+    target.appendChild(wrapper)
 }
 
 function makeSmallAlert(text, element) {
@@ -46,18 +58,26 @@ function makeSmallAnnounce(text, element) {
 
 function makeSmallNotification(text, element, css_class) {
     // create user defined notification
-    let alert = document.createElement('div')
+    const wrapper = document.createElement('div')
+    const notification = document.createElement('div')
+    notification.className = 'small-notification ' + css_class
 
-    alert.innerHTML = `
-        <div class="small-notification ${css_class}">
-            <span class="closebtn"
-                  onclick="this.parentElement.remove()">&times;</span>
-            ${text}
-        </div>`
+    const close = document.createElement('span')
+    close.className = 'closebtn'
+    close.textContent = '×'  // &times;
+    close.addEventListener('click', () => {
+        notification.remove()
+    })
+    notification.appendChild(close)
 
-    setTimeout(() => alert.remove(), 4000)
+    // `text` is user-controlled (filenames, tag strings, API error
+    // messages). Append as a text node — any HTML in it is literal.
+    notification.appendChild(document.createTextNode(text))
 
-    element.appendChild(alert)
+    wrapper.appendChild(notification)
+    setTimeout(() => wrapper.remove(), 4000)
+
+    element.appendChild(wrapper)
 }
 
 async function copyText(text, title, alertId) {
@@ -321,12 +341,40 @@ async function getAutocompletionVariants(tag, endpoint) {
     }
 }
 
-function strongByTemplate(text, template) {
-    // Surround given text template in <strong> tags
-    let reg = new RegExp(template, 'gi');
-    return text.replace(reg, function (str) {
-        return '<strong>' + str + '</strong>'
-    })
+function escapeRegex(text) {
+    // Escape characters that have special meaning in a regular expression.
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function appendWithHighlight(target, text, template) {
+    // Append `text` to `target`, wrapping every case-insensitive
+    // occurrence of `template` in a <strong> element. All inserted
+    // strings go through textContent / data nodes, so neither `text`
+    // nor `template` can carry HTML into the DOM.
+    if (!template) {
+        target.appendChild(document.createTextNode(text))
+        return
+    }
+    const reg = new RegExp(escapeRegex(template), 'gi')
+    let lastIndex = 0
+    let match
+    while ((match = reg.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            target.appendChild(
+                document.createTextNode(text.slice(lastIndex, match.index)),
+            )
+        }
+        const strong = document.createElement('strong')
+        strong.textContent = match[0]
+        target.appendChild(strong)
+        lastIndex = match.index + match[0].length
+        if (match[0].length === 0) {
+            reg.lastIndex++  // guard against zero-length match infinite loop
+        }
+    }
+    if (lastIndex < text.length) {
+        target.appendChild(document.createTextNode(text.slice(lastIndex)))
+    }
 }
 
 function splitLastTag(text) {
@@ -381,9 +429,20 @@ async function autocompleteTag(element, endpoint) {
 
     for (const variant of variants) {
         let item = document.createElement('div');
-        item.innerHTML = body + separator
-        item.innerHTML += strongByTemplate(variant, tag)
-        item.innerHTML += "<input type='hidden' value='" + variant + "'>";
+        // `body + separator` is the user's own input minus the partial
+        // last tag; render as a text node, never as HTML.
+        item.appendChild(document.createTextNode(body + separator))
+        // The variant comes from the server (a tag string originally
+        // entered by some user). Highlight the matching prefix safely.
+        appendWithHighlight(item, variant, tag)
+        // Hidden input that the click handler reads to assemble the
+        // final value. Setting .value attaches it as a DOM property,
+        // not as an attribute-string, so quotes/HTML in `variant` are
+        // stored verbatim and cannot break out.
+        const hidden = document.createElement('input')
+        hidden.type = 'hidden'
+        hidden.value = variant
+        item.appendChild(hidden)
         item.addEventListener('click', function (e) {
             let ending = this.getElementsByTagName('input')[0].value;
             element.value = body + separator + ending + ' '
