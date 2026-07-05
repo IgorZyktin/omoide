@@ -23,7 +23,7 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
         plan: models.Plan,
     ) -> list[models.Item]:
         """Return browse items (generic)."""
-        query = queries.get_items_with_parent_names().where(condition)
+        query = queries.get_items_extended().where(condition)
 
         if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
@@ -31,7 +31,17 @@ class _BrowseRepoBase(AbsBrowseRepo[AsyncConnection], abc.ABC):
         query = queries.finalize_query(query, plan)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
 
 class BrowseRepo(_BrowseRepoBase):
@@ -128,9 +138,12 @@ class BrowseRepo(_BrowseRepoBase):
            nested_items.thumbnail_ext,
            nested_items.tags,
            nested_items.permissions,
-           i2.name as parent_name
+           i2.name as parent_name,
+           coalesce(m.thumbnail_width, :default_size) AS thumbnail_width,
+           coalesce(m.thumbnail_height, :default_size) AS thumbnail_height
     FROM nested_items
     LEFT JOIN items i2 ON nested_items.parent_id = i2.id
+    LEFT JOIN item_metainfo m ON m.item_id = i2.id
     WHERE nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
       AND nested_items.status = :status
         """
@@ -139,6 +152,7 @@ class BrowseRepo(_BrowseRepoBase):
             'item_id': item.id,
             'limit': plan.limit,
             'status': models.Status.AVAILABLE.value,
+            'default_size': const.THUMBNAIL_SIZE,
         }
 
         if plan.collections:
@@ -158,7 +172,17 @@ class BrowseRepo(_BrowseRepoBase):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
     async def browse_related_known(
         self,
@@ -221,9 +245,12 @@ class BrowseRepo(_BrowseRepoBase):
            nested_items.thumbnail_ext,
            nested_items.tags,
            nested_items.permissions,
-           i2.name as parent_name
+           i2.name as parent_name,
+           coalesce(m.thumbnail_width, :default_size) AS thumbnail_width,
+           coalesce(m.thumbnail_height, :default_size) AS thumbnail_height
     FROM nested_items
     LEFT JOIN items i2 ON nested_items.parent_id = i2.id
+    LEFT JOIN item_metainfo m ON m.item_id = i2.id
     WHERE nested_items.status = :status
       AND (
         nested_items.owner_id IN (SELECT id FROM users WHERE is_public)
@@ -237,6 +264,7 @@ class BrowseRepo(_BrowseRepoBase):
             'item_id': item.id,
             'status': models.Status.AVAILABLE.value,
             'limit': plan.limit,
+            'default_size': const.THUMBNAIL_SIZE,
         }
 
         if plan.collections:
@@ -256,7 +284,17 @@ class BrowseRepo(_BrowseRepoBase):
         query += ' LIMIT :limit;'
 
         response = (await conn.execute(sa.text(query), values)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
     async def get_recently_updated_items_known(
         self,
@@ -315,4 +353,14 @@ class BrowseRepo(_BrowseRepoBase):
         ).limit(plan.limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]

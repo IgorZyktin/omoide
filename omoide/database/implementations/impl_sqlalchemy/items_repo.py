@@ -129,7 +129,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     ) -> list[models.Item]:
         """Return list of children for given item."""
         query = (
-            queries.get_items_with_parent_names()
+            queries.get_items_extended()
             .where(db_models.Item.parent_id == item.id)
             .order_by(db_models.Item.number)
         )
@@ -141,7 +141,17 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             query = query.limit(limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
     async def count_all(self, conn: AsyncConnection) -> int:
         """Return total amount of items."""
@@ -267,13 +277,23 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = queries.get_items_with_parent_names().where(
+        query = queries.get_items_extended().where(
             queries.item_is_public(),
         )
         query = queries.extend_item_select(query, owner_uuid, parent_uuid, name, limit)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
     async def get_items_known(
         self,
@@ -285,7 +305,7 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         limit: int,
     ) -> list[models.Item]:
         """Return Items."""
-        query = queries.get_items_with_parent_names().where(
+        query = queries.get_items_extended().where(
             sa.or_(
                 db_models.Item.permissions.any_() == user.id,
                 db_models.Item.owner_id == user.id,
@@ -295,7 +315,17 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
 
         query = queries.extend_item_select(query, owner_uuid, parent_uuid, name, limit)
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
     async def is_child(
         self,
@@ -486,12 +516,19 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
         """Get map of items."""
         items: dict[int, models.Item | None] = dict.fromkeys(ids)
 
-        query = queries.get_items_with_parent_names().where(db_models.Item.id.in_(tuple(ids)))
+        query = queries.get_items_extended().where(db_models.Item.id.in_(tuple(ids)))
 
         response = (await conn.execute(query)).fetchall()
 
         for row in response:
-            item = models.Item.from_obj(row, extra_keys=['parent_name'])
+            item = models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
             items[item.id] = item
 
         return items

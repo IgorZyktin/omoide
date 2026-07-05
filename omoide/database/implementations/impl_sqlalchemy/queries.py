@@ -42,14 +42,18 @@ def extend_item_select(
     return query
 
 
-def get_items_with_parent_names() -> Select:
-    """Construct request that gathers names of item parents."""
+def get_items_extended() -> Select:
+    """Construct request that gathers item with extended parameters."""
     parents = aliased(db_models.Item)
     query = (
         sa.select(
-            db_models.Item, sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name')
+            db_models.Item,
+            sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name'),
+            sa.func.coalesce(db_models.Metainfo.thumbnail_width, const.THUMBNAIL_SIZE).label('thumbnail_width'),
+            sa.func.coalesce(db_models.Metainfo.thumbnail_height, const.THUMBNAIL_SIZE).label('thumbnail_height'),
         )
         .join(parents, parents.id == db_models.Item.parent_id, isouter=True)
+        .join(db_models.Metainfo, db_models.Metainfo.item_id == db_models.Item.id)
         .where(db_models.Item.status != models.Status.DELETED)
     )
     return query

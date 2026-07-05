@@ -265,7 +265,14 @@ class UploadCommand(Command):
             msg = f'Failed to create thumbnail path for item {item.id}'
             raise ValueError(msg)
 
-        return content_path, preview_path, thumbnail_path, is_video, ext, content_type
+        return (
+            content_path,
+            preview_path,
+            thumbnail_path,
+            is_video,
+            ext,
+            content_type,
+        )
 
 
 def perform_all_conversions(

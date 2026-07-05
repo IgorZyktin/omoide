@@ -47,7 +47,7 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
         plan: models.Plan,
     ) -> list[models.Item]:
         """Return home items (generic)."""
-        query = queries.get_items_with_parent_names().where(condition)
+        query = queries.get_items_extended().where(condition)
 
         if plan.collections:
             query = query.where(db_models.Item.is_collection == sa.true())
@@ -58,7 +58,17 @@ class _SearchRepositoryBase(AbsSearchRepo[AsyncConnection], abc.ABC):
         query = queries.finalize_query(query, plan)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
 
 class SearchRepo(_SearchRepositoryBase):
@@ -79,12 +89,22 @@ class SearchRepo(_SearchRepositoryBase):
         plan: models.Plan,
     ) -> list[models.Item]:
         """Find items for dynamic load."""
-        query = queries.get_items_with_parent_names()
+        query = queries.get_items_extended()
         query = self._expand_query(query, user, plan)
         query = queries.finalize_query(query, plan)
 
         response = (await conn.execute(query)).fetchall()
-        return [models.Item.from_obj(row, extra_keys=['parent_name']) for row in response]
+        return [
+            models.Item.from_obj(
+                row,
+                extra_keys=[
+                    'parent_name',
+                    'thumbnail_width',
+                    'thumbnail_height',
+                ],
+            )
+            for row in response
+        ]
 
     async def get_home_items_for_anon(
         self,
