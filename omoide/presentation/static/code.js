@@ -205,7 +205,10 @@ function renderThumbnailDynamic(container, item) {
     const img = document.createElement('img')
     img.src = getThumbnailContentUrl(item)
     img.alt = 'Thumbnail for ' + (item.name ? item.name : item.uuid)
+    img.width = item.extras.thumbnail_width
+    img.height = item.extras.thumbnail_height
     link.append(img)
+    img.addEventListener('load', updateImageSize);
 }
 
 function renderThumbnailStatic(container, path) {
@@ -219,6 +222,12 @@ function renderThumbnailStatic(container, path) {
     img.alt = 'Thumbnail'
     img.style.maxWidth = '384px'
     envelope.append(img)
+}
+
+function updateImageSize() {
+      // Read real dimensions and overwrite the placeholder properties
+      this.width = this.naturalWidth;
+      this.height = this.naturalHeight;
 }
 
 function convertDatetimeToIsoString(datetime) {

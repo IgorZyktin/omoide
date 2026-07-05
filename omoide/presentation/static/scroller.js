@@ -191,6 +191,9 @@ class Scroller {
         const img = document.createElement('img');
         img.src = getThumbnailContentUrl(item);
         img.title = parentName;
+        img.width = item.extras.thumbnail_width;
+        img.height = item.extras.thumbnail_height;
+        img.addEventListener('load', updateImageSize);
         link.appendChild(img);
 
         envelope.appendChild(link);
