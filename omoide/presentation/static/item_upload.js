@@ -207,6 +207,12 @@ async function addNewFiles(source, parentUUid) {
     refreshAllTags()
     const media = document.getElementById(MEDIA_ID)
     const features = getFeatures()
+    // Dispose any video.js players from the previous batch before we drop
+    // their DOM nodes — otherwise those player objects (and their event
+    // listeners on window/document) leak until the tab is closed.
+    for (const oldCard of CARDS) {
+        oldCard.element.dispose()
+    }
     CARDS.length = 0
     media.replaceChildren()
     let number = 1
@@ -248,6 +254,10 @@ async function addNewFiles(source, parentUUid) {
         CARDS.push(card)
         console.log(`Added file ${file.name}`)
         media.append(card.element.div)
+        // videojs() must run after the <video> is in the live DOM,
+        // otherwise the player is created with zero size and never
+        // recovers when the node is inserted later.
+        card.element.activate()
     }
 }
 
@@ -401,6 +411,8 @@ class FileCardElement {
     constructor(file, number, tags) {
         this.previewIsVisible = false
         this.error = null
+        this.isVideo = isVideoFile(file)
+        this.videoPlayer = null
 
         // div itself
         this.div = document.createElement('div')
@@ -417,13 +429,29 @@ class FileCardElement {
         this.left.classList.add('upload-lines')
         this.div.append(this.left)
 
-        if (isVideoFile(file)) {
+        this.mediaObjectUrl = URL.createObjectURL(file)
+
+        if (this.isVideo) {
+            // Playable video.js player. Click on the frame plays/pauses,
+            // so we deliberately DO NOT bind the size-toggle click handler
+            // that images use — it would fight the controls. Instead we
+            // pin the card to the "big" (flex column) layout immediately.
             this.img = document.createElement('video')
+            this.img.classList.add('video-js', 'vjs-fluid', 'vjs-default-skin')
+            this.img.setAttribute('controls', '')
+            this.img.setAttribute('preload', 'metadata')
+
+            const source = document.createElement('source')
+            source.src = this.mediaObjectUrl
+            source.type = file.type || 'video/mp4'
+            this.img.append(source)
+
+            this._applyLargeLayout()
         } else {
             this.img = document.createElement('img')
+            this.img.src = this.mediaObjectUrl
+            this.img.addEventListener('click', () => this.togglePreview())
         }
-        this.img.src = URL.createObjectURL(file)
-        this.img.addEventListener('click', () => this.togglePreview())
         this.left.append(this.img)
 
         // right side
@@ -507,14 +535,51 @@ class FileCardElement {
                 if (index !== -1) {
                     CARDS.splice(index, 1)
                 }
+                this.dispose()
                 this.div.remove()
             }
         })
         this.left.append(this.delete)
     }
 
+    activate() {
+        // Called AFTER the card's DOM has been inserted into the live
+        // document. Wires up the video.js player only then, because
+        // videojs() measures its container and produces broken layout
+        // when called on a detached node.
+        if (this.isVideo && typeof videojs !== 'undefined') {
+            this.videoPlayer = videojs(this.img)
+        }
+    }
+
+    dispose() {
+        // Idempotent cleanup — safe to call from delete-button and from
+        // the "new batch" reset in addNewFiles.
+        if (this.videoPlayer) {
+            this.videoPlayer.dispose()
+            this.videoPlayer = null
+        }
+        if (this.mediaObjectUrl) {
+            URL.revokeObjectURL(this.mediaObjectUrl)
+            this.mediaObjectUrl = null
+        }
+    }
+
+    _applyLargeLayout() {
+        // "Big" (flex-column) layout — the same state that togglePreview
+        // moves to for images. Videos start there and never leave.
+        this.div.style.display = 'flex'
+        this.div.style.flexDirection = 'column'
+        this.div.style.gridTemplateColumns = 'unset'
+        this.previewIsVisible = true
+    }
+
     togglePreview() {
-        // Make image bigger or smaller
+        // Make image bigger or smaller. No-op for videos — the frame
+        // itself is the play/pause target.
+        if (this.isVideo) {
+            return
+        }
         if (this.previewIsVisible) {
             this.div.style.display = 'grid'
             this.div.style.flexDirection = 'unset'
