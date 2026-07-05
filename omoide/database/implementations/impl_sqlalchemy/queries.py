@@ -49,8 +49,10 @@ def get_items_extended() -> Select:
         sa.select(
             db_models.Item,
             sa.func.coalesce(parents.name, db_models.Item.name).label('parent_name'),
-            sa.func.coalesce(db_models.Metainfo.thumbnail_width, const.THUMBNAIL_SIZE).label('thumbnail_width'),
-            sa.func.coalesce(db_models.Metainfo.thumbnail_height, const.THUMBNAIL_SIZE).label('thumbnail_height'),
+            sa.func.coalesce(db_models.Metainfo.thumbnail_width,
+                             const.THUMBNAIL_SIZE).label('thumbnail_width'),
+            sa.func.coalesce(db_models.Metainfo.thumbnail_height,
+                             const.THUMBNAIL_SIZE).label('thumbnail_height'),
         )
         .join(parents, parents.id == db_models.Item.parent_id, isouter=True)
         .join(db_models.Metainfo, db_models.Metainfo.item_id == db_models.Item.id)
