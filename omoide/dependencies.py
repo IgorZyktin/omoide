@@ -172,6 +172,19 @@ async def get_known_user(
     )
 
 
+async def get_admin_user(
+    current_user: Annotated[models.User, Depends(get_current_user)],
+) -> models.User:
+    """Return admin user, raise if user is not one."""
+    if current_user.is_admin:
+        return current_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail='You must be registered to do this',
+    )
+
+
 @functools.cache
 def get_templates() -> Jinja2Templates:
     """Get templates instance."""

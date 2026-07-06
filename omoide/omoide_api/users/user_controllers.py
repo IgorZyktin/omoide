@@ -35,7 +35,7 @@ async def api_create_user(  # noqa: PLR0913
     request: Request,
     response: Response,
     user_in: user_api_models.UserInput,
-    user: models.User = Depends(dep.get_current_user),
+    admin: models.User = Depends(dep.get_admin_user),
     authenticator: infra_interfaces.AbsAuthenticator = Depends(dep.get_authenticator),
     database: AbsDatabase = Depends(dep.get_database),
     users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
@@ -52,7 +52,7 @@ async def api_create_user(  # noqa: PLR0913
     )
 
     user_out = await use_case.execute(
-        user=user,
+        admin=admin,
         name=user_in.name,
         login=user_in.login,
         password=user_in.password,
