@@ -40,14 +40,14 @@ class CreateUserUseCase:
 
     async def execute(
         self,
-        user: models.User,
+        admin: models.User,
         name: str,
         login: str,
         password: str,
     ) -> models.User:
         """Execute."""
-        ensure.admin(user, 'Only admins can create users')
-        LOG.info('Admin {} is creating new user {}', user, name)
+        ensure.admin(admin, 'Only admins can create users')
+        LOG.info('Admin {} is creating new user {}', admin, name)
 
         new_user = models.User(
             id=-1,
@@ -84,7 +84,7 @@ class CreateUserUseCase:
                 tags=self.tags,
             )
             item = await sub_use_case.execute(
-                user=new_user,
+                user=admin,
                 item_uuid=None,
                 parent_uuid=None,
                 name=new_user.name,
@@ -94,7 +94,7 @@ class CreateUserUseCase:
                 permissions=[],
                 top_level=True,
             )
-            await sub_use_case.update_tags(user, item, conn)
+            await sub_use_case.update_tags(new_user, item, conn)
 
         new_user.extras['root_item_uuid'] = item.uuid
 
