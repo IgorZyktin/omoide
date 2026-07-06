@@ -175,7 +175,7 @@ progress {
 .header-floating {
     background-color: var(--color-surface);
     padding: 0;
-    z-index: 90;
+    z-index: 4;
     width: 100%;
 }
 
@@ -454,7 +454,7 @@ progress {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    z-index: 3;
 }
 
 .triangle-overlay::before {
@@ -781,7 +781,7 @@ progress {
     top: 100%;
     left: 0;
     right: 0;
-    z-index: 99;
+    z-index: 7;
     border: 1px solid #d4d4d4;
     border-top: none;
     border-bottom: none;
