@@ -128,7 +128,8 @@ VOCABULARY = {
 
 def gettext(text: str, user: models.User) -> str:
     """Convert to different language."""
-    if user.is_anon:
+    # FIXME: Temporarily disabling localization
+    if user.is_anon or True:
         return text
 
     # TODO - use proper localization technics, not this garbage
