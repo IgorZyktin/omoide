@@ -203,12 +203,15 @@ function renderThumbnailDynamic(container, item) {
     }
 
     const img = document.createElement('img')
-    img.src = getThumbnailContentUrl(item)
     img.alt = 'Thumbnail for ' + (item.name ? item.name : item.uuid)
     img.width = item.extras.thumbnail_width
     img.height = item.extras.thumbnail_height
     link.append(img)
-    img.addEventListener('load', updateImageSize);
+    // Attach the listener BEFORE setting src — otherwise for a cached
+    // image the load event fires synchronously on assignment and we miss
+    // the correction pass entirely.
+    bindImageSizeCorrection(img)
+    img.src = getThumbnailContentUrl(item)
 }
 
 function renderThumbnailStatic(container, path) {
@@ -229,6 +232,28 @@ function updateImageSize() {
       this.width = this.naturalWidth;
       this.height = this.naturalHeight;
 }
+
+function bindImageSizeCorrection(img) {
+    // Ensure updateImageSize runs once the image has real dimensions —
+    // either immediately (already cached / loaded) or on the load event.
+    // Server-rendered thumbnails carry width/height attributes from
+    // item.extras.thumbnail_* so the browser can reserve space before the
+    // fetch completes; this rebuilds real dimensions once bytes arrive.
+    if (img.complete && img.naturalWidth > 0) {
+        updateImageSize.call(img)
+    } else {
+        img.addEventListener('load', updateImageSize)
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Bootstrap size-correction for thumbnails rendered by Jinja2 (the
+    // `render_thumbnail_for_item` macro). Dynamic thumbnails inserted by
+    // renderThumbnailDynamic already bind the listener themselves.
+    for (const img of document.querySelectorAll('.envelope img[width][height]')) {
+        bindImageSizeCorrection(img)
+    }
+})
 
 function convertDatetimeToIsoString(datetime) {
     let tzo = -datetime.getTimezoneOffset(),
