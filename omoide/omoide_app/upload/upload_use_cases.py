@@ -39,7 +39,7 @@ class AppUploadUseCase:
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, parent_uuid)
 
-            if item.owner_uuid != user.uuid and not user.is_admin:
+            if item.owner_id != user.id and not user.is_admin:
                 msg = 'You are not allowed to upload for different user'
                 raise exceptions.NotAllowedError(msg)
 

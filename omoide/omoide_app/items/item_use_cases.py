@@ -61,7 +61,7 @@ class AppCreateItemUseCase:
             else:
                 parent = await self.items.get_by_uuid(conn, parent_uuid)
 
-                if parent.owner_uuid != user.uuid:
+                if parent.owner_id != user.id:
                     msg = 'You are not allowed to create items for other users'
                     raise exceptions.AccessDeniedError(msg)
 
@@ -142,7 +142,7 @@ class AppDeleteItemUseCase:
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
 
-            if item.owner_uuid != user.uuid and user.is_not_admin:
+            if item.owner_id != user.id and user.is_not_admin:
                 msg = 'You must own item {item_uuid} to delete it'
                 raise exceptions.AccessDeniedError(msg, item_uuid=item_uuid)
 

@@ -132,7 +132,7 @@ class RebuildComputedTagsForItemUseCase:
 
         async with self.database.transaction() as conn:
             item = await self.items_repo.get_by_uuid(conn, item_uuid)
-            owner = await self.users_repo.get_by_uuid(conn, item.owner_uuid)
+            owner = await self.users_repo.get_by_id(conn, item.owner_id)
 
             LOG.info(
                 '{} is rebuilding computed tags for item {} (owner is {})',
