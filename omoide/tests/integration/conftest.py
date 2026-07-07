@@ -44,23 +44,17 @@ from omoide.database.implementations import impl_sqlalchemy
 from omoide.infra.interfaces.abs_metrics_collector import Metric
 
 _TRUNCATE_TABLES = (
-    'queue_input_media',
-    'queue_output_media',
     'item_notes',
     'item_metainfo',
     'exif',
     'signatures_md5',
     'signatures_crc32',
-    'media',
-    'commands_copy',
     'computed_tags',
     'known_tags',
     'known_tags_anon',
     'serial_operations',
     'serial_lock',
-    'parallel_operations',
     'command_queue_parallel',
-    'problems',
     'items',
     'users',
 )
