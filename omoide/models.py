@@ -114,6 +114,10 @@ class User(OmoideModel):
         """Return textual representation."""
         return f'<User id={self.id} {self.uuid} {self.name}>'
 
+    def __repr__(self) -> str:
+        """Return textual representation."""
+        return str(self)
+
     @property
     def is_admin(self) -> bool:
         """Return True if user is an administrator."""
