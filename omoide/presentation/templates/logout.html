@@ -2,4 +2,32 @@
 
 {% block body %}
     <h3>{{ _('You have successfully logged out') }}</h3>
+    <script>
+        (function () {
+            // Firefox holds on to cached Basic-Auth credentials until the
+            // browser restarts unless another same-origin request arrives
+            // with a fresh Authorization header. The user/password args
+            // on xhr.open() force the browser to attach a deliberately
+            // wrong Authorization header AND to update its per-origin
+            // credential cache with those bogus values. The 401 that
+            // /login returns for the bogus login seals the deal in every
+            // major browser (Chromium already clears on the outer 401,
+            // Firefox uses this second signal).
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open(
+                    'GET',
+                    '{{ request.url_for("app_login") }}',
+                    true,
+                    'logout-invalidated',
+                    'logout-invalidated'
+                );
+                xhr.send();
+            } catch (err) {
+                // If the XHR fails to start (blocked / offline), the
+                // outer 401 from /logout has already handled the common
+                // Chromium case — nothing else to do here.
+            }
+        })();
+    </script>
 {% endblock %}
