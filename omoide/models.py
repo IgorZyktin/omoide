@@ -238,7 +238,7 @@ class Item(OmoideModel):
         computed_tags.update(parent_tags)
 
         computed_tags.add(str(self.uuid).casefold())
-        if self.is_video:
+        if self.name:
             computed_tags.add(self.name.casefold())
 
         return computed_tags

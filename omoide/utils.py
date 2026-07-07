@@ -101,7 +101,12 @@ def parse_tags(query: str) -> tuple[set[str], set[str]]:
         else:
             tags_exclude.add(_tag)
 
-    return tags_include, tags_exclude
+    # Symbol `-` sometimes used in item names
+    # and should not be treated as minus
+    return (
+        {x.replace(' \\- ', ' - ') for x in tags_include},
+        {x.replace(' \\- ', ' - ') for x in tags_exclude},
+    )
 
 
 def get_content_path(

@@ -123,7 +123,7 @@
 
         <div class="preview-tags">
             {% for tag in all_tags %}
-                <a href="{{ request.url_for('app_search') }}?q={{ tag | urlencode }}"
+                <a href="{{ request.url_for('app_search') }}?q={{ tag | replace(" - ", " \- ") | urlencode }}"
                    class="tag-box">{{ tag }}</a>
             {% endfor %}
         </div>
