@@ -49,7 +49,7 @@ class ApiBrowseUseCase:
                 items = await self.browse.browse_direct_anon(conn, item, plan)
             elif user.is_anon and not plan.direct:
                 items = await self.browse.browse_related_anon(conn, item, plan)
-            elif user.is_not_anon and plan.direct:
+            elif not user.is_anon and plan.direct:
                 items = await self.browse.browse_direct_known(conn, user, item, plan)
             else:
                 items = await self.browse.browse_related_known(conn, user, item, plan)

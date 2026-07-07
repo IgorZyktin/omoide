@@ -14,7 +14,7 @@ def admin(user: models.User, error_message: str) -> None:
 
 def registered(user: models.User, error_message: str) -> None:
     """Raise if user is Anon."""
-    if user.is_not_anon:
+    if not user.is_anon:
         return
 
     raise exceptions.AccessDeniedError(error_message)

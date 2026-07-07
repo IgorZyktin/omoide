@@ -142,7 +142,7 @@ class AppDeleteItemUseCase:
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
 
-            if item.owner_id != user.id and user.is_not_admin:
+            if item.owner_id != user.id and not user.is_admin:
                 msg = 'You must own item {item_uuid} to delete it'
                 raise exceptions.AccessDeniedError(msg, item_uuid=item_uuid)
 

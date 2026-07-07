@@ -163,7 +163,7 @@ async def get_known_user(
     current_user: Annotated[models.User, Depends(get_current_user)],
 ) -> models.User:
     """Return current user, raise if user is anon."""
-    if current_user.is_not_anon:
+    if not current_user.is_anon:
         return current_user
 
     raise HTTPException(

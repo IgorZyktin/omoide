@@ -41,7 +41,7 @@ async def app_login(  # noqa: PLR0913
     """Ask user for login and password."""
     url = request.url_for('app_home')
 
-    if user.is_not_anon:
+    if not user.is_anon:
         return RedirectResponse(url)
 
     use_case = auth_use_cases.LoginUserUseCase(authenticator, database, users_repo)
