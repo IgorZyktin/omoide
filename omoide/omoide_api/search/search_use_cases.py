@@ -60,7 +60,11 @@ class AutocompleteUseCase:
             else:
                 variants = await self.tags.autocomplete_tag_user(conn, user, tag, limit)
 
-        return [variant for variant in variants if not utils.looks_like_uuid(variant)]
+        return [
+            variant.replace(' - ', ' \\- ')
+            for variant in variants
+            if not utils.looks_like_uuid(variant)
+        ]
 
 
 class RecentUpdatesUseCase:
