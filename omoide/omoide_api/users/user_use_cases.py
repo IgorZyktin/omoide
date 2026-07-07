@@ -333,12 +333,10 @@ class GetUserResourceUsageUseCase:
 
         async with self.database.transaction() as conn:
             target_user = await self.users.get_by_uuid(conn, user_uuid)
-            ensure.represents(user, target_user, "You cannot change someone else's resource usage")
+            ensure.represents(user, target_user, "You cannot see someone else's resource usage")
 
             disk_usage = await self.meta.get_total_disk_usage(conn, target_user)
-
             total_items = await self.users.count_items_by_owner(conn, target_user)
-
             total_collections = await self.users.count_items_by_owner(
                 conn,
                 target_user,
