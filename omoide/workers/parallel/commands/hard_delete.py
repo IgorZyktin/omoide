@@ -4,7 +4,6 @@ from aiofiles import os
 
 from omoide import const
 from omoide import custom_logging
-from omoide import models
 
 from omoide.infra.locators import FilesystemLocator
 from omoide.workers.parallel.commands.base_command import Command
@@ -47,13 +46,12 @@ class HardDeleteCommand(Command):
             )
             owner = await self.users.get_by_id(conn, item.owner_id)
 
-        deleted = item.status == models.Status.DELETED
-
         async with self.database.transaction() as conn:
             await self.items.hard_delete(conn, item)
 
         paths = [
             path
+            for deleted in [True, False]
             for path in (
                 self.locator.get_path(
                     owner, item, const.MediaType.VIDEO, deleted=deleted
