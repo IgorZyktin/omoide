@@ -141,6 +141,21 @@ class UploadCommand(Command):
         )
 
         loop = asyncio.get_running_loop()
+
+        # Files created before 1980 are not accepted in zip. User could get
+        # problems if try to download this file later, so we're altering its
+        # timestamps
+        stat = await aiofiles.os.stat(content_path)
+        await loop.run_in_executor(
+            self.executor,
+            os.utime,
+            content_path,
+            (
+                max(stat.st_atime, const.OLDEST_ALLOWED_TIMESTAMP),
+                max(stat.st_mtime, const.OLDEST_ALLOWED_TIMESTAMP),
+            )
+        )
+
         conversion_output = await loop.run_in_executor(
             self.executor, perform_all_conversions, conversion_input
         )
