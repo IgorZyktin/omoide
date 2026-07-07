@@ -12,9 +12,12 @@ from sqlalchemy import Connection
 from sqlalchemy import Engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from omoide import custom_logging
 from omoide import models
 from omoide import utils
 from omoide.database import db_models
+
+LOG = custom_logging.get_logger(__name__)
 
 
 def fix_missing_signatures(
@@ -30,7 +33,12 @@ def fix_missing_signatures(
         for id_, user_uuid, item_uuid, ext in _get_items_without_signatures(conn, marker, limit):
             string = f'Missing: item_id={id_}, {site_url}/preview/{item_uuid}'
             if fix_missing:
-                _update_signature(conn, data_folder, id_, user_uuid, item_uuid, ext)
+                try:
+                    _update_signature(conn, data_folder, id_, user_uuid, item_uuid, ext)
+                except Exception:
+                    LOG.exception('Failed to update signature for item_uuid={}', item_uuid)
+                    continue
+
                 string += ' [Fixed]'
 
             print(string)  # noqa: T201
