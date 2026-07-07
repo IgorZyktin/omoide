@@ -44,6 +44,7 @@ class ConversionInput:
     thumbnail_width: int
     image_quality: int
     extract_exif: bool
+    skip_content: bool
 
 
 @dataclass(frozen=True)
@@ -138,6 +139,7 @@ class UploadCommand(Command):
             thumbnail_width=const.THUMBNAIL_SIZE,
             image_quality=const.IMAGE_QUALITY,
             extract_exif=extract_exif,
+            skip_content=skip_content,
         )
 
         loop = asyncio.get_running_loop()
@@ -339,13 +341,14 @@ def perform_all_conversions(
             if conversion_input.extract_exif:
                 exif = extract_exif_from_image(img)
 
-    chunk_size = 8192
-    with open(conversion_input.content_path, 'rb') as fd:
-        signature_crc32 = 0
-        signature_md5 = hashlib.md5()
-        while chunk := fd.read(chunk_size):
-            signature_md5.update(chunk)
-            signature_crc32 = zlib.crc32(chunk, signature_crc32)
+    if not conversion_input.skip_content:
+        chunk_size = 8192
+        with open(conversion_input.content_path, 'rb') as fd:
+            signature_crc32 = 0
+            signature_md5 = hashlib.md5()
+            while chunk := fd.read(chunk_size):
+                signature_md5.update(chunk)
+                signature_crc32 = zlib.crc32(chunk, signature_crc32)
 
     return ConversionOutput(
         content_width=content_width,
