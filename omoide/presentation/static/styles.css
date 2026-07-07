@@ -121,6 +121,10 @@ h3 { font-size: var(--font-size-lg); }
 h4 { font-size: var(--font-size-md); }
 h5 { font-size: var(--font-size-sm); }
 
+img {
+    transition: width 0.3s, height 0.3s;
+}
+
 textarea,
 input,
 select {

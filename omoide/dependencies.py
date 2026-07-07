@@ -203,6 +203,8 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals['sep_digits'] = pu.sep_digits
     templates.env.globals['Status'] = models.Status
 
+    templates.env.globals['thumbnail_size'] = const.THUMBNAIL_SIZE
+
     @jinja2.pass_context
     def translate(context: jinja2.runtime.Context, text: str) -> str:
         user = context.get('user')
