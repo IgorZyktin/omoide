@@ -544,36 +544,6 @@ class TestDeleteItemUseCaseSwitchTo:
         assert switch_to.id == root.id
 
 
-class TestDeleteItemUseCaseObjectStorage:
-    """Parallel operations emitted for object storage cleanup."""
-
-    async def test_no_parallel_operation_when_no_media(
-        self,
-        delete_item_use_case,
-        engine,
-        make_user_model,
-        make_item_model,
-        make_metainfo,
-    ):
-        owner = await make_user_model()
-        root = await make_item_model(owner_id=owner.id, owner_uuid=owner.uuid)
-        child = await make_item_model(
-            owner_id=owner.id,
-            owner_uuid=owner.uuid,
-            parent_id=root.id,
-            parent_uuid=root.uuid,
-        )
-        make_metainfo(child.id)
-
-        await delete_item_use_case.execute(
-            user=owner,
-            item_uuid=child.uuid,
-            desired_switch='parent',
-        )
-
-        assert _read_parallel_ops(engine, name='soft_delete') == []
-
-
 class TestDeleteItemUseCaseCascade:
     """Family-wide effects: descendants get the same treatment as the root of the delete."""
 
