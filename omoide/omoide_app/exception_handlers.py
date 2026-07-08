@@ -8,9 +8,17 @@ do not have to wrap every body in ``try/except``.
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
+from omoide import custom_logging
+from omoide import exceptions
 from omoide.presentation.web import redirect_from_exc
+
+LOG = custom_logging.get_logger(__name__)
 
 
 async def handle_omoide_error(request: Request, exc: Exception) -> RedirectResponse:
     """Render an Omoide exception as a redirect to the matching error page."""
+    if isinstance(exc, exceptions.AccessDeniedError):
+        LOG.warning(str(exc), exc_info=exc)
+    else:
+        LOG.exception(str(exc), exc_info=exc)
     return redirect_from_exc(request, exc)
