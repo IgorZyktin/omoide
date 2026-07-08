@@ -365,6 +365,10 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
     async def save(self, conn: AsyncConnection, item: models.Item) -> bool:
         """Save the given item."""
         changes = item.get_changes()
+
+        if not changes:
+            return False
+
         if 'tags' in changes:
             changes['tags'] = tuple(changes['tags'])
 

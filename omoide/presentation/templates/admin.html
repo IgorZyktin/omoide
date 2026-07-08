@@ -117,13 +117,23 @@
         }
 
         function deleteUser() {
-            let user_uuid_delete = document.getElementById('user_uuid_delete')
+            const user_uuid_delete = document.getElementById('user_uuid_delete')
 
             if (!user_uuid_delete)
                 return
 
+            const uuid = user_uuid_delete.value
+
+            if (!uuid){
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete user ${uuid}?`)) {
+               return;
+            }
+
             let xhr = new XMLHttpRequest()
-            xhr.open('DELETE', url)
+            xhr.open('DELETE', `/api/v1/users/${uuid}`)
             xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
             xhr.responseType = 'json'
 

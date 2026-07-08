@@ -139,6 +139,7 @@ class DeleteUserUseCase:
 
             for visible_item in all_visible_items:
                 visible_item.permissions.discard(user.id)
+                visible_item.mark_changed('permissions')
                 await self.items_repo.save(conn, visible_item)
 
             # Delete known tags
@@ -176,6 +177,8 @@ class DeleteUserUseCase:
                     name='rebuild_known_tags_for_anon',
                     extras={'requested_by': str(admin.uuid)},
                 )
+
+            await self.users_repo.delete(conn, user)
 
 
 class ChangeUserNameUseCase:
