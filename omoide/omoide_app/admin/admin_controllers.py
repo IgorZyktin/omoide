@@ -11,10 +11,10 @@ from fastapi.templating import Jinja2Templates
 from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
-from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces import AbsDatabase
+from omoide.domain import ensure
 from omoide.omoide_app.admin import admin_use_cases
 from omoide.presentation import web
 
@@ -32,9 +32,7 @@ async def app_admin(
     aim_wrapper: Annotated[web.AimWrapper, Depends(dep.get_aim)],
 ) -> HTMLResponse:
     """Create item page."""
-    if not admin.is_admin:
-        msg = 'Only admins can access this page'
-        raise exceptions.AccessDeniedError(msg)
+    ensure.admin(admin, 'Only admins can access admin page')
 
     context = {
         'request': request,
@@ -59,10 +57,6 @@ async def app_admin_resource_usage(
     meta_repo: Annotated[db_interfaces.AbsMetaRepo, Depends(dep.get_meta_repo)],
 ) -> HTMLResponse:
     """Show resource usage for every user."""
-    if not admin.is_admin:
-        msg = 'Only admins can access this page'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = admin_use_cases.ShowResourceUsageUseCase(database, users_repo, meta_repo)
     resource_usage = await use_case.execute(admin)
 

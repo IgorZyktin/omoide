@@ -12,10 +12,10 @@ from fastapi.templating import Jinja2Templates
 
 from omoide import cfg
 from omoide import dependencies as dep
-from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.domain import ensure
 from omoide.omoide_app.upload import upload_use_cases
 from omoide.presentation import web
 
@@ -36,12 +36,7 @@ async def app_upload(  # noqa: PLR0913
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Upload media page."""
-    if user.is_anon:
-        msg = 'Anonymous users are not allowed to upload'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = upload_use_cases.AppUploadUseCase(database, items_repo, users_repo)
-
     result = await use_case.execute(user, parent_uuid)
 
     context = {

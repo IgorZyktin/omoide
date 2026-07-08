@@ -13,11 +13,11 @@ from fastapi.templating import Jinja2Templates
 from omoide import cfg
 from omoide import custom_logging
 from omoide import dependencies as dep
-from omoide import exceptions
 from omoide import limits
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.domain import ensure
 from omoide.omoide_app.profile import profile_use_cases
 from omoide.presentation import web
 
@@ -36,9 +36,7 @@ async def app_profile(
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Show user profile page."""
-    if user.is_anon:
-        msg = 'Anonymous users have no profile'
-        raise exceptions.AccessDeniedError(msg)
+    ensure.registered(user, 'Anonymous users have no profile')
 
     context = {
         'request': request,
@@ -66,12 +64,7 @@ async def app_profile_usage(  # noqa: PLR0913
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Show space usage stats."""
-    if user.is_anon:
-        msg = 'Anonymous users have no profile'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = profile_use_cases.AppProfileUsageUseCase(database, users_repo)
-
     result = await use_case.execute(user)
 
     context = {
@@ -103,12 +96,7 @@ async def app_profile_tags(  # noqa: PLR0913
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Show know tags."""
-    if user.is_anon:
-        msg = 'Anonymous users have no profile'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = profile_use_cases.AppProfileTagsUseCase(database, tags_repo)
-
     known_tags = await use_case.execute(user)
 
     context = {
@@ -140,12 +128,7 @@ async def app_profile_duplicates(  # noqa: PLR0913
     response_class: type[Response] = HTMLResponse,  # noqa: ARG001
 ) -> HTMLResponse:
     """Show duplicated items."""
-    if user.is_anon:
-        msg = 'Anonymous users have no profile'
-        raise exceptions.AccessDeniedError(msg)
-
     use_case = profile_use_cases.AppProfileDuplicatesUseCase(database, items_repo)
-
     result = await use_case.execute(user, item_uuid, limit)
 
     context = {

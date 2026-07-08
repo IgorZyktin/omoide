@@ -8,6 +8,7 @@ import python_utilz as pu
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.domain import ensure
 
 
 class ProfileUsage(NamedTuple):
@@ -42,6 +43,8 @@ class AppProfileUsageUseCase:
         user: models.User,
     ) -> ProfileUsage:
         """Execute."""
+        ensure.registered(user, 'Anonymous users have no resource usage')
+
         async with self.database.transaction() as conn:
             size = await self.users.calc_total_space_used_by(conn, user)
             total_items = await self.users.count_items_by_owner(conn, user)
@@ -72,6 +75,8 @@ class AppProfileTagsUseCase:
 
     async def execute(self, user: models.User) -> dict[str, int]:
         """Execute."""
+        ensure.registered(user, 'Anonymous users have no tags page')
+
         async with self.database.transaction() as conn:
             known_tags = await self.tags.get_known_tags_user(conn, user)
             clean_tags = {
@@ -101,6 +106,8 @@ class AppProfileDuplicatesUseCase:
         limit: int,
     ) -> ProfileDuplicates:
         """Execute."""
+        ensure.registered(user, 'Anonymous users have no duplicates page')
+
         async with self.database.transaction() as conn:
             if item_uuid is not None and pu.is_valid_uuid(item_uuid):
                 item = await self.items.get_by_uuid(conn, UUID(item_uuid))

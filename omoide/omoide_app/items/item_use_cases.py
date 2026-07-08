@@ -8,6 +8,7 @@ from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.domain import ensure
 
 
 class CreateItemPage(NamedTuple):
@@ -61,7 +62,7 @@ class AppCreateItemUseCase:
             else:
                 parent = await self.items.get_by_uuid(conn, parent_uuid)
 
-                if parent.owner_id != user.id:
+                if parent.owner_id != user.id and not user.is_admin:
                     msg = 'You are not allowed to create items for other users'
                     raise exceptions.AccessDeniedError(msg)
 
@@ -95,9 +96,7 @@ class AppUpdateItemUseCase:
         item_uuid: UUID,
     ) -> UpdateItemPage:
         """Execute."""
-        if user.is_anon:
-            msg = 'You are not allowed to update items'
-            raise exceptions.AccessDeniedError(msg)
+        ensure.registered(user, 'Anon users are not allowed to update items')
 
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)

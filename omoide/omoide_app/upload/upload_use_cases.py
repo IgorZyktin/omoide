@@ -7,6 +7,7 @@ from omoide import exceptions
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
+from omoide.domain import ensure
 
 
 class UploadPage(NamedTuple):
@@ -36,6 +37,8 @@ class AppUploadUseCase:
         parent_uuid: UUID,
     ) -> UploadPage:
         """Execute."""
+        ensure.registered(user, 'Anonymous users are not allowed to upload')
+
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, parent_uuid)
 
