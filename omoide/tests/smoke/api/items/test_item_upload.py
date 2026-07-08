@@ -18,16 +18,15 @@ Coverage focus:
 
 from uuid import uuid4
 
-import pytest
 from httpx import ASGITransport
 from httpx import AsyncClient
+import pytest
 
 from omoide import dependencies as dep
 from omoide import limits
 from omoide.object_storage.implementations.pgl_object_storage import PgLargeObjectStorage
 from omoide.omoide_api.application import apply_api_routes_v1
 from omoide.omoide_api.application import get_api
-
 
 # --- fixtures ----------------------------------------------------------
 
@@ -65,9 +64,7 @@ async def http_client(api_app):
     creates a nested event loop.
     """
     transport = ASGITransport(app=api_app)
-    async with AsyncClient(
-        transport=transport, base_url='http://testserver'
-    ) as client:
+    async with AsyncClient(transport=transport, base_url='http://testserver') as client:
         yield client
 
 
@@ -109,8 +106,11 @@ class TestSizeValidation:
         make_item_model,
         monkeypatch,
     ):
-        """Content-Length header check — the early-out on oversized
-        uploads that stops the client from streaming any bytes at all."""
+        """Test that we check content-length header.
+
+        Content-Length header check — the early-out on oversized
+        uploads that stops the client from streaming any bytes at all.
+        """
         monkeypatch.setattr(limits, 'MAX_MEDIA_SIZE', 100)
         monkeypatch.setattr(limits, 'MAX_MEDIA_SIZE_HR', '100 B')
 
@@ -161,8 +161,11 @@ class TestSizeValidation:
         make_item_model,
         monkeypatch,
     ):
-        """Sanity: with the limit at exactly the payload size, upload
-        succeeds. Guards against off-by-one in the ``>`` comparison."""
+        """Test that user can upload exactly limit.
+
+        Sanity: with the limit at exactly the payload size, upload
+        succeeds. Guards against off-by-one in the ``>`` comparison.
+        """
         # Multipart adds boundary + headers; give plenty of headroom.
         monkeypatch.setattr(limits, 'MAX_MEDIA_SIZE', 10_000)
         monkeypatch.setattr(limits, 'MAX_MEDIA_SIZE_HR', '10 KB')
@@ -215,8 +218,11 @@ class TestExtensionFilter:
         make_user_model,
         make_item_model,
     ):
-        """The controller lower-cases before matching; capitalised
-        extensions must still be accepted."""
+        """Test that uppercase is accepted.
+
+        The controller lower-cases before matching; capitalised
+        extensions must still be accepted.
+        """
         user = await make_user_model()
         item = await make_item_model(owner_id=user.id, owner_uuid=user.uuid)
         _authenticate_as(api_app, user)
@@ -239,8 +245,11 @@ class TestAuthorization:
         make_user_model,
         make_item_model,
     ):
-        """No auth overrides on the app → get_current_user returns anon
-        → get_known_user raises 403."""
+        """Test that anon cannot upload.
+
+        No auth overrides on the app → get_current_user returns anon
+        → get_known_user raises 403.
+        """
         user = await make_user_model()
         item = await make_item_model(owner_id=user.id, owner_uuid=user.uuid)
         # Deliberately NOT calling _authenticate_as.
@@ -259,8 +268,11 @@ class TestAuthorization:
         make_user_model,
         make_item_model,
     ):
-        """Item belongs to someone else — use case's ownership check
-        raises ``NotAllowedError`` → 403."""
+        """Test that we do not allow to mess with others items.
+
+        Item belongs to someone else — use case's ownership check
+        raises ``NotAllowedError`` → 403.
+        """
         owner = await make_user_model()
         item = await make_item_model(owner_id=owner.id, owner_uuid=owner.uuid)
 

@@ -373,9 +373,9 @@ async def api_upload_item(  # noqa: PLR0913
     if content_length_hdr is not None:
         try:
             declared_size = int(content_length_hdr)
-        except ValueError:
+        except ValueError as exc:
             msg = 'Invalid Content-Length header'
-            raise exceptions.InvalidInputError(msg)
+            raise exceptions.InvalidInputError(msg) from exc
         if declared_size > limits.MAX_MEDIA_SIZE:
             msg = f'Maximum upload size is {limits.MAX_MEDIA_SIZE_HR}'
             raise exceptions.NotAllowedError(msg)
