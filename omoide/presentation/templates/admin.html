@@ -27,6 +27,17 @@
         <hr>
 
         <div>
+            <h3>Delete user</h3>
+            <div>
+                <label for="user_uuid_delete">UUID:</label>
+                <input id="user_uuid_delete" type="text" value="" class="height-auto">
+            </div>
+            <input type="button" class="button control-button" onclick="deleteUser()" value="Delete user">
+        </div>
+
+        <hr>
+
+        <div>
             <h3>Rebuild known tags for anon</h3>
             <input type="button" class="button control-button" onclick="rebuildKnownTagsForAnon()" value="Rebuild">
         </div>
@@ -103,6 +114,31 @@
             });
 
             getXHR('/api/v1/users').send(payload)
+        }
+
+        function deleteUser() {
+            let user_uuid_delete = document.getElementById('user_uuid_delete')
+
+            if (!user_uuid_delete)
+                return
+
+            let xhr = new XMLHttpRequest()
+            xhr.open('DELETE', url)
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            xhr.responseType = 'json'
+
+            xhr.onload = function () {
+                if (xhr.status !== 202) {
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`)
+                } else {
+                    alert(`Ok`)
+                }
+            };
+
+            xhr.onerror = function () {
+                console.log('Error: ' + xhr.response)
+            };
+            xhr.send()
         }
 
         function rebuildKnownTagsForAnon() {

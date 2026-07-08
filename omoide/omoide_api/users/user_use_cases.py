@@ -101,6 +101,83 @@ class CreateUserUseCase:
         return new_user
 
 
+class DeleteUserUseCase:
+    """Use case for deleting a user."""
+
+    def __init__(
+        self,
+        database: AbsDatabase,
+        users_repo: db_interfaces.AbsUsersRepo,
+        items_repo: db_interfaces.AbsItemsRepo,
+        meta_repo: db_interfaces.AbsMetaRepo,
+        misc_repo: db_interfaces.AbsMiscRepo,
+        tags_repo: db_interfaces.AbsTagsRepo,
+        commands_repo: db_interfaces.AbsCommandsRepo,
+    ) -> None:
+        """Initialize instance."""
+        self.database = database
+        self.users_repo = users_repo
+        self.items_repo = items_repo
+        self.meta_repo = meta_repo
+        self.misc_repo = misc_repo
+        self.tags_repo = tags_repo
+        self.commands_repo = commands_repo
+
+    async def execute(self, admin: models.User, user_uuid: UUID) -> None:
+        """Execute."""
+        ensure.admin(admin, 'Only admins can delete users')
+
+        async with self.database.transaction() as conn:
+            user = await self.users_repo.get_by_uuid(conn, user_uuid)
+            LOG.info('Admin {} is deleting user {}', admin, user)
+
+            # Delete from permissions of all items
+            all_visible_items = await self.items_repo.select(
+                conn=conn,
+                permissions_id=user.id,
+            )
+
+            for visible_item in all_visible_items:
+                visible_item.permissions.discard(user.id)
+                await self.items_repo.save(conn, visible_item)
+
+            # Delete known tags
+            await self.tags_repo.drop_known_tags_user(conn, user, only_tags=None)
+
+            # Delete all items
+            affected_users: set[int] = set()
+            all_items = await self.items_repo.select(conn, owner_id=user.id)
+            for item in all_items:
+                affected_users.update(item.permissions)
+                metainfo = await self.meta_repo.get_by_item(conn, item)
+                await self.meta_repo.soft_delete(conn, metainfo)
+                await self.items_repo.soft_delete(conn, item)
+                await self.commands_repo.hard_delete(
+                    conn=conn,
+                    requested_by=admin,
+                    item=item,
+                )
+
+            # Recalculate all affected tags
+            for user_id in affected_users:
+                affected_user = await self.users_repo.get_by_id(conn, user_id)
+                await self.misc_repo.create_serial_operation(
+                    conn=conn,
+                    name='rebuild_known_tags_for_user',
+                    extras={
+                        'requested_by': str(admin.uuid),
+                        'user_uuid': str(affected_user.uuid),
+                    },
+                )
+
+            if user.is_public:
+                await self.misc_repo.create_serial_operation(
+                    conn=conn,
+                    name='rebuild_known_tags_for_anon',
+                    extras={'requested_by': str(admin.uuid)},
+                )
+
+
 class ChangeUserNameUseCase:
     """Use case for updating a user's name."""
 

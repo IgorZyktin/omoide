@@ -65,6 +65,38 @@ async def api_create_user(  # noqa: PLR0913
     return user_api_models.UserOutput(**utils.serialize(user_out.model_dump()))
 
 
+@api_users_router.delete(
+    '/{user_uuid}',
+    summary='Delete user',
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {'description': 'Accepted'},
+        status.HTTP_403_FORBIDDEN: {'description': 'Permission denied'},
+    },
+    response_model=None,
+)
+async def api_delete_user(
+    user_uuid: UUID,
+    admin: models.User = Depends(dep.get_admin_user),
+    database: AbsDatabase = Depends(dep.get_database),
+    users_repo: db_interfaces.AbsUsersRepo = Depends(dep.get_users_repo),
+    items_repo: db_interfaces.AbsItemsRepo = Depends(dep.get_items_repo),
+    meta_repo: db_interfaces.AbsMetaRepo = Depends(dep.get_meta_repo),
+    misc_repo: db_interfaces.AbsMiscRepo = Depends(dep.get_misc_repo),
+    tags_repo: db_interfaces.AbsTagsRepo = Depends(dep.get_tags_repo),
+    commands_repo: db_interfaces.AbsCommandsRepo = Depends(dep.get_commands_repo),
+) -> None:
+    """Delete existing user.
+
+    Only admins can do this.
+    """
+    use_case = user_use_cases.DeleteUserUseCase(
+        database, users_repo, items_repo, meta_repo, misc_repo, tags_repo, commands_repo
+    )
+
+    await use_case.execute(admin, user_uuid)
+
+
 @api_users_router.get(
     '',
     summary='Get list of users',

@@ -611,5 +611,13 @@ class ItemsRepo(AbsItemsRepo[AsyncConnection]):
             else:
                 query = query.where(db_models.Item.parent_id == parent_id)
 
+        if 'owner_id' in kwargs:
+            owner_id = kwargs['owner_id']
+            query = query.where(db_models.Item.owner_id == owner_id)
+
+        if 'permissions_id' in kwargs:
+            permissions_id = kwargs['permissions_id']
+            query = query.where(db_models.Item.permissions.any_() == permissions_id)
+
         response = (await conn.execute(query)).fetchall()
         return [models.Item.from_obj(row) for row in response]
