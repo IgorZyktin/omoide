@@ -742,13 +742,20 @@ class UploadItemUseCase(BaseItemUseCase):
         chunks: AsyncIterable[bytes],
     ) -> int | None:
         """Execute."""
-        ensure.registered(user, 'Anonymous users are not allowed to upload items')
+        ensure.registered(
+            user,
+            'Anonymous users are not allowed to upload items',
+        )
 
         # Pre-flight ownership check before the HTTP body is consumed.
         # Failing here avoids streaming the payload only to reject it.
         async with self.database.transaction() as conn:
             item = await self.items.get_by_uuid(conn, item_uuid)
-            ensure.owner(user, item, "You cannot upload media to someone else's item")
+            ensure.owner(
+                user,
+                item,
+                "You cannot upload media to someone else's item",
+            )
 
         # Stream the upload into long-term storage with no DB transaction
         # held; the storage commits on its own session.
@@ -776,43 +783,69 @@ class UploadItemUseCase(BaseItemUseCase):
                 key='original_filename',
                 value=str(file.filename),
             )
-
-            if item.parent_id is not None:
-                parent = await self.items.get_by_id(conn, item.parent_id)
-                parent.is_collection = True
-
-                if parent.thumbnail_ext is None:
-                    # NOTE - temporarily setting parent metainfo,
-                    # so next item in batch will not copy again
-                    parent.preview_ext = 'tmp'
-                    parent.thumbnail_ext = 'tmp'
-
-                    # Reuse the same long-term reference for the parent thumbnail.
-                    # The converter only deletes the OID when no other queue
-                    # entry still references it.
-                    await self.commands.upload(
-                        conn=conn,
-                        requested_by=user,
-                        item=parent,
-                        content_type=file.content_type,
-                        ext='jpg' if file.ext == 'jpeg' else file.ext,
-                        oid=oid,
-                        extras={
-                            'extract_exif': False,
-                            'skip_content': True,
-                        },
-                    )
-
-                    await self.meta.add_item_note(
-                        conn=conn,
-                        item=parent,
-                        key='copied_image_from',
-                        value=str(item.uuid),
-                    )
-
-                await self.items.save(conn, parent)
+            await self.mark_parent_as_collection(
+                conn=conn,
+                user=user,
+                original_item=item,
+                parent_id=item.parent_id,
+                file=file,
+                oid=oid,
+            )
 
         return operation_id
+
+    async def mark_parent_as_collection(
+        self,
+        conn: Any,
+        user: models.User,
+        original_item: models.Item,
+        parent_id: int | None,
+        file: models.NewFile,
+        oid: int,
+    ) -> None:
+        """Maybe alter parent to collection."""
+        while parent_id is not None:
+            parent_item = await self.items.get_by_id(conn, parent_id)
+            changed = False
+
+            if not parent_item.is_collection:
+                parent_item.is_collection = True
+                changed = True
+
+            if parent_item.thumbnail_ext is None:
+                # NOTE - temporarily setting parent metainfo,
+                # so next item in batch will not copy again
+                parent_item.thumbnail_ext = 'tmp'
+                changed = True
+
+                # Reuse the same long-term reference for the parent
+                # thumbnail. The converter only deletes the OID when
+                # no other queue entry still references it.
+                await self.commands.upload(
+                    conn=conn,
+                    requested_by=user,
+                    item=parent_item,
+                    content_type=file.content_type,
+                    ext='jpg' if file.ext == 'jpeg' else file.ext,
+                    oid=oid,
+                    extras={
+                        'extract_exif': False,
+                        'skip_content': True,
+                    },
+                )
+
+                await self.meta.add_item_note(
+                    conn=conn,
+                    item=parent_item,
+                    key='copied_image_from',
+                    value=str(original_item.uuid),
+                )
+
+            if not changed:
+                return
+
+            await self.items.save(conn, parent_item)
+            parent_id = parent_item.parent_id
 
 
 class ChangePermissionsUseCase(BaseItemUseCase):

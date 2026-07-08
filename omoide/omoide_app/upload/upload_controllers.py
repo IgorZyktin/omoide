@@ -15,7 +15,6 @@ from omoide import dependencies as dep
 from omoide import models
 from omoide.database import interfaces as db_interfaces
 from omoide.database.interfaces.abs_database import AbsDatabase
-from omoide.domain import ensure
 from omoide.omoide_app.upload import upload_use_cases
 from omoide.presentation import web
 
