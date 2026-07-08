@@ -365,9 +365,20 @@ async def api_upload_item(  # noqa: PLR0913
     object_storage: object_interfaces.AbsObjectStorage = Depends(dep.get_object_storage),
 ) -> dict[str, Any]:
     """Store content data for given item."""
-    if int(request.headers['content-length']) > limits.MAX_MEDIA_SIZE:
-        msg = f'Maximum upload size is {limits.MAX_MEDIA_SIZE_HR}'
-        raise exceptions.NotAllowedError(msg)
+    # Early rejection based on the declared Content-Length. Handles a
+    # missing/invalid header gracefully — the in-stream counter below is
+    # the ultimate line of defence, but we still want to spare bandwidth
+    # when the client has already told us it plans to send too much.
+    content_length_hdr = request.headers.get('content-length')
+    if content_length_hdr is not None:
+        try:
+            declared_size = int(content_length_hdr)
+        except ValueError:
+            msg = 'Invalid Content-Length header'
+            raise exceptions.InvalidInputError(msg)
+        if declared_size > limits.MAX_MEDIA_SIZE:
+            msg = f'Maximum upload size is {limits.MAX_MEDIA_SIZE_HR}'
+            raise exceptions.NotAllowedError(msg)
 
     ext = str(file.filename).lower().split('.')[-1]
     if ext not in limits.SUPPORTED_EXTENSION:
@@ -381,10 +392,21 @@ async def api_upload_item(  # noqa: PLR0913
     features = item_api_models.extract_features(request)
 
     async def _chunks() -> AsyncIterator[bytes]:
+        # Defence in depth against clients under-declaring Content-Length
+        # (chunked encoding, buggy proxies, deliberate spoofing): count
+        # bytes as they stream in and abort before the LOB overshoots
+        # the limit. ``PgLargeObjectStorage.write`` closes its session
+        # without commit on any exception, so the partial LOB gets
+        # rolled back — no orphan bytes left in ``pg_largeobject``.
+        total = 0
         while True:
             chunk = await file.read(const.UPLOAD_CHUNK_SIZE)
             if not chunk:
-                break
+                return
+            total += len(chunk)
+            if total > limits.MAX_MEDIA_SIZE:
+                msg = f'Maximum upload size is {limits.MAX_MEDIA_SIZE_HR}'
+                raise exceptions.NotAllowedError(msg)
             yield chunk
 
     await use_case.execute(
