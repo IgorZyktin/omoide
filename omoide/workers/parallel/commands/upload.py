@@ -61,8 +61,8 @@ class ConversionOutput:
     thumbnail_height: int
     thumbnail_size: int
     exif: dict[str, Any] | None
-    signature_crc32: int
-    signature_md5: str
+    signature_crc32: int | None
+    signature_md5: str | None
 
 
 class UploadCommand(Command):
@@ -224,12 +224,15 @@ class UploadCommand(Command):
                 exif_model = models.Exif(exif=conversion_output.exif)
                 await self.exif_repo.save(conn, item, exif_model)
 
-            await self.signatures_repo.save_md5_signature(
-                conn, item, conversion_output.signature_md5
-            )
-            await self.signatures_repo.save_cr32_signature(
-                conn, item, conversion_output.signature_crc32
-            )
+            if conversion_output.signature_md5 is not None:
+                await self.signatures_repo.save_md5_signature(
+                    conn, item, conversion_output.signature_md5
+                )
+
+            if conversion_output.signature_crc32 is not None:
+                await self.signatures_repo.save_cr32_signature(
+                    conn, item, conversion_output.signature_crc32
+                )
 
         return (
             conversion_output.content_size
@@ -341,14 +344,20 @@ def perform_all_conversions(
             if conversion_input.extract_exif:
                 exif = extract_exif_from_image(img)
 
+    signature_crc32 = None
+    signature_md5 = None
     if not conversion_input.skip_content:
+        tmp_signature_crc32 = 0
+        tmp_signature_md5 = hashlib.md5()
         chunk_size = 8192
+
         with open(conversion_input.content_path, 'rb') as fd:
-            signature_crc32 = 0
-            signature_md5 = hashlib.md5()
             while chunk := fd.read(chunk_size):
-                signature_md5.update(chunk)
-                signature_crc32 = zlib.crc32(chunk, signature_crc32)
+                tmp_signature_md5.update(chunk)
+                tmp_signature_crc32 = zlib.crc32(chunk, tmp_signature_crc32)
+
+        signature_crc32 = tmp_signature_crc32
+        signature_md5 = tmp_signature_md5.hexdigest()
 
     return ConversionOutput(
         content_width=content_width,
@@ -362,7 +371,7 @@ def perform_all_conversions(
         thumbnail_size=os.path.getsize(conversion_input.thumbnail_path),
         exif=exif,
         signature_crc32=signature_crc32,
-        signature_md5=signature_md5.hexdigest(),
+        signature_md5=signature_md5,
     )
 
 
