@@ -803,7 +803,17 @@ class UploadItemUseCase(BaseItemUseCase):
         file: models.NewFile,
         oid: int,
     ) -> None:
-        """Maybe alter parent to collection."""
+        """Walk up the ancestor chain, ensuring each is a collection with a thumbnail.
+
+        The traversal ALWAYS reaches the root: an intermediate ancestor
+        that already looks correct (``is_collection=True`` and
+        ``thumbnail_ext`` set) must NOT stop the walk, because a higher
+        ancestor may still be missing that state — either because a
+        previous upload's propagation broke off there, or because the
+        earlier iteration of this method itself did (fixed here). The
+        state changes are idempotent: unchanged ancestors incur only a
+        cheap read.
+        """
         while parent_id is not None:
             parent_item = await self.items.get_by_id(conn, parent_id)
             changed = False
@@ -841,10 +851,9 @@ class UploadItemUseCase(BaseItemUseCase):
                     value=str(original_item.uuid),
                 )
 
-            if not changed:
-                return
+            if changed:
+                await self.items.save(conn, parent_item)
 
-            await self.items.save(conn, parent_item)
             parent_id = parent_item.parent_id
 
 

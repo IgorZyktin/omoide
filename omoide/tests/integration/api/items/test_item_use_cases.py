@@ -5,6 +5,7 @@ NOT mock the database, repos, or object storage. The fixtures wire up the
 same async stack the API uses in production.
 """
 
+from collections.abc import AsyncIterator
 import uuid
 
 import pytest
@@ -13,7 +14,9 @@ import sqlalchemy as sa
 from omoide import exceptions
 from omoide import models
 from omoide.database import db_models
+from omoide.object_storage.implementations.pgl_object_storage import PgLargeObjectStorage
 from omoide.omoide_api.items.item_use_cases import DeleteItemUseCase
+from omoide.omoide_api.items.item_use_cases import UploadItemUseCase
 
 
 @pytest.fixture
@@ -33,6 +36,27 @@ def delete_item_use_case(
     """
     return DeleteItemUseCase(
         async_database, items_repo, users_repo, meta_repo, tags_repo, commands_repo
+    )
+
+
+@pytest.fixture
+def object_storage(async_database):
+    """Real ``PgLargeObjectStorage`` backed by the test DB."""
+    return PgLargeObjectStorage(async_database)
+
+
+@pytest.fixture
+def upload_item_use_case(
+    async_database,
+    items_repo,
+    meta_repo,
+    misc_repo,
+    commands_repo,
+    object_storage,
+):
+    """Build ``UploadItemUseCase`` wired with real repos + storage."""
+    return UploadItemUseCase(
+        async_database, items_repo, meta_repo, misc_repo, commands_repo, object_storage
     )
 
 
@@ -647,3 +671,199 @@ class TestDeleteItemUseCaseCascade:
         assert _read_known_tags_user_counter(engine, descendant_viewer.id, 'parent_only') == 9, (
             'permission holder unrelated to parent must not lose count for parent tag'
         )
+
+
+# --- UploadItemUseCase.mark_parent_as_collection ------------------------
+#
+# The upload flow walks every ancestor of the uploaded leaf and marks
+# it as a collection with a shared thumbnail. The traversal used to
+# early-return the moment it saw an ancestor that was already a
+# collection with a thumbnail, silently skipping every higher ancestor
+# that still needed the update. These tests pin the fixed behaviour:
+# the walk ALWAYS reaches the root, and it emits an upload command
+# only for ancestors that were actually missing the thumbnail.
+
+
+async def _chunks_of(payload: bytes) -> AsyncIterator[bytes]:
+    """Async iterator with a single chunk — a minimal fake upload body."""
+    yield payload
+
+
+async def _make_chain(make_item_model, owner, states):
+    """Build a linear chain of items rooted at ``owner``.
+
+    ``states`` is an iterable of ``(is_collection, thumbnail_ext)``
+    tuples ordered from ROOT to LEAF. Returns the items in the same
+    order so tests can index by depth.
+    """
+    items = []
+    parent_id: int | None = None
+    parent_uuid = None
+    for is_collection, thumbnail_ext in states:
+        item = await make_item_model(
+            owner_id=owner.id,
+            owner_uuid=owner.uuid,
+            parent_id=parent_id,
+            parent_uuid=parent_uuid,
+            is_collection=is_collection,
+            thumbnail_ext=thumbnail_ext,
+        )
+        items.append(item)
+        parent_id = item.id
+        parent_uuid = item.uuid
+    return items
+
+
+def _read_item_flags(engine, item_id: int):
+    """Return ``(is_collection, thumbnail_ext)`` for one item."""
+    with engine.connect() as conn:
+        row = conn.execute(
+            sa.select(
+                db_models.Item.is_collection,
+                db_models.Item.thumbnail_ext,
+            ).where(db_models.Item.id == item_id)
+        ).one()
+    return row.is_collection, row.thumbnail_ext
+
+
+def _read_upload_commands(engine) -> list[dict]:
+    """Return every parallel command's ``extras`` dict."""
+    with engine.connect() as conn:
+        rows = conn.execute(sa.select(db_models.ParallelCommand.extras)).all()
+    return [row.extras for row in rows]
+
+
+def _read_notes(engine, item_id: int) -> dict[str, str]:
+    """Return notes for the given item as a ``{key: value}`` dict."""
+    with engine.connect() as conn:
+        rows = conn.execute(
+            sa.select(
+                db_models.ItemNote.key,
+                db_models.ItemNote.value,
+            ).where(db_models.ItemNote.item_id == item_id)
+        ).all()
+    return {row.key: row.value for row in rows}
+
+
+def _upload_file() -> models.NewFile:
+    return models.NewFile(
+        content_type='image/jpeg',
+        filename='cat.jpg',
+        ext='jpg',
+        features=models.Features(extract_exif=False),
+    )
+
+
+class TestUploadItemUseCaseChain:
+    """Every ancestor of the uploaded item gets flagged as a collection."""
+
+    async def test_fresh_chain_flags_every_ancestor(
+        self,
+        upload_item_use_case,
+        make_user_model,
+        make_item_model,
+        engine,
+    ):
+        """Baseline: nobody has been touched yet.
+
+        Every ancestor MUST be marked as a collection with the placeholder
+        ``thumbnail_ext='tmp'``, and a dedicated upload command MUST be
+        enqueued for each ancestor, all sharing the leaf's OID.
+        """
+        alice = await make_user_model()
+        root, mid, leaf = await _make_chain(
+            make_item_model,
+            alice,
+            states=[
+                (False, None),  # root
+                (False, None),  # mid
+                (False, None),  # leaf — upload target
+            ],
+        )
+
+        await upload_item_use_case.execute(
+            user=alice,
+            item_uuid=leaf.uuid,
+            file=_upload_file(),
+            chunks=_chunks_of(b'x' * 128),
+        )
+
+        assert _read_item_flags(engine, root.id) == (True, 'tmp')
+        assert _read_item_flags(engine, mid.id) == (True, 'tmp')
+        # Leaf is not made a collection — it's the payload holder.
+        # It gets ``status=PROCESSING`` and keeps ``thumbnail_ext=None``
+        # until the converter fills it in.
+        assert _read_item_flags(engine, leaf.id) == (False, None)
+
+        # 3 commands, one per item (leaf + mid + root).
+        commands = _read_upload_commands(engine)
+        assert len(commands) == 3
+
+        # Every command references the same OID (thumbnail sharing).
+        oids = {cmd['oid'] for cmd in commands}
+        assert len(oids) == 1
+
+        # Ancestor commands are ``skip_content`` — they only need the
+        # thumbnail rendered, not the original bytes.
+        by_item = {cmd['item_id']: cmd for cmd in commands}
+        assert by_item[leaf.id].get('skip_content') is not True
+        assert by_item[mid.id]['skip_content'] is True
+        assert by_item[root.id]['skip_content'] is True
+
+        # A note is written on every ancestor linking back to the leaf.
+        assert _read_notes(engine, mid.id)['copied_image_from'] == str(leaf.uuid)
+        assert _read_notes(engine, root.id)['copied_image_from'] == str(leaf.uuid)
+
+    async def test_walks_past_intermediate_already_done_ancestor(
+        self,
+        upload_item_use_case,
+        make_user_model,
+        make_item_model,
+        engine,
+    ):
+        """Test intermediate update.
+
+        The actual bug: an intermediate ancestor that already looks
+        correct (``is_collection=True`` AND ``thumbnail_ext`` set) used
+        to trigger an early ``return`` inside ``mark_parent_as_collection``,
+        leaving every ancestor above it silently untouched. After the
+        fix the walk continues to the root and updates it.
+        """
+        alice = await make_user_model()
+        root, mid, leaf = await _make_chain(
+            make_item_model,
+            alice,
+            states=[
+                (False, None),   # root — MUST still be updated
+                (True, 'jpg'),   # mid — already "done", not a wall
+                (False, None),   # leaf — upload target
+            ],
+        )
+
+        await upload_item_use_case.execute(
+            user=alice,
+            item_uuid=leaf.uuid,
+            file=_upload_file(),
+            chunks=_chunks_of(b'x' * 128),
+        )
+
+        # Root got its update — this is exactly what the bug prevented.
+        assert _read_item_flags(engine, root.id) == (True, 'tmp')
+
+        # Mid stays untouched: it already looks correct, no
+        # skip_content command needed for it, no note written.
+        assert _read_item_flags(engine, mid.id) == (True, 'jpg')
+
+        commands = _read_upload_commands(engine)
+        command_item_ids = {cmd['item_id'] for cmd in commands}
+        # Two commands: leaf (payload) + root (thumbnail share). Mid
+        # skipped because it already had a thumbnail.
+        assert command_item_ids == {leaf.id, root.id}
+
+        # Same OID shared across leaf and root.
+        oids = {cmd['oid'] for cmd in commands}
+        assert len(oids) == 1
+
+        # Only root got the note — mid wasn't touched at all.
+        assert _read_notes(engine, root.id)['copied_image_from'] == str(leaf.uuid)
+        assert 'copied_image_from' not in _read_notes(engine, mid.id)
