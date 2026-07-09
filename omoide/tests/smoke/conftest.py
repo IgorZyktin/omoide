@@ -7,26 +7,24 @@ without going through ``pytest_plugins`` (which conflicts with the
 plain-conftest auto-discovery pytest does inside ``integration/``).
 """
 
-from omoide.tests.integration.conftest import (  # noqa: F401
-    _schema_engine,
-    async_database,
-    async_db_url,
-    commands_repo,
-    engine,
-    items_repo,
-    make_item,
-    make_item_model,
-    make_metainfo,
-    make_user,
-    make_user_model,
-    meta_repo,
-    metrics_collector,
-    misc_repo,
-    set_computed_tags,
-    set_known_tags_anon,
-    set_known_tags_user,
-    signatures_repo,
-    tags_repo,
-    test_db_url,
-    users_repo,
-)
+from omoide.tests.integration.conftest import _schema_engine  # noqa: F401
+from omoide.tests.integration.conftest import async_database  # noqa: F401
+from omoide.tests.integration.conftest import async_db_url  # noqa: F401
+from omoide.tests.integration.conftest import commands_repo  # noqa: F401
+from omoide.tests.integration.conftest import engine  # noqa: F401
+from omoide.tests.integration.conftest import items_repo  # noqa: F401
+from omoide.tests.integration.conftest import make_item  # noqa: F401
+from omoide.tests.integration.conftest import make_item_model  # noqa: F401
+from omoide.tests.integration.conftest import make_metainfo  # noqa: F401
+from omoide.tests.integration.conftest import make_user  # noqa: F401
+from omoide.tests.integration.conftest import make_user_model  # noqa: F401
+from omoide.tests.integration.conftest import meta_repo  # noqa: F401
+from omoide.tests.integration.conftest import metrics_collector  # noqa: F401
+from omoide.tests.integration.conftest import misc_repo  # noqa: F401
+from omoide.tests.integration.conftest import set_computed_tags  # noqa: F401
+from omoide.tests.integration.conftest import set_known_tags_anon  # noqa: F401
+from omoide.tests.integration.conftest import set_known_tags_user  # noqa: F401
+from omoide.tests.integration.conftest import signatures_repo  # noqa: F401
+from omoide.tests.integration.conftest import tags_repo  # noqa: F401
+from omoide.tests.integration.conftest import test_db_url  # noqa: F401
+from omoide.tests.integration.conftest import users_repo  # noqa: F401

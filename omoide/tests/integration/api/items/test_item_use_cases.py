@@ -834,9 +834,9 @@ class TestUploadItemUseCaseChain:
             make_item_model,
             alice,
             states=[
-                (False, None),   # root — MUST still be updated
-                (True, 'jpg'),   # mid — already "done", not a wall
-                (False, None),   # leaf — upload target
+                (False, None),  # root — MUST still be updated
+                (True, 'jpg'),  # mid — already "done", not a wall
+                (False, None),  # leaf — upload target
             ],
         )
 
