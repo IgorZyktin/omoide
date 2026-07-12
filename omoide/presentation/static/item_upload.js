@@ -296,6 +296,7 @@ function createFileCard(file, parentUUID, number, tags) {
                 xhr.upload.addEventListener('load', () => {
                     this.element.progress.value = 100
                     this.element.progress.max = 100
+                    this.element.progress.classList.add('animated-stripes');
                 })
 
                 xhr.addEventListener('load', () => {
