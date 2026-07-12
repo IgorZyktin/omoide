@@ -320,6 +320,17 @@ progress {
     text-decoration: none;
 }
 
+.retry-button {
+  background-color: var(--color-problem);
+  color: var(--color-text-inverse);
+}
+
+.retry-button:hover {
+  background-color: var(--color-danger);
+  color: var(--color-text-inverse);
+  text-decoration: none;
+}
+
 /* gap rule above handles spacing between an icon and a label,
    so no extra image margins needed here. */
 

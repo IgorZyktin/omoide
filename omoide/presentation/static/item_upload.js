@@ -403,6 +403,30 @@ function createFileCard(file, parentUUID, number, tags) {
         }
     })
 
+    card.element.retryBtn.addEventListener('click', async () => {
+        // Guard against double-clicks: while a retry is in flight the
+        // button carries ``button-disabled`` and further clicks bail
+        // out. ``clearError`` hides the button visually, but a fast
+        // second click could still race in before the display change.
+        if (card.element.retryBtn.classList.contains('button-disabled')) {
+            return
+        }
+        if (!card.uuid) {
+            // Item creation itself failed for this card — retrying the
+            // upload PUT would just 404. Nothing sensible to do here.
+            return
+        }
+        card.element.retryBtn.classList.add('button-disabled')
+        try {
+            card.element.clearError()
+            await card.send()
+            // If send() failed, its handler already re-invoked
+            // setError() which puts the retry button back on screen.
+        } finally {
+            card.element.retryBtn.classList.remove('button-disabled')
+        }
+    })
+
     return card
 }
 
@@ -526,6 +550,15 @@ class FileCardElement {
         this.log.classList.add('error-message')
         this.div.append(this.log)
 
+        // Retry button appears next to the error message when setError()
+        // fires and disappears again on clearError() (either an explicit
+        // clear before a retry, or the retry succeeding).
+        this.retryBtn = document.createElement('a')
+        this.retryBtn.textContent = 'Retry upload'
+        this.retryBtn.classList.add('button', 'retry-button')
+        this.retryBtn.style.display = 'none'
+        this.div.append(this.retryBtn)
+
         this.delete = document.createElement('a')
         this.delete.textContent = 'Delete'
         this.delete.classList.add('button')
@@ -604,6 +637,16 @@ class FileCardElement {
         this.error = true
         this.div.classList.add('error-upload')
         this.log.textContent = text
+        this.retryBtn.style.display = 'flex'
+    }
+
+    clearError() {
+        // Reset UI for a fresh attempt. Called before retrying; if the
+        // retry itself fails, setError() puts everything back.
+        this.error = false
+        this.div.classList.remove('error-upload')
+        this.log.textContent = ''
+        this.retryBtn.style.display = 'none'
     }
 }
 
