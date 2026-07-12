@@ -695,6 +695,19 @@ progress {
     width: 100%;
 }
 
+/* Upload progress lives on ``.upload-element`` directly so folding
+   the card (which hides ``.upload-lines``) keeps it visible. In grid
+   layout (default expanded state, two columns) the bar spans both
+   columns; in flex-column layout ``grid-column`` is a no-op. The
+   fixed small height keeps the bar unobtrusive whether the card is
+   folded down to a single-line summary or expanded. */
+.upload-element > .upload-progress {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 6px;
+    margin: 0;
+}
+
 .float-button-container {
     position: absolute;
     right: -4em;

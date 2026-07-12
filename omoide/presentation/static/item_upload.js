@@ -506,10 +506,16 @@ class FileCardElement {
         this.label.textContent = file.name
         this.right.append(this.label)
 
+        // Progress lives directly on ``this.div`` (not inside ``right``)
+        // so folding the card — which hides ``left`` and ``right`` —
+        // keeps the upload indicator on screen. Placed right after the
+        // folded-state filename, above the two info columns when the
+        // card is expanded.
         this.progress = document.createElement('progress')
+        this.progress.classList.add('upload-progress')
         this.progress.value = 0
         this.progress.max = 100
-        this.right.append(this.progress)
+        this.foldLabel.after(this.progress)
 
         if (isVideoFile(file)) {
             this.nameInput = document.createElement('input')
