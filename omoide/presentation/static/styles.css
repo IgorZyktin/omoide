@@ -707,6 +707,13 @@ progress {
     font-size: var(--font-size-xl);
 }
 
+/* Reserve no vertical space until setError() puts real text inside.
+   ``:empty`` matches an element with no child nodes (not even whitespace),
+   which is exactly the state ``document.createElement('p')`` leaves it in. */
+.error-message:empty {
+    display: none;
+}
+
 .error-upload {
     background-color: var(--color-problem);
 }
