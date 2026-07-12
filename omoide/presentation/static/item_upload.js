@@ -422,6 +422,11 @@ function createFileCard(file, parentUUID, number, tags) {
             await card.send()
             // If send() failed, its handler already re-invoked
             // setError() which puts the retry button back on screen.
+            // Otherwise the batch may now be fully successful — trigger
+            // the same finalisation path uploadAllFiles uses on happy
+            // path, so the "after upload" redirect fires after a retry
+            // heals the last error.
+            finalizeIfAllSucceeded()
         } finally {
             card.element.retryBtn.classList.remove('button-disabled')
         }
@@ -722,7 +727,6 @@ function createItems() {
 async function uploadAllFiles() {
     // Perform uploading
     const globalProgress = document.getElementById(GLOBAL_PROGRESS_ID)
-    const parentUUID = document.getElementById(PARENT_UUID_ID).value
 
     const step = CARDS.length ? 100 / CARDS.length : 0
     let progress = 0
@@ -741,19 +745,37 @@ async function uploadAllFiles() {
 
     globalProgress.value = 100
 
-    let hasErrors = false
+    // Freeze editable fields on every card — the batch is done as far as
+    // this function is concerned; retries re-upload the file only. Delete
+    // is hidden here too so the user can't remove a card mid-retry.
     for (const card of CARDS) {
         card.element.disable()
-        hasErrors = hasErrors || card.element.error
     }
 
-    if (hasErrors){
+    finalizeIfAllSucceeded()
+}
+
+function finalizeIfAllSucceeded() {
+    // If every card in the batch finished without an error, clear the
+    // state and honor the "after upload" dropdown. Called from
+    // uploadAllFiles and from the retry click handler — idempotent, and
+    // a no-op while any card still shows a failure. The redirect is
+    // gated on ALL cards succeeding: one lingering error is enough to
+    // keep the user on the page so they can retry.
+    if (!CARDS.length) {
         return
+    }
+    for (const card of CARDS) {
+        if (card.element.error) {
+            return
+        }
     }
 
     CARDS.length = 0
     document.getElementById(UPLOAD_INPUT_ID).value = null
+
     if (document.getElementById(AFTER_UPLOAD_ID).value === 'parent') {
+        const parentUUID = document.getElementById(PARENT_UUID_ID).value
         relocateWithAim(`/browse/${parentUUID}`)
     }
 }
