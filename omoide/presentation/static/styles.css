@@ -184,7 +184,9 @@ progress {
 }
 
 .header-floating {
-    position: fixed;
+    position: sticky;
+    top: 0;
+    left: 0;
 }
 
 .sub_header {
